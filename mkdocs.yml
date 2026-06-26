@@ -72,7 +72,7 @@ nav:
   - Maintainer Guide:
       - Overview: reference/maintainer-guide.md
       - Glossary: reference/glossary.md
-      - Function Call Graph: reference/callable-flow.md
+      - Function Call Graph: reference/function-call-graph.md
       - Public API Contract: reference/public-api-contract.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md

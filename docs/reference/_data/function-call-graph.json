@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T18:33:45.580169Z",
-    "data_source": "callable-flow.json"
+    "generated_at_utc": "2026-06-26T18:52:07.900694Z",
+    "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
     "long_call_chain_depth": 4,

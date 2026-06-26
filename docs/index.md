@@ -70,7 +70,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Function Call Graph Dashboard and Function Inventory to review public API architecture and export raw function-level packets.
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
+  <a class="fabricops-landing-card" href="assets/function-call-graph-dashboard.html">
     <span class="fabricops-landing-card__title">Function Call Graph Dashboard</span>
     <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, source Python files, and architecture signals.</span>
     <span class="fabricops-landing-card__meta">Open Function Call Graph Dashboard</span>
