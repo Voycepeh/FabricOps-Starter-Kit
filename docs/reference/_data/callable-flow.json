@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T06:20:36.336134Z",
+    "generated_at_utc": "2026-06-26T10:43:33.656890Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -31253,6 +31253,9 @@
       "modules_touched": [
         "pipeline"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/pipeline.py"
+      ],
       "external_dependents_count": 2,
       "end_node_count": 7,
       "architecture_violation_count": 0,
@@ -32057,6 +32060,11 @@
         "config",
         "governance_review",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 13,
       "end_node_count": 11,
@@ -33145,6 +33153,10 @@
         "config",
         "pipeline"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/pipeline.py"
+      ],
       "external_dependents_count": 3,
       "end_node_count": 1,
       "architecture_violation_count": 1,
@@ -33498,6 +33510,13 @@
         "_profiling_workflows",
         "config",
         "data_profiling"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/_profiling_adapters.py",
+        "src/fabricops_kit/_profiling_resolvers.py",
+        "src/fabricops_kit/_profiling_workflows.py",
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_profiling.py"
       ],
       "external_dependents_count": 3,
       "end_node_count": 6,
@@ -34022,6 +34041,11 @@
         "config",
         "io.read_lakehouse_csv",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_lakehouse_csv.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 8,
       "end_node_count": 8,
@@ -34711,6 +34735,11 @@
         "config",
         "io.read_lakehouse_excel",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_lakehouse_excel.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 8,
       "end_node_count": 8,
@@ -35441,6 +35470,11 @@
         "config",
         "io.read_lakehouse_parquet",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_lakehouse_parquet.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 7,
       "end_node_count": 8,
@@ -36186,6 +36220,11 @@
         "config",
         "io.read_lakehouse_table",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_lakehouse_table.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 10,
       "end_node_count": 9,
@@ -36951,6 +36990,11 @@
         "io.read_warehouse_query",
         "io.shared"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_warehouse_query.py",
+        "src/fabricops_kit/io/shared.py"
+      ],
       "external_dependents_count": 7,
       "end_node_count": 7,
       "architecture_violation_count": 0,
@@ -37590,6 +37634,11 @@
         "config",
         "io.read_warehouse_table",
         "io.shared"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/read_warehouse_table.py",
+        "src/fabricops_kit/io/shared.py"
       ],
       "external_dependents_count": 10,
       "end_node_count": 9,
@@ -38322,6 +38371,18 @@
         "io.shared",
         "metadata",
         "pipeline"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/_profiling_adapters.py",
+        "src/fabricops_kit/_profiling_resolvers.py",
+        "src/fabricops_kit/_profiling_workflows.py",
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_profiling.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/guardrails.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py",
+        "src/fabricops_kit/pipeline.py"
       ],
       "external_dependents_count": 37,
       "end_node_count": 51,
@@ -44247,6 +44308,12 @@
         "governance_review",
         "io.shared"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_agreement.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py"
+      ],
       "external_dependents_count": 23,
       "end_node_count": 22,
       "architecture_violation_count": 3,
@@ -46643,6 +46710,9 @@
       "modules_touched": [
         "config"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py"
+      ],
       "external_dependents_count": 3,
       "end_node_count": 5,
       "architecture_violation_count": 0,
@@ -47196,6 +47266,13 @@
         "io.shared",
         "metadata",
         "pipeline"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_agreement.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py",
+        "src/fabricops_kit/pipeline.py"
       ],
       "external_dependents_count": 31,
       "end_node_count": 25,
@@ -49755,6 +49832,12 @@
         "io.shared",
         "metadata"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
+      ],
       "external_dependents_count": 28,
       "end_node_count": 17,
       "architecture_violation_count": 6,
@@ -51734,6 +51817,12 @@
         "io.shared",
         "metadata"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
+      ],
       "external_dependents_count": 28,
       "end_node_count": 17,
       "architecture_violation_count": 6,
@@ -53712,6 +53801,12 @@
         "governance_review",
         "io.shared",
         "metadata"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
       ],
       "external_dependents_count": 32,
       "end_node_count": 22,
@@ -56094,6 +56189,12 @@
         "io.shared",
         "metadata"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_agreement.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
+      ],
       "external_dependents_count": 31,
       "end_node_count": 21,
       "architecture_violation_count": 2,
@@ -58202,6 +58303,12 @@
         "data_agreement",
         "io.shared",
         "metadata"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_agreement.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
       ],
       "external_dependents_count": 34,
       "end_node_count": 28,
@@ -61584,6 +61691,12 @@
         "io.shared",
         "metadata"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/data_agreement.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
+      ],
       "external_dependents_count": 34,
       "end_node_count": 28,
       "architecture_violation_count": 2,
@@ -64682,6 +64795,11 @@
         "governance_review",
         "metadata"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/metadata.py"
+      ],
       "external_dependents_count": 9,
       "end_node_count": 6,
       "architecture_violation_count": 3,
@@ -65538,6 +65656,12 @@
         "governance_review",
         "io.shared",
         "metadata"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/governance_review.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py"
       ],
       "external_dependents_count": 16,
       "end_node_count": 13,
@@ -66843,6 +66967,11 @@
         "io.shared",
         "io.write_lakehouse_table"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/io/write_lakehouse_table.py"
+      ],
       "external_dependents_count": 11,
       "end_node_count": 10,
       "architecture_violation_count": 0,
@@ -67680,6 +67809,12 @@
         "io.shared",
         "metadata",
         "pipeline"
+      ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/metadata.py",
+        "src/fabricops_kit/pipeline.py"
       ],
       "external_dependents_count": 25,
       "end_node_count": 15,
@@ -69295,6 +69430,11 @@
         "io.shared",
         "pipeline"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/pipeline.py"
+      ],
       "external_dependents_count": 19,
       "end_node_count": 14,
       "architecture_violation_count": 1,
@@ -70634,6 +70774,11 @@
         "io.shared",
         "io.write_warehouse_table"
       ],
+      "source_python_files": [
+        "src/fabricops_kit/config.py",
+        "src/fabricops_kit/io/shared.py",
+        "src/fabricops_kit/io/write_warehouse_table.py"
+      ],
       "external_dependents_count": 9,
       "end_node_count": 9,
       "architecture_violation_count": 0,
@@ -71394,7 +71539,7 @@
       "suggested_inline_or_privatize": 11
     },
     "callable_inventory_metrics": {
-      "module_count": 20,
+      "module_count": 19,
       "total_callables": 320,
       "public_api_entrypoints": 26,
       "function_callables": 98,
