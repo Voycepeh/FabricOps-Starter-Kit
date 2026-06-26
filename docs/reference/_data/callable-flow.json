@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T13:07:03.135165Z",
+    "generated_at_utc": "2026-06-26T13:23:14.445587Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -8134,54 +8134,6 @@
     {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "function_name": "profile_dataframe",
-      "module": "data_profiling",
-      "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
-      "owner_file": "src/fabricops_kit/data_profiling/profile_dataframe.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
-      "source_start_line": 10,
-      "source_end_line": 65,
-      "function_type": "Shared helper",
-      "layer": "internal",
-      "review_status": "classification_pending",
-      "review_status_label": "Classification pending",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "profiling_entrypoint",
-        "public_stable"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "profiling_entrypoint",
-        "public_stable"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Profiling entrypoint, Public stable",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Next step",
-      "priority": "Low",
-      "signals": [
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 0,
-      "callers": [],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
-      "function_name": "profile_dataframe",
       "module": "data_profiling.profile_dataframe",
       "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
       "owner_file": "src/fabricops_kit/data_profiling/profile_dataframe.py",
@@ -8646,7 +8598,7 @@
         {
           "function": "profile_dataframe",
           "module": "data_profiling.profile_dataframe",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
           "docs_path": "docs/api/reference/profile_dataframe.md",
           "docs_url": "../../api/reference/profile_dataframe/",
@@ -34729,7 +34681,7 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "function_name": "profile_dataframe",
       "module": "data_profiling.profile_dataframe",
       "docs_path": "docs/api/reference/profile_dataframe.md",
@@ -34775,7 +34727,7 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
@@ -34814,7 +34766,7 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
@@ -72614,24 +72566,24 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 342,
+    "total_callables": 341,
     "function_type": {
       "Public function": 26,
-      "Shared helper": 77
+      "Shared helper": 76
     },
     "layer": {
       "public": 26,
-      "internal": 77
+      "internal": 76
     },
     "review_status": {
       "classified": 312,
-      "classification_pending": 30,
+      "classification_pending": 29,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 103
+      "function": 102
     },
     "callable_role_group": {
       "adapter": 17,
@@ -72640,7 +72592,7 @@
       "normalizer": 20,
       "other": 2,
       "property_method": 1,
-      "public_entrypoint": 27,
+      "public_entrypoint": 26,
       "registry_builder": 1,
       "resolver": 52,
       "utility": 129,
@@ -72659,7 +72611,7 @@
       "internal_workflow": 55,
       "lifecycle_method": 8,
       "property_method": 1,
-      "public_api_entrypoint": 27,
+      "public_api_entrypoint": 26,
       "registry_builder": 1,
       "result_model_class": 1,
       "schema_utility": 2,
@@ -72669,7 +72621,7 @@
     "recommended_action": {
       "Keep private helper": 135,
       "Merge into owner": 63,
-      "Next step": 62,
+      "Next step": 61,
       "Public API entrypoint": 26,
       "Remove redundant wrapper": 4,
       "Rename to shared helper": 16,
@@ -72685,10 +72637,10 @@
     },
     "callable_inventory_metrics": {
       "module_count": 17,
-      "total_callables": 342,
+      "total_callables": 341,
       "public_api_entrypoints": 26,
-      "function_callables": 103,
-      "supporting_functions": 77,
+      "function_callables": 102,
+      "supporting_functions": 76,
       "non_function_records": 22,
       "hidden_private_helpers": 217,
       "private_helpers_to_review": 217

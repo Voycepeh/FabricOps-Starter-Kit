@@ -1877,21 +1877,6 @@
     "fabricops_kit.data_profiling.profile_dataframe": {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "short_name": "profile_dataframe",
-      "module": "data_profiling",
-      "callable": "profile_dataframe",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe": {
-      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
-      "short_name": "profile_dataframe",
       "module": "data_profiling.profile_dataframe",
       "callable": "profile_dataframe",
       "docs_url": "/FabricOps-Starter-Kit/reference/profile_dataframe/",
@@ -2017,7 +2002,7 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+        "fabricops_kit.data_profiling.profile_dataframe",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
         "fabricops_kit.guardrails.enforce_profile_behavior",
         "fabricops_kit.pipeline._run_table_guardrails_workflow"
@@ -7421,10 +7406,11 @@
       "callable_count": 0,
       "internal_count": 0,
       "outbound_modules": [
-        "config"
+        "config",
+        "shared"
       ],
       "inbound_modules": [],
-      "outbound_count": 1,
+      "outbound_count": 2,
       "inbound_count": 0
     },
     "data_profiling.profile_dataframe": {

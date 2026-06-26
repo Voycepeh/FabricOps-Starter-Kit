@@ -486,9 +486,11 @@ def resolve_call_target(
             module_candidate = ".".join(imported_short[:-1])
             resolved_module = module_candidate.removeprefix(f"{PACKAGE_NAME}.")
             if imported.startswith(PACKAGE_NAME) or resolved_module in package_module_names:
+                exported = exported_symbol_map.get(resolved_symbol)
+                target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
                 callee_kind = _classify_callee(resolved_module, resolved_symbol)
                 return (
-                    f"{PACKAGE_NAME}.{resolved_module}.{resolved_symbol}",
+                    f"{PACKAGE_NAME}.{target_module}.{resolved_symbol}",
                     "cross_module" if resolved_module != module else "same_module",
                     callee_kind,
                 )
@@ -501,15 +503,18 @@ def resolve_call_target(
         resolved_owner = mapped_owner.removeprefix(f"{PACKAGE_NAME}.")
         if mapped_owner.startswith(PACKAGE_NAME) or resolved_owner in package_module_names or short_owner in package_module_names:
             resolved_module = resolved_owner if resolved_owner in package_module_names else short_owner
+            exported = exported_symbol_map.get(member)
+            target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
             callee_kind = _classify_callee(resolved_module, member)
-            return f"{PACKAGE_NAME}.{resolved_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
+            return f"{PACKAGE_NAME}.{target_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
         return None, "unresolved", "unresolved"
 
     # public exported symbol map fallback (bare-name cross-module only for exported mapping)
     exported = exported_symbol_map.get(raw_name)
     if exported and exported.actual_module != module:
         callee_kind = _classify_callee(exported.actual_module, raw_name)
-        return f"{PACKAGE_NAME}.{exported.actual_module}.{raw_name}", "cross_module", callee_kind
+        target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+        return f"{PACKAGE_NAME}.{target_module}.{raw_name}", "cross_module", callee_kind
 
     return None, "unresolved", "unresolved"
 
@@ -528,6 +533,13 @@ def build_callable_graph(
     module_summaries: list[dict[str, Any]] = []
     calls_modules: dict[str, set[str]] = {m: set() for m in package_modules}
     called_by_modules: dict[str, set[str]] = {m: set() for m in package_modules}
+
+    def canonical_qualified_name(module: str, callable_name: str) -> str:
+        exported = symbol_map.get(callable_name)
+        if exported and exported.actual_module == module:
+            target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+            return f"{PACKAGE_NAME}.{target_module}.{callable_name}"
+        return f"{PACKAGE_NAME}.{module}.{callable_name}"
 
     for module, info in module_data.items():
         module_tree = ast.parse(source_module_path(module).read_text(encoding="utf-8"))
@@ -558,7 +570,7 @@ def build_callable_graph(
             exported = callable_name in exported_names
             if not exported and role not in {"callable", "internal"}:
                 role = "internal"
-            qualified_name = f"{PACKAGE_NAME}.{module}.{callable_name}"
+            qualified_name = canonical_qualified_name(module, callable_name)
             key = (module, callable_name)
             if key not in node_keys:
                 node_keys.add(key)
@@ -595,7 +607,7 @@ def build_callable_graph(
                     if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         callable_nodes.append((f"{node.name}.{child.name}", child))
         for caller_name, node in callable_nodes:
-            caller_qn = f"{PACKAGE_NAME}.{module}.{caller_name}"
+            caller_qn = canonical_qualified_name(module, caller_name)
             local_module_aliases, local_symbol_aliases = parse_import_aliases(
                 [n for n in ast.walk(node) if isinstance(n, (ast.Import, ast.ImportFrom))]
             )
@@ -5146,7 +5158,7 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
-    public_qn_by_name = {name: f"{PACKAGE_NAME}.{symbol.actual_module}.{name}" for name, symbol in symbol_map.items()}
+    public_qn_by_name = {name: f"{PACKAGE_NAME}.{(symbol.public_module if symbol.public_module == 'data_profiling' else symbol.actual_module)}.{name}" for name, symbol in symbol_map.items()}
     internalized_public_helpers = {
         "read_lakehouse_csv",
         "read_lakehouse_excel",

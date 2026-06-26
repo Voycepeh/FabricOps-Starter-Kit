@@ -834,7 +834,7 @@
     "possible_grouping_mismatches": []
   },
   "profile_dataframe": {
-    "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+    "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
     "unique_internal_helper_count": 4,
     "repeated_helpers": [
       {

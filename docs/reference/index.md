@@ -31,8 +31,8 @@ Use the finder below to look up the 26 public Starter Kit functions. Implementat
     Maintainer inventory metrics:
 
     - Source Python files count: 17
-    - Total callables: 342
-    - Supporting functions: 77
+    - Total callables: 341
+    - Supporting functions: 76
     - Private helpers to review: 217
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
@@ -86,7 +86,7 @@ Use the finder below to look up the 26 public Starter Kit functions. Implementat
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 10</span></summary><ul><li><code>profile_dataframe_core</code></li><li><code>build_audit_timestamp_expr</code></li><li><code>get_audit_timezone</code></li><li><code>build_distribution_summaries</code></li><li><code>is_min_max_supported_type</code></li><li><code>resolve_profiled_columns</code></li><li><code>_validate_audit_timezone</code></li><li><code>_build_categorical_distribution</code></li><li><code>_build_numeric_distribution</code></li><li><code>_numeric_bin_edges</code></li></ul></details>
+
   </div>
 </article>
 <article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="io" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric-resolved path.">
