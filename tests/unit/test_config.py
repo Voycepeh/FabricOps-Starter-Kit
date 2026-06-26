@@ -627,7 +627,7 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     """Verify generated widget inventory reflects the shared workflow role split."""
     import json
 
-    inventory = json.loads(Path("docs/reference/_data/callable-flow.json").read_text(encoding="utf-8"))["function_inventory"]
+    inventory = json.loads(Path("docs/reference/_data/function-call-graph.json").read_text(encoding="utf-8"))["function_inventory"]
     rows = {row["qualified_name"]: row for row in inventory}
     for qn in [
         "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",

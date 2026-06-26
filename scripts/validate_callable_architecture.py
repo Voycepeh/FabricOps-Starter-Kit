@@ -17,10 +17,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src" / "fabricops_kit"
-CALLABLE_FLOW_PATH = ROOT / "docs" / "reference" / "_data" / "callable-flow.json"
+CALLABLE_FLOW_PATH = ROOT / "docs" / "reference" / "_data" / "function-call-graph.json"
 OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-ownership-plan.json"
-DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
-INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
+DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
+INVENTORY_PATH = ROOT / "docs" / "assets" / "function-inventory.html"
 
 VISIBLE_FUNCTION_TYPES = {"Public function", "Shared helper"}
 PRIVATE_HELPER_TYPE = "Private helper"
@@ -463,7 +463,7 @@ def validate(flow: dict[str, Any] | None = None) -> ValidationResult:
         try:
             flow = _load_flow()
         except (OSError, json.JSONDecodeError) as exc:
-            return ValidationResult(failures=[f"callable-flow.json cannot be loaded or parsed: {exc}"], warnings=[])
+            return ValidationResult(failures=[f"function-call-graph.json cannot be loaded or parsed: {exc}"], warnings=[])
 
     failures = [finding for finding in _generated_failures(flow) if classify_generated_finding(finding) == "failure"]
     warnings: list[str] = []

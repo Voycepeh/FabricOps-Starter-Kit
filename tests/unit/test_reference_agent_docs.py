@@ -238,21 +238,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     inventory_path = ROOT / "docs" / "assets" / "function-inventory.html"
     exported_symbols = set(_exported_symbols())
 
-    legacy_flow_page = REFERENCE_DIR / "callable-flow.md"
-    legacy_flow_data = REFERENCE_DIR / "_data" / "callable-flow.json"
-    legacy_dashboard_path = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
-    legacy_inventory_path = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
-
     assert flow_page.exists()
     assert dashboard_path.exists()
     assert inventory_path.exists()
-    assert legacy_flow_page.exists()
-    assert legacy_dashboard_path.exists()
-    assert legacy_inventory_path.exists()
-    assert not legacy_flow_data.exists()
-    assert "function-call-graph.md" in legacy_flow_page.read_text(encoding="utf-8")
-    assert "function-call-graph-dashboard.html" in legacy_dashboard_path.read_text(encoding="utf-8")
-    assert "function-inventory.html" in legacy_inventory_path.read_text(encoding="utf-8")
 
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Function Call Graph" in flow_text
@@ -269,7 +257,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## Generated outputs" in flow_text
     assert "## Preferred callable file pattern" not in flow_text
     assert not (ROOT / "docs" / "reference" / "callable-architecture.md").exists()
-    assert "Callable Architecture Pattern" not in (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     assert "AI can code fast." in flow_text
     assert "messy integration patterns" in flow_text
     assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text

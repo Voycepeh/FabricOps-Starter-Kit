@@ -37,10 +37,6 @@ FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-gra
 FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
 FUNCTION_CALL_GRAPH_DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
 FUNCTION_INVENTORY_PATH = ROOT / "docs" / "assets" / "function-inventory.html"
-LEGACY_CALLABLE_FLOW_PAGE_PATH = ROOT / "docs" / "reference" / "callable-flow.md"
-LEGACY_CALLABLE_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "callable-flow.json"
-LEGACY_REFACTOR_DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
-LEGACY_REFACTOR_INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
@@ -3924,29 +3920,6 @@ Always call out tests required before changes.`}function refactorPacket(){const 
 
 
 
-def _html_redirect_page(*, title: str, target: str) -> str:
-    """Return a small compatibility redirect page for renamed generated assets."""
-    escaped_title = html.escape(title)
-    escaped_target = html.escape(target, quote=True)
-    return (
-        "<!doctype html>\n"
-        "<html lang=\"en\">\n"
-        "<head>\n"
-        "<meta charset=\"utf-8\">\n"
-        f"<meta http-equiv=\"refresh\" content=\"0; url={escaped_target}\">\n"
-        f"<title>{escaped_title}</title>\n"
-        "</head>\n"
-        "<body>\n"
-        f"<p>This generated page was renamed. Open <a href=\"{escaped_target}\">{escaped_title}</a>.</p>\n"
-        "</body>\n"
-        "</html>\n"
-    )
-
-
-def _markdown_redirect_page(*, title: str, target: str) -> str:
-    """Return a small compatibility markdown page for renamed generated docs."""
-    return f"# {title}\n\nThis generated page was renamed. Open [{title}]({target}).\n"
-
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global function call graph Markdown page."""
     del flow_data
@@ -5799,25 +5772,6 @@ def main() -> None:
         encoding="utf-8",
         newline="\n",
     )
-    LEGACY_REFACTOR_DASHBOARD_PATH.write_text(
-        _html_redirect_page(
-            title="Function Call Graph Dashboard",
-            target="function-call-graph-dashboard.html",
-        ),
-        encoding="utf-8",
-        newline="\n",
-    )
-    LEGACY_REFACTOR_INVENTORY_PATH.write_text(
-        _html_redirect_page(title="Function Inventory", target="function-inventory.html"),
-        encoding="utf-8",
-        newline="\n",
-    )
-    LEGACY_CALLABLE_FLOW_PAGE_PATH.write_text(
-        _markdown_redirect_page(title="Function Call Graph", target="function-call-graph.md"),
-        encoding="utf-8",
-        newline="\n",
-    )
-    LEGACY_CALLABLE_FLOW_DATA_PATH.unlink(missing_ok=True)
     _remove_stale_function_taxonomy_audit()
 
 
