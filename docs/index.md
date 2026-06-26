@@ -72,7 +72,7 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="assets/callable-functions-dashboard.html">
     <span class="fabricops-landing-card__title">Callable Flow Dashboard</span>
-    <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, modules touched, and architecture signals.</span>
+    <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, source Python files, and architecture signals.</span>
     <span class="fabricops-landing-card__meta">Open Callable Flow Dashboard</span>
   </a>
 

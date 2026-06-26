@@ -761,6 +761,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "downstream_count",
         "max_depth",
         "modules_touched",
+        "source_python_files",
         "architecture_violation_count",
         "architecture_violation_breakdown",
         "helper_cleanup_candidates",
@@ -771,6 +772,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "end_node_count",
     }
     assert all(set(flow) == expected_public_flow_keys for flow in public_flows)
+    assert all(flow["source_python_files"] for flow in public_flows)
+    assert all(path.endswith(".py") for flow in public_flows for path in flow["source_python_files"])
     assert any(
         callee["architecture_result"] in {"Warning", "Violation"}
         for flow in public_flows
