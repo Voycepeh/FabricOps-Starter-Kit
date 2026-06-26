@@ -123,7 +123,6 @@ def test_landing_stats_match_reference_sources() -> None:
     metrics = summary_counts["callable_inventory_metrics"]
     assert stats["function_callable_count"] == summary_counts["callable_kind"]["function"]
     assert stats["supporting_function_count"] == metrics["supporting_functions"]
-    assert stats["non_function_record_count"] == metrics["non_function_records"]
     assert stats["metadata_table_count"] == len(metadata_pages)
 
 
@@ -466,7 +465,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "inline single-use helper" not in dashboard_text
 
     assert "Code Inventory" in inventory_text
-    assert "Inspect supporting implementation details that complement the callable flow architecture view." in normalized_inventory_text
+    assert "Inspect function-level callable support assets that complement the callable flow architecture view." in normalized_inventory_text
     assert "Generated at:" in inventory_text
     assert "Generated at:</strong>" in inventory_text
     assert "SGT" in inventory_text
@@ -496,20 +495,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert "Internal function" not in generated_text
     assert "Shared helpers" in inventory_text
     assert "Private helpers" in inventory_text
-    assert "Non functions" in inventory_text
+    assert "Non functions" not in inventory_text
     assert "Suggested cleanup" in inventory_text
     assert "Public callables" in inventory_text
-    assert "Total code assets" in inventory_text
+    assert "Total function-level code assets" in inventory_text
     assert "User facing callable functions." in inventory_text
     assert "Reusable utility functions intentionally shared across callable files." in inventory_text
     assert "Private helpers owned by one standalone callable file." in inventory_text
-    assert "Classes, methods, constants, registries, config objects, metadata, and other support assets." in inventory_text
     assert "Only actionable records that need review or cleanup." in inventory_text
-    assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
-    assert "Use this inventory to inspect supporting implementation details that are not fully visible in callable flows, including internal helpers, methods, classes, orphaned utilities, and refactor candidates." in normalized_inventory_text
+    assert "This inventory focuses on function-level callable support assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
+    assert "Use this inventory to inspect function-level callable support assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
     assert "giant review table" not in inventory_text
-    assert "summaryCounts.callable_inventory_metrics" in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
     assert ".surface-cardstrong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem" in compact_inventory_text
     assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700" in compact_inventory_text
@@ -518,7 +515,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
     assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
-    assert "Showing ${visibleRows.length} support inventory records of ${total} total generated code assets." in normalized_inventory_text
+    assert "Showing ${visibleRows.length} function-level inventory records of ${total} total generated function-level code assets." in normalized_inventory_text
     assert "Callable metrics are generated from the callable inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
@@ -542,7 +539,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callable" in inventory_text
     assert "Shared helper" in inventory_text
     assert "Private helper" in inventory_text
-    assert "Non functions" in inventory_text
+    assert "Non functions" not in inventory_text
     assert "Usage scope" in inventory_text
     assert "Boundary violation" in inventory_text
     assert "Recommended action" in inventory_text
@@ -626,7 +623,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
     assert summary_counts["callable_kind"]["function"] == 102
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
-    assert flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"] == 0
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
         "public_api_entrypoints",
@@ -658,7 +654,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert len(function_inventory) == summary_counts["total_callables"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert all(row["callable_kind"] == "function" for row in function_inventory if row["layer"] != "supporting_object")
+    assert all(row["callable_kind"] == "function" for row in function_inventory)
+    assert "supporting_object" not in {row["layer"] for row in function_inventory}
     assert all(row["recommended_action"] for row in function_inventory)
 
     private_helper_rows = [row for row in function_inventory if row["layer"] == "private_helper"]
@@ -2155,7 +2152,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "newURL('reference/_data/callable-flow.json',document.baseURI).href" in compact_inventory_text
     assert "Loading callable-flow data..." in inventory_text
     assert "Loaded ${inventory.length} code inventory records" in inventory_text
-    assert "No supporting code assets found for the current filters." in inventory_text
+    assert "No function-level callable support assets found for the current filters." in inventory_text
     assert "No selected code assets. Clear the Selected focus or select visible rows first." in inventory_text
     assert "Inventory data is missing from callable-flow.json. Regenerate the callable flow export." in inventory_text
     assert "Failed to load callable-flow data. URL:" in inventory_text
@@ -2167,26 +2164,24 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert "function yamlPacket(packet)" in inventory_text
     assert 'id="inventorySummaryCards"' in inventory_text
-    assert "function canonicalNonFunctionCount()" in inventory_text
-    assert "metrics.non_function_records!==undefined" in compact_inventory_text
-    assert "return Number(metrics.non_function_records)||0" in inventory_text
-    assert "summaryCounts.supporting_objects!==undefined" in compact_inventory_text
-    assert "return inventory.filter(i=>itemTypeKey(i)==='supporting_object').length" in inventory_text
-    assert "nonFunctionCount=canonicalNonFunctionCount()" in compact_inventory_text
-    assert "const ITEM_TYPE_LABELS={public:'Public callable',internal:'Shared helper',private_helper:'Private helper',supporting_object:'Non functions'}" in inventory_text
-    assert '<option value="supporting_object">Non functions</option>' in inventory_text
+    assert "function canonicalNonFunctionCount()" not in inventory_text
+    assert "non_function_records" not in inventory_text
+    assert "supporting_objects" not in inventory_text
+    assert "supporting_object" not in inventory_text
+    assert "nonFunctionCount=canonicalNonFunctionCount()" not in compact_inventory_text
+    assert "const ITEM_TYPE_LABELS={public:'Public callable',internal:'Shared helper',private_helper:'Private helper'}" in inventory_text
+    assert '<option value="supporting_object">Non functions</option>' not in inventory_text
     assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" in inventory_text
     assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!supportFocus(i))return false" in inventory_text
     assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected code assets. Clear the Selected focus or select visible rows first.'" in inventory_text
     for label in [
-        "Total code assets",
+        "Total function-level code assets",
         "Public callables",
         "Shared helpers",
         "Private helpers",
-        "Non functions",
         "Suggested cleanup",
         "Public callables",
-        "Total code assets",
+        "Total function-level code assets",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
@@ -2234,35 +2229,21 @@ def test_callable_inventory_selected_focus_empty_state_is_clear() -> None:
     assert "state.focusFilter==='selected'&&!state.selected.has(i.qualified_name)" in inventory_text
 
 
-def test_callable_inventory_non_functions_filter_works_outside_selected_focus() -> None:
-    """Verify Non functions filtering can match summary count when focus is all or cleanup."""
-    flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
-    inventory = flow_data["function_inventory"]
-    non_function_rows = [row for row in inventory if row["layer"] == "supporting_object"]
-
-    assert len(non_function_rows) == flow_data["summary_counts"]["callable_inventory_metrics"]["non_function_records"]
-    assert len(non_function_rows) == 22
-
-
 def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
-    """Verify item type filter keys match generated inventory records and summary metrics."""
+    """Verify item type filter keys match generated function-level inventory records."""
     flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8"))
     inventory = flow_data["function_inventory"]
-    metrics = flow_data["summary_counts"]["callable_inventory_metrics"]
 
     expected_counts = {
         "public": 26,
         "internal": 76,
         "private_helper": 217,
-        "supporting_object": metrics["non_function_records"],
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 
     assert actual_counts == expected_counts
-    assert actual_counts["supporting_object"] == 0
-    assert actual_counts["supporting_object"] == metrics["non_function_records"]
-    assert all(row["function_type"] == "Non functions" for row in inventory if row["layer"] == "supporting_object")
-
+    assert "supporting_object" not in {row["layer"] for row in inventory}
+    assert all(row["function_type"] != "Non functions" for row in inventory)
 
 def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
     """Verify inventory YAML helpers emit escaped JavaScript newline strings."""
@@ -2278,7 +2259,7 @@ def test_callable_inventory_generated_html_smoke_contract() -> None:
     """Verify generated inventory HTML keeps required entrypoints and no broken YAML strings."""
     inventory_text = (ROOT / "docs" / "assets" / "callable-functions-inventory.html").read_text(encoding="utf-8")
 
-    assert "function canonicalNonFunctionCount()" in inventory_text
+    assert "function canonicalNonFunctionCount()" not in inventory_text
     assert "function loadData()" in inventory_text
     assert "loadData();" in inventory_text
     assert "join('\n')" not in inventory_text

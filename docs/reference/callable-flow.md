@@ -93,9 +93,9 @@ The point is to avoid letting fast prototypes quietly become long term technical
 Callable Flow has two generated review surfaces:
 
 - [Callable Architecture](../assets/callable-functions-dashboard.html) starts from notebook-facing public callables and shows the selected callable's flow, downstream depth, architecture findings, merge candidates, and suggested next step.
-- [Code Inventory](../assets/callable-functions-inventory.html) supports deeper inspection of lower-level implementation assets, including shared helpers, private helpers, methods, classes, and other support assets.
+- [Code Inventory](../assets/callable-functions-inventory.html) supports deeper inspection of function-level callable support assets, including public callables, shared helpers, private helpers, and cleanup candidates.
 
-Use the Architecture page first when you are deciding whether a public callable is clean enough to keep. Use Code Inventory when the flow points to support code that needs closer review or when you need to batch related support assets for cleanup planning.
+Use the Architecture page first when you are deciding whether a public callable is clean enough to keep. Use Code Inventory when the flow points to function-level support code that needs closer review or when you need to batch related function assets for cleanup planning.
 
 ## Cleanup packets
 
@@ -107,7 +107,7 @@ The packet gives AI enough context to help with the next step without asking it 
 
 ![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
 
-The Architecture page exports `fabricops_public_callable_flow_cleanup_packet` for one selected public callable flow. The Code Inventory page exports `fabricops_support_inventory_cleanup_packet` for selected support assets.
+The Architecture page exports `fabricops_public_callable_flow_cleanup_packet` for one selected public callable flow. The Code Inventory page exports `fabricops_support_inventory_cleanup_packet` for selected function-level support assets.
 
 Both packet types are designed to keep the cleanup focused on the selected callable or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
 
