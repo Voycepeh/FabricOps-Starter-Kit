@@ -155,13 +155,13 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
 
 
 def test_supported_public_api_matches_generated_inventory_classification():
-    """Verify contract entries remain generated Callable inventory entries."""
+    """Verify contract entries remain generated function inventory entries."""
     root = Path(__file__).parents[2]
     function_manifest = json.loads(
         (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
     )
     callable_flow = json.loads(
-        (root / "docs" / "reference" / "_data" / "callable-flow.json").read_text(encoding="utf-8")
+        (root / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
     )
 
     manifest_public = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Callable"}

@@ -566,7 +566,7 @@ def test_no_source_imports_io_core_after_shared_migration():
 def test_callable_architecture_pattern_is_not_user_facing_docs():
     """Verify Fabric IO architecture guidance is not published as a user docs page."""
     assert not Path("docs/reference/callable-architecture.md").exists()
-    assert "Callable Architecture Pattern" not in Path("mkdocs.yml").read_text(encoding="utf-8")
+    assert "callable-architecture.md" not in Path("mkdocs.yml").read_text(encoding="utf-8")
     assert "Fabric IO callable file pattern" in Path("AGENTS.md").read_text(encoding="utf-8")
 
 

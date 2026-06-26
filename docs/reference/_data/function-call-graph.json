@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T13:38:04.036956Z",
-    "data_source": "callable-flow.json"
+    "generated_at_utc": "2026-06-26T19:19:36.893555Z",
+    "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
     "long_call_chain_depth": 4,
@@ -71324,7 +71324,6 @@
       "public_api_entrypoints": 26,
       "function_callables": 102,
       "supporting_functions": 76,
-      "non_function_records": 0,
       "hidden_private_helpers": 217,
       "private_helpers_to_review": 217
     },
