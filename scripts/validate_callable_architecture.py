@@ -22,9 +22,9 @@ OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-o
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "callable-functions-dashboard.html"
 INVENTORY_PATH = ROOT / "docs" / "assets" / "callable-functions-inventory.html"
 
-VISIBLE_FUNCTION_TYPES = {"Public function", "Internal function"}
+VISIBLE_FUNCTION_TYPES = {"Public function", "Shared helper"}
 PRIVATE_HELPER_TYPE = "Private helper"
-PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Internal", PRIVATE_HELPER_TYPE}
+PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Shared helper", PRIVATE_HELPER_TYPE}
 ALLOWED_ARCHITECTURE_WARNING_TYPES = {"Same-file private dependency"}
 ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {"Cross-file private dependency"}
 LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
@@ -37,7 +37,7 @@ LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
 }
 VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
-OLD_VISIBLE_LAYER_LABELS = {"Public API", "Internal helper", "Utility", "Adapter", "Workflow", "Private"}
+OLD_VISIBLE_LAYER_LABELS = {"Public API", "Utility", "Adapter", "Workflow", "Private"}
 CALLABLE_FILE_PATTERN = "Public callable file -> domain shared helper -> same-file private helper"
 DOMAIN_SHARED_HELPER_FILES = {"src/fabricops_kit/io/shared.py"}
 
@@ -315,7 +315,7 @@ def _source_failures() -> list[str]:
             if fn.layer == "public" and callee.layer == "public":
                 failures.append(f"Public function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
             if fn.layer == "internal" and callee.layer == "public":
-                failures.append(f"Internal function calls public function: {fn.qualified_name} -> {callee.qualified_name}")
+                failures.append(f"Shared helper calls public function: {fn.qualified_name} -> {callee.qualified_name}")
 
     public_names = {fn.name for fn in functions.values() if fn.layer == "public"}
     migrated_public_names = {
@@ -359,7 +359,7 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
     metrics = summary.get("callable_inventory_metrics", {})
 
     public_rows = [row for row in inventory if row.get("function_type") == "Public function"]
-    internal_rows = [row for row in inventory if row.get("function_type") == "Internal function"]
+    internal_rows = [row for row in inventory if row.get("function_type") == "Shared helper"]
     private_rows = [row for row in inventory if str(row.get("function_name", "")).split(".")[-1].startswith("_") or row.get("layer") == PRIVATE_HELPER_LAYER]
 
     for row in inventory:
@@ -369,11 +369,11 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
         layer = row.get("layer")
         if name.split(".")[-1].startswith("_"):
             if function_type != PRIVATE_HELPER_TYPE or layer != PRIVATE_HELPER_LAYER:
-                failures.append(f"Private helper is counted as Public/Internal architecture row: {qn}")
+                failures.append(f"Private helper is counted as Public/Shared helper architecture row: {qn}")
             if row.get("architecture_signals") or row.get("recommended_action") == "Architecture violation":
                 failures.append(f"Private helper contributes architecture violations: {qn}")
         elif function_type not in VISIBLE_FUNCTION_TYPES:
-            failures.append(f"Non Public/Internal function type emitted for visible function {qn}: {function_type!r}")
+            failures.append(f"Non Public/Shared helper function type emitted for visible function {qn}: {function_type!r}")
         if function_type in VISIBLE_FUNCTION_TYPES and layer not in VISIBLE_LAYERS:
             failures.append(f"Visible function type has non public/internal layer for {qn}: {layer!r}")
         if function_type in OLD_VISIBLE_LAYER_LABELS or layer in OLD_VISIBLE_LAYER_LABELS:
@@ -390,11 +390,11 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
         "public": len(public_rows),
         "internal": len(internal_rows),
     }:
-        failures.append("Visible layer counts do not match Public/Internal inventory rows")
+        failures.append("Visible layer counts do not match Public/Shared helper inventory rows")
     if function_type_counts.get("Public function") != len(public_rows):
         failures.append("Private helpers are mixed into Public function counts")
-    if function_type_counts.get("Internal function") != len(internal_rows):
-        failures.append("Private helpers are mixed into Internal function counts")
+    if function_type_counts.get("Shared helper") != len(internal_rows):
+        failures.append("Private helpers are mixed into Shared helper counts")
     if metrics.get("function_callables") != len(public_rows) + len(internal_rows):
         failures.append("Private helpers are counted in default function callable metrics")
     if metrics.get("private_helpers_to_review", 0) != len(private_rows):

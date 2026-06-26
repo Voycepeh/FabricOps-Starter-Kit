@@ -113,7 +113,7 @@ def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
     page = _reference_index()
 
     assert "“Used in” means direct starter notebook code-cell invocation" in page
-    assert "not import-only, markdown-only, generated metadata, example usage, or internal helper usage" in page
+    assert "not import-only, markdown-only, generated metadata, example usage, or implementation helper usage" in page
 
 
 def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:

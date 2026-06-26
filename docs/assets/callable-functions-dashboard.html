@@ -854,7 +854,7 @@
         architecture risk.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-26 00:30 SGT<span
+        <strong>Generated at:</strong> 2026-06-26 14:20 SGT<span
           ><strong>Data source:</strong> callable-flow.json</span
         >
       </p>
@@ -1047,7 +1047,7 @@
           subtitle:
             "Selected cleanup should preserve existing public callable behavior and avoid breaking current users.",
           promptInstruction:
-            "Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Internal helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.",
+            "Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.",
           className: "compat-mode-safe",
         },
         allow_breaking_changes: {
@@ -1975,7 +1975,7 @@ ${meta.label}
 Compatibility instruction:
 ${meta.promptInstruction}
 
-If compatibility mode is “Preserve backwards compatibility”, preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Internal helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.
+If compatibility mode is “Preserve backwards compatibility”, preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.
 
 If compatibility mode is “Allow breaking changes”, propose cleaner breaking changes where they improve the architecture. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.
 

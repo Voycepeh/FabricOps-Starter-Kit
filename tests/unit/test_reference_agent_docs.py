@@ -274,7 +274,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Use the Architecture page first" in flow_text
     assert "Use Code Inventory" in flow_text
     assert "## Callable helper summary" not in flow_text
-    assert "## Internal helper nesting inventory" not in flow_text
+    assert "## Implementation helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
     assert "refactor reason" not in flow_text.lower()
     for stale_flow_phrase in [
@@ -336,7 +336,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "functionflowSignalChips(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
     assert "Public callable findings</h3>" not in dashboard_text
     assert "Architecture findings inside this flow" not in dashboard_text
-    assert "Internal helper cleanup candidates</h3>" not in dashboard_text
+    assert "Implementation helper cleanup candidates</h3>" not in dashboard_text
     assert "helper_tags" in dashboard_text
     assert "Inspect the selected public callable and its call flow." in dashboard_text
     assert "Resolve true cross-file private dependency violations first." in dashboard_text
@@ -491,15 +491,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert "headerp{margin:" in common_shell and "color:#475569" in common_shell
     assert "inventorySummaryCards" in inventory_text
     assert "function renderInventoryCards()" in inventory_text
-    assert "Shared functions" in inventory_text
-    assert "Private functions" in inventory_text
+    for generated_text in [dashboard_text, inventory_text, flow_text]:
+        assert "Internal helper" not in generated_text
+        assert "Internal function" not in generated_text
+    assert "Shared helpers" in inventory_text
+    assert "Private helpers" in inventory_text
     assert "Non functions" in inventory_text
     assert "Suggested cleanup" in inventory_text
     assert "Public callables" in inventory_text
     assert "Total code assets" in inventory_text
     assert "User facing callable functions." in inventory_text
     assert "Reusable utility functions intentionally shared across callable files." in inventory_text
-    assert "Internal helpers owned by one standalone callable file." in inventory_text
+    assert "Private helpers owned by one standalone callable file." in inventory_text
     assert "Classes, methods, constants, registries, config objects, metadata, and other support assets." in inventory_text
     assert "Only actionable records that need review or cleanup." in inventory_text
     assert "The callable flow page is the source of truth for public callable architecture" in normalized_inventory_text
@@ -537,8 +540,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Item type" in inventory_text
     assert "Suggested cleanup" in inventory_text
     assert "Public callable" in inventory_text
-    assert "Shared function" in inventory_text
-    assert "Private function" in inventory_text
+    assert "Shared helper" in inventory_text
+    assert "Private helper" in inventory_text
     assert "Non functions" in inventory_text
     assert "Usage scope" in inventory_text
     assert "Boundary violation" in inventory_text
@@ -639,7 +642,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     function_inventory = flow_data["function_inventory"]
 
     assert summary_counts["layer"]["public"] == len(exported_symbols)
-    assert set(summary_counts["function_type"]) == {"Public function", "Internal function"}
+    assert set(summary_counts["function_type"]) == {"Public function", "Shared helper"}
     assert summary_counts["callable_inventory_metrics"]["function_callables"] == sum(
         summary_counts["function_type"].values()
     )
@@ -667,9 +670,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["owner_function"] or row["usage_scope"] == "unused" for row in private_helper_rows)
     assert all(row["owner_file"] for row in private_helper_rows)
     assert any(row["leaks_outside_owner_file"] for row in private_helper_rows)
-    assert {"Keep private helper", "Merge into owner", "Rename to internal function", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
+    assert {"Keep private helper", "Merge into owner", "Rename to shared helper", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
-    assert sum(1 for row in function_inventory if row["function_type"] == "Internal function") == summary_counts["function_type"]["Internal function"]
+    assert sum(1 for row in function_inventory if row["function_type"] == "Shared helper") == summary_counts["function_type"]["Shared helper"]
     assert any(
         callee["function_type"] == "Private helper"
         for flow in public_flows
@@ -734,7 +737,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "focused cleanup packets as JSON or YAML" in callable_flow_text
     assert "fabricops_public_callable_flow_cleanup_packet" in callable_flow_text
     assert "fabricops_support_inventory_cleanup_packet" in callable_flow_text
-    assert "Public callables → Internal helpers → Utility callables" not in callable_flow_text
+    assert "Public callables → Shared helpers → Utility callables" not in callable_flow_text
     assert "Internal-to-internal calls are valid" not in callable_flow_text
     assert "Role group = broad job of the callable." not in callable_flow_text
     serialized_flow = json.dumps(flow_data)
@@ -921,7 +924,7 @@ def test_callable_pages_embed_title_first_collapsed_call_flow() -> None:
         assert "Unique internal/private helpers:" not in text, page
         assert "Internal/private helpers shown here are implementation details, not public API" not in text, page
         assert '??? info "Nested helper functions:' not in text, page
-        assert '??? info "Internal helpers used:' not in text, page
+        assert '??? info "Implementation helpers used:' not in text, page
         assert 'class="reference-helper-groups"' not in text, page
         assert '??? example "View helper source by area"' not in text, page
         assert '??? example "Source code"' not in text, page
@@ -1034,7 +1037,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     assert "Dependency data is generated from the callable architecture inventory." in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
-    assert "Internal helper count: 11" not in text
+    assert "Implementation helper count: 11" not in text
     assert 'class="reference-helper-groups"' not in implementation_section
     assert re.search(
         r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline\.py#L\d+(?:-L\d+)?"',
@@ -1052,7 +1055,7 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     implementation_section = text.split("## See also", 1)[0]
 
     assert implementation_section.count('??? info "Downstream callables: 14"') == 1
-    assert '??? info "Internal helpers used:' not in implementation_section
+    assert '??? info "Implementation helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert (
         "Unique internal/private helpers: 11. Repeated calls may appear in multiple branches."
@@ -1649,13 +1652,13 @@ def test_callable_architecture_validation_rejects_private_visible_rows(monkeypat
             {
                 "qualified_name": "fabricops_kit.example._private_helper",
                 "function_name": "_private_helper",
-                "function_type": "Internal function",
+                "function_type": "Shared helper",
                 "layer": "internal",
                 "callable_kind": "function",
             }
         ],
         "summary_counts": {
-            "function_type": {"Internal function": 1},
+            "function_type": {"Shared helper": 1},
             "layer": {"internal": 1},
             "public_api_surface": {"public_api_entrypoints": 0},
             "callable_inventory_metrics": {"total_callables": 1},
@@ -1672,7 +1675,7 @@ def test_callable_architecture_validation_rejects_private_visible_rows(monkeypat
 
     failures = validator._failures(flow)
 
-    assert any("Private helper is counted as Public/Internal" in failure for failure in failures)
+    assert any("Private helper is counted as Public/Shared helper" in failure for failure in failures)
 
 
 def test_callable_architecture_validation_allows_private_helper_review_rows(monkeypatch, tmp_path) -> None:
@@ -1692,7 +1695,7 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
             }
         ],
         "summary_counts": {
-            "function_type": {"Public function": 0, "Internal function": 0},
+            "function_type": {"Public function": 0, "Shared helper": 0},
             "layer": {"public": 0, "internal": 0},
             "public_api_surface": {"public_api_entrypoints": 0, "architecture_violations": 0},
             "callable_inventory_metrics": {"function_callables": 0, "private_helpers_to_review": 1},
@@ -1770,7 +1773,7 @@ def test_callable_architecture_validation_allows_private_helpers_in_public_flow(
             {"qualified_name": second_helper_qn, "function_name": "_nested_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
         ],
         "summary_counts": {
-            "function_type": {"Public function": 1, "Internal function": 0},
+            "function_type": {"Public function": 1, "Shared helper": 0},
             "layer": {"public": 1, "internal": 0},
             "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 0},
             "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 2},
@@ -1808,7 +1811,7 @@ def test_callable_architecture_validation_rejects_supporting_objects_in_public_f
             {"qualified_name": "fabricops_kit.example.public_api", "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
         ],
         "summary_counts": {
-            "function_type": {"Public function": 1, "Internal function": 0},
+            "function_type": {"Public function": 1, "Shared helper": 0},
             "layer": {"public": 1, "internal": 0},
             "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 0},
             "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 0},
@@ -1853,13 +1856,13 @@ def test_callable_architecture_validation_accepts_new_violation_types(monkeypatc
         "function_inventory": [
             {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
             {"qualified_name": public_target_qn, "function_name": "other_public", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
-            {"qualified_name": shared_qn, "function_name": "shared_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
-            {"qualified_name": single_qn, "function_name": "single_use_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
-            {"qualified_name": nested_qn, "function_name": "nested_helper", "function_type": "Internal function", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": shared_qn, "function_name": "shared_helper", "function_type": "Shared helper", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": single_qn, "function_name": "single_use_helper", "function_type": "Shared helper", "layer": "internal", "callable_kind": "function"},
+            {"qualified_name": nested_qn, "function_name": "nested_helper", "function_type": "Shared helper", "layer": "internal", "callable_kind": "function"},
             {"qualified_name": private_qn, "function_name": "_private_helper", "function_type": "Private helper", "layer": "private_helper", "callable_kind": "function", "architecture_signals": [], "recommended_action": "Keep private helper"},
         ],
         "summary_counts": {
-            "function_type": {"Public function": 2, "Internal function": 3},
+            "function_type": {"Public function": 2, "Shared helper": 3},
             "layer": {"public": 2, "internal": 3},
             "public_api_surface": {"public_api_entrypoints": 2, "architecture_violations": 1},
             "callable_inventory_metrics": {"function_callables": 5, "private_helpers_to_review": 1},
@@ -1870,7 +1873,7 @@ def test_callable_architecture_validation_accepts_new_violation_types(monkeypatc
                 "architecture_violation_count": len(violation_types),
                 "direct_callees": [],
                 "transitive_callees": [
-                    {"qualified_name": f"{shared_qn}.{index}", "function_name": f"callee_{index}", "function_type": "Internal function", "layer": "internal", "callee_type": "Internal", "architecture_result": "Violation", "violation_type": violation_type}
+                    {"qualified_name": f"{shared_qn}.{index}", "function_name": f"callee_{index}", "function_type": "Shared helper", "layer": "internal", "callee_type": "Shared helper", "architecture_result": "Violation", "violation_type": violation_type}
                     for index, violation_type in enumerate(violation_types)
                 ],
             },
@@ -1903,7 +1906,7 @@ def test_callable_architecture_validation_rejects_legacy_violation_types(monkeyp
             {"qualified_name": public_qn, "function_name": "public_api", "function_type": "Public function", "layer": "public", "callable_kind": "function"},
         ],
         "summary_counts": {
-            "function_type": {"Public function": 1, "Internal function": 0},
+            "function_type": {"Public function": 1, "Shared helper": 0},
             "layer": {"public": 1, "internal": 0},
             "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 1},
             "callable_inventory_metrics": {"function_callables": 1, "private_helpers_to_review": 0},
@@ -2170,8 +2173,8 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     for label in [
         "Total code assets",
         "Public callables",
-        "Shared functions",
-        "Private functions",
+        "Shared helpers",
+        "Private helpers",
         "Non functions",
         "Suggested cleanup",
         "Public callables",
@@ -2305,7 +2308,7 @@ def _flow_test_inventory_row(qn: str, name: str, module: str, layer: str, *, own
     """Return a minimal callable-flow inventory row for architecture tests."""
     function_type = {
         "public": "Public function",
-        "internal": "Internal function",
+        "internal": "Shared helper",
         "private_helper": "Private helper",
     }[layer]
     row: dict[str, object] = {
