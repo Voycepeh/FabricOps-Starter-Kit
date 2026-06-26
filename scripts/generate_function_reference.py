@@ -1413,7 +1413,7 @@ def _call_tree_link(
     if module_name and callable_name and module_name in module_data:
         source_location = module_data.get(module_name, {}).get("source_locations", {}).get(callable_name, {})
         return github_source_url(
-            f"src/fabricops_kit/{module_name}.py",
+            f"src/fabricops_kit/{module_name.replace('.', '/')}.py",
             source_location.get("start_line"),
             source_location.get("end_line"),
         )
@@ -4757,7 +4757,7 @@ def main() -> None:
 
     def _module_name(qn: str) -> str:
         parts = qn.split(".")
-        return parts[1] if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
+        return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
     MODULE_DIR.mkdir(parents=True, exist_ok=True)
     for generated_page in MODULE_DIR.glob("*.md"):
         if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
@@ -5468,7 +5468,7 @@ def main() -> None:
         docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
             f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
         )
-        source_path = f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
+        source_path = module_info.get("source_path") or f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
         source_location = module_info.get("source_locations", {}).get(short_name, {})
         source_start_line = source_location.get("start_line")
         source_end_line = source_location.get("end_line")
