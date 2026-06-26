@@ -1,22 +1,21 @@
 # profile_dataframe
 
-??? info "Downstream callables: 11"
+??? info "Downstream callables: 10"
 
     Dependency data is generated from the callable architecture inventory.
 
     <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
       <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><code>profile_dataframe(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73"><code>profile_dataframe_core(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140"><code>profile_dataframe_core(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133"><code>_build_distribution_summaries(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100"><code>_build_categorical_distribution(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60"><code>_build_numeric_distribution(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        │   └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28"><code>_numeric_bin_edges(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67"><code>_get_profiled_columns(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90"><code>_is_min_max_supported_type(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280"><code>_audit_timestamp_expr(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261"><code>_get_audit_timezone(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">            └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248"><code>_validate_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L201-L274"><code>profile_dataframe_core(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280"><code>build_audit_timestamp_expr(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261"><code>get_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248"><code>_validate_audit_timezone(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L168-L198"><code>build_distribution_summaries(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L129-L165"><code>_build_categorical_distribution(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L97-L126"><code>_build_numeric_distribution(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L84-L94"><code>_numeric_bin_edges(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L60-L81"><code>is_min_max_supported_type(...)</code></a></div>
+      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.shared.py#L48-L57"><code>resolve_profiled_columns(...)</code></a></div>
     </div>
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
@@ -24,9 +23,9 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/data_profiling.py:80`
+`fabricops_kit/data_profiling/profile_dataframe.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

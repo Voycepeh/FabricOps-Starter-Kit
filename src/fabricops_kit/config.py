@@ -253,7 +253,7 @@ def _validate_audit_timezone(timezone_name: str | None) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
+def get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> str:
     """Resolve the configured FabricOps audit timezone, defaulting to UTC."""
     if timezone_name is not None:
         return _validate_audit_timezone(timezone_name)
@@ -265,18 +265,18 @@ def _current_audit_timestamp(
     config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True
 ) -> str:
     """Return the current audit timestamp in the configured audit timezone."""
-    tz_name = _get_audit_timezone(config, timezone_name)
+    tz_name = get_audit_timezone(config, timezone_name)
     value = datetime.now(ZoneInfo(tz_name))
     if drop_microseconds:
         value = value.replace(microsecond=0)
     return value.isoformat()
 
 
-def _audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
+def build_audit_timestamp_expr(config: Any = None, timezone_name: str | None = None):
     """Return a Spark expression for the current audit timestamp timezone."""
     from pyspark.sql import functions as F
 
-    tz_name = _get_audit_timezone(config, timezone_name)
+    tz_name = get_audit_timezone(config, timezone_name)
     return F.current_timestamp() if tz_name == "UTC" else F.from_utc_timestamp(F.current_timestamp(), tz_name)
 
 

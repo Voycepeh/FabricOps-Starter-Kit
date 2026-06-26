@@ -1,197 +1,5 @@
 [
   {
-    "id": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-    "name": "_build_categorical_distribution",
-    "qualified_name": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-    "module": "_profiling_adapters",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_adapters._build_distribution_summaries"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_adapters.py",
-    "source_start_line": 63,
-    "source_end_line": 100,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100",
-    "docs_path": null,
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-    "name": "_build_distribution_summaries",
-    "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-    "module": "_profiling_adapters",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core"
-    ],
-    "outbound": [
-      "fabricops_kit._profiling_adapters._build_categorical_distribution",
-      "fabricops_kit._profiling_adapters._build_numeric_distribution",
-      "fabricops_kit._profiling_adapters._numeric_bin_edges"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_adapters.py",
-    "source_start_line": 103,
-    "source_end_line": 133,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-    "docs_path": null,
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-    "name": "_build_numeric_distribution",
-    "qualified_name": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-    "module": "_profiling_adapters",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_adapters._build_distribution_summaries"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_adapters.py",
-    "source_start_line": 31,
-    "source_end_line": 60,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60",
-    "docs_path": null,
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-    "name": "_numeric_bin_edges",
-    "qualified_name": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-    "module": "_profiling_adapters",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_adapters._build_distribution_summaries"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_adapters.py",
-    "source_start_line": 18,
-    "source_end_line": 28,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28",
-    "docs_path": null,
-    "summary": "No summary available."
-  },
-  {
-    "id": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-    "name": "_get_profiled_columns",
-    "qualified_name": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-    "module": "_profiling_resolvers",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-    "source_start_line": 44,
-    "source_end_line": 67,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67",
-    "docs_path": null,
-    "summary": "Return non-technical column names from a Spark DataFrame."
-  },
-  {
-    "id": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-    "name": "_is_min_max_supported_type",
-    "qualified_name": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-    "module": "_profiling_resolvers",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-    "source_start_line": 70,
-    "source_end_line": 90,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90",
-    "docs_path": null,
-    "summary": "Return whether min/max aggregation is safe for a Spark type string."
-  },
-  {
-    "id": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-    "name": "profile_dataframe_core",
-    "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-    "module": "_profiling_workflows",
-    "classification": "Internal",
-    "function_category": "utility",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit.data_profiling.profile_dataframe_core"
-    ],
-    "outbound": [
-      "fabricops_kit._profiling_adapters._build_distribution_summaries",
-      "fabricops_kit._profiling_resolvers._get_profiled_columns",
-      "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-      "fabricops_kit.config._audit_timestamp_expr",
-      "fabricops_kit.config._get_audit_timezone"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/_profiling_workflows.py",
-    "source_start_line": 19,
-    "source_end_line": 140,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-    "docs_path": null,
-    "summary": "Build canonical DQ-ready profiling rows from a Spark DataFrame."
-  },
-  {
     "id": "fabricops_kit.config.ConfigSmokeCheckResult",
     "name": "ConfigSmokeCheckResult",
     "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
@@ -686,34 +494,6 @@
     "summary": "Notebook-local review settings for suggestion staging and approval."
   },
   {
-    "id": "fabricops_kit.config._audit_timestamp_expr",
-    "name": "_audit_timestamp_expr",
-    "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-    "module": "config",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core"
-    ],
-    "outbound": [
-      "fabricops_kit.config._get_audit_timezone"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 275,
-    "source_end_line": 280,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
-    "docs_path": null,
-    "summary": "Return a Spark expression for the current audit timestamp timezone."
-  },
-  {
     "id": "fabricops_kit.config._check_spark_session",
     "name": "_check_spark_session",
     "qualified_name": "fabricops_kit.config._check_spark_session",
@@ -783,7 +563,7 @@
       "fabricops_kit.pipeline._now_iso"
     ],
     "outbound": [
-      "fabricops_kit.config._get_audit_timezone"
+      "fabricops_kit.config.get_audit_timezone"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -855,36 +635,6 @@
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L1070-L1096",
     "docs_path": null,
     "summary": "Return the canonical active metadata tables prepared by ``00_env_config``."
-  },
-  {
-    "id": "fabricops_kit.config._get_audit_timezone",
-    "name": "_get_audit_timezone",
-    "qualified_name": "fabricops_kit.config._get_audit_timezone",
-    "module": "config",
-    "classification": "Internal",
-    "function_category": "internal-private",
-    "usage_sources": [],
-    "inbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "fabricops_kit.config._audit_timestamp_expr",
-      "fabricops_kit.config._current_audit_timestamp"
-    ],
-    "outbound": [
-      "fabricops_kit.config._validate_audit_timezone"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "return_interpretation": null,
-    "common_failure_causes": [],
-    "related_guides": [],
-    "source_path": "src/fabricops_kit/config.py",
-    "source_start_line": 256,
-    "source_end_line": 261,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-    "docs_path": null,
-    "summary": "Resolve the configured FabricOps audit timezone, defaulting to UTC."
   },
   {
     "id": "fabricops_kit.config._get_fabric_runtime_metadata",
@@ -1220,8 +970,8 @@
     "usage_sources": [],
     "inbound": [
       "fabricops_kit.config.FrameworkConfig.__post_init__",
-      "fabricops_kit.config._get_audit_timezone",
-      "fabricops_kit.config._validate_framework_config"
+      "fabricops_kit.config._validate_framework_config",
+      "fabricops_kit.config.get_audit_timezone"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -1330,6 +1080,66 @@
     "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L801-L812",
     "docs_path": null,
     "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.config.build_audit_timestamp_expr",
+    "name": "build_audit_timestamp_expr",
+    "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+    "module": "config",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.profile_dataframe_core",
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
+    ],
+    "outbound": [
+      "fabricops_kit.config.get_audit_timezone"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/config.py",
+    "source_start_line": 275,
+    "source_end_line": 280,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
+    "docs_path": null,
+    "summary": "Return a Spark expression for the current audit timestamp timezone."
+  },
+  {
+    "id": "fabricops_kit.config.get_audit_timezone",
+    "name": "get_audit_timezone",
+    "qualified_name": "fabricops_kit.config.get_audit_timezone",
+    "module": "config",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.config._current_audit_timestamp",
+      "fabricops_kit.config.build_audit_timestamp_expr",
+      "fabricops_kit.data_profiling.profile_dataframe_core",
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
+    ],
+    "outbound": [
+      "fabricops_kit.config._validate_audit_timezone"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/config.py",
+    "source_start_line": 256,
+    "source_end_line": 261,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+    "docs_path": null,
+    "summary": "Resolve the configured FabricOps audit timezone, defaulting to UTC."
   },
   {
     "id": "fabricops_kit.config.get_default_fabric_context",
@@ -2808,6 +2618,30 @@
     "name": "profile_dataframe",
     "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
     "module": "data_profiling",
+    "classification": "Internal",
+    "function_category": "public_starter_kit",
+    "usage_sources": [],
+    "inbound": [],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+    "source_start_line": 10,
+    "source_end_line": 65,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
+    "docs_path": null,
+    "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+    "name": "profile_dataframe",
+    "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+    "module": "data_profiling.profile_dataframe",
     "classification": "Callable",
     "function_category": "public_starter_kit",
     "usage_sources": [
@@ -2815,7 +2649,7 @@
     ],
     "inbound": [],
     "outbound": [
-      "fabricops_kit.data_profiling.profile_dataframe_core"
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
     ],
     "used_in_templates": [
       "99_explore"
@@ -2844,29 +2678,106 @@
         "path": "../../notebook-templates-implementation-guide/governance-review.md"
       }
     ],
-    "source_path": "src/fabricops_kit/data_profiling.py",
-    "source_start_line": 80,
-    "source_end_line": 135,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135",
+    "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+    "source_start_line": 10,
+    "source_end_line": 65,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
     "docs_path": "api/reference/profile_dataframe.md",
     "summary": "Profile a source or target DataFrame for schema, quality, and catalogue evidence."
   },
   {
-    "id": "fabricops_kit.data_profiling.profile_dataframe_core",
-    "name": "profile_dataframe_core",
-    "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-    "module": "data_profiling",
+    "id": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+    "name": "_build_categorical_distribution",
+    "qualified_name": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.shared.build_distribution_summaries"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 129,
+    "source_end_line": 165,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L129-L165",
+    "docs_path": null,
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+    "name": "_build_numeric_distribution",
+    "qualified_name": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.shared.build_distribution_summaries"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 97,
+    "source_end_line": 126,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L97-L126",
+    "docs_path": null,
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+    "name": "_numeric_bin_edges",
+    "qualified_name": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "internal-private",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.shared.build_distribution_summaries"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 84,
+    "source_end_line": 94,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L84-L94",
+    "docs_path": null,
+    "summary": "No summary available."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+    "name": "build_distribution_summaries",
+    "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+    "module": "data_profiling.shared",
     "classification": "Internal",
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
-      "fabricops_kit.data_profiling.profile_dataframe",
-      "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-      "fabricops_kit.guardrails.enforce_profile_behavior",
-      "fabricops_kit.pipeline._run_table_guardrails_workflow"
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
     ],
     "outbound": [
-      "fabricops_kit._profiling_workflows.profile_dataframe_core"
+      "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+      "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+      "fabricops_kit.data_profiling.shared._numeric_bin_edges"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -2875,12 +2786,99 @@
     "return_interpretation": null,
     "common_failure_causes": [],
     "related_guides": [],
-    "source_path": "src/fabricops_kit/data_profiling.py",
-    "source_start_line": 18,
-    "source_end_line": 73,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 168,
+    "source_end_line": 198,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
     "docs_path": null,
-    "summary": "Delegate profiling to the owning private profiling workflow."
+    "summary": "Build optional numeric and categorical distribution summaries."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+    "name": "is_min_max_supported_type",
+    "qualified_name": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 60,
+    "source_end_line": 81,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L60-L81",
+    "docs_path": null,
+    "summary": "Return whether min/max aggregation is safe for a Spark type string."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+    "name": "profile_dataframe_core",
+    "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+      "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+      "fabricops_kit.guardrails.enforce_profile_behavior",
+      "fabricops_kit.pipeline._run_table_guardrails_workflow"
+    ],
+    "outbound": [
+      "fabricops_kit.config.build_audit_timestamp_expr",
+      "fabricops_kit.config.get_audit_timezone",
+      "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+      "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+      "fabricops_kit.data_profiling.shared.resolve_profiled_columns"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 201,
+    "source_end_line": 274,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+    "docs_path": null,
+    "summary": "Build canonical DQ-ready profiling rows from a Spark DataFrame."
+  },
+  {
+    "id": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+    "name": "resolve_profiled_columns",
+    "qualified_name": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+    "module": "data_profiling.shared",
+    "classification": "Internal",
+    "function_category": "utility",
+    "usage_sources": [],
+    "inbound": [
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "return_interpretation": null,
+    "common_failure_causes": [],
+    "related_guides": [],
+    "source_path": "src/fabricops_kit/data_profiling/shared.py",
+    "source_start_line": 48,
+    "source_end_line": 57,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L48-L57",
+    "docs_path": null,
+    "summary": "Return non-technical column names from a Spark DataFrame."
   },
   {
     "id": "fabricops_kit.governance_review._approved_column_identity",
@@ -4031,7 +4029,7 @@
     "inbound": [],
     "outbound": [
       "fabricops_kit.config._current_audit_timestamp",
-      "fabricops_kit.data_profiling.profile_dataframe_core",
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core",
       "fabricops_kit.governance_review._spark_sql_helpers"
     ],
     "used_in_templates": [],
@@ -6142,7 +6140,7 @@
       "fabricops_kit.pipeline._run_table_guardrails_workflow"
     ],
     "outbound": [
-      "fabricops_kit.data_profiling.profile_dataframe_core",
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core",
       "fabricops_kit.guardrails._accepted_profile_rows",
       "fabricops_kit.guardrails._apply_bypass_post_review_warning",
       "fabricops_kit.guardrails._catalogue_value",
@@ -9632,7 +9630,7 @@
     ],
     "outbound": [
       "fabricops_kit.config.resolve_fabric_context",
-      "fabricops_kit.data_profiling.profile_dataframe_core",
+      "fabricops_kit.data_profiling.shared.profile_dataframe_core",
       "fabricops_kit.governance_review._run_active_dq_guardrail",
       "fabricops_kit.guardrails._check_schema_rule_runtime",
       "fabricops_kit.guardrails._check_schema_runtime",

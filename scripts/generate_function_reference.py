@@ -67,7 +67,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config": "config",
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
-    "data_profiling": "data_profiling",
+    "data_profiling.profile_dataframe": "data_profiling",
     "io": "io",
     "guardrails": "guardrails",
     "metadata": "metadata",
@@ -103,7 +103,7 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     },
     "run_table_guardrails": {
         "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.config._get_audit_timezone",
+        "fabricops_kit.config.get_audit_timezone",
         "fabricops_kit.config._validate_audit_timezone",
     },
 }
@@ -290,18 +290,23 @@ def _is_property_method(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
 
 def source_module_name(path: Path) -> str:
     """Return a dotted package-relative source module name."""
-    return ".".join(path.relative_to(PKG_DIR).with_suffix("").parts)
+    parts = path.relative_to(PKG_DIR).with_suffix("").parts
+    if parts[-1] == "__init__":
+        return ".".join(parts[:-1])
+    return ".".join(parts)
 
 
 def source_module_paths() -> list[Path]:
     """Return package source files that participate in generated callable metadata."""
-    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py")
+    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name == "data_profiling")
 
 
 def source_module_path(module: str) -> Path:
     """Return the source path for a dotted package-relative module name."""
     if module == "io":
         return PKG_DIR / "io" / "shared.py"
+    if module == "data_profiling":
+        return PKG_DIR / "data_profiling" / "shared.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
 
 def parse_module(path: Path) -> dict[str, Any]:
@@ -612,7 +617,7 @@ def build_callable_graph(
                 }
                 edges.append(edge)
                 if resolved_qn and edge_type in {"same_module", "cross_module"}:
-                    callee_module = resolved_qn.split(".")[1] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
+                    callee_module = resolved_qn.removeprefix(f"{PACKAGE_NAME}.").rsplit(".", 1)[0] if resolved_qn.startswith(f"{PACKAGE_NAME}.") else resolved_qn.split(".")[-2]
                     if callee_module != module:
                         calls_modules[module].add(callee_module)
                         called_by_modules[callee_module].add(module)
@@ -2152,8 +2157,8 @@ ROLE_TAGS_BY_NAME = {
     ],
     "get_default_fabric_context": ["internal_resolver", "runtime_context_provider", "shared_internal_service"],
     "_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
-    "_get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
-    "_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
+    "get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
+    "build_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
     "_validate_framework_config": ["internal_validator", "config_validator"],
     "_validate_metadata_table_registration": ["internal_validator", "metadata_table_registration_validator"],
     "_validate_audit_timezone": ["utility_validator", "low_level_utility"],
@@ -2263,12 +2268,12 @@ ROLE_TAGS_BY_NAME = {
     # Profiling public entrypoint and role-organized internals.
     "profile_dataframe": ["public_api_entrypoint", "profiling_entrypoint", "public_stable"],
     "profile_dataframe_core": ["internal_workflow", "profiling_workflow"],
-    "_get_profiled_columns": ["internal_resolver", "profiling_column_resolver"],
-    "_is_min_max_supported_type": ["internal_resolver", "spark_type_resolver"],
+    "resolve_profiled_columns": ["internal_resolver", "profiling_column_resolver"],
+    "is_min_max_supported_type": ["internal_resolver", "spark_type_resolver"],
     "_numeric_bin_edges": ["internal_adapter", "spark_profiling_adapter"],
     "_build_numeric_distribution": ["internal_adapter", "spark_profiling_adapter"],
     "_build_categorical_distribution": ["internal_adapter", "spark_profiling_adapter"],
-    "_build_distribution_summaries": ["internal_adapter", "spark_profiling_adapter"],
+    "build_distribution_summaries": ["internal_adapter", "spark_profiling_adapter"],
 
     # Guardrail support internals.
     "_check_schema_rule_runtime": ["internal_workflow", "schema_guardrail_workflow"],
@@ -2582,7 +2587,7 @@ def _build_function_inventory(
 
     def private_helper_action(qn: str, inbound: set[str], outbound: list[str]) -> tuple[str, str]:
         scope = private_helper_usage_scope(qn, inbound)
-        if node_by_qn[qn]["module_name"] == "_profiling_adapters":
+        if node_by_qn[qn]["module_name"] == "data_profiling.shared":
             return "Keep private helper", "Low"
         if scope == "cross_module":
             return "Rename to shared helper", "Medium"
@@ -4088,7 +4093,7 @@ def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
 def _helper_area(helper_name: str, purpose: str) -> tuple[str, str]:
     """Return the implementation area and plain-English role for an internal helper."""
     haystack = f"{helper_name} {purpose}".lower()
-    if helper_name in {"_guardrail_exclude_columns", "_get_profiled_columns"} or "exclude_columns" in haystack:
+    if helper_name in {"_guardrail_exclude_columns", "resolve_profiled_columns"} or "exclude_columns" in haystack:
         return "Column handling", "Select, exclude, and normalize column names used by the callable."
     if helper_name in {
         "_catalogue_value",

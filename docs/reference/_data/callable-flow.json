@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-26T12:19:59.075686Z",
+    "generated_at_utc": "2026-06-26T12:47:34.267437Z",
     "data_source": "callable-flow.json"
   },
   "architecture_thresholds": {
@@ -8,637 +8,6 @@
     "large_dependency_surface": 10
   },
   "function_inventory": [
-    {
-      "qualified_name": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-      "function_name": "_build_categorical_distribution",
-      "module": "_profiling_adapters",
-      "source_path": "src/fabricops_kit/_profiling_adapters.py",
-      "owner_file": "src/fabricops_kit/_profiling_adapters.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100",
-      "source_start_line": 63,
-      "source_end_line": 100,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_group": "adapter",
-      "callable_role_group_label": "Adapter",
-      "callable_role_detail": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
-      "dependency_role": "internal_adapter",
-      "owner_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-      "owner_function": "_build_distribution_summaries",
-      "owner_module": "_profiling_adapters",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Keep private helper",
-      "priority": "Low",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 0,
-      "callers": [
-        {
-          "function": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-      "function_name": "_build_distribution_summaries",
-      "module": "_profiling_adapters",
-      "source_path": "src/fabricops_kit/_profiling_adapters.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-      "source_start_line": 103,
-      "source_end_line": 133,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_group": "adapter",
-      "callable_role_group_label": "Adapter",
-      "callable_role_detail": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
-      "dependency_role": "internal_adapter",
-      "owner_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "owner_function": "profile_dataframe_core",
-      "owner_module": "_profiling_workflows",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Keep private helper",
-      "priority": "Low",
-      "signals": [
-        "Single-use internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 3,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_build_categorical_distribution",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        },
-        {
-          "function": "_build_numeric_distribution",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        },
-        {
-          "function": "_numeric_bin_edges",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ]
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-      "function_name": "_build_numeric_distribution",
-      "module": "_profiling_adapters",
-      "source_path": "src/fabricops_kit/_profiling_adapters.py",
-      "owner_file": "src/fabricops_kit/_profiling_adapters.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60",
-      "source_start_line": 31,
-      "source_end_line": 60,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_group": "adapter",
-      "callable_role_group_label": "Adapter",
-      "callable_role_detail": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
-      "dependency_role": "internal_adapter",
-      "owner_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-      "owner_function": "_build_distribution_summaries",
-      "owner_module": "_profiling_adapters",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Keep private helper",
-      "priority": "Low",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 0,
-      "callers": [
-        {
-          "function": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-      "function_name": "_numeric_bin_edges",
-      "module": "_profiling_adapters",
-      "source_path": "src/fabricops_kit/_profiling_adapters.py",
-      "owner_file": "src/fabricops_kit/_profiling_adapters.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28",
-      "source_start_line": 18,
-      "source_end_line": 28,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_group": "adapter",
-      "callable_role_group_label": "Adapter",
-      "callable_role_detail": [
-        "internal_adapter",
-        "spark_profiling_adapter"
-      ],
-      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
-      "dependency_role": "internal_adapter",
-      "owner_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-      "owner_function": "_build_distribution_summaries",
-      "owner_module": "_profiling_adapters",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Keep private helper",
-      "priority": "Low",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 0,
-      "callers": [
-        {
-          "function": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        }
-      ],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-      "function_name": "_get_profiled_columns",
-      "module": "_profiling_resolvers",
-      "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67",
-      "source_start_line": 44,
-      "source_end_line": 67,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_resolver",
-        "profiling_column_resolver"
-      ],
-      "callable_role_group": "resolver",
-      "callable_role_group_label": "Resolver",
-      "callable_role_detail": [
-        "internal_resolver",
-        "profiling_column_resolver"
-      ],
-      "callable_role_detail_label": "Internal resolver, Profiling column resolver",
-      "dependency_role": "internal_resolver",
-      "owner_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "owner_function": "profile_dataframe_core",
-      "owner_module": "_profiling_workflows",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Rename to shared helper",
-      "priority": "Medium",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 0,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-      "function_name": "_is_min_max_supported_type",
-      "module": "_profiling_resolvers",
-      "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90",
-      "source_start_line": 70,
-      "source_end_line": 90,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_resolver",
-        "spark_type_resolver"
-      ],
-      "callable_role_group": "resolver",
-      "callable_role_group_label": "Resolver",
-      "callable_role_detail": [
-        "internal_resolver",
-        "spark_type_resolver"
-      ],
-      "callable_role_detail_label": "Internal resolver, Spark type resolver",
-      "dependency_role": "internal_resolver",
-      "owner_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "owner_function": "profile_dataframe_core",
-      "owner_module": "_profiling_workflows",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Rename to shared helper",
-      "priority": "Medium",
-      "signals": [
-        "Single-use internal helper",
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 0,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "function_name": "profile_dataframe_core",
-      "module": "_profiling_workflows",
-      "source_path": "src/fabricops_kit/_profiling_workflows.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-      "source_start_line": 19,
-      "source_end_line": 140,
-      "function_type": "Shared helper",
-      "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_workflow",
-        "profiling_workflow"
-      ],
-      "callable_role_group": "workflow",
-      "callable_role_group_label": "Workflow",
-      "callable_role_detail": [
-        "internal_workflow",
-        "profiling_workflow"
-      ],
-      "callable_role_detail_label": "Internal workflow, Profiling workflow",
-      "dependency_role": "internal_workflow",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Next step",
-      "priority": "Low",
-      "signals": [
-        "allowed_internal_role_call",
-        "Possible inline/private helper"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 5,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_adapter",
-            "spark_profiling_adapter"
-          ],
-          "dependency_role": "internal_adapter"
-        },
-        {
-          "function": "_get_profiled_columns",
-          "module": "_profiling_resolvers",
-          "qualified_name": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "profiling_column_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_is_min_max_supported_type",
-          "module": "_profiling_resolvers",
-          "qualified_name": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "spark_type_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        },
-        {
-          "function": "_audit_timestamp_expr",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "spark_audit_expression_utility"
-          ],
-          "dependency_role": "audit_time_utility"
-        },
-        {
-          "function": "_get_audit_timezone",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "audit_config_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        }
-      ]
-    },
-    {
-      "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-      "function_name": "_audit_timestamp_expr",
-      "module": "config",
-      "source_path": "src/fabricops_kit/config.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
-      "source_start_line": 275,
-      "source_end_line": 280,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "audit_time_utility",
-        "spark_audit_expression_utility"
-      ],
-      "callable_role_group": "utility",
-      "callable_role_group_label": "Utility",
-      "callable_role_detail": [
-        "audit_time_utility",
-        "spark_audit_expression_utility"
-      ],
-      "callable_role_detail_label": "Audit time utility, Spark audit expression utility",
-      "dependency_role": "audit_time_utility",
-      "owner_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "owner_function": "profile_dataframe_core",
-      "owner_module": "_profiling_workflows",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Rename to shared helper",
-      "priority": "Medium",
-      "signals": [
-        "Thin wrapper candidate",
-        "Single-use internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 1,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_get_audit_timezone",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "audit_config_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        }
-      ]
-    },
     {
       "qualified_name": "fabricops_kit.config._check_spark_session",
       "function_name": "_check_spark_session",
@@ -906,11 +275,11 @@
       ],
       "callees": [
         {
-          "function": "_get_audit_timezone",
+          "function": "get_audit_timezone",
           "module": "config",
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -1086,112 +455,6 @@
             "governance_metadata_schema_resolver"
           ],
           "dependency_role": "internal_resolver"
-        }
-      ]
-    },
-    {
-      "qualified_name": "fabricops_kit.config._get_audit_timezone",
-      "function_name": "_get_audit_timezone",
-      "module": "config",
-      "source_path": "src/fabricops_kit/config.py",
-      "owner_file": "src/fabricops_kit/_profiling_workflows.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-      "source_start_line": 256,
-      "source_end_line": 261,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "internal_resolver",
-        "audit_config_resolver"
-      ],
-      "callable_role_group": "resolver",
-      "callable_role_group_label": "Resolver",
-      "callable_role_detail": [
-        "internal_resolver",
-        "audit_config_resolver"
-      ],
-      "callable_role_detail_label": "Internal resolver, Audit config resolver",
-      "dependency_role": "internal_resolver",
-      "owner_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-      "owner_function": "profile_dataframe_core",
-      "owner_module": "_profiling_workflows",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Rename to shared helper",
-      "priority": "Medium",
-      "signals": [
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 3,
-      "calls_count": 1,
-      "callers": [
-        {
-          "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow",
-            "profiling_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        },
-        {
-          "function": "_audit_timestamp_expr",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "spark_audit_expression_utility"
-          ],
-          "dependency_role": "audit_time_utility"
-        },
-        {
-          "function": "_current_audit_timestamp",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L264-L272",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "shared_internal_service",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "audit_time_utility"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_validate_audit_timezone",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_validator",
-            "low_level_utility",
-            "implicit_lifecycle_reachable"
-          ],
-          "dependency_role": "utility_validator"
         }
       ]
     },
@@ -2338,8 +1601,8 @@
       ],
       "callable_role_detail_label": "Utility validator, Low level utility, Implicit lifecycle reachable",
       "dependency_role": "utility_validator",
-      "owner_qualified_name": "fabricops_kit.config._get_audit_timezone",
-      "owner_function": "_get_audit_timezone",
+      "owner_qualified_name": "fabricops_kit.config.get_audit_timezone",
+      "owner_function": "get_audit_timezone",
       "owner_module": "config",
       "leaks_outside_owner_file": false,
       "usage_scope": "same_module",
@@ -2358,20 +1621,6 @@
       "called_by_count": 3,
       "calls_count": 0,
       "callers": [
-        {
-          "function": "_get_audit_timezone",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "audit_config_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        },
         {
           "function": "_validate_framework_config",
           "module": "config",
@@ -2400,6 +1649,20 @@
             "keep_lifecycle_method"
           ],
           "dependency_role": "lifecycle_method"
+        },
+        {
+          "function": "get_audit_timezone",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "audit_config_resolver"
+          ],
+          "dependency_role": "internal_resolver"
         }
       ],
       "callees": []
@@ -2763,6 +2026,82 @@
       "callees": []
     },
     {
+      "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+      "function_name": "build_audit_timestamp_expr",
+      "module": "config",
+      "source_path": "src/fabricops_kit/config.py",
+      "owner_file": "src/fabricops_kit/config.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
+      "source_start_line": 275,
+      "source_end_line": 280,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "audit_time_utility",
+        "spark_audit_expression_utility"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "audit_time_utility",
+        "spark_audit_expression_utility"
+      ],
+      "callable_role_detail_label": "Audit time utility, Spark audit expression utility",
+      "dependency_role": "audit_time_utility",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "profile_dataframe_core",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "profiling_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "callees": [
+        {
+          "function": "get_audit_timezone",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "audit_config_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ]
+    },
+    {
       "qualified_name": "fabricops_kit.config.ConfigSmokeCheckResult",
       "function_name": "ConfigSmokeCheckResult",
       "module": "config",
@@ -2794,8 +2133,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -2853,8 +2192,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -2901,8 +2240,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "implicit_lifecycle_reachability",
@@ -2963,8 +2302,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -3011,8 +2350,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "implicit_lifecycle_reachability",
         "Implicit lifecycle method"
@@ -3056,8 +2395,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Property accessor"
       ],
@@ -3102,8 +2441,8 @@
       "usage_scope_label": "",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "Layer assignment needs review"
       ],
@@ -3165,8 +2504,8 @@
       "usage_scope_label": "",
       "reachability_kind": "unknown_or_entrypoint",
       "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
+      "recommended_action": "Next step",
+      "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
         "implicit_lifecycle_reachability",
@@ -3177,6 +2516,112 @@
       "called_by_count": 0,
       "calls_count": 1,
       "callers": [],
+      "callees": [
+        {
+          "function": "_validate_audit_timezone",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._validate_audit_timezone",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_validator",
+            "low_level_utility",
+            "implicit_lifecycle_reachable"
+          ],
+          "dependency_role": "utility_validator"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.get_audit_timezone",
+      "function_name": "get_audit_timezone",
+      "module": "config",
+      "source_path": "src/fabricops_kit/config.py",
+      "owner_file": "src/fabricops_kit/config.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+      "source_start_line": 256,
+      "source_end_line": 261,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver",
+        "audit_config_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver",
+        "audit_config_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver, Audit config resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Shared internal helper",
+      "priority": "Low",
+      "signals": [
+        "Shared helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 3,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "_current_audit_timestamp",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L264-L272",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "shared_internal_service",
+            "high_fanout_shared"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
+        {
+          "function": "build_audit_timestamp_expr",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "spark_audit_expression_utility"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
+        {
+          "function": "profile_dataframe_core",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "profiling_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
       "callees": [
         {
           "function": "_validate_audit_timezone",
@@ -8690,11 +8135,59 @@
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "function_name": "profile_dataframe",
       "module": "data_profiling",
-      "source_path": "src/fabricops_kit/data_profiling.py",
-      "owner_file": "src/fabricops_kit/data_profiling.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135",
-      "source_start_line": 80,
-      "source_end_line": 135,
+      "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "owner_file": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
+      "source_start_line": 10,
+      "source_end_line": 65,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "profiling_entrypoint",
+        "public_stable"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "profiling_entrypoint",
+        "public_stable"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Profiling entrypoint, Public stable",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+      "function_name": "profile_dataframe",
+      "module": "data_profiling.profile_dataframe",
+      "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "owner_file": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
+      "source_start_line": 10,
+      "source_end_line": 65,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -8735,9 +8228,9 @@
       "callees": [
         {
           "function": "profile_dataframe_core",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -8752,14 +8245,368 @@
       "docs_url": "../../api/reference/profile_dataframe/"
     },
     {
-      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+      "qualified_name": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+      "function_name": "_build_categorical_distribution",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L129-L165",
+      "source_start_line": 129,
+      "source_end_line": 165,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_group": "adapter",
+      "callable_role_group_label": "Adapter",
+      "callable_role_detail": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
+      "dependency_role": "internal_adapter",
+      "owner_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+      "owner_function": "build_distribution_summaries",
+      "owner_module": "data_profiling.shared",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Single-use internal helper",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+      "function_name": "_build_numeric_distribution",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L97-L126",
+      "source_start_line": 97,
+      "source_end_line": 126,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_group": "adapter",
+      "callable_role_group_label": "Adapter",
+      "callable_role_detail": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
+      "dependency_role": "internal_adapter",
+      "owner_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+      "owner_function": "build_distribution_summaries",
+      "owner_module": "data_profiling.shared",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Single-use internal helper",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+      "function_name": "_numeric_bin_edges",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L84-L94",
+      "source_start_line": 84,
+      "source_end_line": 94,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_group": "adapter",
+      "callable_role_group_label": "Adapter",
+      "callable_role_detail": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
+      "dependency_role": "internal_adapter",
+      "owner_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+      "owner_function": "build_distribution_summaries",
+      "owner_module": "data_profiling.shared",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Single-use internal helper",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+      "function_name": "build_distribution_summaries",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+      "source_start_line": 168,
+      "source_end_line": 198,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_group": "adapter",
+      "callable_role_group_label": "Adapter",
+      "callable_role_detail": [
+        "internal_adapter",
+        "spark_profiling_adapter"
+      ],
+      "callable_role_detail_label": "Internal adapter, Spark profiling adapter",
+      "dependency_role": "internal_adapter",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 3,
+      "callers": [
+        {
+          "function": "profile_dataframe_core",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "profiling_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_build_categorical_distribution",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L129-L165",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "_build_numeric_distribution",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L97-L126",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "_numeric_bin_edges",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L84-L94",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+      "function_name": "is_min_max_supported_type",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L60-L81",
+      "source_start_line": 60,
+      "source_end_line": 81,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver",
+        "spark_type_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver",
+        "spark_type_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver, Spark type resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "profile_dataframe_core",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "profiling_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
       "function_name": "profile_dataframe_core",
-      "module": "data_profiling",
-      "source_path": "src/fabricops_kit/data_profiling.py",
-      "owner_file": "src/fabricops_kit/data_profiling.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
-      "source_start_line": 18,
-      "source_end_line": 73,
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+      "source_start_line": 201,
+      "source_end_line": 274,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -8788,18 +8635,19 @@
       "recommended_action": "Shared internal helper",
       "priority": "Low",
       "signals": [
+        "allowed_internal_role_call",
         "Shared helper"
       ],
       "architecture_signals": [],
       "review_signals": [],
       "called_by_count": 4,
-      "calls_count": 1,
+      "calls_count": 5,
       "callers": [
         {
           "function": "profile_dataframe",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135",
+          "module": "data_profiling.profile_dataframe",
+          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
           "docs_path": "docs/api/reference/profile_dataframe.md",
           "docs_url": "../../api/reference/profile_dataframe/",
           "layer": "public",
@@ -8855,10 +8703,126 @@
       ],
       "callees": [
         {
+          "function": "build_audit_timestamp_expr",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "spark_audit_expression_utility"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
+        {
+          "function": "get_audit_timezone",
+          "module": "config",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "audit_config_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "spark_profiling_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "is_min_max_supported_type",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L60-L81",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "spark_type_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        },
+        {
+          "function": "resolve_profiled_columns",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L48-L57",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "profiling_column_resolver"
+          ],
+          "dependency_role": "internal_resolver"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+      "function_name": "resolve_profiled_columns",
+      "module": "data_profiling.shared",
+      "source_path": "src/fabricops_kit/data_profiling/shared.py",
+      "owner_file": "src/fabricops_kit/data_profiling/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L48-L57",
+      "source_start_line": 48,
+      "source_end_line": 57,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_resolver",
+        "profiling_column_resolver"
+      ],
+      "callable_role_group": "resolver",
+      "callable_role_group_label": "Resolver",
+      "callable_role_detail": [
+        "internal_resolver",
+        "profiling_column_resolver"
+      ],
+      "callable_role_detail_label": "Internal resolver, Profiling column resolver",
+      "dependency_role": "internal_resolver",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
           "function": "profile_dataframe_core",
-          "module": "_profiling_workflows",
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -8868,7 +8832,8 @@
           ],
           "dependency_role": "internal_workflow"
         }
-      ]
+      ],
+      "callees": []
     },
     {
       "qualified_name": "fabricops_kit.governance_review._approved_column_identity",
@@ -12693,9 +12658,9 @@
         },
         {
           "function": "profile_dataframe_core",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -19441,9 +19406,9 @@
       "callees": [
         {
           "function": "profile_dataframe_core",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30483,9 +30448,9 @@
         },
         {
           "function": "profile_dataframe_core",
-          "module": "data_profiling",
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+          "module": "data_profiling.shared",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -34603,24 +34568,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -34636,7 +34601,7 @@
               "_prepare_pipeline_table_configs_workflow",
               "_add_audit_columns",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -34651,8 +34616,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -34677,7 +34642,7 @@
               "_prepare_pipeline_table_configs_workflow",
               "_add_audit_columns",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -34764,77 +34729,71 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+      "qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
       "function_name": "profile_dataframe",
-      "module": "data_profiling",
+      "module": "data_profiling.profile_dataframe",
       "docs_path": "docs/api/reference/profile_dataframe.md",
       "docs_url": "../../api/reference/profile_dataframe/",
-      "source_path": "src/fabricops_kit/data_profiling.py",
-      "owner_file": "src/fabricops_kit/data_profiling.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L80-L135",
-      "source_start_line": 80,
-      "source_end_line": 135,
-      "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "source_path": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "owner_file": "src/fabricops_kit/data_profiling/profile_dataframe.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/profile_dataframe.py#L10-L65",
+      "source_start_line": 10,
+      "source_end_line": 65,
+      "priority": "Medium",
+      "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
         "Merge candidate found",
-        "Spans many modules",
         "Wide dependency"
       ],
-      "downstream_count": 11,
-      "max_depth": 4,
+      "downstream_count": 10,
+      "max_depth": 3,
       "modules_touched": [
-        "_profiling_adapters",
-        "_profiling_resolvers",
-        "_profiling_workflows",
         "config",
-        "data_profiling"
+        "data_profiling.profile_dataframe",
+        "data_profiling.shared"
       ],
       "source_python_files": [
-        "src/fabricops_kit/_profiling_adapters.py",
-        "src/fabricops_kit/_profiling_resolvers.py",
-        "src/fabricops_kit/_profiling_workflows.py",
         "src/fabricops_kit/config.py",
-        "src/fabricops_kit/data_profiling.py"
+        "src/fabricops_kit/data_profiling/profile_dataframe.py",
+        "src/fabricops_kit/data_profiling/shared.py"
       ],
       "external_dependents_count": 3,
       "end_node_count": 6,
-      "architecture_violation_count": 5,
+      "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 5
+        "Cross-file private dependency": 0
       },
-      "helper_cleanup_candidates": 8,
+      "helper_cleanup_candidates": 7,
       "direct_callees": [
         {
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "function_name": "profile_dataframe_core",
-          "module": "data_profiling",
+          "module": "data_profiling.shared",
           "depth": 1,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
+            "allowed_internal_role_call",
             "Shared helper"
           ],
           "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
+          "calls_inside_flow": 5,
           "used_outside_flow": 3,
           "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/data_profiling.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
-          "source_start_line": 18,
-          "source_end_line": 73,
+          "downstream_count": 5,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "source_start_line": 201,
+          "source_end_line": 274,
           "path_examples": [
             [
               "profile_dataframe",
@@ -34846,33 +34805,34 @@
       ],
       "transitive_callees": [
         {
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "function_name": "profile_dataframe_core",
-          "module": "data_profiling",
+          "module": "data_profiling.shared",
           "depth": 1,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
+          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe.profile_dataframe",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
+            "allowed_internal_role_call",
             "Shared helper"
           ],
           "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
+          "calls_inside_flow": 5,
           "used_outside_flow": 3,
           "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/data_profiling.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
-          "source_start_line": 18,
-          "source_end_line": 73,
+          "downstream_count": 5,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "source_start_line": 201,
+          "source_end_line": 274,
           "path_examples": [
             [
               "profile_dataframe",
@@ -34882,183 +34842,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "function_name": "profile_dataframe_core",
-          "module": "_profiling_workflows",
+          "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+          "function_name": "build_audit_timestamp_expr",
+          "module": "config",
           "depth": 2,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
-            "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
           "recommended_action": "Next step",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 5,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/_profiling_workflows.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "source_start_line": 19,
-          "source_end_line": 140,
-          "path_examples": [
-            [
-              "profile_dataframe",
-              "profile_dataframe_core",
-              "profile_dataframe_core"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "function_name": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 3,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 3,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "source_start_line": 103,
-          "source_end_line": 133,
-          "path_examples": [
-            [
-              "profile_dataframe",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-          "function_name": "_get_profiled_columns",
-          "module": "_profiling_resolvers",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67",
-          "source_start_line": 44,
-          "source_end_line": 67,
-          "path_examples": [
-            [
-              "profile_dataframe",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_profiled_columns"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-          "function_name": "_is_min_max_supported_type",
-          "module": "_profiling_resolvers",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90",
-          "source_start_line": 70,
-          "source_end_line": 90,
-          "path_examples": [
-            [
-              "profile_dataframe",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_is_min_max_supported_type"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "function_name": "_audit_timestamp_expr",
-          "module": "config",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Thin wrapper candidate",
-            "Single-use internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 0,
@@ -35072,31 +34873,30 @@
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr"
+              "build_audit_timestamp_expr"
             ]
           ],
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "depth": 2,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 2,
           "calls_inside_flow": 1,
           "used_outside_flow": 1,
@@ -35110,138 +34910,124 @@
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr",
-              "_get_audit_timezone"
+              "build_audit_timestamp_expr",
+              "get_audit_timezone"
             ],
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-          "function_name": "_build_categorical_distribution",
-          "module": "_profiling_adapters",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "function_name": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "depth": 2,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
+            "Possible inline/private helper"
           ],
-          "recommended_action": "Keep private helper",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
+          "calls_inside_flow": 3,
           "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100",
-          "source_start_line": 63,
-          "source_end_line": 100,
+          "is_end_node": false,
+          "downstream_count": 3,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "source_start_line": 168,
+          "source_end_line": 198,
           "path_examples": [
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_categorical_distribution"
+              "build_distribution_summaries"
             ]
           ],
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-          "function_name": "_build_numeric_distribution",
-          "module": "_profiling_adapters",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "qualified_name": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+          "function_name": "is_min_max_supported_type",
+          "module": "data_profiling.shared",
+          "depth": 2,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
+            "Possible inline/private helper"
           ],
-          "recommended_action": "Keep private helper",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
           "is_end_node": true,
           "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60",
-          "source_start_line": 31,
-          "source_end_line": 60,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L60-L81",
+          "source_start_line": 60,
+          "source_end_line": 81,
           "path_examples": [
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_numeric_distribution"
+              "is_min_max_supported_type"
             ]
           ],
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-          "function_name": "_numeric_bin_edges",
-          "module": "_profiling_adapters",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "qualified_name": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+          "function_name": "resolve_profiled_columns",
+          "module": "data_profiling.shared",
+          "depth": 2,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
+            "Possible inline/private helper"
           ],
-          "recommended_action": "Keep private helper",
+          "recommended_action": "Next step",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 0,
           "used_outside_flow": 0,
           "is_end_node": true,
           "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28",
-          "source_start_line": 18,
-          "source_end_line": 28,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L48-L57",
+          "source_start_line": 48,
+          "source_end_line": 57,
           "path_examples": [
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_numeric_bin_edges"
+              "resolve_profiled_columns"
             ]
           ],
           "helper_cleanup_candidate": true
@@ -35250,14 +35036,14 @@
           "qualified_name": "fabricops_kit.config._validate_audit_timezone",
           "function_name": "_validate_audit_timezone",
           "module": "config",
-          "depth": 4,
+          "depth": 3,
           "function_type": "Private helper",
           "layer": "private_helper",
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -35280,20 +35066,138 @@
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr",
-              "_get_audit_timezone",
+              "build_audit_timestamp_expr",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
               "profile_dataframe",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+          "function_name": "_build_categorical_distribution",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L129-L165",
+          "source_start_line": 129,
+          "source_end_line": 165,
+          "path_examples": [
+            [
+              "profile_dataframe",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_categorical_distribution"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+          "function_name": "_build_numeric_distribution",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L97-L126",
+          "source_start_line": 97,
+          "source_end_line": 126,
+          "path_examples": [
+            [
+              "profile_dataframe",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_numeric_distribution"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+          "function_name": "_numeric_bin_edges",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L84-L94",
+          "source_start_line": 84,
+          "source_end_line": 94,
+          "path_examples": [
+            [
+              "profile_dataframe",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_numeric_bin_edges"
+            ]
+          ],
+          "helper_cleanup_candidate": true
         }
       ],
       "private_helper_review_items": []
@@ -39639,14 +39543,11 @@
         "Spans many modules",
         "Wide dependency"
       ],
-      "downstream_count": 113,
+      "downstream_count": 112,
       "max_depth": 7,
       "modules_touched": [
-        "_profiling_adapters",
-        "_profiling_resolvers",
-        "_profiling_workflows",
         "config",
-        "data_profiling",
+        "data_profiling.shared",
         "governance_review",
         "guardrails",
         "io.shared",
@@ -39654,11 +39555,8 @@
         "pipeline"
       ],
       "source_python_files": [
-        "src/fabricops_kit/_profiling_adapters.py",
-        "src/fabricops_kit/_profiling_resolvers.py",
-        "src/fabricops_kit/_profiling_workflows.py",
         "src/fabricops_kit/config.py",
-        "src/fabricops_kit/data_profiling.py",
+        "src/fabricops_kit/data_profiling/shared.py",
         "src/fabricops_kit/governance_review.py",
         "src/fabricops_kit/guardrails.py",
         "src/fabricops_kit/io/shared.py",
@@ -39667,11 +39565,11 @@
       ],
       "external_dependents_count": 37,
       "end_node_count": 51,
-      "architecture_violation_count": 11,
+      "architecture_violation_count": 6,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 11
+        "Cross-file private dependency": 6
       },
-      "helper_cleanup_candidates": 48,
+      "helper_cleanup_candidates": 47,
       "direct_callees": [
         {
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
@@ -39807,9 +39705,9 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+          "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "function_name": "profile_dataframe_core",
-          "module": "data_profiling",
+          "module": "data_profiling.shared",
           "depth": 2,
           "function_type": "Shared helper",
           "layer": "internal",
@@ -39822,18 +39720,19 @@
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
+            "allowed_internal_role_call",
             "Shared helper"
           ],
           "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 2,
-          "calls_inside_flow": 1,
+          "calls_inside_flow": 5,
           "used_outside_flow": 2,
           "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/data_profiling.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
-          "source_start_line": 18,
-          "source_end_line": 73,
+          "downstream_count": 5,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
+          "source_start_line": 201,
+          "source_end_line": 274,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40542,50 +40441,102 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "function_name": "profile_dataframe_core",
-          "module": "_profiling_workflows",
+          "qualified_name": "fabricops_kit.config.build_audit_timestamp_expr",
+          "function_name": "build_audit_timestamp_expr",
+          "module": "config",
           "depth": 3,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
           "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
-            "allowed_internal_role_call",
             "Possible inline/private helper"
           ],
           "recommended_action": "Next step",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 5,
+          "calls_inside_flow": 1,
           "used_outside_flow": 0,
           "is_end_node": false,
-          "downstream_count": 5,
-          "source_path": "src/fabricops_kit/_profiling_workflows.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_workflows.py#L19-L140",
-          "source_start_line": 19,
-          "source_end_line": 140,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
+          "source_start_line": 275,
+          "source_end_line": 280,
           "path_examples": [
             [
               "run_table_guardrails",
               "_run_table_guardrails_workflow",
               "profile_dataframe_core",
-              "profile_dataframe_core"
+              "build_audit_timestamp_expr"
             ],
             [
               "run_table_guardrails",
               "_run_table_guardrails_workflow",
               "enforce_profile_behavior",
               "profile_dataframe_core",
-              "profile_dataframe_core"
+              "build_audit_timestamp_expr"
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 3,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 3,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "build_audit_timestamp_expr",
+              "get_audit_timezone"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "get_audit_timezone"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "_run_active_dq_guardrail",
+              "_dq_summary",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.config.get_default_fabric_context",
@@ -40646,6 +40597,141 @@
             ]
           ],
           "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "function_name": "build_distribution_summaries",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Possible inline/private helper"
+          ],
+          "recommended_action": "Next step",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 3,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 3,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L168-L198",
+          "source_start_line": 168,
+          "source_end_line": 198,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "build_distribution_summaries"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "build_distribution_summaries"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared.is_min_max_supported_type",
+          "function_name": "is_min_max_supported_type",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Possible inline/private helper"
+          ],
+          "recommended_action": "Next step",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L60-L81",
+          "source_start_line": 60,
+          "source_end_line": 81,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "is_min_max_supported_type"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "is_min_max_supported_type"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared.resolve_profiled_columns",
+          "function_name": "resolve_profiled_columns",
+          "module": "data_profiling.shared",
+          "depth": 3,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Possible inline/private helper"
+          ],
+          "recommended_action": "Next step",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L48-L57",
+          "source_start_line": 48,
+          "source_end_line": 57,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "resolve_profiled_columns"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "resolve_profiled_columns"
+            ]
+          ],
+          "helper_cleanup_candidate": true
         },
         {
           "qualified_name": "fabricops_kit.governance_review._dq_failed_row_count",
@@ -42583,201 +42669,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "function_name": "_build_distribution_summaries",
-          "module": "_profiling_adapters",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 3,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 3,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L103-L133",
-          "source_start_line": 103,
-          "source_end_line": 133,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_resolvers._get_profiled_columns",
-          "function_name": "_get_profiled_columns",
-          "module": "_profiling_resolvers",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L44-L67",
-          "source_start_line": 44,
-          "source_end_line": 67,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_profiled_columns"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_profiled_columns"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_resolvers._is_min_max_supported_type",
-          "function_name": "_is_min_max_supported_type",
-          "module": "_profiling_resolvers",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_resolvers.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_resolvers.py#L70-L90",
-          "source_start_line": 70,
-          "source_end_line": 90,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_is_min_max_supported_type"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_is_min_max_supported_type"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config._audit_timestamp_expr",
-          "function_name": "_audit_timestamp_expr",
-          "module": "config",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "Thin wrapper candidate",
-            "Single-use internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L275-L280",
-          "source_start_line": 275,
-          "source_end_line": 280,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
           "qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "function_name": "_current_audit_timestamp",
           "module": "config",
@@ -42834,8 +42725,8 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config._validate_audit_timezone",
+          "function_name": "_validate_audit_timezone",
           "module": "config",
           "depth": 4,
           "function_type": "Private helper",
@@ -42843,39 +42734,41 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_workflows.profile_dataframe_core",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
           "caller_type": "Shared helper",
           "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
           "signals": [
+            "implicit_lifecycle_reachability",
+            "Leaf internal helper",
             "Layer assignment needs review"
           ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 3,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 1,
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 2,
+          "is_end_node": true,
+          "downstream_count": 0,
           "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248",
+          "source_start_line": 216,
+          "source_end_line": 248,
           "path_examples": [
             [
               "run_table_guardrails",
               "_run_table_guardrails_workflow",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr",
-              "_get_audit_timezone"
+              "build_audit_timestamp_expr",
+              "get_audit_timezone",
+              "_validate_audit_timezone"
             ],
             [
               "run_table_guardrails",
               "_run_table_guardrails_workflow",
               "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_audit_timezone"
+              "get_audit_timezone",
+              "_validate_audit_timezone"
             ],
             [
               "run_table_guardrails",
@@ -42883,7 +42776,8 @@
               "_run_active_dq_guardrail",
               "_dq_summary",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone",
+              "_validate_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -42946,6 +42840,153 @@
             ]
           ],
           "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_categorical_distribution",
+          "function_name": "_build_categorical_distribution",
+          "module": "data_profiling.shared",
+          "depth": 4,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L129-L165",
+          "source_start_line": 129,
+          "source_end_line": 165,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_categorical_distribution"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_categorical_distribution"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._build_numeric_distribution",
+          "function_name": "_build_numeric_distribution",
+          "module": "data_profiling.shared",
+          "depth": 4,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L97-L126",
+          "source_start_line": 97,
+          "source_end_line": 126,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_numeric_distribution"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_build_numeric_distribution"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.data_profiling.shared._numeric_bin_edges",
+          "function_name": "_numeric_bin_edges",
+          "module": "data_profiling.shared",
+          "depth": 4,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_profiling.shared.build_distribution_summaries",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Single-use internal helper",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/data_profiling/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L84-L94",
+          "source_start_line": 84,
+          "source_end_line": 94,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_numeric_bin_edges"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "enforce_profile_behavior",
+              "profile_dataframe_core",
+              "build_distribution_summaries",
+              "_numeric_bin_edges"
+            ]
+          ],
+          "helper_cleanup_candidate": true
         },
         {
           "qualified_name": "fabricops_kit.governance_review._canonical_dq_rule_type",
@@ -44469,159 +44510,6 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_categorical_distribution",
-          "function_name": "_build_categorical_distribution",
-          "module": "_profiling_adapters",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L63-L100",
-          "source_start_line": 63,
-          "source_end_line": 100,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_categorical_distribution"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_categorical_distribution"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_adapters._build_numeric_distribution",
-          "function_name": "_build_numeric_distribution",
-          "module": "_profiling_adapters",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L31-L60",
-          "source_start_line": 31,
-          "source_end_line": 60,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_numeric_distribution"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_build_numeric_distribution"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit._profiling_adapters._numeric_bin_edges",
-          "function_name": "_numeric_bin_edges",
-          "module": "_profiling_adapters",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit._profiling_adapters._build_distribution_summaries",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Single-use internal helper",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/_profiling_adapters.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/_profiling_adapters.py#L18-L28",
-          "source_start_line": 18,
-          "source_end_line": 28,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_numeric_bin_edges"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "enforce_profile_behavior",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_build_distribution_summaries",
-              "_numeric_bin_edges"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -44683,66 +44571,6 @@
             ]
           ],
           "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config._validate_audit_timezone",
-          "function_name": "_validate_audit_timezone",
-          "module": "config",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "implicit_lifecycle_reachability",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 2,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L216-L248",
-          "source_start_line": 216,
-          "source_end_line": 248,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_audit_timestamp_expr",
-              "_get_audit_timezone",
-              "_validate_audit_timezone"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "profile_dataframe_core",
-              "profile_dataframe_core",
-              "_get_audit_timezone",
-              "_validate_audit_timezone"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "_run_active_dq_guardrail",
-              "_dq_summary",
-              "_current_audit_timestamp",
-              "_get_audit_timezone",
-              "_validate_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
@@ -45319,9 +45147,9 @@
             },
             {
               "function": "profile_dataframe_core",
-              "module": "data_profiling",
-              "qualified_name": "fabricops_kit.data_profiling.profile_dataframe_core",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling.py#L18-L73",
+              "module": "data_profiling.shared",
+              "qualified_name": "fabricops_kit.data_profiling.shared.profile_dataframe_core",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_profiling/shared.py#L201-L274",
               "layer": "internal",
               "review_status": "classified",
               "callable_kind": "function",
@@ -49157,24 +48985,24 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -49191,14 +49019,14 @@
               "widget_select_agreement",
               "_register_current_notebook",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "_now_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -49832,8 +49660,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -49859,7 +49687,7 @@
               "widget_select_agreement",
               "_register_current_notebook",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -49867,7 +49695,7 @@
               "_start_pipeline_run_workflow",
               "_now_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -52548,24 +52376,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 6,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -52585,7 +52413,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "widget_author_dq_rules",
@@ -52594,7 +52422,7 @@
               "_base_guardrail_rule_record",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -52866,8 +52694,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -52896,7 +52724,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -52906,7 +52734,7 @@
               "_base_guardrail_rule_record",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -54533,24 +54361,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 6,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -54570,7 +54398,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "widget_author_schema_freshness_profile_rules",
@@ -54579,7 +54407,7 @@
               "_base_guardrail_rule_record",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -54851,8 +54679,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -54881,7 +54709,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -54891,7 +54719,7 @@
               "_base_guardrail_rule_record",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -56907,24 +56735,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 6,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -56942,7 +56770,7 @@
               "_approved_review_context",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "widget_enrich_table_metadata",
@@ -56951,7 +56779,7 @@
               "_approved_review_context",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "widget_enrich_table_metadata",
@@ -56961,7 +56789,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -57190,8 +57018,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -57218,7 +57046,7 @@
               "_approved_review_context",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -57228,7 +57056,7 @@
               "_approved_review_context",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -57239,7 +57067,7 @@
               "_authoring_lifecycle",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -58766,46 +58594,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
-          "module": "config",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
-          "path_examples": [
-            [
-              "widget_render_agreement_evidence",
-              "_render_agreement_evidence_widget_workflow",
-              "_save_agreement_evidence_records",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -58865,6 +58653,46 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 2,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "widget_render_agreement_evidence",
+              "_render_agreement_evidence_widget_workflow",
+              "_save_agreement_evidence_records",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared.normalize_write_mode",
@@ -59094,8 +58922,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -59121,7 +58949,7 @@
               "_save_agreement_evidence_records",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -61812,54 +61640,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
-          "module": "config",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
-          "path_examples": [
-            [
-              "widget_render_data_agreement",
-              "_render_maintenance_widget_shared_workflow",
-              "_create_or_update_data_agreement",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ],
-            [
-              "widget_render_data_agreement",
-              "_render_maintenance_widget_shared_workflow",
-              "_create_or_update_data_steward",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -61923,6 +61703,54 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 2,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "widget_render_data_agreement",
+              "_render_maintenance_widget_shared_workflow",
+              "_create_or_update_data_agreement",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "widget_render_data_agreement",
+              "_render_maintenance_widget_shared_workflow",
+              "_create_or_update_data_steward",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared._normalize_schema_name",
@@ -62259,8 +62087,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -62286,7 +62114,7 @@
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -62295,7 +62123,7 @@
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -65199,54 +65027,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
-          "module": "config",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
-          "path_examples": [
-            [
-              "widget_render_data_steward",
-              "_render_maintenance_widget_shared_workflow",
-              "_create_or_update_data_agreement",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ],
-            [
-              "widget_render_data_steward",
-              "_render_maintenance_widget_shared_workflow",
-              "_create_or_update_data_steward",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -65310,6 +65090,54 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 2,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "widget_render_data_steward",
+              "_render_maintenance_widget_shared_workflow",
+              "_create_or_update_data_agreement",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "widget_render_data_steward",
+              "_render_maintenance_widget_shared_workflow",
+              "_create_or_update_data_steward",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared._normalize_schema_name",
@@ -65646,8 +65474,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -65673,7 +65501,7 @@
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -65682,7 +65510,7 @@
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -66709,24 +66537,24 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config",
           "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
           "used_outside_flow": 2,
@@ -66743,7 +66571,7 @@
               "apply_governance_enrichment_action",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ],
             [
               "widget_review_guardrail_governance",
@@ -66751,7 +66579,7 @@
               "apply_governance_rule_action",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone"
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -66766,8 +66594,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -66793,7 +66621,7 @@
               "apply_governance_enrichment_action",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -66802,7 +66630,7 @@
               "apply_governance_rule_action",
               "_now_utc_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -69917,61 +69745,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
-          "module": "config",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
-          "path_examples": [
-            [
-              "write_pipeline_lineage",
-              "_write_pipeline_lineage_workflow",
-              "_now_iso",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ],
-            [
-              "write_pipeline_lineage",
-              "_write_pipeline_lineage_workflow",
-              "_runtime_audit_fields",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ],
-            [
-              "write_pipeline_lineage",
-              "_write_pipeline_lineage_workflow",
-              "_runtime_audit_fields",
-              "_now_iso",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -70028,6 +69801,61 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 4,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 2,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "write_pipeline_lineage",
+              "_write_pipeline_lineage_workflow",
+              "_now_iso",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "write_pipeline_lineage",
+              "_write_pipeline_lineage_workflow",
+              "_runtime_audit_fields",
+              "_build_runtime_audit_fields",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "write_pipeline_lineage",
+              "_write_pipeline_lineage_workflow",
+              "_runtime_audit_fields",
+              "_now_iso",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
@@ -70245,8 +70073,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -70271,7 +70099,7 @@
               "_write_pipeline_lineage_workflow",
               "_now_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -70280,7 +70108,7 @@
               "_runtime_audit_fields",
               "_build_runtime_audit_fields",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ],
             [
@@ -70289,7 +70117,7 @@
               "_runtime_audit_fields",
               "_now_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -71433,45 +71261,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "function_name": "_get_audit_timezone",
-          "module": "config",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
-          "source_start_line": 256,
-          "source_end_line": 261,
-          "path_examples": [
-            [
-              "write_pipeline_run_summary",
-              "_write_pipeline_run_summary_workflow",
-              "_now_iso",
-              "_current_audit_timestamp",
-              "_get_audit_timezone"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config",
@@ -71520,6 +71309,45 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "function_name": "get_audit_timezone",
+          "module": "config",
+          "depth": 4,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config._current_audit_timestamp",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Shared helper"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 2,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config.py#L256-L261",
+          "source_start_line": 256,
+          "source_end_line": 261,
+          "path_examples": [
+            [
+              "write_pipeline_run_summary",
+              "_write_pipeline_run_summary_workflow",
+              "_now_iso",
+              "_current_audit_timestamp",
+              "get_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.io.shared.resolve_lakehouse_table_location",
@@ -71609,8 +71437,8 @@
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config._get_audit_timezone",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.get_audit_timezone",
+          "caller_type": "Shared helper",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
@@ -71635,7 +71463,7 @@
               "_write_pipeline_run_summary_workflow",
               "_now_iso",
               "_current_audit_timestamp",
-              "_get_audit_timezone",
+              "get_audit_timezone",
               "_validate_audit_timezone"
             ]
           ],
@@ -72789,21 +72617,21 @@
     "total_callables": 342,
     "function_type": {
       "Public function": 26,
-      "Shared helper": 72
+      "Shared helper": 77
     },
     "layer": {
       "public": 26,
-      "internal": 72
+      "internal": 77
     },
     "review_status": {
-      "classified": 313,
-      "classification_pending": 29,
+      "classified": 312,
+      "classification_pending": 30,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 98
+      "function": 103
     },
     "callable_role_group": {
       "adapter": 17,
@@ -72812,12 +72640,12 @@
       "normalizer": 20,
       "other": 2,
       "property_method": 1,
-      "public_entrypoint": 26,
+      "public_entrypoint": 27,
       "registry_builder": 1,
       "resolver": 52,
       "utility": 129,
       "validator": 19,
-      "workflow": 56
+      "workflow": 55
     },
     "dependency_role": {
       "audit_time_utility": 2,
@@ -72828,10 +72656,10 @@
       "internal_normalizer": 20,
       "internal_resolver": 52,
       "internal_validator": 17,
-      "internal_workflow": 56,
+      "internal_workflow": 55,
       "lifecycle_method": 8,
       "property_method": 1,
-      "public_api_entrypoint": 26,
+      "public_api_entrypoint": 27,
       "registry_builder": 1,
       "result_model_class": 1,
       "schema_utility": 2,
@@ -72839,32 +72667,32 @@
       "utility_validator": 2
     },
     "recommended_action": {
-      "Keep private helper": 136,
-      "Merge into owner": 71,
-      "Next step": 50,
+      "Keep private helper": 135,
+      "Merge into owner": 63,
+      "Next step": 62,
       "Public API entrypoint": 26,
       "Remove redundant wrapper": 4,
-      "Rename to shared helper": 20,
-      "Shared internal helper": 35
+      "Rename to shared helper": 16,
+      "Shared internal helper": 36
     },
     "public_api_surface": {
       "public_api_entrypoints": 26,
-      "long_call_chains": 25,
-      "architecture_violations": 15,
-      "architecture_findings": 15,
+      "long_call_chains": 24,
+      "architecture_violations": 14,
+      "architecture_findings": 14,
       "merge_candidates": 26,
-      "suggested_inline_or_privatize": 11
+      "suggested_inline_or_privatize": 12
     },
     "callable_inventory_metrics": {
-      "module_count": 19,
+      "module_count": 17,
       "total_callables": 342,
       "public_api_entrypoints": 26,
-      "function_callables": 98,
-      "supporting_functions": 72,
+      "function_callables": 103,
+      "supporting_functions": 77,
       "non_function_records": 22,
-      "hidden_private_helpers": 222,
-      "private_helpers_to_review": 222
+      "hidden_private_helpers": 217,
+      "private_helpers_to_review": 217
     },
-    "private_helper_review": 222
+    "private_helper_review": 217
   }
 }

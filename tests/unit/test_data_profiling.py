@@ -76,3 +76,98 @@ def test_profile_dataframe_public_import_and_signature_are_stable():
 
     assert root_profile_dataframe is profile_dataframe
     assert str(inspect.signature(profile_dataframe)) == "(df, table_name: 'str', *, exclude_columns=None, run_timestamp_timezone: 'str | None' = None, config: 'Any' = None, include_distributions: 'bool' = False, distribution_columns: 'list[str] | set[str] | tuple[str, ...] | None' = None, distribution_bin_edges: 'dict[str, list[float]] | None' = None, categorical_categories: 'dict[str, list[str]] | None' = None, categorical_top_n: 'int' = 20)"
+
+
+def test_profile_dataframe_numeric_distribution_behavior(spark_session):
+    """Verify numeric profiling distribution output."""
+    import json
+
+    df = spark_session.createDataFrame([(1, 5.0), (2, 15.0), (3, 25.0)], ["id", "amount"])
+
+    rows = {row["COLUMN_NAME"]: row.asDict() for row in profile_dataframe(
+        df,
+        "orders",
+        include_distributions=True,
+        distribution_columns=["amount"],
+        distribution_bin_edges={"amount": [0.0, 10.0, 20.0, 30.0]},
+    ).collect()}
+
+    assert rows["amount"]["DISTRIBUTION_TYPE"] == "numeric"
+    assert json.loads(rows["amount"]["DISTRIBUTION_JSON"]) == {"bin_edges": [0.0, 10.0, 20.0, 30.0], "bin_counts": [1, 1, 1]}
+    assert rows["id"]["DISTRIBUTION_TYPE"] is None
+
+
+def test_profile_dataframe_categorical_distribution_behavior(spark_session):
+    """Verify categorical profiling distribution output."""
+    import json
+
+    df = spark_session.createDataFrame([("open",), ("open",), ("closed",), ("new",)], ["status"])
+
+    row = profile_dataframe(
+        df,
+        "orders",
+        include_distributions=True,
+        categorical_categories={"status": ["open", "closed"]},
+    ).collect()[0].asDict()
+
+    assert row["DISTRIBUTION_TYPE"] == "categorical"
+    assert json.loads(row["DISTRIBUTION_JSON"]) == {
+        "category_counts": {"closed": 1, "open": 2},
+        "new_categories": ["new"],
+        "other_count": 1,
+    }
+
+
+def test_profile_dataframe_selected_columns_behavior(spark_session):
+    """Verify explicit excluded columns are not profiled."""
+    df = spark_session.createDataFrame([(1, 10.0, "open")], ["id", "amount", "status"])
+
+    columns = {row["COLUMN_NAME"] for row in profile_dataframe(df, "orders", exclude_columns=["id"]).collect()}
+
+    assert columns == {"amount", "status"}
+
+
+def test_profile_dataframe_min_max_supported_type_behavior(spark_session):
+    """Verify unsupported complex types omit min and max values."""
+    from fabricops_kit.data_profiling.shared import is_min_max_supported_type
+
+    assert is_min_max_supported_type("string") is True
+    assert is_min_max_supported_type("array<string>") is False
+
+    df = spark_session.createDataFrame([(["a"],), (["b"],)], "tags array<string>")
+
+    row = profile_dataframe(df, "orders").collect()[0].asDict()
+
+    assert row["MIN_VALUE"] is None
+    assert row["MAX_VALUE"] is None
+
+
+def test_profile_dataframe_audit_timestamp_timezone_behavior(spark_session):
+    """Verify audit timezone validation and timestamp expression behavior."""
+    from types import SimpleNamespace
+
+    from fabricops_kit.config import get_audit_timezone
+
+    assert get_audit_timezone(SimpleNamespace(audit_timezone="UTC")) == "UTC"
+
+    df = spark_session.createDataFrame([(1,)], ["id"])
+    row = profile_dataframe(df, "orders", run_timestamp_timezone="UTC").collect()[0]
+
+    assert row["RUN_TIMESTAMP"] is not None
+    with pytest.raises(ValueError, match="Invalid FABRICOPS_AUDIT_TIMEZONE"):
+        profile_dataframe(df, "orders", run_timestamp_timezone="NotATimezone").collect()
+
+
+def test_profile_dataframe_empty_column_behavior_raises(spark_session):
+    """Verify all-technical DataFrames raise the supported empty-profile error."""
+    df = spark_session.createDataFrame([("run-1", "ok")], ["_pipeline_run_id", "_dq_check_status"])
+
+    with pytest.raises(ValueError, match="No eligible non-technical columns"):
+        profile_dataframe(df, "orders")
+
+
+def test_profile_dataframe_package_import():
+    """Verify package-level public import works after module migration."""
+    from fabricops_kit.data_profiling import profile_dataframe as package_profile_dataframe
+
+    assert package_profile_dataframe is profile_dataframe
