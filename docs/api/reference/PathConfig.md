@@ -6,9 +6,9 @@ Environment-to-target mapping used for lakehouse and warehouse routing.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/public.py:121`
+`fabricops_kit/config/models.py:60`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/public.py#L121-L142">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L60-L81">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -19,6 +19,10 @@ Environment-to-target mapping used for lakehouse and warehouse routing.
 **Used in notebooks:** `00_env_config`
 
 ## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
 
 ### Additional context
 
@@ -46,6 +50,10 @@ No parameters.
 ## Returns
 
 Validated PathConfig object.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
 
 ## Raises / Errors
 

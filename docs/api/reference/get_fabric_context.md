@@ -14,9 +14,9 @@ Build a Fabric context from explicit values or the active default.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/public.py:65`
+`fabricops_kit/config/get_fabric_context.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/public.py#L65-L117">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/get_fabric_context.py#L12-L64">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -27,6 +27,10 @@ Build a Fabric context from explicit values or the active default.
 **Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
 
 ### Additional context
 
@@ -69,6 +73,10 @@ Example usage not documented yet.
 ## Returns
 
 Fabric context dictionary containing config and env.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
 
 ## Raises / Errors
 

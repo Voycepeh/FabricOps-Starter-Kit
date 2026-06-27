@@ -1,6 +1,7 @@
 """Supported config public contract for FabricOps notebooks."""
 
-from .public import (
+from .get_fabric_context import get_fabric_context
+from .models import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
     FabricStore,
@@ -8,10 +9,9 @@ from .public import (
     GovernanceConfig,
     NotebookSetupContext,
     PathConfig,
-    get_fabric_context,
-    setup_metadata_tables,
-    setup_notebook,
 )
+from .setup_metadata_tables import setup_metadata_tables
+from .setup_notebook import setup_notebook
 
 __all__ = [
     "FabricStore",
@@ -21,7 +21,7 @@ __all__ = [
     "FrameworkConfig",
     "ConfigSmokeCheckResult",
     "NotebookSetupContext",
+    "get_fabric_context",
     "setup_notebook",
     "setup_metadata_tables",
-    "get_fabric_context",
 ]

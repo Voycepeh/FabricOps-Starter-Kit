@@ -1,16 +1,9 @@
 """Supported public API contract for release-facing notebook functions."""
 
 SUPPORTED_PUBLIC_API = (
-    "fabricops_kit.config.public.FabricStore",
-    "fabricops_kit.config.public.PathConfig",
-    "fabricops_kit.config.public.GovernanceConfig",
-    "fabricops_kit.config.public.DataAgreementConfig",
-    "fabricops_kit.config.public.FrameworkConfig",
-    "fabricops_kit.config.public.ConfigSmokeCheckResult",
-    "fabricops_kit.config.public.NotebookSetupContext",
-    "fabricops_kit.config.public.setup_metadata_tables",
-    "fabricops_kit.config.public.setup_notebook",
-    "fabricops_kit.config.public.get_fabric_context",
+    "fabricops_kit.config.get_fabric_context.get_fabric_context",
+    "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+    "fabricops_kit.config.setup_notebook.setup_notebook",
     "fabricops_kit.data_agreement.widget_render_agreement_evidence",
     "fabricops_kit.data_agreement.widget_render_data_agreement",
     "fabricops_kit.data_agreement.widget_render_data_steward",

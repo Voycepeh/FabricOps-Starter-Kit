@@ -6,9 +6,9 @@ Agreement table and widget configuration.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/public.py:197`
+`fabricops_kit/config/models.py:133`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/public.py#L197-L258">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L133-L194">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -19,6 +19,10 @@ Agreement table and widget configuration.
 **Used in notebooks:** `00_env_config`
 
 ## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
 
 ### Additional context
 
@@ -46,6 +50,10 @@ No parameters.
 ## Returns
 
 Validated DataAgreementConfig object.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
 
 ## Raises / Errors
 

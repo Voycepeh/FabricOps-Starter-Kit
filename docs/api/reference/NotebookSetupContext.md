@@ -6,9 +6,9 @@ Runtime setup context returned by setup_notebook.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/public.py:306`
+`fabricops_kit/config/models.py:240`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/public.py#L306-L340">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L240-L274">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -19,6 +19,10 @@ Runtime setup context returned by setup_notebook.
 **Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
 
 ### Additional context
 
@@ -46,6 +50,10 @@ No parameters.
 ## Returns
 
 NotebookSetupContext value object.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
 
 ## Raises / Errors
 

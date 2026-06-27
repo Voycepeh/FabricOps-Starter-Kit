@@ -129,6 +129,16 @@ def test_landing_stats_match_reference_sources() -> None:
 def test_generated_callable_surface_matches_all_exports() -> None:
     """Verify generated callable entries come from package __all__."""
     exported_symbols = set(_exported_symbols())
+    config_model_symbols = {
+        "FabricStore",
+        "PathConfig",
+        "GovernanceConfig",
+        "DataAgreementConfig",
+        "FrameworkConfig",
+        "ConfigSmokeCheckResult",
+        "NotebookSetupContext",
+    }
+    function_exported_symbols = exported_symbols - config_model_symbols
     removed_symbols = {
         "enforce_dq_rules",
         "get_selected_agreement",
@@ -150,7 +160,7 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert function_callables == exported_symbols
     assert page_callables == exported_symbols
     public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["layer"] == "public"}
-    assert public_inventory == exported_symbols
+    assert public_inventory == function_exported_symbols
     assert not (removed_symbols & automation_callables)
     assert not (removed_symbols & function_callables)
     assert not (removed_symbols & page_callables)
@@ -237,6 +247,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     dashboard_path = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
     inventory_path = ROOT / "docs" / "assets" / "function-inventory.html"
     exported_symbols = set(_exported_symbols())
+    config_model_symbols = {
+        "FabricStore",
+        "PathConfig",
+        "GovernanceConfig",
+        "DataAgreementConfig",
+        "FrameworkConfig",
+        "ConfigSmokeCheckResult",
+        "NotebookSetupContext",
+    }
+    function_exported_symbols = exported_symbols - config_model_symbols
 
     assert flow_page.exists()
     assert dashboard_path.exists()
@@ -635,7 +655,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     public_flows = flow_data["public_entrypoint_flow"]
     function_inventory = flow_data["function_inventory"]
 
-    assert summary_counts["layer"]["public"] == len(exported_symbols)
+    assert summary_counts["layer"]["public"] == len(function_exported_symbols)
     assert set(summary_counts["function_type"]) == {"Public function", "Shared helper"}
     assert summary_counts["callable_inventory_metrics"]["function_callables"] == sum(
         summary_counts["function_type"].values()
@@ -649,7 +669,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     )
 
     public_inventory = {row["function_name"] for row in function_inventory if row["layer"] == "public"}
-    assert public_inventory == exported_symbols
+    assert public_inventory == function_exported_symbols
     assert len(function_inventory) == summary_counts["total_callables"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
@@ -2234,8 +2254,8 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     inventory = flow_data["function_inventory"]
 
     expected_counts = {
-        "public": 26,
-        "internal": 76,
+        "public": 27,
+        "internal": 75,
         "private_helper": 217,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}

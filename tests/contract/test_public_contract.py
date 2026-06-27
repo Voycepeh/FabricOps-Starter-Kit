@@ -21,8 +21,19 @@ pytestmark = pytest.mark.contract
 APPROVED_V1_CALLABLES = {qualified_name.rsplit(".", maxsplit=1)[-1] for qualified_name in SUPPORTED_PUBLIC_API}
 APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
 APPROVED_V1_QUALIFIED_FUNCTIONS = {name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()}
+CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES = {"fabricops_kit.config.get_fabric_context.get_fabric_context"}
+CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
+    "fabricops_kit.config.models.FabricStore",
+    "fabricops_kit.config.models.PathConfig",
+    "fabricops_kit.config.models.GovernanceConfig",
+    "fabricops_kit.config.models.DataAgreementConfig",
+    "fabricops_kit.config.models.FrameworkConfig",
+    "fabricops_kit.config.models.ConfigSmokeCheckResult",
+    "fabricops_kit.config.models.NotebookSetupContext",
+}
 LEGACY_APPROVED_V1_CALLABLES = {
     "setup_notebook",
+    "get_fabric_context",
     "setup_metadata_tables",
     "widget_render_data_steward",
     "widget_render_data_agreement",
@@ -131,15 +142,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the release public API contract keeps exactly 26 functions."""
+    """Verify the release public API contract keeps exactly 27 functions."""
     message = (
-        "The supported public API surface must remain exactly 26 functions during "
+        "The supported public API surface must remain exactly 27 functions during "
         "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
         "intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 26, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 26
+    assert len(SUPPORTED_PUBLIC_API) == 27, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 27
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -172,8 +183,8 @@ def test_supported_public_api_matches_generated_inventory_classification():
         if row.get("layer") == "public" or row.get("function_type") == "Public Starter Kit function"
     }
 
-    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES
-    assert flow_public == APPROVED_V1_QUALIFIED_FUNCTIONS
+    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES | CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
+    assert flow_public == APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
@@ -191,7 +202,18 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
         snapshots[qualified_name] = _signature_snapshot(function)
 
     assert snapshots == {
-        "fabricops_kit.config.setup_metadata_tables": {
+        "fabricops_kit.config.get_fabric_context.get_fabric_context": {
+            "parameters": [
+                {"name": "env", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "config", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "workspace_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "lakehouse_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "workspace_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "lakehouse_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "values", "kind": "VAR_KEYWORD", "required": True},
+            ]
+        },
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "config", "kind": "KEYWORD_ONLY", "required": True},
@@ -200,7 +222,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "require_active_steward", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.config.setup_notebook": {
+        "fabricops_kit.config.setup_notebook.setup_notebook": {
             "parameters": [
                 {"name": "config", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "env", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
@@ -484,8 +506,8 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
 
 def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
-    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
-    assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES)
+    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "ConfigSmokeCheckResult", "NotebookSetupContext"}
+    assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES) + 7
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
 
@@ -499,7 +521,7 @@ def test_removed_aliases_are_not_exported():
 
 def test_root_public_exports_match_approved_v1_list():
     """Verify root public exports match approved v1 list."""
-    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES
+    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "ConfigSmokeCheckResult", "NotebookSetupContext"}
     for removed in {
         "apply_governance_rule_action",
         "build_guardrail_detail_rows",

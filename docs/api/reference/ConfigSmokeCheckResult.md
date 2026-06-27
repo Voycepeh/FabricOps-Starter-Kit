@@ -6,9 +6,9 @@ One configuration readiness check result.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/public.py:297`
+`fabricops_kit/config/models.py:231`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/public.py#L297-L302">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L231-L236">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -19,6 +19,10 @@ One configuration readiness check result.
 **Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
 
 ### Additional context
 
@@ -46,6 +50,10 @@ No parameters.
 ## Returns
 
 ConfigSmokeCheckResult value object.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
 
 ## Raises / Errors
 

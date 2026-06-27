@@ -246,7 +246,7 @@ def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
     True
 
     """
-    from .public import DataAgreementConfig, FrameworkConfig, GovernanceConfig, PathConfig
+    from .models import DataAgreementConfig, FrameworkConfig, GovernanceConfig, PathConfig
 
     if isinstance(config, FrameworkConfig):
         normalized = config
@@ -287,7 +287,7 @@ def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
 
 def _normalize_path_config(config: Any | None, *, require_paths: bool = True) -> PathConfig:
     """Return the shared runtime path configuration for accepted config shapes."""
-    from .public import FrameworkConfig, PathConfig
+    from .models import FrameworkConfig, PathConfig
 
     if config is None:
         if require_paths:
@@ -447,7 +447,7 @@ def _run_config_smoke_tests(
     False
 
     """
-    from .public import ConfigSmokeCheckResult
+    from .models import ConfigSmokeCheckResult
 
     results: list[ConfigSmokeCheckResult] = []
     required_targets = required_targets or ["Source", "Unified"]
@@ -515,7 +515,7 @@ def _setup_notebook_workflow(
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
     """Own setup_notebook orchestration behind the frozen public API."""
-    from .public import NotebookSetupContext
+    from .models import NotebookSetupContext
     from uuid import uuid4
     from datetime import datetime, timezone
 

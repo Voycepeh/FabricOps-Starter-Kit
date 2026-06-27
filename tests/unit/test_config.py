@@ -45,8 +45,8 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
         "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
     )
-    assert setup_notebook.__module__ == "fabricops_kit.config.public"
-    assert setup_metadata_tables.__module__ == "fabricops_kit.config.public"
+    assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
+    assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -652,7 +652,11 @@ def test_config_public_import_contract_and_package_shape():
 
     assert Path("src/fabricops_kit/config.py").exists() is False
     assert Path("src/fabricops_kit/config/__init__.py").exists()
-    assert Path("src/fabricops_kit/config/public.py").exists()
+    assert Path("src/fabricops_kit/config/public.py").exists() is False
+    assert Path("src/fabricops_kit/config/models.py").exists()
+    assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
+    assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
+    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
     assert Path("src/fabricops_kit/config/shared.py").exists()
     assert config_package.__file__.endswith("config/__init__.py")
     assert RootFabricStore is ConfigFabricStore
@@ -662,6 +666,9 @@ def test_config_public_import_contract_and_package_shape():
     assert RootDataAgreementConfig is DataAgreementConfig
     assert root_setup_notebook is fabricops_kit.setup_notebook
     assert root_setup_metadata_tables is fabricops_kit.setup_metadata_tables
+    assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
+    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
+    assert fabricops_kit.get_fabric_context.__module__ == "fabricops_kit.config.get_fabric_context"
 
 
 def test_env_config_template_imports_config_from_root_only():

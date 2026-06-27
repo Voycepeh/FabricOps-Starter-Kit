@@ -1,4 +1,4 @@
-"""Public config models and notebook-facing setup entrypoints."""
+"""Config dataclasses and value objects for FabricOps notebooks."""
 
 from __future__ import annotations
 
@@ -11,13 +11,8 @@ from .shared import (
     DEFAULT_AUDIT_TIMEZONE,
     DEFAULT_STEWARD_ROLE_OPTIONS,
     _normalize_widget_config,
-    _setup_metadata_tables_workflow,
-    _setup_notebook_workflow,
     _validate_audit_timezone,
-    get_default_fabric_context,
 )
-
-_DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
 
 
 @dataclass(frozen=True)
@@ -61,62 +56,6 @@ class FabricStore:
         return f"abfss://{self.workspace_id}@onelake.dfs.fabric.microsoft.com/{self.item_id}"
 
 
-
-def get_fabric_context(
-    *,
-    env: str | None = None,
-    config: Any = None,
-    workspace_id: str | None = None,
-    lakehouse_id: str | None = None,
-    workspace_name: str | None = None,
-    lakehouse_name: str | None = None,
-    **values: Any,
-) -> dict[str, Any]:
-    """Build a Fabric context from explicit values or the active default.
-
-    Parameters
-    ----------
-    env : str, optional
-        Environment key to use. Defaults to the active ``00_env_config`` value.
-    config : Any, optional
-        FrameworkConfig or compatible config object. Defaults to the active
-        ``00_env_config`` value.
-    workspace_id : str, optional
-        Workspace ID override for advanced cross-workspace usage.
-    lakehouse_id : str, optional
-        Lakehouse item ID override for advanced usage.
-    workspace_name : str, optional
-        Workspace name override.
-    lakehouse_name : str, optional
-        Lakehouse name override.
-    **values
-        Additional context values to merge into the returned dictionary.
-
-    Returns
-    -------
-    dict[str, Any]
-        Fabric context dictionary suitable for helper ``context=`` overrides.
-
-    """
-    base: dict[str, Any] = {} if config is not None and env is not None else dict(get_default_fabric_context())
-    if config is not None:
-        base["config"] = config
-    if env is not None:
-        base["env"] = env
-    for key, value in {
-        "workspace_id": workspace_id,
-        "lakehouse_id": lakehouse_id,
-        "workspace_name": workspace_name,
-        "lakehouse_name": lakehouse_name,
-    }.items():
-        if value is not None:
-            base[key] = value
-    base.update(values)
-    if not base.get("config") or not base.get("env"):
-        raise RuntimeError(_DEFAULT_CONTEXT_ERROR)
-    return base
-
-
 @dataclass(frozen=True)
 class PathConfig:
     """Environment-to-target mapping used for lakehouse/warehouse routing.
@@ -140,8 +79,6 @@ class PathConfig:
         """Validate and normalize initialized values."""
         if not isinstance(self.paths, dict) or not self.paths:
             raise ValueError("paths must be a non-empty mapping of environments to targets.")
-
-
 
 
 @dataclass(frozen=True)
@@ -190,7 +127,6 @@ class GovernanceConfig:
             "enrichment_classification_widget",
             _normalize_widget_config(self.enrichment_classification_widget),
         )
-
 
 
 @dataclass(frozen=True)
@@ -256,8 +192,6 @@ class DataAgreementConfig:
         object.__setattr__(self, "data_agreement_widget", _normalize_widget_config(self.data_agreement_widget))
         options = [str(option).strip() for option in (self.steward_role_options or []) if str(option).strip()]
         object.__setattr__(self, "steward_role_options", options or list(DEFAULT_STEWARD_ROLE_OPTIONS))
-
-
 
 
 @dataclass(frozen=True)
@@ -340,127 +274,6 @@ class NotebookSetupContext:
     readiness_status: str
 
 
-def setup_notebook(
-    config: FrameworkConfig | dict[str, Any],
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    notebook_name: str | None = None,
-    run_id_prefix: str = "run",
-    local_fallback_name: str | None = None,
-) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for delivery and optional support notebooks.
-
-    Parameters
-    ----------
-    config : FrameworkConfig | dict[str, Any]
-        Framework configuration object or compatible mapping. The setup flow
-        validates required sections and configured Fabric targets before
-        running readiness checks.
-    env : str, default="Sandbox"
-        Environment key used to resolve target paths.
-    required_targets : list[str] | None, optional
-        Target names that must resolve for ``env``. Defaults to
-        ``["Source", "Unified"]``.
-    notebook_name : str | None, optional
-        Explicit notebook name used for runtime metadata and naming checks.
-    run_id_prefix : str, default="run"
-        Prefix used when a Fabric runtime run identifier is unavailable.
-    local_fallback_name : str | None, optional
-        Notebook name used when neither ``notebook_name`` nor Fabric runtime
-        context provides one.
-
-    Returns
-    -------
-    NotebookSetupContext
-        Validated runtime context with resolved paths, smoke-check results,
-        runtime metadata, and overall readiness status.
-
-    Raises
-    ------
-    ValueError
-        Raised when config sections are invalid or required targets cannot be
-        resolved for the selected environment.
-
-    Notes
-    -----
-    Validation and smoke checks are local to notebook startup. This helper does
-    not provision Fabric resources or persist metadata.
-
-    """
-    return _setup_notebook_workflow(
-        config=config,
-        env=env,
-        required_targets=required_targets,
-        notebook_name=notebook_name,
-        run_id_prefix=run_id_prefix,
-        local_fallback_name=local_fallback_name,
-    )
-
-
-def setup_metadata_tables(
-    *,
-    spark: Any,
-    config: FrameworkConfig | dict[str, Any],
-    env: str,
-    metadata_schema: str | None = None,
-    require_active_steward: bool = False,
-) -> dict[str, Any]:
-    """Prepare all FabricOps metadata tables for the configured environment.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used by the table setup helpers.
-    config : FrameworkConfig or dict
-        Shared ``00_env_config`` configuration containing the metadata target.
-    env : str
-        Environment key to prepare.
-    metadata_schema : str or None, default=None
-        Optional schema name for schema-enabled Fabric Lakehouses. Keep
-        ``None`` for classic Lakehouses that store metadata tables under
-        ``Tables/<table_name>``. Use a simple schema such as ``"METADATA"``
-        to create and validate registered tables such as
-        ``METADATA.METADATA_DATA_AGREEMENT``.
-    require_active_steward : bool, default=False
-        Forwarded to the agreement metadata setup to optionally require an
-        active steward before returning success.
-
-    Returns
-    -------
-    dict[str, Any]
-        Combined setup summary keyed by ``data_agreement``,
-        ``notebook_registry``, and ``governance``. The payload also includes
-        ``metadata_schema`` and ``fully_qualified_tables`` for schema-enabled
-        Lakehouse visibility.
-
-    Notes
-    -----
-    This is the v1 notebook setup action for metadata provisioning. It keeps
-    ``00_env_config`` simple while delegating to internal helpers that route all
-    metadata reads and writes through the configured metadata target. With
-    ``metadata_schema=None``, setup preserves classic path-based Lakehouse
-    behavior under ``Tables/<table_name>``. With ``metadata_schema`` set, setup
-    uses schema-aware Lakehouse paths such as ``Tables/<schema>/<table>`` and
-    does not bake the schema into configured metadata table names. FabricOps may warn about
-    legacy nested or unidentified Delta folders, but it does not delete or
-    migrate user data automatically.
-
-    """
-    return _setup_metadata_tables_workflow(
-        spark=spark,
-        config=config,
-        env=env,
-        metadata_schema=metadata_schema,
-        require_active_steward=require_active_steward,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Utility layer: Spark/Fabric runtime probes
-# ---------------------------------------------------------------------------
-
-
-
 __all__ = [
     "FabricStore",
     "PathConfig",
@@ -469,7 +282,4 @@ __all__ = [
     "FrameworkConfig",
     "ConfigSmokeCheckResult",
     "NotebookSetupContext",
-    "setup_notebook",
-    "setup_metadata_tables",
-    "get_fabric_context",
 ]

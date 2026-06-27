@@ -64,7 +64,10 @@ def markdown_anchor(value: str) -> str:
 
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
-    "config.public": "config",
+    "config.models": "config",
+    "config.get_fabric_context": "config",
+    "config.setup_notebook": "config",
+    "config.setup_metadata_tables": "config",
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
     "data_profiling.profile_dataframe": "data_profiling",
@@ -308,7 +311,7 @@ def source_module_path(module: str) -> Path:
     if module == "data_profiling":
         return PKG_DIR / "data_profiling" / "shared.py"
     if module == "config":
-        return PKG_DIR / "config" / "public.py"
+        return PKG_DIR / "config" / "__init__.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
 
 def parse_module(path: Path) -> dict[str, Any]:
@@ -4782,8 +4785,8 @@ def main() -> None:
     all_doc_modules = discovered_doc_modules
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
-        if actual_module not in module_data and module == "config" and "config.public" in module_data:
-            actual_module = "config.public"
+        if actual_module not in module_data and module == "config":
+            actual_module = "config.models"
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]
