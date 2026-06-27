@@ -4089,15 +4089,27 @@ requested_work:
 
 The packet keeps the refactor focused on the selected function, the identified risks, and the compatibility mode.
 
-## Generated outputs
+## Generated outputs and source checks
 
-The Function Call Graph is generated from repository scans. The generated outputs are:
+The Function Call Graph is generated from repository scans.
+
+The generated review outputs are:
 
 - [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
 - [Function Inventory](../assets/function-inventory.html)
 - [function-call-graph.json](_data/function-call-graph.json)
 
-Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
+The source scanner is the Python file that scans the repository and identifies the public callable functions, supporting private functions, classes, internal methods, and dependency edges used to build the graph.
+
+- Scanner: `scripts/generate_function_reference.py`
+
+The architecture is also protected by an enforcement test. This test makes sure the callable structure stays intentional as the codebase changes, instead of allowing public callables, shared helpers, or generated reference outputs to drift silently.
+
+- Enforcement test: `tests/contract/test_callable_architecture_validation.py`
+
+Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
+
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
 
 ## Principle
 
