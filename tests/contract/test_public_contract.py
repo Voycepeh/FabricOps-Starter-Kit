@@ -177,13 +177,15 @@ def test_supported_public_api_matches_generated_inventory_classification():
     )
 
     manifest_public = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Callable"}
+    manifest_classes = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Public class"}
     flow_public = {
         row["qualified_name"]
         for row in callable_flow["function_inventory"]
         if row.get("layer") == "public" or row.get("function_type") == "Public Starter Kit function"
     }
 
-    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES | CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
+    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
+    assert manifest_classes == CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES
     assert flow_public == APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
 
 

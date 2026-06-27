@@ -631,7 +631,7 @@
       "module": "config.shared",
       "callable": "ConfigSmokeCheckResult",
       "docs_url": "/FabricOps-Starter-Kit/reference/ConfigSmokeCheckResult/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -648,7 +648,7 @@
       "module": "config.shared",
       "callable": "DataAgreementConfig",
       "docs_url": "/FabricOps-Starter-Kit/reference/DataAgreementConfig/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [],
@@ -684,7 +684,7 @@
       "module": "config.shared",
       "callable": "FabricStore",
       "docs_url": "/FabricOps-Starter-Kit/reference/FabricStore/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [],
@@ -731,7 +731,7 @@
       "module": "config.shared",
       "callable": "FrameworkConfig",
       "docs_url": "/FabricOps-Starter-Kit/reference/FrameworkConfig/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -769,7 +769,7 @@
       "module": "config.shared",
       "callable": "GovernanceConfig",
       "docs_url": "/FabricOps-Starter-Kit/reference/GovernanceConfig/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [],
@@ -805,7 +805,7 @@
       "module": "config.shared",
       "callable": "NotebookSetupContext",
       "docs_url": "/FabricOps-Starter-Kit/reference/NotebookSetupContext/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -822,7 +822,7 @@
       "module": "config.shared",
       "callable": "PathConfig",
       "docs_url": "/FabricOps-Starter-Kit/reference/PathConfig/",
-      "classification": "callable",
+      "classification": "class",
       "calls": [],
       "calls_count": 0,
       "used_by": [
@@ -7871,7 +7871,7 @@
       "inbound_count": 0
     },
     "config.shared": {
-      "callable_count": 7,
+      "callable_count": 0,
       "internal_count": 20,
       "outbound_modules": [],
       "inbound_modules": [],

@@ -12,7 +12,7 @@ Governance policy and widget option configuration.
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
-<span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">Public config class</span>
 <span class="reference-chip">00_env_config</span>
 </p>
 

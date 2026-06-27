@@ -1,12 +1,17 @@
 # Function Reference
 
-Use this page to look up Starter Kit functions used by the template notebooks.
+Use this page to look up Starter Kit functions and public config classes used by the template notebooks.
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">34</strong>
+    <strong class="reference-kpi-value">27</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
+  </section>
+  <section class="reference-kpi-card surface-card">
+    <strong class="reference-kpi-value">7</strong>
+    <span class="reference-kpi-title">Public classes</span>
+    <p class="reference-kpi-note">Public config classes.</p>
   </section>
 </div>
 
@@ -14,15 +19,15 @@ Use this page to look up Starter Kit functions used by the template notebooks.
 
 ## Find a function
 
-Use the finder below to look up the 34 public Starter Kit functions. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 27 public functions and 7 public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
-  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>
-  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
-  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>
+  <label class="callable-finder-label" for="callable-finder-input">Search public functions and classes</label>
+  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions and classes" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
+  <p id="callable-finder-help" class="callable-finder-help">Search by function or class name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 34 public Starter Kit functions.</p>
-  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 27 public functions and 7 public classes.</p>
+  <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions or classes match your search.</p>
 </div>
 
 ??? info "Maintainer tools"
@@ -31,8 +36,8 @@ Use the finder below to look up the 34 public Starter Kit functions. Implementat
     Maintainer inventory metrics:
 
     - Source Python files count: 20
-    - Total callables: 344
-    - Supporting functions: 73
+    - Total callables: 351
+    - Supporting functions: 80
     - Private helpers to review: 237
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
@@ -46,9 +51,29 @@ Use the finder below to look up the 34 public Starter Kit functions. Implementat
 
 ## Function catalogue
 
-## Functions
+## Public functions and classes
 
 <div class="reference-catalogue-list">
+<article id="config.shared-ConfigSmokeCheckResult" class="reference-catalogue-item" data-callable-row="true" data-callable-name="ConfigSmokeCheckResult" data-callable-module="config" data-function-type="public-class" data-callable-purpose="Represent pass, warning, failure, or skipped readiness check output.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/ConfigSmokeCheckResult/"><code>ConfigSmokeCheckResult</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Represent pass, warning, failure, or skipped readiness check output.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">—</span></p>
+
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
+  </div>
+</article>
+<article id="config.shared-DataAgreementConfig" class="reference-catalogue-item" data-callable-row="true" data-callable-name="DataAgreementConfig" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Define agreement metadata table names and steward/agreement widget fields.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/DataAgreementConfig/"><code>DataAgreementConfig</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Define agreement metadata table names and steward/agreement widget fields.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
+  </div>
+</article>
 <article id="pipeline-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return summary, detailed, or debug guardrail display output for Fabric notebooks.</p>
@@ -57,6 +82,26 @@ Use the finder below to look up the 34 public Starter Kit functions. Implementat
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 14</span></summary><ul><li><code>_display_guardrail_results_workflow</code></li><li><code>build_guardrail_detail_rows</code></li><li><code>build_guardrail_summary_rows</code></li><li><code>_guardrail_reason</code></li><li><code>_next_action</code></li><li><code>_result_can_continue</code></li><li><code>_result_status</code></li><li><code>_table_keys</code></li><li><code>_yes_no</code></li><li><code>_dq_reason</code></li><li><code>_freshness_reason</code></li><li><code>_profile_behavior_reason</code></li><li><code>_result_reason</code></li><li><code>_schema_reason</code></li></ul></details>
+  </div>
+</article>
+<article id="config.shared-FabricStore" class="reference-catalogue-item" data-callable-row="true" data-callable-name="FabricStore" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Describe one configured Fabric store used by path routing.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/FabricStore/"><code>FabricStore</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Describe one configured Fabric store used by path routing.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
+  </div>
+</article>
+<article id="config.shared-FrameworkConfig" class="reference-catalogue-item" data-callable-row="true" data-callable-name="FrameworkConfig" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Combine path, governance, data agreement, and audit timezone settings for notebooks.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/FrameworkConfig/"><code>FrameworkConfig</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Combine path, governance, data agreement, and audit timezone settings for notebooks.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
   </div>
 </article>
 <article id="config.get_fabric_context-get_fabric_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_fabric_context" data-callable-module="config" data-function-type="public-starter-kit" data-callable-purpose="Create a context dictionary for helper context overrides.">
@@ -77,6 +122,36 @@ Use the finder below to look up the 34 public Starter Kit functions. Implementat
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 21</span></summary><ul><li><code>_latest_metadata_catalogue_lookup_workflow</code></li><li><code>resolve_fabric_context</code></li><li><code>_catalogue_lookup_value</code></li><li><code>_coerce_rows</code></li><li><code>configured_lakehouse_schema</code></li><li><code>read_lakehouse_table_core</code></li><li><code>get_default_fabric_context</code></li><li><code>get_store</code></li><li><code>_normalize_schema_name</code></li><li><code>get_spark_session</code></li><li><code>read_delta_path</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>_normalize_path_config</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_join_lakehouse_area_path</code></li></ul></details>
+  </div>
+</article>
+<article id="config.shared-GovernanceConfig" class="reference-catalogue-item" data-callable-row="true" data-callable-name="GovernanceConfig" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Define governance labels, PII options, and enrichment widget custom fields.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/GovernanceConfig/"><code>GovernanceConfig</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Define governance labels, PII options, and enrichment widget custom fields.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
+  </div>
+</article>
+<article id="config.shared-NotebookSetupContext" class="reference-catalogue-item" data-callable-row="true" data-callable-name="NotebookSetupContext" data-callable-module="config" data-function-type="public-class" data-callable-purpose="Carry resolved paths, runtime metadata, smoke checks, and readiness status.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/NotebookSetupContext/"><code>NotebookSetupContext</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Carry resolved paths, runtime metadata, smoke checks, and readiness status.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">—</span></p>
+
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
+  </div>
+</article>
+<article id="config.shared-PathConfig" class="reference-catalogue-item" data-callable-row="true" data-callable-name="PathConfig" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Group configured Fabric stores by environment and target name.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/PathConfig/"><code>PathConfig</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Group configured Fabric stores by environment and target name.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public config class</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
+  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
+  <div class="reference-catalogue-item-counts">
+
   </div>
 </article>
 <article id="pipeline-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">

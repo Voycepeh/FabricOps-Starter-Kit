@@ -1046,7 +1046,7 @@
     "name": "ConfigSmokeCheckResult",
     "qualified_name": "fabricops_kit.config.shared.ConfigSmokeCheckResult",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
@@ -1078,7 +1078,7 @@
     "name": "DataAgreementConfig",
     "qualified_name": "fabricops_kit.config.shared.DataAgreementConfig",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [
       "00_env_config"
@@ -1139,7 +1139,7 @@
     "name": "FabricStore",
     "qualified_name": "fabricops_kit.config.shared.FabricStore",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [
       "00_env_config"
@@ -1221,7 +1221,7 @@
     "name": "FrameworkConfig",
     "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [
       "00_env_config"
@@ -1283,7 +1283,7 @@
     "name": "GovernanceConfig",
     "qualified_name": "fabricops_kit.config.shared.GovernanceConfig",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [
       "00_env_config"
@@ -1343,7 +1343,7 @@
     "name": "NotebookSetupContext",
     "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [],
     "inbound": [
@@ -1375,7 +1375,7 @@
     "name": "PathConfig",
     "qualified_name": "fabricops_kit.config.shared.PathConfig",
     "module": "config.shared",
-    "classification": "Callable",
+    "classification": "Public class",
     "function_category": "utility",
     "usage_sources": [
       "00_env_config"

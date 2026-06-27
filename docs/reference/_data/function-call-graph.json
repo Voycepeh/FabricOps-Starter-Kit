@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-27T05:59:06.644959Z",
+    "generated_at_utc": "2026-06-27T06:21:54.485548Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -2126,7 +2126,22 @@
           "dependency_role": "internal_workflow"
         }
       ],
-      "callees": []
+      "callees": [
+        {
+          "function": "PathConfig",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.PathConfig",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L257-L278",
+          "layer": "class",
+          "review_status": "classified",
+          "callable_kind": "class",
+          "callable_role": [
+            "config_model_class",
+            "path_config_model"
+          ],
+          "dependency_role": "config_model_class"
+        }
+      ]
     },
     {
       "qualified_name": "fabricops_kit.config.shared._normalize_widget_config",
@@ -2369,6 +2384,19 @@
             "local_leaf_helper"
           ],
           "dependency_role": "utility_validator"
+        },
+        {
+          "function": "ConfigSmokeCheckResult",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.ConfigSmokeCheckResult",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L428-L433",
+          "layer": "class",
+          "review_status": "classified",
+          "callable_kind": "class",
+          "callable_role": [
+            "result_model_class"
+          ],
+          "dependency_role": "result_model_class"
         },
         {
           "function": "get_store",
@@ -2801,6 +2829,19 @@
             "internal_workflow"
           ],
           "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "NotebookSetupContext",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471",
+          "layer": "class",
+          "review_status": "classified",
+          "callable_kind": "class",
+          "callable_role": [
+            "context_model_class"
+          ],
+          "dependency_role": "context_model_class"
         }
       ]
     },
@@ -3077,6 +3118,20 @@
             "implicit_lifecycle_reachable"
           ],
           "dependency_role": "utility_validator"
+        },
+        {
+          "function": "FrameworkConfig",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L395-L424",
+          "layer": "class",
+          "review_status": "classified",
+          "callable_kind": "class",
+          "callable_role": [
+            "config_model_class",
+            "root_config_model"
+          ],
+          "dependency_role": "config_model_class"
         }
       ]
     },
@@ -3365,6 +3420,214 @@
           "dependency_role": "internal_resolver"
         }
       ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.ConfigSmokeCheckResult",
+      "function_name": "ConfigSmokeCheckResult",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L428-L433",
+      "source_start_line": 428,
+      "source_end_line": 433,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "result_model_class"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "result_model_class"
+      ],
+      "callable_role_detail_label": "Result model class",
+      "dependency_role": "result_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_run_config_smoke_tests",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._run_config_smoke_tests",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L656-L756",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "setup_smoke_test_validator"
+          ],
+          "dependency_role": "internal_validator"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.DataAgreementConfig",
+      "function_name": "DataAgreementConfig",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L330-L391",
+      "source_start_line": 330,
+      "source_end_line": 391,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "config_model_class"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "config_model_class"
+      ],
+      "callable_role_detail_label": "Config model class",
+      "dependency_role": "config_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.FabricStore",
+      "function_name": "FabricStore",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L216-L253",
+      "source_start_line": 216,
+      "source_end_line": 253,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "instance_method"
+      ],
+      "callable_role_group": "other",
+      "callable_role_group_label": "Other",
+      "callable_role_detail": [
+        "instance_method"
+      ],
+      "callable_role_detail_label": "Instance method",
+      "dependency_role": "instance_method",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
+      "function_name": "FrameworkConfig",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L395-L424",
+      "source_start_line": 395,
+      "source_end_line": 424,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "config_model_class",
+        "root_config_model"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "config_model_class",
+        "root_config_model"
+      ],
+      "callable_role_detail_label": "Config model class, Root config model",
+      "dependency_role": "config_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_validate_framework_config",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "config_validator"
+          ],
+          "dependency_role": "internal_validator"
+        }
+      ],
+      "callees": []
     },
     {
       "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
@@ -3751,6 +4014,170 @@
           "dependency_role": "internal_normalizer"
         }
       ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.GovernanceConfig",
+      "function_name": "GovernanceConfig",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L282-L326",
+      "source_start_line": 282,
+      "source_end_line": 326,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "config_model_class"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "config_model_class"
+      ],
+      "callable_role_detail_label": "Config model class",
+      "dependency_role": "config_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
+      "function_name": "NotebookSetupContext",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471",
+      "source_start_line": 437,
+      "source_end_line": 471,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "context_model_class"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "context_model_class"
+      ],
+      "callable_role_detail_label": "Context model class",
+      "dependency_role": "context_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_setup_notebook_workflow",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._setup_notebook_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L764-L836",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow",
+            "setup_notebook_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.PathConfig",
+      "function_name": "PathConfig",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L257-L278",
+      "source_start_line": 257,
+      "source_end_line": 278,
+      "function_type": "Public config class",
+      "layer": "class",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "class",
+      "callable_role": [
+        "config_model_class",
+        "path_config_model"
+      ],
+      "callable_role_group": "model_class",
+      "callable_role_group_label": "Model class",
+      "callable_role_detail": [
+        "config_model_class",
+        "path_config_model"
+      ],
+      "callable_role_detail_label": "Config model class, Path config model",
+      "dependency_role": "config_model_class",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Public config class",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_normalize_path_config",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L547-L587",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_normalizer",
+            "path_config_normalizer"
+          ],
+          "dependency_role": "internal_normalizer"
+        }
+      ],
+      "callees": []
     },
     {
       "qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
@@ -32325,72 +32752,6 @@
   ],
   "public_entrypoint_flow": [
     {
-      "qualified_name": "fabricops_kit.config.shared.ConfigSmokeCheckResult",
-      "function_name": "ConfigSmokeCheckResult",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/ConfigSmokeCheckResult.md",
-      "docs_url": "../../api/reference/ConfigSmokeCheckResult/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L428-L433",
-      "source_start_line": 428,
-      "source_end_line": 433,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.DataAgreementConfig",
-      "function_name": "DataAgreementConfig",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/DataAgreementConfig.md",
-      "docs_url": "../../api/reference/DataAgreementConfig/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L330-L391",
-      "source_start_line": 330,
-      "source_end_line": 391,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
-    },
-    {
       "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
       "function_name": "display_guardrail_results",
       "module": "pipeline",
@@ -33195,72 +33556,6 @@
           ]
         }
       ]
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.FabricStore",
-      "function_name": "FabricStore",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/FabricStore.md",
-      "docs_url": "../../api/reference/FabricStore/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L216-L253",
-      "source_start_line": 216,
-      "source_end_line": 253,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
-      "function_name": "FrameworkConfig",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/FrameworkConfig.md",
-      "docs_url": "../../api/reference/FrameworkConfig/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L395-L424",
-      "source_start_line": 395,
-      "source_end_line": 424,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
     },
     {
       "qualified_name": "fabricops_kit.config.get_fabric_context.get_fabric_context",
@@ -34463,105 +34758,6 @@
           ]
         }
       ]
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.GovernanceConfig",
-      "function_name": "GovernanceConfig",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/GovernanceConfig.md",
-      "docs_url": "../../api/reference/GovernanceConfig/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L282-L326",
-      "source_start_line": 282,
-      "source_end_line": 326,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
-      "function_name": "NotebookSetupContext",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/NotebookSetupContext.md",
-      "docs_url": "../../api/reference/NotebookSetupContext/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471",
-      "source_start_line": 437,
-      "source_end_line": 471,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared.PathConfig",
-      "function_name": "PathConfig",
-      "module": "config.shared",
-      "docs_path": "docs/api/reference/PathConfig.md",
-      "docs_url": "../../api/reference/PathConfig/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L257-L278",
-      "source_start_line": 257,
-      "source_end_line": 278,
-      "priority": "Low",
-      "recommended_simplification_action": "Keep public",
-      "warnings": [],
-      "downstream_count": 0,
-      "max_depth": 0,
-      "modules_touched": [
-        "config.shared"
-      ],
-      "source_python_files": [
-        "src/fabricops_kit/config/shared.py"
-      ],
-      "external_dependents_count": 0,
-      "end_node_count": 0,
-      "architecture_violation_count": 0,
-      "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
-      },
-      "helper_cleanup_candidates": 0,
-      "direct_callees": [],
-      "transitive_callees": [],
-      "private_helper_review_items": []
     },
     {
       "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
@@ -48536,6 +48732,19 @@
                 "internal_workflow"
               ],
               "dependency_role": "internal_workflow"
+            },
+            {
+              "function": "NotebookSetupContext",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471",
+              "layer": "class",
+              "review_status": "classified",
+              "callable_kind": "class",
+              "callable_role": [
+                "context_model_class"
+              ],
+              "dependency_role": "context_model_class"
             }
           ]
         }
@@ -72782,17 +72991,18 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 344,
+    "total_callables": 351,
     "function_type": {
       "Public function": 27,
-      "Shared helper": 80
+      "Shared helper": 80,
+      "Public config class": 7
     },
     "layer": {
       "public": 27,
       "internal": 80
     },
     "review_status": {
-      "classified": 311,
+      "classified": 318,
       "classification_pending": 33,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
@@ -72803,7 +73013,9 @@
     },
     "callable_role_group": {
       "adapter": 19,
+      "model_class": 6,
       "normalizer": 23,
+      "other": 1,
       "public_entrypoint": 27,
       "registry_builder": 2,
       "resolver": 57,
@@ -72813,6 +73025,9 @@
     },
     "dependency_role": {
       "audit_time_utility": 4,
+      "config_model_class": 4,
+      "context_model_class": 1,
+      "instance_method": 1,
       "internal_adapter": 19,
       "internal_normalizer": 23,
       "internal_resolver": 57,
@@ -72820,6 +73035,7 @@
       "internal_workflow": 57,
       "public_api_entrypoint": 27,
       "registry_builder": 2,
+      "result_model_class": 1,
       "schema_utility": 4,
       "utility_function": 126,
       "utility_validator": 4
@@ -72829,12 +73045,13 @@
       "Merge into owner": 63,
       "Next step": 56,
       "Public API entrypoint": 27,
+      "Public config class": 7,
       "Remove redundant wrapper": 24,
       "Rename to shared helper": 18,
       "Shared internal helper": 24
     },
     "public_api_surface": {
-      "public_api_entrypoints": 34,
+      "public_api_entrypoints": 27,
       "long_call_chains": 24,
       "architecture_violations": 15,
       "architecture_findings": 15,
@@ -72843,13 +73060,15 @@
     },
     "callable_inventory_metrics": {
       "module_count": 20,
-      "total_callables": 344,
-      "public_api_entrypoints": 34,
+      "total_callables": 351,
+      "public_api_entrypoints": 27,
       "function_callables": 107,
-      "supporting_functions": 73,
+      "supporting_functions": 80,
+      "public_classes": 7,
       "hidden_private_helpers": 237,
       "private_helpers_to_review": 237
     },
-    "private_helper_review": 237
+    "private_helper_review": 237,
+    "public_classes": 7
   }
 }

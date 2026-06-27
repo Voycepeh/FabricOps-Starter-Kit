@@ -14,6 +14,17 @@ REFERENCE_DIR = ROOT / "docs" / "reference"
 REFERENCE_INDEX = REFERENCE_DIR / "index.md"
 API_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 PLACEHOLDER = "Not documented yet"
+
+CONFIG_MODEL_SYMBOLS = {
+    "FabricStore",
+    "PathConfig",
+    "GovernanceConfig",
+    "DataAgreementConfig",
+    "FrameworkConfig",
+    "ConfigSmokeCheckResult",
+    "NotebookSetupContext",
+}
+
 CORE_CALLABLES = {
     "setup_notebook",
     "setup_metadata_tables",
@@ -157,7 +168,14 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     page_callables = {path.stem for path in API_REFERENCE_DIR.glob("*.md")}
 
     assert automation_callables == exported_symbols
-    assert function_callables == exported_symbols
+    class_callables = {
+        entry["name"]
+        for entry in function_manifest
+        if entry.get("classification") == "Public class" and entry.get("docs_path", "").startswith("api/reference/")
+    }
+
+    assert function_callables == function_exported_symbols
+    assert class_callables == config_model_symbols
     assert page_callables == exported_symbols
     public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["layer"] == "public"}
     assert public_inventory == function_exported_symbols
@@ -166,6 +184,37 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert not (removed_symbols & page_callables)
     assert not (removed_symbols & public_inventory)
 
+
+def test_public_config_classes_have_reference_taxonomy() -> None:
+    """Verify public config classes are searchable and separate from public functions."""
+    class_names = CONFIG_MODEL_SYMBOLS
+    reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    flow_data = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
+    landing_stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
+    class_rows = {row["function_name"]: row for row in flow_data["function_inventory"] if row["layer"] == "class"}
+    flow_names = {row["function_name"] for row in flow_data["public_entrypoint_flow"]}
+
+    assert "search 27 public functions and 7 public classes" in reference_index
+    assert '<option value="class">Classes</option>' in inventory_text
+    assert set(class_rows) == class_names
+    assert flow_data["summary_counts"]["public_api_surface"]["public_api_entrypoints"] == 27
+    assert flow_data["summary_counts"]["public_classes"] == 7
+    assert landing_stats["public_class_count"] == 7
+    assert landing_stats["public_root_export_count"] == 34
+    assert len(flow_data["public_entrypoint_flow"]) == 27
+    assert not (class_names & flow_names)
+
+    for name in class_names:
+        page = API_REFERENCE_DIR / f"{name}.md"
+        assert page.exists(), name
+        page_text = page.read_text(encoding="utf-8")
+        assert "Public config class" in page_text
+        assert "Public Starter Kit function" not in page_text
+        assert f'data-callable-name="{name}"' in reference_index
+        assert 'data-function-type="public-class"' in reference_index
+        assert class_rows[name]["function_type"] == "Public config class"
+        assert class_rows[name]["callable_kind"] == "class"
 
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
@@ -641,6 +690,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
     assert summary_counts["callable_kind"]["function"] == 107
+    assert summary_counts["public_classes"] == 7
+    assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
     assert {
@@ -656,9 +707,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     function_inventory = flow_data["function_inventory"]
 
     assert summary_counts["layer"]["public"] == len(function_exported_symbols)
-    assert set(summary_counts["function_type"]) == {"Public function", "Shared helper"}
-    assert summary_counts["callable_inventory_metrics"]["function_callables"] == sum(
-        summary_counts["function_type"].values()
+    assert set(summary_counts["function_type"]) == {"Public function", "Shared helper", "Public config class"}
+    assert summary_counts["callable_inventory_metrics"]["function_callables"] == (
+        summary_counts["function_type"]["Public function"] + summary_counts["function_type"]["Shared helper"]
     )
     assert public_api_surface["public_api_entrypoints"] == len(public_flows)
     assert public_api_surface["architecture_violations"] == sum(
@@ -673,7 +724,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert len(function_inventory) == summary_counts["total_callables"]
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
-    assert all(row["callable_kind"] == "function" for row in function_inventory)
+    assert all(row["callable_kind"] in {"function", "class"} for row in function_inventory)
     assert "supporting_object" not in {row["layer"] for row in function_inventory}
     assert all(row["recommended_action"] for row in function_inventory)
 
@@ -839,7 +890,11 @@ def test_every_callable_page_has_curated_public_reference_sections() -> None:
         assert "## Example usage" in text, page
         assert "## See also" in text, page
         assert "**Used in notebooks:**" in text, page
-        assert "Public Starter Kit function" in text, page
+        if page.stem in CONFIG_MODEL_SYMBOLS:
+            assert "Public config class" in text, page
+            assert "Public Starter Kit function" not in text, page
+        else:
+            assert "Public Starter Kit function" in text, page
         assert "## Relationships" not in text, page
         assert "## Maintainer/developer implementation details" not in text, page
         assert "## Source link" not in text, page
@@ -1253,8 +1308,10 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
     """Verify public callables have one canonical full content page."""
     manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
     public_names = sorted({entry["name"] for entry in manifest if entry.get("classification") == "Callable"})
+    public_class_names = sorted({entry["name"] for entry in manifest if entry.get("classification") == "Public class"})
 
     assert public_names
+    assert public_class_names
     for name in public_names:
         canonical_page = API_REFERENCE_DIR / f"{name}.md"
         legacy_page = REFERENCE_DIR / "callables" / f"{name}.md"
@@ -1266,7 +1323,7 @@ def test_public_callables_have_one_canonical_full_content_page() -> None:
         assert "**Used in notebooks:**" in text, canonical_page
 
     generated_pages = sorted(page.stem for page in API_REFERENCE_DIR.glob("*.md"))
-    assert generated_pages == public_names
+    assert generated_pages == sorted([*public_names, *public_class_names])
 
 
 def test_generated_manifests_point_public_callables_to_canonical_api_reference() -> None:
@@ -1275,7 +1332,7 @@ def test_generated_manifests_point_public_callables_to_canonical_api_reference()
     automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
 
     for entry in function_manifest:
-        if entry.get("classification") == "Callable":
+        if entry.get("classification") in {"Callable", "Public class"}:
             assert entry["docs_path"] == f"api/reference/{entry['name']}.md"
         elif entry.get("docs_path") is not None:
             assert entry["docs_path"].startswith("reference/internal/")
@@ -2188,14 +2245,15 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "supporting_objects" not in inventory_text
     assert "supporting_object" not in inventory_text
     assert "nonFunctionCount=canonicalNonFunctionCount()" not in compact_inventory_text
-    assert "const ITEM_TYPE_LABELS={public:'Public callable',internal:'Shared helper',private_helper:'Private helper'}" in inventory_text
+    assert "const ITEM_TYPE_LABELS={public:'Public callable',class:'Classes',internal:'Shared helper',private_helper:'Private helper'}" in inventory_text
     assert '<option value="supporting_object">Non functions</option>' not in inventory_text
     assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" in inventory_text
-    assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!supportFocus(i))return false" in inventory_text
+    assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!q&&!supportFocus(i))return false" in inventory_text
     assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.'" in inventory_text
     for label in [
         "Total function-level code assets",
         "Public callables",
+        "Classes",
         "Shared helpers",
         "Private helpers",
         "Suggested cleanup",

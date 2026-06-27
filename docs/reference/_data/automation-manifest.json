@@ -1406,7 +1406,7 @@
     "qualified_name": "fabricops_kit.config.shared.ConfigSmokeCheckResult",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.shared._run_config_smoke_tests"
@@ -1447,7 +1447,7 @@
     "qualified_name": "fabricops_kit.config.shared.DataAgreementConfig",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [],
     "outbound": [],
@@ -1524,7 +1524,7 @@
     "qualified_name": "fabricops_kit.config.shared.FabricStore",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [],
     "outbound": [],
@@ -1629,7 +1629,7 @@
     "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.shared._validate_framework_config"
@@ -1709,7 +1709,7 @@
     "qualified_name": "fabricops_kit.config.shared.GovernanceConfig",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [],
     "outbound": [],
@@ -1785,7 +1785,7 @@
     "qualified_name": "fabricops_kit.config.shared.NotebookSetupContext",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.shared._setup_notebook_workflow"
@@ -1826,7 +1826,7 @@
     "qualified_name": "fabricops_kit.config.shared.PathConfig",
     "module": "config.shared",
     "type": "callable",
-    "role": "callable",
+    "role": "class",
     "function_category": "utility",
     "inbound": [
       "fabricops_kit.config.shared._normalize_path_config"
