@@ -1788,6 +1788,94 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
     assert validator._failures(flow) == []
 
 
+
+def test_callable_architecture_validation_allows_public_config_classes(monkeypatch, tmp_path) -> None:
+    """Verify public config classes are visible inventory items but not functions."""
+    import scripts.validate_callable_architecture as validator
+
+    public_qn = "fabricops_kit.example.public_api"
+    class_qn = "fabricops_kit.config.shared.FabricStore"
+    flow = {
+        "function_inventory": [
+            {
+                "qualified_name": public_qn,
+                "function_name": "public_api",
+                "function_type": "Public function",
+                "layer": "public",
+                "callable_kind": "function",
+            },
+            {
+                "qualified_name": class_qn,
+                "function_name": "FabricStore",
+                "function_type": "Public config class",
+                "layer": "class",
+                "callable_kind": "class",
+            },
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 1, "Shared helper": 0, "Public config class": 1},
+            "layer": {"public": 1, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 1, "architecture_violations": 0},
+            "callable_inventory_metrics": {
+                "function_callables": 1,
+                "private_helpers_to_review": 0,
+                "public_classes": 1,
+            },
+        },
+        "public_entrypoint_flow": [
+            {"qualified_name": public_qn, "architecture_violation_count": 0, "direct_callees": [], "transitive_callees": []}
+        ],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("FabricStore Public config class Classes", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    assert validator._failures(flow) == []
+
+
+def test_callable_architecture_validation_rejects_unclassified_supporting_object(monkeypatch, tmp_path) -> None:
+    """Verify unsupported non-callable objects still fail generated validation."""
+    import scripts.validate_callable_architecture as validator
+
+    flow = {
+        "function_inventory": [
+            {
+                "qualified_name": "fabricops_kit.example.Model",
+                "function_name": "Model",
+                "function_type": "Supporting object",
+                "layer": "supporting_object",
+                "callable_kind": "class",
+            },
+        ],
+        "summary_counts": {
+            "function_type": {"Public function": 0, "Shared helper": 0, "Supporting object": 1},
+            "layer": {"public": 0, "internal": 0},
+            "public_api_surface": {"public_api_entrypoints": 0, "architecture_violations": 0},
+            "callable_inventory_metrics": {
+                "function_callables": 0,
+                "private_helpers_to_review": 0,
+                "public_classes": 0,
+            },
+        },
+        "public_entrypoint_flow": [],
+    }
+    dashboard = tmp_path / "dashboard.html"
+    inventory = tmp_path / "inventory.html"
+    dashboard.write_text("Architecture violations", encoding="utf-8")
+    inventory.write_text("", encoding="utf-8")
+    monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
+    monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(validator, "_source_failures", lambda: [])
+
+    failures = validator._failures(flow)
+
+    assert any("Non Public/Shared helper function type" in failure for failure in failures)
+    assert any("Supporting object emitted as architecture inventory row" in failure for failure in failures)
+
 def test_callable_graph_resolves_relative_import_alias_forms() -> None:
     """Verify callable graph resolution handles explicit and module relative imports."""
     import ast
