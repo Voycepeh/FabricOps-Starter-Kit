@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .models import FrameworkConfig
+from .shared import FrameworkConfig
 from .shared import _setup_metadata_tables_workflow
 
 

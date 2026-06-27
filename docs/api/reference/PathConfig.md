@@ -6,9 +6,9 @@ Environment-to-target mapping used for lakehouse and warehouse routing.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/models.py:60`
+`fabricops_kit/config/shared.py:257`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L60-L81">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L257-L278">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

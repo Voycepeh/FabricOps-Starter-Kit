@@ -23,13 +23,13 @@ APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
 APPROVED_V1_QUALIFIED_FUNCTIONS = {name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()}
 CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES = {"fabricops_kit.config.get_fabric_context.get_fabric_context"}
 CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
-    "fabricops_kit.config.models.FabricStore",
-    "fabricops_kit.config.models.PathConfig",
-    "fabricops_kit.config.models.GovernanceConfig",
-    "fabricops_kit.config.models.DataAgreementConfig",
-    "fabricops_kit.config.models.FrameworkConfig",
-    "fabricops_kit.config.models.ConfigSmokeCheckResult",
-    "fabricops_kit.config.models.NotebookSetupContext",
+    "fabricops_kit.config.shared.FabricStore",
+    "fabricops_kit.config.shared.PathConfig",
+    "fabricops_kit.config.shared.GovernanceConfig",
+    "fabricops_kit.config.shared.DataAgreementConfig",
+    "fabricops_kit.config.shared.FrameworkConfig",
+    "fabricops_kit.config.shared.ConfigSmokeCheckResult",
+    "fabricops_kit.config.shared.NotebookSetupContext",
 }
 LEGACY_APPROVED_V1_CALLABLES = {
     "setup_notebook",

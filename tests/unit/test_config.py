@@ -653,7 +653,7 @@ def test_config_public_import_contract_and_package_shape():
     assert Path("src/fabricops_kit/config.py").exists() is False
     assert Path("src/fabricops_kit/config/__init__.py").exists()
     assert Path("src/fabricops_kit/config/public.py").exists() is False
-    assert Path("src/fabricops_kit/config/models.py").exists()
+    assert Path("src/fabricops_kit/config/models.py").exists() is False
     assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
     assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
     assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()

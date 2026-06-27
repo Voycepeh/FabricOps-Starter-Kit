@@ -6,9 +6,9 @@ Top-level FabricOps framework configuration.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/models.py:198`
+`fabricops_kit/config/shared.py:395`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L198-L227">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L395-L424">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

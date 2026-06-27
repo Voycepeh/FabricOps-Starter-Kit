@@ -64,7 +64,7 @@ def markdown_anchor(value: str) -> str:
 
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
-    "config.models": "config",
+    "config.shared": "config",
     "config.get_fabric_context": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
@@ -4786,7 +4786,7 @@ def main() -> None:
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
         if actual_module not in module_data and module == "config":
-            actual_module = "config.models"
+            actual_module = "config.shared"
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]

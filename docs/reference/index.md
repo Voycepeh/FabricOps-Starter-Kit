@@ -31,9 +31,9 @@ Use the finder below to look up the 34 public Starter Kit functions. Implementat
     Maintainer inventory metrics:
 
     - Source Python files count: 20
-    - Total callables: 319
-    - Supporting functions: 68
-    - Private helpers to review: 217
+    - Total callables: 344
+    - Supporting functions: 73
+    - Private helpers to review: 237
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.

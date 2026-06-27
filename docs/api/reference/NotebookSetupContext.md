@@ -6,9 +6,9 @@ Runtime setup context returned by setup_notebook.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/models.py:240`
+`fabricops_kit/config/shared.py:437`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/models.py#L240-L274">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

@@ -1,7 +1,7 @@
 """Supported config public contract for FabricOps notebooks."""
 
 from .get_fabric_context import get_fabric_context
-from .models import (
+from .shared import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
     FabricStore,
