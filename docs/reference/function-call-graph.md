@@ -24,10 +24,6 @@ Use the Function Call Graph Dashboard first when you are deciding whether a publ
 
 </div>
 
-<div markdown="0" style="border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.5rem; overflow: hidden; margin: 1rem 0; box-shadow: var(--md-shadow-z1);">
-  <iframe src="../../assets/function-call-graph-dashboard.html" title="Function Call Graph Dashboard preview" loading="lazy" style="width: 100%; height: 560px; border: 0;"></iframe>
-</div>
-
 Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
 ## Why this exists
@@ -114,12 +110,12 @@ The intended workflow is:
 
 ```text
 Prototype quickly
-→ validate with users
-→ inspect the function call graph
-→ export a focused cleanup packet
-→ use AI to assist the refactor
-→ review the actual code
-→ run tests
+-> validate with users
+-> inspect the function call graph
+-> export a focused cleanup packet
+-> use AI to assist the refactor
+-> review the actual code
+-> run tests
 ```
 
 The point is not to review every line of code at the moment it is created.
