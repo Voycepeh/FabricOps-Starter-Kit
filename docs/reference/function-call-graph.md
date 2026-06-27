@@ -1,6 +1,6 @@
 # Function Call Graph
 
-> **Make it exist first. Make it good next.**
+> **First make it exist. Then make it good.**
 >
 > AI helps FabricOps move quickly from idea to working public function. The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
 
@@ -39,8 +39,8 @@ At that stage, the goal is not perfect code.
 The goal is:
 
 ```text
-Make the function exist.
-Make it work.
+First make it exist.
+Then make it good.
 Validate whether the behaviour is useful.
 ```
 
@@ -184,9 +184,8 @@ Because these outputs are generated, update source inputs and the generator firs
 ## Principle
 
 ```text
-Make it exist first.
-Validate that it is useful.
-Then make the implementation good enough to keep.
+First make it exist.
+Then make it good.
 ```
 
 The Function Call Graph exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
