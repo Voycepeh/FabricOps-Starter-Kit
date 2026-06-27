@@ -76,7 +76,7 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
     <span class="fabricops-landing-card__meta">Open Function Call Graph Dashboard</span>
   </a>
 
-  <a class="fabricops-landing-card" href="https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/callable-flow/">
+  <a class="fabricops-landing-card" href="reference/function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph Reference</span>
     <span class="fabricops-landing-card__body">Read about the architecture and the motivation behind the function call graph dashboard.</span>
     <span class="fabricops-landing-card__meta">Open Function Call Graph Reference</span>
