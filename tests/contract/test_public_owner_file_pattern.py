@@ -152,3 +152,18 @@ def test_existing_public_callable_packages_follow_owner_file_pattern() -> None:
     """Verify config, io, and data_profiling satisfy the owner-file architecture."""
     package_names = {path.name for path in _package_dirs()}
     assert {"config", "io", "data_profiling"} <= package_names
+
+
+def test_public_function_architecture_guide_is_documented_and_linked() -> None:
+    """Verify the maintainer guide documents and navigates the architecture rule."""
+    guide_path = Path("docs/reference/public-function-architecture.md")
+    guide = guide_path.read_text(encoding="utf-8")
+    agents = Path("AGENTS.md").read_text(encoding="utf-8")
+    mkdocs = Path("mkdocs.yml").read_text(encoding="utf-8")
+
+    assert "# Public Function Architecture" in guide
+    assert "one owner file per public function" in guide
+    assert "Do not add `public.py`, `models.py`, `classes.py`" in guide
+    assert "The test suite enforces this pattern." in guide
+    assert str(guide_path) in agents
+    assert "Public Function Architecture: reference/public-function-architecture.md" in mkdocs

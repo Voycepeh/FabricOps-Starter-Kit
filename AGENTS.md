@@ -40,66 +40,12 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 
 ## Public callable package file pattern
 
-For every new public callable function added to FabricOps:
-
-1. Create or use a package folder for the functional batch.
-2. Put each public callable function in its own owner file named exactly after the function.
-3. Put shared helpers, private helpers, support classes, dataclasses, and value objects for that batch in `shared.py`.
-4. Re-export the supported public surface through that package's `__init__.py`.
-5. Re-export notebook-facing public functions/classes through `src/fabricops_kit/__init__.py` only when they are part of the supported root API.
-6. Do not add `public.py`, `models.py`, `classes.py`, `adapter.py`, `adapters.py`, `resolver.py`, `resolvers.py`, or compatibility shim files unless explicitly approved.
-
-Example with one public function:
-
-```text
-src/fabricops_kit/my_feature/
-  __init__.py
-  my_public_function.py
-  shared.py
-```
-
-Example with two public functions:
-
-```text
-src/fabricops_kit/my_feature/
-  __init__.py
-  first_public_function.py
-  second_public_function.py
-  shared.py
-```
-
-If the batch needs classes, dataclasses, value objects, shared helpers, or
-private helpers, keep them in `shared.py`:
-
-```python
-# src/fabricops_kit/my_feature/shared.py
-MyConfig
-MyResult
-_private_helper
-shared_core_logic
-```
-
-Then expose the package-supported surface through `__init__.py`:
-
-```python
-from .first_public_function import first_public_function
-from .second_public_function import second_public_function
-from .shared import MyConfig, MyResult
-
-__all__ = [
-    "first_public_function",
-    "second_public_function",
-    "MyConfig",
-    "MyResult",
-]
-```
-
-Only re-export through the root package when the function or class is supported
-for users/templates:
-
-```python
-from .my_feature import first_public_function, second_public_function, MyConfig, MyResult
-```
+When adding any new public callable function, follow the FabricOps public
+function architecture pattern: one public owner file named after the function,
+one package `shared.py` for helpers/classes/dataclasses/value objects, and
+`__init__.py` for exports. Do not add `public.py`, `models.py`,
+`classes.py`, adapter/resolver files, or compatibility shims unless explicitly
+approved. See `docs/reference/public-function-architecture.md`.
 
 ## Fabric IO callable file pattern
 

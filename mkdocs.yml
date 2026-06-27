@@ -74,6 +74,7 @@ nav:
       - Glossary: reference/glossary.md
       - Function Call Graph: reference/function-call-graph.md
       - Public API Contract: reference/public-api-contract.md
+      - Public Function Architecture: reference/public-function-architecture.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md
