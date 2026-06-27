@@ -38,6 +38,15 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - New dashboard metrics must be public-callable-centric unless explicitly marked as internal/debug.
 - Coding agents must update tests and snapshots whenever architecture classification or dashboard outputs change.
 
+## Public callable package file pattern
+
+When adding any new public callable function, follow the FabricOps public
+function architecture pattern: one public owner file named after the function,
+one package `shared.py` for helpers/classes/dataclasses/value objects, and
+`__init__.py` for exports. Do not add `public.py`, `models.py`,
+`classes.py`, adapter/resolver files, or compatibility shims unless explicitly
+approved. See `docs/reference/public-function-architecture.md`.
+
 ## Fabric IO callable file pattern
 
 - Notebook-facing Fabric IO public callable files live under `src/fabricops_kit/io/` with one public callable per owner file.

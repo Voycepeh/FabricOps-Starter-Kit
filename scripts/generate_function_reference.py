@@ -64,7 +64,10 @@ def markdown_anchor(value: str) -> str:
 
 
 PUBLIC_MODULE_PREFERRED_NAMES = {
-    "config": "config",
+    "config.shared": "config",
+    "config.get_fabric_context": "config",
+    "config.setup_notebook": "config",
+    "config.setup_metadata_tables": "config",
     "data_agreement": "data_agreement",
     "governance_review": "governance_review",
     "data_profiling.profile_dataframe": "data_profiling",
@@ -99,12 +102,12 @@ INTERNAL_ALIAS_MODULES = {}
 INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
     "enforce_profile_behavior": {
         "fabricops_kit.io.shared._normalize_schema_name",
-        "fabricops_kit.config._get_store",
+        "fabricops_kit.config.shared.get_store",
     },
     "run_table_guardrails": {
-        "fabricops_kit.config._current_audit_timestamp",
-        "fabricops_kit.config.get_audit_timezone",
-        "fabricops_kit.config._validate_audit_timezone",
+        "fabricops_kit.config.shared._current_audit_timestamp",
+        "fabricops_kit.config.shared.get_audit_timezone",
+        "fabricops_kit.config.shared._validate_audit_timezone",
     },
 }
 
@@ -126,8 +129,8 @@ def _hide_from_public_relationships(qn: str) -> bool:
 
 
 INTERNAL_HELPER_AUDIT_DECISIONS = {
-    "fabricops_kit.config._get_store": "keep_internal",
-    "fabricops_kit.config._normalize_path_config": "keep_internal",
+    "fabricops_kit.config.shared.get_store": "keep_internal",
+    "fabricops_kit.config.shared._normalize_path_config": "keep_internal",
     "fabricops_kit.io.shared._normalize_table_name": "keep_internal",
     "fabricops_kit.io.shared._normalize_schema_name": "keep_internal",
     "fabricops_kit.io.shared._resolve_lakehouse_schema": "keep_internal",
@@ -307,6 +310,8 @@ def source_module_path(module: str) -> Path:
         return PKG_DIR / "io" / "shared.py"
     if module == "data_profiling":
         return PKG_DIR / "data_profiling" / "shared.py"
+    if module == "config":
+        return PKG_DIR / "config" / "__init__.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
 
 def parse_module(path: Path) -> dict[str, Any]:
@@ -1914,6 +1919,7 @@ def _refactor_priority(signals: list[str]) -> str:
 
 def _build_refactor_inventory(
     public_qns: list[str],
+    public_class_qns: list[str] | None,
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
@@ -2076,6 +2082,8 @@ CALLABLE_LAYER_LABELS = {
 HIDDEN_PRIVATE_LAYER = "private_helper"
 PRIVATE_HELPER_LABEL = "Private helper"
 SUPPORTING_OBJECT_LAYER = "supporting_object"
+PUBLIC_CLASS_LAYER = "class"
+PUBLIC_CLASS_LABEL = "Public config class"
 
 REVIEW_STATUS_LABELS = {
     "classified": "Classified",
@@ -2142,12 +2150,8 @@ def _classify_layer_consistency(
 
 
 CONFIG_MODEL_CLASSES = {
-    "NotebookRuntimeConfig",
-    "QualityConfig",
     "GovernanceConfig",
     "DataAgreementConfig",
-    "ReviewWorkflowConfig",
-    "LineageConfig",
     "FrameworkConfig",
     "PathConfig",
 }
@@ -2505,6 +2509,7 @@ ARCHITECTURE_VIOLATION_ACTION = "Architecture violation"
 def _callable_classification(
     qn: str,
     public_qn_set: set[str],
+    public_class_qn_set: set[str],
     reachable_non_public: set[str],
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
@@ -2512,6 +2517,8 @@ def _callable_classification(
     """Return architecture layer and review status for a project callable."""
     node = node_by_qn[qn]
     if node.get("callable_kind") != "function":
+        if qn in public_class_qn_set:
+            return PUBLIC_CLASS_LAYER, "classified"
         return SUPPORTING_OBJECT_LAYER, "classified"
     if node.get("is_underscore"):
         return HIDDEN_PRIVATE_LAYER, "classified"
@@ -2544,6 +2551,7 @@ def _dependency_review_signals(callee_review_status: str) -> list[str]:
 
 def _build_function_inventory(
     public_qns: list[str],
+    public_class_qns: list[str] | None,
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
@@ -2552,6 +2560,7 @@ def _build_function_inventory(
 ) -> tuple[dict[str, int], list[dict[str, Any]]]:
     """Build a reconciled one-row-per-discovered-callable dashboard inventory."""
     public_qn_set = set(public_qns)
+    public_class_qn_set = set(public_class_qns or [])
     reachable_non_public = set().union(
         *(_reachable_callables(public_qn, calls_by_qn, node_by_qn) for public_qn in public_qns)
     ) - public_qn_set
@@ -2559,7 +2568,7 @@ def _build_function_inventory(
     refactor_by_qn = {row["qualified_name"]: row for row in refactor_inventory}
     summary_by_qn = {row["qualified_name"]: row for row in callable_summary}
     classification_by_qn = {
-        qn: _callable_classification(qn, public_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
+        qn: _callable_classification(qn, public_qn_set, public_class_qn_set, reachable_non_public, calls_by_qn, node_by_qn)
         for qn in node_by_qn
     }
     for qn, callers in inbound_by_qn.items():
@@ -2574,11 +2583,13 @@ def _build_function_inventory(
         return layer_by_qn.get(qn) in {"public", "internal"}
 
     def is_inventory_function(qn: str) -> bool:
-        return layer_by_qn.get(qn) in {"public", "internal", HIDDEN_PRIVATE_LAYER}
+        return layer_by_qn.get(qn) in {"public", "internal", HIDDEN_PRIVATE_LAYER, PUBLIC_CLASS_LAYER}
 
     def inventory_function_type(layer: str) -> str:
         if layer == HIDDEN_PRIVATE_LAYER:
             return PRIVATE_HELPER_LABEL
+        if layer == PUBLIC_CLASS_LAYER:
+            return PUBLIC_CLASS_LABEL
         return CALLABLE_LAYER_LABELS[layer]
 
     def private_helper_usage_scope(qn: str, inbound: set[str]) -> str:
@@ -2748,6 +2759,9 @@ def _build_function_inventory(
             priority = refactor.get("priority", "Low")
         elif layer == HIDDEN_PRIVATE_LAYER:
             recommended_action, priority = private_helper_action(qn, inbound, outbound)
+        elif layer == PUBLIC_CLASS_LAYER:
+            recommended_action = "Public config class"
+            priority = "Low"
         owner_qn = private_helper_owner(qn, inbound) if layer == HIDDEN_PRIVATE_LAYER else ""
         usage_scope = private_helper_usage_scope(qn, inbound) if layer == HIDDEN_PRIVATE_LAYER else ""
         inventory.append(
@@ -2813,13 +2827,14 @@ def _build_function_inventory(
         "private_helper_review": sum(1 for row in inventory if row["layer"] == HIDDEN_PRIVATE_LAYER),
         "function_type": {
             label: sum(1 for row in inventory if row["function_type"] == label)
-            for label in CALLABLE_LAYER_LABELS.values()
+            for label in [*CALLABLE_LAYER_LABELS.values(), PUBLIC_CLASS_LABEL]
         },
         "layer": {
             layer: sum(1 for row in inventory if row["layer"] == layer)
             for layer in CALLABLE_LAYER_LABELS
         },
         "hidden_private_helpers": sum(1 for row in inventory if row["layer"] == HIDDEN_PRIVATE_LAYER),
+        "public_classes": sum(1 for row in inventory if row["layer"] == PUBLIC_CLASS_LAYER),
         "review_status": {
             status: sum(1 for row in inventory if row["review_status"] == status)
             for status in REVIEW_STATUS_LABELS
@@ -2864,6 +2879,7 @@ def _build_callable_inventory_metrics(
     total_callables = int(summary_counts.get("total_callables", len(inventory)))
     visible_function_callables = sum(1 for row in inventory if row.get("layer") in CALLABLE_LAYER_LABELS)
     private_helper_review = sum(1 for row in inventory if row.get("layer") == HIDDEN_PRIVATE_LAYER)
+    public_class_count = sum(1 for row in inventory if row.get("layer") == PUBLIC_CLASS_LAYER)
     public_api_entrypoints = int(public_api_counts.get("public_api_entrypoints", 0))
     return {
         "module_count": len({row.get("source_path") for row in inventory if str(row.get("source_path") or "").endswith(".py")}),
@@ -2871,6 +2887,7 @@ def _build_callable_inventory_metrics(
         "public_api_entrypoints": public_api_entrypoints,
         "function_callables": visible_function_callables,
         "supporting_functions": max(visible_function_callables - public_api_entrypoints, 0),
+        "public_classes": public_class_count,
         "hidden_private_helpers": private_helper_review,
         "private_helpers_to_review": private_helper_review,
     }
@@ -2887,6 +2904,7 @@ def _callable_inventory_metrics(callable_flow_data: dict[str, Any]) -> dict[str,
             "public_api_entrypoints": int(metrics.get("public_api_entrypoints", 0)),
             "function_callables": int(metrics.get("function_callables", 0)),
             "supporting_functions": int(metrics.get("supporting_functions", 0)),
+            "public_classes": int(metrics.get("public_classes", 0)),
             "hidden_private_helpers": int(metrics.get("hidden_private_helpers", 0)),
         }
     return _build_callable_inventory_metrics(summary_counts, callable_flow_data.get("function_inventory", []))
@@ -3320,6 +3338,7 @@ CALLABLE_FLOW_SUMMARY_KEYS = (
     "public_api_surface",
     "callable_inventory_metrics",
     "private_helper_review",
+    "public_classes",
 )
 
 FUNCTION_INVENTORY_DASHBOARD_KEYS = (
@@ -3570,6 +3589,7 @@ def _trim_callable_flow_dashboard_contract(callable_flow_data: dict[str, Any]) -
 
 def _build_callable_flow_data(
     public_qns: list[str],
+    public_class_qns: list[str] | None,
     calls_by_qn: dict[str, list[str]],
     node_by_qn: dict[str, dict[str, Any]],
     module_data: dict[str, dict[str, Any]],
@@ -3663,6 +3683,7 @@ def _build_callable_flow_data(
 
     _, refactor_inventory, _ = _build_refactor_inventory(
         public_qns,
+        public_class_qns,
         calls_by_qn,
         node_by_qn,
         module_data,
@@ -3670,6 +3691,7 @@ def _build_callable_flow_data(
 
     summary_counts, function_inventory = _build_function_inventory(
         public_qns,
+        public_class_qns,
         calls_by_qn,
         node_by_qn,
         module_data,
@@ -3899,8 +3921,8 @@ def _render_refactor_inventory_html(flow_data: dict[str, Any]) -> str:
     """Render the standalone static support/code inventory HTML page."""
     generation_banner = _render_callable_generation_banner(flow_data)
     return r"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Function Inventory</title><link rel="stylesheet" href="../stylesheets/table-controls.css"><style><!--CALLABLE_PAGE_SHELL_CSS-->.surface-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.55rem;margin:.75rem 0}.surface-card,.toolbar-card{background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;padding:.65rem}.surface-card strong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem}.surface-card span{display:block;line-height:1.2;font-weight:700}.surface-card small{display:block;margin-top:.3rem;line-height:1.25;color:#64748b}.surface-card.info{border-color:#bfdbfe;background:#eff6ff}.surface-card.primary{border-color:#c7d2fe;background:#eef2ff}.surface-card.review{border-color:#fde68a;background:#fffbeb}.surface-card.risk{border-color:#fecaca;background:#fef2f2}.surface-card.muted{background:#f1f5f9;color:#475569}.surface-card.info strong,.surface-card.primary strong{color:#1d4ed8}.surface-card.review strong{color:#92400e}.surface-card.risk strong{color:#991b1b}.inventory-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem;margin:.75rem 0}.inventory-note{background:#eff6ff;border-color:#bfdbfe}.inventory-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}.filter-field{display:flex;flex-direction:column;font-weight:700;font-size:.82rem}input,select,button{padding:.42rem .5rem;border:1px solid #dbe3ef;border-radius:.45rem;background:#fff}.export-toolbar{display:flex;flex-direction:column;gap:.65rem;align-items:stretch;box-sizing:border-box;max-width:100%;margin:.75rem 0}.toolbar-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.65rem}.toolbar-card{box-sizing:border-box;min-width:0;background:#f1f5f9}.toolbar-card--selection,.toolbar-card--prompt{display:flex;flex-direction:column;gap:.55rem}.toolbar-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;max-width:100%;min-width:0}.toolbar-field{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;max-width:100%;min-width:0;font-weight:700}.toolbar-field select{max-width:100%;min-width:0}.toolbar-help,.group-help{color:#475569;font-weight:400}.compat-mode-subtitle{margin-top:.35rem;font-size:.85rem;line-height:1.35}.compat-mode-safe{color:#1d4ed8}.compat-mode-review{color:#b45309}.compat-mode-breaking{color:#b91c1c}.toolbar-group{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;max-width:100%;min-width:0}.toolbar-group>div{min-width:0}.toolbar-group .toolbar-row{flex:1 1 16rem}.toolbar-row button{white-space:normal}.primary-action,.danger-action:not(:disabled){background:#1d4ed8;color:#fff;border-color:#1d4ed8}.danger-action:not(:disabled){background:#b91c1c;border-color:#b91c1c}button:disabled,.danger-action:disabled{background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed}.table-wrap{max-width:100%;overflow-x:auto;overflow-y:visible;background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;-webkit-overflow-scrolling:touch}.callable-review-table-wrap{max-width:100%;overflow-x:auto}.callable-review-table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}.callable-review-table th,.callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}.callable-review-table tr[data-inventory-row]{cursor:pointer}.callable-review-table tr.selected{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}.callable-review-table tr[data-inventory-row]:focus{outline:3px solid #2563eb;outline-offset:-3px}.callable-review-table .col-callable{min-width:18rem;white-space:nowrap}.callable-review-table .col-file-area{min-width:18rem;white-space:nowrap}.callable-review-table .col-item-type,.callable-review-table .col-flow,.callable-review-table .col-health{white-space:nowrap}.callable-review-table .col-usage-scope{min-width:11rem;white-space:nowrap}.callable-review-table .col-recommended-action{min-width:13rem;white-space:nowrap}.callable-review-table .col-details{min-width:9rem;white-space:normal}.inventory-detail summary{cursor:pointer;list-style:none}.inventory-detail summary::-webkit-details-marker{display:none}.inventory-detail-panel{margin-top:.35rem;padding:.5rem;border:1px solid #bfdbfe;border-radius:.55rem;background:#eff6ff;color:#334155;line-height:1.4;max-width:28rem}.inventory-detail-panel div{margin:.18rem 0}.tag,.badge{display:inline-flex;align-items:center;margin:.06rem;padding:.12rem .42rem;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:.69rem;font-weight:800;line-height:1.2}.badge.issue{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.keep{background:#dcfce7;color:#166534}.badge.muted{background:#e2e8f0;color:#475569}.badge.info{background:#dbeafe;color:#1e40af}@media(max-width:720px){.inventory-filter-grid,.toolbar-card-grid{grid-template-columns:1fr}.toolbar-row,.toolbar-group{align-items:stretch}.toolbar-field,.toolbar-group{flex-direction:column}.toolbar-field select{width:100%}.toolbar-help{display:block}.toolbar-group .toolbar-row{flex:1 1 auto;flex-direction:row}.toolbar-group .toolbar-row button{flex:1 1 9rem}.callable-review-table{min-width:1100px}}</style></head><body><header><h1>Function Inventory</h1><p>The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</p><!--CALLABLE_GENERATION_BANNER--><!--CALLABLE_PAGE_NAV--></header><main><section id="inventorySummaryCards" class="surface-cards" aria-label="Function inventory summary"></section><p><small>The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</small></p><section class="toolbar-card inventory-note" aria-label="Function inventory note"><strong>Function Inventory</strong><p>Use this inventory to inspect function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</p></section><section class="inventory-filter-grid" aria-label="Function inventory filters"><label class="filter-field">Search function inventory <input id="searchBox" type="search"></label><label class="filter-field">Function inventory focus <select id="focusFilter"><option value="actionable" selected>Suggested cleanup</option><option value="all">All code assets</option><option value="selected">Selected</option></select></label><label class="filter-field">Item type <select id="typeFilter"><option value="all">All item types</option><option value="public">Public callables</option><option value="internal">Shared helpers</option><option value="private_helper">Private helpers</option></select></label><label class="filter-field">Usage scope <select id="usageFilter"><option value="all">All usage scopes</option><option value="Public callable">Public callable</option><option value="Used by owning callable">Used by owning callable</option><option value="Shared utility">Shared utility</option><option value="Boundary violation">Boundary violation</option></select></label><label class="filter-field">Health <select id="healthFilter"><option value="all">All health states</option><option value="Architecture violation">Architecture violation</option><option value="Warning">Warning</option><option value="Healthy">Healthy</option></select></label><label class="filter-field">Recommended action <select id="actionFilter"><option value="all">All recommended actions</option><option value="Fix architecture boundary">Fix architecture boundary</option><option value="Promote to shared utility">Promote to shared utility</option><option value="Refactor helper">Refactor helper</option><option value="Rename shared helper">Rename shared helper</option><option value="Keep private helper">Keep private helper</option><option value="Next step">Next step</option><option value="Remove orphaned asset">Remove orphaned asset</option><option value="No action">No action</option><option value="Warning">Warning</option></select></label><button id="resetFilters" class="inventory-clear-all" type="button" hidden>Clear filters</button></section><section class="export-toolbar"><div class="toolbar-card-grid"><div class="toolbar-card toolbar-card--selection" aria-label="Selection"><strong id="selectedCount">Selected function-level code assets: 0</strong><div class="toolbar-row"><button id="selectVisible" class="primary-action" type="button">Select visible</button><button id="clearSelected" class="danger-action" type="button" disabled>Clear selection</button></div></div><div class="toolbar-card toolbar-card--compatibility"><label class="toolbar-field">Compatibility mode <select id="compatibilityMode"><option value="preserve_backwards_compatibility" selected>Preserve backwards compatibility</option><option value="allow_breaking_changes">Allow breaking changes</option></select></label><small id="compatibilityModeSubtitle" class="compat-mode-subtitle compat-mode-safe">Selected cleanup should preserve existing public callable behavior and avoid breaking current users.</small></div><div class="toolbar-card toolbar-card--prompt"><div class="toolbar-group"><div><strong>Export function inventory cleanup packet</strong><br><small class="group-help">Export selected function-level code assets for AI-assisted cleanup planning.</small></div><div class="toolbar-row"><button id="downloadJson" type="button" disabled>Download JSON</button><button id="downloadYaml" type="button" disabled>Download YAML</button></div></div><small id="exportStatus"></small></div></section><p id="resultCount"></p><p id="dataLoadStatus" class="load-status" aria-live="polite">Loading function call graph data...</p><section class="table-wrap callable-review-table-wrap"><table class="callable-review-table" data-table-controls="excel"><thead><tr><th class="col-file-area">Source file</th><th class="col-callable">Item name</th><th class="col-item-type">Item type</th><th class="col-usage-scope">Usage scope</th><th class="col-health">Health</th><th class="col-recommended-action">Recommended action</th><th class="col-details">Details</th></tr></thead><tbody id="inventoryBody"></tbody></table></section></main><script>
-const DISPLAY_LABEL_MAP={'None':'Healthy','Architecture violation':'Architecture violation','Long chain':'Long chain','Wide dependency':'Wide dependency','Merge candidate':'Merge candidate','Inline candidate':'Inline candidate','Shared utility':'Shared utility','Same-file private dependency':'Same-file private dependency'};const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};let inventory=[],visibleRows=[],summaryCounts={},publicFlowQns=new Set(),flowSignalsByQn=new Map(),inventoryDataMissing=false;const state={search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all',selected:new Set()};const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function isPublicCallable(r){return r.layer==='public'||r.function_type==='Public function'}function inCallableFlow(r){return publicFlowQns.has(r.qualified_name)}function fileArea(r){return r.owner_file||r.source_path||r.docs_path||r.module||''}const ITEM_TYPE_LABELS={public:'Public callable',internal:'Shared helper',private_helper:'Private helper'};function itemTypeKey(r){if(r.layer&&ITEM_TYPE_LABELS[r.layer])return r.layer;if(isPublicCallable(r))return 'public';if(r.function_type==='Private helper')return 'private_helper';if(r.function_type==='Shared helper')return 'internal';return 'private_helper'}function itemType(r){return ITEM_TYPE_LABELS[itemTypeKey(r)]||'Private helper'}function flowSignal(r){return flowSignalsByQn.get(r.qualified_name)||{violation:false,warning:false,types:[]}}function duplicateHelperEvidence(r){const values=[r.recommended_action,r.review_status,r.priority,r.violation_type,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase());return values.some(v=>/(duplicate|similar helper|repeated helper|promote|extract|shared utility|shared helper|merge candidate)/.test(v))}function usageScope(r){const type=itemType(r),signal=flowSignal(r);if(isPublicCallable(r))return 'Public callable';if(type==='Private helper'&&signal.violation)return 'Boundary violation';if(type==='Private helper'&&inCallableFlow(r))return 'Used by owning callable';if(type==='Shared helper')return 'Shared utility';return inCallableFlow(r)?'Used by owning callable':'Shared utility'}const ACTIONABLE_ACTIONS=new Set(['Fix architecture boundary','Promote to shared utility','Refactor helper','Rename shared helper','Next step','Remove orphaned asset','Warning']);function actionDetails(r){const signal=flowSignal(r),type=itemType(r),scope=usageScope(r),raw=displayLabel(r.recommended_action||''),rawText=[raw,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase()).join(' ');let finding='None',reason='No cleanup action is needed.',evidence='',notes='',cleanup='No action';if(signal.violation){finding='Architecture boundary violation';reason='Private implementation crosses a callable file or module boundary.';evidence=`${sourceHref(r)||fileArea(r)} is referenced outside its owning callable boundary.`;cleanup='Fix architecture boundary'}else if(duplicateHelperEvidence(r)){finding='Duplicate helper logic across callable files';reason='Similar helper logic appears in multiple callable files and may deserve extraction into an intentional shared utility.';evidence=raw||text((r.signals||[]).join('; '))||'Duplicate or promotion-oriented helper signal found.';cleanup='Promote to shared utility'}else if(signal.warning){finding=signal.types.map(displayLabel).join(', ')||'Warning';reason='This record needs manual review before cleanup.';cleanup='Warning'}else if(/refactor|large|unclear|split|responsibility/.test(rawText)&&type==='Private helper'){finding='Private helper cleanup';reason='Helper appears large, unclear, or internally mixed and may need same-file cleanup.';cleanup='Refactor helper'}else if(raw&&/Rename/.test(raw)){finding='Naming review';reason='Name may be unclear for its current responsibility.';cleanup='Rename shared helper'}else if(raw&&/Remove|Orphan/.test(raw)){finding='Potential orphan';reason='Record appears unused and needs verification before removal.';cleanup='Remove orphaned asset'}else if(raw&&/Review/.test(raw)){finding='Manual review';reason='Explicit evidence indicates a human should review this record.';cleanup='Next step'}else if(type==='Private helper'&&scope==='Used by owning callable'){finding='Owning callable private helper';reason='Private helper is used by its owning public callable file.';cleanup='Keep private helper'}notes=(r.signals||[]).map(displayLabel).join('; ');return{finding,reason,evidence,notes,cleanup_action:cleanup}}function recommendedAction(r){const details=actionDetails(r);return details.cleanup_action||'No action'}function isActionable(r){return ACTIONABLE_ACTIONS.has(recommendedAction(r))}function healthLabel(r){const action=recommendedAction(r);if(action==='Fix architecture boundary')return 'Architecture violation';if(action==='Warning'||action==='Next step')return 'Warning';return 'Healthy'}function healthClass(h){return h==='Architecture violation'?'issue':h==='Warning'?'warn':h==='Out of scope'?'muted':'keep'}function healthBadge(i){const health=healthLabel(i);return `<span class="badge ${healthClass(health)}">${esc(health)}</span>`}function actionBadge(i){const action=recommendedAction(i);return `<span class="badge ${ACTIONABLE_ACTIONS.has(action)?'warn':'keep'}">${esc(action)}</span>`}function usageBadge(i){const scope=usageScope(i);return `<span class="badge ${scope==='Boundary violation'?'issue':'info'}">${esc(scope)}</span>`}function detailsCell(i){const d=actionDetails(i);return `<details class="inventory-detail"><summary><span class="badge muted">Details</span></summary><div class="inventory-detail-panel"><div><strong>Finding:</strong> ${esc(d.finding)}</div><div><strong>Reason:</strong> ${esc(d.reason)}</div><div><strong>Evidence:</strong> ${esc(d.evidence||'None')}</div><div><strong>Notes:</strong> ${esc(d.notes||'None')}</div><div><strong>Next step:</strong> ${esc(d.cleanup_action)}</div></div></details>`}function sourceHref(i){if(i.docs_path)return '../'+String(i.docs_path).replace(/^docs\//,'').replace(/\.md$/,'/');if(i.source_url)return i.source_url;const path=i.source_path;if(!path)return '';const start=i.source_start_line,end=i.source_end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return 'https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/'+path+anchor}function sourceCallableLink(i){const href=sourceHref(i),label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}" target="_blank" rel="noopener"><code>${label}</code></a>`:`<code>${label}</code>`}function selectedItems(){return inventory.filter(row=>state.selected.has(row.qualified_name))}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function exportItem(r){return{source_file:r.source_path||r.owner_file||fileArea(r),item_name:r.function_name||r.qualified_name,item_type:itemType(r),usage_scope:usageScope(r),health:healthLabel(r),recommended_action:recommendedAction(r),action_details:actionDetails(r)}}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function inventory cleanup packet.
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Function Inventory</title><link rel="stylesheet" href="../stylesheets/table-controls.css"><style><!--CALLABLE_PAGE_SHELL_CSS-->.surface-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.55rem;margin:.75rem 0}.surface-card,.toolbar-card{background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;padding:.65rem}.surface-card strong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem}.surface-card span{display:block;line-height:1.2;font-weight:700}.surface-card small{display:block;margin-top:.3rem;line-height:1.25;color:#64748b}.surface-card.info{border-color:#bfdbfe;background:#eff6ff}.surface-card.primary{border-color:#c7d2fe;background:#eef2ff}.surface-card.review{border-color:#fde68a;background:#fffbeb}.surface-card.risk{border-color:#fecaca;background:#fef2f2}.surface-card.muted{background:#f1f5f9;color:#475569}.surface-card.info strong,.surface-card.primary strong{color:#1d4ed8}.surface-card.review strong{color:#92400e}.surface-card.risk strong{color:#991b1b}.inventory-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem;margin:.75rem 0}.inventory-note{background:#eff6ff;border-color:#bfdbfe}.inventory-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}.filter-field{display:flex;flex-direction:column;font-weight:700;font-size:.82rem}input,select,button{padding:.42rem .5rem;border:1px solid #dbe3ef;border-radius:.45rem;background:#fff}.export-toolbar{display:flex;flex-direction:column;gap:.65rem;align-items:stretch;box-sizing:border-box;max-width:100%;margin:.75rem 0}.toolbar-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.65rem}.toolbar-card{box-sizing:border-box;min-width:0;background:#f1f5f9}.toolbar-card--selection,.toolbar-card--prompt{display:flex;flex-direction:column;gap:.55rem}.toolbar-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;max-width:100%;min-width:0}.toolbar-field{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;max-width:100%;min-width:0;font-weight:700}.toolbar-field select{max-width:100%;min-width:0}.toolbar-help,.group-help{color:#475569;font-weight:400}.compat-mode-subtitle{margin-top:.35rem;font-size:.85rem;line-height:1.35}.compat-mode-safe{color:#1d4ed8}.compat-mode-review{color:#b45309}.compat-mode-breaking{color:#b91c1c}.toolbar-group{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;max-width:100%;min-width:0}.toolbar-group>div{min-width:0}.toolbar-group .toolbar-row{flex:1 1 16rem}.toolbar-row button{white-space:normal}.primary-action,.danger-action:not(:disabled){background:#1d4ed8;color:#fff;border-color:#1d4ed8}.danger-action:not(:disabled){background:#b91c1c;border-color:#b91c1c}button:disabled,.danger-action:disabled{background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed}.table-wrap{max-width:100%;overflow-x:auto;overflow-y:visible;background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;-webkit-overflow-scrolling:touch}.callable-review-table-wrap{max-width:100%;overflow-x:auto}.callable-review-table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}.callable-review-table th,.callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}.callable-review-table tr[data-inventory-row]{cursor:pointer}.callable-review-table tr.selected{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}.callable-review-table tr[data-inventory-row]:focus{outline:3px solid #2563eb;outline-offset:-3px}.callable-review-table .col-callable{min-width:18rem;white-space:nowrap}.callable-review-table .col-file-area{min-width:18rem;white-space:nowrap}.callable-review-table .col-item-type,.callable-review-table .col-flow,.callable-review-table .col-health{white-space:nowrap}.callable-review-table .col-usage-scope{min-width:11rem;white-space:nowrap}.callable-review-table .col-recommended-action{min-width:13rem;white-space:nowrap}.callable-review-table .col-details{min-width:9rem;white-space:normal}.inventory-detail summary{cursor:pointer;list-style:none}.inventory-detail summary::-webkit-details-marker{display:none}.inventory-detail-panel{margin-top:.35rem;padding:.5rem;border:1px solid #bfdbfe;border-radius:.55rem;background:#eff6ff;color:#334155;line-height:1.4;max-width:28rem}.inventory-detail-panel div{margin:.18rem 0}.tag,.badge{display:inline-flex;align-items:center;margin:.06rem;padding:.12rem .42rem;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:.69rem;font-weight:800;line-height:1.2}.badge.issue{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.keep{background:#dcfce7;color:#166534}.badge.muted{background:#e2e8f0;color:#475569}.badge.info{background:#dbeafe;color:#1e40af}@media(max-width:720px){.inventory-filter-grid,.toolbar-card-grid{grid-template-columns:1fr}.toolbar-row,.toolbar-group{align-items:stretch}.toolbar-field,.toolbar-group{flex-direction:column}.toolbar-field select{width:100%}.toolbar-help{display:block}.toolbar-group .toolbar-row{flex:1 1 auto;flex-direction:row}.toolbar-group .toolbar-row button{flex:1 1 9rem}.callable-review-table{min-width:1100px}}</style></head><body><header><h1>Function Inventory</h1><p>The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</p><!--CALLABLE_GENERATION_BANNER--><!--CALLABLE_PAGE_NAV--></header><main><section id="inventorySummaryCards" class="surface-cards" aria-label="Function inventory summary"></section><p><small>The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</small></p><section class="toolbar-card inventory-note" aria-label="Function inventory note"><strong>Function Inventory</strong><p>Use this inventory to inspect function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</p></section><section class="inventory-filter-grid" aria-label="Function inventory filters"><label class="filter-field">Search function inventory <input id="searchBox" type="search"></label><label class="filter-field">Function inventory focus <select id="focusFilter"><option value="actionable" selected>Suggested cleanup</option><option value="all">All code assets</option><option value="selected">Selected</option></select></label><label class="filter-field">Item type <select id="typeFilter"><option value="all">All item types</option><option value="public">Public callables</option><option value="class">Classes</option><option value="internal">Shared helpers</option><option value="private_helper">Private helpers</option></select></label><label class="filter-field">Usage scope <select id="usageFilter"><option value="all">All usage scopes</option><option value="Public callable">Public callable</option><option value="Used by owning callable">Used by owning callable</option><option value="Shared utility">Shared utility</option><option value="Boundary violation">Boundary violation</option></select></label><label class="filter-field">Health <select id="healthFilter"><option value="all">All health states</option><option value="Architecture violation">Architecture violation</option><option value="Warning">Warning</option><option value="Healthy">Healthy</option></select></label><label class="filter-field">Recommended action <select id="actionFilter"><option value="all">All recommended actions</option><option value="Fix architecture boundary">Fix architecture boundary</option><option value="Promote to shared utility">Promote to shared utility</option><option value="Refactor helper">Refactor helper</option><option value="Rename shared helper">Rename shared helper</option><option value="Keep private helper">Keep private helper</option><option value="Next step">Next step</option><option value="Remove orphaned asset">Remove orphaned asset</option><option value="No action">No action</option><option value="Warning">Warning</option></select></label><button id="resetFilters" class="inventory-clear-all" type="button" hidden>Clear filters</button></section><section class="export-toolbar"><div class="toolbar-card-grid"><div class="toolbar-card toolbar-card--selection" aria-label="Selection"><strong id="selectedCount">Selected function-level code assets: 0</strong><div class="toolbar-row"><button id="selectVisible" class="primary-action" type="button">Select visible</button><button id="clearSelected" class="danger-action" type="button" disabled>Clear selection</button></div></div><div class="toolbar-card toolbar-card--compatibility"><label class="toolbar-field">Compatibility mode <select id="compatibilityMode"><option value="preserve_backwards_compatibility" selected>Preserve backwards compatibility</option><option value="allow_breaking_changes">Allow breaking changes</option></select></label><small id="compatibilityModeSubtitle" class="compat-mode-subtitle compat-mode-safe">Selected cleanup should preserve existing public callable behavior and avoid breaking current users.</small></div><div class="toolbar-card toolbar-card--prompt"><div class="toolbar-group"><div><strong>Export function inventory cleanup packet</strong><br><small class="group-help">Export selected function-level code assets for AI-assisted cleanup planning.</small></div><div class="toolbar-row"><button id="downloadJson" type="button" disabled>Download JSON</button><button id="downloadYaml" type="button" disabled>Download YAML</button></div></div><small id="exportStatus"></small></div></section><p id="resultCount"></p><p id="dataLoadStatus" class="load-status" aria-live="polite">Loading function call graph data...</p><section class="table-wrap callable-review-table-wrap"><table class="callable-review-table" data-table-controls="excel"><thead><tr><th class="col-file-area">Source file</th><th class="col-callable">Item name</th><th class="col-item-type">Item type</th><th class="col-usage-scope">Usage scope</th><th class="col-health">Health</th><th class="col-recommended-action">Recommended action</th><th class="col-details">Details</th></tr></thead><tbody id="inventoryBody"></tbody></table></section></main><script>
+const DISPLAY_LABEL_MAP={'None':'Healthy','Architecture violation':'Architecture violation','Long chain':'Long chain','Wide dependency':'Wide dependency','Merge candidate':'Merge candidate','Inline candidate':'Inline candidate','Shared utility':'Shared utility','Same-file private dependency':'Same-file private dependency'};const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};let inventory=[],visibleRows=[],summaryCounts={},publicFlowQns=new Set(),flowSignalsByQn=new Map(),inventoryDataMissing=false;const state={search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all',selected:new Set()};const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function isPublicCallable(r){return r.layer==='public'||r.function_type==='Public function'}function inCallableFlow(r){return publicFlowQns.has(r.qualified_name)}function fileArea(r){return r.owner_file||r.source_path||r.docs_path||r.module||''}const ITEM_TYPE_LABELS={public:'Public callable',class:'Classes',internal:'Shared helper',private_helper:'Private helper'};function itemTypeKey(r){if(r.layer&&ITEM_TYPE_LABELS[r.layer])return r.layer;if(isPublicCallable(r))return 'public';if(r.function_type==='Private helper')return 'private_helper';if(r.function_type==='Shared helper')return 'internal';return 'private_helper'}function itemType(r){return ITEM_TYPE_LABELS[itemTypeKey(r)]||'Private helper'}function flowSignal(r){return flowSignalsByQn.get(r.qualified_name)||{violation:false,warning:false,types:[]}}function duplicateHelperEvidence(r){const values=[r.recommended_action,r.review_status,r.priority,r.violation_type,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase());return values.some(v=>/(duplicate|similar helper|repeated helper|promote|extract|shared utility|shared helper|merge candidate)/.test(v))}function usageScope(r){const type=itemType(r),signal=flowSignal(r);if(isPublicCallable(r))return 'Public callable';if(type==='Classes')return 'Public class';if(type==='Private helper'&&signal.violation)return 'Boundary violation';if(type==='Private helper'&&inCallableFlow(r))return 'Used by owning callable';if(type==='Shared helper')return 'Shared utility';return inCallableFlow(r)?'Used by owning callable':'Shared utility'}const ACTIONABLE_ACTIONS=new Set(['Fix architecture boundary','Promote to shared utility','Refactor helper','Rename shared helper','Next step','Remove orphaned asset','Warning']);function actionDetails(r){const signal=flowSignal(r),type=itemType(r),scope=usageScope(r),raw=displayLabel(r.recommended_action||''),rawText=[raw,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase()).join(' ');let finding='None',reason='No cleanup action is needed.',evidence='',notes='',cleanup='No action';if(signal.violation){finding='Architecture boundary violation';reason='Private implementation crosses a callable file or module boundary.';evidence=`${sourceHref(r)||fileArea(r)} is referenced outside its owning callable boundary.`;cleanup='Fix architecture boundary'}else if(duplicateHelperEvidence(r)){finding='Duplicate helper logic across callable files';reason='Similar helper logic appears in multiple callable files and may deserve extraction into an intentional shared utility.';evidence=raw||text((r.signals||[]).join('; '))||'Duplicate or promotion-oriented helper signal found.';cleanup='Promote to shared utility'}else if(signal.warning){finding=signal.types.map(displayLabel).join(', ')||'Warning';reason='This record needs manual review before cleanup.';cleanup='Warning'}else if(/refactor|large|unclear|split|responsibility/.test(rawText)&&type==='Private helper'){finding='Private helper cleanup';reason='Helper appears large, unclear, or internally mixed and may need same-file cleanup.';cleanup='Refactor helper'}else if(raw&&/Rename/.test(raw)){finding='Naming review';reason='Name may be unclear for its current responsibility.';cleanup='Rename shared helper'}else if(raw&&/Remove|Orphan/.test(raw)){finding='Potential orphan';reason='Record appears unused and needs verification before removal.';cleanup='Remove orphaned asset'}else if(raw&&/Review/.test(raw)){finding='Manual review';reason='Explicit evidence indicates a human should review this record.';cleanup='Next step'}else if(type==='Private helper'&&scope==='Used by owning callable'){finding='Owning callable private helper';reason='Private helper is used by its owning public callable file.';cleanup='Keep private helper'}notes=(r.signals||[]).map(displayLabel).join('; ');return{finding,reason,evidence,notes,cleanup_action:cleanup}}function recommendedAction(r){const details=actionDetails(r);return details.cleanup_action||'No action'}function isActionable(r){return ACTIONABLE_ACTIONS.has(recommendedAction(r))}function healthLabel(r){const action=recommendedAction(r);if(action==='Fix architecture boundary')return 'Architecture violation';if(action==='Warning'||action==='Next step')return 'Warning';return 'Healthy'}function healthClass(h){return h==='Architecture violation'?'issue':h==='Warning'?'warn':h==='Out of scope'?'muted':'keep'}function healthBadge(i){const health=healthLabel(i);return `<span class="badge ${healthClass(health)}">${esc(health)}</span>`}function actionBadge(i){const action=recommendedAction(i);return `<span class="badge ${ACTIONABLE_ACTIONS.has(action)?'warn':'keep'}">${esc(action)}</span>`}function usageBadge(i){const scope=usageScope(i);return `<span class="badge ${scope==='Boundary violation'?'issue':'info'}">${esc(scope)}</span>`}function detailsCell(i){const d=actionDetails(i);return `<details class="inventory-detail"><summary><span class="badge muted">Details</span></summary><div class="inventory-detail-panel"><div><strong>Finding:</strong> ${esc(d.finding)}</div><div><strong>Reason:</strong> ${esc(d.reason)}</div><div><strong>Evidence:</strong> ${esc(d.evidence||'None')}</div><div><strong>Notes:</strong> ${esc(d.notes||'None')}</div><div><strong>Next step:</strong> ${esc(d.cleanup_action)}</div></div></details>`}function sourceHref(i){if(i.docs_path)return '../'+String(i.docs_path).replace(/^docs\//,'').replace(/\.md$/,'/');if(i.source_url)return i.source_url;const path=i.source_path;if(!path)return '';const start=i.source_start_line,end=i.source_end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return 'https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/'+path+anchor}function sourceCallableLink(i){const href=sourceHref(i),label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}" target="_blank" rel="noopener"><code>${label}</code></a>`:`<code>${label}</code>`}function selectedItems(){return inventory.filter(row=>state.selected.has(row.qualified_name))}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function exportItem(r){return{source_file:r.source_path||r.owner_file||fileArea(r),item_name:r.function_name||r.qualified_name,item_type:itemType(r),usage_scope:usageScope(r),health:healthLabel(r),recommended_action:recommendedAction(r),action_details:actionDetails(r)}}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function inventory cleanup packet.
 
 Use the selected function-level code assets and function call graph context to plan a safe cleanup. Group items by cleanup type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet.
 
@@ -3914,7 +3936,7 @@ If compatibility mode is “Preserve backwards compatibility”, preserve existi
 
 If compatibility mode is “Allow breaking changes”, propose cleaner breaking changes where they improve the architecture. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.
 
-Always call out tests required before changes.`}function refactorPacket(){const rows=selectedItems().map(exportItem);return{schema:'fabricops_support_inventory_cleanup_packet',export_type:'Function inventory cleanup packet',ai_prompt:cleanupPrompt(),selected_code_assets:rows,asset_context:{selected_code_asset_count:rows.length,...cleanupMode()},requested_work:['Inspect the selected function-level code assets using the compact schema.','Fix architecture boundaries before cosmetic cleanup.','Keep normal owning-file private helpers private.','Promote duplicate helper logic only when duplication evidence supports a shared utility.','Keep cleanup focused on function-level code assets.'],safety_constraints:['Preserve public callable behavior.','Do not remove assets without caller and test review.','Cross-callable private helper usage is an architecture violation.'],expected_output:'Return summary, changed assets, tests, risks, and deferred items.'}}function yamlScalar(v){if(v===null||v===undefined)return 'null';if(typeof v==='number'||typeof v==='boolean')return String(v);const value=String(v);return /^[A-Za-z0-9_./:@ -]+$/.test(value)&&value.trim()===value&&value!==''?value:JSON.stringify(value)}function yamlValue(value,indent=0){const pad='  '.repeat(indent);if(Array.isArray(value)){if(!value.length)return '[]';return value.map(item=>{if(item&&typeof item==='object')return `${pad}-\n${yamlValue(item,indent+1)}`;return `${pad}- ${yamlScalar(item)}`}).join('\n')}if(value&&typeof value==='object'){const entries=Object.entries(value);if(!entries.length)return '{}';return entries.map(([key,item])=>{if(item&&typeof item==='object'){return `${pad}${key}:\n${yamlValue(item,indent+1)}`}return `${pad}${key}: ${yamlScalar(item)}`}).join('\n')}return `${pad}${yamlScalar(value)}`}function yamlPacket(packet){return yamlValue(packet)+'\n'}function downloadPacket(format){const isYaml=format==='yaml';const blob=new Blob([isYaml?yamlPacket(refactorPacket()):JSON.stringify(refactorPacket(),null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fabricops-function-inventory-cleanup-packet.${isYaml?'yaml':'json'}`;a.click()}function renderInventoryCards(){const total=inventory.length,publicCount=inventory.filter(isPublicCallable).length,sharedCount=inventory.filter(i=>itemTypeKey(i)==='internal').length,privateCount=inventory.filter(i=>itemTypeKey(i)==='private_helper').length,cleanupCount=inventory.filter(isActionable).length,cards=[{label:'Total function-level code assets',value:total,subtitle:'All generated function-level code asset records.',cls:'muted'},{label:'Public callables',value:publicCount,subtitle:'User facing callable functions.',cls:'primary'},{label:'Shared helpers',value:sharedCount,subtitle:'Reusable utility functions intentionally shared across callable files.',cls:'info'},{label:'Private helpers',value:privateCount,subtitle:'Private helpers owned by one standalone callable file.',cls:'good'},{label:'Suggested cleanup',value:cleanupCount,subtitle:'Only actionable records that need review or cleanup.',cls:cleanupCount?'risk':'good'}];$('inventorySummaryCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function supportFocus(i){return isActionable(i)}function matchesFilters(i){const q=state.search.toLowerCase();if(q&&![i.function_name,i.qualified_name,fileArea(i),itemType(i),usageScope(i),healthLabel(i),recommendedAction(i)].some(v=>text(v).toLowerCase().includes(q)))return false;if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!supportFocus(i))return false;if(state.focusFilter==='selected'&&!state.selected.has(i.qualified_name))return false;if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false;if(state.usageFilter!=='all'&&usageScope(i)!==state.usageFilter)return false;if(state.healthFilter!=='all'&&healthLabel(i)!==state.healthFilter)return false;if(state.actionFilter!=='all'&&recommendedAction(i)!==state.actionFilter)return false;return true}function rank(i){return (isActionable(i)?0:1)+text(recommendedAction(i)).localeCompare('No action')}function filteredRows(){return inventory.filter(matchesFilters).sort((a,b)=>rank(a)-rank(b)||itemType(a).localeCompare(itemType(b))||text(a.function_name).localeCompare(text(b.function_name)))}function updateFilterControls(){$('resetFilters').hidden=state.search===''&&state.focusFilter==='actionable'&&state.typeFilter==='all'&&state.usageFilter==='all'&&state.healthFilter==='all'&&state.actionFilter==='all'}function updateExportControls(){$('selectedCount').textContent=`Selected function-level code assets: ${state.selected.size}`;['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=state.selected.size===0);$('clearSelected').disabled=state.selected.size===0}function resultCountText(){const total=summaryCounts.total_callables??inventory.length;return `Showing ${visibleRows.length} function inventory records of ${total} total generated function-level code assets.`}function inventoryEmptyMessage(){if(inventoryDataMissing)return 'Function inventory data is missing from function-call-graph.json. Regenerate the function call graph export.';if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.';return 'No function-level code assets found for the current filters.'}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');el.textContent=message;el.className=isError?'load-status issue':'load-status'}function renderTable(){visibleRows=filteredRows();$('resultCount').textContent=resultCountText();renderLoadStatus(visibleRows.length?`Loaded ${inventory.length} function inventory records`:inventoryEmptyMessage(),inventoryDataMissing);updateFilterControls();$('inventoryBody').innerHTML=visibleRows.map(i=>`<tr data-inventory-row="${esc(i.qualified_name)}" class="${state.selected.has(i.qualified_name)?'selected':''}" tabindex="0" aria-selected="${state.selected.has(i.qualified_name)?'true':'false'}"><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-item-type">${esc(itemType(i))}</td><td class="col-usage-scope">${usageBadge(i)}</td><td class="col-health">${healthBadge(i)}</td><td class="col-recommended-action">${actionBadge(i)}</td><td class="col-details">${detailsCell(i)}</td></tr>`).join('');updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls="excel"]'))}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json';if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json';return new URL('reference/_data/function-call-graph.json',document.baseURI).href}function updateFunctionCallGraphDataLink(url){const link=$('openFunctionCallGraphJson');if(link)link.href=url}function buildFlowSignals(flows){publicFlowQns=new Set();flowSignalsByQn=new Map();(flows||[]).forEach(flow=>{publicFlowQns.add(flow.qualified_name);(flow.transitive_callees||[]).forEach(row=>{publicFlowQns.add(row.qualified_name);const signal=flowSignalsByQn.get(row.qualified_name)||{violation:false,warning:false,types:[]};if(row.architecture_result==='Violation')signal.violation=true;if(row.architecture_result==='Warning')signal.warning=true;if(row.violation_type&&!signal.types.includes(row.violation_type))signal.types.push(row.violation_type);flowSignalsByQn.set(row.qualified_name,signal)})})}$('searchBox').addEventListener('input',e=>{state.search=e.target.value;renderTable()});['focusFilter','typeFilter','usageFilter','healthFilter','actionFilter'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;renderTable()}));$('resetFilters').onclick=()=>{Object.assign(state,{search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all'});$('searchBox').value='';$('focusFilter').value='actionable';$('typeFilter').value='all';$('usageFilter').value='all';$('healthFilter').value='all';$('actionFilter').value='all';if(window.FabricOpsTableControls)window.FabricOpsTableControls.resetAll(document);renderTable()};document.addEventListener('click',e=>{if(e.target.closest('a,button,input,select,textarea,label,summary,.inventory-detail'))return;const row=e.target.closest('[data-inventory-row]');if(row){state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-inventory-row]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});$('selectVisible').onclick=()=>{visibleRows.forEach(r=>state.selected.add(r.qualified_name));renderTable()};$('clearSelected').onclick=()=>{state.selected.clear();renderTable()};$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);updateCompatibilityModeMeta();async function loadData(){const attemptedUrl=functionCallGraphDataUrl();updateFunctionCallGraphDataLink(attemptedUrl);try{const response=await fetch(attemptedUrl);if(!response.ok)throw new Error(`HTTP ${response.status} ${response.statusText}`);let data;try{data=await response.json()}catch(parseError){throw new Error(`Could not parse function-call-graph.json from ${attemptedUrl}: ${parseError&&parseError.message?parseError.message:String(parseError)}`)}if(!Array.isArray(data.function_inventory)){inventory=[];summaryCounts=data&&data.summary_counts?data.summary_counts:{};inventoryDataMissing=true;buildFlowSignals(data&&Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]);renderInventoryCards();renderTable();return}inventoryDataMissing=false;inventory=data.function_inventory;summaryCounts=data.summary_counts||{};buildFlowSignals(data.public_entrypoint_flow||[]);renderInventoryCards();renderTable()}catch(error){inventoryDataMissing=false;renderInventoryCards();$('inventoryBody').innerHTML='';$('resultCount').textContent='';renderLoadStatus(`Failed to load function call graph data. URL: ${attemptedUrl}. Error: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
+Always call out tests required before changes.`}function refactorPacket(){const rows=selectedItems().map(exportItem);return{schema:'fabricops_support_inventory_cleanup_packet',export_type:'Function inventory cleanup packet',ai_prompt:cleanupPrompt(),selected_code_assets:rows,asset_context:{selected_code_asset_count:rows.length,...cleanupMode()},requested_work:['Inspect the selected function-level code assets using the compact schema.','Fix architecture boundaries before cosmetic cleanup.','Keep normal owning-file private helpers private.','Promote duplicate helper logic only when duplication evidence supports a shared utility.','Keep cleanup focused on function-level code assets.'],safety_constraints:['Preserve public callable behavior.','Do not remove assets without caller and test review.','Cross-callable private helper usage is an architecture violation.'],expected_output:'Return summary, changed assets, tests, risks, and deferred items.'}}function yamlScalar(v){if(v===null||v===undefined)return 'null';if(typeof v==='number'||typeof v==='boolean')return String(v);const value=String(v);return /^[A-Za-z0-9_./:@ -]+$/.test(value)&&value.trim()===value&&value!==''?value:JSON.stringify(value)}function yamlValue(value,indent=0){const pad='  '.repeat(indent);if(Array.isArray(value)){if(!value.length)return '[]';return value.map(item=>{if(item&&typeof item==='object')return `${pad}-\n${yamlValue(item,indent+1)}`;return `${pad}- ${yamlScalar(item)}`}).join('\n')}if(value&&typeof value==='object'){const entries=Object.entries(value);if(!entries.length)return '{}';return entries.map(([key,item])=>{if(item&&typeof item==='object'){return `${pad}${key}:\n${yamlValue(item,indent+1)}`}return `${pad}${key}: ${yamlScalar(item)}`}).join('\n')}return `${pad}${yamlScalar(value)}`}function yamlPacket(packet){return yamlValue(packet)+'\n'}function downloadPacket(format){const isYaml=format==='yaml';const blob=new Blob([isYaml?yamlPacket(refactorPacket()):JSON.stringify(refactorPacket(),null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`fabricops-function-inventory-cleanup-packet.${isYaml?'yaml':'json'}`;a.click()}function renderInventoryCards(){const total=inventory.length,publicCount=inventory.filter(isPublicCallable).length,classCount=inventory.filter(i=>itemTypeKey(i)==='class').length,sharedCount=inventory.filter(i=>itemTypeKey(i)==='internal').length,privateCount=inventory.filter(i=>itemTypeKey(i)==='private_helper').length,cleanupCount=inventory.filter(isActionable).length,cards=[{label:'Total function-level code assets',value:total,subtitle:'All generated function-level code asset records.',cls:'muted'},{label:'Public callables',value:publicCount,subtitle:'User facing callable functions.',cls:'primary'},{label:'Classes',value:classCount,subtitle:'Public config classes.',cls:'info'},{label:'Shared helpers',value:sharedCount,subtitle:'Reusable utility functions intentionally shared across callable files.',cls:'info'},{label:'Private helpers',value:privateCount,subtitle:'Private helpers owned by one standalone callable file.',cls:'good'},{label:'Suggested cleanup',value:cleanupCount,subtitle:'Only actionable records that need review or cleanup.',cls:cleanupCount?'risk':'good'}];$('inventorySummaryCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function supportFocus(i){return isActionable(i)}function matchesFilters(i){const q=state.search.toLowerCase();if(q&&![i.function_name,i.qualified_name,fileArea(i),itemType(i),usageScope(i),healthLabel(i),recommendedAction(i)].some(v=>text(v).toLowerCase().includes(q)))return false;if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!q&&!supportFocus(i))return false;if(state.focusFilter==='selected'&&!state.selected.has(i.qualified_name))return false;if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false;if(state.usageFilter!=='all'&&usageScope(i)!==state.usageFilter)return false;if(state.healthFilter!=='all'&&healthLabel(i)!==state.healthFilter)return false;if(state.actionFilter!=='all'&&recommendedAction(i)!==state.actionFilter)return false;return true}function rank(i){return (isActionable(i)?0:1)+text(recommendedAction(i)).localeCompare('No action')}function filteredRows(){return inventory.filter(matchesFilters).sort((a,b)=>rank(a)-rank(b)||itemType(a).localeCompare(itemType(b))||text(a.function_name).localeCompare(text(b.function_name)))}function updateFilterControls(){$('resetFilters').hidden=state.search===''&&state.focusFilter==='actionable'&&state.typeFilter==='all'&&state.usageFilter==='all'&&state.healthFilter==='all'&&state.actionFilter==='all'}function updateExportControls(){$('selectedCount').textContent=`Selected function-level code assets: ${state.selected.size}`;['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=state.selected.size===0);$('clearSelected').disabled=state.selected.size===0}function resultCountText(){const total=summaryCounts.total_callables??inventory.length;return `Showing ${visibleRows.length} function inventory records of ${total} total generated function-level code assets.`}function inventoryEmptyMessage(){if(inventoryDataMissing)return 'Function inventory data is missing from function-call-graph.json. Regenerate the function call graph export.';if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.';return 'No function-level code assets found for the current filters.'}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');el.textContent=message;el.className=isError?'load-status issue':'load-status'}function renderTable(){visibleRows=filteredRows();$('resultCount').textContent=resultCountText();renderLoadStatus(visibleRows.length?`Loaded ${inventory.length} function inventory records`:inventoryEmptyMessage(),inventoryDataMissing);updateFilterControls();$('inventoryBody').innerHTML=visibleRows.map(i=>`<tr data-inventory-row="${esc(i.qualified_name)}" class="${state.selected.has(i.qualified_name)?'selected':''}" tabindex="0" aria-selected="${state.selected.has(i.qualified_name)?'true':'false'}"><td class="col-file-area">${esc(fileArea(i))}</td><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-item-type">${esc(itemType(i))}</td><td class="col-usage-scope">${usageBadge(i)}</td><td class="col-health">${healthBadge(i)}</td><td class="col-recommended-action">${actionBadge(i)}</td><td class="col-details">${detailsCell(i)}</td></tr>`).join('');updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('table[data-table-controls="excel"]'))}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json';if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json';return new URL('reference/_data/function-call-graph.json',document.baseURI).href}function updateFunctionCallGraphDataLink(url){const link=$('openFunctionCallGraphJson');if(link)link.href=url}function buildFlowSignals(flows){publicFlowQns=new Set();flowSignalsByQn=new Map();(flows||[]).forEach(flow=>{publicFlowQns.add(flow.qualified_name);(flow.transitive_callees||[]).forEach(row=>{publicFlowQns.add(row.qualified_name);const signal=flowSignalsByQn.get(row.qualified_name)||{violation:false,warning:false,types:[]};if(row.architecture_result==='Violation')signal.violation=true;if(row.architecture_result==='Warning')signal.warning=true;if(row.violation_type&&!signal.types.includes(row.violation_type))signal.types.push(row.violation_type);flowSignalsByQn.set(row.qualified_name,signal)})})}$('searchBox').addEventListener('input',e=>{state.search=e.target.value;renderTable()});['focusFilter','typeFilter','usageFilter','healthFilter','actionFilter'].forEach(id=>$(id).addEventListener('change',e=>{state[id]=e.target.value;renderTable()}));$('resetFilters').onclick=()=>{Object.assign(state,{search:'',focusFilter:'actionable',typeFilter:'all',usageFilter:'all',healthFilter:'all',actionFilter:'all'});$('searchBox').value='';$('focusFilter').value='actionable';$('typeFilter').value='all';$('usageFilter').value='all';$('healthFilter').value='all';$('actionFilter').value='all';if(window.FabricOpsTableControls)window.FabricOpsTableControls.resetAll(document);renderTable()};document.addEventListener('click',e=>{if(e.target.closest('a,button,input,select,textarea,label,summary,.inventory-detail'))return;const row=e.target.closest('[data-inventory-row]');if(row){state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-inventory-row]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});$('selectVisible').onclick=()=>{visibleRows.forEach(r=>state.selected.add(r.qualified_name));renderTable()};$('clearSelected').onclick=()=>{state.selected.clear();renderTable()};$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);updateCompatibilityModeMeta();async function loadData(){const attemptedUrl=functionCallGraphDataUrl();updateFunctionCallGraphDataLink(attemptedUrl);try{const response=await fetch(attemptedUrl);if(!response.ok)throw new Error(`HTTP ${response.status} ${response.statusText}`);let data;try{data=await response.json()}catch(parseError){throw new Error(`Could not parse function-call-graph.json from ${attemptedUrl}: ${parseError&&parseError.message?parseError.message:String(parseError)}`)}if(!Array.isArray(data.function_inventory)){inventory=[];summaryCounts=data&&data.summary_counts?data.summary_counts:{};inventoryDataMissing=true;buildFlowSignals(data&&Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]);renderInventoryCards();renderTable();return}inventoryDataMissing=false;inventory=data.function_inventory;summaryCounts=data.summary_counts||{};buildFlowSignals(data.public_entrypoint_flow||[]);renderInventoryCards();renderTable()}catch(error){inventoryDataMissing=false;renderInventoryCards();$('inventoryBody').innerHTML='';$('resultCount').textContent='';renderLoadStatus(`Failed to load function call graph data. URL: ${attemptedUrl}. Error: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
 </script><script src="../javascripts/table-controls.js"></script></body></html>
 """.replace("<!--CALLABLE_GENERATION_BANNER-->", generation_banner).replace("<!--CALLABLE_PAGE_SHELL_CSS-->", _callable_page_shell_css()).replace("<!--CALLABLE_PAGE_NAV-->", _render_callable_page_nav("inventory"))
 
@@ -4384,7 +4406,7 @@ def _default_reference_config() -> Any:
     """Return a minimal validated config for schema registry generation."""
     from types import SimpleNamespace
 
-    from fabricops_kit.config import FrameworkConfig, NotebookRuntimeConfig, PathConfig
+    from fabricops_kit.config import FrameworkConfig, PathConfig
 
     metadata_store = SimpleNamespace(
         workspace_id="reference-workspace",
@@ -4394,7 +4416,6 @@ def _default_reference_config() -> Any:
     )
     return FrameworkConfig(
         path_config=PathConfig(paths={"dev": {"metadata": metadata_store}}),
-        notebook_runtime_config=NotebookRuntimeConfig(),
     )
 
 
@@ -4517,7 +4538,7 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
     sys.modules.setdefault("pyspark.sql", sql)
     sys.modules.setdefault("pyspark.sql.types", sql_types)
 
-    from fabricops_kit.config import _get_metadata_table_schema_registry
+    from fabricops_kit.config.shared import _get_metadata_table_schema_registry
 
     return _get_metadata_table_schema_registry(_default_reference_config())
 
@@ -4532,7 +4553,7 @@ def generate_metadata_table_reference() -> int:
 
     """
     try:
-        from fabricops_kit.config import _get_metadata_table_schema_registry
+        from fabricops_kit.config.shared import _get_metadata_table_schema_registry
 
         registry = _get_metadata_table_schema_registry(_default_reference_config())
     except RuntimeError as exc:
@@ -4631,6 +4652,8 @@ def generate_landing_stats(
         "total_callable_records": metrics["total_callables"],
         "function_callable_count": metrics["function_callables"],
         "supporting_function_count": metrics["supporting_functions"],
+        "public_class_count": metrics.get("public_classes", 0),
+        "public_root_export_count": metrics["public_api_entrypoints"] + metrics.get("public_classes", 0),
         "module_count": metrics["module_count"],
         "metadata_table_count": metadata_table_count,
     }
@@ -4679,13 +4702,13 @@ def main() -> None:
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
-    non_callable_exports = sorted(
-        name for name in public if str(docs_metadata[name].get("function_type", "")).lower() != "callable"
+    invalid_public_exports = sorted(
+        name for name in public if str(docs_metadata[name].get("function_type", "")).lower() not in {"callable", "class"}
     )
-    if non_callable_exports:
+    if invalid_public_exports:
         raise RuntimeError(
-            "__all__ is the canonical callable surface; exported symbols must have "
-            "PUBLIC_SYMBOL_DOCS function_type=callable: " + ", ".join(non_callable_exports)
+            "__all__ exports must have PUBLIC_SYMBOL_DOCS function_type=callable or function_type=class: "
+            + ", ".join(invalid_public_exports)
         )
     unknown_glossary_terms = sorted(
         {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
@@ -4731,14 +4754,15 @@ def main() -> None:
         if not symbol_role:
             raise RuntimeError(f"Missing explicit function_type for {symbol.name} in PUBLIC_SYMBOL_DOCS")
         symbol.role = str(symbol_role).lower()
-        if symbol.role not in {"callable", "internal"}:
-            raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/internal")
+        if symbol.role not in {"callable", "class", "internal"}:
+            raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/class/internal")
         if symbol.role == "internal" and not symbol.name.startswith("_"):
             raise RuntimeError(f"Non-underscore callable cannot be internal: {symbol.name}")
         if symbol.role == "callable" and symbol.name.startswith("_"):
             raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
+    class_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "class"}
     nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_lookup = {n["qualified_name"]: n for n in nodes}
     core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
@@ -4772,6 +4796,8 @@ def main() -> None:
             generated_page.unlink()
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
+    if "config" not in discovered_doc_modules:
+        discovered_doc_modules.append("config")
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",
@@ -4783,11 +4809,13 @@ def main() -> None:
     all_doc_modules = discovered_doc_modules
     for module in all_doc_modules:
         actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
+        if actual_module not in module_data and module == "config":
+            actual_module = "config.shared"
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]
         module_md = MODULE_DIR / f"{module}.md"
-        public_in_module = [s for s in function_symbol_map.values() if s.public_module == module]
+        public_in_module = [s for s in symbol_map.values() if s.public_module == module]
         is_internal_only = not public_in_module
         title = f"# `{module}` module" if not is_internal_only else f"# `{module}` module (internal)"
         module_visibility = module_manifest.get(module, {}).get("visibility", "public")
@@ -4854,7 +4882,7 @@ def main() -> None:
         if module_purpose:
             lines.extend(["## Module purpose", "", module_purpose, ""])
 
-        recommended = sorted([s for s in public_in_module if s.role == "callable"], key=lambda x: x.name.lower())
+        recommended = sorted([s for s in public_in_module if s.role in {"callable", "class"}], key=lambda x: x.name.lower())
         lines.extend(["## Module manifest", ""])
         manifest_rows = [
             ["Module name", f"<code>{module}</code>"],
@@ -5287,12 +5315,17 @@ def main() -> None:
 
 
     public_flow_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported")],
+        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "function"],
+        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    )
+    public_class_qns = sorted(
+        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "class"],
         key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
     )
     generated_at_utc = datetime.now(UTC)
     callable_flow_data = _build_callable_flow_data(
         public_flow_qns,
+        public_class_qns,
         calls_by_qn,
         node_by_qn,
         module_data,
@@ -5302,16 +5335,22 @@ def main() -> None:
 
     callable_metrics = _callable_inventory_metrics(callable_flow_data)
     public_function_count = callable_metrics["public_api_entrypoints"] or len(function_symbol_map)
+    public_class_count = callable_metrics.get("public_classes", len(class_symbol_map))
     ref = [
         "# Function Reference",
         "",
-        "Use this page to look up Starter Kit functions used by the template notebooks.",
+        "Use this page to look up Starter Kit functions and public config classes used by the template notebooks.",
         "",
         '<div class="reference-kpi-grid" aria-label="Function reference summary">',
         '  <section class="reference-kpi-card surface-card">',
         f'    <strong class="reference-kpi-value">{callable_metrics["public_api_entrypoints"]}</strong>',
         '    <span class="reference-kpi-title">Public functions</span>',
         '    <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>',
+        '  </section>',
+        '  <section class="reference-kpi-card surface-card">',
+        f'    <strong class="reference-kpi-value">{public_class_count}</strong>',
+        '    <span class="reference-kpi-title">Public classes</span>',
+        '    <p class="reference-kpi-note">Public config classes.</p>',
         '  </section>',
         '</div>',
         "",
@@ -5323,15 +5362,15 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            f"Use the finder below to look up the {public_function_count} public Starter Kit functions. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.",
+            f"Use the finder below to search {public_function_count} public functions and {public_class_count} public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
-            '  <label class="callable-finder-label" for="callable-finder-input">Search functions</label>',
-            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
-            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>',
+            '  <label class="callable-finder-label" for="callable-finder-input">Search public functions and classes</label>',
+            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions and classes" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
+            '  <p id="callable-finder-help" class="callable-finder-help">Search by function or class name, module, starter path, usage source, or description.</p>',
             '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>',
-            f'  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing {public_function_count} public Starter Kit functions.</p>',
-            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No functions match your search.</p>',
+            f'  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing {public_function_count} public functions and {public_class_count} public classes.</p>',
+            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions or classes match your search.</p>',
             "</div>",
             "",
             '??? info "Maintainer tools"',
@@ -5355,7 +5394,7 @@ def main() -> None:
             '',
             "## Function catalogue",
             "",
-            "## Functions",
+            "## Public functions and classes",
             "",
         ]
     )
@@ -5366,15 +5405,16 @@ def main() -> None:
         [
             n
             for n in node_by_qn.values()
-            if n["exported"] and n["callable_name"] in module_data[n["module_name"]]["functions"]
+            if n["exported"] and (n["callable_name"] in module_data[n["module_name"]]["functions"] or n["callable_name"] in module_data[n["module_name"]]["classes"])
         ],
         key=lambda n: (n["callable_name"].lower(), n["module_name"]),
     )
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
-        function_type = "public-starter-kit"
-        symbol = function_symbol_map[name]
+        is_class_symbol = name in module_data[module_name]["classes"]
+        function_type = "public-class" if is_class_symbol else "public-starter-kit"
+        symbol = symbol_map[name]
         symbol_link = public_reference_link(name, docs_metadata, context="reference")
         starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
         usage_source = ", ".join(template_usage_by_symbol.get(name, [])) or "—"
@@ -5384,7 +5424,7 @@ def main() -> None:
         usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         public_flow = public_flow_by_qn.get(qn, {})
-        downstream_callables = [row["qualified_name"] for row in public_flow.get("transitive_callees", []) if row.get("qualified_name")]
+        downstream_callables = [] if is_class_symbol else [row["qualified_name"] for row in public_flow.get("transitive_callees", []) if row.get("qualified_name")]
 
         def _catalogue_relationship_list(items: list[str]) -> str:
             rows = []
@@ -5426,7 +5466,7 @@ def main() -> None:
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
-                    f'<span class="reference-chip">Public Starter Kit function</span>'
+                    f'<span class="reference-chip">{_esc("Public config class" if is_class_symbol else "Public Starter Kit function")}</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
                 ),
@@ -5435,7 +5475,7 @@ def main() -> None:
                     if usage_source != "—"
                     else ""
                 ),
-                '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>',
+                ('  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>' if is_class_symbol else '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>'),
                 '  <div class="reference-catalogue-item-counts">',
                 _catalogue_count_details("Downstream callables: {count}", "Downstream callables: {count}", downstream_callables),
                 "  </div>",
@@ -5482,7 +5522,7 @@ def main() -> None:
         source_end_line = source_location.get("end_line")
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
-        classification = "Callable" if node.get("role") == "callable" else "Internal"
+        classification = "Callable" if node.get("role") == "callable" else "Public class" if node.get("role") == "class" else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
         rel_module = canonical_public_module(module_name)
         metadata_related = list(metadata.get("related_functions", []))
@@ -5530,6 +5570,7 @@ def main() -> None:
             refactor_signals_manifest[short_name] = refactor_signals
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             downstream_count = int(public_flow.get("downstream_count") or 0)
+            is_public_class_page = node.get("role") == "class"
             call_flow_lines = (
                 [
                     f'??? info "Downstream callables: {downstream_count}"',
@@ -5538,7 +5579,7 @@ def main() -> None:
                     "",
                     *_indent_markdown(_render_callable_architecture_flow_tree(public_flow, node_by_qn, module_data)),
                 ]
-                if downstream_count
+                if downstream_count and not is_public_class_page
                 else []
             )
             notebook_usage_chips = [
@@ -5546,7 +5587,7 @@ def main() -> None:
             ] or ['<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>']
             page_chip_lines = [
                 '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
-                '<span class="reference-chip">Public Starter Kit function</span>',
+                '<span class="reference-chip">' + ('Public config class' if is_public_class_page else 'Public Starter Kit function') + '</span>',
                 *notebook_usage_chips,
                 '</p>',
             ]

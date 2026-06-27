@@ -13,22 +13,21 @@ from fabricops_kit.config import (
     DataAgreementConfig,
     FrameworkConfig,
     GovernanceConfig,
-    LineageConfig,
-    NotebookRuntimeConfig,
     PathConfig,
-    QualityConfig,
-    ReviewWorkflowConfig,
-    _current_audit_timestamp,
-    _get_active_metadata_tables,
-    _validate_audit_timezone,
-    _validate_metadata_table_registration,
-    get_default_fabric_context,
     get_fabric_context,
-    resolve_fabric_context,
     setup_metadata_tables,
     setup_notebook,
 )
 from fabricops_kit.config import FabricStore
+from fabricops_kit.config.shared import (
+    _current_audit_timestamp,
+    _get_active_metadata_tables,
+    _validate_audit_timezone,
+    _validate_framework_config,
+    _validate_metadata_table_registration,
+    get_default_fabric_context,
+    resolve_fabric_context,
+)
 from tests.helpers import framework_config, store
 
 pytestmark = pytest.mark.unit
@@ -46,8 +45,8 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
         "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
     )
-    assert setup_notebook.__module__ == "fabricops_kit.config"
-    assert setup_metadata_tables.__module__ == "fabricops_kit.config"
+    assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
+    assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -130,40 +129,36 @@ def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaul
     assert "LINEAGE_CONFIG = LineageConfig()" not in source
 
 
-def test_framework_config_defaults_framework_only_sections_when_omitted():
-    """Verify framework config defaults framework only sections when omitted."""
-    config = FrameworkConfig(
-        path_config=PathConfig(paths={"dev": {"source": store()}}),
-        notebook_runtime_config=NotebookRuntimeConfig(),
-    )
+def test_framework_config_uses_simplified_config_sections():
+    """Verify FrameworkConfig only exposes active config sections."""
+    config = FrameworkConfig(path_config=PathConfig(paths={"dev": {"source": store()}}))
 
-    assert isinstance(config.quality_config, QualityConfig)
     assert isinstance(config.governance_config, GovernanceConfig)
-    assert isinstance(config.review_workflow_config, ReviewWorkflowConfig)
-    assert isinstance(config.lineage_config, LineageConfig)
+    assert isinstance(config.data_agreement_config, DataAgreementConfig)
+    assert not hasattr(config, "quality_config")
+    assert not hasattr(config, "review_workflow_config")
+    assert not hasattr(config, "lineage_config")
+    assert not hasattr(config, "notebook_runtime_config")
 
 
-def test_dict_framework_config_defaults_framework_only_sections_when_omitted():
-    """Verify dict framework config defaults framework only sections when omitted."""
-    config = setup_notebook.__globals__["_validate_framework_config"]({
+def test_dict_framework_config_defaults_simplified_sections_when_omitted():
+    """Verify dict framework config defaults simplified sections when omitted."""
+    config = _validate_framework_config({
         "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
-        "notebook_runtime_config": NotebookRuntimeConfig(),
     })
 
-    assert isinstance(config.quality_config, QualityConfig)
     assert isinstance(config.governance_config, GovernanceConfig)
-    assert isinstance(config.review_workflow_config, ReviewWorkflowConfig)
-    assert isinstance(config.lineage_config, LineageConfig)
+    assert isinstance(config.data_agreement_config, DataAgreementConfig)
 
 
-def test_framework_config_keeps_type_validation_for_present_defaulted_sections():
-    """Verify framework config keeps type validation for present defaulted sections."""
-    with pytest.raises(ValueError, match="quality_config must be a QualityConfig object"):
-        setup_notebook.__globals__["_validate_framework_config"]({
-            "path_config": PathConfig(paths={"dev": {"source": store()}}),
-            "notebook_runtime_config": NotebookRuntimeConfig(),
-                "quality_config": object(),
-        })
+def test_removed_config_classes_are_not_exported_from_root():
+    """Verify removed config classes are absent from the root public API."""
+    import fabricops_kit
+
+    assert not hasattr(fabricops_kit, "QualityConfig")
+    assert not hasattr(fabricops_kit, "ReviewWorkflowConfig")
+    assert not hasattr(fabricops_kit, "LineageConfig")
+    assert not hasattr(fabricops_kit, "NotebookRuntimeConfig")
 
 
 def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(fake_notebookutils):
@@ -249,7 +244,7 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
             raise RuntimeError("table does not exist")
         return Table(schemas[table].fieldNames())
 
-    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
     monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     def write_table(df, table, *, target, context, **kwargs):
@@ -303,7 +298,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
         reads.append((context["env"], target, table, spark_session))
         return Table(schemas[table].fieldNames())
 
-    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
     monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("valid existing metadata tables should not be recreated"))
@@ -447,8 +442,8 @@ def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch)
         reads.append((table, schema))
         return Table()
 
-    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr("fabricops_kit.config._get_active_metadata_tables", lambda config: list(schemas))
+    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.config.shared._get_active_metadata_tables", lambda config: list(schemas))
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
     monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
     monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append(kwargs))
@@ -491,7 +486,7 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     )
     schemas = {"METADATA_DATA_AGREEMENT": Schema()}
 
-    monkeypatch.setattr("fabricops_kit.config._get_metadata_table_schema_registry", lambda config: schemas)
+    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
     monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
     monkeypatch.setattr(io, "read_lakehouse_table_core", lambda *args, **kwargs: Table())
     monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: None)
@@ -637,3 +632,59 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
         assert rows[qn]["layer"] == "private_helper"
     assert rows["fabricops_kit.data_agreement.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
     assert rows["fabricops_kit.data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]
+
+
+def test_config_public_import_contract_and_package_shape():
+    """Verify config is a package and public config objects import from supported roots."""
+    import fabricops_kit
+    import fabricops_kit.config as config_package
+
+    from fabricops_kit import (  # noqa: PLC0415
+        DataAgreementConfig as RootDataAgreementConfig,
+        FabricStore as RootFabricStore,
+        FrameworkConfig as RootFrameworkConfig,
+        GovernanceConfig as RootGovernanceConfig,
+        PathConfig as RootPathConfig,
+        setup_metadata_tables as root_setup_metadata_tables,
+        setup_notebook as root_setup_notebook,
+    )
+    from fabricops_kit.config import FabricStore as ConfigFabricStore, FrameworkConfig as ConfigFrameworkConfig  # noqa: PLC0415
+
+    assert Path("src/fabricops_kit/config.py").exists() is False
+    assert Path("src/fabricops_kit/config/__init__.py").exists()
+    assert Path("src/fabricops_kit/config/public.py").exists() is False
+    assert Path("src/fabricops_kit/config/models.py").exists() is False
+    assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
+    assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
+    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
+    assert Path("src/fabricops_kit/config/shared.py").exists()
+    assert config_package.__file__.endswith("config/__init__.py")
+    assert RootFabricStore is ConfigFabricStore
+    assert RootFrameworkConfig is ConfigFrameworkConfig
+    assert RootGovernanceConfig is GovernanceConfig
+    assert RootPathConfig is PathConfig
+    assert RootDataAgreementConfig is DataAgreementConfig
+    assert root_setup_notebook is fabricops_kit.setup_notebook
+    assert root_setup_metadata_tables is fabricops_kit.setup_metadata_tables
+    assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
+    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
+    assert fabricops_kit.get_fabric_context.__module__ == "fabricops_kit.config.get_fabric_context"
+
+
+def test_env_config_template_imports_config_from_root_only():
+    """Verify 00_env_config imports supported config objects from root only."""
+    notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+
+    assert "from fabricops_kit import (" in source
+    assert "from fabricops_kit.config" not in source
+    assert "NotebookRuntimeConfig" not in source
+    assert "NOTEBOOK_PREFIXES" not in source
+    assert "RUNTIME_CONFIG" not in source
+
+
+def test_internal_modules_import_config_shared_helpers_not_old_module():
+    """Verify internals use config.shared for internal helper imports."""
+    assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
+    assert "from .config.shared import _current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/data_profiling/shared.py").read_text(encoding="utf-8")

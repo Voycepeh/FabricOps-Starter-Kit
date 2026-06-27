@@ -146,7 +146,7 @@ def test_profile_dataframe_audit_timestamp_timezone_behavior(spark_session):
     """Verify audit timezone validation and timestamp expression behavior."""
     from types import SimpleNamespace
 
-    from fabricops_kit.config import get_audit_timezone
+    from fabricops_kit.config.shared import get_audit_timezone
 
     assert get_audit_timezone(SimpleNamespace(audit_timezone="UTC")) == "UTC"
 

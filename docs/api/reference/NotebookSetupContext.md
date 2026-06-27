@@ -1,0 +1,76 @@
+# NotebookSetupContext
+
+
+Runtime setup context returned by setup_notebook.
+
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/config/shared.py:437`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L437-L471">View on GitHub</a>
+</div>
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges">
+<span class="reference-chip">Public config class</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+</p>
+
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
+
+## Usage guidance
+
+### Use when
+
+- Use through the supported FabricOps root import surface.
+
+### Additional context
+
+Supports the public root import contract for FabricOps notebook configuration.
+
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+class NotebookSetupContext
+```
+
+</div>
+
+## Example usage
+
+Example usage not documented yet.
+
+## Parameters
+
+No parameters.
+
+## Returns
+
+NotebookSetupContext value object.
+
+### Return interpretation
+
+Use the returned value as part of the supported FabricOps configuration surface.
+
+## Raises / Errors
+
+None.
+
+### Common failure causes
+
+- Required configuration values are missing or invalid.
+
+## Glossary
+
+<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
+<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></span>
+</div>
+
+See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
+
+## See also
+
+No related guides documented.

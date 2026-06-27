@@ -22,7 +22,10 @@ OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-o
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
 INVENTORY_PATH = ROOT / "docs" / "assets" / "function-inventory.html"
 
+PUBLIC_CONFIG_CLASS_TYPE = "Public config class"
+PUBLIC_CONFIG_CLASS_LAYER = "class"
 VISIBLE_FUNCTION_TYPES = {"Public function", "Shared helper"}
+VISIBLE_INVENTORY_TYPES = VISIBLE_FUNCTION_TYPES | {PUBLIC_CONFIG_CLASS_TYPE}
 PRIVATE_HELPER_TYPE = "Private helper"
 PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Shared helper", PRIVATE_HELPER_TYPE}
 ALLOWED_ARCHITECTURE_WARNING_TYPES = {"Same-file private dependency"}
@@ -360,7 +363,13 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
 
     public_rows = [row for row in inventory if row.get("function_type") == "Public function"]
     internal_rows = [row for row in inventory if row.get("function_type") == "Shared helper"]
-    private_rows = [row for row in inventory if str(row.get("function_name", "")).split(".")[-1].startswith("_") or row.get("layer") == PRIVATE_HELPER_LAYER]
+    public_class_rows = [row for row in inventory if row.get("function_type") == PUBLIC_CONFIG_CLASS_TYPE]
+    private_rows = [
+        row
+        for row in inventory
+        if str(row.get("function_name", "")).split(".")[-1].startswith("_")
+        or row.get("layer") == PRIVATE_HELPER_LAYER
+    ]
 
     for row in inventory:
         qn = str(row.get("qualified_name", ""))
@@ -372,19 +381,25 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
                 failures.append(f"Private helper is counted as Public/Shared helper architecture row: {qn}")
             if row.get("architecture_signals") or row.get("recommended_action") == "Architecture violation":
                 failures.append(f"Private helper contributes architecture violations: {qn}")
+        elif function_type == PUBLIC_CONFIG_CLASS_TYPE:
+            if layer != PUBLIC_CONFIG_CLASS_LAYER or row.get("callable_kind") != "class":
+                failures.append(
+                    "Public config class has invalid class inventory shape for "
+                    f"{qn}: {function_type!r}/{layer!r}/{row.get('callable_kind')!r}"
+                )
         elif function_type not in VISIBLE_FUNCTION_TYPES:
             failures.append(f"Non Public/Shared helper function type emitted for visible function {qn}: {function_type!r}")
         if function_type in VISIBLE_FUNCTION_TYPES and layer not in VISIBLE_LAYERS:
             failures.append(f"Visible function type has non public/internal layer for {qn}: {layer!r}")
         if function_type in OLD_VISIBLE_LAYER_LABELS or layer in OLD_VISIBLE_LAYER_LABELS:
             failures.append(f"Old architecture layer label emitted for {qn}: {function_type!r}/{layer!r}")
-        if row.get("callable_kind") != "function":
+        if row.get("callable_kind") != "function" and function_type != PUBLIC_CONFIG_CLASS_TYPE:
             failures.append(f"Supporting object emitted as architecture inventory row: {qn}")
 
     function_type_counts = summary.get("function_type", {})
     if any(key in function_type_counts for key in OLD_VISIBLE_LAYER_LABELS | {PRIVATE_HELPER_TYPE}):
         failures.append("Private/old architecture labels are present in summary_counts.function_type")
-    if set(function_type_counts) - VISIBLE_FUNCTION_TYPES:
+    if set(function_type_counts) - VISIBLE_INVENTORY_TYPES:
         failures.append(f"Unexpected visible function type counts: {sorted(function_type_counts)}")
     if summary.get("layer", {}) != {
         "public": len(public_rows),
@@ -396,7 +411,9 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
     if function_type_counts.get("Shared helper") != len(internal_rows):
         failures.append("Private helpers are mixed into Shared helper counts")
     if metrics.get("function_callables") != len(public_rows) + len(internal_rows):
-        failures.append("Private helpers are counted in default function callable metrics")
+        failures.append("Private helpers or public classes are counted in default function callable metrics")
+    if metrics.get("public_classes", 0) != len(public_class_rows):
+        failures.append("Public class metric does not match Public config class inventory rows")
     if metrics.get("private_helpers_to_review", 0) != len(private_rows):
         failures.append("Private helper review metric does not match private helper inventory rows")
     if public_surface.get("public_api_entrypoints") != len(public_rows):
