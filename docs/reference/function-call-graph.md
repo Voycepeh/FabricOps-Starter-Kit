@@ -94,6 +94,8 @@ The Function Call Graph is generated from repository scans. The generated output
 - [Function Inventory](../../assets/function-inventory.html)
 - [function-call-graph.json](_data/function-call-graph.json)
 
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
+
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
 
 ## Principle
