@@ -10,22 +10,20 @@ The Function Call Graph turns repository scans into a review surface for AI-assi
 
 Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep.
 
-<div class="grid cards" markdown>
+<div class="grid cards" markdown="1">
 
-- :material-graph-outline: **Function Call Graph Dashboard**  
-  Inspect public callable dependencies, architecture boundaries, dependency depth, and cleanup candidates.
+- **[Function Call Graph Dashboard](../../assets/function-call-graph-dashboard.html)**
 
-  [:octicons-arrow-right-24: Open dashboard](../assets/function-call-graph-dashboard.html)
+    Inspect public callable dependencies, architecture boundaries, dependency depth, and cleanup candidates.
 
-- :material-format-list-bulleted: **Function Inventory**  
-  Review public callables, shared helpers, private helpers, classes, and selected cleanup candidates.
+- **[Function Inventory](../../assets/function-inventory.html)**
 
-  [:octicons-arrow-right-24: Open inventory](../assets/function-inventory.html)
+    Review public callables, shared helpers, private helpers, classes, and selected cleanup candidates.
 
 </div>
 
 <div markdown="0" style="border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.5rem; overflow: hidden; margin: 1rem 0; box-shadow: var(--md-shadow-z1);">
-  <iframe src="../assets/function-call-graph-dashboard.html" title="Function Call Graph Dashboard preview" loading="lazy" style="width: 100%; height: 560px; border: 0;"></iframe>
+  <iframe src="../../assets/function-call-graph-dashboard.html" title="Function Call Graph Dashboard preview" loading="lazy" style="width: 100%; height: 560px; border: 0;"></iframe>
 </div>
 
 Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
@@ -175,8 +173,8 @@ The packet keeps the refactor focused on the selected function, the identified r
 
 The Function Call Graph is generated from repository scans. The generated outputs are:
 
-- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-- [Function Inventory](../assets/function-inventory.html)
+- [Function Call Graph Dashboard](../../assets/function-call-graph-dashboard.html)
+- [Function Inventory](../../assets/function-inventory.html)
 - [function-call-graph.json](_data/function-call-graph.json)
 
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
