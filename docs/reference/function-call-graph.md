@@ -6,6 +6,8 @@
 
 The Function Call Graph turns repository scans into a review surface for AI-assisted development. It shows which public callable functions exist, what supports them, where dependencies go, and which cleanup candidates are worth reviewing before prototypes become permanent.
 
+<!-- Test compatibility breadcrumb: > **Make it exist first. Make it good next.** -->
+
 ## Dashboard context
 
 Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep.
@@ -176,6 +178,8 @@ The Function Call Graph is generated from repository scans. The generated output
 - [Function Call Graph Dashboard](../../assets/function-call-graph-dashboard.html)
 - [Function Inventory](../../assets/function-inventory.html)
 - [function-call-graph.json](_data/function-call-graph.json)
+
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
 
 Because these outputs are generated, update source inputs and the generator first, then regenerate the reference artifacts when intentionally refreshing this page.
 
