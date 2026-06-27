@@ -10,9 +10,9 @@ The Function Call Graph turns repository scans into a review surface for AI-assi
 
 Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep.
 
-![Function Call Graph Dashboard](../../assets/fabricops-select-refactor-candidates.png)
+![Function Call Graph Dashboard](../assets/fabricops-select-refactor-candidates.png)
 
-[Open architecture dashboard](../../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
+[Open architecture dashboard](../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
 
 ## Why this exists
 
@@ -90,8 +90,8 @@ The packet keeps the refactor focused on the selected function, the identified r
 
 The Function Call Graph is generated from repository scans. The generated outputs are:
 
-- [Function Call Graph Dashboard](../../assets/function-call-graph-dashboard.html)
-- [Function Inventory](../../assets/function-inventory.html)
+- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
+- [Function Inventory](../assets/function-inventory.html)
 - [function-call-graph.json](_data/function-call-graph.json)
 
 <!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
