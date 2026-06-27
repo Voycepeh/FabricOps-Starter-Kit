@@ -12,17 +12,9 @@ The Function Call Graph turns repository scans into a review surface for AI-assi
 
 Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep.
 
-<div class="grid cards" markdown="1">
+![Function Call Graph Dashboard](../../assets/fabricops-select-refactor-candidates.png)
 
-- **[Function Call Graph Dashboard](../../assets/function-call-graph-dashboard.html)**
-
-    Inspect public callable dependencies, architecture boundaries, dependency depth, and cleanup candidates.
-
-- **[Function Inventory](../../assets/function-inventory.html)**
-
-    Review public callables, shared helpers, private helpers, classes, and selected cleanup candidates.
-
-</div>
+[Open architecture dashboard](../../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
 
 Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
