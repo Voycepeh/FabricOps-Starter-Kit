@@ -2,7 +2,33 @@
 
 > **Make it exist first. Make it good next.**
 >
-> AI helps FabricOps move quickly from idea to working public function. The Function Call Graph helps us come back afterwards to review whether the implementation is clean enough to keep.
+> AI helps FabricOps move quickly from idea to working public function. The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
+
+The Function Call Graph turns repository scans into a review surface for AI-assisted development. It shows which public callable functions exist, what supports them, where dependencies go, and which cleanup candidates are worth reviewing before prototypes become permanent.
+
+## Dashboard context
+
+Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep.
+
+<div class="grid cards" markdown>
+
+- :material-graph-outline: **Function Call Graph Dashboard**  
+  Inspect public callable dependencies, architecture boundaries, dependency depth, and cleanup candidates.
+
+  [:octicons-arrow-right-24: Open dashboard](../assets/function-call-graph-dashboard.html)
+
+- :material-format-list-bulleted: **Function Inventory**  
+  Review public callables, shared helpers, private helpers, classes, and selected cleanup candidates.
+
+  [:octicons-arrow-right-24: Open inventory](../assets/function-inventory.html)
+
+</div>
+
+<div markdown="0" style="border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.5rem; overflow: hidden; margin: 1rem 0; box-shadow: var(--md-shadow-z1);">
+  <iframe src="../assets/function-call-graph-dashboard.html" title="Function Call Graph Dashboard preview" loading="lazy" style="width: 100%; height: 560px; border: 0;"></iframe>
+</div>
+
+Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
 ## Why this exists
 
@@ -27,6 +53,18 @@ AI generated code can work correctly but still leave behind messy integration pa
 The Function Call Graph exists to support that second step.
 
 It helps us move quickly during prototyping, then return later with a clearer view of what should be cleaned up.
+
+## What it helps with
+
+The dashboard is meant to make cleanup decisions easier before anyone edits code.
+
+It helps reviewers:
+
+- see all public callable functions in one place
+- understand the supporting private functions, shared helpers, classes, and internal methods behind each public callable
+- spot architecture violations and dependency chains that deserve a closer look
+- export focused cleanup packets for AI-assisted refactors
+- review compatibility mode and test expectations before changing implementation
 
 ## What we want to catch
 
@@ -87,15 +125,6 @@ Prototype quickly
 The point is not to review every line of code at the moment it is created.
 
 The point is to avoid letting fast prototypes quietly become long term technical debt.
-
-## Dashboard context
-
-The generated review surfaces are:
-
-- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) shows how public functions, shared helpers, and private helpers connect across the package. Use it to inspect function dependencies, architecture boundaries, and cleanup candidates.
-- [Function Inventory](../assets/function-inventory.html) focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.
-
-Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep. Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
 ## Cleanup packets
 
