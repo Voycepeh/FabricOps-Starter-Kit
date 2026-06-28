@@ -391,9 +391,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architecture_violation_count" in dashboard_text
     assert "architecture_findings" in dashboard_text
     assert "flow_tree" in dashboard_text
-    assert "merge_candidates" in dashboard_text
+    assert "review_for_merge_helpers" in dashboard_text
     assert "public_callable_findings" in dashboard_text
-    assert "merge_candidate_count" in dashboard_text
+    assert "review_for_merge_count" in dashboard_text
     assert "requested_work" in dashboard_text
     assert "safety_constraints" in dashboard_text
     assert "function publicCallableFindingRows(flow)" in dashboard_text
@@ -521,9 +521,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
     assert '<span class="badge keep">Healthy</span>' in dashboard_text
-    assert "Merge candidate found" in dashboard_text
-    assert "Inspect merge candidate" in dashboard_text
-    assert "Inspect merge candidates" in dashboard_text
+    assert "Review for merge" in dashboard_text
+    assert "Review helper" in dashboard_text
+    assert "Review helpers" in dashboard_text
     assert "reasons.join('')" in compact_dashboard_text
     assert "Contains ${violations} architecture violations." in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
@@ -531,9 +531,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Max depth; long chain threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
-    assert "mergeCount===1?'Contains1mergecandidateinsidethisgraph.'" in compact_dashboard_text
+    assert "mergeCount===1?'Contains1helpermarkedReviewformergeinsidethisgraph.'" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
+    assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
+    assert "Helper suggestions are review hints, not automatic judgments." in inventory_text
 
     assert "Function Inventory" in inventory_text
     assert "The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
@@ -701,8 +703,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "public_api_entrypoints",
         "long_call_chains",
         "architecture_violations",
-        "merge_candidates",
-        "suggested_inline_or_privatize",
+        "review_for_merge_helpers",
+        "suggested_helper_review",
     } <= set(public_api_surface)
 
 
@@ -718,7 +720,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert public_api_surface["architecture_violations"] == sum(
         1 for flow in public_flows if flow["architecture_violation_count"]
     )
-    assert public_api_surface["merge_candidates"] == sum(
+    assert public_api_surface["review_for_merge_helpers"] == sum(
         1 for flow in public_flows if flow["helper_cleanup_candidates"]
     )
 
@@ -787,6 +789,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "priority",
         "signals",
         "called_by_count",
+        "call_site_count",
+        "recursive",
+        "repeated_within_single_caller",
         "calls_count",
         "callers",
         "callees",
@@ -1718,7 +1723,7 @@ def test_callable_architecture_layer_rules_and_labels():
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long chain"
-    assert generator._display_label("Single-use helper candidate") == "Merge candidate"
+    assert generator._display_label("Single-use helper candidate") == "Review for merge"
 
 
 def test_callable_architecture_validation_rejects_private_visible_rows(monkeypatch, tmp_path) -> None:
@@ -2248,7 +2253,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Source module" not in dashboard_text
     assert "Called by" in dashboard_text
     assert "Used outside" in dashboard_text
-    assert "Merge candidate" in dashboard_text
+    assert "Review for merge" in dashboard_text
     assert "Violation reason" in dashboard_text
     assert "Warning reason" in dashboard_text
     assert "Path example" in dashboard_text
@@ -2259,7 +2264,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     compact = _remove_whitespace(dashboard_text)
     assert "<spanclass=\"badgemuted\">end</span>" not in compact
     assert "functionflowTreeStatusChips(n)" in compact
-    assert "Inlinecandidate" in compact
+    assert "Reviewformerge" in compact
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -2515,12 +2520,74 @@ def _flow_test_inventory_row(qn: str, name: str, module: str, layer: str, *, own
         "function_type": function_type,
         "callable_kind": "function",
         "used_by_count": used_by_count,
+        "call_site_count": 1,
+        "recursive": False,
+        "repeated_within_single_caller": False,
         "signals": [],
     }
     if owner:
         row["owner_qualified_name"] = owner
     return row
 
+
+def test_refactor_inventory_distinguishes_single_repeated_recursive_and_heavy_helpers() -> None:
+    """Verify helper cleanup suggestions use call-site-aware labels."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.alpha.public_alpha"
+    public_b = "fabricops_kit.beta.public_beta"
+    public_c = "fabricops_kit.gamma.public_gamma"
+    public_d = "fabricops_kit.delta.public_delta"
+    public_e = "fabricops_kit.epsilon.public_epsilon"
+    public_f = "fabricops_kit.zeta.public_zeta"
+    once = "fabricops_kit.alpha._once_helper"
+    repeated = "fabricops_kit.alpha._repeated_helper"
+    recursive = "fabricops_kit.alpha._recursive_helper"
+    heavy = "fabricops_kit.shared._shared_helper"
+    qns = [public_qn, public_b, public_c, public_d, public_e, public_f, once, repeated, recursive, heavy]
+    node_by_qn = {
+        qn: {
+            "callable_name": qn.rsplit(".", 1)[1],
+            "module_name": qn.rsplit(".", 1)[0].replace("fabricops_kit.", ""),
+            "callable_kind": "function",
+        }
+        for qn in qns
+    }
+    calls_by_qn = {
+        public_qn: [once, repeated, repeated, recursive, heavy],
+        public_b: [heavy],
+        public_c: [heavy],
+        public_d: [heavy],
+        public_e: [heavy],
+        public_f: [heavy],
+        once: [],
+        repeated: [],
+        recursive: [recursive],
+        heavy: [],
+    }
+
+    _, inventory, _ = generator._build_refactor_inventory(
+        [public_qn, public_b, public_c, public_d, public_e, public_f],
+        [],
+        calls_by_qn,
+        node_by_qn,
+        {},
+    )
+    by_qn = {row["qualified_name"]: row for row in inventory}
+
+    assert by_qn[once]["call_site_count"] == 1
+    assert by_qn[once]["recursive"] is False
+    assert "Review for merge" in by_qn[once]["signals"]
+    assert "Used by one function" in by_qn[once]["signals"]
+    assert by_qn[repeated]["call_site_count"] == 2
+    assert by_qn[repeated]["repeated_within_single_caller"] is True
+    assert "Used several times in one function" in by_qn[repeated]["signals"]
+    assert "Review for merge" not in by_qn[repeated]["signals"]
+    assert by_qn[recursive]["recursive"] is True
+    assert "Recursive helper" in by_qn[recursive]["signals"]
+    assert "Review for merge" not in by_qn[recursive]["signals"]
+    assert by_qn[heavy]["inbound_count"] == 6
+    assert "Heavily used helper" in by_qn[heavy]["signals"]
 
 def test_callable_flow_allows_two_layer_local_private_and_shared_internal_calls() -> None:
     """Verify allowed public/private/shared-internal paths are not architecture findings."""

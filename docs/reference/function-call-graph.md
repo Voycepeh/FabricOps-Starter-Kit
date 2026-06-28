@@ -66,14 +66,7 @@ The question is not whether the code works.
 
 The question is whether the structure is still simple enough to keep.
 
-* public callables depending directly on other public callables
-* internal helpers depending directly on public callables
-* public owner files defining more than one public function
-* public owner files defining classes
-* public function names not matching their owner file names
-* support classes, dataclasses, or value objects living outside `shared.py`
-* forbidden grouping files such as `public.py`, `models.py`, `classes.py`, `adapter.py`, `adapters.py`, `resolver.py`, or `resolvers.py`
-* generated reference outputs drifting away from the codebase
+## The workflow
 
 The intended workflow is:
 
@@ -93,55 +86,12 @@ The point is to avoid letting fast prototypes quietly become long term technical
 
 ## Dashboard context
 
-The dashboard suggestions are review hints, not automatic judgments.
-
-```text
-How helper suggestions should be read
-
-Public function
-A function that users can call directly.
-
-Shared helper
-A helper used by several functions. Be careful before changing it.
-
-Used by one function
-The helper has one distinct caller.
-
-This does not mean the helper is bad.
-Keep it if it makes the code easier to read, avoids repeated code, is used several times inside the same caller, handles a tricky step, or calls itself recursively.
-
-Review for merge
-The helper has one distinct caller and is used once by that caller.
-
-This is the stronger cleanup signal.
-It usually means the helper is defined, called once, and may not add enough meaning to stay separate.
-
-Recursive helper
-The helper calls itself.
-
-Do not treat this as a simple inline or merge case.
-
-Used several times in one function
-The helper has one distinct caller, but that caller uses it more than once.
-
-This is usually a reason to keep or review carefully, not a reason to remove it automatically.
-
-Heavily used helper
-A helper used by many functions.
-
-Change carefully because many things may depend on it.
-```
-
-A helper should only become a strong inline or merge suggestion when it is both defined separately and used once only by its caller.
-
 The generated review surfaces are:
 
-Avoid these patterns:
+- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) shows how public functions, shared helpers, and private helpers connect across the package. Use it to inspect function dependencies, architecture boundaries, and cleanup candidates.
+- [Function Inventory](../assets/function-inventory.html) focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.
 
-```text
-public callable → public callable
-internal helper → public callable
-```
+Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep. Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
 
 ## Cleanup packets
 
@@ -151,9 +101,7 @@ The packet gives AI enough context to help with the next step without asking it 
 
 The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph. The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
-When shared logic is needed, it should usually move into a helper that both public functions can call safely.
-
-### Long nested chains
+Both packet types are designed to keep the cleanup focused on the selected function or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
 
 Example packet shape:
 
@@ -171,7 +119,7 @@ architecture_summary:
   downstream_count: 8
   max_depth: 4
   architecture_violation_count: 1
-  merge_candidate_count: 2
+  review_for_merge_count: 2
 
 requested_work:
   intent: >
@@ -180,7 +128,7 @@ requested_work:
   priority_order:
     - Resolve architecture violations first.
     - Keep public callable behaviour stable.
-    - Merge or inline thin wrappers only when readability improves.
+    - Review helper boundaries only when readability improves.
     - Call out tests required before implementation.
 ```
 
@@ -216,4 +164,4 @@ Validate that it is useful.
 Then make the implementation good enough to keep.
 ```
 
-<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
+The Function Call Graph exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
