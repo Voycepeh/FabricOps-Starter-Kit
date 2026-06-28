@@ -161,7 +161,7 @@ def get_audit_timezone(config: Any = None, timezone_name: str | None = None) -> 
     return _validate_audit_timezone(value)
 
 
-def _current_audit_timestamp(
+def get_current_audit_timestamp(
     config: Any = None, timezone_name: str | None = None, *, drop_microseconds: bool = True
 ) -> str:
     """Return the current audit timestamp in the configured audit timezone."""

@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from .config.shared import _current_audit_timestamp, get_store
+from .config.shared import get_current_audit_timestamp, get_store
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
@@ -62,7 +62,7 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
 
 
 def _now_utc_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config, drop_microseconds=False)
+    return get_current_audit_timestamp(config=config, drop_microseconds=False)
 
 
 def _resolve_action_by(action_by: str | None = None) -> str:
@@ -265,7 +265,7 @@ def _build_runtime_audit_fields(
         else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
         timestamp_field: _safe_str(committed_at)
         if committed_at
-        else _current_audit_timestamp(config=config),
+        else get_current_audit_timestamp(config=config),
         workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
         notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
         metadata_lakehouse_field: metadata_lakehouse_name,
@@ -381,7 +381,7 @@ def _register_current_notebook(
         ),
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
-        "registered_at": _current_audit_timestamp(config=config, drop_microseconds=False),
+        "registered_at": get_current_audit_timestamp(config=config, drop_microseconds=False),
         "agreement_contract_version": _safe_str(contract_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),

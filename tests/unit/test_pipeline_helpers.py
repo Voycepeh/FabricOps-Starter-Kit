@@ -179,15 +179,35 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
     assert created_at.endswith("+00:00")
 
 
-def test_add_audit_columns_uses_configured_audit_timezone(monkeypatch):
-    """Verify add audit columns uses configured audit timezone."""
+def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezone(monkeypatch):
+    """Verify target audit columns use configured audit timezone."""
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
     config = framework_config()
     object.__setattr__(config, "audit_timezone", "Asia/Singapore")
 
-    pipeline._add_audit_columns(df, run_id="run-1", pipeline_name="pipeline-1", config=config)
+    enriched, _by_key = pipeline.prepare_pipeline_table_configs(
+        [
+            {
+                "key": "target_01",
+                "df": df,
+                "layer": "unified",
+                "table_name": "orders_curated",
+                "config": config,
+            }
+        ],
+        {},
+        table_role="target",
+        run_id="run-1",
+        pipeline_name="pipeline-1",
+    )
 
+    assert enriched[0]["df"] is df
+    assert [name for name, _value in df.with_columns] == [
+        "_fabricops_run_id",
+        "_fabricops_pipeline_name",
+        "_fabricops_created_at",
+    ]
     created_at = dict(df.with_columns)["_fabricops_created_at"][1]
     assert created_at.endswith("+08:00")
 

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-27T06:21:54.485548Z",
+    "generated_at_utc": "2026-06-28T10:39:04.357112Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -81,55 +81,6 @@
       ],
       "callable_role_detail_label": "Internal normalizer, Row payload normalizer",
       "dependency_role": "internal_normalizer",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "unused",
-      "usage_scope_label": "Unused",
-      "reachability_kind": "unknown_or_entrypoint",
-      "reachability_label": "Unknown / possible entrypoint",
-      "recommended_action": "Remove redundant wrapper",
-      "priority": "Medium",
-      "signals": [
-        "Leaf internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "calls_count": 0,
-      "callers": [],
-      "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config._current_audit_timestamp",
-      "function_name": "_current_audit_timestamp",
-      "module": "config",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-      "source_start_line": 164,
-      "source_end_line": 172,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "audit_time_utility",
-        "shared_internal_service",
-        "high_fanout_shared"
-      ],
-      "callable_role_group": "utility",
-      "callable_role_group_label": "Utility",
-      "callable_role_detail": [
-        "audit_time_utility",
-        "shared_internal_service",
-        "high_fanout_shared"
-      ],
-      "callable_role_detail_label": "Audit time utility, Shared internal service, High fanout shared",
-      "dependency_role": "audit_time_utility",
       "owner_qualified_name": "",
       "owner_function": "",
       "owner_module": "",
@@ -1041,6 +992,54 @@
       "callees": []
     },
     {
+      "qualified_name": "fabricops_kit.config.get_current_audit_timestamp",
+      "function_name": "get_current_audit_timestamp",
+      "module": "config",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+      "source_start_line": 164,
+      "source_end_line": 172,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "audit_time_utility",
+        "shared_internal_service",
+        "high_fanout_shared"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "audit_time_utility",
+        "shared_internal_service",
+        "high_fanout_shared"
+      ],
+      "callable_role_detail_label": "Audit time utility, Shared internal service, High fanout shared",
+      "dependency_role": "audit_time_utility",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
       "qualified_name": "fabricops_kit.config.get_default_fabric_context",
       "function_name": "get_default_fabric_context",
       "module": "config",
@@ -1499,162 +1498,6 @@
         }
       ],
       "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-      "function_name": "_current_audit_timestamp",
-      "module": "config.shared",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/governance_review.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-      "source_start_line": 164,
-      "source_end_line": 172,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "audit_time_utility",
-        "shared_internal_service",
-        "high_fanout_shared"
-      ],
-      "callable_role_group": "utility",
-      "callable_role_group_label": "Utility",
-      "callable_role_detail": [
-        "audit_time_utility",
-        "shared_internal_service",
-        "high_fanout_shared"
-      ],
-      "callable_role_detail_label": "Audit time utility, Shared internal service, High fanout shared",
-      "dependency_role": "audit_time_utility",
-      "owner_qualified_name": "fabricops_kit.governance_review._dq_summary",
-      "owner_function": "_dq_summary",
-      "owner_module": "governance_review",
-      "leaks_outside_owner_file": true,
-      "usage_scope": "cross_module",
-      "usage_scope_label": "Cross module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Rename to shared helper",
-      "priority": "Medium",
-      "signals": [
-        "High-fanout helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 7,
-      "calls_count": 1,
-      "callers": [
-        {
-          "function": "_dq_summary",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._dq_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1479-L1494",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_prepare_dq_profile_input_rows",
-          "module": "governance_review",
-          "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1613-L1637",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_build_runtime_audit_fields",
-          "module": "metadata",
-          "qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_now_utc_iso",
-          "module": "metadata",
-          "qualified_name": "fabricops_kit.metadata._now_utc_iso",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_register_current_notebook",
-          "module": "metadata",
-          "qualified_name": "fabricops_kit.metadata._register_current_notebook",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L276-L395",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_add_audit_columns",
-          "module": "pipeline",
-          "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L668",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        },
-        {
-          "function": "_now_iso",
-          "module": "pipeline",
-          "qualified_name": "fabricops_kit.pipeline._now_iso",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L239-L240",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        }
-      ],
-      "callees": [
-        {
-          "function": "get_audit_timezone",
-          "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L156-L161",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_resolver",
-            "audit_config_resolver"
-          ],
-          "dependency_role": "internal_resolver"
-        }
-      ]
     },
     {
       "qualified_name": "fabricops_kit.config.shared._detect_nested_metadata_delta_folders",
@@ -3674,21 +3517,6 @@
       "calls_count": 1,
       "callers": [
         {
-          "function": "_current_audit_timestamp",
-          "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "shared_internal_service",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "audit_time_utility"
-        },
-        {
           "function": "build_audit_timestamp_expr",
           "module": "config.shared",
           "qualified_name": "fabricops_kit.config.shared.build_audit_timestamp_expr",
@@ -3699,6 +3527,21 @@
           "callable_role": [
             "audit_time_utility",
             "spark_audit_expression_utility"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
+        {
+          "function": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "shared_internal_service",
+            "high_fanout_shared"
           ],
           "dependency_role": "audit_time_utility"
         },
@@ -3732,6 +3575,188 @@
             "implicit_lifecycle_reachable"
           ],
           "dependency_role": "utility_validator"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+      "function_name": "get_current_audit_timestamp",
+      "module": "config.shared",
+      "source_path": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+      "source_start_line": 164,
+      "source_end_line": 172,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "audit_time_utility",
+        "shared_internal_service",
+        "high_fanout_shared"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "audit_time_utility",
+        "shared_internal_service",
+        "high_fanout_shared"
+      ],
+      "callable_role_detail_label": "Audit time utility, Shared internal service, High fanout shared",
+      "dependency_role": "audit_time_utility",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Shared internal helper",
+      "priority": "Low",
+      "signals": [
+        "Promote candidate"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 9,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "_save_agreement_evidence_records",
+          "module": "data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement._save_agreement_evidence_records",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L754-L785",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_adapter",
+            "metadata_write_adapter"
+          ],
+          "dependency_role": "internal_adapter"
+        },
+        {
+          "function": "widget_select_agreement",
+          "module": "data_agreement",
+          "qualified_name": "fabricops_kit.data_agreement.widget_select_agreement",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        },
+        {
+          "function": "_dq_summary",
+          "module": "governance_review",
+          "qualified_name": "fabricops_kit.governance_review._dq_summary",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1479-L1494",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_prepare_dq_profile_input_rows",
+          "module": "governance_review",
+          "qualified_name": "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L1613-L1637",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_build_runtime_audit_fields",
+          "module": "metadata",
+          "qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L200-L273",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_now_utc_iso",
+          "module": "metadata",
+          "qualified_name": "fabricops_kit.metadata._now_utc_iso",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L64-L65",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_register_current_notebook",
+          "module": "metadata",
+          "qualified_name": "fabricops_kit.metadata._register_current_notebook",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L276-L395",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_now_iso",
+          "module": "pipeline",
+          "qualified_name": "fabricops_kit.pipeline._now_iso",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L239-L240",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_prepare_pipeline_table_configs_workflow",
+          "module": "pipeline",
+          "qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": [
+        {
+          "function": "get_audit_timezone",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L156-L161",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_resolver",
+            "audit_config_resolver"
+          ],
+          "dependency_role": "internal_resolver"
         }
       ]
     },
@@ -4405,7 +4430,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -4418,7 +4443,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -4431,7 +4456,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -7465,7 +7490,7 @@
       "architecture_signals": [],
       "review_signals": [],
       "called_by_count": 1,
-      "calls_count": 4,
+      "calls_count": 5,
       "callers": [
         {
           "function": "_render_agreement_evidence_widget_workflow",
@@ -7483,6 +7508,21 @@
         }
       ],
       "callees": [
+        {
+          "function": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "shared_internal_service",
+            "high_fanout_shared"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
         {
           "function": "_config_value",
           "module": "data_agreement",
@@ -8471,7 +8511,7 @@
       "architecture_signals": [],
       "review_signals": [],
       "called_by_count": 1,
-      "calls_count": 8,
+      "calls_count": 9,
       "callers": [
         {
           "function": "_start_pipeline_run_workflow",
@@ -8488,6 +8528,21 @@
         }
       ],
       "callees": [
+        {
+          "function": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "audit_time_utility",
+            "shared_internal_service",
+            "high_fanout_shared"
+          ],
+          "dependency_role": "audit_time_utility"
+        },
         {
           "function": "resolve_fabric_context",
           "module": "config.shared",
@@ -9111,7 +9166,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -11087,11 +11142,11 @@
       ],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -13062,11 +13117,11 @@
       "callers": [],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -13690,7 +13745,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -17520,7 +17575,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -17679,7 +17734,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -19563,7 +19618,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -19667,7 +19722,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -19813,7 +19868,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -20069,7 +20124,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -24328,7 +24383,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -24341,7 +24396,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -24354,7 +24409,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26624,7 +26679,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26637,7 +26692,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -26650,7 +26705,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -27285,7 +27340,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -27298,7 +27353,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -27311,7 +27366,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -27475,11 +27530,11 @@
       ],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -28183,11 +28238,11 @@
       ],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -28258,11 +28313,11 @@
       ],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -28963,7 +29018,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29079,7 +29134,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29092,7 +29147,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29103,82 +29158,6 @@
         }
       ],
       "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-      "function_name": "_add_audit_columns",
-      "module": "pipeline",
-      "source_path": "src/fabricops_kit/pipeline.py",
-      "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L668",
-      "source_start_line": 659,
-      "source_end_line": 668,
-      "function_type": "Private helper",
-      "layer": "private_helper",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "utility_function"
-      ],
-      "callable_role_group": "utility",
-      "callable_role_group_label": "Utility",
-      "callable_role_detail": [
-        "utility_function"
-      ],
-      "callable_role_detail_label": "Utility function",
-      "dependency_role": "utility_function",
-      "owner_qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
-      "owner_function": "_prepare_pipeline_table_configs_workflow",
-      "owner_module": "pipeline",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Merge into owner",
-      "priority": "Medium",
-      "signals": [
-        "Thin wrapper candidate",
-        "Single-use internal helper",
-        "Layer assignment needs review"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 1,
-      "calls_count": 1,
-      "callers": [
-        {
-          "function": "_prepare_pipeline_table_configs_workflow",
-          "module": "pipeline",
-          "qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "utility_function"
-          ],
-          "dependency_role": "utility_function"
-        }
-      ],
-      "callees": [
-        {
-          "function": "_current_audit_timestamp",
-          "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "audit_time_utility",
-            "shared_internal_service",
-            "high_fanout_shared"
-          ],
-          "dependency_role": "audit_time_utility"
-        }
-      ]
     },
     {
       "qualified_name": "fabricops_kit.pipeline._blocking_guardrail_message",
@@ -29287,7 +29266,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29332,9 +29311,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
-      "source_start_line": 776,
-      "source_end_line": 806,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
+      "source_start_line": 770,
+      "source_end_line": 800,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -29373,7 +29352,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29388,7 +29367,7 @@
           "function": "_table_key",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._table_key",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L768-L769",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L762-L763",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29401,7 +29380,7 @@
           "function": "_table_name",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L772-L773",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L766-L767",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29460,7 +29439,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29519,7 +29498,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29532,7 +29511,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29545,7 +29524,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -29604,7 +29583,7 @@
           "function": "display_guardrail_results",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1523-L1527",
           "docs_path": "docs/api/reference/display_guardrail_results.md",
           "docs_url": "../../api/reference/display_guardrail_results/",
           "layer": "public",
@@ -30075,7 +30054,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30160,7 +30139,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30173,7 +30152,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30186,7 +30165,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30198,11 +30177,11 @@
       ],
       "callees": [
         {
-          "function": "_current_audit_timestamp",
+          "function": "get_current_audit_timestamp",
           "module": "config.shared",
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "layer": "private_helper",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
@@ -30220,9 +30199,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
-      "source_start_line": 671,
-      "source_end_line": 765,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
+      "source_start_line": 659,
+      "source_end_line": 759,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -30262,7 +30241,7 @@
           "function": "prepare_pipeline_table_configs",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1536-L1551",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1530-L1545",
           "docs_path": "docs/api/reference/prepare_pipeline_table_configs.md",
           "docs_url": "../../api/reference/prepare_pipeline_table_configs/",
           "layer": "public",
@@ -30276,17 +30255,19 @@
       ],
       "callees": [
         {
-          "function": "_add_audit_columns",
-          "module": "pipeline",
-          "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L668",
-          "layer": "private_helper",
+          "function": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
           "callable_role": [
-            "utility_function"
+            "audit_time_utility",
+            "shared_internal_service",
+            "high_fanout_shared"
           ],
-          "dependency_role": "utility_function"
+          "dependency_role": "audit_time_utility"
         }
       ]
     },
@@ -30664,9 +30645,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
-      "source_start_line": 809,
-      "source_end_line": 1091,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
+      "source_start_line": 803,
+      "source_end_line": 1085,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -30705,7 +30686,7 @@
           "function": "run_table_guardrails",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1554-L1588",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1548-L1582",
           "docs_path": "docs/api/reference/run_table_guardrails.md",
           "docs_url": "../../api/reference/run_table_guardrails/",
           "layer": "public",
@@ -30901,7 +30882,7 @@
           "function": "_build_guardrail_evidence_definitions",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30914,7 +30895,7 @@
           "function": "_table_key",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._table_key",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L768-L769",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L762-L763",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30927,7 +30908,7 @@
           "function": "_table_name",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._table_name",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L772-L773",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L766-L767",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -30966,7 +30947,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31023,7 +31004,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31036,7 +31017,7 @@
           "function": "write_catalogue_evidence",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31284,7 +31265,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31302,9 +31283,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L768-L769",
-      "source_start_line": 768,
-      "source_end_line": 769,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L762-L763",
+      "source_start_line": 762,
+      "source_end_line": 763,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -31343,7 +31324,7 @@
           "function": "_build_guardrail_evidence_definitions",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31356,7 +31337,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31446,9 +31427,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L772-L773",
-      "source_start_line": 772,
-      "source_end_line": 773,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L766-L767",
+      "source_start_line": 766,
+      "source_end_line": 767,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -31487,7 +31468,7 @@
           "function": "_build_guardrail_evidence_definitions",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31500,7 +31481,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -31518,9 +31499,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
-      "source_start_line": 1222,
-      "source_end_line": 1334,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
+      "source_start_line": 1216,
+      "source_end_line": 1328,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -31559,7 +31540,7 @@
           "function": "write_pipeline_lineage",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1591-L1624",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1585-L1618",
           "docs_path": "docs/api/reference/write_pipeline_lineage.md",
           "docs_url": "../../api/reference/write_pipeline_lineage/",
           "layer": "public",
@@ -31679,9 +31660,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
-      "source_start_line": 1337,
-      "source_end_line": 1526,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
+      "source_start_line": 1331,
+      "source_end_line": 1520,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -31720,7 +31701,7 @@
           "function": "write_pipeline_run_summary",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1627-L1676",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1621-L1670",
           "docs_path": "docs/api/reference/write_pipeline_run_summary.md",
           "docs_url": "../../api/reference/write_pipeline_run_summary/",
           "layer": "public",
@@ -31965,7 +31946,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32129,7 +32110,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32226,9 +32207,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533",
-      "source_start_line": 1529,
-      "source_end_line": 1533,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1523-L1527",
+      "source_start_line": 1523,
+      "source_end_line": 1527,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -32286,9 +32267,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1536-L1551",
-      "source_start_line": 1536,
-      "source_end_line": 1551,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1530-L1545",
+      "source_start_line": 1530,
+      "source_end_line": 1545,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -32327,7 +32308,7 @@
           "function": "_prepare_pipeline_table_configs_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32346,9 +32327,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1554-L1588",
-      "source_start_line": 1554,
-      "source_end_line": 1588,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1548-L1582",
+      "source_start_line": 1548,
+      "source_end_line": 1582,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -32387,7 +32368,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32466,9 +32447,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
-      "source_start_line": 1094,
-      "source_end_line": 1219,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
+      "source_start_line": 1088,
+      "source_end_line": 1213,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -32507,7 +32488,7 @@
           "function": "_run_table_guardrails_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._run_table_guardrails_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32635,9 +32616,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1591-L1624",
-      "source_start_line": 1591,
-      "source_end_line": 1624,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1585-L1618",
+      "source_start_line": 1585,
+      "source_end_line": 1618,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -32676,7 +32657,7 @@
           "function": "_write_pipeline_lineage_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32695,9 +32676,9 @@
       "module": "pipeline",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1627-L1676",
-      "source_start_line": 1627,
-      "source_end_line": 1676,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1621-L1670",
+      "source_start_line": 1621,
+      "source_end_line": 1670,
       "function_type": "Public function",
       "layer": "public",
       "review_status": "classified",
@@ -32736,7 +32717,7 @@
           "function": "_write_pipeline_run_summary_workflow",
           "module": "pipeline",
           "qualified_name": "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -32759,9 +32740,9 @@
       "docs_url": "../../api/reference/display_guardrail_results/",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533",
-      "source_start_line": 1529,
-      "source_end_line": 1533,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1523-L1527",
+      "source_start_line": 1523,
+      "source_end_line": 1527,
       "priority": "Medium",
       "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
@@ -33514,7 +33495,7 @@
               "function": "display_guardrail_results",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1529-L1533",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1523-L1527",
               "docs_path": "docs/api/reference/display_guardrail_results.md",
               "docs_url": "../../api/reference/display_guardrail_results/",
               "layer": "public",
@@ -34767,18 +34748,17 @@
       "docs_url": "../../api/reference/prepare_pipeline_table_configs/",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1536-L1551",
-      "source_start_line": 1536,
-      "source_end_line": 1551,
-      "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1530-L1545",
+      "source_start_line": 1530,
+      "source_end_line": 1545,
+      "priority": "Medium",
+      "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Architecture violation",
         "Long chain",
         "Merge candidate found"
       ],
-      "downstream_count": 5,
-      "max_depth": 5,
+      "downstream_count": 4,
+      "max_depth": 4,
       "modules_touched": [
         "config.shared",
         "pipeline"
@@ -34789,11 +34769,11 @@
       ],
       "external_dependents_count": 3,
       "end_node_count": 1,
-      "architecture_violation_count": 1,
+      "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 1
+        "Cross-file private dependency": 0
       },
-      "helper_cleanup_candidates": 2,
+      "helper_cleanup_candidates": 1,
       "direct_callees": [
         {
           "qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
@@ -34822,9 +34802,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
-          "source_start_line": 671,
-          "source_end_line": 765,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
+          "source_start_line": 659,
+          "source_end_line": 759,
           "path_examples": [
             [
               "prepare_pipeline_table_configs",
@@ -34862,9 +34842,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
-          "source_start_line": 671,
-          "source_end_line": 765,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
+          "source_start_line": 659,
+          "source_end_line": 759,
           "path_examples": [
             [
               "prepare_pipeline_table_configs",
@@ -34874,67 +34854,27 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-          "function_name": "_add_audit_columns",
-          "module": "pipeline",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
           "depth": 2,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "Thin wrapper candidate",
-            "Single-use internal helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Merge into owner",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 0,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L668",
-          "source_start_line": 659,
-          "source_end_line": 668,
-          "path_examples": [
-            [
-              "prepare_pipeline_table_configs",
-              "_prepare_pipeline_table_configs_workflow",
-              "_add_audit_columns"
-            ]
-          ],
-          "helper_cleanup_candidate": true
-        },
-        {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
-          "module": "config.shared",
-          "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 8,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -34945,8 +34885,7 @@
             [
               "prepare_pipeline_table_configs",
               "_prepare_pipeline_table_configs_workflow",
-              "_add_audit_columns",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -34955,14 +34894,14 @@
           "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
           "function_name": "get_audit_timezone",
           "module": "config.shared",
-          "depth": 4,
+          "depth": 3,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -34983,8 +34922,7 @@
             [
               "prepare_pipeline_table_configs",
               "_prepare_pipeline_table_configs_workflow",
-              "_add_audit_columns",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -34994,7 +34932,7 @@
           "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
           "function_name": "_validate_audit_timezone",
           "module": "config.shared",
-          "depth": 5,
+          "depth": 4,
           "function_type": "Private helper",
           "layer": "private_helper",
           "layer_group": "Private helper",
@@ -35024,8 +34962,7 @@
             [
               "prepare_pipeline_table_configs",
               "_prepare_pipeline_table_configs_workflow",
-              "_add_audit_columns",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -35040,9 +34977,9 @@
           "module": "pipeline",
           "source_path": "src/fabricops_kit/pipeline.py",
           "owner_file": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L671-L765",
-          "source_start_line": 671,
-          "source_end_line": 765,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L759",
+          "source_start_line": 659,
+          "source_end_line": 759,
           "function_type": "Private helper",
           "layer": "private_helper",
           "review_status": "classified",
@@ -35082,7 +35019,7 @@
               "function": "prepare_pipeline_table_configs",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1536-L1551",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1530-L1545",
               "docs_path": "docs/api/reference/prepare_pipeline_table_configs.md",
               "docs_url": "../../api/reference/prepare_pipeline_table_configs/",
               "layer": "public",
@@ -35096,17 +35033,19 @@
           ],
           "callees": [
             {
-              "function": "_add_audit_columns",
-              "module": "pipeline",
-              "qualified_name": "fabricops_kit.pipeline._add_audit_columns",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L659-L668",
-              "layer": "private_helper",
+              "function": "get_current_audit_timestamp",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+              "layer": "internal",
               "review_status": "classified",
               "callable_kind": "function",
               "callable_role": [
-                "utility_function"
+                "audit_time_utility",
+                "shared_internal_service",
+                "high_fanout_shared"
               ],
-              "dependency_role": "utility_function"
+              "dependency_role": "audit_time_utility"
             }
           ]
         }
@@ -39915,9 +39854,9 @@
       "docs_url": "../../api/reference/run_table_guardrails/",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1554-L1588",
-      "source_start_line": 1554,
-      "source_end_line": 1588,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1548-L1582",
+      "source_start_line": 1548,
+      "source_end_line": 1582,
       "priority": "High",
       "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
@@ -39949,9 +39888,9 @@
       ],
       "external_dependents_count": 37,
       "end_node_count": 51,
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 5,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 6
+        "Cross-file private dependency": 5
       },
       "helper_cleanup_candidates": 47,
       "direct_callees": [
@@ -39981,9 +39920,9 @@
           "is_end_node": false,
           "downstream_count": 19,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
-          "source_start_line": 809,
-          "source_end_line": 1091,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
+          "source_start_line": 803,
+          "source_end_line": 1085,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40020,9 +39959,9 @@
           "is_end_node": false,
           "downstream_count": 19,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
-          "source_start_line": 809,
-          "source_end_line": 1091,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
+          "source_start_line": 803,
+          "source_end_line": 1085,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40604,9 +40543,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
-          "source_start_line": 776,
-          "source_end_line": 806,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
+          "source_start_line": 770,
+          "source_end_line": 800,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40642,9 +40581,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L768-L769",
-          "source_start_line": 768,
-          "source_end_line": 769,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L762-L763",
+          "source_start_line": 762,
+          "source_end_line": 763,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40686,9 +40625,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L772-L773",
-          "source_start_line": 772,
-          "source_end_line": 773,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L766-L767",
+          "source_start_line": 766,
+          "source_end_line": 767,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40812,9 +40751,9 @@
           "is_end_node": false,
           "downstream_count": 8,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
-          "source_start_line": 1094,
-          "source_end_line": 1219,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
+          "source_start_line": 1088,
+          "source_end_line": 1213,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -40916,7 +40855,7 @@
               "_run_table_guardrails_workflow",
               "_run_active_dq_guardrail",
               "_dq_summary",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -43053,62 +42992,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
-          "module": "config.shared",
-          "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.governance_review._dq_summary",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 4,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 3,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "source_start_line": 164,
-          "source_end_line": 172,
-          "path_examples": [
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "_run_active_dq_guardrail",
-              "_dq_summary",
-              "_current_audit_timestamp"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "_run_active_dq_guardrail",
-              "_write_guardrail_result_row",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
-            ],
-            [
-              "run_table_guardrails",
-              "_run_table_guardrails_workflow",
-              "_run_active_dq_guardrail",
-              "_write_guardrail_result_row",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
           "function_name": "_validate_audit_timezone",
           "module": "config.shared",
@@ -43159,9 +43042,64 @@
               "_run_table_guardrails_workflow",
               "_run_active_dq_guardrail",
               "_dq_summary",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "depth": 4,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.governance_review._dq_summary",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Promote candidate"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 4,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 5,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "source_start_line": 164,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "_run_active_dq_guardrail",
+              "_dq_summary",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "_run_active_dq_guardrail",
+              "_write_guardrail_result_row",
+              "_build_runtime_audit_fields",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "run_table_guardrails",
+              "_run_table_guardrails_workflow",
+              "_run_active_dq_guardrail",
+              "_write_guardrail_result_row",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -45459,9 +45397,9 @@
           "module": "pipeline",
           "source_path": "src/fabricops_kit/pipeline.py",
           "owner_file": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L809-L1091",
-          "source_start_line": 809,
-          "source_end_line": 1091,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L803-L1085",
+          "source_start_line": 803,
+          "source_end_line": 1085,
           "function_type": "Private helper",
           "layer": "private_helper",
           "review_status": "classified",
@@ -45500,7 +45438,7 @@
               "function": "run_table_guardrails",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.run_table_guardrails",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1554-L1588",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1548-L1582",
               "docs_path": "docs/api/reference/run_table_guardrails.md",
               "docs_url": "../../api/reference/run_table_guardrails/",
               "layer": "public",
@@ -45696,7 +45634,7 @@
               "function": "_build_guardrail_evidence_definitions",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline._build_guardrail_evidence_definitions",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L776-L806",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L770-L800",
               "layer": "private_helper",
               "review_status": "classified",
               "callable_kind": "function",
@@ -45709,7 +45647,7 @@
               "function": "_table_key",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline._table_key",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L768-L769",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L762-L763",
               "layer": "private_helper",
               "review_status": "classified",
               "callable_kind": "function",
@@ -45722,7 +45660,7 @@
               "function": "_table_name",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline._table_name",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L772-L773",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L766-L767",
               "layer": "private_helper",
               "review_status": "classified",
               "callable_kind": "function",
@@ -45761,7 +45699,7 @@
               "function": "write_catalogue_evidence",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.write_catalogue_evidence",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1094-L1219",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1088-L1213",
               "layer": "internal",
               "review_status": "classified",
               "callable_kind": "function",
@@ -48788,9 +48726,9 @@
       ],
       "external_dependents_count": 31,
       "end_node_count": 25,
-      "architecture_violation_count": 3,
+      "architecture_violation_count": 2,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 3
+        "Cross-file private dependency": 2
       },
       "helper_cleanup_candidates": 14,
       "direct_callees": [
@@ -48928,10 +48866,10 @@
           ],
           "recommended_action": "Next step",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 8,
+          "calls_inside_flow": 9,
           "used_outside_flow": 0,
           "is_end_node": false,
-          "downstream_count": 8,
+          "downstream_count": 9,
           "source_path": "src/fabricops_kit/data_agreement.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L788-L1024",
           "source_start_line": 788,
@@ -48984,28 +48922,27 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.pipeline._now_iso",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "parent_qualified_name": "fabricops_kit.data_agreement.widget_select_agreement",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 2,
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 3,
           "calls_inside_flow": 1,
-          "used_outside_flow": 5,
+          "used_outside_flow": 6,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -49017,14 +48954,20 @@
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "widget_select_agreement",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "start_pipeline_run",
+              "_start_pipeline_run_workflow",
+              "widget_select_agreement",
               "_register_current_notebook",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "_now_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -49384,8 +49327,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -49407,15 +49350,22 @@
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "widget_select_agreement",
+              "get_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "start_pipeline_run",
+              "_start_pipeline_run_workflow",
+              "widget_select_agreement",
               "_register_current_notebook",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -50075,8 +50025,16 @@
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "widget_select_agreement",
+              "get_current_audit_timestamp",
+              "get_audit_timezone",
+              "_validate_audit_timezone"
+            ],
+            [
+              "start_pipeline_run",
+              "_start_pipeline_run_workflow",
+              "widget_select_agreement",
               "_register_current_notebook",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -50084,7 +50042,7 @@
               "start_pipeline_run",
               "_start_pipeline_run_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -51352,9 +51310,9 @@
       ],
       "external_dependents_count": 28,
       "end_node_count": 17,
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 5,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 6
+        "Cross-file private dependency": 5
       },
       "helper_cleanup_candidates": 10,
       "direct_callees": [
@@ -52309,57 +52267,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
-          "module": "config.shared",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.metadata._now_utc_iso",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 6,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "source_start_line": 164,
-          "source_end_line": 172,
-          "path_examples": [
-            [
-              "widget_author_dq_rules",
-              "_dq_rule_authoring_widget_workflow",
-              "_dq_records_from_selection",
-              "_base_guardrail_rule_record",
-              "guardrail_authoring_status",
-              "_authoring_lifecycle",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ],
-            [
-              "widget_author_dq_rules",
-              "_dq_rule_authoring_widget_workflow",
-              "_dq_records_from_selection",
-              "_base_guardrail_rule_record",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config.shared",
@@ -52410,6 +52317,56 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.metadata._now_utc_iso",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Promote candidate"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 8,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "source_start_line": 164,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "widget_author_dq_rules",
+              "_dq_rule_authoring_widget_workflow",
+              "_dq_records_from_selection",
+              "_base_guardrail_rule_record",
+              "guardrail_authoring_status",
+              "_authoring_lifecycle",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "widget_author_dq_rules",
+              "_dq_rule_authoring_widget_workflow",
+              "_dq_records_from_selection",
+              "_base_guardrail_rule_record",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
@@ -52762,8 +52719,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -52789,7 +52746,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -52798,7 +52755,7 @@
               "_dq_records_from_selection",
               "_base_guardrail_rule_record",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -53100,7 +53057,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -53110,7 +53067,7 @@
               "_dq_records_from_selection",
               "_base_guardrail_rule_record",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -53337,9 +53294,9 @@
       ],
       "external_dependents_count": 28,
       "end_node_count": 17,
-      "architecture_violation_count": 6,
+      "architecture_violation_count": 5,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 6
+        "Cross-file private dependency": 5
       },
       "helper_cleanup_candidates": 10,
       "direct_callees": [
@@ -54294,57 +54251,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
-          "module": "config.shared",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.metadata._now_utc_iso",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 6,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "source_start_line": 164,
-          "source_end_line": 172,
-          "path_examples": [
-            [
-              "widget_author_schema_freshness_profile_rules",
-              "_schema_freshness_profile_rule_authoring_widget_workflow",
-              "_schema_freshness_profile_records_from_selection",
-              "_base_guardrail_rule_record",
-              "guardrail_authoring_status",
-              "_authoring_lifecycle",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ],
-            [
-              "widget_author_schema_freshness_profile_rules",
-              "_schema_freshness_profile_rule_authoring_widget_workflow",
-              "_schema_freshness_profile_records_from_selection",
-              "_base_guardrail_rule_record",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config.shared",
@@ -54395,6 +54301,56 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.metadata._now_utc_iso",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Promote candidate"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 1,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 8,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "source_start_line": 164,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "widget_author_schema_freshness_profile_rules",
+              "_schema_freshness_profile_rule_authoring_widget_workflow",
+              "_schema_freshness_profile_records_from_selection",
+              "_base_guardrail_rule_record",
+              "guardrail_authoring_status",
+              "_authoring_lifecycle",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "widget_author_schema_freshness_profile_rules",
+              "_schema_freshness_profile_rule_authoring_widget_workflow",
+              "_schema_freshness_profile_records_from_selection",
+              "_base_guardrail_rule_record",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.governance_review._authoring_lifecycle",
@@ -54747,8 +54703,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -54774,7 +54730,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -54783,7 +54739,7 @@
               "_schema_freshness_profile_records_from_selection",
               "_base_guardrail_rule_record",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -55085,7 +55041,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -55095,7 +55051,7 @@
               "_schema_freshness_profile_records_from_selection",
               "_base_guardrail_rule_record",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -55322,9 +55278,9 @@
       ],
       "external_dependents_count": 32,
       "end_node_count": 22,
-      "architecture_violation_count": 7,
+      "architecture_violation_count": 6,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 7
+        "Cross-file private dependency": 6
       },
       "helper_cleanup_candidates": 14,
       "direct_callees": [
@@ -56714,64 +56670,6 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
-          "module": "config.shared",
-          "depth": 5,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
-          "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Rename to shared helper",
-          "called_inside_flow_by": 2,
-          "calls_inside_flow": 1,
-          "used_outside_flow": 5,
-          "is_end_node": false,
-          "downstream_count": 1,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "source_start_line": 164,
-          "source_end_line": 172,
-          "path_examples": [
-            [
-              "widget_enrich_table_metadata",
-              "_table_metadata_enrichment_widget_workflow",
-              "build_enrichment_rule_records",
-              "_approved_review_context",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
-            ],
-            [
-              "widget_enrich_table_metadata",
-              "_table_metadata_enrichment_widget_workflow",
-              "build_enrichment_rule_records",
-              "_approved_review_context",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ],
-            [
-              "widget_enrich_table_metadata",
-              "_table_metadata_enrichment_widget_workflow",
-              "build_enrichment_rule_records",
-              "guardrail_authoring_status",
-              "_authoring_lifecycle",
-              "_now_utc_iso",
-              "_current_audit_timestamp"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
           "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
           "function_name": "_normalize_path_config",
           "module": "config.shared",
@@ -56831,6 +56729,63 @@
             ]
           ],
           "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "depth": 5,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Promote candidate"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 2,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 7,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "source_start_line": 164,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "widget_enrich_table_metadata",
+              "_table_metadata_enrichment_widget_workflow",
+              "build_enrichment_rule_records",
+              "_approved_review_context",
+              "_build_runtime_audit_fields",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "widget_enrich_table_metadata",
+              "_table_metadata_enrichment_widget_workflow",
+              "build_enrichment_rule_records",
+              "_approved_review_context",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "widget_enrich_table_metadata",
+              "_table_metadata_enrichment_widget_workflow",
+              "build_enrichment_rule_records",
+              "guardrail_authoring_status",
+              "_authoring_lifecycle",
+              "_now_utc_iso",
+              "get_current_audit_timestamp"
+            ]
+          ],
+          "helper_cleanup_candidate": false
         },
         {
           "qualified_name": "fabricops_kit.governance_review._lifecycle_fields",
@@ -57121,8 +57076,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -57146,7 +57101,7 @@
               "build_enrichment_rule_records",
               "_approved_review_context",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -57155,7 +57110,7 @@
               "build_enrichment_rule_records",
               "_approved_review_context",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -57165,7 +57120,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -57422,7 +57377,7 @@
               "build_enrichment_rule_records",
               "_approved_review_context",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -57432,7 +57387,7 @@
               "build_enrichment_rule_records",
               "_approved_review_context",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -57443,7 +57398,7 @@
               "guardrail_authoring_status",
               "_authoring_lifecycle",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -57709,9 +57664,9 @@
       ],
       "external_dependents_count": 31,
       "end_node_count": 21,
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 2
+        "Cross-file private dependency": 1
       },
       "helper_cleanup_candidates": 10,
       "direct_callees": [
@@ -58095,10 +58050,10 @@
           ],
           "recommended_action": "Keep private helper",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 4,
+          "calls_inside_flow": 5,
           "used_outside_flow": 0,
           "is_end_node": false,
-          "downstream_count": 4,
+          "downstream_count": 5,
           "source_path": "src/fabricops_kit/data_agreement.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement.py#L754-L785",
           "source_start_line": 754,
@@ -58152,6 +58107,51 @@
               "widget_render_agreement_evidence",
               "_render_agreement_evidence_widget_workflow",
               "_widget_common"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
+          "module": "config.shared",
+          "depth": 3,
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.data_agreement._save_agreement_evidence_records",
+          "caller_type": "Private helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
+          "signals": [
+            "Promote candidate"
+          ],
+          "recommended_action": "Shared internal helper",
+          "called_inside_flow_by": 2,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 7,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
+          "source_start_line": 164,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "widget_render_agreement_evidence",
+              "_render_agreement_evidence_widget_workflow",
+              "_save_agreement_evidence_records",
+              "get_current_audit_timestamp"
+            ],
+            [
+              "widget_render_agreement_evidence",
+              "_render_agreement_evidence_widget_workflow",
+              "_save_agreement_evidence_records",
+              "_build_runtime_audit_fields",
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -58482,41 +58482,48 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
+          "function_name": "get_audit_timezone",
           "module": "config.shared",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
-          "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Shared helper"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 2,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L164-L172",
-          "source_start_line": 164,
-          "source_end_line": 172,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L156-L161",
+          "source_start_line": 156,
+          "source_end_line": 161,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
               "_render_agreement_evidence_widget_workflow",
               "_save_agreement_evidence_records",
+              "get_current_audit_timestamp",
+              "get_audit_timezone"
+            ],
+            [
+              "widget_render_agreement_evidence",
+              "_render_agreement_evidence_widget_workflow",
+              "_save_agreement_evidence_records",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp",
+              "get_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -59032,41 +59039,52 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
-          "function_name": "get_audit_timezone",
+          "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
+          "function_name": "_validate_audit_timezone",
           "module": "config.shared",
           "depth": 5,
-          "function_type": "Shared helper",
-          "layer": "internal",
-          "layer_group": "Shared helper",
-          "simple_classification": "Shared helper",
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
-          "callee_type": "Shared helper",
-          "architecture_result": "Allowed",
-          "violation_type": "",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
           "signals": [
-            "Shared helper"
+            "implicit_lifecycle_reachability",
+            "Leaf internal helper",
+            "Layer assignment needs review"
           ],
-          "recommended_action": "Shared internal helper",
+          "recommended_action": "Keep private helper",
           "called_inside_flow_by": 1,
-          "calls_inside_flow": 1,
+          "calls_inside_flow": 0,
           "used_outside_flow": 2,
-          "is_end_node": false,
-          "downstream_count": 1,
+          "is_end_node": true,
+          "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L156-L161",
-          "source_start_line": 156,
-          "source_end_line": 161,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L116-L148",
+          "source_start_line": 116,
+          "source_end_line": 148,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
               "_render_agreement_evidence_widget_workflow",
               "_save_agreement_evidence_records",
+              "get_current_audit_timestamp",
+              "get_audit_timezone",
+              "_validate_audit_timezone"
+            ],
+            [
+              "widget_render_agreement_evidence",
+              "_render_agreement_evidence_widget_workflow",
+              "_save_agreement_evidence_records",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "get_audit_timezone"
+              "get_current_audit_timestamp",
+              "get_audit_timezone",
+              "_validate_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -59285,49 +59303,6 @@
               "_write_row",
               "write_lakehouse_table_core",
               "write_delta_path"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
-          "function_name": "_validate_audit_timezone",
-          "module": "config.shared",
-          "depth": 6,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared.get_audit_timezone",
-          "caller_type": "Shared helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "implicit_lifecycle_reachability",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Keep private helper",
-          "called_inside_flow_by": 1,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 2,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L116-L148",
-          "source_start_line": 116,
-          "source_end_line": 148,
-          "path_examples": [
-            [
-              "widget_render_agreement_evidence",
-              "_render_agreement_evidence_widget_workflow",
-              "_save_agreement_evidence_records",
-              "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
-              "get_audit_timezone",
-              "_validate_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -59824,9 +59799,9 @@
       ],
       "external_dependents_count": 34,
       "end_node_count": 28,
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 2
+        "Cross-file private dependency": 1
       },
       "helper_cleanup_candidates": 17,
       "direct_callees": [
@@ -61437,28 +61412,27 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 8,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -61471,14 +61445,14 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "widget_render_data_agreement",
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -62091,8 +62065,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -62115,7 +62089,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -62123,7 +62097,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -62490,7 +62464,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -62499,7 +62473,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -63211,9 +63185,9 @@
       ],
       "external_dependents_count": 34,
       "end_node_count": 28,
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 2
+        "Cross-file private dependency": 1
       },
       "helper_cleanup_candidates": 17,
       "direct_callees": [
@@ -64824,28 +64798,27 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 8,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -64858,14 +64831,14 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "widget_render_data_steward",
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -65478,8 +65451,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -65502,7 +65475,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -65510,7 +65483,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -65877,7 +65850,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_agreement",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -65886,7 +65859,7 @@
               "_render_maintenance_widget_shared_workflow",
               "_create_or_update_data_steward",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -66314,9 +66287,9 @@
       ],
       "external_dependents_count": 9,
       "end_node_count": 6,
-      "architecture_violation_count": 3,
+      "architecture_violation_count": 2,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 3
+        "Cross-file private dependency": 2
       },
       "helper_cleanup_candidates": 4,
       "direct_callees": [
@@ -66765,28 +66738,27 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 4,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.metadata._now_utc_iso",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 8,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -66799,14 +66771,14 @@
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_enrichment_action",
               "_now_utc_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "widget_review_guardrail_governance",
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_rule_action",
               "_now_utc_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -66923,8 +66895,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -66947,7 +66919,7 @@
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_enrichment_action",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -66955,7 +66927,7 @@
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_rule_action",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -66997,7 +66969,7 @@
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_enrichment_action",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -67006,7 +66978,7 @@
               "_guardrail_governance_review_widget_workflow",
               "apply_governance_rule_action",
               "_now_utc_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -69303,9 +69275,9 @@
       "docs_url": "../../api/reference/write_pipeline_lineage/",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1591-L1624",
-      "source_start_line": 1591,
-      "source_end_line": 1624,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1585-L1618",
+      "source_start_line": 1585,
+      "source_end_line": 1618,
       "priority": "High",
       "recommended_simplification_action": "Fix architecture violation",
       "warnings": [
@@ -69330,9 +69302,9 @@
       ],
       "external_dependents_count": 25,
       "end_node_count": 15,
-      "architecture_violation_count": 3,
+      "architecture_violation_count": 2,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 3
+        "Cross-file private dependency": 2
       },
       "helper_cleanup_candidates": 7,
       "direct_callees": [
@@ -69362,9 +69334,9 @@
           "is_end_node": false,
           "downstream_count": 7,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
-          "source_start_line": 1222,
-          "source_end_line": 1334,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
+          "source_start_line": 1216,
+          "source_end_line": 1328,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -69401,9 +69373,9 @@
           "is_end_node": false,
           "downstream_count": 7,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
-          "source_start_line": 1222,
-          "source_end_line": 1334,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
+          "source_start_line": 1216,
+          "source_end_line": 1328,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -69690,28 +69662,27 @@
           "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.pipeline._now_iso",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 2,
           "calls_inside_flow": 1,
-          "used_outside_flow": 5,
+          "used_outside_flow": 7,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -69723,21 +69694,21 @@
               "write_pipeline_lineage",
               "_write_pipeline_lineage_workflow",
               "_now_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "write_pipeline_lineage",
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ],
             [
               "write_pipeline_lineage",
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_now_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -70189,8 +70160,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -70212,7 +70183,7 @@
               "write_pipeline_lineage",
               "_write_pipeline_lineage_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -70220,7 +70191,7 @@
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ],
             [
@@ -70228,7 +70199,7 @@
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -70475,7 +70446,7 @@
               "write_pipeline_lineage",
               "_write_pipeline_lineage_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -70484,7 +70455,7 @@
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_build_runtime_audit_fields",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ],
@@ -70493,7 +70464,7 @@
               "_write_pipeline_lineage_workflow",
               "_runtime_audit_fields",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -70759,9 +70730,9 @@
           "module": "pipeline",
           "source_path": "src/fabricops_kit/pipeline.py",
           "owner_file": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1222-L1334",
-          "source_start_line": 1222,
-          "source_end_line": 1334,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1216-L1328",
+          "source_start_line": 1216,
+          "source_end_line": 1328,
           "function_type": "Private helper",
           "layer": "private_helper",
           "review_status": "classified",
@@ -70800,7 +70771,7 @@
               "function": "write_pipeline_lineage",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1591-L1624",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1585-L1618",
               "docs_path": "docs/api/reference/write_pipeline_lineage.md",
               "docs_url": "../../api/reference/write_pipeline_lineage/",
               "layer": "public",
@@ -70924,13 +70895,12 @@
       "docs_url": "../../api/reference/write_pipeline_run_summary/",
       "source_path": "src/fabricops_kit/pipeline.py",
       "owner_file": "src/fabricops_kit/pipeline.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1627-L1676",
-      "source_start_line": 1627,
-      "source_end_line": 1676,
-      "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1621-L1670",
+      "source_start_line": 1621,
+      "source_end_line": 1670,
+      "priority": "Medium",
+      "recommended_simplification_action": "Move helper closer to caller",
       "warnings": [
-        "Architecture violation",
         "Long chain",
         "Merge candidate found",
         "Wide dependency"
@@ -70949,9 +70919,9 @@
       ],
       "external_dependents_count": 19,
       "end_node_count": 14,
-      "architecture_violation_count": 1,
+      "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 1
+        "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 8,
       "direct_callees": [
@@ -70981,9 +70951,9 @@
           "is_end_node": false,
           "downstream_count": 7,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
-          "source_start_line": 1337,
-          "source_end_line": 1526,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
+          "source_start_line": 1331,
+          "source_end_line": 1520,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -71020,9 +70990,9 @@
           "is_end_node": false,
           "downstream_count": 7,
           "source_path": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
-          "source_start_line": 1337,
-          "source_end_line": 1526,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
+          "source_start_line": 1331,
+          "source_end_line": 1520,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -71305,28 +71275,27 @@
           "helper_cleanup_candidate": true
         },
         {
-          "qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "function_name": "_current_audit_timestamp",
+          "qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "function_name": "get_current_audit_timestamp",
           "module": "config.shared",
           "depth": 3,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
+          "function_type": "Shared helper",
+          "layer": "internal",
+          "layer_group": "Shared helper",
+          "simple_classification": "Shared helper",
           "edge_type": "transitive",
           "parent_qualified_name": "fabricops_kit.pipeline._now_iso",
           "caller_type": "Private helper",
-          "callee_type": "Private helper",
-          "architecture_result": "Violation",
-          "violation_type": "Cross-file private dependency",
+          "callee_type": "Shared helper",
+          "architecture_result": "Allowed",
+          "violation_type": "",
           "signals": [
-            "High-fanout helper",
-            "Layer assignment needs review"
+            "Promote candidate"
           ],
-          "recommended_action": "Rename to shared helper",
+          "recommended_action": "Shared internal helper",
           "called_inside_flow_by": 1,
           "calls_inside_flow": 1,
-          "used_outside_flow": 6,
+          "used_outside_flow": 8,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -71338,7 +71307,7 @@
               "write_pipeline_run_summary",
               "_write_pipeline_run_summary_workflow",
               "_now_iso",
-              "_current_audit_timestamp"
+              "get_current_audit_timestamp"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -71697,8 +71666,8 @@
           "layer_group": "Shared helper",
           "simple_classification": "Shared helper",
           "edge_type": "transitive",
-          "parent_qualified_name": "fabricops_kit.config.shared._current_audit_timestamp",
-          "caller_type": "Private helper",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_current_audit_timestamp",
+          "caller_type": "Shared helper",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
@@ -71720,7 +71689,7 @@
               "write_pipeline_run_summary",
               "_write_pipeline_run_summary_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone"
             ]
           ],
@@ -71839,7 +71808,7 @@
               "write_pipeline_run_summary",
               "_write_pipeline_run_summary_workflow",
               "_now_iso",
-              "_current_audit_timestamp",
+              "get_current_audit_timestamp",
               "get_audit_timezone",
               "_validate_audit_timezone"
             ]
@@ -72105,9 +72074,9 @@
           "module": "pipeline",
           "source_path": "src/fabricops_kit/pipeline.py",
           "owner_file": "src/fabricops_kit/pipeline.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1337-L1526",
-          "source_start_line": 1337,
-          "source_end_line": 1526,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1331-L1520",
+          "source_start_line": 1331,
+          "source_end_line": 1520,
           "function_type": "Private helper",
           "layer": "private_helper",
           "review_status": "classified",
@@ -72146,7 +72115,7 @@
               "function": "write_pipeline_run_summary",
               "module": "pipeline",
               "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1627-L1676",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline.py#L1621-L1670",
               "docs_path": "docs/api/reference/write_pipeline_run_summary.md",
               "docs_url": "../../api/reference/write_pipeline_run_summary/",
               "layer": "public",
@@ -72991,25 +72960,25 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 351,
+    "total_callables": 350,
     "function_type": {
       "Public function": 27,
-      "Shared helper": 80,
+      "Shared helper": 82,
       "Public config class": 7
     },
     "layer": {
       "public": 27,
-      "internal": 80
+      "internal": 82
     },
     "review_status": {
-      "classified": 318,
-      "classification_pending": 33,
+      "classified": 316,
+      "classification_pending": 34,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 107
+      "function": 109
     },
     "callable_role_group": {
       "adapter": 19,
@@ -73019,7 +72988,7 @@
       "public_entrypoint": 27,
       "registry_builder": 2,
       "resolver": 57,
-      "utility": 134,
+      "utility": 133,
       "validator": 25,
       "workflow": 57
     },
@@ -73037,38 +73006,38 @@
       "registry_builder": 2,
       "result_model_class": 1,
       "schema_utility": 4,
-      "utility_function": 126,
+      "utility_function": 125,
       "utility_validator": 4
     },
     "recommended_action": {
       "Keep private helper": 132,
-      "Merge into owner": 63,
-      "Next step": 56,
+      "Merge into owner": 62,
+      "Next step": 57,
       "Public API entrypoint": 27,
       "Public config class": 7,
-      "Remove redundant wrapper": 24,
-      "Rename to shared helper": 18,
-      "Shared internal helper": 24
+      "Remove redundant wrapper": 23,
+      "Rename to shared helper": 17,
+      "Shared internal helper": 25
     },
     "public_api_surface": {
       "public_api_entrypoints": 27,
       "long_call_chains": 24,
-      "architecture_violations": 15,
-      "architecture_findings": 15,
+      "architecture_violations": 13,
+      "architecture_findings": 13,
       "merge_candidates": 26,
-      "suggested_inline_or_privatize": 11
+      "suggested_inline_or_privatize": 13
     },
     "callable_inventory_metrics": {
       "module_count": 20,
-      "total_callables": 351,
+      "total_callables": 350,
       "public_api_entrypoints": 27,
-      "function_callables": 107,
-      "supporting_functions": 80,
+      "function_callables": 109,
+      "supporting_functions": 82,
       "public_classes": 7,
-      "hidden_private_helpers": 237,
-      "private_helpers_to_review": 237
+      "hidden_private_helpers": 234,
+      "private_helpers_to_review": 234
     },
-    "private_helper_review": 237,
+    "private_helper_review": 234,
     "public_classes": 7
   }
 }
