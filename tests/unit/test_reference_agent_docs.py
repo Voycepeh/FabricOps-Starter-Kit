@@ -328,14 +328,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert not (ROOT / "docs" / "reference" / "callable-architecture.md").exists()
     assert "AI can code fast." in flow_text
     assert "messy integration patterns" in flow_text
-    assert "![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)" in flow_text
+    assert "fabricops-bad-example-pointless-wrapper-functions.png" not in flow_text
     assert "![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)" in flow_text
-    assert "![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)" in flow_text
+    assert "fabricops-bad-example-function-dependancy.png" not in flow_text
     assert "![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)" in flow_text
     assert "[Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)" in flow_text
     assert "[Function Inventory](../assets/function-inventory.html)" in flow_text
     assert "[function-call-graph.json](_data/function-call-graph.json)" in flow_text
     assert "focused cleanup packets as JSON or YAML" in flow_text
+    assert "fabricops-select-refactor-candidates.png" not in flow_text
+    assert "fabricops-select-refactor-candidates-prompt-export.png" not in flow_text
+    assert "Reviewers select refactor candidates in the dashboard" in flow_text
     assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
     assert "fabricops_support_inventory_cleanup_packet" in flow_text
     assert "Use the Function Call Graph Dashboard first" in flow_text

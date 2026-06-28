@@ -1,93 +1,70 @@
-> **First make it exist. Then make it good.**
+# Function Call Graph
+
+> **Make it exist first. Make it good next.**
 >
-> AI helps FabricOps move quickly from idea to working public callable function:
->
-> * create the function quickly
-> * test whether the behaviour is useful
-> * keep it if the behaviour is worth preserving
-> * clean the architecture before the prototype becomes permanent
->
-> The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
+> AI helps FabricOps move quickly from idea to working public function. The Function Call Graph helps us come back afterwards to review whether the implementation is clean enough to keep.
 
+## Why this exists
 
-The Function Call Graph turns repository scans into a review surface for AI assisted development. It shows which public callable functions exist, what supports them, where dependencies go, and which cleanup candidates are worth reviewing before prototypes become permanent.
+AI can code fast.
 
-## How it works
+That speed is useful when building FabricOps because the first priority is often to create a working public callable function that users can try.
 
-The Function Call Graph follows a simple flow:
+At that stage, the goal is not perfect code.
+
+The goal is:
 
 ```text
-Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets
+Make the function exist.
+Make it work.
+Validate whether the behaviour is useful.
 ```
 
-![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
+Once the behaviour is worth keeping, the next problem is maintainability.
 
-## 1. Repository code
+AI generated code can work correctly but still leave behind messy integration patterns: duplicated helpers, private functions used across files, wide dependency surfaces, public callables depending on other public callables, or long chains of thin wrapper functions.
 
-The repository is the source of truth.
+The Function Call Graph exists to support that second step.
 
-FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.
+It helps us move quickly during prototyping, then return later with a clearer view of what should be cleaned up.
 
-## 2. Scan and analyze
+## What we want to catch
 
-The Function Call Graph is generated from repository scans.
+### Pointless wrapper functions
 
-The source scanner is:
+AI generated code can create small wrapper functions that only pass work to the next function.
 
-* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+Each wrapper may look harmless by itself, but the full chain makes the implementation harder to read, test, and refactor.
 
-The scanner reads the codebase and identifies:
+Wrappers are worth keeping when they add clear naming, validation, reuse, or a meaningful boundary.
 
-* public callable functions
-* supporting private functions
-* shared helpers
-* classes
-* internal methods
-* dependency edges between functions and modules
+They are worth simplifying when they only make the call path longer.
 
-The scanner then produces generated review artifacts that make the callable architecture easier to inspect.
+### Wide dependency surfaces
 
-The generated review outputs are:
+A public callable can become hard to reason about when it pulls in too many downstream helpers.
 
-* [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-* [Function Inventory](../assets/function-inventory.html)
-* [function-call-graph.json](_data/function-call-graph.json)
+![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
 
-## 3. Enforce architecture
+This is not automatically wrong.
 
-AI generated code can work correctly but still leave behind messy integration patterns:
+But it is a signal to ask whether the function is doing too much, or whether the same responsibility has been spread across too many helper functions.
 
-* duplicated helpers
-* private functions used across files
-* wide dependency surfaces
-* public callables depending on other public callables
-* long chains of thin wrapper functions
+### Public callable dependencies
 
-The question is not only whether the code works.
+Public callables should usually be entry points, not dependencies of other public callables.
+
+When shared logic is needed, it should usually move into a helper that both public functions can call safely.
+
+### Long nested chains
+
+Long nested chains make it harder to understand where the real work happens.
+
+![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)
+
+The question is not whether the code works.
 
 The question is whether the structure is still simple enough to keep.
-
-The Function Call Graph is protected by an enforcement test that keeps the callable architecture intentional as the codebase changes.
-
-The enforcement test makes sure public callables, shared helpers, and generated reference outputs do not drift silently.
-
-The enforcement test is:
-
-* [`tests/contract/test_callable_architecture_validation.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/tests/contract/test_callable_architecture_validation.py)
-
-This helps prevent accidental architecture violations from becoming permanent.
-
-### Architecture violations we are preventing
-
-The Function Call Graph supports the public function architecture rule used by FabricOps.
-
-Each public callable should have a clear owner file, shared implementation details should stay in `shared.py`, and the package `__init__.py` should be the supported export surface.
-
-For the full rule, see:
-
-* [Public Function Architecture](../public-function-architecture/)
-
-The main violations we want to catch are:
 
 * public callables depending directly on other public callables
 * internal helpers depending directly on public callables
@@ -98,30 +75,25 @@ The main violations we want to catch are:
 * forbidden grouping files such as `public.py`, `models.py`, `classes.py`, `adapter.py`, `adapters.py`, `resolver.py`, or `resolvers.py`
 * generated reference outputs drifting away from the codebase
 
-The preferred package shape is:
+The intended workflow is:
 
 ```text
-src/fabricops_kit/my_feature/
-  __init__.py
-  my_public_function.py
-  shared.py
+Prototype quickly
+→ validate with users
+→ inspect the function call graph
+→ export a focused cleanup packet
+→ use AI to assist the refactor
+→ review the actual code
+→ run tests
 ```
 
-For multiple public functions in the same batch:
+The point is not to review every line of code at the moment it is created.
 
-```text
-src/fabricops_kit/my_feature/
-  __init__.py
-  first_public_function.py
-  second_public_function.py
-  shared.py
-```
+The point is to avoid letting fast prototypes quietly become long term technical debt.
 
-The intended pattern is simple:
+## Dashboard context
 
-```text
-public owner file → shared.py → internal implementation details
-```
+The generated review surfaces are:
 
 Avoid these patterns:
 
@@ -130,65 +102,77 @@ public callable → public callable
 internal helper → public callable
 ```
 
-Public callables should be clean entry points. Shared logic belongs behind them, not inside a chain of public function calls.
+## Cleanup packets
 
-### Wide dependency surfaces
+When a function is worth improving, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
-A public callable can become hard to reason about when it pulls in too many downstream helpers.
+The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository. Reviewers select refactor candidates in the dashboard and use the prompt export to hand AI a focused cleanup scope.
 
-![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
+The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph. The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
 When shared logic is needed, it should usually move into a helper that both public functions can call safely.
 
 ### Long nested chains
 
-Long nested chains make it harder to understand where the real work happens.
+Example packet shape:
 
-![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)
+```yaml
+schema: fabricops_public_callable_flow_cleanup_packet
+
+selected_public_callable:
+  selected_public_callable_name: display_guardrail_results
+  qualified_name: fabricops_kit.pipeline.display_guardrail_results
+  source_file: src/fabricops_kit/pipeline.py
+
+compatibility_mode: preserve_backwards_compatibility
+
+architecture_summary:
+  downstream_count: 8
+  max_depth: 4
+  architecture_violation_count: 1
+  merge_candidate_count: 2
+
+requested_work:
+  intent: >
+    Plan a safe cleanup for the selected public callable and its
+    supporting helpers.
+  priority_order:
+    - Resolve architecture violations first.
+    - Keep public callable behaviour stable.
+    - Merge or inline thin wrappers only when readability improves.
+    - Call out tests required before implementation.
+```
+
+The packet keeps the refactor focused on the selected function, the identified risks, and the compatibility mode.
+
+## Generated outputs and source checks
+
+The Function Call Graph is generated from repository scans.
+
+The generated review outputs are:
+
+- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
+- [Function Inventory](../assets/function-inventory.html)
+- [function-call-graph.json](_data/function-call-graph.json)
+
+The source scanner is the Python file that scans the repository and identifies the public callable functions, supporting private functions, classes, internal methods, and dependency edges used to build the graph.
+
+- Scanner: `scripts/generate_function_reference.py`
+
+The architecture is also protected by an enforcement test. This test makes sure the callable structure stays intentional as the codebase changes, instead of allowing public callables, shared helpers, or generated reference outputs to drift silently.
+
+- Enforcement test: `tests/contract/test_callable_architecture_validation.py`
 
 Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
 
-## 4. Function Call Graph Dashboard
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
 
-The Function Call Graph Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
+## Principle
 
-After the scanner identifies public callables, supporting private functions, shared helpers, classes, internal methods, and dependency edges, the dashboard turns that scan into something reviewers can inspect.
-
-![Function Call Graph Dashboard](../assets/fabricops-call-graph-dashboard.png)
-
-<div align="center" markdown>
-
-[Open architecture dashboard](../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
-
-</div>
-
-The dashboard helps reviewers:
-
-* see all public callable functions in one place
-* understand what supports each public callable
-* trace where dependencies go
-* spot architecture violations and dependency chains that deserve a closer look
-
-## 5. AI refactor packets
-
-When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
-
-The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph.
-
-The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function level code assets.
-
-The packet keeps the AI refactor focused on:
-
-* the selected function
-* the supporting code assets
-* the identified architecture risks
-* the compatibility mode
-* the relevant test expectations
-
-![Function Call Graph AI refactor package](../assets/fabricops-call-graph-ai-refactor-package.png)
-
-![Function Call Graph AI refactor package detail](../assets/fabricops-call-graph-ai-refactor-package%282%29.png)
-
-The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
+```text
+Make it exist first.
+Validate that it is useful.
+Then make the implementation good enough to keep.
+```
 
 <!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
