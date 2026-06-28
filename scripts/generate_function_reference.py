@@ -3983,8 +3983,6 @@ AI generated code can create small wrapper functions that only pass work to the 
 
 Each wrapper may look harmless by itself, but the full chain makes the implementation harder to read, test, and refactor.
 
-![Pointless wrapper functions](../assets/fabricops-bad-example-pointless-wrapper-functions.png)
-
 Wrappers are worth keeping when they add clear naming, validation, reuse, or a meaningful boundary.
 
 They are worth simplifying when they only make the call path longer.
@@ -4002,8 +4000,6 @@ But it is a signal to ask whether the function is doing too much, or whether the
 ### Public callable dependencies
 
 Public callables should usually be entry points, not dependencies of other public callables.
-
-![Public callable dependency](../assets/fabricops-bad-example-function-dependancy.png)
 
 When shared logic is needed, it should usually move into a helper that both public functions can call safely.
 
@@ -4048,11 +4044,7 @@ Use the Function Call Graph Dashboard first when you are deciding whether a publ
 
 When a function is worth improving, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
-The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository.
-
-![Selecting refactor candidates](../assets/fabricops-select-refactor-candidates.png)
-
-![Prompt export](../assets/fabricops-select-refactor-candidates-prompt-export.png)
+The packet gives AI enough context to help with the next step without asking it to freely rewrite the repository. Reviewers select refactor candidates in the dashboard and use the prompt export to hand AI a focused cleanup scope.
 
 The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph. The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
