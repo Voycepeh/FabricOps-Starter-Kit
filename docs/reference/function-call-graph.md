@@ -93,6 +93,47 @@ The point is to avoid letting fast prototypes quietly become long term technical
 
 ## Dashboard context
 
+The dashboard suggestions are review hints, not automatic judgments.
+
+```text
+How helper suggestions should be read
+
+Public function
+A function that users can call directly.
+
+Shared helper
+A helper used by several functions. Be careful before changing it.
+
+Used by one function
+The helper has one distinct caller.
+
+This does not mean the helper is bad.
+Keep it if it makes the code easier to read, avoids repeated code, is used several times inside the same caller, handles a tricky step, or calls itself recursively.
+
+Review for merge
+The helper has one distinct caller and is used once by that caller.
+
+This is the stronger cleanup signal.
+It usually means the helper is defined, called once, and may not add enough meaning to stay separate.
+
+Recursive helper
+The helper calls itself.
+
+Do not treat this as a simple inline or merge case.
+
+Used several times in one function
+The helper has one distinct caller, but that caller uses it more than once.
+
+This is usually a reason to keep or review carefully, not a reason to remove it automatically.
+
+Heavily used helper
+A helper used by many functions.
+
+Change carefully because many things may depend on it.
+```
+
+A helper should only become a strong inline or merge suggestion when it is both defined separately and used once only by its caller.
+
 The generated review surfaces are:
 
 Avoid these patterns:
