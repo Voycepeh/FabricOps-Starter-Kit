@@ -105,7 +105,7 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
         "fabricops_kit.config.shared.get_store",
     },
     "run_table_guardrails": {
-        "fabricops_kit.config.shared._current_audit_timestamp",
+        "fabricops_kit.config.shared.get_current_audit_timestamp",
         "fabricops_kit.config.shared.get_audit_timezone",
         "fabricops_kit.config.shared._validate_audit_timezone",
     },
@@ -2172,7 +2172,7 @@ ROLE_TAGS_BY_NAME = {
         "high_fanout_shared",
     ],
     "get_default_fabric_context": ["internal_resolver", "runtime_context_provider", "shared_internal_service"],
-    "_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
+    "get_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
     "get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
     "build_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
     "_validate_framework_config": ["internal_validator", "config_validator"],

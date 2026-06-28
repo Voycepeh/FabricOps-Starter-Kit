@@ -66,7 +66,14 @@ The question is not whether the code works.
 
 The question is whether the structure is still simple enough to keep.
 
-## The workflow
+* public callables depending directly on other public callables
+* internal helpers depending directly on public callables
+* public owner files defining more than one public function
+* public owner files defining classes
+* public function names not matching their owner file names
+* support classes, dataclasses, or value objects living outside `shared.py`
+* forbidden grouping files such as `public.py`, `models.py`, `classes.py`, `adapter.py`, `adapters.py`, `resolver.py`, or `resolvers.py`
+* generated reference outputs drifting away from the codebase
 
 The intended workflow is:
 
@@ -88,10 +95,12 @@ The point is to avoid letting fast prototypes quietly become long term technical
 
 The generated review surfaces are:
 
-- [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) shows how public functions, shared helpers, and private helpers connect across the package. Use it to inspect function dependencies, architecture boundaries, and cleanup candidates.
-- [Function Inventory](../assets/function-inventory.html) focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.
+Avoid these patterns:
 
-Use the Function Call Graph Dashboard first when you are deciding whether a public callable is clean enough to keep. Use Function Inventory when the graph points to function-level code assets that need closer review or when you need to batch related function assets for cleanup planning.
+```text
+public callable → public callable
+internal helper → public callable
+```
 
 ## Cleanup packets
 
@@ -101,7 +110,9 @@ The packet gives AI enough context to help with the next step without asking it 
 
 The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph. The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
-Both packet types are designed to keep the cleanup focused on the selected function or assets, the identified risks, the compatibility mode, and the tests that should be reviewed before changes are merged.
+When shared logic is needed, it should usually move into a helper that both public functions can call safely.
+
+### Long nested chains
 
 Example packet shape:
 
@@ -164,4 +175,4 @@ Validate that it is useful.
 Then make the implementation good enough to keep.
 ```
 
-The Function Call Graph exists because AI assisted development should be fast, but the repository still needs a maintainability checkpoint before messy prototypes become permanent.
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
