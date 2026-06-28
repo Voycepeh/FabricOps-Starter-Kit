@@ -90,6 +90,7 @@ For the full rule, see:
 The main violations we want to catch are:
 
 * public callables depending directly on other public callables
+* internal helpers depending directly on public callables
 * public owner files defining more than one public function
 * public owner files defining classes
 * public function names not matching their owner file names
@@ -122,10 +123,11 @@ The intended pattern is simple:
 public owner file → shared.py → internal implementation details
 ```
 
-Avoid this pattern:
+Avoid these patterns:
 
 ```text
-public callable → public callable → public callable
+public callable → public callable
+internal helper → public callable
 ```
 
 Public callables should be clean entry points. Shared logic belongs behind them, not inside a chain of public function calls.
