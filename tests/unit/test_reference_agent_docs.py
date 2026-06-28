@@ -536,6 +536,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "inline single-use helper" not in dashboard_text
     assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
     assert "Helper suggestions are review hints, not automatic judgments." in inventory_text
+    assert "function timesUsedLabel(count)" in inventory_text
+    assert "Times used:" in inventory_text
+    assert "Used once" in inventory_text
+    assert "Used several times" in inventory_text
+    assert "one call site" not in inventory_text
+    assert "Call sites:" not in inventory_text
 
     assert "Function Inventory" in inventory_text
     assert "The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text

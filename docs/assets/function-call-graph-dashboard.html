@@ -856,7 +856,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-28 21:53 SGT<span
+        <strong>Generated at:</strong> 2026-06-28 22:13 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -1598,7 +1598,7 @@
           );
         if (n.helper_cleanup_candidate)
           chips.push(
-            '<span class="badge muted" title="Review only if merging this helper improves readability.">Review for merge</span>',
+            '<span class="badge muted" title="This helper is used by one function, and that function uses it once. Review whether keeping it separate makes the code easier to read.">Review for merge</span>',
           );
         if ((n.used_outside_flow ?? 0) > 0)
           chips.push(
