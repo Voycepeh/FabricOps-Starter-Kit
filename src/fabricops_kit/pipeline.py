@@ -19,7 +19,7 @@ from .guardrails import (
 )
 from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
-from .config.shared import _current_audit_timestamp, get_audit_timezone, resolve_fabric_context
+from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -237,7 +237,7 @@ def _active_pipeline_context() -> _PipelineRunContext | None:
 
 
 def _now_iso(config: Any = None) -> str:
-    return _current_audit_timestamp(config=config)
+    return get_current_audit_timestamp(config=config)
 
 
 def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
@@ -656,18 +656,6 @@ def _display_guardrail_results_workflow(
     raise ValueError("mode must be one of: summary, detailed, debug")
 
 
-def _add_audit_columns(dataframe: Any, *, run_id: str, pipeline_name: str, config: Any = None):
-    """Return a DataFrame with standard FabricOps target audit columns."""
-    from pyspark.sql import functions as F
-
-    audit_created_at = _current_audit_timestamp(config=config)
-    return (
-        dataframe.withColumn("_fabricops_run_id", F.lit(run_id))
-        .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
-        .withColumn("_fabricops_created_at", F.lit(audit_created_at))
-    )
-
-
 def _prepare_pipeline_table_configs_workflow(
     table_configs: list[dict[str, Any]],
     default_settings: Mapping[str, Any],
@@ -743,17 +731,23 @@ def _prepare_pipeline_table_configs_workflow(
                 "stage": stage,
             }
         else:
+            from pyspark.sql import functions as F
+
             target_layer = merged_config.get("target_layer", merged_config["layer"])
             target_name = merged_config.get("target_name", merged_config["table_name"])
             target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
+            audit_created_at = get_current_audit_timestamp(
+                config=merged_config.get("config", default_settings.get("config"))
+            )
+            audited_df = (
+                merged_config["df"]
+                .withColumn("_fabricops_run_id", F.lit(run_id))
+                .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
+                .withColumn("_fabricops_created_at", F.lit(audit_created_at))
+            )
             enriched_table = {
                 **merged_config,
-                "df": _add_audit_columns(
-                    merged_config["df"],
-                    run_id=run_id,
-                    pipeline_name=pipeline_name,
-                    config=merged_config.get("config", default_settings.get("config")),
-                ),
+                "df": audited_df,
                 "dataset_name": dataset_name,
                 "stage": stage,
                 "target_layer": target_layer,

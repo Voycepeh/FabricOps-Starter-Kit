@@ -136,6 +136,8 @@ A public callable can become hard to reason about when it pulls in too many down
 
 ![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
 
+When shared logic is needed, it should usually move into a helper that both public functions can call safely.
+
 ### Long nested chains
 
 Long nested chains make it harder to understand where the real work happens.

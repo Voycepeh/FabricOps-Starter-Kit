@@ -20,7 +20,7 @@ from fabricops_kit.config import (
 )
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import (
-    _current_audit_timestamp,
+    get_current_audit_timestamp,
     _get_active_metadata_tables,
     _validate_audit_timezone,
     _validate_framework_config,
@@ -506,14 +506,17 @@ def test_audit_timezone_defaults_validates_and_fails_clearly():
         _validate_audit_timezone("Singapore")
 
 
-def test_framework_config_and_current_audit_timestamp_use_configured_timezone():
-    """Verify framework config and current audit timestamp use configured timezone."""
+def test_framework_config_and_get_current_audit_timestamp_use_configured_timezone():
+    """Verify framework config and get current audit timestamp use configured timezone."""
     config = FrameworkConfig(
         **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
     )
 
     assert config.audit_timezone == "Asia/Singapore"
-    assert _current_audit_timestamp(config=config).endswith("+08:00")
+    assert get_current_audit_timestamp(config=config).endswith("+08:00")
+
+    with pytest.raises(ValueError, match='Invalid FABRICOPS_AUDIT_TIMEZONE: "Singapore"'):
+        get_current_audit_timestamp(timezone_name="Singapore")
 
 
 def test_env_config_template_exposes_audit_timezone_setting():
@@ -558,7 +561,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     assert "PIPELINE_STARTED_AT" not in pipeline_source
     assert "pipeline_started_at=_now_iso()" in pipeline_helper_source
     assert "def _now_iso(config: Any = None) -> str:" in pipeline_helper_source
-    assert "return _current_audit_timestamp(config=config)" in pipeline_helper_source
+    assert "return get_current_audit_timestamp(config=config)" in pipeline_helper_source
 
 
 def test_config_workflow_role_boundaries_do_not_add_workflow_to_workflow_signal():
@@ -686,5 +689,5 @@ def test_env_config_template_imports_config_from_root_only():
 def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
-    assert "from .config.shared import _current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from .config.shared import get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/data_profiling/shared.py").read_text(encoding="utf-8")
