@@ -36,9 +36,9 @@ Use the finder below to search 27 public functions and 7 public classes. Impleme
     Maintainer inventory metrics:
 
     - Source Python files count: 20
-    - Total callables: 360
+    - Total callables: 373
     - Supporting functions: 82
-    - Private helpers to review: 244
+    - Private helpers to review: 257
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.
@@ -251,7 +251,7 @@ Use the finder below to search 27 public functions and 7 public classes. Impleme
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 15</span></summary><ul><li><code>_active_steward_count</code></li><li><code>_existing_table_columns</code></li><li><code>_metadata_schema_field_names</code></li><li><code>_metadata_table_definitions</code></li><li><code>_metadata_table_path</code></li><li><code>_write_bootstrap_table</code></li><li><code>_validate_framework_config</code></li><li><code>get_store</code></li><li><code>_empty_dataframe_for_schema</code></li><li><code>_is_table_not_found_error</code></li><li><code>_spark_types</code></li><li><code>_string_metadata_schema</code></li><li><code>_typed_metadata_schema</code></li><li><code>_normalize_path_config</code></li><li><code>_validate_audit_timezone</code></li></ul></details>
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 26</span></summary><ul><li><code>_active_steward_count</code></li><li><code>_existing_table_columns</code></li><li><code>_metadata_schema_field_names</code></li><li><code>_metadata_table_definitions</code></li><li><code>_metadata_table_path</code></li><li><code>_resolved_metadata_table_names</code></li><li><code>_validate_setup_metadata_config</code></li><li><code>_write_bootstrap_table</code></li><li><code>get_store</code></li><li><code>_empty_dataframe_for_schema</code></li><li><code>_is_table_not_found_error</code></li><li><code>_metadata_data_access_schema</code></li><li><code>_metadata_data_agreement_evidence_schema</code></li><li><code>_metadata_data_agreement_schema</code></li><li><code>_metadata_data_catalogue_schema</code></li><li><code>_metadata_data_lineage_table_schema</code></li><li><code>_metadata_data_steward_schema</code></li><li><code>_metadata_enrichment_rules_schema</code></li><li><code>_metadata_guardrail_results_schema</code></li><li><code>_metadata_guardrail_rules_schema</code></li><li><code>_metadata_notebook_registry_schema</code></li><li><code>_metadata_pipeline_runs_schema</code></li><li><code>_normalize_path_config</code></li><li><code>_audit_fields</code></li><li><code>_schema</code></li><li><code>_spark_types</code></li></ul></details>
   </div>
 </article>
 <article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.">

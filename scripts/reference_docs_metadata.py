@@ -413,8 +413,14 @@ PUBLIC_SYMBOL_DOCS = [
                        '    env="Sandbox",\n'
                        ')',
   'related_functions': ['setup_notebook', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Prepares FabricOps metadata tables through configured metadata target ABFSS '
-                      'paths, not Spark partial namespaces or an attached default lakehouse.',
+  'expanded_purpose': 'Prepares the canonical FabricOps metadata tables METADATA_DATA_ACCESS, '
+                      'METADATA_DATA_AGREEMENT, METADATA_DATA_AGREEMENT_EVIDENCE, '
+                      'METADATA_DATA_CATALOGUE, METADATA_DATA_LINEAGE_TABLE, '
+                      'METADATA_DATA_STEWARD, METADATA_ENRICHMENT_RULES, '
+                      'METADATA_GUARDRAIL_RESULTS, METADATA_GUARDRAIL_RULES, '
+                      'METADATA_NOTEBOOK_REGISTRY, and METADATA_PIPELINE_RUNS through '
+                      'configured metadata target ABFSS paths, not Spark partial namespaces '
+                      'or an attached default lakehouse.',
   'when_to_use': 'Use after setup_notebook in 00_env_config when bootstrapping or validating the '
                  'metadata store for an environment.',
   'glossary_terms': ['metadata lakehouse', 'evidence'],

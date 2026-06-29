@@ -440,6 +440,63 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     assert checked_paths == ["abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/dbo/METADATA_DATA_AGREEMENT"]
 
 
+
+def test_setup_metadata_tables_bootstrap_schemas_use_typed_contracts():
+    """Verify metadata bootstrap schemas use typed columns for canonical contracts."""
+    import importlib
+
+    config_module = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
+    definitions = config_module._metadata_table_definitions(framework_config())
+
+    def type_name(table: str, field_name: str) -> str:
+        schema = definitions[table]
+        fields = getattr(schema, "fields", [])
+        field = next(item for item in fields if item.name == field_name)
+        return type(field.dataType).__name__
+
+    assert list(definitions) == [
+        "METADATA_DATA_ACCESS",
+        "METADATA_DATA_AGREEMENT",
+        "METADATA_DATA_AGREEMENT_EVIDENCE",
+        "METADATA_DATA_CATALOGUE",
+        "METADATA_DATA_LINEAGE_TABLE",
+        "METADATA_DATA_STEWARD",
+        "METADATA_ENRICHMENT_RULES",
+        "METADATA_GUARDRAIL_RESULTS",
+        "METADATA_GUARDRAIL_RULES",
+        "METADATA_NOTEBOOK_REGISTRY",
+        "METADATA_PIPELINE_RUNS",
+    ]
+    assert type_name("METADATA_DATA_STEWARD", "is_active") == "BooleanType"
+    assert type_name("METADATA_DATA_STEWARD", "effective_from") == "DateType"
+    assert type_name("METADATA_DATA_AGREEMENT", "approved_usage_internal") == "BooleanType"
+    assert type_name("METADATA_DATA_AGREEMENT", "approved_usage_external") == "BooleanType"
+    assert type_name("METADATA_DATA_AGREEMENT", "approved_usage_research") == "BooleanType"
+    assert type_name("METADATA_DATA_AGREEMENT", "start_date") == "DateType"
+    assert type_name("METADATA_DATA_AGREEMENT_EVIDENCE", "file_size") == "LongType"
+    assert type_name("METADATA_DATA_AGREEMENT_EVIDENCE", "uploaded_at") == "TimestampType"
+    assert type_name("METADATA_NOTEBOOK_REGISTRY", "registered_at") == "TimestampType"
+    assert type_name("METADATA_NOTEBOOK_REGISTRY", "superseded_at") == "TimestampType"
+
+
+def test_setup_metadata_tables_has_no_cross_file_private_dependency():
+    """Verify setup metadata tables avoids cross-file private helper imports."""
+    source = Path("src/fabricops_kit/config/setup_metadata_tables.py").read_text(encoding="utf-8")
+
+    assert "_validate_framework_config" not in source
+    assert "from fabricops_kit.data_agreement import" not in source
+    assert "from fabricops_kit.governance_review import" not in source
+    assert "fabricops_kit.io.shared" not in source
+
+
+def test_reference_generator_has_no_setup_metadata_tables_special_case():
+    """Verify docs generation does not patch setup metadata tables specially."""
+    source = Path("scripts/generate_function_reference.py").read_text(encoding="utf-8")
+
+    assert "setup_page = CALLABLE_REFERENCE_DIR / \"setup_metadata_tables.md\"" not in source
+    assert "config/__init__.py:171" not in source
+    assert "data-callable-name=\"setup_metadata_tables\"' not in index_text" not in source
+
 def test_audit_timezone_defaults_validates_and_fails_clearly():
     """Verify audit timezone defaults validates and fails clearly."""
     assert _validate_audit_timezone(None) == "UTC"

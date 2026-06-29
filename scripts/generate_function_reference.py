@@ -5886,19 +5886,6 @@ def main() -> None:
         newline="\n",
     )
 
-    setup_page = CALLABLE_REFERENCE_DIR / "setup_metadata_tables.md"
-    if setup_page.exists():
-        setup_text = setup_page.read_text(encoding="utf-8")
-        setup_text = setup_text.replace("## Signature\n\nNot documented yet", "## Signature\n\n```python\ndef setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]\n```")
-        setup_text = setup_text.replace("`fabricops_kit/config/shared.py`", "`fabricops_kit/config/__init__.py:171`")
-        setup_text = setup_text.replace("src/fabricops_kit/config/shared.py", "src/fabricops_kit/config/__init__.py")
-        setup_page.write_text(setup_text, encoding="utf-8")
-
-    index_text = REFERENCE_PATH.read_text(encoding="utf-8") if REFERENCE_PATH.exists() else ""
-    if 'data-callable-name="setup_metadata_tables"' not in index_text and "## Public functions and classes" in index_text:
-        setup_article = '\n<article id="config-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create or validate all FabricOps metadata tables through one setup action.">\n  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>\n  <p>Create or validate all FabricOps metadata tables through one setup action.</p>\n</article>\n'
-        index_text = index_text.replace("## Public functions and classes\n", "## Public functions and classes\n" + setup_article, 1)
-        REFERENCE_PATH.write_text(index_text, encoding="utf-8", newline="\n")
     _remove_stale_function_taxonomy_audit()
 
 
