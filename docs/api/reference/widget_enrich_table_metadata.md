@@ -67,9 +67,9 @@ Render a consolidated column enrichment widget.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2720`
+`fabricops_kit/widgets/widget_enrich_table_metadata.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2720-L2735">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L10-L46">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -119,11 +119,11 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `guardrail_state` | `Mapping[str, Any]` | Yes | Not documented yet |
-| `spark_session` | `Any` | Yes | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
-| `source_notebook_type` | `str` | No | Not documented yet |
-| `created_by_role` | `str` | No | Not documented yet |
+| `guardrail_state` | `Mapping[str, Any]` | Yes | Guardrail target state containing table identity and catalogue profile rows for enrichment. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used when committing enrichment metadata rows. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
+| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
+| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
 
 ## Returns
 

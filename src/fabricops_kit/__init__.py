@@ -16,11 +16,6 @@ from .config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from .data_agreement import (
-    widget_render_agreement_evidence,
-    widget_render_data_agreement,
-    widget_render_data_steward,
-)
 from .data_profiling import profile_dataframe
 from .io import (
     read_lakehouse_csv,
@@ -40,13 +35,16 @@ from .pipeline import (
     write_pipeline_lineage,
     write_pipeline_run_summary,
 )
-from .governance_review import (
-    get_latest_metadata_catalogue,
-    widget_select_guardrail_target,
-    widget_enrich_table_metadata,
-    widget_author_schema_freshness_profile_rules,
+from .governance_review import get_latest_metadata_catalogue
+from .widgets import (
     widget_author_dq_rules,
+    widget_author_schema_freshness_profile_rules,
+    widget_enrich_table_metadata,
+    widget_render_agreement_evidence,
+    widget_render_data_agreement,
+    widget_render_data_steward,
     widget_review_guardrail_governance,
+    widget_select_guardrail_target,
 )
 
 

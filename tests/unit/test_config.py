@@ -542,8 +542,8 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     ]:
         assert rows[qn]["function_type"] == "Private helper"
         assert rows[qn]["layer"] == "private_helper"
-    assert rows["fabricops_kit.data_agreement.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
-    assert rows["fabricops_kit.data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]
+    assert rows["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
+    assert rows["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]
 
 
 def test_config_public_import_contract_and_package_shape():

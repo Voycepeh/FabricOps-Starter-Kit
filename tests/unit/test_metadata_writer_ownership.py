@@ -146,7 +146,7 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         assert "write_lakehouse_table_core" not in source
 
     for wrapper_name, workflow_name in workflow_by_wrapper.items():
-        wrapper_source = _function_source("governance_review.py", wrapper_name)
+        wrapper_source = _function_source(f"widgets/{wrapper_name}.py", wrapper_name)
         wrapper_tree = ast.parse(wrapper_source)
         wrapper_def = next(node for node in wrapper_tree.body if isinstance(node, ast.FunctionDef))
         wrapper_calls = {node.func.id for node in ast.walk(wrapper_def) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}

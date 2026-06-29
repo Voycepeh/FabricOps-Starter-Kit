@@ -234,19 +234,19 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "local_fallback_name", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
             ]
         },
-        "fabricops_kit.data_agreement.widget_render_agreement_evidence": {
+        "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.data_agreement.widget_render_data_agreement": {
+        "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.data_agreement.widget_render_data_steward": {
+        "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
@@ -354,7 +354,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.widget_author_dq_rules": {
+        "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules": {
             "parameters": [
                 {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "dq_authoring_mode", "kind": "KEYWORD_ONLY", "required": False},
@@ -370,7 +370,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "commit", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules": {
+        "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules": {
             "parameters": [
                 {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
@@ -381,7 +381,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "commit", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.widget_enrich_table_metadata": {
+        "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata": {
             "parameters": [
                 {"name": "guardrail_state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": True},
@@ -390,14 +390,14 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "created_by_role", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.widget_review_guardrail_governance": {
+        "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance": {
             "parameters": [
                 {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.widget_select_guardrail_target": {
+        "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target": {
             "parameters": [
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},

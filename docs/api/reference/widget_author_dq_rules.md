@@ -59,9 +59,9 @@ Render interactive manual DQ guardrail authoring controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2765`
+`fabricops_kit/widgets/widget_author_dq_rules.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2765-L2794">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L10-L75">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -118,18 +118,18 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Not documented yet |
-| `dq_authoring_mode` | `str` | No | Not documented yet |
-| `rule_type` | `str` | No | Not documented yet |
-| `selected_columns` | `Iterable[str] \| None` | No | Not documented yet |
-| `parameters` | `Mapping[str, Any] \| None` | No | Not documented yet |
-| `severity` | `str` | No | Not documented yet |
-| `spark_session` | `Any` | No | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
-| `bypass_reason` | `str` | No | Not documented yet |
-| `source_notebook_type` | `str` | No | Not documented yet |
-| `created_by_role` | `str` | No | Not documented yet |
-| `commit` | `bool` | No | Not documented yet |
+| `state` | `Mapping[str, Any]` | Yes | Guardrail target state returned by the target selector or prepared by a notebook workflow. |
+| `dq_authoring_mode` | `str` | No | Authoring mode for the widget. The public widget supports manual rule authoring. |
+| `rule_type` | `str` | No | Initial DQ rule type selected in the widget. |
+| `selected_columns` | `Iterable[str] \| None` | No | Initial columns selected for the rule. |
+| `parameters` | `Mapping[str, Any] \| None` | No | Initial rule parameters. |
+| `severity` | `str` | No | Initial rule severity. |
+| `spark_session` | `Any` | No | Fabric Spark session used when committing metadata rows. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
+| `bypass_reason` | `str` | No | Governance-bypass reason used when applying rules immediately. |
+| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
+| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
+| `commit` | `bool` | No | When True, commit the selected rule instead of preview-only behavior. |
 
 ## Returns
 

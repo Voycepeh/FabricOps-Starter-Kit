@@ -1,0 +1,29 @@
+"""Public widget entrypoint for ``widget_render_data_steward``."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.data_agreement import _render_maintenance_widget_shared_workflow
+
+
+def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Render append-only data steward create/update maintenance.
+
+    Parameters
+    ----------
+    spark : pyspark.sql.SparkSession
+        Fabric Spark session used for metadata reads and append-only writes.
+    context : dict[str, Any], optional
+        Advanced override for the active Fabric context. When omitted, the
+        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
+
+    Returns
+    -------
+    dict[str, Any]
+        Rendered widget controls keyed for notebook customization.
+
+    """
+    config, env, _context = resolve_fabric_context(context=context)
+    return _render_maintenance_widget_shared_workflow(spark=spark, config=config, env=env, kind="data_steward_widget")
