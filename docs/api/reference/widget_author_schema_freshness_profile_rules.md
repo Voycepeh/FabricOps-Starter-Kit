@@ -59,9 +59,9 @@ Render interactive schema, freshness, and profile-behavior guardrail authoring c
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2743`
+`fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2743-L2762">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L10-L53">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -113,13 +113,13 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Not documented yet |
-| `spark_session` | `Any` | No | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
-| `bypass_reason` | `str` | No | Not documented yet |
-| `source_notebook_type` | `str` | No | Not documented yet |
-| `created_by_role` | `str` | No | Not documented yet |
-| `commit` | `bool` | No | Not documented yet |
+| `state` | `Mapping[str, Any]` | Yes | Guardrail target state returned by the target selector or prepared by a notebook workflow. |
+| `spark_session` | `Any` | No | Fabric Spark session used when committing metadata rows. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
+| `bypass_reason` | `str` | No | Governance-bypass reason used when applying rules immediately. |
+| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
+| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
+| `commit` | `bool` | No | When True, commit the selected rule instead of preview-only behavior. |
 
 ## Returns
 

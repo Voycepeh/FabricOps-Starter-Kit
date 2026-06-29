@@ -68,6 +68,59 @@ def test_public_callable_list_includes_guardrail_authoring_widgets():
     assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
 
 
+def test_widget_public_callables_live_under_widgets_package():
+    """Verify the public widget surface is owned by fabricops_kit.widgets."""
+    import fabricops_kit.data_agreement as data_agreement
+    import fabricops_kit.widgets as widgets
+
+    widget_names = {
+        "widget_author_dq_rules",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_enrich_table_metadata",
+        "widget_render_agreement_evidence",
+        "widget_render_data_agreement",
+        "widget_render_data_steward",
+        "widget_review_guardrail_governance",
+        "widget_select_guardrail_target",
+    }
+    for name in widget_names:
+        assert hasattr(widgets, name)
+        assert getattr(widgets, name).__module__.startswith(f"fabricops_kit.widgets.{name}")
+    assert widget_names.isdisjoint(vars(data_agreement))
+    assert widget_names.isdisjoint(vars(governance))
+
+
+def test_widget_modules_do_not_call_public_widget_functions():
+    """Verify widget entrypoint modules do not call other public widget functions."""
+    import ast
+
+    root = Path(__file__).parents[2]
+    widgets_dir = root / "src" / "fabricops_kit" / "widgets"
+    public_widget_names = {
+        "widget_author_dq_rules",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_enrich_table_metadata",
+        "widget_render_agreement_evidence",
+        "widget_render_data_agreement",
+        "widget_render_data_steward",
+        "widget_review_guardrail_governance",
+        "widget_select_guardrail_target",
+    }
+    offenders = []
+    for path in widgets_dir.glob("widget_*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        owned = path.stem
+        for node in ast.walk(tree):
+            called = None
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                called = node.func.id
+            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                called = node.func.attr
+            if called in public_widget_names - {owned}:
+                offenders.append(f"{path.relative_to(root)} calls {called}")
+    assert offenders == []
+
+
 def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():
     """Verify no source tests docs or templates reference removed modules or callables."""
     root = Path(__file__).parents[2]

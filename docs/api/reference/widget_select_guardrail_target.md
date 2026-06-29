@@ -39,9 +39,9 @@ Render an interactive target selector for guardrail authoring and governance rev
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/governance_review.py:2738`
+`fabricops_kit/widgets/widget_select_guardrail_target.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_review.py#L2738-L2740">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L10-L27">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -88,8 +88,8 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark_session` | `Any` | Yes | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to read metadata catalogue, enrichment, and guardrail rule rows. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
 
 ## Returns
 

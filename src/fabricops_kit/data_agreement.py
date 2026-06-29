@@ -8,7 +8,6 @@ are append-only and use framework-managed runtime audit columns.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import date, datetime
 import hashlib
 import json
@@ -19,6 +18,7 @@ from typing import Any
 from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook, coerce_metadata_row_types
+from .widgets.shared import _html_escape, _render_custom_fields, _render_searchable_selector, _require_ipywidgets, _standard_widget, _widget_common
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -59,18 +59,10 @@ AGREEMENT_EVIDENCE_TYPES = [
     "Supporting Screenshot", "Other",
 ]
 
-
-def _require_ipywidgets():
-    """Return ipywidgets or raise an actionable optional-dependency error."""
-    try:
-        import ipywidgets as widgets
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "The data agreement widget feature requires the 'dq-review' extra. "
-            'Install with: pip install "fabricops-kit[dq-review]"'
-        ) from exc
-    return widgets
-
+_WIDGET_CONFIG_DEFAULTS = {
+    "data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []},
+    "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []},
+}
 FIELD_LABELS = {
     "steward_id": "Steward ID",
     "steward_name": "Steward Name",
@@ -89,13 +81,6 @@ FIELD_LABELS = {
     "approved_usage_external": "Approved Usage - External",
     "approved_usage_research": "Approved Usage - Research",
     "evidence_type": "Evidence Type",
-}
-_WIDGET_STYLE = {"description_width": "150px"}
-_WIDGET_LAYOUT_WIDTH = "600px"
-_TEXTAREA_HEIGHT = "80px"
-_WIDGET_CONFIG_DEFAULTS = {
-    "data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []},
-    "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []},
 }
 
 
@@ -178,189 +163,6 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     if kind == "data_agreement_widget":
         hidden.update(DATA_AGREEMENT_GENERATED_FIELDS)
     return [field for field in configured if field not in hidden]
-
-
-def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
-    """Return common style and layout keyword arguments for form controls."""
-    common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
-    layout_class = getattr(widgets_module, "Layout", None)
-    if layout_class is not None:
-        kwargs = {"width": _WIDGET_LAYOUT_WIDTH}
-        if textarea:
-            kwargs["height"] = _TEXTAREA_HEIGHT
-        common["layout"] = layout_class(**kwargs)
-    return common
-
-
-def _html_escape(value: Any) -> str:
-    """Return display-safe HTML text for notebook context snippets."""
-    import html
-    return html.escape(str(value or ""))
-
-
-def _render_searchable_selector(
-    *,
-    widgets: Any,
-    label: str,
-    rows: list[dict[str, Any]],
-    label_fn: Callable[[dict[str, Any]], str],
-    value_fn: Callable[[dict[str, Any]], str],
-    placeholder: str = "Search...",
-    max_results: int = 25,
-    search_fields: list[str] | None = None,
-    context_fields: list[tuple[str, str]] | None = None,
-    empty_label: str | None = None,
-    selected_value: str | None = None,
-) -> dict[str, Any]:
-    """Render a table-backed selector with search and stable-value tracking.
-
-    The visible label may be friendly and long, while the selection value remains
-    the stable key produced by ``value_fn``. The returned ``selector`` is the
-    select control used by persistence code, and its ``value`` is never replaced
-    with the display label.
-    """
-    search = widgets.Text(value="", placeholder=placeholder, **_widget_common(widgets, f"Search {label}"))
-    selector = widgets.Select(options=[], **_widget_common(widgets, label))
-    context = widgets.HTML(value="")
-    lookup: dict[str, dict[str, Any]] = {}
-    indexed_rows: list[dict[str, Any]] = []
-
-    def _set_rows(new_rows: list[dict[str, Any]]) -> None:
-        lookup.clear()
-        indexed_rows.clear()
-        for row in new_rows:
-            value = str(value_fn(row) or "").strip()
-            if not value:
-                continue
-            display_label = str(label_fn(row) or value)
-            lookup[value] = row
-            indexed_rows.append({
-                "row": row,
-                "label": display_label,
-                "value": value,
-                "search": " ".join(
-                    [display_label, value, *(str(row.get(field) or "") for field in (search_fields or sorted(str(key) for key in row)))]
-                ).casefold(),
-            })
-
-    def _matching_options(query: str) -> list[tuple[str, str]]:
-        needle = str(query or "").casefold().strip()
-        matches = [item for item in indexed_rows if not needle or needle in item["search"]]
-        return [(item["label"], item["value"]) for item in matches[:max_results]]
-
-    def _render_context(value: Any) -> None:
-        row = lookup.get(str(value or ""))
-        context.value = "<br>".join(
-            f"<b>{_html_escape(field_label)}:</b> {_html_escape(row.get(field, ''))}"
-            for field, field_label in context_fields
-        ) if row and context_fields else ("<em>No record selected.</em>" if context_fields else "")
-
-    def _apply_filter(preferred_value: Any = None) -> None:
-        current = str(preferred_value if preferred_value is not None else selector.value or "")
-        options = _matching_options(search.value)
-        if empty_label is not None:
-            options = [(empty_label, ""), *options]
-        selector.options = options
-        values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-        if current and current in lookup and current not in values and not str(search.value or "").strip():
-            row = lookup[current]
-            options = [(str(label_fn(row) or current), current), *options]
-            values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-        non_empty_values = [value for value in values if value]
-        if current in values and (current or not str(search.value or "").strip()):
-            selector.value = current
-        elif non_empty_values:
-            selector.value = non_empty_values[0]
-        elif values:
-            selector.value = values[0]
-        else:
-            selector.value = None
-        _render_context(selector.value)
-
-    def _on_search(change: dict[str, Any]) -> None:
-        if change.get("name") == "value":
-            _apply_filter(selector.value)
-
-    def _on_select(change: dict[str, Any]) -> None:
-        if change.get("name") == "value":
-            _render_context(change.get("new"))
-
-    def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
-        _set_rows(new_rows)
-        _apply_filter(selected)
-
-    def _select_value(value: str | None) -> None:
-        _apply_filter(str(value or ""))
-
-    search.observe(_on_search, names="value")
-    selector.observe(_on_select, names="value")
-    _refresh_rows(rows, selected_value)
-    container = widgets.VBox([search, selector, context])
-    selector.search_box = search
-    selector.context_html = context
-    selector.refresh_rows = _refresh_rows
-    selector.select_value = _select_value
-    selector.rows_by_value = lookup
-    return {
-        "container": container,
-        "search": search,
-        "selector": selector,
-        "context": context,
-        "rows_by_value": lookup,
-        "refresh_rows": _refresh_rows,
-    }
-
-def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Create widgets for configured organization-specific fields.
-
-    Parameters
-    ----------
-    config : list[dict[str, Any]] or dict[str, Any]
-        Custom-field definitions or a widget config containing ``custom_fields``.
-    values : dict[str, Any], optional
-        Previously stored values used to prefill update forms.
-
-    Returns
-    -------
-    dict[str, ipywidgets.Widget]
-        Widgets keyed by custom-field key.
-
-    Notes
-    -----
-    Supported field types are ``text``, ``textarea``, ``select``,
-    ``multiselect``, ``date``, and ``boolean``.
-
-    """
-    widgets = _require_ipywidgets()
-
-    definitions = config.get("custom_fields", []) if isinstance(config, dict) else config
-    current = values or {}
-    rendered: dict[str, Any] = {}
-    for definition in definitions:
-        key = str(definition["key"])
-        field_type = str(definition.get("type", "text")).lower()
-        label = str(definition.get("label", FIELD_LABELS.get(key, key.replace("_", " ").title())))
-        common = _widget_common(widgets, label, textarea=field_type == "textarea")
-        value = current.get(key)
-        if field_type == "textarea":
-            widget = widgets.Textarea(value=str(value or ""), **common)
-        elif field_type == "select":
-            options = list(definition.get("options", []))
-            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-            default_value = value if value in option_values else option_values[0] if option_values else None
-            widget = widgets.Dropdown(options=options, value=default_value, **common)
-        elif field_type == "multiselect":
-            widget = widgets.SelectMultiple(options=list(definition.get("options", [])), value=tuple(value or ()), **common)
-        elif field_type == "date":
-            widget = widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **common)
-        elif field_type == "boolean":
-            widget = widgets.Checkbox(value=_to_bool(value), **common)
-        elif field_type == "text":
-            widget = widgets.Text(value=str(value or ""), **common)
-        else:
-            raise ValueError(f"Unsupported custom field type: {field_type}")
-        rendered[key] = widget
-    return rendered
 
 
 def _collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widgets_by_key: dict[str, Any]) -> dict[str, Any]:
@@ -1049,22 +851,6 @@ def get_selected_agreement() -> dict[str, Any]:
     return dict(_SELECTED_AGREEMENT)
 
 
-def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
-    widgets = _require_ipywidgets()
-    description = FIELD_LABELS.get(field, field.replace("_", " ").title())
-    if options is not None:
-        option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-        default_value = value if value in option_values else option_values[0] if option_values else None
-        return widgets.Dropdown(options=options, value=default_value, **_widget_common(widgets, description))
-    if field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
-        return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **_widget_common(widgets, description))
-    if field == "is_active":
-        return widgets.Checkbox(value=True if value == "" else _to_bool(value), **_widget_common(widgets, description))
-    if field in {"business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}:
-        return widgets.Textarea(value=str(value or ""), **_widget_common(widgets, description, textarea=True))
-    return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
-
-
 def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     """Return read-only agreement version context for the notebook form."""
     if not row:
@@ -1408,81 +1194,3 @@ def _render_agreement_evidence_widget_workflow(*, spark: Any, config: Any, env: 
         "save_button": save,
         "output": output,
     }
-
-
-def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render standalone agreement evidence upload controls.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads, file writes, and
-        append-only evidence metadata writes.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Rendered controls for selecting an agreement version, pasting
-        metadata lakehouse evidence file paths, refreshing agreement options,
-        and saving evidence metadata rows.
-
-    Notes
-    -----
-    This public wrapper is intended for the separate-widget ``01_agreement`` layout.
-    Evidence files must be uploaded manually to the metadata lakehouse
-    ``Files`` area first. The widget appends one file-reference row per
-    pasted ``Files/...`` path to ``METADATA_DATA_AGREEMENT_EVIDENCE`` and
-    does not read or write binary file content.
-
-    """
-    config, env, _context = resolve_fabric_context(context=context)
-    return _render_agreement_evidence_widget_workflow(
-        spark=spark,
-        config=config,
-        env=env,
-    )
-
-
-def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render append-only data steward create/update maintenance.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads and append-only writes.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Rendered widget controls keyed for notebook customization.
-
-    """
-    config, env, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget_shared_workflow(spark=spark, config=config, env=env, kind="data_steward_widget")
-
-
-def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render append-only agreement create/update maintenance using active stewards.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads and append-only writes.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-
-    Returns
-    -------
-    dict[str, Any]
-        Rendered controls, including read-only generated-identifier context.
-
-    """
-    config, env, _context = resolve_fabric_context(context=context)
-    return _render_maintenance_widget_shared_workflow(spark=spark, config=config, env=env, kind="data_agreement_widget")

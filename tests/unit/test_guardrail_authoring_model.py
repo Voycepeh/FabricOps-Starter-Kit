@@ -10,9 +10,8 @@ from fabricops_kit.governance_review import (
     GUARDRAIL_RESULTS_TABLE,
     GUARDRAIL_RULES_TABLE,
     _get_governance_metadata_schemas,
-    widget_author_dq_rules,
-    widget_author_schema_freshness_profile_rules,
 )
+from fabricops_kit.widgets import widget_author_dq_rules, widget_author_schema_freshness_profile_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
 
 
 @pytest.fixture(autouse=True)
@@ -474,7 +473,7 @@ def test_dq_widget_exposes_only_manual_authoring_actions(monkeypatch):
 def test_governance_review_widget_actions(monkeypatch):
     """Verify governance review widget exposes policy and rule actions."""
     _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.governance_review import widget_review_guardrail_governance
+    from fabricops_kit.widgets import widget_review_guardrail_governance
 
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
     widget = widget_review_guardrail_governance(state)
@@ -491,6 +490,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     """Verify target selector reads catalogue, rules, and governance policy."""
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
+    from fabricops_kit import widgets
 
     catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
     rules = [_rule(metadata_table_key="table-key")]
@@ -501,7 +501,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
         return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.ENRICHMENT_RULES_TABLE: enrichment}[table_name]
 
     monkeypatch.setattr(governance_review, "_read_metadata_table_or_empty", fake_read)
-    state = governance_review.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
+    state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
 
     assert state["environment_name"] == "dev"
     assert state["columns"] == ["order_id"]
@@ -532,6 +532,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
     """Verify authoring widget save writes only METADATA_GUARDRAIL_RULES."""
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
+    from fabricops_kit import widgets
 
     writes = []
 
@@ -554,6 +555,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
     """Verify review widget actions write rule rows, not a separate policy table."""
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
+    from fabricops_kit import widgets
 
     writes = []
 
@@ -563,7 +565,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
     monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
-    widget = governance_review.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
+    widget = widgets.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
     widget["save_rule_action"]("approve")
 
@@ -655,7 +657,7 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
         ],
     }
 
-    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=Spark())
+    widget = widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=Spark())
 
     assert len(widget["rows"]) == 2
     assert list(widget["rows"][0]["sensitivity_label"].options) == ["classified", "restricted", "public"]
@@ -781,7 +783,7 @@ def test_enrichment_widget_exposes_required_authoring_actions(monkeypatch):
 
     config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"], enrichment_context_widget={"custom_fields": []}, enrichment_classification_widget={"custom_fields": []}))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "order_id", "data_type": "int", "profile_run_id": "run", "profile_stage": "target"}], "governance_mode": "governed", "approval_policy": "approval_required"}
-    widget = governance_review.widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=object())
+    widget = widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=object())
 
     assert widget["save_draft_button"].description == "Save draft"
     assert widget["submit_button"].description == "Submit for governance review"
@@ -805,7 +807,7 @@ def test_review_guardrail_governance_actions_and_replace_mapping(monkeypatch):
             _rule(rule_id="old", rule_key="old", activation_state="inactive", is_active=False, review_state="superseded", review_status="superseded"),
         ],
     }
-    widget = governance_review.widget_review_guardrail_governance(state)
+    widget = widget_review_guardrail_governance(state)
 
     assert widget["controls"]["replacement_key"].description == "Supersedes/replacement"
     replaced = widget["save_record_action"]("replace")
