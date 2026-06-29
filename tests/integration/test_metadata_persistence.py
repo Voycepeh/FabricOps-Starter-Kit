@@ -15,6 +15,7 @@ class Table:
     """Minimal table fake exposing columns and active steward count."""
 
     def __init__(self, columns: list[str], count: int = 1) -> None:
+        """Initialize the fake table with columns and an optional count."""
         self.columns = list(columns)
         self._count = count
 
