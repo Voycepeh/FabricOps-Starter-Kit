@@ -46,7 +46,7 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
-    assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
+    assert setup_metadata_tables.__module__ == "fabricops_kit.config"
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -196,12 +196,9 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
         PathConfig(paths={})
 
 
-def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypatch):
-    """Verify setup metadata tables creates missing tables with write helper."""
-    from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
-    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
-    import fabricops_kit.io.shared as io
-    import fabricops_kit.governance_review as governance
+def test_setup_metadata_tables_creates_missing_tables_with_direct_delta_bootstrap(monkeypatch):
+    """Verify setup metadata tables creates missing tables with direct Delta writes."""
+    import fabricops_kit.config as config_module
 
     class Schema:
         def __init__(self, fields):
@@ -210,53 +207,29 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
         def fieldNames(self):  # noqa: N802 - mirrors Spark API
             return list(self._fields)
 
-    class Table:
-        def __init__(self, fields):
-            self.columns = list(fields)
-
     class Spark:
-        def __init__(self):
-            self.created_dataframes = []
-
-        def createDataFrame(self, rows, schema=None):  # noqa: N802 - mirrors Spark API
-            self.created_dataframes.append((list(rows), schema.fieldNames()))
-            return object()
-
-        def sql(self, statement):
-            raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
+        pass
 
     schemas = {
-        DATA_STEWARD_TABLE: Schema(["steward_id"]),
-        DATA_AGREEMENT_TABLE: Schema(["agreement_id"]),
-        DATA_AGREEMENT_EVIDENCE_TABLE: Schema(["agreement_id", "file_path"]),
-        NOTEBOOK_REGISTRY_TABLE: Schema(["agreement_id", "registration_id"]),
+        "METADATA_DATA_STEWARD": Schema(["steward_id"]),
+        "METADATA_DATA_AGREEMENT": Schema(["agreement_id"]),
+        "METADATA_DATA_AGREEMENT_EVIDENCE": Schema(["agreement_id", "file_path"]),
+        "METADATA_NOTEBOOK_REGISTRY": Schema(["agreement_id", "registration_id"]),
         "METADATA_GUARDRAIL_RULES": Schema(["rule_id"]),
     }
-    reads = {table: 0 for table in schemas}
     writes = []
+    paths = []
 
-    def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert target == "metadata"
-        assert context["env"] == "dev"
-        assert schema is None
-        reads[table] += 1
-        if reads[table] == 1:
-            raise RuntimeError("table does not exist")
-        return Table(schemas[table].fieldNames())
+    monkeypatch.setattr(config_module, "_metadata_table_definitions", lambda config: schemas)
+    monkeypatch.setattr(config_module, "_existing_table_columns", lambda spark, path: paths.append(path) or None)
+    monkeypatch.setattr(
+        config_module,
+        "_write_bootstrap_table",
+        lambda *, spark, path, schema, mode: writes.append((path, schema.fieldNames(), mode)),
+    )
+    monkeypatch.setattr(config_module, "_active_steward_count", lambda spark, path: 1)
 
-    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    def write_table(df, table, *, target, context, **kwargs):
-        assert target == "metadata"
-        assert context["env"] == "dev"
-        writes.append((context["env"], target, table, kwargs))
-
-    monkeypatch.setattr(io, "write_lakehouse_table_core", write_table)
-    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
-
-    spark = Spark()
-    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", require_active_steward=True)
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", require_active_steward=True)
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "ready"
@@ -264,54 +237,41 @@ def test_setup_metadata_tables_creates_missing_tables_with_write_helper(monkeypa
     assert result["governance"]["created_tables"] == ["METADATA_GUARDRAIL_RULES"]
     assert result["tables"] == list(schemas)
     assert result["created_tables"] == list(schemas)
+    assert result["skipped_tables"] == []
     assert result["warnings"] == []
     assert result["active_metadata_tables"] == list(schemas)
-    assert [table for _, _, table, _ in writes] == list(schemas)
-    assert all(target == "metadata" for _, target, _, _ in writes)
-    assert all(kwargs == {"schema": None, "mode": "overwrite", "options": {"overwriteSchema": "true"}} for *_, kwargs in writes)
+    assert len(writes) == len(schemas)
+    assert all(path.endswith(f"/Tables/{table}") for path, table in zip(paths, schemas))
+    assert [fields for _, fields, _ in writes] == [schema.fieldNames() for schema in schemas.values()]
+    assert all(mode == "overwrite" for _, _, mode in writes)
     assert result["metadata_schema"] is None
     assert result["fully_qualified_tables"] == list(schemas)
-    assert spark.created_dataframes == [([], schema.fieldNames()) for schema in schemas.values()]
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
-    """Verify setup metadata tables ready without active steward when not required."""
-    import fabricops_kit.io.shared as io
+    """Verify setup metadata tables remains ready without active steward unless required."""
+    import fabricops_kit.config as config_module
 
     class Schema:
-        def __init__(self, fields):
-            self._fields = fields
-
         def fieldNames(self):  # noqa: N802 - mirrors Spark API
-            return list(self._fields)
+            return ["steward_id", "is_active"]
 
-    class Table:
-        def __init__(self, fields):
-            self.columns = list(fields)
+    schemas = {"METADATA_DATA_STEWARD": Schema()}
+    writes = []
 
-    schemas = {"METADATA_DATA_STEWARD": Schema(["steward_id", "is_active"])}
-    reads = []
+    monkeypatch.setattr(config_module, "_metadata_table_definitions", lambda config: schemas)
+    monkeypatch.setattr(config_module, "_existing_table_columns", lambda spark, path: ["steward_id", "is_active"])
+    monkeypatch.setattr(config_module, "_write_bootstrap_table", lambda **kwargs: writes.append(kwargs))
+    monkeypatch.setattr(config_module, "_active_steward_count", lambda spark, path: 0)
 
-    def read_table(table, *, target, context, spark_session=None, **kwargs):
-        assert context["env"] == "dev"
-        assert target == "metadata"
-        reads.append((context["env"], target, table, spark_session))
-        return Table(schemas[table].fieldNames())
-
-    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("valid existing metadata tables should not be recreated"))
-    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [])
-
-    spark = object()
-    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "not_ready"
     assert result["warnings"] == []
     assert result["created_tables"] == []
-    assert reads == [("dev", "metadata", "METADATA_DATA_STEWARD", spark), ("dev", "metadata", "METADATA_DATA_STEWARD", spark)]
+    assert result["skipped_tables"] == ["METADATA_DATA_STEWARD"]
+    assert writes == []
 
 
 def test_active_metadata_tables_are_source_driven_and_include_access_context():
@@ -415,63 +375,39 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
     assert "configured metadata target" in result["warnings"][0]
 
 
-def test_setup_metadata_tables_passes_metadata_schema_to_io_helpers(monkeypatch):
-    """Verify setup metadata tables passes metadata schema to io helpers."""
-    import fabricops_kit.io.shared as io
-
-    class Schema:
-        def __init__(self, fields):
-            self._fields = fields
-        def fieldNames(self):  # noqa: N802
-            return list(self._fields)
-
-    class Table:
-        columns = ["id"]
-
-    class Spark:
-        def createDataFrame(self, rows, schema=None):  # noqa: N802
-            return object()
-
-    schemas = {"METADATA_DATA_AGREEMENT": Schema(["id"])}
-    reads = []
-    writes = []
-
-    def read_table(table, *, target, context, schema=None, spark_session=None):
-        assert context["env"] == "dev"
-        assert target == "metadata"
-        reads.append((table, schema))
-        return Table()
-
-    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr("fabricops_kit.config.shared._get_active_metadata_tables", lambda config: list(schemas))
-    monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append(kwargs))
-    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
-
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", metadata_schema="METADATA")
-
-    assert result["metadata_schema"] == "METADATA"
-    assert result["fully_qualified_tables"] == ["METADATA.METADATA_DATA_AGREEMENT"]
-    assert result["registration_validation"]["metadata_schema"] == "METADATA"
-    assert all(schema == "METADATA" for _, schema in reads)
-    assert writes == []
-
-
-def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
-    """Verify setup metadata tables reports configured metadata schema."""
-    import fabricops_kit.io.shared as io
+def test_setup_metadata_tables_passes_metadata_schema_to_direct_paths(monkeypatch):
+    """Verify setup metadata tables passes metadata schema to direct Lakehouse paths."""
+    import fabricops_kit.config as config_module
 
     class Schema:
         def fieldNames(self):  # noqa: N802
             return ["id"]
 
-    class Table:
-        columns = ["id"]
+    schemas = {"METADATA_DATA_AGREEMENT": Schema()}
+    checked_paths = []
+    writes = []
 
-    class Spark:
-        def createDataFrame(self, rows, schema=None):  # noqa: N802
-            return object()
+    monkeypatch.setattr(config_module, "_metadata_table_definitions", lambda config: schemas)
+    monkeypatch.setattr(config_module, "_existing_table_columns", lambda spark, path: checked_paths.append(path) or ["id"])
+    monkeypatch.setattr(config_module, "_write_bootstrap_table", lambda **kwargs: writes.append(kwargs))
+    monkeypatch.setattr(config_module, "_active_steward_count", lambda spark, path: 1)
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", metadata_schema="METADATA")
+
+    assert result["metadata_schema"] == "METADATA"
+    assert result["fully_qualified_tables"] == ["METADATA.METADATA_DATA_AGREEMENT"]
+    assert result["registration_validation"]["metadata_schema"] == "METADATA"
+    assert checked_paths == ["abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/METADATA/METADATA_DATA_AGREEMENT"]
+    assert writes == []
+
+
+def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
+    """Verify setup metadata tables reports configured metadata schema."""
+    import fabricops_kit.config as config_module
+
+    class Schema:
+        def fieldNames(self):  # noqa: N802
+            return ["id"]
 
     cfg = framework_config()
     metadata_store = cfg.path_config.paths["dev"]["metadata"]
@@ -485,18 +421,20 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
         schema="dbo",
     )
     schemas = {"METADATA_DATA_AGREEMENT": Schema()}
+    checked_paths = []
 
-    monkeypatch.setattr("fabricops_kit.config.shared._get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr("fabricops_kit.governance_review._get_governance_metadata_schemas", lambda: {})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", lambda *args, **kwargs: Table())
-    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: None)
-    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
+    monkeypatch.setattr(config_module, "_metadata_table_definitions", lambda config: schemas)
+    monkeypatch.setattr(config_module, "_existing_table_columns", lambda spark, path: checked_paths.append(path) or ["id"])
+    monkeypatch.setattr(config_module, "_write_bootstrap_table", lambda **kwargs: None)
+    monkeypatch.setattr(config_module, "_active_steward_count", lambda spark, path: 1)
 
-    result = setup_metadata_tables(spark=Spark(), config=cfg, env="dev")
+    result = setup_metadata_tables(spark=object(), config=cfg, env="dev")
 
     assert result["metadata_schema"] == "dbo"
     assert result["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
     assert result["registration_validation"]["fully_qualified_tables"] == ["dbo.METADATA_DATA_AGREEMENT"]
+    assert checked_paths == ["abfss://dev-workspace@onelake.dfs.fabric.microsoft.com/dev-lakehouse-item/Tables/dbo/METADATA_DATA_AGREEMENT"]
+
 
 def test_audit_timezone_defaults_validates_and_fails_clearly():
     """Verify audit timezone defaults validates and fails clearly."""
@@ -564,43 +502,13 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     assert "return get_current_audit_timestamp(config=config)" in pipeline_helper_source
 
 
-def test_config_workflow_role_boundaries_do_not_add_workflow_to_workflow_signal():
-    """Verify config setup role tags avoid workflow-to-workflow architecture signals."""
-    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME, _role_dependency_signals
+def test_config_metadata_bootstrap_role_tags_do_not_reference_retired_workflow():
+    """Verify metadata bootstrap no longer exposes the retired workflow helper role."""
+    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME
 
-    config_roles = {
-        name: tags[0]
-        for name, tags in ROLE_TAGS_BY_NAME.items()
-        if name in {
-            "_setup_notebook_workflow",
-            "_setup_metadata_tables_workflow",
-            "_setup_metadata_table_registry",
-            "_validate_metadata_table_registration",
-            "_run_config_smoke_tests",
-            "_get_store",
-            "_resolve_metadata_schema",
-        }
-    }
-
-    assert config_roles["_setup_notebook_workflow"] == "internal_workflow"
-    assert config_roles["_setup_metadata_tables_workflow"] == "internal_workflow"
-    assert config_roles["_setup_metadata_table_registry"] == "internal_adapter"
-    assert config_roles["_validate_metadata_table_registration"] == "internal_validator"
-    assert config_roles["_run_config_smoke_tests"] == "internal_validator"
-    assert (
-        _role_dependency_signals(
-            config_roles["_setup_metadata_tables_workflow"],
-            config_roles["_validate_metadata_table_registration"],
-        )
-        == ["allowed_internal_role_call"]
-    )
-    assert (
-        _role_dependency_signals(
-            config_roles["_setup_metadata_tables_workflow"],
-            config_roles["_setup_metadata_table_registry"],
-        )
-        == ["allowed_internal_role_call"]
-    )
+    assert "_setup_metadata_tables_workflow" not in ROLE_TAGS_BY_NAME
+    assert ROLE_TAGS_BY_NAME["_setup_notebook_workflow"][0] == "internal_workflow"
+    assert ROLE_TAGS_BY_NAME["_validate_metadata_table_registration"][0] == "internal_validator"
 
 
 def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
@@ -659,7 +567,7 @@ def test_config_public_import_contract_and_package_shape():
     assert Path("src/fabricops_kit/config/models.py").exists() is False
     assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
     assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
-    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
+    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists() is False
     assert Path("src/fabricops_kit/config/shared.py").exists()
     assert config_package.__file__.endswith("config/__init__.py")
     assert RootFabricStore is ConfigFabricStore
@@ -670,7 +578,7 @@ def test_config_public_import_contract_and_package_shape():
     assert root_setup_notebook is fabricops_kit.setup_notebook
     assert root_setup_metadata_tables is fabricops_kit.setup_metadata_tables
     assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
-    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
+    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config"
     assert fabricops_kit.get_fabric_context.__module__ == "fabricops_kit.config.get_fabric_context"
 
 

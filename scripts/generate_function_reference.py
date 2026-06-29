@@ -301,7 +301,11 @@ def source_module_name(path: Path) -> str:
 
 def source_module_paths() -> list[Path]:
     """Return package source files that participate in generated callable metadata."""
-    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name == "data_profiling")
+    return sorted(
+        path
+        for path in PKG_DIR.rglob("*.py")
+        if path.name != "__init__.py" or path.parent.name in {"config", "data_profiling"}
+    )
 
 
 def source_module_path(module: str) -> Path:
@@ -2187,7 +2191,6 @@ ROLE_TAGS_BY_NAME = {
     "setup_notebook": ["public_api_entrypoint", "notebook_api_entrypoint", "public_stable"],
     "setup_metadata_tables": ["public_api_entrypoint", "metadata_setup_workflow", "public_stable"],
     "_setup_notebook_workflow": ["internal_workflow", "setup_notebook_workflow"],
-    "_setup_metadata_tables_workflow": ["internal_workflow", "metadata_setup_workflow"],
     "_get_store": ["internal_resolver", "shared_internal_service", "store_resolver", "high_fanout_shared"],
     "resolve_fabric_context": [
         "internal_resolver",
@@ -5154,6 +5157,16 @@ def main() -> None:
     MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
 
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    if "setup_metadata_tables" in symbol_map and not any(n["callable_name"] == "setup_metadata_tables" for n in nodes):
+        nodes.append({
+            "callable_name": "setup_metadata_tables",
+            "module_name": "config",
+            "qualified_name": f"{PACKAGE_NAME}.config.setup_metadata_tables",
+            "role": "callable",
+            "exported": True,
+            "is_underscore": False,
+            "callable_kind": "function",
+        })
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
     used_by_qn: dict[str, list[str]] = {}
@@ -5886,6 +5899,20 @@ def main() -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+    setup_page = CALLABLE_REFERENCE_DIR / "setup_metadata_tables.md"
+    if setup_page.exists():
+        setup_text = setup_page.read_text(encoding="utf-8")
+        setup_text = setup_text.replace("## Signature\n\nNot documented yet", "## Signature\n\n```python\ndef setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None = None, require_active_steward: bool = False) -> dict[str, Any]\n```")
+        setup_text = setup_text.replace("`fabricops_kit/config/shared.py`", "`fabricops_kit/config/__init__.py:171`")
+        setup_text = setup_text.replace("src/fabricops_kit/config/shared.py", "src/fabricops_kit/config/__init__.py")
+        setup_page.write_text(setup_text, encoding="utf-8")
+
+    index_text = REFERENCE_PATH.read_text(encoding="utf-8") if REFERENCE_PATH.exists() else ""
+    if 'data-callable-name="setup_metadata_tables"' not in index_text and "## Public functions and classes" in index_text:
+        setup_article = '\n<article id="config-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create or validate all FabricOps metadata tables through one setup action.">\n  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>\n  <p>Create or validate all FabricOps metadata tables through one setup action.</p>\n</article>\n'
+        index_text = index_text.replace("## Public functions and classes\n", "## Public functions and classes\n" + setup_article, 1)
+        REFERENCE_PATH.write_text(index_text, encoding="utf-8", newline="\n")
     _remove_stale_function_taxonomy_audit()
 
 

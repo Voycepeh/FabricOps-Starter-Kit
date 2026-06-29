@@ -215,7 +215,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "values", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables": {
+        "fabricops_kit.config.setup_metadata_tables": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "config", "kind": "KEYWORD_ONLY", "required": True},
