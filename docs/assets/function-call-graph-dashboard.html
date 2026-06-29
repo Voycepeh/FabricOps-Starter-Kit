@@ -478,17 +478,58 @@
         background: #e2e8f0;
         color: #475569;
       }
-      tr.priority-critical-row {
-        background: #fff1f2;
-      }
-      tr.priority-high-row {
-        background: #fff7ed;
-      }
       tr.priority-critical-row:not(.active) {
         box-shadow: inset 0.25rem 0 #991b1b;
       }
       tr.priority-high-row:not(.active) {
-        box-shadow: inset 0.25rem 0 #f97316;
+        box-shadow: inset 0.25rem 0 #f59e0b;
+      }
+      .summary-toggle {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        color: #1d4ed8;
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+      .summary-row {
+        display: none;
+      }
+      .summary-row.is-open {
+        display: table-row;
+      }
+      .summary-panel {
+        padding: 0.7rem;
+        border-left: 0.25rem solid #cbd5e1;
+        background: #fff;
+        line-height: 1.45;
+      }
+      .summary-panel.issue {
+        border-left-color: #991b1b;
+      }
+      .summary-panel.warn {
+        border-left-color: #f59e0b;
+      }
+      .summary-panel h3 {
+        margin: 0.1rem 0 0.35rem;
+      }
+      .summary-panel h4 {
+        margin: 0.55rem 0 0.2rem;
+      }
+      .summary-panel p {
+        margin: 0.15rem 0;
+        color: #334155;
+      }
+      .summary-panel ul {
+        margin: 0.2rem 0 0.1rem 1.1rem;
+        padding: 0;
+      }
+      .recommendation-chip.issue {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .recommendation-chip.warn {
+        background: #fef3c7;
+        color: #92400e;
       }
       .export-toolbar {
         display: flex;
@@ -856,7 +897,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-29 18:41 SGT<span
+        <strong>Generated at:</strong> 2026-06-29 19:19 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -942,21 +983,31 @@
                 </button>
               </th>
               <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="signals"
-                >
-                  Signals
+                <button type="button" class="sort-button" data-sort-key="width">
+                  Width
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" data-sort-key="depth">
+                  Depth
                 </button>
               </th>
               <th>
                 <button
                   type="button"
                   class="sort-button"
-                  data-sort-key="next_step"
+                  data-sort-key="recommendation"
                 >
-                  Next step
+                  Recommendation
+                </button>
+              </th>
+              <th>
+                <button
+                  type="button"
+                  class="sort-button"
+                  data-sort-key="signals"
+                >
+                  Signals
                 </button>
               </th>
               <th>Summary</th>
@@ -1122,23 +1173,15 @@
         o.textContent = l || v;
         s.appendChild(o);
       }
-      function moreDetails(hidden, render) {
-        return hidden.length
-          ? `<details class="inline-more"><summary><span class="tag">${hidden.length} more signals</span></summary><span class="inline-more-panel">${hidden.map(render).join("")}</span></details>`
-          : "";
-      }
       function compactList(items, limit = 3) {
         const list = items || [],
-          shown = list.slice(0, limit),
-          hidden = list.slice(limit);
-        return `<span class="compact-list" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="tag">${esc(i)}</span>`).join("")}${moreDetails(hidden, (i) => `<span class="tag">${esc(i)}</span>`)}</span>`;
+          shown = list.slice(0, limit);
+        return `<span class="compact-list" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="tag">${esc(i)}</span>`).join("")}</span>`;
       }
-      function compactBadges(items, cls = "warn", limit = 2) {
-        const list = items || [];
-        if (!list.length) return '<span class="badge keep">Healthy</span>';
-        const shown = list.slice(0, limit),
-          hidden = list.slice(limit);
-        return `<span class="compact-badges" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="badge ${cls}">${esc(i)}</span>`).join("")}${moreDetails(hidden, (i) => `<span class="badge ${cls}">${esc(i)}</span>`)}</span>`;
+      function compactBadges(items, cls = "warn", limit = 3) {
+        const list = items || [],
+          shown = list.slice(0, limit);
+        return `<span class="compact-badges" title="${esc(list.join(", "))}">${shown.map((i) => `<span class="badge ${cls}">${esc(i)}</span>`).join("")}</span>`;
       }
       const GITHUB_SOURCE_BASE =
         "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/";
@@ -1233,56 +1276,106 @@
       function reviewMergeCandidateLabel(count) {
         return count === 1 ? "Review helper" : "Review helpers";
       }
-      function suggestedActionLabel(flow) {
-        const architectureFindings = architectureFindingRows(flow),
-          mergeCandidates = (flow.transitive_callees || []).filter(
-            (c) => c.helper_cleanup_candidate,
-          );
-        return flowNextStepLabel(flow, architectureFindings, mergeCandidates);
+      function architectureFindingCount(flow) {
+        return (
+          architectureFindingRows(flow).length ||
+          (flow.architecture_violation_count ?? 0)
+        );
       }
-      function flowNextStepLabel(flow, architectureFindings, mergeCandidates) {
-        const longThreshold = longCallChainThreshold();
-        if (architectureFindings.length) return "Fix architecture issue";
-        if (
-          (flow.external_dependents_count || 0) > 0 ||
-          mergeCandidates.length ||
-          (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-        )
-          return "Review nested helpers";
-        return "";
-      }
-      function whyReview(flow) {
-        const reasons = [];
-        const violations = flow.architecture_violation_count ?? 0,
-          longThreshold = longCallChainThreshold(),
+      function flowSignals(flow) {
+        const longThreshold = longCallChainThreshold(),
           largeThreshold = largeDependencySurfaceThreshold(),
-          mergeCount = mergeCandidateCount(flow);
-        if (violations)
-          reasons.push(`Contains ${violations} architecture violations.`);
+          signals = [];
+        if (architectureFindingCount(flow) > 0)
+          signals.push("Architecture violation");
         if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          reasons.push(
-            `Depth is ${flow.max_depth}; threshold is >= ${longThreshold}.`,
-          );
+          signals.push("Long chain");
         if (
           largeThreshold !== null &&
           (flow.downstream_count || 0) >= largeThreshold
         )
-          reasons.push(
-            `Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}.`,
-          );
-        if (mergeCount > 0)
-          reasons.push(
-            mergeCount === 1
-              ? "Contains 1 helper marked Review for merge inside this graph."
-              : `Contains ${mergeCount} helpers marked Review for merge inside this graph.`,
-          );
-        return reasons.length ? reasons.join(" ") : "Clear";
+          signals.push("Many dependencies");
+        if ((flow.external_dependents_count || 0) > 0)
+          signals.push("Shared dependency");
+        if (mergeCandidateCount(flow) > 0) signals.push("Review for merge");
+        return signals;
       }
-      function reviewNoteControl(flow) {
-        const note = whyReview(flow);
-        return note === "Clear"
-          ? ""
-          : `<span class="compact-list">${esc(note)}</span>`;
+      function suggestedActionLabel(flow) {
+        const signals = flowSignals(flow);
+        if (signals.includes("Architecture violation"))
+          return "Fix architecture issue";
+        if (
+          signals.some((s) =>
+            [
+              "Long chain",
+              "Many dependencies",
+              "Shared dependency",
+              "Review for merge",
+            ].includes(s),
+          )
+        )
+          return "Review nested helpers";
+        return "";
+      }
+      function recommendationBadge(flow) {
+        const action = suggestedActionLabel(flow);
+        if (!action) return "";
+        return `<span class="badge recommendation-chip ${action === "Fix architecture issue" ? "issue" : "warn"}">${esc(action)}</span>`;
+      }
+      function signalBadges(flow) {
+        const signals = flowSignals(flow).slice(0, 3),
+          cls = signals.includes("Architecture violation") ? "issue" : "warn";
+        return compactBadges(signals, cls, 3);
+      }
+      function summaryText(flow) {
+        const signals = flowSignals(flow),
+          hasArch = signals.includes("Architecture violation"),
+          hasGraph = signals.some((s) =>
+            [
+              "Long chain",
+              "Many dependencies",
+              "Shared dependency",
+              "Review for merge",
+            ].includes(s),
+          );
+        if (hasArch && hasGraph)
+          return "Architecture issues were detected. This callable also has a deep or wide helper graph, so fix the architecture issue first before reviewing nested helper cleanup.";
+        if (hasArch)
+          return "Architecture issues were detected in this public callable. Fix these first before reviewing helper cleanup.";
+        if (hasGraph)
+          return "This callable has nested or shared helper usage that may be worth simplifying before refactoring.";
+        return "No review flags detected.";
+      }
+      function recommendedCheck(flow) {
+        const signals = flowSignals(flow),
+          hasArch = signals.includes("Architecture violation"),
+          hasGraph = signals.some((s) =>
+            [
+              "Long chain",
+              "Many dependencies",
+              "Shared dependency",
+              "Review for merge",
+            ].includes(s),
+          );
+        if (hasArch && hasGraph)
+          return "Fix the architecture issue first, then review whether nested helpers should stay separate, be shared, or be merged.";
+        if (hasArch)
+          return "Resolve the architecture issue, then re-run the call graph review.";
+        if (hasGraph)
+          return "Review whether the nested helpers should stay separate, move into shared helper logic, or be merged into their caller.";
+        return "No follow-up needed.";
+      }
+      function summaryButton(flow) {
+        return `<button class="summary-toggle" type="button" aria-expanded="false" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`;
+      }
+      function summaryRow(flow) {
+        const open = state.activePublicFlow === flow.qualified_name,
+          severity = flowSignals(flow).includes("Architecture violation")
+            ? "issue"
+            : suggestedActionLabel(flow)
+              ? "warn"
+              : "";
+        return `<tr class="summary-row ${open ? "is-open" : ""}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="6"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.downstream_count || 0)} downstream function(s)</li><li>Depth: ${esc(flow.max_depth || 0)}</li><li>Architecture violations: ${esc(architectureFindingCount(flow))}</li><li>Shared impact: ${esc(flow.external_dependents_count || 0)}</li><li>Review-for-merge helpers: ${esc(mergeCandidateCount(flow))}</li></ul>${flowSignals(flow).length ? `<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(", "))}</p>` : ""}</div></td></tr>`;
       }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
@@ -1515,7 +1608,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td>${sourceCallableLink(f)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${suggestedActionLabel(f) ? `<span class="badge muted">${esc(suggestedActionLabel(f))}</span>` : ""}</td><td>${reviewNoteControl(f)}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td>${sourceCallableLink(f)}</td><td class="num">${esc(f.downstream_count || 0)}</td><td class="num">${esc(f.max_depth || 0)}</td><td>${recommendationBadge(f)}</td><td>${signalBadges(f)}</td><td>${summaryButton(f)}</td></tr>${summaryRow(f)}`;
           })
           .join("");
         setPublicListControls();

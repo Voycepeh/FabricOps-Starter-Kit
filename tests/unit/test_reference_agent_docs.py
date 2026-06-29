@@ -445,7 +445,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
-    assert "Next step" in dashboard_text
+    header_order = [
+        compact_dashboard_text.index("data-sort-key='callable'>Function"),
+        compact_dashboard_text.index("data-sort-key='width'>Width"),
+        compact_dashboard_text.index("data-sort-key='depth'>Depth"),
+        compact_dashboard_text.index("data-sort-key='recommendation'>Recommendation"),
+        compact_dashboard_text.index("data-sort-key='signals'>Signals"),
+        compact_dashboard_text.index("<th>Summary</th>"),
+    ]
+    assert header_order == sorted(header_order)
     assert "No review flags detected." in dashboard_text
     assert "Review helper placement" not in dashboard_text
     assert "Review nested helpers" in dashboard_text
@@ -528,8 +536,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Violation reason" in dashboard_text
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
-    assert "function whyReview(flow)" in dashboard_text
-    assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
+    assert "function flowSignals(flow)" in dashboard_text
+    assert "function summaryRow(flow)" in dashboard_text
+    assert "data-summary-toggle" in dashboard_text
+    assert "View summary" in dashboard_text
+    assert "Width:${esc(flow.downstream_count||0)}downstreamfunction(s)" in compact_dashboard_text
+    assert "Depth:${esc(flow.max_depth||0)}" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
     assert "Preserve backwards compatibility" in dashboard_text
     assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in dashboard_text
@@ -540,18 +552,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy flow Markdown" not in dashboard_text
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
-    assert '<span class="badge keep">Healthy</span>' in dashboard_text
+    assert "health === \"Healthy\" ? \"keep\"" in dashboard_text
     assert "Review for merge" in dashboard_text
     assert "Review helper" in dashboard_text
     assert "Review helpers" in dashboard_text
-    assert "reasons.join('')" in compact_dashboard_text
-    assert "Contains ${violations} architecture violations." in dashboard_text
-    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
-    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
+    assert "reasons.join('')" not in compact_dashboard_text
+    assert "Contains ${violations} architecture violations." not in dashboard_text
+    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." not in dashboard_text
+    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." not in dashboard_text
     assert "Max depth; long chain threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
-    assert "mergeCount===1?'Contains1helpermarkedReviewformergeinsidethisgraph.'" in compact_dashboard_text
+    assert "Review-for-mergehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
     assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
