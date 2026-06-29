@@ -856,7 +856,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-28 22:13 SGT<span
+        <strong>Generated at:</strong> 2026-06-29 18:41 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -906,7 +906,7 @@
           >Search public callables<input
             id="publicSearchBox"
             type="search"
-            placeholder="Search by callable, module, finding, or recommendation..." /></label
+            placeholder="Search by callable, module, signal, or next step..." /></label
         ><button
           id="resetPublicFilters"
           class="architecture-clear-all"
@@ -932,35 +932,24 @@
         <table data-table-controls="excel">
           <thead>
             <tr>
-              <th>Priority</th>
               <th>
                 <button
                   type="button"
                   class="sort-button"
                   data-sort-key="callable"
                 >
-                  Public callable
+                  Function
                 </button>
               </th>
               <th>
                 <button
                   type="button"
                   class="sort-button"
-                  data-sort-key="module"
+                  data-sort-key="signals"
                 >
-                  Module
+                  Signals
                 </button>
               </th>
-              <th>
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="findings"
-                >
-                  Findings
-                </button>
-              </th>
-              <th>Finding note</th>
               <th>
                 <button
                   type="button"
@@ -970,20 +959,7 @@
                   Next step
                 </button>
               </th>
-              <th class="num">
-                <button
-                  type="button"
-                  class="sort-button"
-                  data-sort-key="downstream"
-                >
-                  Downstream
-                </button>
-              </th>
-              <th class="num">
-                <button type="button" class="sort-button" data-sort-key="depth">
-                  Depth
-                </button>
-              </th>
+              <th>Summary</th>
             </tr>
           </thead>
           <tbody id="publicCallableList"></tbody>
@@ -1074,7 +1050,7 @@
       const DISPLAY_LABEL_MAP = {
         "Architecture violation": "Architecture violation",
         "Long chain": "Long chain",
-        "Wide dependency": "Wide dependency",
+        "Many dependencies": "Many dependencies",
         "Review for merge": "Review for merge",
         "Used by one function": "Used by one function",
         "Used several times in one function":
@@ -1148,7 +1124,7 @@
       }
       function moreDetails(hidden, render) {
         return hidden.length
-          ? `<details class="inline-more"><summary><span class="tag">+${hidden.length} more</span></summary><span class="inline-more-panel">${hidden.map(render).join("")}</span></details>`
+          ? `<details class="inline-more"><summary><span class="tag">${hidden.length} more signals</span></summary><span class="inline-more-panel">${hidden.map(render).join("")}</span></details>`
           : "";
       }
       function compactList(items, limit = 3) {
@@ -1258,10 +1234,22 @@
         return count === 1 ? "Review helper" : "Review helpers";
       }
       function suggestedActionLabel(flow) {
-        const action = flow.recommended_simplification_action || "Keep public";
-        if (action === "Inspect helpers marked Review for merge")
-          return reviewMergeCandidateLabel(mergeCandidateCount(flow));
-        return action;
+        const architectureFindings = architectureFindingRows(flow),
+          mergeCandidates = (flow.transitive_callees || []).filter(
+            (c) => c.helper_cleanup_candidate,
+          );
+        return flowNextStepLabel(flow, architectureFindings, mergeCandidates);
+      }
+      function flowNextStepLabel(flow, architectureFindings, mergeCandidates) {
+        const longThreshold = longCallChainThreshold();
+        if (architectureFindings.length) return "Fix architecture issue";
+        if (
+          (flow.external_dependents_count || 0) > 0 ||
+          mergeCandidates.length ||
+          (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
+        )
+          return "Review nested helpers";
+        return "";
       }
       function whyReview(flow) {
         const reasons = [];
@@ -1292,7 +1280,9 @@
       }
       function reviewNoteControl(flow) {
         const note = whyReview(flow);
-        return `<details class="review-note"><summary><span class="badge muted">Finding note</span> <span class="review-note-toggle">View details</span></summary><div class="review-note-panel">${esc(note)}</div></details>`;
+        return note === "Clear"
+          ? ""
+          : `<span class="compact-list">${esc(note)}</span>`;
       }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
@@ -1525,7 +1515,7 @@
               strong = p === "Critical" || p === "High",
               active =
                 f.qualified_name === state.activePublicFlow ? "active" : "";
-            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td><span class="badge priority priority-${pc}">${esc(p)}</span></td><td>${sourceCallableLink(f)}</td><td>${moduleLink(f.module)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${reviewNoteControl(f)}</td><td><span class="badge ${suggestedActionLabel(f) === "Keep public" ? "keep" : "muted"}">${esc(suggestedActionLabel(f))}</span></td><td class="num">${f.downstream_count}</td><td class="num">${f.max_depth}</td></tr>`;
+            return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} ${strong ? "priority-" + pc + "-row" : ""}" tabindex="0" aria-selected="${state.selectedFlow === f.qualified_name ? "true" : "false"}"><td>${sourceCallableLink(f)}</td><td>${compactBadges((f.warnings || []).map(findingLabel), riskBadgeClass("", p))}</td><td>${suggestedActionLabel(f) ? `<span class="badge muted">${esc(suggestedActionLabel(f))}</span>` : ""}</td><td>${reviewNoteControl(f)}</td></tr>`;
           })
           .join("");
         setPublicListControls();
@@ -1632,14 +1622,12 @@
         if (n.architecture_result === "Warning")
           details.push([
             "Warning reason",
-            n.violation_type === "Same-file private dependency"
-              ? "Same-file private helper dependency; review for possible merge."
-              : n.violation_type || "Warning",
+            "Nested helper may be too small, too specific, or reused in a way that needs cleanup.",
           ]);
         if (n.helper_cleanup_candidate)
           details.push([
-            "Review for merge",
-            n.recommended_action || "Inspect helper placement.",
+            "Review action",
+            "Keep as helper, move to shared helper, or merge into caller.",
           ]);
         if (n.path_examples && n.path_examples.length)
           details.push(["Path example", n.path_examples[0].join(" -> ")]);
@@ -1679,7 +1667,7 @@
           largeThreshold !== null &&
           (flow.downstream_count || 0) >= largeThreshold
         )
-          return "Wide dependency";
+          return "Many dependencies";
         if ((flow.external_dependents_count || 0) > 0) return "Shared impact";
         if (mergeCandidates.length) return "Review for merge";
         return "Healthy";
@@ -1694,16 +1682,16 @@
         return "No architecture violations found in this graph.";
       }
       function flowNextStep(flow, architectureFindings, mergeCandidates) {
-        const longThreshold = longCallChainThreshold();
-        if (architectureFindings.length)
-          return "Inspect the highlighted flow tree nodes before moving or merging helpers.";
-        if ((flow.external_dependents_count || 0) > 0)
-          return "Inspect external dependents before refactoring shared helpers.";
-        if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
-          return "Inspect whether this long graph can be simplified before moving helpers.";
-        if (mergeCandidates.length)
-          return "No architecture violation found; inspect helpers marked Review for merge only if readability improves.";
-        return "Keep the callable shape and use the flow tree only for spot checks.";
+        const label = flowNextStepLabel(
+          flow,
+          architectureFindings,
+          mergeCandidates,
+        );
+        if (label === "Fix architecture issue")
+          return "Fix architecture issues before refactoring this callable.";
+        if (label === "Review nested helpers")
+          return "Review nested helpers before refactoring. Check whether they should stay separate, be shared, or be merged into their caller.";
+        return "";
       }
       function flowSignalChips(flow, architectureFindings, mergeCandidates) {
         const chips = [];
@@ -1720,7 +1708,7 @@
           largeThreshold !== null &&
           (flow.downstream_count || 0) >= largeThreshold
         )
-          chips.push('<span class="badge warn">Wide dependency</span>');
+          chips.push('<span class="badge warn">Many dependencies</span>');
         if (mergeCandidates.length)
           chips.push(
             `<span class="badge muted">${mergeCandidates.length} review for merge</span>`,
@@ -1749,7 +1737,7 @@
           nextStep = flowNextStep(f, architectureFindings, mergeCandidates),
           signals = flowSignalChips(f, architectureFindings, mergeCandidates);
         $("publicFlowDetails").innerHTML =
-          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Review for merge</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} helper(s) are marked Review for merge. Open the function call graph tree to inspect helper placement.`) : "Open the function call graph tree to inspect exact helper names, layers, source files, and actionable details."}</p></section><section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section><h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div>${nextStep ? `<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div>` : ""}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Review for merge</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} helper(s) are marked Review for merge. Open the call graph tree to inspect whether nested helpers should stay separate, be shared, or be merged into their caller.`) : "No review flags detected."}</p></section>${nextStep ? `<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>` : ""}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItem() {
         const byQn = new Map(
@@ -1792,7 +1780,7 @@
             (flow.downstream_count || 0) >= largeThreshold
               ? [
                   {
-                    finding: "Wide dependency",
+                    finding: "Many dependencies",
                     evidence: `${flow.downstream_count} downstream functions, threshold >= ${largeThreshold}`,
                     next_step:
                       "Many functions depend on this graph. Refactor carefully.",
@@ -1825,13 +1813,7 @@
           ];
         return rows.length
           ? rows
-          : [
-              {
-                finding: "Healthy",
-                evidence: "Clear",
-                next_step: "Keep public",
-              },
-            ];
+          : [{ finding: "Healthy", evidence: "Clear", next_step: "" }];
       }
       function findingRows(f) {
         return architectureFindingRows(f).map((v) => ({

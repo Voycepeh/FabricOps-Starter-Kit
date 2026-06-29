@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-28T14:13:24.722770Z",
+    "generated_at_utc": "2026-06-29T10:41:49.062281Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -33886,11 +33886,11 @@
       "source_start_line": 1523,
       "source_end_line": 1527,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -34746,7 +34746,7 @@
       "source_start_line": 12,
       "source_end_line": 64,
       "priority": "Low",
-      "recommended_simplification_action": "Keep public",
+      "recommended_simplification_action": "",
       "warnings": [],
       "downstream_count": 1,
       "max_depth": 1,
@@ -34861,11 +34861,11 @@
       "source_start_line": 2702,
       "source_end_line": 2717,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 21,
       "max_depth": 6,
@@ -36029,7 +36029,7 @@
       "source_start_line": 1530,
       "source_end_line": 1545,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
         "Review for merge"
@@ -36358,10 +36358,10 @@
       "source_start_line": 10,
       "source_end_line": 65,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 10,
       "max_depth": 3,
@@ -36868,11 +36868,11 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -37615,11 +37615,11 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -38407,11 +38407,11 @@
       "source_start_line": 15,
       "source_end_line": 82,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -39213,11 +39213,11 @@
       "source_start_line": 10,
       "source_end_line": 38,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 16,
       "max_depth": 4,
@@ -40041,11 +40041,11 @@
       "source_start_line": 10,
       "source_end_line": 46,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 12,
       "max_depth": 4,
@@ -40736,11 +40736,11 @@
       "source_start_line": 10,
       "source_end_line": 49,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -41521,13 +41521,13 @@
       "source_start_line": 1548,
       "source_end_line": 1582,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
+        "Many dependencies",
         "Review for merge",
-        "Spans many modules",
-        "Wide dependency"
+        "Spans many modules"
       ],
       "downstream_count": 112,
       "max_depth": 7,
@@ -47761,13 +47761,13 @@
       "source_start_line": 11,
       "source_end_line": 66,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
+        "Many dependencies",
         "Review for merge",
-        "Spans many modules",
-        "Wide dependency"
+        "Spans many modules"
       ],
       "downstream_count": 44,
       "max_depth": 7,
@@ -50323,7 +50323,7 @@
       "source_start_line": 11,
       "source_end_line": 65,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Review for merge"
@@ -50928,13 +50928,13 @@
       "source_start_line": 34,
       "source_end_line": 98,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
+        "Many dependencies",
         "Review for merge",
-        "Spans many modules",
-        "Wide dependency"
+        "Spans many modules"
       ],
       "downstream_count": 48,
       "max_depth": 8,
@@ -53675,12 +53675,12 @@
       "source_start_line": 2765,
       "source_end_line": 2794,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 40,
       "max_depth": 7,
@@ -55792,12 +55792,12 @@
       "source_start_line": 2743,
       "source_end_line": 2762,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 40,
       "max_depth": 7,
@@ -57909,12 +57909,12 @@
       "source_start_line": 2720,
       "source_end_line": 2735,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 48,
       "max_depth": 7,
@@ -60456,12 +60456,12 @@
       "source_start_line": 1407,
       "source_end_line": 1440,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 41,
       "max_depth": 7,
@@ -62730,12 +62730,12 @@
       "source_start_line": 1464,
       "source_end_line": 1482,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 60,
       "max_depth": 7,
@@ -66314,12 +66314,12 @@
       "source_start_line": 1443,
       "source_end_line": 1461,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 60,
       "max_depth": 7,
@@ -69613,12 +69613,12 @@
       "source_start_line": 2797,
       "source_end_line": 2799,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 15,
       "max_depth": 6,
@@ -70527,12 +70527,12 @@
       "source_start_line": 2738,
       "source_end_line": 2740,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 26,
       "max_depth": 7,
@@ -71930,11 +71930,11 @@
       "source_start_line": 10,
       "source_end_line": 57,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 17,
       "max_depth": 4,
@@ -72836,12 +72836,12 @@
       "source_start_line": 1585,
       "source_end_line": 1618,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture violation",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
         "Architecture violation",
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 32,
       "max_depth": 6,
@@ -74563,11 +74563,11 @@
       "source_start_line": 1621,
       "source_end_line": 1670,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 27,
       "max_depth": 6,
@@ -75999,11 +75999,11 @@
       "source_start_line": 10,
       "source_end_line": 43,
       "priority": "Medium",
-      "recommended_simplification_action": "Review helper placement",
+      "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Long chain",
-        "Review for merge",
-        "Wide dependency"
+        "Many dependencies",
+        "Review for merge"
       ],
       "downstream_count": 15,
       "max_depth": 4,
