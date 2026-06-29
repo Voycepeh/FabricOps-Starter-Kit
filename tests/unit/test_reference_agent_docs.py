@@ -445,7 +445,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
-    assert "Next step" in dashboard_text
+    header_order = [
+        compact_dashboard_text.index("data-sort-key='callable'>Function"),
+        compact_dashboard_text.index("data-sort-key='width'>Width"),
+        compact_dashboard_text.index("data-sort-key='depth'>Depth"),
+        compact_dashboard_text.index("data-sort-key='recommendation'>Recommendation"),
+        compact_dashboard_text.index("data-sort-key='signals'>Signals"),
+        compact_dashboard_text.index("<th>Summary</th>"),
+    ]
+    assert header_order == sorted(header_order)
     assert "No review flags detected." in dashboard_text
     assert "Review helper placement" not in dashboard_text
     assert "Review nested helpers" in dashboard_text
@@ -480,6 +488,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "populateBandFilter('publicMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
+    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.downstream_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='recommendation')returnsuggestedActionLabel(flow).toLowerCase();if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
+    assert "if(key==='downstream')" not in compact_dashboard_text
+    assert "if(key==='next_step')" not in compact_dashboard_text
+    assert "if(key==='findings')" not in compact_dashboard_text
     card_order = [
         compact_dashboard_text.index("label:'Publiccallables'"),
         compact_dashboard_text.index("label:'Witharchitectureviolations'"),
@@ -528,8 +540,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Violation reason" in dashboard_text
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
-    assert "function whyReview(flow)" in dashboard_text
-    assert "returnreasons.length?reasons.join(''):'Clear'" in compact_dashboard_text
+    assert "function flowSignals(flow)" in dashboard_text
+    assert "function summaryRow(flow)" in dashboard_text
+    assert "openSummaryFlow:''" in compact_dashboard_text
+    assert "constopen=state.openSummaryFlow===flow.qualified_name" in compact_dashboard_text
+    assert "aria-expanded='${open?'true':'false'}'" in compact_dashboard_text
+    assert "state.openSummaryFlow=state.openSummaryFlow===summaryToggle.dataset.summaryToggle?'':summaryToggle.dataset.summaryToggle" in compact_dashboard_text
+    assert "state.activePublicFlow=row.dataset.publicFlowRow;state.selectedFlow=row.dataset.publicFlowRow;state.collapsedPublicList=true" in compact_dashboard_text
+    assert "state.openSummaryFlow=row.dataset.publicFlowRow" not in compact_dashboard_text
+    assert "state.activePublicFlow===flow.qualified_name" not in compact_dashboard_text
+    assert "data-summary-toggle" in dashboard_text
+    assert "View summary" in dashboard_text
+    assert "Width:${esc(flow.downstream_count||0)}downstreamfunction(s)" in compact_dashboard_text
+    assert "Depth:${esc(flow.max_depth||0)}" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
     assert "Preserve backwards compatibility" in dashboard_text
     assert "Selected cleanup should preserve existing public callable behavior and avoid breaking current users." in dashboard_text
@@ -540,18 +563,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy flow Markdown" not in dashboard_text
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
-    assert '<span class="badge keep">Healthy</span>' in dashboard_text
+    assert "health === \"Healthy\" ? \"keep\"" in dashboard_text
     assert "Review for merge" in dashboard_text
     assert "Review helper" in dashboard_text
     assert "Review helpers" in dashboard_text
-    assert "reasons.join('')" in compact_dashboard_text
-    assert "Contains ${violations} architecture violations." in dashboard_text
-    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." in dashboard_text
-    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." in dashboard_text
+    assert "reasons.join('')" not in compact_dashboard_text
+    assert "Contains ${violations} architecture violations." not in dashboard_text
+    assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." not in dashboard_text
+    assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." not in dashboard_text
     assert "Max depth; long chain threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
-    assert "mergeCount===1?'Contains1helpermarkedReviewformergeinsidethisgraph.'" in compact_dashboard_text
+    assert "Review-for-mergehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
     assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
@@ -2389,15 +2412,22 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
     assert ".callable-review-table{width:100%;table-layout:auto" in compact_inventory_text
     assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-details{width:6rem;white-space:nowrap" in compact_inventory_text
+    assert ".callable-review-table.col-details{width:90px;min-width:90px;white-space:nowrap" in compact_inventory_text
+    assert ".details-toggle{font-weight:800;color:#1d4ed8;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}" in compact_inventory_text
+    assert ".details-panela{overflow-wrap:anywhere;word-break:break-word}" in compact_inventory_text
     assert ".details-row{display:none}" in compact_inventory_text
     assert ".details-row.is-open{display:table-row}" in compact_inventory_text
     assert ".details-panel{max-width:100%;padding:.85rem1rem" in compact_inventory_text
     assert "data-details-toggle" in inventory_text
     assert "detailsRow(i)" in inventory_text
+    assert 'colspan="7"' in inventory_text
     assert "<thclass='col-recommended-action'>Recommendedaction</th>" in compact_inventory_text
     assert "<thclass='col-details'>Details</th>" in compact_inventory_text
     assert "<strong>Finding:</strong>" in inventory_text
+    assert "<strong>Reason:</strong>" in inventory_text
+    assert "<strong>Evidence:</strong>" in inventory_text
+    assert "<strong>Notes:</strong>" in inventory_text
+    assert "<strong>Cleanup action:</strong>" in inventory_text
     assert "Codebase note" not in inventory_text
     assert "<thclass='col-suggested-action'>Suggestedcleanupaction</th>" not in compact_inventory_text
     assert "<thclass='col-code-role'>Coderole</th>" not in compact_inventory_text
