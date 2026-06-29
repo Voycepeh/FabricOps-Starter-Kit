@@ -2401,15 +2401,22 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
     assert ".callable-review-table{width:100%;table-layout:auto" in compact_inventory_text
     assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-details{width:6rem;white-space:nowrap" in compact_inventory_text
+    assert ".callable-review-table.col-details{width:90px;min-width:90px;white-space:nowrap" in compact_inventory_text
+    assert ".details-toggle{font-weight:800;color:#1d4ed8;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}" in compact_inventory_text
+    assert ".details-panela{overflow-wrap:anywhere;word-break:break-word}" in compact_inventory_text
     assert ".details-row{display:none}" in compact_inventory_text
     assert ".details-row.is-open{display:table-row}" in compact_inventory_text
     assert ".details-panel{max-width:100%;padding:.85rem1rem" in compact_inventory_text
     assert "data-details-toggle" in inventory_text
     assert "detailsRow(i)" in inventory_text
+    assert 'colspan="7"' in inventory_text
     assert "<thclass='col-recommended-action'>Recommendedaction</th>" in compact_inventory_text
     assert "<thclass='col-details'>Details</th>" in compact_inventory_text
     assert "<strong>Finding:</strong>" in inventory_text
+    assert "<strong>Reason:</strong>" in inventory_text
+    assert "<strong>Evidence:</strong>" in inventory_text
+    assert "<strong>Notes:</strong>" in inventory_text
+    assert "<strong>Cleanup action:</strong>" in inventory_text
     assert "Codebase note" not in inventory_text
     assert "<thclass='col-suggested-action'>Suggestedcleanupaction</th>" not in compact_inventory_text
     assert "<thclass='col-code-role'>Coderole</th>" not in compact_inventory_text
