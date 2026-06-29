@@ -72,7 +72,7 @@ class FakeDataFrame:
 
 
 def _install_fake_pyspark_functions(monkeypatch):
-    fake_functions = types.SimpleNamespace(lit=lambda value: ("lit", value))
+    fake_functions = types.SimpleNamespace(lit=lambda value: ("lit", value), current_timestamp=lambda: ("current_timestamp",), from_utc_timestamp=lambda value, timezone: ("from_utc_timestamp", value, timezone))
     fake_sql = types.ModuleType("pyspark.sql")
     fake_sql.functions = fake_functions
     fake_pyspark = types.ModuleType("pyspark")
@@ -175,8 +175,8 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
         "_fabricops_created_at",
     ]
 
-    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
-    assert created_at.endswith("+00:00")
+    created_at = dict(df.with_columns)["_fabricops_created_at"]
+    assert created_at == ("current_timestamp",)
 
 
 def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezone(monkeypatch):
@@ -208,8 +208,8 @@ def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezo
         "_fabricops_pipeline_name",
         "_fabricops_created_at",
     ]
-    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
-    assert created_at.endswith("+08:00")
+    created_at = dict(df.with_columns)["_fabricops_created_at"]
+    assert created_at == ("from_utc_timestamp", ("current_timestamp",), "Asia/Singapore")
 
 
 def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):

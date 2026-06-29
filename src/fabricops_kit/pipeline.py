@@ -20,7 +20,7 @@ from .guardrails import (
 )
 from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
-from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from .config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
@@ -747,14 +747,14 @@ def _prepare_pipeline_table_configs_workflow(
             target_layer = merged_config.get("target_layer", merged_config["layer"])
             target_name = merged_config.get("target_name", merged_config["table_name"])
             target_kind = merged_config.get("target_kind", merged_config.get("kind", "lakehouse"))
-            audit_created_at = get_current_audit_timestamp(
+            audit_timestamp = build_audit_timestamp_expr(
                 config=merged_config.get("config", default_settings.get("config"))
             )
             audited_df = (
                 merged_config["df"]
                 .withColumn("_fabricops_run_id", F.lit(run_id))
                 .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
-                .withColumn("_fabricops_created_at", F.lit(audit_created_at))
+                .withColumn("_fabricops_created_at", audit_timestamp)
             )
             enriched_table = {
                 **merged_config,
@@ -1389,7 +1389,7 @@ def _write_pipeline_run_summary_workflow(
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
         Agreement and notebook registry context.
     started_at, completed_at : str, optional
-        Runtime timestamps. Defaults to current UTC time when omitted.
+        Runtime timestamps. Defaults to the configured FabricOps audit timezone when omitted.
     status : str, default="completed"
         Overall pipeline status.
     source_definitions, target_definitions : mapping, optional

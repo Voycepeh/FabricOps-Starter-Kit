@@ -20,6 +20,7 @@ from fabricops_kit.config import (
 )
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.shared import (
+    build_audit_timestamp_expr,
     get_current_audit_timestamp,
     _get_active_metadata_tables,
     _validate_audit_timezone,
@@ -526,6 +527,57 @@ def test_framework_config_and_get_current_audit_timestamp_use_configured_timezon
 
     with pytest.raises(ValueError, match='Invalid FABRICOPS_AUDIT_TIMEZONE: "Singapore"'):
         get_current_audit_timestamp(timezone_name="Singapore")
+
+
+def test_build_audit_timestamp_expr_uses_configured_timezone(monkeypatch):
+    """Verify Spark audit timestamp expressions use configured audit timezone."""
+    import sys
+    import types
+
+    fake_functions = types.SimpleNamespace(
+        current_timestamp=lambda: ("current_timestamp",),
+        from_utc_timestamp=lambda value, timezone: ("from_utc_timestamp", value, timezone),
+    )
+    fake_sql = types.ModuleType("pyspark.sql")
+    fake_sql.functions = fake_functions
+    fake_pyspark = types.ModuleType("pyspark")
+    fake_pyspark.sql = fake_sql
+    monkeypatch.setitem(sys.modules, "pyspark", fake_pyspark)
+    monkeypatch.setitem(sys.modules, "pyspark.sql", fake_sql)
+    monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
+    base = framework_config()
+    singapore = FrameworkConfig(
+        path_config=base.path_config,
+        governance_config=base.governance_config,
+        data_agreement_config=base.data_agreement_config,
+        audit_timezone="Asia/Singapore",
+    )
+
+    assert build_audit_timestamp_expr(config=singapore) == (
+        "from_utc_timestamp",
+        ("current_timestamp",),
+        "Asia/Singapore",
+    )
+    assert build_audit_timestamp_expr(config=framework_config()) == ("current_timestamp",)
+
+
+def test_metadata_writers_do_not_use_utc_or_raw_spark_timestamp_sources():
+    """Verify metadata writers route timestamps through audit timezone helpers."""
+    writer_sources = [
+        Path("src/fabricops_kit/data_agreement.py"),
+        Path("src/fabricops_kit/governance_review.py"),
+        Path("src/fabricops_kit/metadata.py"),
+        Path("src/fabricops_kit/pipeline.py"),
+    ]
+    forbidden = ["datetime.utcnow", "datetime.now(timezone.utc", "datetime.now(UTC", "pandas.Timestamp.utcnow"]
+    for path in writer_sources:
+        source = path.read_text(encoding="utf-8")
+        for marker in forbidden:
+            assert marker not in source, f"{path} uses {marker}"
+    raw_current_timestamp_users = [
+        path for path in writer_sources if "current_timestamp(" in path.read_text(encoding="utf-8")
+    ]
+    assert raw_current_timestamp_users == []
 
 
 def test_env_config_template_exposes_audit_timezone_setting():

@@ -781,7 +781,6 @@ def _setup_notebook_workflow(
 ) -> NotebookSetupContext:
     """Own setup_notebook orchestration behind the frozen public API."""
     from uuid import uuid4
-    from datetime import datetime, timezone
 
     normalized = _validate_framework_config(config)
     required_targets = required_targets or ["Source", "Unified"]
@@ -812,7 +811,7 @@ def _setup_notebook_workflow(
     user_name = ctx("userName") or ctx("userId") or "unknown"
     run_id = (
         ctx("currentRunId")
-        or f"{run_id_prefix}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
+        or f"{run_id_prefix}_{get_current_audit_timestamp(config=normalized).replace('-', '').replace(':', '').replace('+', '_').replace('.', '_')}_{uuid4().hex[:8]}"
     )
 
     runtime_meta = {

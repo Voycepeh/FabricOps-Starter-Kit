@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
+
 import pytest
 
 import fabricops_kit.data_agreement as agreement
@@ -31,7 +33,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
     monkeypatch.setattr(agreement, "_build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
     monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
-    monkeypatch.setattr(agreement, "_generate_agreement_id", lambda: "DA-GENERATED")
+    monkeypatch.setattr(agreement, "_generate_agreement_id", lambda *args, **kwargs: "DA-GENERATED")
     monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
 
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
@@ -50,6 +52,41 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
     assert (created["contract_version"], updated["contract_version"]) == ("1.0.0", "1.1.0")
     assert [write["table"] for write in writes] == ["CUSTOM_STEWARD", "CUSTOM_AGREEMENT", "CUSTOM_AGREEMENT"]
     assert all(write["env"] == "dev" for write in writes)
+
+
+def test_agreement_metadata_writer_payloads_match_typed_bootstrap_contract(monkeypatch):
+    """Verify agreement metadata rows use timestamp-compatible typed payloads."""
+    writes = []
+    config = agreement_config()
+
+    monkeypatch.setattr(agreement, "_list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: writes.append(kwargs["row"]))
+
+    steward = agreement._create_or_update_data_steward(
+        spark=object(),
+        config=config,
+        env="dev",
+        values=steward_row(),
+    )
+    created = agreement._create_or_update_data_agreement(
+        spark=object(),
+        config=config,
+        env="dev",
+        values=agreement_row(),
+    )
+
+    assert isinstance(steward["effective_from"], date)
+    assert steward["effective_to"] is None
+    assert isinstance(steward["is_active"], bool)
+    assert isinstance(steward["_committed_at"], datetime)
+    assert isinstance(created["start_date"], date)
+    assert isinstance(created["expiry_date"], date)
+    assert isinstance(created["approved_usage_internal"], bool)
+    assert isinstance(created["approved_usage_external"], bool)
+    assert isinstance(created["approved_usage_research"], bool)
+    assert isinstance(created["_committed_at"], datetime)
+    assert len(writes) == 2
 
 
 def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
