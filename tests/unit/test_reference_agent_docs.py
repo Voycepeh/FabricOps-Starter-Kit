@@ -754,7 +754,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 123
+    assert summary_counts["callable_kind"]["function"] == 130
     assert summary_counts["public_classes"] == 7
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
@@ -1782,6 +1782,7 @@ def test_callable_architecture_layer_rules_and_labels():
 
     assert validator.CALLABLE_FILE_PATTERN == "Public callable file -> domain shared helper -> same-file private helper"
     assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
+    assert "src/fabricops_kit/widgets/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long chain"
@@ -2481,8 +2482,8 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
     expected_counts = {
         "public": 27,
-        "internal": 96,
-        "private_helper": 297,
+        "internal": 103,
+        "private_helper": 290,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 

@@ -42,7 +42,7 @@ VISIBLE_LAYERS = {"public", "internal"}
 PRIVATE_HELPER_LAYER = "private_helper"
 OLD_VISIBLE_LAYER_LABELS = {"Public API", "Utility", "Adapter", "Workflow", "Private"}
 CALLABLE_FILE_PATTERN = "Public callable file -> domain shared helper -> same-file private helper"
-DOMAIN_SHARED_HELPER_FILES = {"src/fabricops_kit/io/shared.py"}
+DOMAIN_SHARED_HELPER_FILES = {"src/fabricops_kit/io/shared.py", "src/fabricops_kit/widgets/shared.py"}
 
 
 @dataclass(frozen=True)

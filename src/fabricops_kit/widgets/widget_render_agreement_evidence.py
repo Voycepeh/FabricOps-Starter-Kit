@@ -14,12 +14,12 @@ from fabricops_kit.widgets.shared import (
     AGREEMENT_EVIDENCE_MIME_TYPES,
     AGREEMENT_EVIDENCE_TYPES,
     DATA_AGREEMENT_EVIDENCE_TABLE,
-    _config_value,
-    _list_all_data_agreement_rows,
-    _render_searchable_selector,
-    _require_ipywidgets,
-    _widget_common,
-    _write_row,
+    config_value,
+    list_all_data_agreement_rows,
+    render_searchable_selector,
+    require_ipywidgets,
+    widget_common,
+    write_widget_metadata_row,
 )
 
 
@@ -144,7 +144,7 @@ def _save_agreement_evidence_records(
     )
     uploaded_by = audit.get("_committed_by") or ""
 
-    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
     rows: list[dict[str, Any]] = []
     for reference in file_references:
         row = {
@@ -159,7 +159,7 @@ def _save_agreement_evidence_records(
             "uploaded_by": uploaded_by,
             **audit,
         }
-        _write_row(
+        write_widget_metadata_row(
             spark=spark,
             config=config,
             env=env,
@@ -174,13 +174,13 @@ def _render_agreement_evidence_widget_workflow(
     *, spark: Any, config: Any, env: str, display_widget: bool = True
 ) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
-    widgets = _require_ipywidgets()
+    widgets = require_ipywidgets()
     from IPython import display as ip
 
     row_lookup: dict[str, dict[str, Any]] = {}
 
     def _agreement_rows() -> list[dict[str, Any]]:
-        return _list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
+        return list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
 
     def _version_key(row: dict[str, Any]) -> str:
         agreement_id = str(row.get("agreement_id") or "").strip()
@@ -202,7 +202,7 @@ def _render_agreement_evidence_widget_workflow(
         return rows
 
     message = widgets.HTML(value="")
-    version_selector = _render_searchable_selector(
+    version_selector = render_searchable_selector(
         widgets=widgets,
         label="Agreement Version",
         rows=_selector_rows(),
@@ -220,14 +220,14 @@ def _render_agreement_evidence_widget_workflow(
     )
     selected = version_selector["selector"]
     evidence_type = widgets.Dropdown(
-        options=[(item, item) for item in AGREEMENT_EVIDENCE_TYPES], **_widget_common(widgets, "Evidence Type")
+        options=[(item, item) for item in AGREEMENT_EVIDENCE_TYPES], **widget_common(widgets, "Evidence Type")
     )
     evidence_file_paths = widgets.Textarea(
         placeholder=(
             "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/signed_agreement.pdf\n"
             "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/email_approval.pdf"
         ),
-        **_widget_common(widgets, "Evidence File Paths"),
+        **widget_common(widgets, "Evidence File Paths"),
     )
     instructions = widgets.HTML(
         value=(

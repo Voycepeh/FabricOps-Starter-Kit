@@ -18,7 +18,7 @@ from typing import Any
 from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook, coerce_metadata_row_types
-from .widgets.shared import _html_escape, _render_custom_fields, _render_searchable_selector, _require_ipywidgets, _standard_widget, _widget_common
+from .widgets.shared import _html_escape, _render_custom_fields, render_searchable_selector, require_ipywidgets, _standard_widget, widget_common
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -625,7 +625,7 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
         attributes on the selector for advanced notebook automation.
 
     """
-    widgets = _require_ipywidgets()
+    widgets = require_ipywidgets()
     from IPython import display as ip
 
     global _SELECTED_AGREEMENT
@@ -650,7 +650,7 @@ def widget_select_agreement(agreement_rows: Any = None, *, context: dict[str, An
         agreement_id = str(row.get("agreement_id") or "").strip()
         return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
 
-    selector_parts = _render_searchable_selector(
+    selector_parts = render_searchable_selector(
         widgets=widgets,
         label="Agreement",
         rows=latest_rows,

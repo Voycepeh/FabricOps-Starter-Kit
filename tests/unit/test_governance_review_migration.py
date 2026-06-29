@@ -121,6 +121,26 @@ def test_widget_modules_do_not_call_public_widget_functions():
     assert offenders == []
 
 
+def test_widget_modules_do_not_import_private_shared_widget_helpers():
+    """Verify widget modules use architecture-visible helpers from widgets.shared."""
+    import ast
+
+    root = Path(__file__).parents[2]
+    widgets_dir = root / "src" / "fabricops_kit" / "widgets"
+    offenders = []
+    for path in widgets_dir.glob("widget_*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if node.module != "fabricops_kit.widgets.shared":
+                continue
+            for alias in node.names:
+                if alias.name.startswith("_"):
+                    offenders.append(f"{path.relative_to(root)} imports {alias.name} from widgets.shared")
+    assert offenders == []
+
+
 def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callables():
     """Verify no source tests docs or templates reference removed modules or callables."""
     root = Path(__file__).parents[2]
