@@ -2365,11 +2365,14 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
     assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
-    assert ".callable-review-table{width:max-content;min-width:100%;table-layout:auto" in compact_inventory_text
+    assert ".callable-review-table{width:100%;table-layout:auto" in compact_inventory_text
     assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-details{min-width:9rem;white-space:normal" in compact_inventory_text
-    assert ".inventory-detailsummary{cursor:pointer;list-style:none" in compact_inventory_text
-    assert ".inventory-detail-panel{margin-top:.35rem;padding:.5rem" in compact_inventory_text
+    assert ".callable-review-table.col-details{width:6rem;white-space:nowrap" in compact_inventory_text
+    assert ".details-row{display:none}" in compact_inventory_text
+    assert ".details-row.is-open{display:table-row}" in compact_inventory_text
+    assert ".details-panel{max-width:100%;padding:.85rem1rem" in compact_inventory_text
+    assert "data-details-toggle" in inventory_text
+    assert "detailsRow(i)" in inventory_text
     assert "<thclass='col-recommended-action'>Recommendedaction</th>" in compact_inventory_text
     assert "<thclass='col-details'>Details</th>" in compact_inventory_text
     assert "<strong>Finding:</strong>" in inventory_text
