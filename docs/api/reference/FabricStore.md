@@ -6,9 +6,9 @@ Configured Fabric lakehouse or warehouse connection details.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/shared.py:216`
+`fabricops_kit/config/shared.py:226`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L216-L253">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L226-L263">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

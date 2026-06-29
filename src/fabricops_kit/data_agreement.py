@@ -16,7 +16,7 @@ import re
 import sys
 from typing import Any
 
-from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
+from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, STANDARD_METADATA_AUDIT_SCHEMA, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
 
@@ -24,10 +24,7 @@ DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
-STANDARD_RUNTIME_AUDIT_COLUMNS = [
-    "_committed_by", "_committed_at", "_notebook_name", "_workspace_name",
-    "_metadata_lakehouse_name", "_activity_id",
-]
+STANDARD_RUNTIME_AUDIT_COLUMNS = [name for name, _kind in STANDARD_METADATA_AUDIT_SCHEMA]
 DATA_STEWARD_VISIBLE_FIELDS = [
     "steward_name", "steward_role", "contact", "effective_from", "effective_to",
 ]
@@ -557,9 +554,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     row["steward_id"] = str(values.get("steward_id") or "").strip() or _generate_steward_id(row)
     explicit_active = values.get("is_active")
     if explicit_active not in (None, "") and not _to_bool(explicit_active):
-        row["is_active"] = "false"
+        row["is_active"] = False
     else:
-        row["is_active"] = "true" if _active_steward({**row, "is_active": row.get("is_active", "")}) else "false"
+        row["is_active"] = _active_steward({**row, "is_active": row.get("is_active", "")})
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
@@ -673,6 +670,8 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     active_steward_ids = {str(item["steward_id"]) for item in _list_data_stewards(config, env, spark_session=spark, active_only=True)}
     if str(row["steward_id"]) not in active_steward_ids:
         raise ValueError("steward_id must reference an active data steward.")
+    for field in usage_fields:
+        row[field] = _to_bool(row.get(field))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     if latest is not None:
         new_snapshot = _business_agreement_snapshot(row)
@@ -775,7 +774,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agree
             "file_name": reference["file_name"],
             "file_path": reference["file_path"],
             "mime_type": reference["mime_type"],
-            "file_size": reference["file_size"],
+            "file_size": int(reference["file_size"] or 0),
             "uploaded_at": uploaded_at,
             "uploaded_by": uploaded_by,
             **audit,

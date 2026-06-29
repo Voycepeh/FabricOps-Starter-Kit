@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ import pytest
 import fabricops_kit
 import fabricops_kit.data_agreement as agreement
 import fabricops_kit.metadata as metadata
+from fabricops_kit.config import FrameworkConfig
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -26,6 +28,35 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     assert audit["_committed_by"] == "fabricops.test@example.com"
     assert audit["_metadata_lakehouse_name"] == "lh_metadata_dev"
     assert audit["_activity_id"] == "manual-activity"
+    assert isinstance(audit["_committed_at"], datetime)
+
+
+def test_runtime_audit_fields_respect_configured_timezone():
+    """Verify runtime audit timestamps respect configured audit timezone."""
+    base = framework_config()
+    cfg = FrameworkConfig(
+        path_config=base.path_config,
+        governance_config=base.governance_config,
+        data_agreement_config=base.data_agreement_config,
+        audit_timezone="Asia/Singapore",
+    )
+
+    audit = metadata._build_runtime_audit_fields(config=cfg, env="dev")
+
+    assert isinstance(audit["_committed_at"], datetime)
+    assert audit["_committed_at"].utcoffset() is not None
+    assert audit["_committed_at"].utcoffset().total_seconds() == 8 * 60 * 60
+
+
+def test_runtime_audit_fields_coerce_committed_at_override_to_timestamp():
+    """Verify row-dict audit overrides become timestamp-compatible values."""
+    audit = metadata._build_runtime_audit_fields(
+        config=framework_config(),
+        env="dev",
+        committed_at="2026-01-01T00:00:00+00:00",
+    )
+
+    assert audit["_committed_at"] == datetime(2026, 1, 1, tzinfo=timezone.utc)
 
 
 def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
@@ -63,6 +94,8 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
 
     assert list(row) == metadata.NOTEBOOK_REGISTRY_FIELDS
     assert row["notebook_url"] == "https://app.fabric.microsoft.com/groups/workspace-id/notebooks/notebook-id"
+    assert isinstance(row["registered_at"], datetime)
+    assert isinstance(row["_committed_at"], datetime)
     assert [(env, target, table) for _, env, target, table, _ in writes] == [
         ("dev", "metadata", metadata.NOTEBOOK_REGISTRY_TABLE),
     ]

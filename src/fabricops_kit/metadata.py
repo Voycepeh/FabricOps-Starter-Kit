@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from .config.shared import get_current_audit_timestamp, get_store
+from .config.shared import STANDARD_METADATA_AUDIT_SCHEMA, get_current_audit_timestamp, get_store
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
@@ -38,7 +38,9 @@ NOTEBOOK_REGISTRY_STATE_FIELDS = [
     "superseded_by_registration_id",
 ]
 
-NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS]
+STANDARD_RUNTIME_AUDIT_COLUMNS = [name for name, _kind in STANDARD_METADATA_AUDIT_SCHEMA]
+
+NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS, *STANDARD_RUNTIME_AUDIT_COLUMNS]
 
 
 def _notebook_registration_key(row: dict[str, Any]) -> str:
@@ -63,6 +65,16 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
 
 def _now_utc_iso(config: Any = None) -> str:
     return get_current_audit_timestamp(config=config, drop_microseconds=False)
+
+
+def _audit_timestamp_value(config: Any = None, value: Any = None) -> datetime:
+    """Return a timestamp-compatible audit value for metadata writes."""
+    if isinstance(value, datetime):
+        return value
+    text = str(value or get_current_audit_timestamp(config=config, drop_microseconds=False)).strip()
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    return datetime.fromisoformat(text)
 
 
 def _resolve_action_by(action_by: str | None = None) -> str:
@@ -122,7 +134,7 @@ def _write_guardrail_result_row(
         "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
         "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
         "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
-        "created_at": _now_utc_iso(config),
+        "created_at": _audit_timestamp_value(config=config),
         **audit,
     }
     context = {"config": config, "env": env}
@@ -210,7 +222,7 @@ def _build_runtime_audit_fields(
     committed_by: str | None = None,
     committed_at: str | None = None,
     runtime_context: dict[str, Any] | None = None,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Build reusable framework-managed audit fields for metadata-table rows.
 
     Parameters
@@ -263,9 +275,7 @@ def _build_runtime_audit_fields(
         user_field: _safe_str(committed_by).strip()
         if committed_by and _safe_str(committed_by).strip()
         else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-        timestamp_field: _safe_str(committed_at)
-        if committed_at
-        else get_current_audit_timestamp(config=config),
+        timestamp_field: _audit_timestamp_value(config=config, value=committed_at),
         workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
         notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
         metadata_lakehouse_field: metadata_lakehouse_name,
@@ -381,12 +391,13 @@ def _register_current_notebook(
         ),
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
-        "registered_at": get_current_audit_timestamp(config=config, drop_microseconds=False),
+        "registered_at": _audit_timestamp_value(config=config),
         "agreement_contract_version": _safe_str(contract_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),
-        "superseded_at": _safe_str(superseded_at),
+        "superseded_at": _audit_timestamp_value(config=config, value=superseded_at) if superseded_at else None,
         "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
+        **_build_runtime_audit_fields(config=config, env=env),
     }
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}

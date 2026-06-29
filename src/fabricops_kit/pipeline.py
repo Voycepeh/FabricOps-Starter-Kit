@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 from uuid import uuid4
@@ -240,6 +241,16 @@ def _now_iso(config: Any = None) -> str:
     return get_current_audit_timestamp(config=config)
 
 
+def _timestamp_value(config: Any = None, value: Any = None) -> datetime:
+    """Return a timestamp-compatible value for metadata rows."""
+    if isinstance(value, datetime):
+        return value
+    text = str(value or get_current_audit_timestamp(config=config, drop_microseconds=False)).strip()
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    return datetime.fromisoformat(text)
+
+
 def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
     return str(definition.get("table_name") or definition.get("name") or name)
 
@@ -266,12 +277,12 @@ def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
     return ",".join(sorted(concrete))
 
 
-def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
+def _runtime_audit_fields(config: Any, env: str) -> dict[str, Any]:
     try:
         return _build_runtime_audit_fields(config=config, env=env)
     except Exception:
         return {
-            "_committed_at": _now_iso(config),
+            "_committed_at": _timestamp_value(config),
             "_committed_by": "unknown",
             "_workspace_name": "",
             "_notebook_name": "",
@@ -1263,7 +1274,7 @@ def _write_pipeline_lineage_workflow(
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env)
-    created_at = _now_iso(config)
+    created_at = _timestamp_value(config)
     if relationships is None:
         relationships = [
             {
@@ -1461,8 +1472,8 @@ def _write_pipeline_run_summary_workflow(
         message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
 
     config, env, resolved_context = resolve_fabric_context(context=context)
-    completed = completed_at or _now_iso(config)
-    started = started_at or completed
+    completed = _timestamp_value(config, completed_at) if completed_at else _timestamp_value(config)
+    started = _timestamp_value(config, started_at) if started_at else completed
     sources = source_definitions or {}
     targets = target_definitions or {}
     source_guardrail_status = _summary_status(
@@ -1486,6 +1497,7 @@ def _write_pipeline_run_summary_workflow(
         "target_write_status": dict(target_write_status or {}),
         "lineage_result": dict(lineage_result or {}),
     }
+    audit = _runtime_audit_fields(config, env)
     row = {
         "run_id": run_id or str(uuid4()),
         "agreement_id": agreement_id,
@@ -1507,7 +1519,8 @@ def _write_pipeline_run_summary_workflow(
         "catalogue_status": catalogue_status,
         "message": message,
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _now_iso(config),
+        "created_at": _timestamp_value(config),
+        **audit,
     }
     write_lakehouse_table_core(
         spark.createDataFrame([row]),

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import DataAgreementConfig, FrameworkConfig, GovernanceConfig, PathConfig, get_store
+from .shared import DataAgreementConfig, FrameworkConfig, GovernanceConfig, PathConfig, STANDARD_METADATA_AUDIT_SCHEMA, get_store
 
 METADATA_DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 METADATA_DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
@@ -17,15 +17,6 @@ METADATA_GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 METADATA_GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
 METADATA_NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
-
-STANDARD_RUNTIME_AUDIT_COLUMNS = [
-    "_committed_by",
-    "_committed_at",
-    "_notebook_name",
-    "_workspace_name",
-    "_metadata_lakehouse_name",
-    "_activity_id",
-]
 
 
 def _spark_types():
@@ -147,17 +138,22 @@ def _resolved_metadata_table_names(config: FrameworkConfig) -> dict[str, str]:
     return names
 
 
-def _audit_fields(string: Any) -> list[tuple[str, Any]]:
-    """Return standard runtime audit fields."""
-    return [(name, string) for name in STANDARD_RUNTIME_AUDIT_COLUMNS]
+def _audit_fields(string: Any, timestamp: Any | None = None) -> list[tuple[str, Any]]:
+    """Return the central runtime audit schema fields for metadata tables."""
+    if timestamp is None:
+        *_, TimestampType = _spark_types()
+        timestamp = TimestampType()
+    type_map = {"string": string, "timestamp": timestamp}
+    return [(name, type_map[kind]) for name, kind in STANDARD_METADATA_AUDIT_SCHEMA]
 
 
 def _metadata_data_steward_schema(table_name: str):
     """Return the typed schema for METADATA_DATA_STEWARD."""
-    BooleanType, DateType, _, _, StringType, _, _, _ = _spark_types()
+    BooleanType, DateType, _, _, StringType, _, _, TimestampType = _spark_types()
     string = StringType()
     date = DateType()
     boolean = BooleanType()
+    timestamp = TimestampType()
     return _schema(
         table_name,
         [
@@ -169,17 +165,18 @@ def _metadata_data_steward_schema(table_name: str):
             ("effective_to", date),
             ("is_active", boolean),
             ("custom_fields_json", string),
-            *_audit_fields(string),
+            *_audit_fields(string, timestamp),
         ],
     )
 
 
 def _metadata_data_agreement_schema(table_name: str):
     """Return the typed schema for METADATA_DATA_AGREEMENT."""
-    BooleanType, DateType, _, _, StringType, _, _, _ = _spark_types()
+    BooleanType, DateType, _, _, StringType, _, _, TimestampType = _spark_types()
     string = StringType()
     date = DateType()
     boolean = BooleanType()
+    timestamp = TimestampType()
     return _schema(
         table_name,
         [
@@ -196,7 +193,7 @@ def _metadata_data_agreement_schema(table_name: str):
             ("approved_usage_external", boolean),
             ("approved_usage_research", boolean),
             ("custom_fields_json", string),
-            *_audit_fields(string),
+            *_audit_fields(string, timestamp),
         ],
     )
 
@@ -219,7 +216,7 @@ def _metadata_data_agreement_evidence_schema(table_name: str):
             ("file_size", long),
             ("uploaded_at", timestamp),
             ("uploaded_by", string),
-            *_audit_fields(string),
+            *_audit_fields(string, timestamp),
         ],
     )
 
@@ -253,6 +250,7 @@ def _metadata_notebook_registry_schema(table_name: str):
             ("registration_status", string),
             ("superseded_at", timestamp),
             ("superseded_by_registration_id", string),
+            *_audit_fields(string, timestamp),
         ],
     )
 
@@ -261,49 +259,49 @@ def _metadata_data_catalogue_schema(table_name: str):
     """Return the typed schema for METADATA_DATA_CATALOGUE."""
     BooleanType, _, DoubleType, LongType, StringType, _, _, TimestampType = _spark_types()
     string = StringType(); long = LongType(); double = DoubleType(); boolean = BooleanType(); timestamp = TimestampType()
-    return _schema(table_name, [("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("profiled_at", string), ("run_timestamp", timestamp), ("evidence_role", string), ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double), ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string), ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string), ("governance_mode", string), ("approval_policy", string), ("bypass_allowed", boolean), ("policy_reason", string), ("policy_updated_by", string), ("policy_updated_at", string), ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), *_audit_fields(string)])
+    return _schema(table_name, [("metadata_table_key", string), ("metadata_column_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("layer", string), ("asset_kind", string), ("pipeline_name", string), ("profile_run_id", string), ("profile_stage", string), ("profile_status", string), ("profiled_at", timestamp), ("run_timestamp", timestamp), ("evidence_role", string), ("data_type", string), ("row_count", long), ("null_count", long), ("null_percent", double), ("distinct_count", long), ("distinct_percent", double), ("min_value", string), ("max_value", string), ("distribution_type", string), ("distribution_json", string), ("profile_mode", string), ("watermark_column", string), ("watermark_value", string), ("profile_hash", string), ("profile_payload_json", string), ("governance_mode", string), ("approval_policy", string), ("bypass_allowed", boolean), ("policy_reason", string), ("policy_updated_by", string), ("policy_updated_at", timestamp), ("agreement_id", string), ("contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), *_audit_fields(string, timestamp)])
 
 
 def _metadata_enrichment_rules_schema(table_name: str):
     """Return the typed schema for METADATA_ENRICHMENT_RULES."""
-    BooleanType, _, _, _, StringType, _, _, _ = _spark_types()
-    string = StringType(); boolean = BooleanType()
-    return _schema(table_name, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("review_state", string), ("activation_state", string), ("is_active", boolean), ("created_by_role", string), ("source_notebook_type", string), ("source_notebook_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("requires_governance_review", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), ("created_at", string), ("created_by", string), ("updated_at", string), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *_audit_fields(string)])
+    BooleanType, DateType, _, _, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); boolean = BooleanType(); timestamp = TimestampType()
+    return _schema(table_name, [("enrichment_rule_id", string), ("enrichment_rule_version", string), ("enrichment_rule_key", string), ("metadata_table_key", string), ("metadata_column_key", string), ("table_name", string), ("column_name", string), ("enrichment_scope", string), ("enrichment_type", string), ("enrichment_payload_json", string), ("business_name", string), ("business_description", string), ("business_meaning", string), ("column_description", string), ("classification", string), ("sensitivity_label", string), ("pii_flag", boolean), ("pii_type", string), ("data_domain", string), ("data_owner", string), ("data_steward", string), ("usage_notes", string), ("quality_notes", string), ("review_status", string), ("review_state", string), ("activation_state", string), ("is_active", boolean), ("created_by_role", string), ("source_notebook_type", string), ("source_notebook_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", timestamp), ("requires_governance_review", boolean), ("approval_policy", string), ("governance_mode", string), ("submitted_by", string), ("submitted_at", timestamp), ("reviewed_by", string), ("reviewed_at", timestamp), ("review_decision", string), ("review_comment", string), ("bypass_reason", string), ("requires_post_review", boolean), ("supersedes_enrichment_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", timestamp), ("effective_to", timestamp), ("created_at", timestamp), ("created_by", string), ("updated_at", timestamp), ("updated_by", string), ("run_id", string), ("notebook_id", string), ("notebook_registry_id", string), *_audit_fields(string, timestamp)])
 
 
 def _metadata_guardrail_rules_schema(table_name: str):
     """Return the typed schema for METADATA_GUARDRAIL_RULES."""
-    BooleanType, _, _, _, StringType, _, _, _ = _spark_types()
-    string = StringType(); boolean = BooleanType()
-    return _schema(table_name, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("activation_state", string), ("is_active", boolean), ("review_status", string), ("review_state", string), ("created_by_role", string), ("author_role", string), ("created_by", string), ("created_at", string), ("approved_by", string), ("approved_at", string), ("suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", string), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_governance_review", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", string), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", string), ("reviewed_by", string), ("reviewed_at", string), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", string), ("effective_to", string), *_audit_fields(string)])
+    BooleanType, DateType, _, _, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); boolean = BooleanType(); timestamp = TimestampType()
+    return _schema(table_name, [("rule_key", string), ("rule_id", string), ("metadata_column_key", string), ("metadata_table_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("rule_parameters_json", string), ("severity", string), ("description", string), ("activation_state", string), ("is_active", boolean), ("review_status", string), ("review_state", string), ("created_by_role", string), ("author_role", string), ("created_by", string), ("created_at", timestamp), ("approved_by", string), ("approved_at", timestamp), ("suggestion_json", string), ("action_type", string), ("source_notebook_type", string), ("source_notebook_id", string), ("source_workspace_id", string), ("activation_reason", string), ("activated_by", string), ("activated_at", timestamp), ("superseded_by_rule_key", string), ("notes", string), ("approval_required", boolean), ("approval_bypassed", boolean), ("requires_governance_review", boolean), ("requires_post_review", boolean), ("bypass_reason", string), ("bypassed_by", string), ("bypassed_at", timestamp), ("governance_mode", string), ("approval_policy", string), ("submitted_by", string), ("submitted_at", timestamp), ("reviewed_by", string), ("reviewed_at", timestamp), ("review_decision", string), ("review_comment", string), ("supersedes_rule_id", string), ("supersedes_record_id", string), ("superseded_by_record_id", string), ("effective_from", timestamp), ("effective_to", timestamp), *_audit_fields(string, timestamp)])
 
 
 def _metadata_guardrail_results_schema(table_name: str):
     """Return the typed schema for METADATA_GUARDRAIL_RESULTS."""
-    BooleanType, _, _, _, StringType, _, _, _ = _spark_types()
-    string = StringType(); boolean = BooleanType()
-    return _schema(table_name, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", string), *_audit_fields(string)])
+    BooleanType, _, _, _, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); boolean = BooleanType(); timestamp = TimestampType()
+    return _schema(table_name, [("result_id", string), ("run_id", string), ("rule_key", string), ("environment_name", string), ("dataset_name", string), ("table_name", string), ("column_name", string), ("guardrail_type", string), ("rule_type", string), ("status", string), ("can_continue", boolean), ("severity", string), ("reason", string), ("expected_value_json", string), ("actual_value_json", string), ("result_payload_json", string), ("created_at", timestamp), *_audit_fields(string, timestamp)])
 
 
 def _metadata_data_lineage_table_schema(table_name: str):
     """Return the typed schema for METADATA_DATA_LINEAGE_TABLE."""
-    _, _, _, _, StringType, _, _, _ = _spark_types()
-    string = StringType()
-    return _schema(table_name, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", string), *_audit_fields(string)])
+    _, _, _, _, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); timestamp = TimestampType()
+    return _schema(table_name, [("lineage_id", string), ("dataset_name", string), ("run_id", string), ("source_table", string), ("target_table", string), ("source_table_key", string), ("target_table_key", string), ("transformation_steps_json", string), ("created_at", timestamp), *_audit_fields(string, timestamp)])
 
 
 def _metadata_pipeline_runs_schema(table_name: str):
     """Return the typed schema for METADATA_PIPELINE_RUNS."""
-    _, _, _, LongType, StringType, _, _, _ = _spark_types()
-    string = StringType(); long = LongType()
-    return _schema(table_name, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", string), ("completed_at", string), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", string)])
+    _, _, _, LongType, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); long = LongType(); timestamp = TimestampType()
+    return _schema(table_name, [("run_id", string), ("agreement_id", string), ("agreement_contract_version", string), ("notebook_registry_id", string), ("notebook_id", string), ("notebook_type", string), ("pipeline_name", string), ("environment_name", string), ("started_at", timestamp), ("completed_at", timestamp), ("status", string), ("source_count", long), ("target_count", long), ("source_guardrail_status", string), ("target_guardrail_status", string), ("dq_status", string), ("lineage_status", string), ("catalogue_status", string), ("message", string), ("run_summary_json", string), ("created_at", timestamp), *_audit_fields(string, timestamp)])
 
 
 def _metadata_data_access_schema(table_name: str):
     """Return the typed schema for METADATA_DATA_ACCESS."""
-    _, _, _, _, StringType, _, _, _ = _spark_types()
-    string = StringType()
-    return _schema(table_name, [("user_principal", string), ("role_name", string), ("permission", string), ("access_purpose", string), ("approval_status", string), ("access_scope", string), ("table_id", string), ("metadata_table_key", string), ("metadata_column_key", string), ("granted_date", string), ("expires_at", string), ("approved_by", string), ("approved_at", string), ("notes", string), *_audit_fields(string)])
+    _, DateType, _, _, StringType, _, _, TimestampType = _spark_types()
+    string = StringType(); date = DateType(); timestamp = TimestampType()
+    return _schema(table_name, [("user_principal", string), ("role_name", string), ("permission", string), ("access_purpose", string), ("approval_status", string), ("access_scope", string), ("table_id", string), ("metadata_table_key", string), ("metadata_column_key", string), ("granted_date", date), ("expires_at", timestamp), ("approved_by", string), ("approved_at", timestamp), ("notes", string), *_audit_fields(string, timestamp)])
 
 
 def _metadata_table_definitions(config: FrameworkConfig | dict[str, Any]) -> dict[str, Any]:

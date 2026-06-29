@@ -107,9 +107,9 @@ def agreement_row(**overrides: Any) -> dict[str, Any]:
         "start_date": "2026-01-01",
         "expiry_date": "2026-12-31",
         "business_purpose": "Governed reporting",
-        "approved_usage_internal": "Approved internal reporting only",
-        "approved_usage_external": "",
-        "approved_usage_research": "",
+        "approved_usage_internal": True,
+        "approved_usage_external": False,
+        "approved_usage_research": False,
     }
     row.update(overrides)
     return row

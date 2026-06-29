@@ -477,6 +477,16 @@ def test_setup_metadata_tables_bootstrap_schemas_use_typed_contracts():
     assert type_name("METADATA_DATA_AGREEMENT_EVIDENCE", "uploaded_at") == "TimestampType"
     assert type_name("METADATA_NOTEBOOK_REGISTRY", "registered_at") == "TimestampType"
     assert type_name("METADATA_NOTEBOOK_REGISTRY", "superseded_at") == "TimestampType"
+    assert type_name("METADATA_PIPELINE_RUNS", "started_at") == "TimestampType"
+    assert type_name("METADATA_PIPELINE_RUNS", "completed_at") == "TimestampType"
+    assert type_name("METADATA_PIPELINE_RUNS", "created_at") == "TimestampType"
+    assert type_name("METADATA_PIPELINE_RUNS", "source_count") == "LongType"
+    assert type_name("METADATA_PIPELINE_RUNS", "target_count") == "LongType"
+    for table_name, schema in definitions.items():
+        field_types = {field.name: type(field.dataType).__name__ for field in schema.fields}
+        assert len(set(field_types.values())) > 1, table_name
+        if "_committed_at" in field_types:
+            assert field_types["_committed_at"] == "TimestampType"
 
 
 def test_setup_metadata_tables_has_no_cross_file_private_dependency():
@@ -658,5 +668,5 @@ def test_env_config_template_imports_config_from_root_only():
 def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
-    assert "from .config.shared import get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from .config.shared import STANDARD_METADATA_AUDIT_SCHEMA, get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/data_profiling/shared.py").read_text(encoding="utf-8")

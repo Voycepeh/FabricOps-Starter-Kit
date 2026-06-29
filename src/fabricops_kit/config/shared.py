@@ -14,6 +14,16 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 DEFAULT_AUDIT_TIMEZONE = "UTC"
 
+STANDARD_METADATA_AUDIT_SCHEMA = (
+    ("_committed_by", "string"),
+    ("_committed_at", "timestamp"),
+    ("_workspace_name", "string"),
+    ("_notebook_name", "string"),
+    ("_metadata_lakehouse_name", "string"),
+    ("_activity_id", "string"),
+)
+
+
 
 _DEFAULT_CONTEXT_ERROR = "No active Fabric context found. Please run 00_env_config before running this notebook."
 
