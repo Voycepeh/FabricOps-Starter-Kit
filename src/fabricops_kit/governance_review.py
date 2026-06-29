@@ -11,7 +11,7 @@ from typing import Any, Iterable, Mapping
 from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .data_profiling.shared import profile_dataframe_core
-from .metadata import _now_utc_iso, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row
+from .metadata import _audit_timestamp_value, _now_audit_timestamp, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row, coerce_metadata_row_types
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -207,7 +207,7 @@ def _normalize_dq_severity(severity: Any) -> str:
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
     actor = _resolve_action_by(approved_by)
     audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
-    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _now_utc_iso(config), audit
+    return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _audit_timestamp_value(config), audit
 
 
 def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:
@@ -719,7 +719,7 @@ def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, c
     """Append descriptive enrichment intent only to ``METADATA_ENRICHMENT_RULES``."""
     if records:
         write_lakehouse_table_core(
-            spark_session.createDataFrame(records),
+            spark_session.createDataFrame([coerce_metadata_row_types(ENRICHMENT_RULES_TABLE, record) for record in records]),
             ENRICHMENT_RULES_TABLE,
             target="metadata",
             schema=configured_lakehouse_schema(config, env, "metadata"),
@@ -993,7 +993,7 @@ def _evaluate_governance_readiness(
                 warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
 
     outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
-    reviewed_at = _now_utc_iso(config)
+    reviewed_at = _audit_timestamp_value(config)
     actor = _resolve_action_by(reviewed_by)
     audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
     evidence_summary = {
@@ -1088,7 +1088,7 @@ def record_table_governance(
         actor=approved_by,
     )
     actor = _resolve_action_by(approved_by)
-    reviewed_at = _now_utc_iso(config)
+    reviewed_at = _audit_timestamp_value(config)
     for record in enrichment_records:
         record.update({
             "activation_state": "active",
@@ -1121,7 +1121,7 @@ def record_table_governance(
     }
     for table_name, records in writes.items():
         if records:
-            write_lakehouse_table_core(spark_session.createDataFrame(records), table_name, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
+            write_lakehouse_table_core(spark_session.createDataFrame([coerce_metadata_row_types(table_name, record) for record in records]), table_name, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
 
     readiness_summary = None
     if evaluate_readiness:
@@ -1711,7 +1711,7 @@ def _lifecycle_fields(*, activation_state: str, review_state: str, actor: str, n
 
 def _authoring_lifecycle(policy: Mapping[str, Any], *, action: str = "save", actor: str | None = None, bypass_reason: str = "", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering", config: Any = None) -> dict[str, Any]:
     """Return lifecycle fields for authoring save, draft, submit, and apply-now actions."""
-    now = _now_utc_iso(config)
+    now = _audit_timestamp_value(config)
     resolved = _resolve_action_by(actor)
     if action == "draft":
         return _lifecycle_fields(activation_state="inactive", review_state="draft", actor=resolved, now=now, created_by_role=created_by_role, source_notebook_type=source_notebook_type)
@@ -1791,7 +1791,7 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
     """
     _assert_governance_review_context(source_notebook_type)
     row = dict(rule)
-    now = _now_utc_iso(config)
+    now = _audit_timestamp_value(config)
     reviewer = _resolve_action_by(actor)
     legacy_supersede = action == "supersede"
     action = "replace" if legacy_supersede else action
@@ -1844,7 +1844,7 @@ def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *
     """
     _assert_governance_review_context(source_notebook_type)
     row = dict(record)
-    now = _now_utc_iso(config)
+    now = _audit_timestamp_value(config)
     reviewer = _resolve_action_by(actor)
     legacy_supersede = action == "supersede"
     action = "replace" if legacy_supersede else action
@@ -1936,7 +1936,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
         source_notebook_type=source_notebook_type,
         created_by_role=created_by_role,
     )
-    created_at = _now_utc_iso(config)
+    created_at = _audit_timestamp_value(config)
     created_by = _resolve_action_by(actor)
     return {"rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
 
@@ -2005,7 +2005,7 @@ def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str,
     if not records:
         return
     write_lakehouse_table_core(
-        spark_session.createDataFrame(records),
+        spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_RULES_TABLE, record) for record in records]),
         GUARDRAIL_RULES_TABLE,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
@@ -2552,7 +2552,7 @@ def build_table_governance_policy_record(state: Mapping[str, Any], *, governance
     if mode not in {"governed", "ungoverned"}:
         raise ValueError("governance_mode must be governed or ungoverned")
     policy = str(approval_policy or ("approval_required_with_bypass" if mode == "governed" else "no_approval_required"))
-    now = _now_utc_iso(config)
+    now = _audit_timestamp_value(config)
     return {
         "review_id": str(uuid.uuid4()),
         "environment_name": str(state.get("environment_name") or ""),

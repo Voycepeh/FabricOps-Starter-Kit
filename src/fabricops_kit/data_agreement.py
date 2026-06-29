@@ -9,7 +9,7 @@ are append-only and use framework-managed runtime audit columns.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 import hashlib
 import json
 import re
@@ -18,7 +18,7 @@ from typing import Any
 
 from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
+from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook, coerce_metadata_row_types
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -435,11 +435,16 @@ def _to_bool(value: Any) -> bool:
     raise ValueError(f"Unsupported boolean value: {value!r}. Use true/false, 1/0, yes/no, or y/n.")
 
 
-def _active_steward(row: dict[str, Any]) -> bool:
+def _audit_date(config: Any = None) -> date:
+    """Return today in the configured FabricOps audit timezone."""
+    return datetime.fromisoformat(get_current_audit_timestamp(config=config)).date()
+
+
+def _active_steward(row: dict[str, Any], config: Any = None) -> bool:
     is_active = row.get("is_active")
     if is_active not in (None, "") and not _to_bool(is_active):
         return False
-    today = datetime.now(timezone.utc).date()
+    today = _audit_date(config)
     try:
         starts_before_today = not row.get("effective_from") or date.fromisoformat(str(row["effective_from"])[:10]) <= today
         ends_after_today = not row.get("effective_to") or date.fromisoformat(str(row["effective_to"])[:10]) >= today
@@ -487,22 +492,22 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
             return []
         raise
     latest = _latest_by_key(rows, "steward_id")
-    return [row for row in latest if _active_steward(row)] if active_only else latest
+    return [row for row in latest if _active_steward(row, config)] if active_only else latest
 
 
 def _write_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table_core(spark.createDataFrame([row]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
+    write_lakehouse_table_core(spark.createDataFrame([coerce_metadata_row_types(table, row)]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 
-def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
-    """Return an ISO date string or raise a clear intake validation error."""
+def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
+    """Return a date object or raise a clear intake validation error."""
     text = str(value or "").strip()
     if not text:
         if required:
             raise ValueError(f"{field_name} is required.")
-        return ""
+        return None
     try:
-        return date.fromisoformat(text[:10]).isoformat()
+        return date.fromisoformat(text[:10])
     except ValueError as exc:
         raise ValueError(f"{field_name} must be a valid ISO date (YYYY-MM-DD).") from exc
 
@@ -557,9 +562,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     row["steward_id"] = str(values.get("steward_id") or "").strip() or _generate_steward_id(row)
     explicit_active = values.get("is_active")
     if explicit_active not in (None, "") and not _to_bool(explicit_active):
-        row["is_active"] = "false"
+        row["is_active"] = False
     else:
-        row["is_active"] = "true" if _active_steward({**row, "is_active": row.get("is_active", "")}) else "false"
+        row["is_active"] = bool(_active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
@@ -619,12 +624,13 @@ def _list_data_agreements(config: Any, env: str, *, spark_session: Any = None, a
     agreements = _latest_agreement_versions(rows)
     if not active_only:
         return agreements
-    today = datetime.now(timezone.utc).date()
+    today = _audit_date(config)
     return [row for row in agreements if (not row.get("start_date") or date.fromisoformat(str(row["start_date"])[:10]) <= today) and (not row.get("expiry_date") or date.fromisoformat(str(row["expiry_date"])[:10]) >= today)]
 
 
-def _generate_agreement_id() -> str:
-    return "DA-" + datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")
+def _generate_agreement_id(config: Any = None) -> str:
+    value = datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
+    return "DA-" + value.strftime("%Y%m%d-%H%M%S-%f")
 
 
 def _to_iso_date(value: Any) -> str:
@@ -657,7 +663,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
         row["contract_version"] = _next_minor_version(latest.get("contract_version"))
     else:
         latest = None
-        row["agreement_id"] = str(row.get("agreement_id") or "").strip() or _generate_agreement_id()
+        row["agreement_id"] = str(row.get("agreement_id") or "").strip() or _generate_agreement_id(config)
         row["contract_version"] = str(row.get("contract_version") or "1.0.0").strip()
     required = ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
@@ -762,7 +768,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agree
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
     audit = _build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
-    uploaded_at = audit.get("_committed_at") or get_current_audit_timestamp(config=config, drop_microseconds=False)
+    uploaded_at = audit.get("_committed_at") or datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
     uploaded_by = audit.get("_committed_by") or ""
 
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}

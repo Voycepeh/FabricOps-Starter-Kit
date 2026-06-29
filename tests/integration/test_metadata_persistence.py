@@ -1,95 +1,65 @@
-"""Test FabricOps behavior and reference contracts."""
+"""Test FabricOps metadata setup persistence behavior."""
 
 from __future__ import annotations
 
 import pytest
 
 from fabricops_kit.config import setup_metadata_tables
+from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.integration
 
 
-def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
+class Table:
+    """Minimal table fake exposing columns and active steward count."""
+
+    def __init__(self, columns: list[str], count: int = 1) -> None:
+        """Initialize the fake table with columns and an optional count."""
+        self.columns = list(columns)
+        self._count = count
+
+    def where(self, _expr: str) -> "Table":
+        """Return self for active steward filtering."""
+        return self
+
+    def count(self) -> int:
+        """Return configured fake row count."""
+        return self._count
+
+
+def test_central_metadata_setup_preserves_existing_valid_tables():
     """Verify central metadata setup preserves existing valid tables."""
-    import fabricops_kit.config.shared as config_module
-    import fabricops_kit.io.shared as io
-    import fabricops_kit.governance_review as governance
-
-    class Schema:
-        def __init__(self, fields):
-            self._fields = list(fields)
-
-        def fieldNames(self):  # noqa: N802 - mirrors Spark API
-            return list(self._fields)
-
-    class Table:
-        def __init__(self, fields):
-            self.columns = list(fields)
-
-    schemas = {
-        "METADATA_DATA_STEWARD": Schema(["steward_id", "is_active"]),
-        "METADATA_DATA_AGREEMENT": Schema(["agreement_id"]),
-        "METADATA_DATA_AGREEMENT_EVIDENCE": Schema(["agreement_id", "file_path"]),
-        "METADATA_NOTEBOOK_REGISTRY": Schema(["agreement_id", "registration_id"]),
-        "METADATA_GUARDRAIL_RULES": Schema(["rule_id"]),
-    }
+    registry = metadata_table_schema_registry()
     reads = []
-    writes = []
-
-    def read_table(table, *, target, context, spark_session=None, **kwargs):
-        assert context["env"] == "dev"
-        assert target == "metadata"
-        reads.append((context["env"], target, table))
-        return Table(schemas[table].fieldNames())
 
     class Spark:
-        def sql(self, statement):
-            raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
+        def table(self, table: str) -> Table:
+            reads.append(table)
+            return Table(registry[table].fieldNames())
 
-    monkeypatch.setattr(config_module, "_get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", read_table)
-    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
-    monkeypatch.setattr("fabricops_kit.data_agreement._list_data_stewards", lambda *args, **kwargs: [{"steward_id": "s1"}])
+        def sql(self, statement: str) -> None:
+            raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
-    assert result["tables"] == list(schemas)
+    assert result["tables"] == CANONICAL_METADATA_TABLES
     assert result["created_tables"] == []
     assert result["warnings"] == []
-    assert result["active_metadata_tables"] == list(schemas)
-    assert result["created_or_checked_tables"] == list(schemas)
-    assert writes == []
-    assert reads == [("dev", "metadata", table) for table in list(schemas) + list(schemas)]
+    assert result["active_metadata_tables"] == CANONICAL_METADATA_TABLES
+    assert result["created_or_checked_tables"] == CANONICAL_METADATA_TABLES
+    assert reads == [*CANONICAL_METADATA_TABLES, "METADATA_DATA_STEWARD"]
 
 
-def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
+def test_central_metadata_setup_rejects_existing_tables_missing_columns():
     """Verify central metadata setup rejects existing tables missing columns."""
-    import fabricops_kit.config.shared as config_module
-    import fabricops_kit.io.shared as io
-    import fabricops_kit.governance_review as governance
 
-    class Schema:
-        def __init__(self, fields):
-            self._fields = list(fields)
+    class Spark:
+        def table(self, table: str) -> Table:
+            if table == "METADATA_DATA_STEWARD":
+                return Table(["steward_id"])
+            return Table(metadata_table_schema_registry()[table].fieldNames())
 
-        def fieldNames(self):  # noqa: N802 - mirrors Spark API
-            return list(self._fields)
-
-    schemas = {
-        "METADATA_DATA_STEWARD": Schema(["steward_id", "is_active"]),
-        "METADATA_GUARDRAIL_RULES": Schema(["rule_id"]),
-    }
-
-    class BadTable:
-        columns = ["steward_id"]
-
-    monkeypatch.setattr(config_module, "_get_metadata_table_schema_registry", lambda config: schemas)
-    monkeypatch.setattr(governance, "_get_governance_metadata_schemas", lambda: {"METADATA_GUARDRAIL_RULES": schemas["METADATA_GUARDRAIL_RULES"]})
-    monkeypatch.setattr(io, "read_lakehouse_table_core", lambda *args, **kwargs: BadTable())
-    monkeypatch.setattr(io, "write_lakehouse_table_core", lambda *args, **kwargs: pytest.fail("invalid existing schema should not be overwritten"))
-
-    with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): is_active"):
-        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): .*effective_from"):
+        setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
