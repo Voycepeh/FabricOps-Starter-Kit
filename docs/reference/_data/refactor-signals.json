@@ -8,11 +8,57 @@
     "possible_grouping_mismatches": []
   },
   "setup_metadata_tables": {
-    "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-    "unique_internal_helper_count": 2,
-    "repeated_helpers": [],
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+    "unique_internal_helper_count": 14,
+    "repeated_helpers": [
+      {
+        "helper": "_spark_types",
+        "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+        "branch_count": 3
+      },
+      {
+        "helper": "_normalize_path_config",
+        "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
+        "branch_count": 2
+      },
+      {
+        "helper": "_validate_audit_timezone",
+        "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
+        "branch_count": 2
+      },
+      {
+        "helper": "_validate_framework_config",
+        "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+        "branch_count": 2
+      }
+    ],
     "deep_call_chains": [],
-    "single_delegate_helpers": [],
+    "single_delegate_helpers": [
+      {
+        "helper": "_existing_table_columns",
+        "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+        "delegates_to": "_is_table_not_found_error",
+        "delegates_to_qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error"
+      },
+      {
+        "helper": "_string_metadata_schema",
+        "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+        "delegates_to": "_spark_types",
+        "delegates_to_qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types"
+      },
+      {
+        "helper": "_typed_metadata_schema",
+        "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+        "delegates_to": "_spark_types",
+        "delegates_to_qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types"
+      },
+      {
+        "helper": "_write_bootstrap_table",
+        "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+        "delegates_to": "_empty_dataframe_for_schema",
+        "delegates_to_qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema"
+      }
+    ],
     "possible_grouping_mismatches": []
   },
   "setup_notebook": {

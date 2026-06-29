@@ -46,7 +46,7 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
         "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
-    assert setup_metadata_tables.__module__ == "fabricops_kit.config"
+    assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -198,7 +198,8 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
 def test_setup_metadata_tables_creates_missing_tables_with_direct_delta_bootstrap(monkeypatch):
     """Verify setup metadata tables creates missing tables with direct Delta writes."""
-    import fabricops_kit.config as config_module
+    import importlib
+    config_module = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
 
     class Schema:
         def __init__(self, fields):
@@ -250,7 +251,8 @@ def test_setup_metadata_tables_creates_missing_tables_with_direct_delta_bootstra
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
     """Verify setup metadata tables remains ready without active steward unless required."""
-    import fabricops_kit.config as config_module
+    import importlib
+    config_module = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
 
     class Schema:
         def fieldNames(self):  # noqa: N802 - mirrors Spark API
@@ -377,7 +379,8 @@ def test_metadata_registration_validation_warns_for_missing_configured_tables(mo
 
 def test_setup_metadata_tables_passes_metadata_schema_to_direct_paths(monkeypatch):
     """Verify setup metadata tables passes metadata schema to direct Lakehouse paths."""
-    import fabricops_kit.config as config_module
+    import importlib
+    config_module = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
 
     class Schema:
         def fieldNames(self):  # noqa: N802
@@ -403,7 +406,8 @@ def test_setup_metadata_tables_passes_metadata_schema_to_direct_paths(monkeypatc
 
 def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     """Verify setup metadata tables reports configured metadata schema."""
-    import fabricops_kit.config as config_module
+    import importlib
+    config_module = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
 
     class Schema:
         def fieldNames(self):  # noqa: N802
@@ -567,7 +571,7 @@ def test_config_public_import_contract_and_package_shape():
     assert Path("src/fabricops_kit/config/models.py").exists() is False
     assert Path("src/fabricops_kit/config/get_fabric_context.py").exists()
     assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
-    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists() is False
+    assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
     assert Path("src/fabricops_kit/config/shared.py").exists()
     assert config_package.__file__.endswith("config/__init__.py")
     assert RootFabricStore is ConfigFabricStore
@@ -578,7 +582,7 @@ def test_config_public_import_contract_and_package_shape():
     assert root_setup_notebook is fabricops_kit.setup_notebook
     assert root_setup_metadata_tables is fabricops_kit.setup_metadata_tables
     assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
-    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config"
+    assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
     assert fabricops_kit.get_fabric_context.__module__ == "fabricops_kit.config.get_fabric_context"
 
 

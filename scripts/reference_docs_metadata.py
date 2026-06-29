@@ -384,7 +384,7 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
-  'module': 'config',
+  'module': 'config.setup_metadata_tables',
   'function_type': 'callable',
   'summary_override': 'Create or validate all FabricOps metadata tables through one setup action.',
   'symbol_name': 'setup_metadata_tables',

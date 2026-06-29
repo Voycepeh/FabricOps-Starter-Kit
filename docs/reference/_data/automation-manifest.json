@@ -633,9 +633,7 @@
     "type": "internal",
     "role": "internal",
     "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.config.setup_metadata_tables"
-    ],
+    "inbound": [],
     "outbound": [],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -659,9 +657,7 @@
     "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
-    "related_functions": [
-      "setup_metadata_tables"
-    ]
+    "related_functions": []
   },
   {
     "name": "_normalize_path_config",
@@ -868,9 +864,7 @@
     "type": "internal",
     "role": "internal",
     "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.config._metadata_table_definitions"
-    ],
+    "inbound": [],
     "outbound": [],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -894,9 +888,7 @@
     "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
-    "related_functions": [
-      "_metadata_table_definitions"
-    ]
+    "related_functions": []
   },
   {
     "name": "_validate_audit_timezone",
@@ -938,10 +930,7 @@
     "type": "internal",
     "role": "internal",
     "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.config._metadata_table_definitions",
-      "fabricops_kit.config.setup_metadata_tables"
-    ],
+    "inbound": [],
     "outbound": [],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -965,10 +954,7 @@
     "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
-    "related_functions": [
-      "_metadata_table_definitions",
-      "setup_metadata_tables"
-    ]
+    "related_functions": []
   },
   {
     "name": "_validate_metadata_table_registration",
@@ -1216,10 +1202,7 @@
     "type": "internal",
     "role": "internal",
     "function_category": "utility",
-    "inbound": [
-      "fabricops_kit.config._metadata_table_path",
-      "fabricops_kit.config.setup_metadata_tables"
-    ],
+    "inbound": [],
     "outbound": [],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -1243,10 +1226,7 @@
     "related_guides": [],
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
-    "related_functions": [
-      "_metadata_table_path",
-      "setup_metadata_tables"
-    ]
+    "related_functions": []
   },
   {
     "name": "resolve_fabric_context",
@@ -1282,17 +1262,496 @@
     "related_functions": []
   },
   {
+    "name": "_active_steward_count",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 175,
+    "source_end_line": 185,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+    "docs_path": null,
+    "summary": "Return a best-effort count of active steward rows without agreement helpers.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables"
+    ]
+  },
+  {
+    "name": "_empty_dataframe_for_schema",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 120,
+    "source_end_line": 122,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L120-L122",
+    "docs_path": null,
+    "summary": "Create an empty Spark DataFrame for a bootstrap schema.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_write_bootstrap_table"
+    ]
+  },
+  {
+    "name": "_existing_table_columns",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._table_exists",
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 156,
+    "source_end_line": 166,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+    "docs_path": null,
+    "summary": "Return existing Delta table columns, or None when the path is absent.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_table_exists",
+      "setup_metadata_tables",
+      "_is_table_not_found_error"
+    ]
+  },
+  {
+    "name": "_is_table_not_found_error",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._existing_table_columns"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 130,
+    "source_end_line": 153,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L130-L153",
+    "docs_path": null,
+    "summary": "Return whether an exception clearly indicates an absent Delta path/table.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_existing_table_columns"
+    ]
+  },
+  {
+    "name": "_metadata_schema_field_names",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 44,
+    "source_end_line": 48,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+    "docs_path": null,
+    "summary": "Return field names from a Spark StructType-like schema.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables"
+    ]
+  },
+  {
+    "name": "_metadata_table_definitions",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._spark_types",
+      "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+      "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+      "fabricops_kit.config.shared._validate_framework_config"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 78,
+    "source_end_line": 105,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+    "docs_path": null,
+    "summary": "Return config-owned metadata bootstrap table definitions.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "_spark_types",
+      "_string_metadata_schema",
+      "_typed_metadata_schema",
+      "_validate_framework_config"
+    ]
+  },
+  {
+    "name": "_metadata_table_path",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.config.shared.get_store"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 108,
+    "source_end_line": 117,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+    "docs_path": null,
+    "summary": "Return the configured Lakehouse Delta path for a metadata table.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "get_store"
+    ]
+  },
+  {
+    "name": "_spark_types",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+      "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema"
+    ],
+    "outbound": [],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 25,
+    "source_end_line": 41,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+    "docs_path": null,
+    "summary": "Return Spark SQL type classes lazily so package import stays lightweight.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_metadata_table_definitions",
+      "_string_metadata_schema",
+      "_typed_metadata_schema"
+    ]
+  },
+  {
+    "name": "_string_metadata_schema",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions"
+    ],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._spark_types"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 51,
+    "source_end_line": 62,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+    "docs_path": null,
+    "summary": "Build an explicit all-string Spark schema for lightweight metadata tables.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_metadata_table_definitions",
+      "_spark_types"
+    ]
+  },
+  {
+    "name": "_table_exists",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._table_exists",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._existing_table_columns"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 125,
+    "source_end_line": 127,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L125-L127",
+    "docs_path": null,
+    "summary": "Return whether a Delta table path can be read.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_existing_table_columns"
+    ]
+  },
+  {
+    "name": "_typed_metadata_schema",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions"
+    ],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._spark_types"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 65,
+    "source_end_line": 75,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+    "docs_path": null,
+    "summary": "Build a typed Spark schema with duplicate-name validation.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_metadata_table_definitions",
+      "_spark_types"
+    ]
+  },
+  {
+    "name": "_write_bootstrap_table",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+    "module": "config.setup_metadata_tables",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "internal-private",
+    "inbound": [
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+    ],
+    "outbound": [
+      "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 169,
+    "source_end_line": 172,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+    "docs_path": null,
+    "summary": "Write an empty Delta table at the target path.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "Not documented yet",
+    "output": "Not documented yet",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "setup_metadata_tables",
+      "_empty_dataframe_for_schema"
+    ]
+  },
+  {
     "name": "setup_metadata_tables",
-    "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-    "module": "config",
+    "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+    "module": "config.setup_metadata_tables",
     "type": "callable",
     "role": "callable",
     "function_category": "public_starter_kit",
     "inbound": [],
     "outbound": [
-      "fabricops_kit.config._metadata_schema_field_names",
-      "fabricops_kit.config._validate_framework_config",
-      "fabricops_kit.config.get_store"
+      "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+      "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+      "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+      "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+      "fabricops_kit.config.shared._validate_framework_config",
+      "fabricops_kit.config.shared.get_store"
     ],
     "used_in_templates": [
       "00_env_config"
@@ -1303,10 +1762,10 @@
     ],
     "expanded_purpose": "Prepares FabricOps metadata tables through configured metadata target ABFSS paths, not Spark partial namespaces or an attached default lakehouse.",
     "when_to_use": "Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.",
-    "source_file": "src/fabricops_kit/config/shared.py",
-    "source_start_line": null,
-    "source_end_line": null,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py",
+    "source_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+    "source_start_line": 188,
+    "source_end_line": 285,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
     "docs_path": "api/reference/setup_metadata_tables.md",
     "summary": "Create or validate all FabricOps metadata tables through one setup action.",
     "use_when": "Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.",
@@ -2501,6 +2960,8 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
       "fabricops_kit.config.shared._get_active_metadata_tables",
       "fabricops_kit.config.shared._get_metadata_table_schema_registry",
       "fabricops_kit.config.shared._setup_notebook_workflow",
@@ -2534,6 +2995,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "_metadata_table_definitions",
+      "setup_metadata_tables",
       "_get_active_metadata_tables",
       "_get_metadata_table_schema_registry",
       "_setup_notebook_workflow",
@@ -2818,6 +3281,8 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
+      "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+      "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
       "fabricops_kit.config.shared._detect_nested_metadata_delta_folders",
       "fabricops_kit.config.shared._resolve_metadata_schema",
       "fabricops_kit.config.shared._run_config_smoke_tests",
@@ -2855,6 +3320,8 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
+      "_metadata_table_path",
+      "setup_metadata_tables",
       "_detect_nested_metadata_delta_folders",
       "_resolve_metadata_schema",
       "_run_config_smoke_tests",

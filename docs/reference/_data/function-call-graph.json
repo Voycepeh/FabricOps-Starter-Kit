@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-29T11:21:33.699213Z",
+    "generated_at_utc": "2026-06-29T11:45:39.342394Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -332,48 +332,28 @@
       ],
       "callable_role_detail_label": "Schema utility",
       "dependency_role": "schema_utility",
-      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables",
-      "owner_function": "setup_metadata_tables",
-      "owner_module": "config",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
       "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Merge into owner",
+      "usage_scope": "unused",
+      "usage_scope_label": "Unused",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Remove redundant wrapper",
       "priority": "Medium",
       "signals": [
-        "Used several times in one function",
-        "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
-      "call_site_count": 2,
+      "called_by_count": 0,
+      "call_site_count": 0,
       "recursive": false,
-      "repeated_within_single_caller": true,
+      "repeated_within_single_caller": false,
       "calls_count": 0,
-      "callers": [
-        {
-          "function": "setup_metadata_tables",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": null,
-          "docs_path": "docs/api/reference/setup_metadata_tables.md",
-          "docs_url": "../../api/reference/setup_metadata_tables/",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
-          ],
-          "dependency_role": "public_api_entrypoint"
-        }
-      ],
+      "callers": [],
       "callees": []
     },
     {
@@ -802,48 +782,28 @@
       ],
       "callable_role_detail_label": "Internal validator, Config validator",
       "dependency_role": "internal_validator",
-      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables",
-      "owner_function": "setup_metadata_tables",
-      "owner_module": "config",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
       "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
-      "recommended_action": "Merge into owner",
+      "usage_scope": "unused",
+      "usage_scope_label": "Unused",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Remove redundant wrapper",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
-        "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
-      "call_site_count": 1,
+      "called_by_count": 0,
+      "call_site_count": 0,
       "recursive": false,
       "repeated_within_single_caller": false,
       "calls_count": 0,
-      "callers": [
-        {
-          "function": "setup_metadata_tables",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": null,
-          "docs_path": "docs/api/reference/setup_metadata_tables.md",
-          "docs_url": "../../api/reference/setup_metadata_tables/",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
-          ],
-          "dependency_role": "public_api_entrypoint"
-        }
-      ],
+      "callers": [],
       "callees": []
     },
     {
@@ -1157,8 +1117,8 @@
       "source_end_line": 629,
       "function_type": "Shared helper",
       "layer": "internal",
-      "review_status": "classified",
-      "review_status_label": "Classified",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1176,8 +1136,8 @@
       "leaks_outside_owner_file": false,
       "usage_scope": "",
       "usage_scope_label": "",
-      "reachability_kind": "directly_reachable",
-      "reachability_label": "Reachable from public API",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
       "recommended_action": "Next step",
       "priority": "Low",
       "signals": [
@@ -1185,30 +1145,12 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 1,
-      "call_site_count": 3,
+      "called_by_count": 0,
+      "call_site_count": 0,
       "recursive": false,
-      "repeated_within_single_caller": true,
+      "repeated_within_single_caller": false,
       "calls_count": 0,
-      "callers": [
-        {
-          "function": "setup_metadata_tables",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "source_url": null,
-          "docs_path": "docs/api/reference/setup_metadata_tables.md",
-          "docs_url": "../../api/reference/setup_metadata_tables/",
-          "layer": "public",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "public_api_entrypoint",
-            "metadata_setup_workflow",
-            "public_stable"
-          ],
-          "dependency_role": "public_api_entrypoint"
-        }
-      ],
+      "callers": [],
       "callees": []
     },
     {
@@ -1263,100 +1205,6 @@
       "calls_count": 0,
       "callers": [],
       "callees": []
-    },
-    {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-      "function_name": "setup_metadata_tables",
-      "module": "config",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": null,
-      "source_start_line": null,
-      "source_end_line": null,
-      "function_type": "Public function",
-      "layer": "public",
-      "review_status": "classified",
-      "review_status_label": "Classified",
-      "callable_kind": "function",
-      "callable_role": [
-        "public_api_entrypoint",
-        "metadata_setup_workflow",
-        "public_stable"
-      ],
-      "callable_role_group": "public_entrypoint",
-      "callable_role_group_label": "Public entrypoint",
-      "callable_role_detail": [
-        "public_api_entrypoint",
-        "metadata_setup_workflow",
-        "public_stable"
-      ],
-      "callable_role_detail_label": "Public api entrypoint, Metadata setup workflow, Public stable",
-      "dependency_role": "public_api_entrypoint",
-      "owner_qualified_name": "",
-      "owner_function": "",
-      "owner_module": "",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "",
-      "usage_scope_label": "",
-      "reachability_kind": "public_entrypoint",
-      "reachability_label": "Public entrypoint",
-      "recommended_action": "Public API entrypoint",
-      "priority": "Low",
-      "signals": [
-        "allowed_internal_role_call"
-      ],
-      "architecture_signals": [],
-      "review_signals": [],
-      "called_by_count": 0,
-      "call_site_count": 0,
-      "recursive": false,
-      "repeated_within_single_caller": false,
-      "calls_count": 3,
-      "callers": [],
-      "callees": [
-        {
-          "function": "_metadata_schema_field_names",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L909-L913",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "schema_utility"
-          ],
-          "dependency_role": "schema_utility"
-        },
-        {
-          "function": "_validate_framework_config",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
-          "layer": "private_helper",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_validator",
-            "config_validator"
-          ],
-          "dependency_role": "internal_validator"
-        },
-        {
-          "function": "get_store",
-          "module": "config",
-          "qualified_name": "fabricops_kit.config.get_store",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
-          "layer": "internal",
-          "review_status": "classified",
-          "callable_kind": "function",
-          "callable_role": [
-            "internal_workflow"
-          ],
-          "dependency_role": "internal_workflow"
-        }
-      ],
-      "docs_path": "docs/api/reference/setup_metadata_tables.md",
-      "docs_url": "../../api/reference/setup_metadata_tables/"
     },
     {
       "qualified_name": "fabricops_kit.config.get_fabric_context.get_fabric_context",
@@ -1422,6 +1270,1111 @@
       ],
       "docs_path": "docs/api/reference/get_fabric_context.md",
       "docs_url": "../../api/reference/get_fabric_context/"
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+      "function_name": "_active_steward_count",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+      "source_start_line": 175,
+      "source_end_line": 185,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema",
+      "function_name": "_empty_dataframe_for_schema",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L120-L122",
+      "source_start_line": 120,
+      "source_end_line": 122,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+      "owner_function": "_write_bootstrap_table",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_write_bootstrap_table",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+      "function_name": "_existing_table_columns",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+      "source_start_line": 156,
+      "source_end_line": 166,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 2,
+      "call_site_count": 2,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "_table_exists",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._table_exists",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L125-L127",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_is_table_not_found_error",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L130-L153",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error",
+      "function_name": "_is_table_not_found_error",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L130-L153",
+      "source_start_line": 130,
+      "source_end_line": 153,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+      "owner_function": "_existing_table_columns",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+      "function_name": "_metadata_schema_field_names",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+      "source_start_line": 44,
+      "source_end_line": 48,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "schema_utility"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "schema_utility"
+      ],
+      "callable_role_detail_label": "Schema utility",
+      "dependency_role": "schema_utility",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Used several times in one function",
+        "Used by one function",
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 2,
+      "recursive": false,
+      "repeated_within_single_caller": true,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "function_name": "_metadata_table_definitions",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+      "source_start_line": 78,
+      "source_end_line": 105,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 4,
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_spark_types",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_string_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "schema_utility",
+            "local_leaf_helper"
+          ],
+          "dependency_role": "schema_utility"
+        },
+        {
+          "function": "_typed_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_validate_framework_config",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "config_validator"
+          ],
+          "dependency_role": "internal_validator"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+      "function_name": "_metadata_table_path",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+      "source_start_line": 108,
+      "source_end_line": 117,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "get_store",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+      "function_name": "_spark_types",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+      "source_start_line": 25,
+      "source_end_line": 41,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "owner_function": "_metadata_table_definitions",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Keep private helper",
+      "priority": "Low",
+      "signals": [
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 3,
+      "call_site_count": 3,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_string_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "schema_utility",
+            "local_leaf_helper"
+          ],
+          "dependency_role": "schema_utility"
+        },
+        {
+          "function": "_typed_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": []
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+      "function_name": "_string_metadata_schema",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+      "source_start_line": 51,
+      "source_end_line": 62,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "schema_utility",
+        "local_leaf_helper"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "schema_utility",
+        "local_leaf_helper"
+      ],
+      "callable_role_detail_label": "Schema utility, Local leaf helper",
+      "dependency_role": "schema_utility",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "owner_function": "_metadata_table_definitions",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Used several times in one function",
+        "Used by one function",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 4,
+      "recursive": false,
+      "repeated_within_single_caller": true,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_spark_types",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._table_exists",
+      "function_name": "_table_exists",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L125-L127",
+      "source_start_line": 125,
+      "source_end_line": 127,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "unused",
+      "usage_scope_label": "Unused",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Remove redundant wrapper",
+      "priority": "Medium",
+      "signals": [
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "call_site_count": 0,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+      "function_name": "_typed_metadata_schema",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+      "source_start_line": 65,
+      "source_end_line": 75,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+      "owner_function": "_metadata_table_definitions",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Used several times in one function",
+        "Used by one function",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 7,
+      "recursive": false,
+      "repeated_within_single_caller": true,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_spark_types",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+      "function_name": "_write_bootstrap_table",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+      "source_start_line": 169,
+      "source_end_line": 172,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "same_module",
+      "usage_scope_label": "Same module",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Merge into owner",
+      "priority": "Medium",
+      "signals": [
+        "Review for merge",
+        "Used by one function",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 1,
+      "callers": [
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        }
+      ],
+      "callees": [
+        {
+          "function": "_empty_dataframe_for_schema",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L120-L122",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "function_name": "setup_metadata_tables",
+      "module": "config.setup_metadata_tables",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+      "source_start_line": 188,
+      "source_end_line": 285,
+      "function_type": "Public function",
+      "layer": "public",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "public_api_entrypoint",
+        "metadata_setup_workflow",
+        "public_stable"
+      ],
+      "callable_role_group": "public_entrypoint",
+      "callable_role_group_label": "Public entrypoint",
+      "callable_role_detail": [
+        "public_api_entrypoint",
+        "metadata_setup_workflow",
+        "public_stable"
+      ],
+      "callable_role_detail_label": "Public api entrypoint, Metadata setup workflow, Public stable",
+      "dependency_role": "public_api_entrypoint",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "public_entrypoint",
+      "reachability_label": "Public entrypoint",
+      "recommended_action": "Public API entrypoint",
+      "priority": "Low",
+      "signals": [
+        "allowed_internal_role_call"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "call_site_count": 0,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 8,
+      "callers": [],
+      "callees": [
+        {
+          "function": "_active_steward_count",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_metadata_schema_field_names",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "schema_utility"
+          ],
+          "dependency_role": "schema_utility"
+        },
+        {
+          "function": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_metadata_table_path",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_write_bootstrap_table",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "_validate_framework_config",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_validator",
+            "config_validator"
+          ],
+          "dependency_role": "internal_validator"
+        },
+        {
+          "function": "get_store",
+          "module": "config.shared",
+          "qualified_name": "fabricops_kit.config.shared.get_store",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
+          "layer": "internal",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "docs_path": "docs/api/reference/setup_metadata_tables.md",
+      "docs_url": "../../api/reference/setup_metadata_tables/"
     },
     {
       "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
@@ -2771,7 +3724,7 @@
       "function_name": "_validate_framework_config",
       "module": "config.shared",
       "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
       "source_start_line": 477,
       "source_end_line": 539,
@@ -2792,27 +3745,58 @@
       ],
       "callable_role_detail_label": "Internal validator, Config validator",
       "dependency_role": "internal_validator",
-      "owner_qualified_name": "fabricops_kit.config.shared._get_active_metadata_tables",
-      "owner_function": "_get_active_metadata_tables",
-      "owner_module": "config.shared",
-      "leaks_outside_owner_file": false,
-      "usage_scope": "same_module",
-      "usage_scope_label": "Same module",
+      "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "owner_function": "setup_metadata_tables",
+      "owner_module": "config.setup_metadata_tables",
+      "leaks_outside_owner_file": true,
+      "usage_scope": "cross_module",
+      "usage_scope_label": "Cross module",
       "reachability_kind": "directly_reachable",
       "reachability_label": "Reachable from public API",
-      "recommended_action": "Keep private helper",
-      "priority": "Low",
+      "recommended_action": "Rename to shared helper",
+      "priority": "Medium",
       "signals": [
+        "Heavily used helper",
         "Layer assignment needs review"
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 4,
-      "call_site_count": 4,
+      "called_by_count": 6,
+      "call_site_count": 6,
       "recursive": false,
       "repeated_within_single_caller": false,
       "calls_count": 2,
       "callers": [
+        {
+          "function": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        },
         {
           "function": "_get_active_metadata_tables",
           "module": "config.shared",
@@ -3819,12 +4803,42 @@
       ],
       "architecture_signals": [],
       "review_signals": [],
-      "called_by_count": 10,
-      "call_site_count": 10,
+      "called_by_count": 12,
+      "call_site_count": 14,
       "recursive": false,
       "repeated_within_single_caller": false,
       "calls_count": 1,
       "callers": [
+        {
+          "function": "_metadata_table_path",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "dependency_role": "utility_function"
+        },
+        {
+          "function": "setup_metadata_tables",
+          "module": "config.setup_metadata_tables",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+          "docs_path": "docs/api/reference/setup_metadata_tables.md",
+          "docs_url": "../../api/reference/setup_metadata_tables/",
+          "layer": "public",
+          "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "public_api_entrypoint",
+            "metadata_setup_workflow",
+            "public_stable"
+          ],
+          "dependency_role": "public_api_entrypoint"
+        },
         {
           "function": "_detect_nested_metadata_delta_folders",
           "module": "config.shared",
@@ -34992,11 +36006,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -36965,11 +37979,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -37757,11 +38771,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -38696,11 +39710,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -39310,11 +40324,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -40219,11 +41233,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -40876,11 +41890,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -44756,11 +45770,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -47484,90 +48498,52 @@
       ]
     },
     {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables",
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
       "function_name": "setup_metadata_tables",
-      "module": "config",
+      "module": "config.setup_metadata_tables",
       "docs_path": "docs/api/reference/setup_metadata_tables.md",
       "docs_url": "../../api/reference/setup_metadata_tables/",
-      "source_path": "src/fabricops_kit/config/shared.py",
-      "owner_file": "src/fabricops_kit/config/shared.py",
-      "source_url": null,
-      "source_start_line": null,
-      "source_end_line": null,
-      "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+      "source_start_line": 188,
+      "source_end_line": 285,
+      "priority": "High",
+      "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
+        "Architecture violation",
+        "Many dependencies",
         "Review for merge"
       ],
-      "downstream_count": 3,
-      "max_depth": 1,
+      "downstream_count": 15,
+      "max_depth": 2,
       "modules_touched": [
-        "config"
+        "config.setup_metadata_tables",
+        "config.shared"
       ],
       "source_python_files": [
+        "src/fabricops_kit/config/setup_metadata_tables.py",
         "src/fabricops_kit/config/shared.py"
       ],
-      "external_dependents_count": 0,
-      "end_node_count": 3,
-      "architecture_violation_count": 0,
+      "external_dependents_count": 4,
+      "end_node_count": 7,
+      "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
-        "Cross-file private dependency": 0
+        "Cross-file private dependency": 1
       },
-      "helper_cleanup_candidates": 1,
+      "helper_cleanup_candidates": 7,
       "direct_callees": [
         {
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "function_name": "_metadata_schema_field_names",
-          "module": "config",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+          "function_name": "_active_steward_count",
+          "module": "config.setup_metadata_tables",
           "depth": 1,
           "function_type": "Private helper",
           "layer": "private_helper",
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "caller_type": "Public",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Used several times in one function",
-            "Used by one function",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Merge into owner",
-          "called_inside_flow_by": 1,
-          "call_site_count": 2,
-          "recursive": false,
-          "repeated_within_single_caller": true,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L909-L913",
-          "source_start_line": 909,
-          "source_end_line": 913,
-          "path_examples": [
-            [
-              "setup_metadata_tables",
-              "_metadata_schema_field_names"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "function_name": "_validate_framework_config",
-          "module": "config",
-          "depth": 1,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "caller_type": "Public",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
@@ -47587,6 +48563,250 @@
           "used_outside_flow": 0,
           "is_end_node": true,
           "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+          "source_start_line": 175,
+          "source_end_line": 185,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_active_steward_count"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "function_name": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "call_site_count": 2,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 1,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "source_start_line": 156,
+          "source_end_line": 166,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_existing_table_columns"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+          "function_name": "_metadata_schema_field_names",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Used several times in one function",
+            "Used by one function",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 2,
+          "recursive": false,
+          "repeated_within_single_caller": true,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+          "source_start_line": 44,
+          "source_end_line": 48,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_schema_field_names"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "function_name": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 4,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 4,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "source_start_line": 78,
+          "source_end_line": 105,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+          "function_name": "_metadata_table_path",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+          "source_start_line": 108,
+          "source_end_line": 117,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_path"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "function_name": "_write_bootstrap_table",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+          "source_start_line": 169,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_write_bootstrap_table"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "function_name": "_validate_framework_config",
+          "module": "config.shared",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Violation",
+          "violation_type": "Cross-file private dependency",
+          "signals": [
+            "Heavily used helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Rename to shared helper",
+          "called_inside_flow_by": 2,
+          "call_site_count": 6,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 4,
+          "is_end_node": false,
+          "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/shared.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
           "source_start_line": 477,
@@ -47594,43 +48814,54 @@
           "path_examples": [
             [
               "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_validate_framework_config"
+            ],
+            [
+              "setup_metadata_tables",
               "_validate_framework_config"
             ]
           ],
-          "helper_cleanup_candidate": true
+          "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.get_store",
+          "qualified_name": "fabricops_kit.config.shared.get_store",
           "function_name": "get_store",
-          "module": "config",
+          "module": "config.shared",
           "depth": 1,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
-          "simple_classification": "Unknown",
+          "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
-            "Possible inline/private helper"
+            "allowed_internal_role_call",
+            "Promote candidate"
           ],
-          "recommended_action": "Next step",
-          "called_inside_flow_by": 1,
-          "call_site_count": 3,
+          "recommended_action": "Heavily used helper",
+          "called_inside_flow_by": 2,
+          "call_site_count": 14,
           "recursive": false,
-          "repeated_within_single_caller": true,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 10,
+          "is_end_node": false,
+          "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
           "source_start_line": 590,
           "source_end_line": 629,
           "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_path",
+              "get_store"
+            ],
             [
               "setup_metadata_tables",
               "get_store"
@@ -47641,58 +48872,16 @@
       ],
       "transitive_callees": [
         {
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
-          "function_name": "_metadata_schema_field_names",
-          "module": "config",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+          "function_name": "_active_steward_count",
+          "module": "config.setup_metadata_tables",
           "depth": 1,
           "function_type": "Private helper",
           "layer": "private_helper",
           "layer_group": "Private helper",
           "simple_classification": "Private helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
-          "caller_type": "Public",
-          "callee_type": "Private helper",
-          "architecture_result": "Warning",
-          "violation_type": "Same-file private dependency",
-          "signals": [
-            "Used several times in one function",
-            "Used by one function",
-            "Leaf internal helper",
-            "Layer assignment needs review"
-          ],
-          "recommended_action": "Merge into owner",
-          "called_inside_flow_by": 1,
-          "call_site_count": 2,
-          "recursive": false,
-          "repeated_within_single_caller": true,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L909-L913",
-          "source_start_line": 909,
-          "source_end_line": 913,
-          "path_examples": [
-            [
-              "setup_metadata_tables",
-              "_metadata_schema_field_names"
-            ]
-          ],
-          "helper_cleanup_candidate": false
-        },
-        {
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
-          "function_name": "_validate_framework_config",
-          "module": "config",
-          "depth": 1,
-          "function_type": "Private helper",
-          "layer": "private_helper",
-          "layer_group": "Private helper",
-          "simple_classification": "Private helper",
-          "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "caller_type": "Public",
           "callee_type": "Private helper",
           "architecture_result": "Warning",
@@ -47712,6 +48901,250 @@
           "used_outside_flow": 0,
           "is_end_node": true,
           "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+          "source_start_line": 175,
+          "source_end_line": 185,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_active_steward_count"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "function_name": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "call_site_count": 2,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 1,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "source_start_line": 156,
+          "source_end_line": 166,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_existing_table_columns"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
+          "function_name": "_metadata_schema_field_names",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Used several times in one function",
+            "Used by one function",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 2,
+          "recursive": false,
+          "repeated_within_single_caller": true,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+          "source_start_line": 44,
+          "source_end_line": 48,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_schema_field_names"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "function_name": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 4,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 4,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "source_start_line": 78,
+          "source_end_line": 105,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+          "function_name": "_metadata_table_path",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+          "source_start_line": 108,
+          "source_end_line": 117,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_path"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "function_name": "_write_bootstrap_table",
+          "module": "config.setup_metadata_tables",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+          "source_start_line": 169,
+          "source_end_line": 172,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_write_bootstrap_table"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "function_name": "_validate_framework_config",
+          "module": "config.shared",
+          "depth": 1,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "direct",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "caller_type": "Public",
+          "callee_type": "Private helper",
+          "architecture_result": "Violation",
+          "violation_type": "Cross-file private dependency",
+          "signals": [
+            "Heavily used helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Rename to shared helper",
+          "called_inside_flow_by": 2,
+          "call_site_count": 6,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 4,
+          "is_end_node": false,
+          "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/shared.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
           "source_start_line": 477,
@@ -47719,38 +49152,44 @@
           "path_examples": [
             [
               "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_validate_framework_config"
+            ],
+            [
+              "setup_metadata_tables",
               "_validate_framework_config"
             ]
           ],
-          "helper_cleanup_candidate": true
+          "helper_cleanup_candidate": false
         },
         {
-          "qualified_name": "fabricops_kit.config.get_store",
+          "qualified_name": "fabricops_kit.config.shared.get_store",
           "function_name": "get_store",
-          "module": "config",
+          "module": "config.shared",
           "depth": 1,
           "function_type": "Shared helper",
           "layer": "internal",
           "layer_group": "Shared helper",
-          "simple_classification": "Unknown",
+          "simple_classification": "Shared helper",
           "edge_type": "direct",
-          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "caller_type": "Public",
           "callee_type": "Shared helper",
           "architecture_result": "Allowed",
           "violation_type": "",
           "signals": [
-            "Possible inline/private helper"
+            "allowed_internal_role_call",
+            "Promote candidate"
           ],
-          "recommended_action": "Next step",
-          "called_inside_flow_by": 1,
-          "call_site_count": 3,
+          "recommended_action": "Heavily used helper",
+          "called_inside_flow_by": 2,
+          "call_site_count": 14,
           "recursive": false,
-          "repeated_within_single_caller": true,
-          "calls_inside_flow": 0,
-          "used_outside_flow": 0,
-          "is_end_node": true,
-          "downstream_count": 0,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 10,
+          "is_end_node": false,
+          "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
           "source_start_line": 590,
@@ -47758,7 +49197,331 @@
           "path_examples": [
             [
               "setup_metadata_tables",
+              "_metadata_table_path",
               "get_store"
+            ],
+            [
+              "setup_metadata_tables",
+              "get_store"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema",
+          "function_name": "_empty_dataframe_for_schema",
+          "module": "config.setup_metadata_tables",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L120-L122",
+          "source_start_line": 120,
+          "source_end_line": 122,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_write_bootstrap_table",
+              "_empty_dataframe_for_schema"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error",
+          "function_name": "_is_table_not_found_error",
+          "module": "config.setup_metadata_tables",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L130-L153",
+          "source_start_line": 130,
+          "source_end_line": 153,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_existing_table_columns",
+              "_is_table_not_found_error"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+          "function_name": "_spark_types",
+          "module": "config.setup_metadata_tables",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 3,
+          "call_site_count": 3,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+          "source_start_line": 25,
+          "source_end_line": 41,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_spark_types"
+            ],
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_string_metadata_schema",
+              "_spark_types"
+            ],
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_typed_metadata_schema",
+              "_spark_types"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+          "function_name": "_string_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Used several times in one function",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 4,
+          "recursive": false,
+          "repeated_within_single_caller": true,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+          "source_start_line": 51,
+          "source_end_line": 62,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_string_metadata_schema"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+          "function_name": "_typed_metadata_schema",
+          "module": "config.setup_metadata_tables",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Used several times in one function",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 7,
+          "recursive": false,
+          "repeated_within_single_caller": true,
+          "calls_inside_flow": 1,
+          "used_outside_flow": 0,
+          "is_end_node": false,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+          "source_start_line": 65,
+          "source_end_line": 75,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_typed_metadata_schema"
+            ]
+          ],
+          "helper_cleanup_candidate": false
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
+          "function_name": "_normalize_path_config",
+          "module": "config.shared",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.shared.get_store",
+          "caller_type": "Shared helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Merge into owner",
+          "called_inside_flow_by": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 0,
+          "is_end_node": true,
+          "downstream_count": 1,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L547-L587",
+          "source_start_line": 547,
+          "source_end_line": 587,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_path",
+              "get_store",
+              "_normalize_path_config"
+            ],
+            [
+              "setup_metadata_tables",
+              "get_store",
+              "_normalize_path_config"
+            ]
+          ],
+          "helper_cleanup_candidate": true
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
+          "function_name": "_validate_audit_timezone",
+          "module": "config.shared",
+          "depth": 2,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "layer_group": "Private helper",
+          "simple_classification": "Private helper",
+          "edge_type": "transitive",
+          "parent_qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+          "caller_type": "Private helper",
+          "callee_type": "Private helper",
+          "architecture_result": "Warning",
+          "violation_type": "Same-file private dependency",
+          "signals": [
+            "implicit_lifecycle_reachability",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "recommended_action": "Keep private helper",
+          "called_inside_flow_by": 1,
+          "call_site_count": 4,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_inside_flow": 0,
+          "used_outside_flow": 2,
+          "is_end_node": true,
+          "downstream_count": 0,
+          "source_path": "src/fabricops_kit/config/shared.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L116-L148",
+          "source_start_line": 116,
+          "source_end_line": 148,
+          "path_examples": [
+            [
+              "setup_metadata_tables",
+              "_metadata_table_definitions",
+              "_validate_framework_config",
+              "_validate_audit_timezone"
+            ],
+            [
+              "setup_metadata_tables",
+              "_validate_framework_config",
+              "_validate_audit_timezone"
             ]
           ],
           "helper_cleanup_candidate": false
@@ -47766,14 +49529,174 @@
       ],
       "private_helper_review_items": [
         {
-          "qualified_name": "fabricops_kit.config._metadata_schema_field_names",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._active_steward_count",
+          "function_name": "_active_steward_count",
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L175-L185",
+          "source_start_line": 175,
+          "source_end_line": 185,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "review_status_label": "Classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "callable_role_group": "utility",
+          "callable_role_group_label": "Utility",
+          "callable_role_detail": [
+            "utility_function"
+          ],
+          "callable_role_detail_label": "Utility function",
+          "dependency_role": "utility_function",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "owner_function": "setup_metadata_tables",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": false,
+          "usage_scope": "same_module",
+          "usage_scope_label": "Same module",
+          "reachability_kind": "directly_reachable",
+          "reachability_label": "Reachable from public API",
+          "recommended_action": "Merge into owner",
+          "priority": "Medium",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Leaf internal helper",
+            "Layer assignment needs review"
+          ],
+          "architecture_signals": [],
+          "review_signals": [],
+          "called_by_count": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_count": 0,
+          "callers": [
+            {
+              "function": "setup_metadata_tables",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+              "docs_path": "docs/api/reference/setup_metadata_tables.md",
+              "docs_url": "../../api/reference/setup_metadata_tables/",
+              "layer": "public",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "public_api_entrypoint",
+                "metadata_setup_workflow",
+                "public_stable"
+              ],
+              "dependency_role": "public_api_entrypoint"
+            }
+          ],
+          "callees": []
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._existing_table_columns",
+          "function_name": "_existing_table_columns",
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L156-L166",
+          "source_start_line": 156,
+          "source_end_line": 166,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "review_status_label": "Classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "callable_role_group": "utility",
+          "callable_role_group_label": "Utility",
+          "callable_role_detail": [
+            "utility_function"
+          ],
+          "callable_role_detail_label": "Utility function",
+          "dependency_role": "utility_function",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "owner_function": "setup_metadata_tables",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": false,
+          "usage_scope": "same_module",
+          "usage_scope_label": "Same module",
+          "reachability_kind": "directly_reachable",
+          "reachability_label": "Reachable from public API",
+          "recommended_action": "Keep private helper",
+          "priority": "Low",
+          "signals": [
+            "Layer assignment needs review"
+          ],
+          "architecture_signals": [],
+          "review_signals": [],
+          "called_by_count": 2,
+          "call_site_count": 2,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_count": 1,
+          "callers": [
+            {
+              "function": "_table_exists",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._table_exists",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L125-L127",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            },
+            {
+              "function": "setup_metadata_tables",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+              "docs_path": "docs/api/reference/setup_metadata_tables.md",
+              "docs_url": "../../api/reference/setup_metadata_tables/",
+              "layer": "public",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "public_api_entrypoint",
+                "metadata_setup_workflow",
+                "public_stable"
+              ],
+              "dependency_role": "public_api_entrypoint"
+            }
+          ],
+          "callees": [
+            {
+              "function": "_is_table_not_found_error",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_table_not_found_error",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L130-L153",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            }
+          ]
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_schema_field_names",
           "function_name": "_metadata_schema_field_names",
-          "module": "config",
-          "source_path": "src/fabricops_kit/config/shared.py",
-          "owner_file": "src/fabricops_kit/config/shared.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L909-L913",
-          "source_start_line": 909,
-          "source_end_line": 913,
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L44-L48",
+          "source_start_line": 44,
+          "source_end_line": 48,
           "function_type": "Private helper",
           "layer": "private_helper",
           "review_status": "classified",
@@ -47789,9 +49712,9 @@
           ],
           "callable_role_detail_label": "Schema utility",
           "dependency_role": "schema_utility",
-          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "owner_function": "setup_metadata_tables",
-          "owner_module": "config",
+          "owner_module": "config.setup_metadata_tables",
           "leaks_outside_owner_file": false,
           "usage_scope": "same_module",
           "usage_scope_label": "Same module",
@@ -47815,9 +49738,9 @@
           "callers": [
             {
               "function": "setup_metadata_tables",
-              "module": "config",
-              "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-              "source_url": null,
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
               "docs_path": "docs/api/reference/setup_metadata_tables.md",
               "docs_url": "../../api/reference/setup_metadata_tables/",
               "layer": "public",
@@ -47834,11 +49757,295 @@
           "callees": []
         },
         {
-          "qualified_name": "fabricops_kit.config._validate_framework_config",
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+          "function_name": "_metadata_table_definitions",
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+          "source_start_line": 78,
+          "source_end_line": 105,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "review_status_label": "Classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "callable_role_group": "utility",
+          "callable_role_group_label": "Utility",
+          "callable_role_detail": [
+            "utility_function"
+          ],
+          "callable_role_detail_label": "Utility function",
+          "dependency_role": "utility_function",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "owner_function": "setup_metadata_tables",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": false,
+          "usage_scope": "same_module",
+          "usage_scope_label": "Same module",
+          "reachability_kind": "directly_reachable",
+          "reachability_label": "Reachable from public API",
+          "recommended_action": "Keep private helper",
+          "priority": "Low",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "architecture_signals": [],
+          "review_signals": [],
+          "called_by_count": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_count": 4,
+          "callers": [
+            {
+              "function": "setup_metadata_tables",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+              "docs_path": "docs/api/reference/setup_metadata_tables.md",
+              "docs_url": "../../api/reference/setup_metadata_tables/",
+              "layer": "public",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "public_api_entrypoint",
+                "metadata_setup_workflow",
+                "public_stable"
+              ],
+              "dependency_role": "public_api_entrypoint"
+            }
+          ],
+          "callees": [
+            {
+              "function": "_spark_types",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L25-L41",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            },
+            {
+              "function": "_string_metadata_schema",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._string_metadata_schema",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L51-L62",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "schema_utility",
+                "local_leaf_helper"
+              ],
+              "dependency_role": "schema_utility"
+            },
+            {
+              "function": "_typed_metadata_schema",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._typed_metadata_schema",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L65-L75",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            },
+            {
+              "function": "_validate_framework_config",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "internal_validator",
+                "config_validator"
+              ],
+              "dependency_role": "internal_validator"
+            }
+          ]
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_path",
+          "function_name": "_metadata_table_path",
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L108-L117",
+          "source_start_line": 108,
+          "source_end_line": 117,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "review_status_label": "Classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "callable_role_group": "utility",
+          "callable_role_group_label": "Utility",
+          "callable_role_detail": [
+            "utility_function"
+          ],
+          "callable_role_detail_label": "Utility function",
+          "dependency_role": "utility_function",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "owner_function": "setup_metadata_tables",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": false,
+          "usage_scope": "same_module",
+          "usage_scope_label": "Same module",
+          "reachability_kind": "directly_reachable",
+          "reachability_label": "Reachable from public API",
+          "recommended_action": "Merge into owner",
+          "priority": "Medium",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "architecture_signals": [],
+          "review_signals": [],
+          "called_by_count": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_count": 1,
+          "callers": [
+            {
+              "function": "setup_metadata_tables",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+              "docs_path": "docs/api/reference/setup_metadata_tables.md",
+              "docs_url": "../../api/reference/setup_metadata_tables/",
+              "layer": "public",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "public_api_entrypoint",
+                "metadata_setup_workflow",
+                "public_stable"
+              ],
+              "dependency_role": "public_api_entrypoint"
+            }
+          ],
+          "callees": [
+            {
+              "function": "get_store",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared.get_store",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L590-L629",
+              "layer": "internal",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "internal_workflow"
+              ],
+              "dependency_role": "internal_workflow"
+            }
+          ]
+        },
+        {
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_bootstrap_table",
+          "function_name": "_write_bootstrap_table",
+          "module": "config.setup_metadata_tables",
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L169-L172",
+          "source_start_line": 169,
+          "source_end_line": 172,
+          "function_type": "Private helper",
+          "layer": "private_helper",
+          "review_status": "classified",
+          "review_status_label": "Classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "utility_function"
+          ],
+          "callable_role_group": "utility",
+          "callable_role_group_label": "Utility",
+          "callable_role_detail": [
+            "utility_function"
+          ],
+          "callable_role_detail_label": "Utility function",
+          "dependency_role": "utility_function",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "owner_function": "setup_metadata_tables",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": false,
+          "usage_scope": "same_module",
+          "usage_scope_label": "Same module",
+          "reachability_kind": "directly_reachable",
+          "reachability_label": "Reachable from public API",
+          "recommended_action": "Merge into owner",
+          "priority": "Medium",
+          "signals": [
+            "Review for merge",
+            "Used by one function",
+            "Layer assignment needs review"
+          ],
+          "architecture_signals": [],
+          "review_signals": [],
+          "called_by_count": 1,
+          "call_site_count": 1,
+          "recursive": false,
+          "repeated_within_single_caller": false,
+          "calls_count": 1,
+          "callers": [
+            {
+              "function": "setup_metadata_tables",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
+              "docs_path": "docs/api/reference/setup_metadata_tables.md",
+              "docs_url": "../../api/reference/setup_metadata_tables/",
+              "layer": "public",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "public_api_entrypoint",
+                "metadata_setup_workflow",
+                "public_stable"
+              ],
+              "dependency_role": "public_api_entrypoint"
+            }
+          ],
+          "callees": [
+            {
+              "function": "_empty_dataframe_for_schema",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._empty_dataframe_for_schema",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L120-L122",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            }
+          ]
+        },
+        {
+          "qualified_name": "fabricops_kit.config.shared._validate_framework_config",
           "function_name": "_validate_framework_config",
-          "module": "config",
+          "module": "config.shared",
           "source_path": "src/fabricops_kit/config/shared.py",
-          "owner_file": "src/fabricops_kit/config/shared.py",
+          "owner_file": "src/fabricops_kit/config/setup_metadata_tables.py",
           "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L477-L539",
           "source_start_line": 477,
           "source_end_line": 539,
@@ -47859,35 +50066,46 @@
           ],
           "callable_role_detail_label": "Internal validator, Config validator",
           "dependency_role": "internal_validator",
-          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables",
+          "owner_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "owner_function": "setup_metadata_tables",
-          "owner_module": "config",
-          "leaks_outside_owner_file": false,
-          "usage_scope": "same_module",
-          "usage_scope_label": "Same module",
+          "owner_module": "config.setup_metadata_tables",
+          "leaks_outside_owner_file": true,
+          "usage_scope": "cross_module",
+          "usage_scope_label": "Cross module",
           "reachability_kind": "directly_reachable",
           "reachability_label": "Reachable from public API",
-          "recommended_action": "Merge into owner",
+          "recommended_action": "Rename to shared helper",
           "priority": "Medium",
           "signals": [
-            "Review for merge",
-            "Used by one function",
-            "Leaf internal helper",
+            "Heavily used helper",
             "Layer assignment needs review"
           ],
           "architecture_signals": [],
           "review_signals": [],
-          "called_by_count": 1,
-          "call_site_count": 1,
+          "called_by_count": 6,
+          "call_site_count": 6,
           "recursive": false,
           "repeated_within_single_caller": false,
-          "calls_count": 0,
+          "calls_count": 2,
           "callers": [
             {
+              "function": "_metadata_table_definitions",
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_definitions",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L78-L105",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_function"
+              ],
+              "dependency_role": "utility_function"
+            },
+            {
               "function": "setup_metadata_tables",
-              "module": "config",
-              "qualified_name": "fabricops_kit.config.setup_metadata_tables",
-              "source_url": null,
+              "module": "config.setup_metadata_tables",
+              "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L188-L285",
               "docs_path": "docs/api/reference/setup_metadata_tables.md",
               "docs_url": "../../api/reference/setup_metadata_tables/",
               "layer": "public",
@@ -47899,9 +50117,95 @@
                 "public_stable"
               ],
               "dependency_role": "public_api_entrypoint"
+            },
+            {
+              "function": "_get_active_metadata_tables",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._get_active_metadata_tables",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L851-L877",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "internal_resolver",
+                "metadata_registry_query"
+              ],
+              "dependency_role": "internal_resolver"
+            },
+            {
+              "function": "_get_metadata_table_schema_registry",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._get_metadata_table_schema_registry",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L934-L963",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "registry_builder",
+                "metadata_schema_registry_builder"
+              ],
+              "dependency_role": "registry_builder"
+            },
+            {
+              "function": "_setup_notebook_workflow",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._setup_notebook_workflow",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L764-L836",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "internal_workflow",
+                "setup_notebook_workflow"
+              ],
+              "dependency_role": "internal_workflow"
+            },
+            {
+              "function": "_validate_metadata_table_registration",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._validate_metadata_table_registration",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L1043-L1095",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "internal_validator",
+                "metadata_table_registration_validator"
+              ],
+              "dependency_role": "internal_validator"
             }
           ],
-          "callees": []
+          "callees": [
+            {
+              "function": "_validate_audit_timezone",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L116-L148",
+              "layer": "private_helper",
+              "review_status": "classified",
+              "callable_kind": "function",
+              "callable_role": [
+                "utility_validator",
+                "low_level_utility",
+                "implicit_lifecycle_reachable"
+              ],
+              "dependency_role": "utility_validator"
+            },
+            {
+              "function": "FrameworkConfig",
+              "module": "config.shared",
+              "qualified_name": "fabricops_kit.config.shared.FrameworkConfig",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L395-L424",
+              "layer": "class",
+              "review_status": "classified",
+              "callable_kind": "class",
+              "callable_role": [
+                "config_model_class",
+                "root_config_model"
+              ],
+              "dependency_role": "config_model_class"
+            }
+          ]
         }
       ]
     },
@@ -48084,15 +50388,16 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
+            "Heavily used helper",
             "Layer assignment needs review"
           ],
-          "recommended_action": "Keep private helper",
+          "recommended_action": "Rename to shared helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 4,
+          "call_site_count": 6,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 3,
+          "used_outside_flow": 5,
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -48129,11 +50434,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -49984,11 +52289,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -51792,11 +54097,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -53909,11 +56214,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -56378,11 +58683,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -59020,11 +61325,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -62143,11 +64448,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -65727,11 +68032,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -68738,11 +71043,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -69964,11 +72269,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -70966,11 +73271,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 3,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 7,
+          "used_outside_flow": 9,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -72673,11 +74978,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 2,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 8,
+          "used_outside_flow": 10,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -73998,11 +76303,11 @@
           ],
           "recommended_action": "Heavily used helper",
           "called_inside_flow_by": 1,
-          "call_site_count": 10,
+          "call_site_count": 14,
           "recursive": false,
           "repeated_within_single_caller": false,
           "calls_inside_flow": 1,
-          "used_outside_flow": 9,
+          "used_outside_flow": 11,
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/shared.py",
@@ -74367,7 +76672,7 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 348,
+    "total_callables": 360,
     "function_type": {
       "Public function": 27,
       "Shared helper": 82,
@@ -74378,8 +76683,8 @@
       "internal": 82
     },
     "review_status": {
-      "classified": 315,
-      "classification_pending": 33,
+      "classified": 326,
+      "classification_pending": 34,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
@@ -74395,7 +76700,7 @@
       "public_entrypoint": 27,
       "registry_builder": 2,
       "resolver": 57,
-      "utility": 133,
+      "utility": 145,
       "validator": 25,
       "workflow": 55
     },
@@ -74412,40 +76717,40 @@
       "public_api_entrypoint": 27,
       "registry_builder": 2,
       "result_model_class": 1,
-      "schema_utility": 4,
-      "utility_function": 125,
+      "schema_utility": 6,
+      "utility_function": 135,
       "utility_validator": 4
     },
     "recommended_action": {
       "Heavily used helper": 7,
-      "Keep private helper": 128,
-      "Merge into owner": 66,
+      "Keep private helper": 130,
+      "Merge into owner": 72,
       "Next step": 57,
       "Public API entrypoint": 27,
       "Public config class": 7,
-      "Remove redundant wrapper": 23,
-      "Rename to shared helper": 15,
+      "Remove redundant wrapper": 26,
+      "Rename to shared helper": 16,
       "Shared internal helper": 18
     },
     "public_api_surface": {
       "public_api_entrypoints": 27,
       "long_call_chains": 23,
-      "architecture_violations": 12,
-      "architecture_findings": 12,
+      "architecture_violations": 13,
+      "architecture_findings": 13,
       "review_for_merge_helpers": 26,
-      "suggested_helper_review": 14
+      "suggested_helper_review": 13
     },
     "callable_inventory_metrics": {
-      "module_count": 19,
-      "total_callables": 348,
+      "module_count": 20,
+      "total_callables": 360,
       "public_api_entrypoints": 27,
       "function_callables": 109,
       "supporting_functions": 82,
       "public_classes": 7,
-      "hidden_private_helpers": 232,
-      "private_helpers_to_review": 232
+      "hidden_private_helpers": 244,
+      "private_helpers_to_review": 244
     },
-    "private_helper_review": 232,
+    "private_helper_review": 244,
     "public_classes": 7
   }
 }

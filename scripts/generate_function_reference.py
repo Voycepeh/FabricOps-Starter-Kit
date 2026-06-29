@@ -301,11 +301,7 @@ def source_module_name(path: Path) -> str:
 
 def source_module_paths() -> list[Path]:
     """Return package source files that participate in generated callable metadata."""
-    return sorted(
-        path
-        for path in PKG_DIR.rglob("*.py")
-        if path.name != "__init__.py" or path.parent.name in {"config", "data_profiling"}
-    )
+    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name == "data_profiling")
 
 
 def source_module_path(module: str) -> Path:
@@ -5157,16 +5153,6 @@ def main() -> None:
     MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
 
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
-    if "setup_metadata_tables" in symbol_map and not any(n["callable_name"] == "setup_metadata_tables" for n in nodes):
-        nodes.append({
-            "callable_name": "setup_metadata_tables",
-            "module_name": "config",
-            "qualified_name": f"{PACKAGE_NAME}.config.setup_metadata_tables",
-            "role": "callable",
-            "exported": True,
-            "is_underscore": False,
-            "callable_kind": "function",
-        })
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
     used_by_qn: dict[str, list[str]] = {}
