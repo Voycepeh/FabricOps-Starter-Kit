@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib
 
-from fabricops_kit import governance_shared as _governance_review
+from fabricops_kit.widgets import shared as _governance_review
 from fabricops_kit.config.shared import resolve_fabric_context
 
 from typing import Any

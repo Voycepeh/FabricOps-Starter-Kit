@@ -21,8 +21,8 @@ def _function_source(path: str, function_name: str) -> str:
 
 def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
     """Verify widget modules do not depend on retired agreement/governance owners."""
-    blocked_modules = {"fabricops_kit.data_agreement", "fabricops_kit.governance_review"}
-    blocked_package_names = {"data_agreement", "governance_review"}
+    blocked_modules = {"fabricops_kit.data_agreement", "fabricops_kit.governance_review", "fabricops_kit.data_agreement_shared", "fabricops_kit.governance_shared"}
+    blocked_package_names = {"data_agreement", "governance_review", "data_agreement_shared", "governance_shared"}
     violations = []
     for path in (SRC / "widgets").glob("*.py"):
         source = path.read_text(encoding="utf-8")
@@ -42,6 +42,20 @@ def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
                         violations.append(f"{path}:{node.lineno} imports {alias.name}")
 
     assert violations == []
+
+
+
+def test_legacy_proxy_shared_modules_do_not_exist():
+    """Verify cleanup does not introduce proxy modules for retired owners."""
+    assert not (SRC / "data_agreement_shared.py").exists()
+    assert not (SRC / "governance_shared.py").exists()
+
+
+def test_widgets_shared_does_not_define_legacy_getattr_fallbacks():
+    """Verify widget shared helpers do not expose module-level legacy fallbacks."""
+    source = (SRC / "widgets" / "shared.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    assert all(not (isinstance(node, ast.FunctionDef) and node.name == "__getattr__") for node in tree.body)
 
 
 def _calls_write_lakehouse_table_core(source: str) -> bool:

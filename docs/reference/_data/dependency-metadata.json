@@ -2318,21 +2318,6 @@
       ],
       "internal_helper_count": 2
     },
-    "fabricops_kit.data_agreement_shared.__getattr__": {
-      "qualified_name": "fabricops_kit.data_agreement_shared.__getattr__",
-      "short_name": "__getattr__",
-      "module": "data_agreement_shared",
-      "callable": "__getattr__",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.data_profiling.profile_dataframe": {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "short_name": "profile_dataframe",
@@ -3984,21 +3969,6 @@
         "fabricops_kit.governance_review._coerce_rows"
       ],
       "internal_helper_count": 1
-    },
-    "fabricops_kit.governance_shared.__getattr__": {
-      "qualified_name": "fabricops_kit.governance_shared.__getattr__",
-      "short_name": "__getattr__",
-      "module": "governance_shared",
-      "callable": "__getattr__",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
     },
     "fabricops_kit.guardrails.SchemaDriftError": {
       "qualified_name": "fabricops_kit.guardrails.SchemaDriftError",
@@ -7605,6 +7575,282 @@
       ],
       "internal_helper_count": 1
     },
+    "fabricops_kit.widgets.shared._agreement_identity_text": {
+      "qualified_name": "fabricops_kit.widgets.shared._agreement_identity_text",
+      "short_name": "_agreement_identity_text",
+      "module": "widgets.shared",
+      "callable": "_agreement_identity_text",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._agreement_identity_text",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._agreement_identity_text"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._agreement_identity_text",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._build_metadata_table_key": {
+      "qualified_name": "fabricops_kit.widgets.shared._build_metadata_table_key",
+      "short_name": "_build_metadata_table_key",
+      "module": "widgets.shared",
+      "callable": "_build_metadata_table_key",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._build_metadata_table_key",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._build_metadata_table_key"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._build_metadata_table_key",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._collect_custom_fields": {
+      "qualified_name": "fabricops_kit.widgets.shared._collect_custom_fields",
+      "short_name": "_collect_custom_fields",
+      "module": "widgets.shared",
+      "callable": "_collect_custom_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._collect_custom_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._collect_custom_fields"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._collect_custom_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._collect_enrichment_extra_fields": {
+      "qualified_name": "fabricops_kit.widgets.shared._collect_enrichment_extra_fields",
+      "short_name": "_collect_enrichment_extra_fields",
+      "module": "widgets.shared",
+      "callable": "_collect_enrichment_extra_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._collect_enrichment_extra_fields",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._collect_enrichment_extra_fields"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._collect_enrichment_extra_fields",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._config_value": {
+      "qualified_name": "fabricops_kit.widgets.shared._config_value",
+      "short_name": "_config_value",
+      "module": "widgets.shared",
+      "callable": "_config_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._config_value",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._config_value"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._config_value",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._create_or_update_data_agreement": {
+      "qualified_name": "fabricops_kit.widgets.shared._create_or_update_data_agreement",
+      "short_name": "_create_or_update_data_agreement",
+      "module": "widgets.shared",
+      "callable": "_create_or_update_data_agreement",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._create_or_update_data_agreement",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._create_or_update_data_agreement"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._create_or_update_data_agreement",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._create_or_update_data_steward": {
+      "qualified_name": "fabricops_kit.widgets.shared._create_or_update_data_steward",
+      "short_name": "_create_or_update_data_steward",
+      "module": "widgets.shared",
+      "callable": "_create_or_update_data_steward",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._create_or_update_data_steward",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._create_or_update_data_steward"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._create_or_update_data_steward",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._deserialize_custom_fields": {
+      "qualified_name": "fabricops_kit.widgets.shared._deserialize_custom_fields",
+      "short_name": "_deserialize_custom_fields",
+      "module": "widgets.shared",
+      "callable": "_deserialize_custom_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._deserialize_custom_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._deserialize_custom_fields"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._deserialize_custom_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._dq_records_from_selection": {
+      "qualified_name": "fabricops_kit.widgets.shared._dq_records_from_selection",
+      "short_name": "_dq_records_from_selection",
+      "module": "widgets.shared",
+      "callable": "_dq_records_from_selection",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._dq_records_from_selection",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._dq_records_from_selection"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._dq_records_from_selection",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._enrichment_options": {
+      "qualified_name": "fabricops_kit.widgets.shared._enrichment_options",
+      "short_name": "_enrichment_options",
+      "module": "widgets.shared",
+      "callable": "_enrichment_options",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._enrichment_options",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._enrichment_options"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._enrichment_options",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._filter_table_rows": {
+      "qualified_name": "fabricops_kit.widgets.shared._filter_table_rows",
+      "short_name": "_filter_table_rows",
+      "module": "widgets.shared",
+      "callable": "_filter_table_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._filter_table_rows",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._filter_table_rows"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._filter_table_rows",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._get_widget_visible_fields": {
+      "qualified_name": "fabricops_kit.widgets.shared._get_widget_visible_fields",
+      "short_name": "_get_widget_visible_fields",
+      "module": "widgets.shared",
+      "callable": "_get_widget_visible_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._get_widget_visible_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._get_widget_visible_fields"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._get_widget_visible_fields",
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.widgets.shared._html_escape": {
       "qualified_name": "fabricops_kit.widgets.shared._html_escape",
       "short_name": "_html_escape",
@@ -7622,6 +7868,186 @@
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.widgets.shared._latest_rule": {
+      "qualified_name": "fabricops_kit.widgets.shared._latest_rule",
+      "short_name": "_latest_rule",
+      "module": "widgets.shared",
+      "callable": "_latest_rule",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._latest_rule",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._latest_rule"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._latest_rule",
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._legacy_data_agreement_module": {
+      "qualified_name": "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+      "short_name": "_legacy_data_agreement_module",
+      "module": "widgets.shared",
+      "callable": "_legacy_data_agreement_module",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.widgets.shared._agreement_identity_text",
+        "fabricops_kit.widgets.shared._collect_custom_fields",
+        "fabricops_kit.widgets.shared._config_value",
+        "fabricops_kit.widgets.shared._create_or_update_data_agreement",
+        "fabricops_kit.widgets.shared._create_or_update_data_steward",
+        "fabricops_kit.widgets.shared._deserialize_custom_fields",
+        "fabricops_kit.widgets.shared._get_widget_visible_fields",
+        "fabricops_kit.widgets.shared._list_all_data_agreement_rows",
+        "fabricops_kit.widgets.shared._list_data_agreements",
+        "fabricops_kit.widgets.shared._list_data_stewards",
+        "fabricops_kit.widgets.shared._save_agreement_evidence_records",
+        "fabricops_kit.widgets.shared._to_bool",
+        "fabricops_kit.widgets.shared._to_iso_date"
+      ],
+      "used_by_count": 13,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.widgets.shared._legacy_governance_module": {
+      "qualified_name": "fabricops_kit.widgets.shared._legacy_governance_module",
+      "short_name": "_legacy_governance_module",
+      "module": "widgets.shared",
+      "callable": "_legacy_governance_module",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.widgets.shared._build_metadata_table_key",
+        "fabricops_kit.widgets.shared._collect_enrichment_extra_fields",
+        "fabricops_kit.widgets.shared._dq_records_from_selection",
+        "fabricops_kit.widgets.shared._enrichment_options",
+        "fabricops_kit.widgets.shared._filter_table_rows",
+        "fabricops_kit.widgets.shared._latest_rule",
+        "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
+        "fabricops_kit.widgets.shared._render_enrichment_extra_fields",
+        "fabricops_kit.widgets.shared._rule_params",
+        "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection",
+        "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment",
+        "fabricops_kit.widgets.shared._value",
+        "fabricops_kit.widgets.shared._write_enrichment_records",
+        "fabricops_kit.widgets.shared._write_rule_records",
+        "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records",
+        "fabricops_kit.widgets.shared.apply_governance_enrichment_action",
+        "fabricops_kit.widgets.shared.apply_governance_rule_action",
+        "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+        "fabricops_kit.widgets.shared.load_rule_review_history",
+        "fabricops_kit.widgets.shared.resolve_table_governance_policy"
+      ],
+      "used_by_count": 20,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.widgets.shared._list_all_data_agreement_rows": {
+      "qualified_name": "fabricops_kit.widgets.shared._list_all_data_agreement_rows",
+      "short_name": "_list_all_data_agreement_rows",
+      "module": "widgets.shared",
+      "callable": "_list_all_data_agreement_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_all_data_agreement_rows"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._list_all_data_agreement_rows"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_all_data_agreement_rows"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._list_data_agreements": {
+      "qualified_name": "fabricops_kit.widgets.shared._list_data_agreements",
+      "short_name": "_list_data_agreements",
+      "module": "widgets.shared",
+      "callable": "_list_data_agreements",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_data_agreements"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._list_data_agreements"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_data_agreements"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._list_data_stewards": {
+      "qualified_name": "fabricops_kit.widgets.shared._list_data_stewards",
+      "short_name": "_list_data_stewards",
+      "module": "widgets.shared",
+      "callable": "_list_data_stewards",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_data_stewards"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._list_data_stewards"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._list_data_stewards"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._read_metadata_table_or_empty": {
+      "qualified_name": "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
+      "short_name": "_read_metadata_table_or_empty",
+      "module": "widgets.shared",
+      "callable": "_read_metadata_table_or_empty",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._read_metadata_table_or_empty"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._read_metadata_table_or_empty"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._read_metadata_table_or_empty"
+      ],
+      "internal_helper_count": 2
     },
     "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow": {
       "qualified_name": "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow",
@@ -7669,6 +8095,29 @@
       "internal_helpers_used": [
         "fabricops_kit.widgets.shared._require_ipywidgets",
         "fabricops_kit.widgets.shared._widget_common"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._render_enrichment_extra_fields": {
+      "qualified_name": "fabricops_kit.widgets.shared._render_enrichment_extra_fields",
+      "short_name": "_render_enrichment_extra_fields",
+      "module": "widgets.shared",
+      "callable": "_render_enrichment_extra_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._render_enrichment_extra_fields"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._render_enrichment_extra_fields"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._render_enrichment_extra_fields"
       ],
       "internal_helper_count": 2
     },
@@ -7746,6 +8195,98 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.widgets.shared._rule_params": {
+      "qualified_name": "fabricops_kit.widgets.shared._rule_params",
+      "short_name": "_rule_params",
+      "module": "widgets.shared",
+      "callable": "_rule_params",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._rule_params"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._rule_params"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._rule_params"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._save_agreement_evidence_records": {
+      "qualified_name": "fabricops_kit.widgets.shared._save_agreement_evidence_records",
+      "short_name": "_save_agreement_evidence_records",
+      "module": "widgets.shared",
+      "callable": "_save_agreement_evidence_records",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._save_agreement_evidence_records"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._save_agreement_evidence_records"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._save_agreement_evidence_records"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection": {
+      "qualified_name": "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection",
+      "short_name": "_schema_freshness_profile_records_from_selection",
+      "module": "widgets.shared",
+      "callable": "_schema_freshness_profile_records_from_selection",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment": {
+      "qualified_name": "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment",
+      "short_name": "_selected_catalogue_rows_for_enrichment",
+      "module": "widgets.shared",
+      "callable": "_selected_catalogue_rows_for_enrichment",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._selected_catalogue_rows_for_enrichment"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.widgets.shared._standard_widget": {
       "qualified_name": "fabricops_kit.widgets.shared._standard_widget",
       "short_name": "_standard_widget",
@@ -7769,6 +8310,75 @@
       ],
       "internal_helper_count": 2
     },
+    "fabricops_kit.widgets.shared._to_bool": {
+      "qualified_name": "fabricops_kit.widgets.shared._to_bool",
+      "short_name": "_to_bool",
+      "module": "widgets.shared",
+      "callable": "_to_bool",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._to_bool"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._to_bool"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._to_bool"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._to_iso_date": {
+      "qualified_name": "fabricops_kit.widgets.shared._to_iso_date",
+      "short_name": "_to_iso_date",
+      "module": "widgets.shared",
+      "callable": "_to_iso_date",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._to_iso_date"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._to_iso_date"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_data_agreement_module",
+        "fabricops_kit.widgets.shared._to_iso_date"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._value": {
+      "qualified_name": "fabricops_kit.widgets.shared._value",
+      "short_name": "_value",
+      "module": "widgets.shared",
+      "callable": "_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._value"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._value"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._value"
+      ],
+      "internal_helper_count": 2
+    },
     "fabricops_kit.widgets.shared._widget_common": {
       "qualified_name": "fabricops_kit.widgets.shared._widget_common",
       "short_name": "_widget_common",
@@ -7788,6 +8398,185 @@
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
+    },
+    "fabricops_kit.widgets.shared._write_enrichment_records": {
+      "qualified_name": "fabricops_kit.widgets.shared._write_enrichment_records",
+      "short_name": "_write_enrichment_records",
+      "module": "widgets.shared",
+      "callable": "_write_enrichment_records",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_enrichment_records"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._write_enrichment_records"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_enrichment_records"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._write_rule_records": {
+      "qualified_name": "fabricops_kit.widgets.shared._write_rule_records",
+      "short_name": "_write_rule_records",
+      "module": "widgets.shared",
+      "callable": "_write_rule_records",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_rule_records"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._write_rule_records"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_rule_records"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records": {
+      "qualified_name": "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records",
+      "short_name": "_write_table_metadata_enrichment_records",
+      "module": "widgets.shared",
+      "callable": "_write_table_metadata_enrichment_records",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared._write_table_metadata_enrichment_records"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.widgets.shared.apply_governance_enrichment_action": {
+      "qualified_name": "fabricops_kit.widgets.shared.apply_governance_enrichment_action",
+      "short_name": "apply_governance_enrichment_action",
+      "module": "widgets.shared",
+      "callable": "apply_governance_enrichment_action",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared.apply_governance_enrichment_action"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared.apply_governance_enrichment_action"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.widgets.shared.apply_governance_rule_action": {
+      "qualified_name": "fabricops_kit.widgets.shared.apply_governance_rule_action",
+      "short_name": "apply_governance_rule_action",
+      "module": "widgets.shared",
+      "callable": "apply_governance_rule_action",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared.apply_governance_rule_action"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared.apply_governance_rule_action"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.widgets.shared.build_enrichment_rule_records": {
+      "qualified_name": "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+      "short_name": "build_enrichment_rule_records",
+      "module": "widgets.shared",
+      "callable": "build_enrichment_rule_records",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared.build_enrichment_rule_records"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared.build_enrichment_rule_records"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.widgets.shared.load_rule_review_history": {
+      "qualified_name": "fabricops_kit.widgets.shared.load_rule_review_history",
+      "short_name": "load_rule_review_history",
+      "module": "widgets.shared",
+      "callable": "load_rule_review_history",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared.load_rule_review_history"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared.load_rule_review_history"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.widgets.shared.resolve_table_governance_policy": {
+      "qualified_name": "fabricops_kit.widgets.shared.resolve_table_governance_policy",
+      "short_name": "resolve_table_governance_policy",
+      "module": "widgets.shared",
+      "callable": "resolve_table_governance_policy",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.widgets.shared._legacy_governance_module",
+        "fabricops_kit.widgets.shared.resolve_table_governance_policy"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.widgets.shared.resolve_table_governance_policy"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.widgets.shared._legacy_governance_module"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.widgets.widget_author_dq_rules._dq_rule_authoring_widget_workflow": {
       "qualified_name": "fabricops_kit.widgets.widget_author_dq_rules._dq_rule_authoring_widget_workflow",
@@ -8121,14 +8910,6 @@
       "outbound_count": 3,
       "inbound_count": 1
     },
-    "data_agreement_shared": {
-      "callable_count": 0,
-      "internal_count": 1,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
-    },
     "data_profiling": {
       "callable_count": 0,
       "internal_count": 0,
@@ -8168,14 +8949,6 @@
       ],
       "outbound_count": 2,
       "inbound_count": 2
-    },
-    "governance_shared": {
-      "callable_count": 0,
-      "internal_count": 1,
-      "outbound_modules": [],
-      "inbound_modules": [],
-      "outbound_count": 0,
-      "inbound_count": 0
     },
     "guardrails": {
       "callable_count": 0,
@@ -8304,7 +9077,7 @@
     },
     "widgets.shared": {
       "callable_count": 0,
-      "internal_count": 8,
+      "internal_count": 38,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,

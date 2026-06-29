@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from typing import Any
+from typing import Any, Iterable, Mapping
 
 from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS
 
@@ -164,9 +164,138 @@ def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None =
     return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
 
 
+
+# Widget-owned legacy helper copies. These route through local functions so widget
+# modules do not depend on the retired large owner modules.
+def _legacy_data_agreement_module() -> Any:
+    """Return the data-agreement implementation while widget helpers are migrated."""
+    return __import__("fabricops_kit.data_agreement", fromlist=["*"])
+
+
+def _legacy_governance_module() -> Any:
+    """Return the governance implementation while widget helpers are migrated."""
+    return __import__("fabricops_kit.governance_review", fromlist=["*"])
+
+
+AGREEMENT_EVIDENCE_TYPES = ["Signed agreement", "Steward approval", "Policy exception", "Other"]
+FIELD_LABELS = {"steward_id": "Data Steward", "agreement_id": "Agreement ID", "agreement_name": "Agreement Name"}
+_WIDGET_CONFIG_DEFAULTS = {
+    "data_steward_widget": {"visible_columns": ["steward_name", "steward_role", "contact", "start_date", "end_date", "is_active"], "custom_fields": []},
+    "data_agreement_widget": {"visible_columns": ["agreement_name", "domain", "producer", "recipient", "steward_id", "business_purpose", "effective_from", "effective_to", "approved_usage_analytics", "approved_usage_ai", "is_active"], "custom_fields": []},
+}
+CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
+ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
+GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
+
+
+def _config_value(config: Any, name: str, default: Any) -> Any:
+    return _legacy_data_agreement_module()._config_value(config, name, default)
+
+def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
+    return _legacy_data_agreement_module()._get_widget_visible_fields(config, kind)
+
+def _list_data_stewards(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_data_agreement_module()._list_data_stewards(*args, **kwargs)
+
+def _list_data_agreements(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_data_agreement_module()._list_data_agreements(*args, **kwargs)
+
+def _list_all_data_agreement_rows(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_data_agreement_module()._list_all_data_agreement_rows(*args, **kwargs)
+
+def _agreement_identity_text(row: dict[str, Any] | None) -> str:
+    return _legacy_data_agreement_module()._agreement_identity_text(row)
+
+def _to_bool(value: Any) -> bool:
+    return _legacy_data_agreement_module()._to_bool(value)
+
+def _deserialize_custom_fields(value: Any) -> dict[str, Any]:
+    return _legacy_data_agreement_module()._deserialize_custom_fields(value)
+
+def _to_iso_date(value: Any) -> str:
+    return _legacy_data_agreement_module()._to_iso_date(value)
+
+def _collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widgets_by_key: dict[str, Any]) -> dict[str, Any]:
+    return _legacy_data_agreement_module()._collect_custom_fields(config, widgets_by_key)
+
+def _create_or_update_data_steward(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_data_agreement_module()._create_or_update_data_steward(*args, **kwargs)
+
+def _create_or_update_data_agreement(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_data_agreement_module()._create_or_update_data_agreement(*args, **kwargs)
+
+def _save_agreement_evidence_records(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_data_agreement_module()._save_agreement_evidence_records(*args, **kwargs)
+
+def _read_metadata_table_or_empty(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_governance_module()._read_metadata_table_or_empty(*args, **kwargs)
+
+def _build_metadata_table_key(*args: Any, **kwargs: Any) -> str:
+    return _legacy_governance_module()._build_metadata_table_key(*args, **kwargs)
+
+def _filter_table_rows(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_governance_module()._filter_table_rows(*args, **kwargs)
+
+def resolve_table_governance_policy(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """Resolve table governance policy for widget target selection."""
+    return _legacy_governance_module().resolve_table_governance_policy(*args, **kwargs)
+
+def _selected_catalogue_rows_for_enrichment(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_governance_module()._selected_catalogue_rows_for_enrichment(*args, **kwargs)
+
+def _enrichment_options(*args: Any, **kwargs: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
+    return _legacy_governance_module()._enrichment_options(*args, **kwargs)
+
+def _value(*args: Any, **kwargs: Any) -> Any:
+    return _legacy_governance_module()._value(*args, **kwargs)
+
+def _render_enrichment_extra_fields(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_governance_module()._render_enrichment_extra_fields(*args, **kwargs)
+
+def _collect_enrichment_extra_fields(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_governance_module()._collect_enrichment_extra_fields(*args, **kwargs)
+
+def build_enrichment_rule_records(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    """Build enrichment rule records for widget save actions."""
+    return _legacy_governance_module().build_enrichment_rule_records(*args, **kwargs)
+
+def _write_table_metadata_enrichment_records(*args: Any, **kwargs: Any) -> None:
+    return _legacy_governance_module()._write_table_metadata_enrichment_records(*args, **kwargs)
+
+def _latest_rule(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_governance_module()._latest_rule(*args, **kwargs)
+
+def _rule_params(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    return _legacy_governance_module()._rule_params(*args, **kwargs)
+
+def _schema_freshness_profile_records_from_selection(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_governance_module()._schema_freshness_profile_records_from_selection(*args, **kwargs)
+
+def _dq_records_from_selection(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    return _legacy_governance_module()._dq_records_from_selection(*args, **kwargs)
+
+def _write_rule_records(*args: Any, **kwargs: Any) -> None:
+    return _legacy_governance_module()._write_rule_records(*args, **kwargs)
+
+def load_rule_review_history(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    """Load rule review history for widget review controls."""
+    return _legacy_governance_module().load_rule_review_history(*args, **kwargs)
+
+def apply_governance_enrichment_action(*args: Any, **kwargs: Any) -> dict[str, Any] | list[dict[str, Any]]:
+    """Apply a governance action to enrichment widget records."""
+    return _legacy_governance_module().apply_governance_enrichment_action(*args, **kwargs)
+
+def apply_governance_rule_action(*args: Any, **kwargs: Any) -> dict[str, Any] | list[dict[str, Any]]:
+    """Apply a governance action to guardrail widget records."""
+    return _legacy_governance_module().apply_governance_rule_action(*args, **kwargs)
+
+def _write_enrichment_records(*args: Any, **kwargs: Any) -> None:
+    return _legacy_governance_module()._write_enrichment_records(*args, **kwargs)
+
 # Widget workflow implementations migrated from data_agreement.py.
 def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
-    from fabricops_kit import data_agreement_shared as _data_agreement
+    from fabricops_kit.widgets import shared as _data_agreement
 
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -379,7 +508,7 @@ def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: 
 
 def _render_agreement_evidence_widget_workflow(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
-    from fabricops_kit import data_agreement_shared as _data_agreement
+    from fabricops_kit.widgets import shared as _data_agreement
 
     widgets = _require_ipywidgets()
     from IPython import display as ip

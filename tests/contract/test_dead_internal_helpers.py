@@ -9,7 +9,6 @@ SEARCH_ROOTS = [SRC, ROOT / "templates" / "notebooks", ROOT / "scripts", ROOT / 
 
 PRIVATE_HELPER_ALLOWLIST = {
     "_load_package_version": "Package metadata fallback is invoked during module import rather than by a source-level call.",
-    "__getattr__": "Module-level dynamic delegation keeps compatibility with tests that monkeypatch legacy owner modules.",
 }
 
 
