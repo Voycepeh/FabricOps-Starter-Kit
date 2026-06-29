@@ -1119,6 +1119,7 @@
       const state = {
         selectedFlow: "",
         activePublicFlow: "",
+        openSummaryFlow: "",
         collapsedPublicList: false,
         publicSearch: "",
         sortKey: "callable",
@@ -1366,10 +1367,11 @@
         return "No follow-up needed.";
       }
       function summaryButton(flow) {
-        return `<button class="summary-toggle" type="button" aria-expanded="false" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`;
+        const open = state.openSummaryFlow === flow.qualified_name;
+        return `<button class="summary-toggle" type="button" aria-expanded="${open ? "true" : "false"}" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`;
       }
       function summaryRow(flow) {
-        const open = state.activePublicFlow === flow.qualified_name,
+        const open = state.openSummaryFlow === flow.qualified_name,
           severity = flowSignals(flow).includes("Architecture violation")
             ? "issue"
             : suggestedActionLabel(flow)
@@ -1481,16 +1483,11 @@
       }
       function sortValue(flow, key) {
         if (key === "callable") return text(flow.function_name).toLowerCase();
-        if (key === "module") return text(flow.module).toLowerCase();
-        if (key === "findings")
-          return (
-            (flow.warnings || []).map(findingLabel).join(" ").toLowerCase() ||
-            "healthy"
-          );
-        if (key === "next_step")
-          return suggestedActionLabel(flow).toLowerCase();
-        if (key === "downstream") return Number(flow.downstream_count ?? 0);
+        if (key === "width") return Number(flow.downstream_count ?? 0);
         if (key === "depth") return Number(flow.max_depth ?? 0);
+        if (key === "recommendation")
+          return suggestedActionLabel(flow).toLowerCase();
+        if (key === "signals") return flowSignals(flow).join(" ").toLowerCase();
         return text(flow.function_name).toLowerCase();
       }
       function stableSortRows(rows) {
@@ -2174,6 +2171,15 @@ Always call out tests required before changes.`;
       $("downloadJson").onclick = () => downloadPacket("json");
       $("downloadYaml").onclick = () => downloadPacket("yaml");
       document.addEventListener("click", (e) => {
+        const summaryToggle = e.target.closest("[data-summary-toggle]");
+        if (summaryToggle) {
+          state.openSummaryFlow =
+            state.openSummaryFlow === summaryToggle.dataset.summaryToggle
+              ? ""
+              : summaryToggle.dataset.summaryToggle;
+          renderPublicCallableList();
+          return;
+        }
         if (
           e.target.closest(
             "a,button,input,select,textarea,label,summary,.review-note",

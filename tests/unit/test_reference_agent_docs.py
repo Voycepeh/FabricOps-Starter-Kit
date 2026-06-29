@@ -488,6 +488,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "populateBandFilter('publicMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
+    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.downstream_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='recommendation')returnsuggestedActionLabel(flow).toLowerCase();if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
+    assert "if(key==='downstream')" not in compact_dashboard_text
+    assert "if(key==='next_step')" not in compact_dashboard_text
+    assert "if(key==='findings')" not in compact_dashboard_text
     card_order = [
         compact_dashboard_text.index("label:'Publiccallables'"),
         compact_dashboard_text.index("label:'Witharchitectureviolations'"),
@@ -538,6 +542,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "No architecture violations found in this graph." in dashboard_text
     assert "function flowSignals(flow)" in dashboard_text
     assert "function summaryRow(flow)" in dashboard_text
+    assert "openSummaryFlow:''" in compact_dashboard_text
+    assert "constopen=state.openSummaryFlow===flow.qualified_name" in compact_dashboard_text
+    assert "aria-expanded='${open?'true':'false'}'" in compact_dashboard_text
+    assert "state.openSummaryFlow=state.openSummaryFlow===summaryToggle.dataset.summaryToggle?'':summaryToggle.dataset.summaryToggle" in compact_dashboard_text
+    assert "state.activePublicFlow=row.dataset.publicFlowRow;state.selectedFlow=row.dataset.publicFlowRow;state.collapsedPublicList=true" in compact_dashboard_text
+    assert "state.openSummaryFlow=row.dataset.publicFlowRow" not in compact_dashboard_text
+    assert "state.activePublicFlow===flow.qualified_name" not in compact_dashboard_text
     assert "data-summary-toggle" in dashboard_text
     assert "View summary" in dashboard_text
     assert "Width:${esc(flow.downstream_count||0)}downstreamfunction(s)" in compact_dashboard_text
