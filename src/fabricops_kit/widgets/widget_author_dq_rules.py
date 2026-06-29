@@ -57,6 +57,7 @@ def widget_author_dq_rules(
     -------
     dict[str, Any]
         Rendered controls and save actions for notebook automation.
+
     """
     return _dq_rule_authoring_widget_workflow(
         state,

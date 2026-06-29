@@ -29,5 +29,6 @@ def widget_review_guardrail_governance(
     -------
     dict[str, Any]
         Rendered controls and review actions for notebook automation.
+
     """
     return _guardrail_governance_review_widget_workflow(state, spark_session=spark_session, context=context)

@@ -23,6 +23,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     -------
     dict[str, Any]
         Rendered controls, including read-only generated-identifier context.
+
     """
     config, env, _context = resolve_fabric_context(context=context)
     return _render_maintenance_widget_shared_workflow(spark=spark, config=config, env=env, kind="data_agreement_widget")

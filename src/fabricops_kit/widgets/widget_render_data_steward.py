@@ -23,6 +23,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     -------
     dict[str, Any]
         Rendered widget controls keyed for notebook customization.
+
     """
     config, env, _context = resolve_fabric_context(context=context)
     return _render_maintenance_widget_shared_workflow(spark=spark, config=config, env=env, kind="data_steward_widget")

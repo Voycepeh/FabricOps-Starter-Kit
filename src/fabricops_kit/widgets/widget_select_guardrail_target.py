@@ -23,5 +23,6 @@ def widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any
     dict[str, Any]
         Handover state for downstream enrichment, authoring, and governance
         review widgets.
+
     """
     return _guardrail_target_selection_widget_workflow(spark_session=spark_session, context=context)

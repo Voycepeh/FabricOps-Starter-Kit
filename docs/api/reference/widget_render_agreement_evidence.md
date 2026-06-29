@@ -62,7 +62,7 @@ Render the standalone agreement-evidence widget.
 
 `fabricops_kit/widgets/widget_render_agreement_evidence.py:11`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_agreement_evidence.py#L11-L31">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_agreement_evidence.py#L11-L32">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

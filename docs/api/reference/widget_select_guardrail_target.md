@@ -41,7 +41,7 @@ Render an interactive target selector for guardrail authoring and governance rev
 
 `fabricops_kit/widgets/widget_select_guardrail_target.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L10-L27">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L10-L28">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

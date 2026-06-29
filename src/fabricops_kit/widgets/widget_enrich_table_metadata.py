@@ -35,6 +35,7 @@ def widget_enrich_table_metadata(
     -------
     dict[str, Any]
         Rendered controls and save actions for notebook automation.
+
     """
     return _table_metadata_enrichment_widget_workflow(
         guardrail_state,

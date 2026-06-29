@@ -61,7 +61,7 @@ Render interactive schema, freshness, and profile-behavior guardrail authoring c
 
 `fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L10-L53">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L10-L54">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

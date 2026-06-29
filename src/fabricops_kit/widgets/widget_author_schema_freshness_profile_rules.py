@@ -41,6 +41,7 @@ def widget_author_schema_freshness_profile_rules(
     -------
     dict[str, Any]
         Rendered controls and save actions for notebook automation.
+
     """
     return _schema_freshness_profile_rule_authoring_widget_workflow(
         state,

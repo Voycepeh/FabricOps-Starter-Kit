@@ -26,6 +26,7 @@ def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | No
         Rendered controls for selecting an agreement version, pasting
         metadata lakehouse evidence file paths, refreshing agreement options,
         and saving evidence metadata rows.
+
     """
     config, env, _context = resolve_fabric_context(context=context)
     return _render_agreement_evidence_widget_workflow(spark=spark, config=config, env=env)

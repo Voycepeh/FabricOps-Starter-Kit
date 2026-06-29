@@ -11281,8 +11281,8 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/widgets/widget_author_dq_rules.py",
     "source_start_line": 10,
-    "source_end_line": 74,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L10-L74",
+    "source_end_line": 75,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L10-L75",
     "docs_path": "api/reference/widget_author_dq_rules.md",
     "summary": "Render interactive manual DQ guardrail authoring controls."
   },
@@ -11323,8 +11323,8 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py",
     "source_start_line": 10,
-    "source_end_line": 53,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L10-L53",
+    "source_end_line": 54,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L10-L54",
     "docs_path": "api/reference/widget_author_schema_freshness_profile_rules.md",
     "summary": "Render interactive schema, freshness, and profile-behavior guardrail authoring controls."
   },
@@ -11363,8 +11363,8 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
     "source_start_line": 10,
-    "source_end_line": 45,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L10-L45",
+    "source_end_line": 46,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L10-L46",
     "docs_path": "api/reference/widget_enrich_table_metadata.md",
     "summary": "Render a consolidated column enrichment widget."
   },
@@ -11411,8 +11411,8 @@
     ],
     "source_path": "src/fabricops_kit/widgets/widget_render_agreement_evidence.py",
     "source_start_line": 11,
-    "source_end_line": 31,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_agreement_evidence.py#L11-L31",
+    "source_end_line": 32,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_agreement_evidence.py#L11-L32",
     "docs_path": "api/reference/widget_render_agreement_evidence.md",
     "summary": "Render the standalone agreement-evidence widget."
   },
@@ -11454,8 +11454,8 @@
     ],
     "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
     "source_start_line": 11,
-    "source_end_line": 28,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L11-L28",
+    "source_end_line": 29,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L11-L29",
     "docs_path": "api/reference/widget_render_data_agreement.md",
     "summary": "Render the standalone data-agreement intake widget."
   },
@@ -11497,8 +11497,8 @@
     ],
     "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
     "source_start_line": 11,
-    "source_end_line": 28,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L11-L28",
+    "source_end_line": 29,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L11-L29",
     "docs_path": "api/reference/widget_render_data_steward.md",
     "summary": "Render the standalone data-steward intake widget."
   },
@@ -11538,8 +11538,8 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/widgets/widget_review_guardrail_governance.py",
     "source_start_line": 10,
-    "source_end_line": 33,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L10-L33",
+    "source_end_line": 34,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L10-L34",
     "docs_path": "api/reference/widget_review_guardrail_governance.md",
     "summary": "Render interactive controls for reviewing proposed and bypassed guardrail rules."
   },
@@ -11580,8 +11580,8 @@
     "related_guides": [],
     "source_path": "src/fabricops_kit/widgets/widget_select_guardrail_target.py",
     "source_start_line": 10,
-    "source_end_line": 27,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L10-L27",
+    "source_end_line": 28,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L10-L28",
     "docs_path": "api/reference/widget_select_guardrail_target.md",
     "summary": "Render an interactive target selector for guardrail authoring and governance review."
   }
