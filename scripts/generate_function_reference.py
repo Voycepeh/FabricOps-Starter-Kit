@@ -2187,7 +2187,6 @@ ROLE_TAGS_BY_NAME = {
     "setup_notebook": ["public_api_entrypoint", "notebook_api_entrypoint", "public_stable"],
     "setup_metadata_tables": ["public_api_entrypoint", "metadata_setup_workflow", "public_stable"],
     "_setup_notebook_workflow": ["internal_workflow", "setup_notebook_workflow"],
-    "_setup_metadata_tables_workflow": ["internal_workflow", "metadata_setup_workflow"],
     "_get_store": ["internal_resolver", "shared_internal_service", "store_resolver", "high_fanout_shared"],
     "resolve_fabric_context": [
         "internal_resolver",

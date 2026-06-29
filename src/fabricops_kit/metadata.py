@@ -61,7 +61,8 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
-def _now_utc_iso(config: Any = None) -> str:
+def _now_audit_timestamp(config: Any = None) -> str:
+    """Return the current audit timestamp using FABRICOPS_AUDIT_TIMEZONE."""
     return get_current_audit_timestamp(config=config, drop_microseconds=False)
 
 
@@ -122,7 +123,7 @@ def _write_guardrail_result_row(
         "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
         "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
         "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
-        "created_at": _now_utc_iso(config),
+        "created_at": _now_audit_timestamp(config),
         **audit,
     }
     context = {"config": config, "env": env}
@@ -263,9 +264,9 @@ def _build_runtime_audit_fields(
         user_field: _safe_str(committed_by).strip()
         if committed_by and _safe_str(committed_by).strip()
         else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-        timestamp_field: _safe_str(committed_at)
+        timestamp_field: datetime.fromisoformat(str(committed_at))
         if committed_at
-        else get_current_audit_timestamp(config=config),
+        else datetime.fromisoformat(get_current_audit_timestamp(config=config)),
         workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
         notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
         metadata_lakehouse_field: metadata_lakehouse_name,
@@ -381,7 +382,7 @@ def _register_current_notebook(
         ),
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
-        "registered_at": get_current_audit_timestamp(config=config, drop_microseconds=False),
+        "registered_at": datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False)),
         "agreement_contract_version": _safe_str(contract_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),
