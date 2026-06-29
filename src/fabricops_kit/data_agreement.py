@@ -18,7 +18,7 @@ from typing import Any
 
 from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook
+from .metadata import _build_runtime_audit_fields, _current_notebook_active_registrations, _register_current_notebook, coerce_metadata_row_types
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -496,18 +496,18 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
 
 
 def _write_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
-    write_lakehouse_table_core(spark.createDataFrame([row]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
+    write_lakehouse_table_core(spark.createDataFrame([coerce_metadata_row_types(table, row)]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 
-def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> str:
-    """Return an ISO date string or raise a clear intake validation error."""
+def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
+    """Return a date object or raise a clear intake validation error."""
     text = str(value or "").strip()
     if not text:
         if required:
             raise ValueError(f"{field_name} is required.")
-        return ""
+        return None
     try:
-        return date.fromisoformat(text[:10]).isoformat()
+        return date.fromisoformat(text[:10])
     except ValueError as exc:
         raise ValueError(f"{field_name} must be a valid ISO date (YYYY-MM-DD).") from exc
 
@@ -562,9 +562,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     row["steward_id"] = str(values.get("steward_id") or "").strip() or _generate_steward_id(row)
     explicit_active = values.get("is_active")
     if explicit_active not in (None, "") and not _to_bool(explicit_active):
-        row["is_active"] = "false"
+        row["is_active"] = False
     else:
-        row["is_active"] = "true" if _active_steward({**row, "is_active": row.get("is_active", "")}, config) else "false"
+        row["is_active"] = bool(_active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}

@@ -658,9 +658,10 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "used_by_count": 1,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.config.setup_metadata_tables._audit_fields",
@@ -828,7 +829,7 @@
         "fabricops_kit.config.setup_metadata_tables._qualified_table",
         "fabricops_kit.config.setup_metadata_tables._resolve_metadata_schema",
         "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry",
-        "fabricops_kit.config.shared._validate_framework_config"
+        "fabricops_kit.config.shared.validate_framework_config"
       ],
       "calls_count": 7,
       "used_by": [],
@@ -975,7 +976,7 @@
       "calls": [],
       "calls_count": 0,
       "used_by": [
-        "fabricops_kit.config.shared._validate_framework_config"
+        "fabricops_kit.config.shared.validate_framework_config"
       ],
       "used_by_count": 1,
       "used_in_templates": [
@@ -1382,8 +1383,8 @@
       "calls_count": 0,
       "used_by": [
         "fabricops_kit.config.shared.FrameworkConfig.__post_init__",
-        "fabricops_kit.config.shared._validate_framework_config",
-        "fabricops_kit.config.shared.get_audit_timezone"
+        "fabricops_kit.config.shared.get_audit_timezone",
+        "fabricops_kit.config.shared.validate_framework_config"
       ],
       "used_by_count": 3,
       "used_in_templates": [],
@@ -1398,24 +1399,19 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.config.keys",
-        "fabricops_kit.config.shared.FrameworkConfig",
-        "fabricops_kit.config.shared._validate_audit_timezone"
+        "fabricops_kit.config.shared.validate_framework_config"
       ],
-      "calls_count": 3,
+      "calls_count": 1,
       "used_by": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
         "fabricops_kit.config.shared._get_active_metadata_tables",
         "fabricops_kit.config.shared._get_metadata_table_schema_registry",
         "fabricops_kit.config.shared._setup_notebook_workflow",
         "fabricops_kit.config.shared._validate_metadata_table_registration"
       ],
-      "used_by_count": 5,
+      "used_by_count": 4,
       "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.config.shared._validate_audit_timezone"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.config.shared._validate_metadata_table_registration": {
       "qualified_name": "fabricops_kit.config.shared._validate_metadata_table_registration",
@@ -1524,9 +1520,9 @@
         "fabricops_kit.data_agreement.widget_select_agreement",
         "fabricops_kit.governance_review._dq_summary",
         "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._build_runtime_audit_fields",
         "fabricops_kit.metadata._now_audit_timestamp",
-        "fabricops_kit.metadata._register_current_notebook",
         "fabricops_kit.pipeline._now_iso",
         "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow"
       ],
@@ -1613,6 +1609,45 @@
         "fabricops_kit.pipeline._write_pipeline_run_summary_workflow"
       ],
       "used_by_count": 15,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.shared.validate_framework_config": {
+      "qualified_name": "fabricops_kit.config.shared.validate_framework_config",
+      "short_name": "validate_framework_config",
+      "module": "config.shared",
+      "callable": "validate_framework_config",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.keys",
+        "fabricops_kit.config.shared.FrameworkConfig",
+        "fabricops_kit.config.shared._validate_audit_timezone"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.config.shared._validate_framework_config"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config.shared._validate_audit_timezone"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.config.validate_framework_config": {
+      "qualified_name": "fabricops_kit.config.validate_framework_config",
+      "short_name": "validate_framework_config",
+      "module": "config",
+      "callable": "validate_framework_config",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -2448,9 +2483,10 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.io.shared.configured_lakehouse_schema",
-        "fabricops_kit.io.shared.write_lakehouse_table_core"
+        "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "calls_count": 2,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.data_agreement._create_or_update_data_agreement",
         "fabricops_kit.data_agreement._create_or_update_data_steward",
@@ -2765,8 +2801,8 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.governance_review._value",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._build_runtime_audit_fields",
-        "fabricops_kit.metadata._now_audit_timestamp",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 4,
@@ -2809,7 +2845,7 @@
       "calls": [
         "fabricops_kit.governance_review._is_no_approval_required",
         "fabricops_kit.governance_review._lifecycle_fields",
-        "fabricops_kit.metadata._now_audit_timestamp",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 4,
@@ -2833,10 +2869,10 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.governance_review.guardrail_authoring_status",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._build_dq_rule_key",
         "fabricops_kit.metadata._build_metadata_column_key",
         "fabricops_kit.metadata._build_metadata_table_key",
-        "fabricops_kit.metadata._now_audit_timestamp",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 6,
@@ -3225,9 +3261,9 @@
         "fabricops_kit.governance_review._status_is_warning",
         "fabricops_kit.governance_review._value",
         "fabricops_kit.governance_review.load_catalogue_profile_rows",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._build_metadata_table_key",
         "fabricops_kit.metadata._build_runtime_audit_fields",
-        "fabricops_kit.metadata._now_audit_timestamp",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 10,
@@ -4093,9 +4129,10 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.io.shared.configured_lakehouse_schema",
-        "fabricops_kit.io.shared.write_lakehouse_table_core"
+        "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "calls_count": 2,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.governance_review._dq_rule_authoring_widget_workflow",
         "fabricops_kit.governance_review._schema_freshness_profile_rule_authoring_widget_workflow"
@@ -4114,9 +4151,10 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.io.shared.configured_lakehouse_schema",
-        "fabricops_kit.io.shared.write_lakehouse_table_core"
+        "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "calls_count": 2,
+      "calls_count": 3,
       "used_by": [
         "fabricops_kit.governance_review._table_metadata_enrichment_widget_workflow",
         "fabricops_kit.governance_review._write_enrichment_records"
@@ -4136,7 +4174,7 @@
       "calls": [
         "fabricops_kit.governance_review._assert_governance_review_context",
         "fabricops_kit.governance_review._record_identity",
-        "fabricops_kit.metadata._now_audit_timestamp",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 4,
@@ -4161,7 +4199,7 @@
       "calls": [
         "fabricops_kit.governance_review._assert_governance_review_context",
         "fabricops_kit.governance_review._record_identity",
-        "fabricops_kit.metadata._now_audit_timestamp",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 4,
@@ -4214,7 +4252,7 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.metadata._now_audit_timestamp",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._resolve_action_by"
       ],
       "calls_count": 2,
@@ -4365,10 +4403,11 @@
         "fabricops_kit.governance_review.build_enrichment_rule_records",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
-        "fabricops_kit.metadata._now_audit_timestamp",
-        "fabricops_kit.metadata._resolve_action_by"
+        "fabricops_kit.metadata._audit_timestamp_value",
+        "fabricops_kit.metadata._resolve_action_by",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "calls_count": 7,
+      "calls_count": 8,
       "used_by": [],
       "used_by_count": 0,
       "used_in_templates": [],
@@ -6765,6 +6804,35 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.metadata._audit_timestamp_value": {
+      "qualified_name": "fabricops_kit.metadata._audit_timestamp_value",
+      "short_name": "_audit_timestamp_value",
+      "module": "metadata",
+      "callable": "_audit_timestamp_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.shared.get_current_audit_timestamp"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.governance_review._approved_review_context",
+        "fabricops_kit.governance_review._authoring_lifecycle",
+        "fabricops_kit.governance_review._base_guardrail_rule_record",
+        "fabricops_kit.governance_review._evaluate_governance_readiness",
+        "fabricops_kit.governance_review.apply_governance_enrichment_action",
+        "fabricops_kit.governance_review.apply_governance_rule_action",
+        "fabricops_kit.governance_review.build_table_governance_policy_record",
+        "fabricops_kit.governance_review.record_table_governance",
+        "fabricops_kit.metadata._register_current_notebook",
+        "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline._timestamp_value"
+      ],
+      "used_by_count": 11,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.metadata._build_dq_rule_key": {
       "qualified_name": "fabricops_kit.metadata._build_dq_rule_key",
       "short_name": "_build_dq_rule_key",
@@ -6870,6 +6938,23 @@
         "fabricops_kit.metadata._safe_str"
       ],
       "internal_helper_count": 3
+    },
+    "fabricops_kit.metadata._coerce_metadata_value": {
+      "qualified_name": "fabricops_kit.metadata._coerce_metadata_value",
+      "short_name": "_coerce_metadata_value",
+      "module": "metadata",
+      "callable": "_coerce_metadata_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.metadata.coerce_metadata_row_types"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.metadata._coerce_row_dicts": {
       "qualified_name": "fabricops_kit.metadata._coerce_row_dicts",
@@ -6990,18 +7075,8 @@
         "fabricops_kit.config.shared.get_current_audit_timestamp"
       ],
       "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.governance_review._approved_review_context",
-        "fabricops_kit.governance_review._authoring_lifecycle",
-        "fabricops_kit.governance_review._base_guardrail_rule_record",
-        "fabricops_kit.governance_review._evaluate_governance_readiness",
-        "fabricops_kit.governance_review.apply_governance_enrichment_action",
-        "fabricops_kit.governance_review.apply_governance_rule_action",
-        "fabricops_kit.governance_review.build_table_governance_policy_record",
-        "fabricops_kit.governance_review.record_table_governance",
-        "fabricops_kit.metadata._write_guardrail_result_row"
-      ],
-      "used_by_count": 9,
+      "used_by": [],
+      "used_by_count": 0,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -7014,14 +7089,14 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.config.shared.get_current_audit_timestamp",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._rows_for_spark",
         "fabricops_kit.metadata._runtime_context",
-        "fabricops_kit.metadata._safe_str"
+        "fabricops_kit.metadata._safe_str",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
       "calls_count": 8,
       "used_by": [
@@ -7030,9 +7105,9 @@
       "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._context_get",
         "fabricops_kit.metadata._notebook_registration_key",
-        "fabricops_kit.metadata._rows_for_spark",
         "fabricops_kit.metadata._runtime_context",
         "fabricops_kit.metadata._safe_str"
       ],
@@ -7067,23 +7142,6 @@
         "fabricops_kit.metadata._runtime_context"
       ],
       "internal_helper_count": 2
-    },
-    "fabricops_kit.metadata._rows_for_spark": {
-      "qualified_name": "fabricops_kit.metadata._rows_for_spark",
-      "short_name": "_rows_for_spark",
-      "module": "metadata",
-      "callable": "_rows_for_spark",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.metadata._register_current_notebook"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
     },
     "fabricops_kit.metadata._runtime_context": {
       "qualified_name": "fabricops_kit.metadata._runtime_context",
@@ -7157,10 +7215,11 @@
       "calls": [
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._build_runtime_audit_fields",
-        "fabricops_kit.metadata._now_audit_timestamp"
+        "fabricops_kit.metadata.coerce_metadata_row_types"
       ],
-      "calls_count": 4,
+      "calls_count": 5,
       "used_by": [
         "fabricops_kit.governance_review._run_active_dq_guardrail",
         "fabricops_kit.guardrails.enforce_profile_behavior",
@@ -7169,10 +7228,39 @@
       "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [
-        "fabricops_kit.metadata._build_runtime_audit_fields",
-        "fabricops_kit.metadata._now_audit_timestamp"
+        "fabricops_kit.metadata._audit_timestamp_value",
+        "fabricops_kit.metadata._build_runtime_audit_fields"
       ],
       "internal_helper_count": 2
+    },
+    "fabricops_kit.metadata.coerce_metadata_row_types": {
+      "qualified_name": "fabricops_kit.metadata.coerce_metadata_row_types",
+      "short_name": "coerce_metadata_row_types",
+      "module": "metadata",
+      "callable": "coerce_metadata_row_types",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry",
+        "fabricops_kit.metadata._coerce_metadata_value"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.data_agreement._write_row",
+        "fabricops_kit.governance_review._write_rule_records",
+        "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
+        "fabricops_kit.governance_review.record_table_governance",
+        "fabricops_kit.metadata._register_current_notebook",
+        "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+        "fabricops_kit.pipeline._write_pipeline_run_summary_workflow"
+      ],
+      "used_by_count": 8,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.metadata._coerce_metadata_value"
+      ],
+      "internal_helper_count": 1
     },
     "fabricops_kit.pipeline._PipelineRunContext": {
       "qualified_name": "fabricops_kit.pipeline._PipelineRunContext",
@@ -7450,13 +7538,10 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.pipeline._runtime_audit_fields",
         "fabricops_kit.pipeline._start_pipeline_run_workflow",
-        "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
-        "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
         "fabricops_kit.pipeline.write_catalogue_evidence"
       ],
-      "used_by_count": 5,
+      "used_by_count": 2,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -7614,17 +7699,18 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.metadata._build_runtime_audit_fields",
-        "fabricops_kit.pipeline._now_iso"
+        "fabricops_kit.pipeline._timestamp_value"
       ],
       "calls_count": 2,
       "used_by": [
         "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+        "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
         "fabricops_kit.pipeline.write_catalogue_evidence"
       ],
-      "used_by_count": 2,
+      "used_by_count": 3,
       "used_in_templates": [],
       "internal_helpers_used": [
-        "fabricops_kit.pipeline._now_iso"
+        "fabricops_kit.pipeline._timestamp_value"
       ],
       "internal_helper_count": 1
     },
@@ -7741,6 +7827,27 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.pipeline._timestamp_value": {
+      "qualified_name": "fabricops_kit.pipeline._timestamp_value",
+      "short_name": "_timestamp_value",
+      "module": "pipeline",
+      "callable": "_timestamp_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._audit_timestamp_value"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
+        "fabricops_kit.pipeline._write_pipeline_run_summary_workflow"
+      ],
+      "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.pipeline._write_pipeline_lineage_workflow": {
       "qualified_name": "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
       "short_name": "_write_pipeline_lineage_workflow",
@@ -7753,11 +7860,12 @@
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
         "fabricops_kit.metadata._build_metadata_table_key",
+        "fabricops_kit.metadata.coerce_metadata_row_types",
         "fabricops_kit.pipeline._definition_name",
-        "fabricops_kit.pipeline._now_iso",
-        "fabricops_kit.pipeline._runtime_audit_fields"
+        "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline._timestamp_value"
       ],
-      "calls_count": 7,
+      "calls_count": 8,
       "used_by": [
         "fabricops_kit.pipeline.write_pipeline_lineage"
       ],
@@ -7765,8 +7873,8 @@
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.pipeline._definition_name",
-        "fabricops_kit.pipeline._now_iso",
-        "fabricops_kit.pipeline._runtime_audit_fields"
+        "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline._timestamp_value"
       ],
       "internal_helper_count": 3
     },
@@ -7781,12 +7889,14 @@
         "fabricops_kit.config.shared.resolve_fabric_context",
         "fabricops_kit.io.shared.configured_lakehouse_schema",
         "fabricops_kit.io.shared.write_lakehouse_table_core",
+        "fabricops_kit.metadata.coerce_metadata_row_types",
         "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._definition_name",
-        "fabricops_kit.pipeline._now_iso",
-        "fabricops_kit.pipeline._summary_status"
+        "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline._summary_status",
+        "fabricops_kit.pipeline._timestamp_value"
       ],
-      "calls_count": 7,
+      "calls_count": 9,
       "used_by": [
         "fabricops_kit.pipeline.write_pipeline_run_summary"
       ],
@@ -7795,10 +7905,11 @@
       "internal_helpers_used": [
         "fabricops_kit.pipeline._active_pipeline_context",
         "fabricops_kit.pipeline._definition_name",
-        "fabricops_kit.pipeline._now_iso",
-        "fabricops_kit.pipeline._summary_status"
+        "fabricops_kit.pipeline._runtime_audit_fields",
+        "fabricops_kit.pipeline._summary_status",
+        "fabricops_kit.pipeline._timestamp_value"
       ],
-      "internal_helper_count": 4
+      "internal_helper_count": 5
     },
     "fabricops_kit.pipeline._yes_no": {
       "qualified_name": "fabricops_kit.pipeline._yes_no",
@@ -8239,8 +8350,9 @@
     },
     "metadata": {
       "callable_count": 0,
-      "internal_count": 17,
+      "internal_count": 18,
       "outbound_modules": [
+        "setup_metadata_tables",
         "shared"
       ],
       "inbound_modules": [
@@ -8249,12 +8361,12 @@
         "guardrails",
         "pipeline"
       ],
-      "outbound_count": 1,
+      "outbound_count": 2,
       "inbound_count": 4
     },
     "pipeline": {
       "callable_count": 6,
-      "internal_count": 30,
+      "internal_count": 31,
       "outbound_modules": [
         "data_agreement",
         "governance_review",

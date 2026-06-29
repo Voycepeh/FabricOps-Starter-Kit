@@ -20,7 +20,7 @@ from .guardrails import (
 from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from .metadata import _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row
+from .metadata import _audit_timestamp_value, _build_metadata_table_key, _build_runtime_audit_fields, _write_guardrail_result_row, coerce_metadata_row_types
 
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
@@ -240,6 +240,15 @@ def _now_iso(config: Any = None) -> str:
     return get_current_audit_timestamp(config=config)
 
 
+def _timestamp_value(value: Any = None, config: Any = None):
+    """Return a datetime value for metadata timestamp columns."""
+    if value:
+        from datetime import datetime
+
+        return value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+    return _audit_timestamp_value(config)
+
+
 def _definition_name(name: str, definition: Mapping[str, Any]) -> str:
     return str(definition.get("table_name") or definition.get("name") or name)
 
@@ -271,7 +280,7 @@ def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
         return _build_runtime_audit_fields(config=config, env=env)
     except Exception:
         return {
-            "_committed_at": _now_iso(config),
+            "_committed_at": _timestamp_value(config=config),
             "_committed_by": "unknown",
             "_workspace_name": "",
             "_notebook_name": "",
@@ -1263,7 +1272,7 @@ def _write_pipeline_lineage_workflow(
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env)
-    created_at = _now_iso(config)
+    created_at = _timestamp_value(config=config)
     if relationships is None:
         relationships = [
             {
@@ -1318,7 +1327,7 @@ def _write_pipeline_lineage_workflow(
                 )
     if rows:
         write_lakehouse_table_core(
-            spark.createDataFrame(rows),
+            spark.createDataFrame([coerce_metadata_row_types(metadata_table, row) for row in rows]),
             metadata_table,
             target="metadata",
             schema=configured_lakehouse_schema(config, env, "metadata"),
@@ -1461,8 +1470,9 @@ def _write_pipeline_run_summary_workflow(
         message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
 
     config, env, resolved_context = resolve_fabric_context(context=context)
-    completed = completed_at or _now_iso(config)
-    started = started_at or completed
+    audit = _runtime_audit_fields(config, env)
+    completed = _timestamp_value(completed_at, config=config)
+    started = _timestamp_value(started_at, config=config) if started_at else completed
     sources = source_definitions or {}
     targets = target_definitions or {}
     source_guardrail_status = _summary_status(
@@ -1507,10 +1517,11 @@ def _write_pipeline_run_summary_workflow(
         "catalogue_status": catalogue_status,
         "message": message,
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _now_iso(config),
+        "created_at": _timestamp_value(config=config),
+        **audit,
     }
     write_lakehouse_table_core(
-        spark.createDataFrame([row]),
+        spark.createDataFrame([coerce_metadata_row_types(metadata_table, row)]),
         metadata_table,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),

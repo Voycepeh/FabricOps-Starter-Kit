@@ -474,7 +474,7 @@ class NotebookSetupContext:
 
 
 
-def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
+def validate_framework_config(config: Any | dict[str, Any]) -> Any:
     """Validate and normalize framework configuration input.
 
     Parameters
@@ -502,7 +502,7 @@ def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
 
     Examples
     --------
-    >>> normalized = _validate_framework_config(framework_config)
+    >>> normalized = validate_framework_config(framework_config)
     >>> isinstance(normalized, FrameworkConfig)
     True
 
@@ -585,6 +585,11 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     if require_paths:
         raise ValueError("path_config must provide a non-empty paths mapping.")
     return PathConfig(paths={"__missing__": {}})
+
+
+def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
+    """Backward-compatible alias for :func:`validate_framework_config`."""
+    return validate_framework_config(config)
 
 
 def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any:

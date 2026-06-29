@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 from .config.shared import get_current_audit_timestamp, get_store
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
@@ -60,6 +60,56 @@ def _coerce_row_dicts(rows: Any) -> list[dict[str, Any]]:
         rows = rows.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
+
+
+def _audit_timestamp_value(config: Any = None) -> datetime:
+    """Return a datetime audit value using FABRICOPS_AUDIT_TIMEZONE."""
+    return datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
+
+
+def _coerce_metadata_value(value: Any, type_name: str) -> Any:
+    """Coerce one metadata value to the Python type expected by the setup schema."""
+    if value in (None, ""):
+        return None if type_name in {"TimestampType", "DateType", "BooleanType", "LongType", "DoubleType"} else ""
+    if type_name == "TimestampType":
+        return value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+    if type_name == "DateType":
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, date):
+            return value
+        return date.fromisoformat(str(value)[:10])
+    if type_name == "BooleanType":
+        if isinstance(value, bool):
+            return value
+        normalized = str(value).strip().lower()
+        if normalized in {"true", "1", "yes", "y"}:
+            return True
+        if normalized in {"false", "0", "no", "n"}:
+            return False
+        return bool(value)
+    if type_name == "LongType":
+        return int(value)
+    if type_name == "DoubleType":
+        return float(value)
+    return value
+
+
+def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Return a metadata row with values aligned to the bootstrap schema types."""
+    try:
+        from fabricops_kit.config.setup_metadata_tables import _metadata_table_schema_registry
+
+        schema = _metadata_table_schema_registry().get(table_name)
+    except Exception:
+        schema = None
+    if schema is None:
+        return dict(row)
+    coerced = dict(row)
+    for field in getattr(schema, "fields", []):
+        if field.name in coerced:
+            coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
+    return coerced
 
 def _now_audit_timestamp(config: Any = None) -> str:
     """Return the current audit timestamp using FABRICOPS_AUDIT_TIMEZONE."""
@@ -123,12 +173,12 @@ def _write_guardrail_result_row(
         "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
         "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
         "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
-        "created_at": _now_audit_timestamp(config),
+        "created_at": _audit_timestamp_value(config),
         **audit,
     }
     context = {"config": config, "env": env}
     write_lakehouse_table_core(
-        spark_session.createDataFrame([row]),
+        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
@@ -138,18 +188,6 @@ def _write_guardrail_result_row(
 
 def _build_dq_rule_key(environment_name, dataset_name, table_name, rule_id) -> str:
     return _stable_metadata_key(environment_name, dataset_name, table_name, rule_id)
-
-
-def _rows_for_spark(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    out = []
-    for row in rows or []:
-        item = dict(row)
-        if isinstance(item.get("approved_at"), datetime):
-            item["approved_at"] = item["approved_at"].isoformat()
-        if isinstance(item.get("suggestion_json"), (dict, list)):
-            item["suggestion_json"] = json.dumps(item["suggestion_json"], sort_keys=True)
-        out.append(item)
-    return out
 
 
 def _context_get(context: Any, *keys: str) -> Any:
@@ -382,7 +420,7 @@ def _register_current_notebook(
         ),
         "user_name": _safe_str(user_name),
         "user_id": _safe_str(user_id),
-        "registered_at": datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False)),
+        "registered_at": _audit_timestamp_value(config),
         "agreement_contract_version": _safe_str(contract_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),
@@ -391,7 +429,7 @@ def _register_current_notebook(
     }
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
-    df = spark.createDataFrame(_rows_for_spark([row]))
+    df = spark.createDataFrame([coerce_metadata_row_types(metadata_table, row)])
     write_lakehouse_table_core(df, metadata_table, target="metadata", schema=metadata_schema or configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
     return row
 

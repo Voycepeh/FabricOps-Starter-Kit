@@ -600,3 +600,53 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
     assert "from .config.shared import get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/data_profiling/shared.py").read_text(encoding="utf-8")
+
+
+def test_setup_metadata_tables_uses_public_config_validation_helper_only():
+    """Verify setup metadata tables avoids cross-file private helper imports."""
+    source = Path("src/fabricops_kit/config/setup_metadata_tables.py").read_text(encoding="utf-8")
+
+    assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
+    assert "_validate_framework_config" not in source
+
+
+def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
+    """Verify canonical metadata schemas and row coercion align with runtime writer types."""
+    from datetime import date, datetime
+
+    from fabricops_kit.config.setup_metadata_tables import AUDIT_SCHEMA_FIELDS, CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+    from fabricops_kit.metadata import coerce_metadata_row_types
+
+    audit_columns = {name for name, _kind in AUDIT_SCHEMA_FIELDS}
+    registry = _metadata_table_schema_registry()
+
+    assert list(registry) == CANONICAL_METADATA_TABLES
+    for table_name, schema in registry.items():
+        fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
+        assert audit_columns.issubset(fields)
+        sample = {}
+        for field_name, type_name in fields.items():
+            if type_name == "TimestampType":
+                sample[field_name] = "2026-06-29T12:34:56+08:00"
+            elif type_name == "DateType":
+                sample[field_name] = "2026-06-29"
+            elif type_name == "BooleanType":
+                sample[field_name] = "true"
+            elif type_name == "LongType":
+                sample[field_name] = "7"
+            elif type_name == "DoubleType":
+                sample[field_name] = "7.5"
+            else:
+                sample[field_name] = "value"
+        row = coerce_metadata_row_types(table_name, sample)
+        for field_name, type_name in fields.items():
+            if type_name == "TimestampType":
+                assert isinstance(row[field_name], datetime), f"{table_name}.{field_name} must be datetime"
+            elif type_name == "DateType":
+                assert isinstance(row[field_name], date) and not isinstance(row[field_name], datetime), f"{table_name}.{field_name} must be date"
+            elif type_name == "BooleanType":
+                assert isinstance(row[field_name], bool), f"{table_name}.{field_name} must be bool"
+            elif type_name == "LongType":
+                assert isinstance(row[field_name], int), f"{table_name}.{field_name} must be int"
+            elif type_name == "DoubleType":
+                assert isinstance(row[field_name], float), f"{table_name}.{field_name} must be float"
