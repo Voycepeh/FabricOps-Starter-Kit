@@ -11,7 +11,7 @@
 >
 > The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
 
-The Function Call Graph turns repository scans into a review surface for AI assisted development. It shows which public callable functions exist, what supports them, where dependencies go, and which cleanup candidates are worth reviewing before prototypes become permanent.
+The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
 
 ## How it works
 
@@ -131,11 +131,11 @@ public callable → public callable → public callable
 
 Public callables should be clean entry points. Shared logic belongs behind them, not inside a chain of public function calls.
 
-### Wide dependency surfaces
+### Many dependencies
 
 A public callable can become hard to reason about when it pulls in too many downstream helpers.
 
-![Wide dependency surface](../assets/fabricops-bad-example-large-surface-area.png)
+![Many dependencies](../assets/fabricops-bad-example-large-surface-area.png)
 
 ### Long nested chains
 

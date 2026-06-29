@@ -319,7 +319,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## 2. Scan and analyze" in flow_text
     assert "## 3. Enforce architecture" in flow_text
     assert "### Architecture violations we are preventing" in flow_text
-    assert "### Wide dependency surfaces" in flow_text
+    assert "### Many dependencies" in flow_text
     assert "### Long nested chains" in flow_text
     assert "## 4. Function Call Graph Dashboard" in flow_text
     assert "## 5. AI refactor packets" in flow_text
@@ -446,7 +446,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
     assert "Next step" in dashboard_text
-    assert "Open the function call graph tree to inspect exact helper names, layers, source files, and actionable details." in dashboard_text
+    assert "No review flags detected." in dashboard_text
+    assert "Review helper placement" not in dashboard_text
+    assert "Review nested helpers" in dashboard_text
+    assert "Finding note" not in dashboard_text
+    assert "Fix architecture issue" in dashboard_text
+    assert "Keep public" not in dashboard_text
+    assert "No action needed" not in dashboard_text
     assert "disabled>CopyJSON" not in compact_dashboard_text
     assert "disabled>DownloadJSON" in compact_dashboard_text
     assert "disabled>CopyYAML" not in compact_dashboard_text
@@ -824,7 +830,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "First make it exist. Then make it good." in callable_flow_text
     assert "AI generated code can work correctly but still leave behind messy integration patterns" in callable_flow_text
     assert "Architecture violations we are preventing" in callable_flow_text
-    assert "Wide dependency surfaces" in callable_flow_text
+    assert "Many dependencies" in callable_flow_text
     assert "Long nested chains" in callable_flow_text
     assert "Function Call Graph Dashboard" in callable_flow_text
     assert "Open architecture dashboard" in callable_flow_text
