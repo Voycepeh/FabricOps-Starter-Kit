@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import json
 
-from fabricops_kit import governance_review as _governance_review
+from fabricops_kit import governance_shared as _governance_review
 from fabricops_kit.config.shared import resolve_fabric_context
 
 from typing import Any, Mapping

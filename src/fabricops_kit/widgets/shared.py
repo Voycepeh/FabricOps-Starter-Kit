@@ -166,7 +166,7 @@ def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None =
 
 # Widget workflow implementations migrated from data_agreement.py.
 def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
-    from fabricops_kit import data_agreement as _data_agreement
+    from fabricops_kit import data_agreement_shared as _data_agreement
 
     widgets = _require_ipywidgets()
     from IPython import display as ip
@@ -379,7 +379,7 @@ def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: 
 
 def _render_agreement_evidence_widget_workflow(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
     """Render optional agreement evidence upload controls."""
-    from fabricops_kit import data_agreement as _data_agreement
+    from fabricops_kit import data_agreement_shared as _data_agreement
 
     widgets = _require_ipywidgets()
     from IPython import display as ip

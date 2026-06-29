@@ -19,20 +19,30 @@ def _function_source(path: str, function_name: str) -> str:
 
 
 
-def test_widget_modules_do_not_import_private_agreement_or_governance_helpers():
-    """Verify widget modules do not import private helpers from retired owner modules."""
+def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
+    """Verify widget modules do not depend on retired agreement/governance owners."""
     blocked_modules = {"fabricops_kit.data_agreement", "fabricops_kit.governance_review"}
+    blocked_package_names = {"data_agreement", "governance_review"}
     violations = []
     for path in (SRC / "widgets").glob("*.py"):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module in blocked_modules:
-                private_names = [alias.name for alias in node.names if alias.name.startswith("_")]
-                if private_names:
-                    violations.append(f"{path}:{node.lineno} imports {', '.join(private_names)} from {node.module}")
+            if isinstance(node, ast.ImportFrom):
+                if node.module in blocked_modules:
+                    violations.append(f"{path}:{node.lineno} imports from {node.module}")
+                if node.module == "fabricops_kit":
+                    imported = {alias.name for alias in node.names}
+                    blocked = sorted(imported & blocked_package_names)
+                    if blocked:
+                        violations.append(f"{path}:{node.lineno} imports {', '.join(blocked)} from fabricops_kit")
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name in blocked_modules:
+                        violations.append(f"{path}:{node.lineno} imports {alias.name}")
 
     assert violations == []
+
 
 def _calls_write_lakehouse_table_core(source: str) -> bool:
     """Return whether source calls write_lakehouse_table_core directly."""

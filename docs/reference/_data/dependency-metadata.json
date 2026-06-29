@@ -2318,6 +2318,21 @@
       ],
       "internal_helper_count": 2
     },
+    "fabricops_kit.data_agreement_shared.__getattr__": {
+      "qualified_name": "fabricops_kit.data_agreement_shared.__getattr__",
+      "short_name": "__getattr__",
+      "module": "data_agreement_shared",
+      "callable": "__getattr__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.data_profiling.profile_dataframe": {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "short_name": "profile_dataframe",
@@ -3969,6 +3984,21 @@
         "fabricops_kit.governance_review._coerce_rows"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.governance_shared.__getattr__": {
+      "qualified_name": "fabricops_kit.governance_shared.__getattr__",
+      "short_name": "__getattr__",
+      "module": "governance_shared",
+      "callable": "__getattr__",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.guardrails.SchemaDriftError": {
       "qualified_name": "fabricops_kit.guardrails.SchemaDriftError",
@@ -8091,6 +8121,14 @@
       "outbound_count": 3,
       "inbound_count": 1
     },
+    "data_agreement_shared": {
+      "callable_count": 0,
+      "internal_count": 1,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
     "data_profiling": {
       "callable_count": 0,
       "internal_count": 0,
@@ -8130,6 +8168,14 @@
       ],
       "outbound_count": 2,
       "inbound_count": 2
+    },
+    "governance_shared": {
+      "callable_count": 0,
+      "internal_count": 1,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
     },
     "guardrails": {
       "callable_count": 0,

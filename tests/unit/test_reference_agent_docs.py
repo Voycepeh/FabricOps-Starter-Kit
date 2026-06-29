@@ -2482,7 +2482,7 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     expected_counts = {
         "public": 27,
         "internal": 90,
-        "private_helper": 243,
+        "private_helper": 245,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 

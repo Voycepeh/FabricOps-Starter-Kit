@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-29T16:31:01.449341Z",
+    "generated_at_utc": "2026-06-29T16:46:21.947004Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -8602,6 +8602,54 @@
       ]
     },
     {
+      "qualified_name": "fabricops_kit.data_agreement_shared.__getattr__",
+      "function_name": "__getattr__",
+      "module": "data_agreement_shared",
+      "source_path": "src/fabricops_kit/data_agreement_shared.py",
+      "owner_file": "src/fabricops_kit/data_agreement_shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_agreement_shared.py#L14-L16",
+      "source_start_line": 14,
+      "source_end_line": 16,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "unused",
+      "usage_scope_label": "Unused",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Remove redundant wrapper",
+      "priority": "Medium",
+      "signals": [
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "call_site_count": 0,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
+    },
+    {
       "qualified_name": "fabricops_kit.data_profiling.profile_dataframe",
       "function_name": "profile_dataframe",
       "module": "data_profiling.profile_dataframe",
@@ -15932,6 +15980,54 @@
           "dependency_role": "internal_normalizer"
         }
       ]
+    },
+    {
+      "qualified_name": "fabricops_kit.governance_shared.__getattr__",
+      "function_name": "__getattr__",
+      "module": "governance_shared",
+      "source_path": "src/fabricops_kit/governance_shared.py",
+      "owner_file": "src/fabricops_kit/governance_shared.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_shared.py#L15-L17",
+      "source_start_line": 15,
+      "source_end_line": 17,
+      "function_type": "Private helper",
+      "layer": "private_helper",
+      "review_status": "classified",
+      "review_status_label": "Classified",
+      "callable_kind": "function",
+      "callable_role": [
+        "utility_function"
+      ],
+      "callable_role_group": "utility",
+      "callable_role_group_label": "Utility",
+      "callable_role_detail": [
+        "utility_function"
+      ],
+      "callable_role_detail_label": "Utility function",
+      "dependency_role": "utility_function",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "unused",
+      "usage_scope_label": "Unused",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Remove redundant wrapper",
+      "priority": "Medium",
+      "signals": [
+        "Leaf internal helper",
+        "Layer assignment needs review"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 0,
+      "call_site_count": 0,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [],
+      "callees": []
     },
     {
       "qualified_name": "fabricops_kit.guardrails._accepted_profile_rows",
@@ -62852,7 +62948,7 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 367,
+    "total_callables": 369,
     "function_type": {
       "Public function": 27,
       "Shared helper": 90,
@@ -62863,7 +62959,7 @@
       "internal": 90
     },
     "review_status": {
-      "classified": 325,
+      "classified": 327,
       "classification_pending": 42,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
@@ -62880,7 +62976,7 @@
       "public_entrypoint": 27,
       "registry_builder": 2,
       "resolver": 58,
-      "utility": 142,
+      "utility": 144,
       "validator": 25,
       "workflow": 63
     },
@@ -62898,7 +62994,7 @@
       "registry_builder": 2,
       "result_model_class": 1,
       "schema_utility": 4,
-      "utility_function": 134,
+      "utility_function": 136,
       "utility_validator": 4
     },
     "recommended_action": {
@@ -62908,7 +63004,7 @@
       "Next step": 63,
       "Public API entrypoint": 27,
       "Public config class": 7,
-      "Remove redundant wrapper": 43,
+      "Remove redundant wrapper": 45,
       "Rename to shared helper": 20,
       "Shared internal helper": 19
     },
@@ -62921,16 +63017,16 @@
       "suggested_helper_review": 18
     },
     "callable_inventory_metrics": {
-      "module_count": 30,
-      "total_callables": 367,
+      "module_count": 32,
+      "total_callables": 369,
       "public_api_entrypoints": 27,
       "function_callables": 117,
       "supporting_functions": 90,
       "public_classes": 7,
-      "hidden_private_helpers": 243,
-      "private_helpers_to_review": 243
+      "hidden_private_helpers": 245,
+      "private_helpers_to_review": 245
     },
-    "private_helper_review": 243,
+    "private_helper_review": 245,
     "public_classes": 7
   }
 }
