@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.data_agreement import _render_agreement_evidence_widget_workflow
+from fabricops_kit.widgets.shared import _render_agreement_evidence_widget_workflow
 
 
 def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:

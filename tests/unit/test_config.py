@@ -537,8 +537,8 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     inventory = json.loads(Path("docs/reference/_data/function-call-graph.json").read_text(encoding="utf-8"))["function_inventory"]
     rows = {row["qualified_name"]: row for row in inventory}
     for qn in [
-        "fabricops_kit.data_agreement._render_maintenance_widget_shared_workflow",
-        "fabricops_kit.data_agreement._render_agreement_evidence_widget_workflow",
+        "fabricops_kit.widgets.shared._render_maintenance_widget_shared_workflow",
+        "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow",
     ]:
         assert rows[qn]["function_type"] == "Private helper"
         assert rows[qn]["layer"] == "private_helper"

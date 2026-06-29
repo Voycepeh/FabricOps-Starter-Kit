@@ -18,6 +18,22 @@ def _function_source(path: str, function_name: str) -> str:
     raise AssertionError(f"{function_name} not found in {path}")
 
 
+
+def test_widget_modules_do_not_import_private_agreement_or_governance_helpers():
+    """Verify widget modules do not import private helpers from retired owner modules."""
+    blocked_modules = {"fabricops_kit.data_agreement", "fabricops_kit.governance_review"}
+    violations = []
+    for path in (SRC / "widgets").glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module in blocked_modules:
+                private_names = [alias.name for alias in node.names if alias.name.startswith("_")]
+                if private_names:
+                    violations.append(f"{path}:{node.lineno} imports {', '.join(private_names)} from {node.module}")
+
+    assert violations == []
+
 def _calls_write_lakehouse_table_core(source: str) -> bool:
     """Return whether source calls write_lakehouse_table_core directly."""
     tree = ast.parse(source)
@@ -120,8 +136,8 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         "widget_review_guardrail_governance": "_guardrail_governance_review_widget_workflow",
     }
     workflow_sources = {
-        workflow_name: _function_source("governance_review.py", workflow_name)
-        for workflow_name in workflow_by_wrapper.values()
+        workflow_name: _function_source(f"widgets/{wrapper_name}.py", workflow_name)
+        for wrapper_name, workflow_name in workflow_by_wrapper.items()
     }
 
     selector_source = workflow_sources["_guardrail_target_selection_widget_workflow"]
