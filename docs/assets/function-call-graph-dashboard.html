@@ -897,7 +897,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-29 19:19 SGT<span
+        <strong>Generated at:</strong> 2026-06-29 20:10 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -1771,6 +1771,38 @@
           return `${mergeCandidates.length} helper(s) are marked Review for merge.`;
         return "No architecture violations found in this graph.";
       }
+      function flowNextStepLabel(
+        flow,
+        architectureFindings = [],
+        mergeCandidates = [],
+      ) {
+        const explicit = text(
+          flow?.recommended_simplification_action ??
+            flow?.recommended_action ??
+            flow?.next_step,
+        ).trim();
+        if (explicit && explicit !== "Next step") return displayLabel(explicit);
+        const findings = Array.isArray(architectureFindings)
+            ? architectureFindings
+            : [],
+          merges = Array.isArray(mergeCandidates) ? mergeCandidates : [];
+        if (findings.length || architectureFindingCount(flow || {}) > 0)
+          return "Fix architecture issue";
+        const signals = flowSignals(flow || {});
+        if (
+          merges.length ||
+          signals.some((s) =>
+            [
+              "Long chain",
+              "Many dependencies",
+              "Shared dependency",
+              "Review for merge",
+            ].includes(s),
+          )
+        )
+          return "Review nested helpers";
+        return explicit ? displayLabel(explicit) : "";
+      }
       function flowNextStep(flow, architectureFindings, mergeCandidates) {
         const label = flowNextStepLabel(
           flow,
@@ -1781,7 +1813,7 @@
           return "Fix architecture issues before refactoring this callable.";
         if (label === "Review nested helpers")
           return "Review nested helpers before refactoring. Check whether they should stay separate, be shared, or be merged into their caller.";
-        return "";
+        return label;
       }
       function flowSignalChips(flow, architectureFindings, mergeCandidates) {
         const chips = [];
@@ -1825,9 +1857,14 @@
           health = flowHealth(f, architectureFindings, mergeCandidates),
           reason = flowReason(f, architectureFindings, mergeCandidates),
           nextStep = flowNextStep(f, architectureFindings, mergeCandidates),
+          nextStepLabel = flowNextStepLabel(
+            f,
+            architectureFindings,
+            mergeCandidates,
+          ),
           signals = flowSignalChips(f, architectureFindings, mergeCandidates);
         $("publicFlowDetails").innerHTML =
-          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div>${nextStep ? `<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div>` : ""}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Review for merge</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} helper(s) are marked Review for merge. Open the call graph tree to inspect whether nested helpers should stay separate, be shared, or be merged into their caller.`) : "No review flags detected."}</p></section>${nextStep ? `<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>` : ""}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div>${nextStep ? `<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>` : ""}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Review for merge</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} helper(s) are marked Review for merge. Open the call graph tree to inspect whether nested helpers should stay separate, be shared, or be merged into their caller.`) : "No review flags detected."}</p></section>${nextStep ? `<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>` : ""}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItem() {
         const byQn = new Map(

@@ -416,7 +416,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "flow-next-step" in dashboard_text
     assert "functionflowHealth(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
     assert "functionflowReason(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "functionflowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[],)" in compact_dashboard_text
     assert "functionflowNextStep(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
+    assert "returnlabel" in compact_dashboard_text
     assert "functionflowSignalChips(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
     assert "Public callable findings</h3>" not in dashboard_text
     assert "Architecture findings inside this flow" not in dashboard_text
