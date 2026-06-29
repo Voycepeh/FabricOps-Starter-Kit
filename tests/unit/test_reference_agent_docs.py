@@ -398,6 +398,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "publicCallableList" in dashboard_text
     assert "publicFlowDetails" in dashboard_text
     assert "downloadPacket" in dashboard_text
+    assert "function buildCleanupPacketFilename(selectedFunctionName, extension)" in dashboard_text
+    assert "cleanupPacketTimestamp" in dashboard_text
+    assert "selectedFlowName()" in dashboard_text
+    assert "replace(/[^A-Za-z0-9_.-]/g" in compact_dashboard_text
+    assert "fabricops-function-call-graph-cleanup-packet__${safeName}__" in dashboard_text
+    assert "fabricops-function-call-graph-cleanup-packet.${isYaml" not in dashboard_text
     assert "fabricops_public_callable_flow_cleanup_packet" in dashboard_text
     assert "selectedFlow" in dashboard_text
     assert "compat-mode-safe" in dashboard_text
@@ -596,7 +602,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert " UTC" not in inventory_text
     assert "Data source:" in inventory_text
     assert "function-call-graph.json" in inventory_text
-    assert "new Date()" not in inventory_text
     assert "Date.now" not in inventory_text
     assert "Function Call Graph" in inventory_text
     assert "function-call-graph-dashboard.html" in inventory_text
@@ -717,6 +722,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
+    assert "functionbuildInventoryFilename(functionCount,extension)" in compact_inventory_text
+    assert "fabricops-function-inventory__${functionCount}_functions__" in inventory_text
+    assert "buildInventoryFilename((packet.selected_code_assets||[]).length" in compact_inventory_text
+    assert "fabricops-function-inventory-cleanup-packet.${isYaml" not in inventory_text
     assert "source_file" in inventory_text
     assert "item_name" in inventory_text
     assert "usage_scope" in inventory_text
