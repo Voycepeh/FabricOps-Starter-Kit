@@ -856,7 +856,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-28 18:39 SGT<span
+        <strong>Generated at:</strong> 2026-06-28 22:13 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -884,6 +884,14 @@
     <main>
       <h2>Public callable overview</h2>
       <div id="publicSurfaceCards" class="surface-cards"></div>
+      <p class="overview-help">
+        <small
+          >Helper suggestions are review hints, not automatic judgments. A
+          helper used by one function can still be useful if it makes the code
+          easier to read, avoids repeated code, is used several times inside
+          that function, or calls itself recursively.</small
+        >
+      </p>
       <p class="overview-help">
         <small
           >Review notebook-facing public functions, search for risks, and
@@ -1067,11 +1075,14 @@
         "Architecture violation": "Architecture violation",
         "Long chain": "Long chain",
         "Wide dependency": "Wide dependency",
-        "Merge candidate": "Merge candidate",
-        "Inline candidate": "Inline candidate",
+        "Review for merge": "Review for merge",
+        "Used by one function": "Used by one function",
+        "Used several times in one function":
+          "Used several times in one function",
+        "Recursive helper": "Recursive helper",
+        "Heavily used helper": "Heavily used helper",
         "Shared utility": "Shared utility",
         None: "Healthy",
-        "Merge candidate found": "Merge candidate found",
       };
       let inventory = [],
         publicEntryFlows = [],
@@ -1241,18 +1252,14 @@
         );
       }
       function mergeCandidateLabel(count) {
-        return count === 1
-          ? "Merge candidate found"
-          : `${count} merge candidates found`;
+        return count === 1 ? "Review for merge" : `${count} review for merge`;
       }
       function reviewMergeCandidateLabel(count) {
-        return count === 1
-          ? "Inspect merge candidate"
-          : "Inspect merge candidates";
+        return count === 1 ? "Review helper" : "Review helpers";
       }
       function suggestedActionLabel(flow) {
         const action = flow.recommended_simplification_action || "Keep public";
-        if (action === "Inspect merge candidates")
+        if (action === "Inspect helpers marked Review for merge")
           return reviewMergeCandidateLabel(mergeCandidateCount(flow));
         return action;
       }
@@ -1278,8 +1285,8 @@
         if (mergeCount > 0)
           reasons.push(
             mergeCount === 1
-              ? "Contains 1 merge candidate inside this graph."
-              : `Contains ${mergeCount} merge candidates inside this graph.`,
+              ? "Contains 1 helper marked Review for merge inside this graph."
+              : `Contains ${mergeCount} helpers marked Review for merge inside this graph.`,
           );
         return reasons.length ? reasons.join(" ") : "Clear";
       }
@@ -1591,7 +1598,7 @@
           );
         if (n.helper_cleanup_candidate)
           chips.push(
-            '<span class="badge muted" title="Inline only if this helper does not improve readability or reuse.">Inline candidate</span>',
+            '<span class="badge muted" title="This helper is used by one function, and that function uses it once. Review whether keeping it separate makes the code easier to read.">Review for merge</span>',
           );
         if ((n.used_outside_flow ?? 0) > 0)
           chips.push(
@@ -1631,7 +1638,7 @@
           ]);
         if (n.helper_cleanup_candidate)
           details.push([
-            "Merge candidate",
+            "Review for merge",
             n.recommended_action || "Inspect helper placement.",
           ]);
         if (n.path_examples && n.path_examples.length)
@@ -1674,7 +1681,7 @@
         )
           return "Wide dependency";
         if ((flow.external_dependents_count || 0) > 0) return "Shared impact";
-        if (mergeCandidates.length) return "Inline candidate";
+        if (mergeCandidates.length) return "Review for merge";
         return "Healthy";
       }
       function flowReason(flow, architectureFindings, mergeCandidates) {
@@ -1683,7 +1690,7 @@
         if ((flow.external_dependents_count || 0) > 0)
           return `${flow.external_dependents_count} function(s) in this graph are used outside this public callable.`;
         if (mergeCandidates.length)
-          return `${mergeCandidates.length} internal helper(s) may be inspected for possible inline or merge.`;
+          return `${mergeCandidates.length} helper(s) are marked Review for merge.`;
         return "No architecture violations found in this graph.";
       }
       function flowNextStep(flow, architectureFindings, mergeCandidates) {
@@ -1695,7 +1702,7 @@
         if (longThreshold !== null && (flow.max_depth || 0) >= longThreshold)
           return "Inspect whether this long graph can be simplified before moving helpers.";
         if (mergeCandidates.length)
-          return "No architecture violation found; inspect merge candidates only if readability improves.";
+          return "No architecture violation found; inspect helpers marked Review for merge only if readability improves.";
         return "Keep the callable shape and use the flow tree only for spot checks.";
       }
       function flowSignalChips(flow, architectureFindings, mergeCandidates) {
@@ -1716,7 +1723,7 @@
           chips.push('<span class="badge warn">Wide dependency</span>');
         if (mergeCandidates.length)
           chips.push(
-            `<span class="badge muted">${mergeCandidates.length} merge candidate${mergeCandidates.length === 1 ? "" : "s"}</span>`,
+            `<span class="badge muted">${mergeCandidates.length} review for merge</span>`,
           );
         if ((flow.external_dependents_count || 0) > 0)
           chips.push('<span class="badge info">Shared dependency</span>');
@@ -1742,7 +1749,7 @@
           nextStep = flowNextStep(f, architectureFindings, mergeCandidates),
           signals = flowSignalChips(f, architectureFindings, mergeCandidates);
         $("publicFlowDetails").innerHTML =
-          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Merge candidates</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} internal helpers may be inspected for possible inline or merge. Open the function call graph tree to inspect helper placement.`) : "Open the function call graph tree to inspect exact helper names, layers, source files, and actionable details."}</p></section><section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section><h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${health === "Healthy" ? "keep" : health === "Needs architecture review" ? "critical" : "warn"}">${esc(health)}</span></div><div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(suggestedActionLabel(f))}</strong></div><p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Architecture violations</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Review for merge</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${mergeCandidates.length ? esc(`${mergeCandidates.length} helper(s) are marked Review for merge. Open the function call graph tree to inspect helper placement.`) : "Open the function call graph tree to inspect exact helper names, layers, source files, and actionable details."}</p></section><section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section><h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItem() {
         const byQn = new Map(
@@ -1805,16 +1812,13 @@
             ...((flow.helper_cleanup_candidates || 0) > 0
               ? [
                   {
-                    finding:
-                      mergeCandidateLabel(mergeCandidateCount(flow)) +
-                      " inside flow",
+                    finding: "Review for merge inside flow",
                     evidence:
                       mergeCandidateCount(flow) === 1
-                        ? "1 helper function may be a merge candidate."
-                        : `${mergeCandidateCount(flow)} helper functions may be merge candidates.`,
+                        ? "1 helper function is marked Review for merge."
+                        : `${mergeCandidateCount(flow)} helper functions are marked Review for merge.`,
                     next_step:
-                      reviewMergeCandidateLabel(mergeCandidateCount(flow)) +
-                      " without merging away the public API.",
+                      "Review helper readability without changing the public API.",
                   },
                 ]
               : []),
@@ -1865,12 +1869,14 @@
             called_by:
               (inventoryByQn.get(c.parent_qualified_name) || {})
                 .function_name || c.parent_qualified_name,
-            finding: findingLabel(c.recommended_action || "Merge candidate"),
+            finding: findingLabel(c.recommended_action || "Review for merge"),
             next_step: (c.recommended_action || "").includes("Shared")
               ? "Keep as shared internal helper."
-              : (c.recommended_action || "").includes("Inline")
-                ? "Keep only if the helper improves readability or reuse."
-                : "Consider absorbing this helper into its only caller if it does not improve readability or reuse.",
+              : (c.recommended_action || "").includes("Used several")
+                ? "Keep when repeated use improves readability."
+                : (c.recommended_action || "").includes("Recursive")
+                  ? "Keep recursive helpers separate unless a careful redesign is planned."
+                  : "Review whether merging this helper into its only caller improves readability.",
             link: linkMetadata(c),
             called_by_link: linkMetadata(
               inventoryByQn.get(c.parent_qualified_name) || {
@@ -1892,7 +1898,7 @@
           calls_inside_flow: n.calls_inside_flow || 0,
           used_outside_flow: n.used_outside_flow || 0,
           is_end_node: Boolean(n.is_end_node),
-          merge_candidate: Boolean(n.helper_cleanup_candidate),
+          review_for_merge: Boolean(n.helper_cleanup_candidate),
           layer: n.layer || null,
           layer_group: n.layer_group || n.function_type || "Public function",
           helper_tags: [
@@ -1923,13 +1929,13 @@
           downstream_count: f.downstream_count,
           max_depth: f.max_depth,
           architecture_violation_count: f.architecture_violation_count || 0,
-          merge_candidate_count: f.helper_cleanup_candidates || cleanup.length,
+          review_for_merge_count: f.helper_cleanup_candidates || cleanup.length,
           modules_touched: f.modules_touched || [],
           external_shared_impact_count: f.external_dependents_count || 0,
           direct_callees: f.direct_callees || [],
           transitive_callees: f.transitive_callees || [],
           architecture_findings: architectureFindings,
-          merge_candidates: cleanup,
+          review_for_merge_helpers: cleanup,
           public_callable_findings: publicFindings,
           flow_tree: serializeTree(tree),
           flow_context: {
