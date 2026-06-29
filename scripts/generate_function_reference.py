@@ -4079,7 +4079,7 @@ Each public callable should have a clear owner file, shared implementation detai
 
 For the full rule, see:
 
-* [Public Function Architecture](../public-function-architecture/)
+* [Public Function Architecture](public-function-architecture/)
 
 The main violations we want to catch are:
 
