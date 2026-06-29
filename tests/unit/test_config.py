@@ -198,7 +198,7 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
 def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
     """Verify setup metadata tables directly creates canonical metadata tables."""
-    from fabricops_kit.config.setup_metadata_tables import CANONICAL_METADATA_TABLES
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
     class Writer:
         def __init__(self, spark, table):
@@ -251,7 +251,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
     """Verify setup metadata tables does not require an active steward by default."""
-    from fabricops_kit.config.setup_metadata_tables import CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     class Table:
         def __init__(self, columns):
@@ -263,7 +263,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
 
     class Spark:
         def __init__(self):
-            self.schemas = {name: schema.fieldNames() for name, schema in _metadata_table_schema_registry().items()}
+            self.schemas = {name: schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
         def table(self, table):
             return Table(self.schemas[table])
 
@@ -277,7 +277,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
 
 def test_setup_metadata_tables_reports_explicit_metadata_schema():
     """Verify setup metadata tables reports explicit schema-qualified names."""
-    from fabricops_kit.config.setup_metadata_tables import CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     class Table:
         def __init__(self, columns):
@@ -289,7 +289,7 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema():
 
     class Spark:
         def __init__(self):
-            self.schemas = {f"METADATA.{name}": schema.fieldNames() for name, schema in _metadata_table_schema_registry().items()}
+            self.schemas = {f"METADATA.{name}": schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
         def table(self, table):
             return Table(self.schemas[table])
 
@@ -301,7 +301,7 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema():
 
 def test_setup_metadata_tables_reports_configured_metadata_schema():
     """Verify setup metadata tables reports configured metadata schema."""
-    from fabricops_kit.config.setup_metadata_tables import CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     cfg = framework_config()
     metadata_store = cfg.path_config.paths["dev"]["metadata"]
@@ -325,7 +325,7 @@ def test_setup_metadata_tables_reports_configured_metadata_schema():
 
     class Spark:
         def __init__(self):
-            self.schemas = {f"dbo.{name}": schema.fieldNames() for name, schema in _metadata_table_schema_registry().items()}
+            self.schemas = {f"dbo.{name}": schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
         def table(self, table):
             return Table(self.schemas[table])
 
@@ -608,17 +608,18 @@ def test_setup_metadata_tables_uses_public_config_validation_helper_only():
 
     assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
     assert "_validate_framework_config" not in source
+    assert "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry" in source
 
 
 def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     """Verify canonical metadata schemas and row coercion align with runtime writer types."""
     from datetime import date, datetime
 
-    from fabricops_kit.config.setup_metadata_tables import AUDIT_SCHEMA_FIELDS, CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, CANONICAL_METADATA_TABLES, metadata_table_schema_registry
     from fabricops_kit.metadata import coerce_metadata_row_types
 
     audit_columns = {name for name, _kind in AUDIT_SCHEMA_FIELDS}
-    registry = _metadata_table_schema_registry()
+    registry = metadata_table_schema_registry()
 
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
@@ -650,3 +651,35 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
                 assert isinstance(row[field_name], int), f"{table_name}.{field_name} must be int"
             elif type_name == "DoubleType":
                 assert isinstance(row[field_name], float), f"{table_name}.{field_name} must be float"
+
+
+def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
+    """Verify runtime metadata writers do not import private setup owner helpers."""
+    writer_paths = [
+        Path("src/fabricops_kit/metadata.py"),
+        Path("src/fabricops_kit/data_agreement.py"),
+        Path("src/fabricops_kit/governance_review.py"),
+        Path("src/fabricops_kit/pipeline.py"),
+    ]
+
+    metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from .config.metadata_schemas import metadata_table_schema_registry" in metadata_source
+    assert "from fabricops_kit.config.setup_metadata_tables" not in metadata_source
+    assert "from .config.setup_metadata_tables" not in metadata_source
+
+    for path in writer_paths:
+        source = path.read_text(encoding="utf-8")
+        assert "config.setup_metadata_tables import _" not in source
+        assert "setup_metadata_tables import _" not in source
+
+
+def test_metadata_schema_registry_is_shared_source_for_setup_and_runtime_coercion():
+    """Verify setup and runtime coercion use the shared schema registry service."""
+    setup_source = Path("src/fabricops_kit/config/setup_metadata_tables.py").read_text(encoding="utf-8")
+    metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    schema_source = Path("src/fabricops_kit/config/metadata_schemas.py").read_text(encoding="utf-8")
+
+    assert "metadata_table_schema_registry()" in setup_source
+    assert "metadata_table_schema_registry().get(table_name)" in metadata_source
+    assert "def metadata_table_schema_registry" in schema_source
+    assert "def _metadata_table_schema_registry" not in schema_source

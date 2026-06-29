@@ -1,10 +1,10 @@
 {
   "public_function_count": 27,
-  "total_callable_records": 366,
-  "function_callable_count": 112,
-  "supporting_function_count": 85,
+  "total_callable_records": 367,
+  "function_callable_count": 117,
+  "supporting_function_count": 90,
   "public_class_count": 7,
   "public_root_export_count": 34,
-  "module_count": 20,
+  "module_count": 21,
   "metadata_table_count": 11
 }

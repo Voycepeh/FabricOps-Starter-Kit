@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from fabricops_kit.config import setup_metadata_tables
-from fabricops_kit.config.setup_metadata_tables import CANONICAL_METADATA_TABLES, _metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.integration
@@ -29,7 +29,7 @@ class Table:
 
 def test_central_metadata_setup_preserves_existing_valid_tables():
     """Verify central metadata setup preserves existing valid tables."""
-    registry = _metadata_table_schema_registry()
+    registry = metadata_table_schema_registry()
     reads = []
 
     class Spark:
@@ -58,7 +58,7 @@ def test_central_metadata_setup_rejects_existing_tables_missing_columns():
         def table(self, table: str) -> Table:
             if table == "METADATA_DATA_STEWARD":
                 return Table(["steward_id"])
-            return Table(_metadata_table_schema_registry()[table].fieldNames())
+            return Table(metadata_table_schema_registry()[table].fieldNames())
 
     with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): .*effective_from"):
         setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")

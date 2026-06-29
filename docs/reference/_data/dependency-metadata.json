@@ -557,6 +557,115 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.metadata_schemas._schema": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas._schema",
+      "short_name": "_schema",
+      "module": "config.metadata_schemas",
+      "callable": "_schema",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.metadata_schemas.spark_types"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.metadata_schemas.audit_schema_fields": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.audit_schema_fields",
+      "short_name": "audit_schema_fields",
+      "module": "config.metadata_schemas",
+      "callable": "audit_schema_fields",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.metadata_schemas.canonical_metadata_tables": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.canonical_metadata_tables",
+      "short_name": "canonical_metadata_tables",
+      "module": "config.metadata_schemas",
+      "callable": "canonical_metadata_tables",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.metadata_schemas.metadata_table_field_names": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
+      "short_name": "metadata_table_field_names",
+      "module": "config.metadata_schemas",
+      "callable": "metadata_table_field_names",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry",
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+      "short_name": "metadata_table_schema_registry",
+      "module": "config.metadata_schemas",
+      "callable": "metadata_table_schema_registry",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.metadata_schemas._schema",
+        "fabricops_kit.config.metadata_schemas.audit_schema_fields"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+        "fabricops_kit.metadata.coerce_metadata_row_types"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.config.metadata_schemas._schema"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.config.metadata_schemas.spark_types": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.spark_types",
+      "short_name": "spark_types",
+      "module": "config.metadata_schemas",
+      "callable": "spark_types",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.metadata_schemas._schema"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.resolve_fabric_context": {
       "qualified_name": "fabricops_kit.config.resolve_fabric_context",
       "short_name": "resolve_fabric_context",
@@ -593,41 +702,6 @@
       ],
       "internal_helper_count": 1
     },
-    "fabricops_kit.config.setup_metadata_tables._audit_fields": {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._audit_fields",
-      "short_name": "_audit_fields",
-      "module": "config.setup_metadata_tables",
-      "callable": "_audit_fields",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.config.setup_metadata_tables._field_names": {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._field_names",
-      "short_name": "_field_names",
-      "module": "config.setup_metadata_tables",
-      "callable": "_field_names",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry",
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
     "fabricops_kit.config.setup_metadata_tables._is_missing_table_error": {
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._is_missing_table_error",
       "short_name": "_is_missing_table_error",
@@ -644,30 +718,6 @@
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry": {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry",
-      "short_name": "_metadata_table_schema_registry",
-      "module": "config.setup_metadata_tables",
-      "callable": "_metadata_table_schema_registry",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.setup_metadata_tables._audit_fields",
-        "fabricops_kit.config.setup_metadata_tables._schema"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-        "fabricops_kit.metadata.coerce_metadata_row_types"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.config.setup_metadata_tables._audit_fields",
-        "fabricops_kit.config.setup_metadata_tables._schema"
-      ],
-      "internal_helper_count": 2
     },
     "fabricops_kit.config.setup_metadata_tables._qualified_table": {
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._qualified_table",
@@ -729,27 +779,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.config.setup_metadata_tables._schema": {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._schema",
-      "short_name": "_schema",
-      "module": "config.setup_metadata_tables",
-      "callable": "_schema",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.setup_metadata_tables._spark_types"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.config.setup_metadata_tables._spark_types"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry": {
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry",
       "short_name": "_setup_metadata_table_registry",
@@ -758,7 +787,7 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.config.setup_metadata_tables._field_names",
+        "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
         "fabricops_kit.config.setup_metadata_tables._is_missing_table_error",
         "fabricops_kit.config.setup_metadata_tables._read_table_direct",
         "fabricops_kit.config.setup_metadata_tables._write_empty_table_direct"
@@ -770,29 +799,11 @@
       "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [
-        "fabricops_kit.config.setup_metadata_tables._field_names",
         "fabricops_kit.config.setup_metadata_tables._is_missing_table_error",
         "fabricops_kit.config.setup_metadata_tables._read_table_direct",
         "fabricops_kit.config.setup_metadata_tables._write_empty_table_direct"
       ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.config.setup_metadata_tables._spark_types": {
-      "qualified_name": "fabricops_kit.config.setup_metadata_tables._spark_types",
-      "short_name": "_spark_types",
-      "module": "config.setup_metadata_tables",
-      "callable": "_spark_types",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.config.setup_metadata_tables._schema"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
+      "internal_helper_count": 3
     },
     "fabricops_kit.config.setup_metadata_tables._write_empty_table_direct": {
       "qualified_name": "fabricops_kit.config.setup_metadata_tables._write_empty_table_direct",
@@ -823,9 +834,9 @@
       "docs_url": "/FabricOps-Starter-Kit/reference/setup_metadata_tables/",
       "classification": "callable",
       "calls": [
+        "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
         "fabricops_kit.config.setup_metadata_tables._active_steward_count",
-        "fabricops_kit.config.setup_metadata_tables._field_names",
-        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry",
         "fabricops_kit.config.setup_metadata_tables._qualified_table",
         "fabricops_kit.config.setup_metadata_tables._resolve_metadata_schema",
         "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry",
@@ -839,13 +850,11 @@
       ],
       "internal_helpers_used": [
         "fabricops_kit.config.setup_metadata_tables._active_steward_count",
-        "fabricops_kit.config.setup_metadata_tables._field_names",
-        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry",
         "fabricops_kit.config.setup_metadata_tables._qualified_table",
         "fabricops_kit.config.setup_metadata_tables._resolve_metadata_schema",
         "fabricops_kit.config.setup_metadata_tables._setup_metadata_table_registry"
       ],
-      "internal_helper_count": 6
+      "internal_helper_count": 4
     },
     "fabricops_kit.config.setup_notebook.setup_notebook": {
       "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
@@ -7241,7 +7250,7 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.config.setup_metadata_tables._metadata_table_schema_registry",
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
         "fabricops_kit.metadata._coerce_metadata_value"
       ],
       "calls_count": 2,
@@ -8175,9 +8184,17 @@
       "outbound_count": 0,
       "inbound_count": 0
     },
+    "config.metadata_schemas": {
+      "callable_count": 0,
+      "internal_count": 1,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
     "config.setup_metadata_tables": {
       "callable_count": 1,
-      "internal_count": 12,
+      "internal_count": 7,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,
@@ -8352,7 +8369,7 @@
       "callable_count": 0,
       "internal_count": 18,
       "outbound_modules": [
-        "setup_metadata_tables",
+        "metadata_schemas",
         "shared"
       ],
       "inbound_modules": [

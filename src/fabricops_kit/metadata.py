@@ -7,6 +7,7 @@ import json
 import uuid
 from datetime import date, datetime
 from typing import Any
+from .config.metadata_schemas import metadata_table_schema_registry
 from .config.shared import get_current_audit_timestamp, get_store
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
@@ -98,9 +99,7 @@ def _coerce_metadata_value(value: Any, type_name: str) -> Any:
 def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
     """Return a metadata row with values aligned to the bootstrap schema types."""
     try:
-        from fabricops_kit.config.setup_metadata_tables import _metadata_table_schema_registry
-
-        schema = _metadata_table_schema_registry().get(table_name)
+        schema = metadata_table_schema_registry().get(table_name)
     except Exception:
         schema = None
     if schema is None:
