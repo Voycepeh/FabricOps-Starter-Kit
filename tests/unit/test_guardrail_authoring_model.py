@@ -491,6 +491,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
     from fabricops_kit import widgets
+    from fabricops_kit.widgets import shared as widget_shared
 
     catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
     rules = [_rule(metadata_table_key="table-key")]
@@ -500,7 +501,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     def fake_read(config, env, table_name, *, spark_session):
         return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.ENRICHMENT_RULES_TABLE: enrichment}[table_name]
 
-    monkeypatch.setattr(governance_review, "_read_metadata_table_or_empty", fake_read)
+    monkeypatch.setattr(widget_shared, "_read_metadata_table_or_empty", fake_read)
     state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
 
     assert state["environment_name"] == "dev"
@@ -533,6 +534,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
     from fabricops_kit import widgets
+    from fabricops_kit.widgets import shared as widget_shared
 
     writes = []
 
@@ -540,7 +542,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
         def createDataFrame(self, records):
             return records
 
-    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
+    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
     widget = widget_author_schema_freshness_profile_rules(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
@@ -556,6 +558,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit import governance_review
     from fabricops_kit import widgets
+    from fabricops_kit.widgets import shared as widget_shared
 
     writes = []
 
@@ -563,7 +566,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
         def createDataFrame(self, records):
             return records
 
-    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
+    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
     widget = widgets.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
 
@@ -630,12 +633,14 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
     _install_fake_notebook_widgets(monkeypatch)
     import types
 
+    from fabricops_kit.widgets import shared as widget_shared
+
     class Spark:
         def createDataFrame(self, rows):
             return rows
 
     writes = []
-    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
+    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
     config = types.SimpleNamespace(
         governance_config=types.SimpleNamespace(
             sensitivity_labels=["classified", "restricted", "public"],

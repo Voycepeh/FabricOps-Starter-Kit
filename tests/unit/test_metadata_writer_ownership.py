@@ -45,6 +45,34 @@ def test_widget_modules_do_not_import_legacy_agreement_or_governance_modules():
 
 
 
+
+def test_widget_sources_do_not_use_dynamic_legacy_imports():
+    """Verify widget files do not hide legacy owner dependencies in dynamic imports."""
+    blocked_fragments = [
+        "fabricops_kit.data_agreement",
+        "fabricops_kit.governance_review",
+        "__import__(",
+        "importlib.import_module(\"fabricops_kit.data_agreement\")",
+        "importlib.import_module(\"fabricops_kit.governance_review\")",
+    ]
+    violations = []
+    for path in (SRC / "widgets").glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        for fragment in blocked_fragments:
+            if fragment in source:
+                violations.append(f"{path}: contains {fragment}")
+    assert violations == []
+
+
+def test_widgets_shared_does_not_define_legacy_module_loaders():
+    """Verify widgets/shared.py does not define legacy owner module loader helpers."""
+    source = (SRC / "widgets" / "shared.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    function_names = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+    assert "_legacy_data_agreement_module" not in function_names
+    assert "_legacy_governance_module" not in function_names
+
+
 def test_legacy_proxy_shared_modules_do_not_exist():
     """Verify cleanup does not introduce proxy modules for retired owners."""
     assert not (SRC / "data_agreement_shared.py").exists()
