@@ -31,7 +31,7 @@ AUDIT_SCHEMA_FIELDS = [
 def spark_types() -> dict[str, Any]:
     """Return Spark SQL data type instances keyed by compact names."""
     try:
-        from pyspark.sql.types import BooleanType, DateType, DoubleType, LongType, StringType, StructField, StructType, TimestampType
+        from pyspark.sql.types import BooleanType, DateType, DoubleType, IntegerType, LongType, StringType, StructField, StructType, TimestampType
     except Exception:  # pragma: no cover - local docs/tests may run without PySpark
         class _Type:
             pass
@@ -43,6 +43,9 @@ def spark_types() -> dict[str, Any]:
             pass
 
         class LongType(_Type):
+            pass
+
+        class IntegerType(_Type):
             pass
 
         class DoubleType(_Type):
@@ -71,6 +74,7 @@ def spark_types() -> dict[str, Any]:
         "string": StringType(),
         "boolean": BooleanType(),
         "long": LongType(),
+        "integer": IntegerType(),
         "double": DoubleType(),
         "date": DateType(),
         "timestamp": TimestampType(),
@@ -117,10 +121,45 @@ def metadata_table_schema_registry() -> dict[str, Any]:
     }
 
 
+def metadata_schema_type_name(data_type: Any) -> str:
+    """Return the stable documentation label for a Spark metadata data type."""
+    type_name = type(data_type).__name__
+    stable_names = {
+        "StringType": "string",
+        "DateType": "date",
+        "TimestampType": "timestamp",
+        "BooleanType": "boolean",
+        "LongType": "long",
+        "DoubleType": "double",
+        "IntegerType": "integer",
+    }
+    if type_name in stable_names:
+        return stable_names[type_name]
+    if hasattr(data_type, "simpleString"):
+        simple = str(data_type.simpleString())
+        return "long" if simple == "bigint" else simple
+    text = str(data_type).lower()
+    for spark_name, stable_name in stable_names.items():
+        if spark_name.lower().replace("type", "") in text:
+            return stable_name
+    return str(data_type)
+
+
+def metadata_table_schema_rows(schema: Any) -> list[dict[str, Any]]:
+    """Return ordered docs-friendly schema rows from a StructType-like object."""
+    return [
+        {
+            "name": str(field.name),
+            "type": metadata_schema_type_name(getattr(field, "dataType", "")),
+            "nullable": bool(getattr(field, "nullable", True)),
+        }
+        for field in getattr(schema, "fields", [])
+    ]
+
+
 def metadata_table_field_names(schema: Any) -> list[str]:
     """Return field names from a StructType-like object."""
     return list(schema.fieldNames()) if hasattr(schema, "fieldNames") else [field.name for field in schema.fields]
-
 
 
 __all__ = [
@@ -128,7 +167,9 @@ __all__ = [
     "CANONICAL_METADATA_TABLES",
     "audit_schema_fields",
     "canonical_metadata_tables",
+    "metadata_schema_type_name",
     "metadata_table_field_names",
+    "metadata_table_schema_rows",
     "metadata_table_schema_registry",
 ]
 

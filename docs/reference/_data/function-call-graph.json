@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T08:32:16.158529Z",
+    "generated_at_utc": "2026-06-30T10:27:42.280484Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -1446,9 +1446,9 @@
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-      "source_start_line": 82,
-      "source_end_line": 94,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+      "source_start_line": 86,
+      "source_end_line": 98,
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
@@ -1491,7 +1491,7 @@
           "function": "metadata_table_schema_registry",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1506,7 +1506,7 @@
           "function": "spark_types",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.spark_types",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1523,9 +1523,9 @@
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-      "source_start_line": 97,
-      "source_end_line": 99,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+      "source_start_line": 101,
+      "source_end_line": 103,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -1566,7 +1566,7 @@
           "function": "metadata_table_schema_registry",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1584,9 +1584,9 @@
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L136-L138",
-      "source_start_line": 136,
-      "source_end_line": 138,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L177-L179",
+      "source_start_line": 177,
+      "source_end_line": 179,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
@@ -1626,14 +1626,75 @@
       "callees": []
     },
     {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_schema_type_name",
+      "function_name": "metadata_schema_type_name",
+      "module": "config.metadata_schemas",
+      "source_path": "src/fabricops_kit/config/metadata_schemas.py",
+      "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L124-L145",
+      "source_start_line": 124,
+      "source_end_line": 145,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "directly_reachable",
+      "reachability_label": "Reachable from public API",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [],
+      "called_by_count": 1,
+      "call_site_count": 1,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 0,
+      "callers": [
+        {
+          "function": "metadata_table_schema_rows",
+          "module": "config.metadata_schemas",
+          "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_rows",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L148-L157",
+          "layer": "internal",
+          "review_status": "classification_pending",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ],
+      "callees": []
+    },
+    {
       "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
       "function_name": "metadata_table_field_names",
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
-      "source_start_line": 120,
-      "source_end_line": 122,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
+      "source_start_line": 160,
+      "source_end_line": 162,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -1710,9 +1771,9 @@
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-      "source_start_line": 102,
-      "source_end_line": 117,
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+      "source_start_line": 106,
+      "source_end_line": 121,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -1786,7 +1847,7 @@
           "function": "_schema",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas._schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -1799,9 +1860,73 @@
           "function": "audit_schema_fields",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.audit_schema_fields",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
           "layer": "internal",
           "review_status": "classified",
+          "callable_kind": "function",
+          "callable_role": [
+            "internal_workflow"
+          ],
+          "dependency_role": "internal_workflow"
+        }
+      ]
+    },
+    {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_rows",
+      "function_name": "metadata_table_schema_rows",
+      "module": "config.metadata_schemas",
+      "source_path": "src/fabricops_kit/config/metadata_schemas.py",
+      "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L148-L157",
+      "source_start_line": 148,
+      "source_end_line": 157,
+      "function_type": "Shared helper",
+      "layer": "internal",
+      "review_status": "classification_pending",
+      "review_status_label": "Classification pending",
+      "callable_kind": "function",
+      "callable_role": [
+        "internal_workflow"
+      ],
+      "callable_role_group": "workflow",
+      "callable_role_group_label": "Workflow",
+      "callable_role_detail": [
+        "internal_workflow"
+      ],
+      "callable_role_detail_label": "Internal workflow",
+      "dependency_role": "internal_workflow",
+      "owner_qualified_name": "",
+      "owner_function": "",
+      "owner_module": "",
+      "leaks_outside_owner_file": false,
+      "usage_scope": "",
+      "usage_scope_label": "",
+      "reachability_kind": "unknown_or_entrypoint",
+      "reachability_label": "Unknown / possible entrypoint",
+      "recommended_action": "Next step",
+      "priority": "Low",
+      "signals": [
+        "callee_classification_pending",
+        "Possible inline/private helper"
+      ],
+      "architecture_signals": [],
+      "review_signals": [
+        "callee_classification_pending"
+      ],
+      "called_by_count": 0,
+      "call_site_count": 0,
+      "recursive": false,
+      "repeated_within_single_caller": false,
+      "calls_count": 1,
+      "callers": [],
+      "callees": [
+        {
+          "function": "metadata_schema_type_name",
+          "module": "config.metadata_schemas",
+          "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_schema_type_name",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L124-L145",
+          "layer": "internal",
+          "review_status": "classification_pending",
           "callable_kind": "function",
           "callable_role": [
             "internal_workflow"
@@ -1816,9 +1941,9 @@
       "module": "config.metadata_schemas",
       "source_path": "src/fabricops_kit/config/metadata_schemas.py",
       "owner_file": "src/fabricops_kit/config/metadata_schemas.py",
-      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+      "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
       "source_start_line": 31,
-      "source_end_line": 79,
+      "source_end_line": 83,
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classified",
@@ -1859,7 +1984,7 @@
           "function": "_schema",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas._schema",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
           "layer": "private_helper",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2355,7 +2480,7 @@
           "function": "metadata_table_field_names",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2538,7 +2663,7 @@
           "function": "metadata_table_field_names",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -2551,7 +2676,7 @@
           "function": "metadata_table_schema_registry",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -28497,7 +28622,7 @@
           "function": "metadata_table_schema_registry",
           "module": "config.metadata_schemas",
           "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
           "layer": "internal",
           "review_status": "classified",
           "callable_kind": "function",
@@ -51619,9 +51744,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -53735,9 +53860,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -53796,9 +53921,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -54045,9 +54170,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "run_table_guardrails",
@@ -54872,9 +54997,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
-          "source_start_line": 120,
-          "source_end_line": 122,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
+          "source_start_line": 160,
+          "source_end_line": 162,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -54917,9 +55042,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -55173,9 +55298,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
-          "source_start_line": 120,
-          "source_end_line": 122,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
+          "source_start_line": 160,
+          "source_end_line": 162,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -55218,9 +55343,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -55474,9 +55599,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -55514,9 +55639,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -55767,9 +55892,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "setup_metadata_tables",
@@ -56153,7 +56278,7 @@
               "function": "metadata_table_field_names",
               "module": "config.metadata_schemas",
               "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
-              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L120-L122",
+              "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L160-L162",
               "layer": "internal",
               "review_status": "classified",
               "callable_kind": "function",
@@ -59872,9 +59997,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
@@ -60313,9 +60438,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
@@ -60357,9 +60482,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
@@ -60682,9 +60807,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "widget_render_agreement_evidence",
@@ -63414,9 +63539,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "widget_render_data_agreement",
@@ -63990,9 +64115,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "widget_render_data_agreement",
@@ -64043,9 +64168,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "widget_render_data_agreement",
@@ -64498,9 +64623,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "widget_render_data_agreement",
@@ -67112,9 +67237,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "widget_render_data_steward",
@@ -67688,9 +67813,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "widget_render_data_steward",
@@ -67741,9 +67866,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "widget_render_data_steward",
@@ -68196,9 +68321,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "widget_render_data_steward",
@@ -70007,9 +70132,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "widget_select_agreement",
@@ -70602,9 +70727,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "widget_select_agreement",
@@ -70645,9 +70770,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "widget_select_agreement",
@@ -70977,9 +71102,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "widget_select_agreement",
@@ -73292,9 +73417,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -73834,9 +73959,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -73876,9 +74001,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -74257,9 +74382,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "write_pipeline_lineage",
@@ -75388,9 +75513,9 @@
           "is_end_node": false,
           "downstream_count": 2,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L102-L117",
-          "source_start_line": 102,
-          "source_end_line": 117,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L106-L121",
+          "source_start_line": 106,
+          "source_end_line": 121,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -75888,9 +76013,9 @@
           "is_end_node": false,
           "downstream_count": 1,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L82-L94",
-          "source_start_line": 82,
-          "source_end_line": 94,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L86-L98",
+          "source_start_line": 86,
+          "source_end_line": 98,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -75930,9 +76055,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L97-L99",
-          "source_start_line": 97,
-          "source_end_line": 99,
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L101-L103",
+          "source_start_line": 101,
+          "source_end_line": 103,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -76311,9 +76436,9 @@
           "is_end_node": true,
           "downstream_count": 0,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
-          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L79",
+          "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py#L31-L83",
           "source_start_line": 31,
-          "source_end_line": 79,
+          "source_end_line": 83,
           "path_examples": [
             [
               "write_pipeline_run_summary",
@@ -77703,25 +77828,25 @@
     }
   ],
   "summary_counts": {
-    "total_callables": 430,
+    "total_callables": 432,
     "function_type": {
       "Public function": 28,
-      "Shared helper": 109,
+      "Shared helper": 111,
       "Public config class": 7
     },
     "layer": {
       "public": 28,
-      "internal": 109
+      "internal": 111
     },
     "review_status": {
       "classified": 382,
-      "classification_pending": 48,
+      "classification_pending": 50,
       "implicit_lifecycle": 0,
       "property_accessor": 0,
       "unreachable": 0
     },
     "callable_kind": {
-      "function": 137
+      "function": 139
     },
     "callable_role_group": {
       "adapter": 25,
@@ -77733,7 +77858,7 @@
       "resolver": 66,
       "utility": 174,
       "validator": 25,
-      "workflow": 72
+      "workflow": 74
     },
     "dependency_role": {
       "audit_time_utility": 4,
@@ -77744,7 +77869,7 @@
       "internal_normalizer": 31,
       "internal_resolver": 66,
       "internal_validator": 21,
-      "internal_workflow": 72,
+      "internal_workflow": 74,
       "public_api_entrypoint": 28,
       "registry_builder": 2,
       "result_model_class": 1,
@@ -77756,7 +77881,7 @@
       "Heavily used helper": 11,
       "Keep private helper": 137,
       "Merge into owner": 82,
-      "Next step": 72,
+      "Next step": 74,
       "Public API entrypoint": 28,
       "Public config class": 7,
       "Remove redundant wrapper": 55,
@@ -77773,10 +77898,10 @@
     },
     "callable_inventory_metrics": {
       "module_count": 32,
-      "total_callables": 430,
+      "total_callables": 432,
       "public_api_entrypoints": 28,
-      "function_callables": 137,
-      "supporting_functions": 109,
+      "function_callables": 139,
+      "supporting_functions": 111,
       "public_classes": 7,
       "hidden_private_helpers": 286,
       "private_helpers_to_review": 286

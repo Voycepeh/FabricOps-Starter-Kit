@@ -198,7 +198,11 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
 def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
     """Verify setup metadata tables directly creates canonical metadata tables."""
-    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
+    from fabricops_kit.config.metadata_schemas import (
+        CANONICAL_METADATA_TABLES,
+        metadata_table_schema_registry,
+        metadata_table_schema_rows,
+    )
 
     class Writer:
         def __init__(self, spark, table):
@@ -213,6 +217,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
         def saveAsTable(self, table):  # noqa: N802
             self.spark.created_tables.append(table)
             self.spark.tables[table] = self.spark.pending_columns
+            self.spark.created_schemas[table] = self.spark.pending_schema
 
     class DataFrame:
         def __init__(self, spark, columns):
@@ -231,12 +236,17 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
             self.tables = {}
             self.created_tables = []
             self.pending_columns = []
+            self.created_schemas = {}
+            self.pending_schema = None
+
         def table(self, table):
             if table not in self.tables:
                 raise RuntimeError(f"Table {table} does not exist")
             return Table(self.tables[table])
+
         def createDataFrame(self, rows, schema=None):  # noqa: N802
             assert rows == []
+            self.pending_schema = schema
             self.pending_columns = schema.fieldNames()
             return DataFrame(self, self.pending_columns)
 
@@ -247,6 +257,10 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
     assert result["tables"] == CANONICAL_METADATA_TABLES
     assert result["created_tables"] == CANONICAL_METADATA_TABLES
     assert spark.created_tables == CANONICAL_METADATA_TABLES
+    expected_registry = metadata_table_schema_registry()
+    assert {table: metadata_table_schema_rows(schema) for table, schema in spark.created_schemas.items()} == {
+        table: metadata_table_schema_rows(schema) for table, schema in expected_registry.items()
+    }
 
 
 def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
@@ -682,3 +696,72 @@ def test_metadata_schema_registry_is_shared_source_for_setup_and_runtime_coercio
     assert "metadata_table_schema_registry().get(table_name)" in metadata_source
     assert "def metadata_table_schema_registry" in schema_source
     assert "def _metadata_table_schema_registry" not in schema_source
+
+
+def _metadata_doc_schema_rows(table_name: str) -> list[dict[str, str]]:
+    """Return implemented schema rows parsed from a generated metadata docs page."""
+    slug = table_name.lower()
+    path = Path("docs/reference/metadata") / f"{slug}.md"
+    rows = []
+    in_schema = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line == "## Implemented schema":
+            in_schema = True
+            continue
+        if in_schema and line.startswith("## "):
+            break
+        if not in_schema or not line.startswith("| `"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        rows.append(
+            {
+                "name": cells[0].strip("`"),
+                "type": cells[1].strip("`"),
+                "required": cells[2],
+            }
+        )
+    return rows
+
+
+def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
+    """Verify generated metadata docs reflect setup_metadata_tables schema registry."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
+    from scripts.generate_function_reference import generate_metadata_table_reference
+
+    registry = metadata_table_schema_registry()
+
+    assert generate_metadata_table_reference() == len(registry)
+    for table_name, schema in registry.items():
+        expected = [
+            {
+                "name": row["name"],
+                "type": row["type"],
+                "required": "Nullable" if row["nullable"] else "Required",
+            }
+            for row in metadata_table_schema_rows(schema)
+        ]
+        assert _metadata_doc_schema_rows(table_name) == expected
+
+
+def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
+    """Verify metadata docs render canonical non-string types and audit order."""
+    from fabricops_kit.config.metadata_schemas import audit_schema_fields, metadata_table_schema_registry, metadata_table_schema_rows
+    from scripts.generate_function_reference import _schema_rows
+
+    registry = metadata_table_schema_registry()
+    catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}
+    agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
+    evidence = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT_EVIDENCE"])}
+    docs_catalogue = {row["name"]: row["type"] for row in _schema_rows(registry["METADATA_DATA_CATALOGUE"])}
+
+    assert agreement["start_date"] == "date"
+    assert agreement["approved_usage_internal"] == "boolean"
+    assert catalogue["profiled_at"] == "timestamp"
+    assert evidence["file_size"] == "long"
+    assert catalogue["null_percent"] == "double"
+    assert docs_catalogue["policy_updated_at"] == "timestamp"
+
+    for table_name, schema in registry.items():
+        assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()):] == [
+            name for name, _kind in audit_schema_fields()
+        ], table_name

@@ -19,17 +19,17 @@
 | `domain` | `string` | Nullable |
 | `steward_id` | `string` | Nullable |
 | `recipient` | `string` | Nullable |
-| `start_date` | `string` | Nullable |
-| `expiry_date` | `string` | Nullable |
+| `start_date` | `date` | Nullable |
+| `expiry_date` | `date` | Nullable |
 | `business_purpose` | `string` | Nullable |
-| `approved_usage_internal` | `string` | Nullable |
-| `approved_usage_external` | `string` | Nullable |
-| `approved_usage_research` | `string` | Nullable |
+| `approved_usage_internal` | `boolean` | Nullable |
+| `approved_usage_external` | `boolean` | Nullable |
+| `approved_usage_research` | `boolean` | Nullable |
 | `custom_fields_json` | `string` | Nullable |
 | `_committed_by` | `string` | Nullable |
-| `_committed_at` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
+| `_committed_at` | `timestamp` | Nullable |
 | `_workspace_name` | `string` | Nullable |
+| `_notebook_name` | `string` | Nullable |
 | `_metadata_lakehouse_name` | `string` | Nullable |
 | `_activity_id` | `string` | Nullable |
 

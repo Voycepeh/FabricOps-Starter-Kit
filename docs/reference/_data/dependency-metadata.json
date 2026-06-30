@@ -642,6 +642,23 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
+    "fabricops_kit.config.metadata_schemas.metadata_schema_type_name": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_schema_type_name",
+      "short_name": "metadata_schema_type_name",
+      "module": "config.metadata_schemas",
+      "callable": "metadata_schema_type_name",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.config.metadata_schemas.metadata_table_schema_rows"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
     "fabricops_kit.config.metadata_schemas.metadata_table_field_names": {
       "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
       "short_name": "metadata_table_field_names",
@@ -682,6 +699,23 @@
         "fabricops_kit.config.metadata_schemas._schema"
       ],
       "internal_helper_count": 1
+    },
+    "fabricops_kit.config.metadata_schemas.metadata_table_schema_rows": {
+      "qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_rows",
+      "short_name": "metadata_table_schema_rows",
+      "module": "config.metadata_schemas",
+      "callable": "metadata_table_schema_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.metadata_schemas.metadata_schema_type_name"
+      ],
+      "calls_count": 1,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.config.metadata_schemas.spark_types": {
       "qualified_name": "fabricops_kit.config.metadata_schemas.spark_types",

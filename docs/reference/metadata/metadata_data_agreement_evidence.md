@@ -19,13 +19,13 @@
 | `file_name` | `string` | Nullable |
 | `file_path` | `string` | Nullable |
 | `mime_type` | `string` | Nullable |
-| `file_size` | `string` | Nullable |
-| `uploaded_at` | `string` | Nullable |
+| `file_size` | `long` | Nullable |
+| `uploaded_at` | `timestamp` | Nullable |
 | `uploaded_by` | `string` | Nullable |
 | `_committed_by` | `string` | Nullable |
-| `_committed_at` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
+| `_committed_at` | `timestamp` | Nullable |
 | `_workspace_name` | `string` | Nullable |
+| `_notebook_name` | `string` | Nullable |
 | `_metadata_lakehouse_name` | `string` | Nullable |
 | `_activity_id` | `string` | Nullable |
 
