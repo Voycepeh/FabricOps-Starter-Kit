@@ -753,7 +753,7 @@ def test_start_pipeline_run_stores_agreement_context(monkeypatch):
         runtime_metadata={"currentNotebookName": "02_pipeline", "currentNotebookId": "notebook-1"},
     )
     widget_calls = []
-    monkeypatch.setattr(pipeline, "select_agreement_widget_workflow", lambda **kwargs: widget_calls.append(kwargs))
+    monkeypatch.setattr(pipeline, "_load_widget_select_agreement", lambda: (lambda **kwargs: widget_calls.append(kwargs)))
     monkeypatch.setattr(
         pipeline,
         "get_selected_agreement",
