@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T18:50:57.192819Z",
+    "generated_at_utc": "2026-06-30T18:54:11.868589Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -20,7 +20,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "spark_runtime_probe",
@@ -71,7 +71,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -122,7 +122,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -173,7 +173,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -224,7 +224,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "fabric_runtime_probe",
@@ -275,7 +275,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "registry_builder",
@@ -326,7 +326,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -375,7 +375,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "schema_utility"
@@ -424,7 +424,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -475,7 +475,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -526,7 +526,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -577,7 +577,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -628,7 +628,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -679,7 +679,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -730,7 +730,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "schema_utility",
@@ -781,7 +781,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_validator",
@@ -832,7 +832,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -883,7 +883,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -934,7 +934,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_validator",
@@ -985,7 +985,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "audit_time_utility",
@@ -1035,7 +1035,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -1085,7 +1085,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "audit_time_utility",
@@ -1137,7 +1137,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -1189,7 +1189,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1237,7 +1237,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -1291,7 +1291,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1339,7 +1339,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1544,7 +1544,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1592,7 +1592,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -1869,7 +1869,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -2901,7 +2901,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -2969,7 +2969,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -3050,7 +3050,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -3213,7 +3213,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "registry_builder",
@@ -3305,7 +3305,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -3371,7 +3371,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "schema_utility"
@@ -3572,7 +3572,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -3789,7 +3789,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -4051,7 +4051,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "schema_utility",
@@ -4322,7 +4322,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -8574,7 +8574,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -11042,7 +11042,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function",
@@ -11109,7 +11109,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function",
@@ -11189,7 +11189,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -11254,7 +11254,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -11351,7 +11351,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -11431,7 +11431,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -11509,7 +11509,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -11593,7 +11593,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function",
@@ -11644,7 +11644,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -11727,7 +11727,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -11796,7 +11796,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -11876,7 +11876,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_validator",
@@ -11945,7 +11945,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -12026,7 +12026,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12074,7 +12074,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12138,7 +12138,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12202,7 +12202,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12250,7 +12250,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12314,7 +12314,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12377,7 +12377,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -12472,7 +12472,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -12536,7 +12536,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -12614,7 +12614,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -12723,7 +12723,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -12788,7 +12788,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -12866,7 +12866,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -12960,7 +12960,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -13052,7 +13052,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -13160,7 +13160,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -13321,7 +13321,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -13428,7 +13428,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -13492,7 +13492,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -13540,7 +13540,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -13604,7 +13604,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow",
@@ -13712,7 +13712,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -14917,7 +14917,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function",
@@ -18450,7 +18450,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -18553,7 +18553,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -19245,7 +19245,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -19309,7 +19309,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"
@@ -24406,7 +24406,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -24534,7 +24534,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -24842,7 +24842,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -25390,7 +25390,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -25507,7 +25507,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -25636,7 +25636,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -25807,7 +25807,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -25924,7 +25924,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -26084,7 +26084,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -26347,7 +26347,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -26412,7 +26412,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -26609,7 +26609,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -26794,7 +26794,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27306,7 +27306,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -27370,7 +27370,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27435,7 +27435,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27484,7 +27484,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27550,7 +27550,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27751,7 +27751,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -27800,7 +27800,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -28233,7 +28233,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -28309,7 +28309,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -28387,7 +28387,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -28453,7 +28453,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -28610,7 +28610,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -28690,7 +28690,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -28741,7 +28741,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -29029,7 +29029,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer"
@@ -29259,7 +29259,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -29370,7 +29370,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -29478,7 +29478,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -29648,7 +29648,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -29697,7 +29697,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -29746,7 +29746,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -29810,7 +29810,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -30056,7 +30056,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -30121,7 +30121,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -30354,7 +30354,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "utility_function"
@@ -30524,7 +30524,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -30589,7 +30589,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -30683,7 +30683,7 @@
       "function_type": "Private helper",
       "layer": "private_helper",
       "review_status": "classified",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_adapter",
@@ -30794,7 +30794,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -30897,7 +30897,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -31000,7 +31000,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_normalizer",
@@ -31146,7 +31146,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -31470,7 +31470,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -31948,7 +31948,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -32095,7 +32095,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver",
@@ -32145,7 +32145,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -32210,7 +32210,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -32350,7 +32350,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_workflow"
@@ -33032,7 +33032,7 @@
       "function_type": "Shared helper",
       "layer": "internal",
       "review_status": "classification_pending",
-      "review_status_label": "No static path found",
+      "review_status_label": "Cannot trace back to a public function",
       "callable_kind": "function",
       "callable_role": [
         "internal_resolver"

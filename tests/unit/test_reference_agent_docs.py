@@ -380,8 +380,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     combined_dashboard_assets = dashboard_text + inventory_text
     assert "function-inventory.html" not in combined_dashboard_assets
     assert "Remove orphaned asset" not in combined_dashboard_assets
-    assert "safe to delete" not in combined_dashboard_assets
-    assert "No static path found means the call graph scanner did not find a public callable path." in combined_dashboard_assets
+    assert "safe to delete" in combined_dashboard_assets
+    assert "The scanner could not trace this asset back to a public FabricOps function. This is not proof that the asset is unused or safe to delete." in combined_dashboard_assets
     assert "runtime-inventory" in dashboard_text
     assert "Clear table filters" in dashboard_text
     assert "Clear all filters" not in dashboard_text
@@ -673,10 +673,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callables" in inventory_text
     for scope_label in [
         "All runtime assets",
-        "Others / No static path found",
+        "Others / Cannot trace back to a public function",
         "Runtime assets",
         "Needs review",
-        "Unreachable",
+        "Cannot trace back to a public function",
         "Selected for export",
     ]:
         assert scope_label in inventory_text
@@ -718,7 +718,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Private helper" in inventory_text
     assert "Non functions" not in inventory_text
     assert "Reachability" in inventory_text
-    assert "Unreachable runtime asset" in inventory_text
+    assert "Cannot trace back to a public function" in inventory_text
     assert "Recommended action" in inventory_text
     assert "Reached from public flow" not in inventory_text
     assert "reachable_from_public_runtime" in inventory_text
@@ -890,7 +890,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     unreachable_rows = [row for row in function_inventory if row.get("reachability") == "unreachable_runtime_asset"]
     assert unreachable_rows
     assert all(row["recommended_action"] == "Verify possible orphan" for row in unreachable_rows)
-    assert all(row["review_status_label"] == "No static path found" for row in unreachable_rows)
+    assert all(row["review_status_label"] == "Cannot trace back to a public function" for row in unreachable_rows)
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
     assert sum(1 for row in function_inventory if row["function_type"] == "Shared helper") == summary_counts["function_type"]["Shared helper"]
     assert any(
@@ -2593,10 +2593,10 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     for label in [
         "Runtime assets",
         "Needs review",
-        "Unreachable",
+        "Cannot trace back to a public function",
         "Selected for export",
         "All runtime assets",
-        "Others / No static path found",
+        "Others / Cannot trace back to a public function",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
