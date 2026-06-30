@@ -381,6 +381,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function-inventory.html" not in combined_dashboard_assets
     assert "Remove orphaned asset" not in combined_dashboard_assets
     assert "runtime-inventory" in dashboard_text
+    assert "Unreachable does not mean safe to delete. It means no public/template runtime path was found by the scanner." in dashboard_text
+    assert 'data-architecture-scope-special="all"' in dashboard_text
+    assert 'data-architecture-scope-special="unreachable"' in dashboard_text
 
     for text in (dashboard_text, inventory_text):
         assert "function-call-graph.json" in text
@@ -822,6 +825,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     public_inventory = {row["function_name"] for row in function_inventory if row["layer"] == "public"}
     assert public_inventory == function_exported_symbols
     assert len(function_inventory) == summary_counts["total_callables"]
+    assert summary_counts["inventory_row_count"] == len(function_inventory)
+    assert summary_counts["unique_inventory_identity_count"] == len(function_inventory)
+    assert summary_counts["duplicate_inventory_identity_count"] == 0
     assert function_inventory
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
