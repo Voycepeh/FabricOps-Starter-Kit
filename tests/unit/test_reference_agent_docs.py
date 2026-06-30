@@ -549,6 +549,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
     assert "function flowSignals(flow)" in dashboard_text
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in dashboard_text
+    assert "overflow-x: auto" in dashboard_text
+    assert "grid-template-columns: repeat(3, minmax(13rem, 1fr))" in dashboard_text
 
     assert "function hasArchitectureViolation(flow)" in dashboard_text
     assert "function isGraphReviewCandidate(flow)" in dashboard_text
