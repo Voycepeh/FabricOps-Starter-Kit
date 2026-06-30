@@ -769,7 +769,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 132
+    assert summary_counts["callable_kind"]["function"] == 87
     assert summary_counts["public_classes"] == 7
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
@@ -802,8 +802,37 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     public_inventory = {row["function_name"] for row in function_inventory if row["layer"] == "public"}
     assert public_inventory == function_exported_symbols
     assert len(function_inventory) == summary_counts["total_callables"]
+    assert function_inventory
     assert {row["qualified_name"] for row in function_inventory}
     assert len({row["qualified_name"] for row in function_inventory}) == len(function_inventory)
+    stable_identities = {
+        (
+            row["source_path"],
+            row["qualified_name"],
+            row["source_start_line"],
+            row["source_end_line"],
+        )
+        for row in function_inventory
+    }
+    assert len(stable_identities) == len(function_inventory)
+    assert all(str(row["source_path"]).startswith("src/fabricops_kit/") for row in function_inventory)
+    assert all(
+        not str(row["source_path"]).startswith(("tests/", "docs/", "scripts/", "notebooks/", "templates/"))
+        for row in function_inventory
+    )
+    inventory_names = {row["function_name"] for row in function_inventory}
+    assert "_module_name" not in inventory_names
+    assert "_public_exports" not in inventory_names
+    assert "_template_called_fabricops_functions" not in inventory_names
+    assert "_code_from_notebook" not in inventory_names
+    for test_only_helper in [
+        "_module_name",
+        "_public_exports",
+        "_template_called_fabricops_functions",
+        "_code_from_notebook",
+    ]:
+        assert test_only_helper not in dashboard_text
+        assert test_only_helper not in inventory_text
     assert all(row["callable_kind"] in {"function", "class"} for row in function_inventory)
     assert "supporting_object" not in {row["layer"] for row in function_inventory}
     assert all(row["recommended_action"] for row in function_inventory)
@@ -2512,8 +2541,8 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
     expected_counts = {
         "public": 25,
-        "internal": 107,
-        "private_helper": 232,
+        "internal": 62,
+        "private_helper": 146,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 
