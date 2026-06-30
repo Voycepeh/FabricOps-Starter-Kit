@@ -517,7 +517,6 @@ def test_pipeline_and_config_use_new_governance_owners():
 def test_99_explore_reads_metadata_catalogue_directly():
     """Verify 99_explore reads catalogue metadata directly instead of using a wrapper."""
     root = Path(__file__).parents[2]
-    import json
 
     notebook = json.loads((root / "templates" / "notebooks" / "99_explore.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
