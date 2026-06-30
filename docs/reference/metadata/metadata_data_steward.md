@@ -17,14 +17,14 @@
 | `steward_name` | `string` | Nullable |
 | `steward_role` | `string` | Nullable |
 | `contact` | `string` | Nullable |
-| `effective_from` | `string` | Nullable |
-| `effective_to` | `string` | Nullable |
-| `is_active` | `string` | Nullable |
+| `effective_from` | `date` | Nullable |
+| `effective_to` | `date` | Nullable |
+| `is_active` | `boolean` | Nullable |
 | `custom_fields_json` | `string` | Nullable |
 | `_committed_by` | `string` | Nullable |
-| `_committed_at` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
+| `_committed_at` | `timestamp` | Nullable |
 | `_workspace_name` | `string` | Nullable |
+| `_notebook_name` | `string` | Nullable |
 | `_metadata_lakehouse_name` | `string` | Nullable |
 | `_activity_id` | `string` | Nullable |
 

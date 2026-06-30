@@ -22,13 +22,13 @@
 | `table_id` | `string` | Nullable |
 | `metadata_table_key` | `string` | Nullable |
 | `metadata_column_key` | `string` | Nullable |
-| `granted_date` | `string` | Nullable |
-| `expires_at` | `string` | Nullable |
+| `granted_date` | `date` | Nullable |
+| `expires_at` | `timestamp` | Nullable |
 | `approved_by` | `string` | Nullable |
-| `approved_at` | `string` | Nullable |
+| `approved_at` | `timestamp` | Nullable |
 | `notes` | `string` | Nullable |
-| `_committed_at` | `string` | Nullable |
 | `_committed_by` | `string` | Nullable |
+| `_committed_at` | `timestamp` | Nullable |
 | `_workspace_name` | `string` | Nullable |
 | `_notebook_name` | `string` | Nullable |
 | `_metadata_lakehouse_name` | `string` | Nullable |

@@ -4542,16 +4542,17 @@ def _format_symbol_list(symbols: list[str], relative_prefix: str = "../") -> str
 
 
 def _schema_rows(schema: Any) -> list[dict[str, str]]:
-    """Return serializable rows from a Spark StructType-like object."""
-    rows = []
-    for field in getattr(schema, "fields", []):
-        data_type = getattr(field, "dataType", "")
-        if hasattr(data_type, "simpleString"):
-            data_type_label = data_type.simpleString()
-        else:
-            data_type_label = str(data_type)
-        rows.append({"name": str(field.name), "type": data_type_label, "required": "Nullable" if getattr(field, "nullable", True) else "Required"})
-    return rows
+    """Return serializable rows from the canonical metadata schema helper."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_rows
+
+    return [
+        {
+            "name": str(row["name"]),
+            "type": str(row["type"]),
+            "required": "Nullable" if row["nullable"] else "Required",
+        }
+        for row in metadata_table_schema_rows(schema)
+    ]
 
 
 def _metadata_registry_without_pyspark() -> dict[str, Any]:
@@ -4578,6 +4579,14 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
         def __init__(self) -> None:
             super().__init__("double")
 
+    class DateType(_Type):
+        def __init__(self) -> None:
+            super().__init__("date")
+
+    class IntegerType(_Type):
+        def __init__(self) -> None:
+            super().__init__("integer")
+
     class BooleanType(_Type):
         def __init__(self) -> None:
             super().__init__("boolean")
@@ -4602,7 +4611,7 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
     pyspark = types.ModuleType("pyspark")
     sql = types.ModuleType("pyspark.sql")
     sql_types = types.ModuleType("pyspark.sql.types")
-    for cls in (BooleanType, DoubleType, LongType, StringType, StructField, StructType, TimestampType):
+    for cls in (BooleanType, DateType, DoubleType, IntegerType, LongType, StringType, StructField, StructType, TimestampType):
         setattr(sql_types, cls.__name__, cls)
     sql.types = sql_types
     pyspark.sql = sql
@@ -4610,9 +4619,9 @@ def _metadata_registry_without_pyspark() -> dict[str, Any]:
     sys.modules.setdefault("pyspark.sql", sql)
     sys.modules.setdefault("pyspark.sql.types", sql_types)
 
-    from fabricops_kit.config.shared import _get_metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
-    return _get_metadata_table_schema_registry(_default_reference_config())
+    return metadata_table_schema_registry()
 
 
 def generate_metadata_table_reference() -> int:
@@ -4625,9 +4634,9 @@ def generate_metadata_table_reference() -> int:
 
     """
     try:
-        from fabricops_kit.config.shared import _get_metadata_table_schema_registry
+        from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
-        registry = _get_metadata_table_schema_registry(_default_reference_config())
+        registry = metadata_table_schema_registry()
     except RuntimeError as exc:
         if "pyspark.sql.types" not in str(exc):
             raise

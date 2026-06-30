@@ -21,9 +21,9 @@
 | `source_table_key` | `string` | Nullable |
 | `target_table_key` | `string` | Nullable |
 | `transformation_steps_json` | `string` | Nullable |
-| `created_at` | `string` | Nullable |
-| `_committed_at` | `string` | Nullable |
+| `created_at` | `timestamp` | Nullable |
 | `_committed_by` | `string` | Nullable |
+| `_committed_at` | `timestamp` | Nullable |
 | `_workspace_name` | `string` | Nullable |
 | `_notebook_name` | `string` | Nullable |
 | `_metadata_lakehouse_name` | `string` | Nullable |
