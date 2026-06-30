@@ -31,14 +31,6 @@
       ],
       "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
     },
-    "src/fabricops_kit/data_agreement.py": {
-      "public_functions": [
-        "widget_render_agreement_evidence",
-        "widget_render_data_agreement",
-        "widget_render_data_steward"
-      ],
-      "target": "Split into one owner file per public function where practical; keep package exports stable through src/fabricops_kit/__init__.py."
-    },
     "src/fabricops_kit/config.py": {
       "public_functions": [
         "setup_metadata_tables",
@@ -64,6 +56,19 @@
       "stable_import_paths": [
         "fabricops_kit.<function>",
         "fabricops_kit.io.<function>"
+      ]
+    },
+    "src/fabricops_kit/widgets": {
+      "status": "owner_package_exports",
+      "owner_package": "src/fabricops_kit/widgets",
+      "public_functions": [
+        "widget_render_agreement_evidence",
+        "widget_render_data_agreement",
+        "widget_render_data_steward"
+      ],
+      "stable_import_paths": [
+        "fabricops_kit.<function>",
+        "fabricops_kit.widgets.<function>"
       ]
     }
   }

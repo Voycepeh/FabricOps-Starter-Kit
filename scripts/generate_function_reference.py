@@ -68,7 +68,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.get_fabric_context": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
-    "data_agreement": "data_agreement",
     "governance_review": "governance_review",
     "data_profiling.profile_dataframe": "data_profiling",
     "io": "io",
@@ -78,7 +77,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
-    "data_agreement",
     "governance_review",
     "data_profiling",
     "io",
@@ -4797,7 +4795,7 @@ def main() -> None:
     for name in public:
         preferred_module = canonical_public_module(docs_metadata[name]["module"])
         preferred_actual_module = resolve_preferred_actual_module(preferred_module)
-        modules_to_check = [preferred_actual_module] + [m for m in module_data if m != preferred_actual_module]
+        modules_to_check = ([preferred_actual_module] if preferred_actual_module in module_data else []) + [m for m in module_data if m != preferred_actual_module]
         for module in modules_to_check:
             info = module_data[module]
             if name in info["functions"]:
@@ -4871,6 +4869,10 @@ def main() -> None:
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     if "config" not in discovered_doc_modules:
         discovered_doc_modules.append("config")
+    for row in module_docs_metadata:
+        module_name = row["module_name"]
+        if module_name in module_data and module_name not in discovered_doc_modules:
+            discovered_doc_modules.append(module_name)
     module_index_lines = [
         "# Implementation Module Catalogue",
         "",

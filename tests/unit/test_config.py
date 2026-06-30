@@ -670,7 +670,7 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     """Verify runtime metadata writers do not import private setup owner helpers."""
     writer_paths = [
         Path("src/fabricops_kit/metadata.py"),
-        Path("src/fabricops_kit/data_agreement.py"),
+        Path("src/fabricops_kit/widgets/shared.py"),
         Path("src/fabricops_kit/governance_review.py"),
         Path("src/fabricops_kit/pipeline.py"),
     ]

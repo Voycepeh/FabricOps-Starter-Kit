@@ -876,7 +876,7 @@
   },
   "widget_pipeline_bootstrap": {
     "qualified_name": "fabricops_kit.pipeline.widget_pipeline_bootstrap",
-    "unique_internal_helper_count": 28,
+    "unique_internal_helper_count": 30,
     "repeated_helpers": [
       {
         "helper": "_normalize_path_config",

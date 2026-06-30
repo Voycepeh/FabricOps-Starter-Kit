@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
-import fabricops_kit.data_agreement as agreement
+import fabricops_kit.widgets.shared as agreement
 import fabricops_kit.metadata as metadata
 from tests.helpers import FakeSpark, framework_config
 

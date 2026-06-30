@@ -862,7 +862,7 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
     ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
     normalized = _validate_framework_config(config)
-    from fabricops_kit.data_agreement import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+    from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.governance_review import _get_governance_metadata_schemas
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
 
@@ -939,7 +939,7 @@ def _string_metadata_schema(table_name: str, fields: list[str]):
 def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[str, Any]:
     """Return the canonical metadata setup registry as table names mapped to schemas."""
     normalized = _validate_framework_config(config)
-    from fabricops_kit.data_agreement import (
+    from fabricops_kit.widgets.shared import (
         DATA_AGREEMENT_EVIDENCE_FIELDS,
         DATA_AGREEMENT_EVIDENCE_TABLE,
         DATA_AGREEMENT_FIELDS,
