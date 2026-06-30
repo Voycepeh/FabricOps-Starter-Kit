@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 from uuid import uuid4
 
-from .data_agreement import get_selected_agreement, widget_select_agreement
+from .data_agreement import get_selected_agreement
 from .data_profiling.shared import profile_dataframe_core
 from .guardrails import (
     enforce_freshness,
@@ -126,6 +126,13 @@ class _PipelineRunContext:
 _ACTIVE_PIPELINE_CONTEXT: _PipelineRunContext | None = None
 
 
+def _load_widget_select_agreement():
+    """Return the public agreement selector widget callable."""
+    from importlib import import_module
+
+    return import_module("fabricops_kit.widgets.widget_select_agreement").widget_select_agreement
+
+
 def _start_pipeline_run_workflow(
     *,
     notebook_type: str = "02_pipeline",
@@ -211,7 +218,7 @@ def _start_pipeline_run_workflow(
     _ACTIVE_PIPELINE_CONTEXT = active
 
     if select_agreement:
-        widget_select_agreement(
+        _load_widget_select_agreement()(
             spark_session=active.spark_session,
             metadata_schema=active.metadata_schema or None,
             register_notebook=register_notebook,

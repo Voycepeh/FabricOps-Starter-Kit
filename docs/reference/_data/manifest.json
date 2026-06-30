@@ -153,6 +153,20 @@
       ]
     },
     {
+      "module_name": "data_agreement",
+      "visibility": "public",
+      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": true,
+      "callable_name": "widget_select_agreement",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Agreement selection",
+      "used_in_templates": []
+    },
+    {
       "module_name": "data_profiling",
       "visibility": "public",
       "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",

@@ -19,7 +19,7 @@ _WIDGET_LAYOUT_WIDTH = "600px"
 _TEXTAREA_HEIGHT = "80px"
 
 
-def _require_ipywidgets():
+def require_ipywidgets():
     """Return ipywidgets or raise an actionable optional-dependency error."""
     try:
         import ipywidgets as widgets
@@ -31,7 +31,7 @@ def _require_ipywidgets():
     return widgets
 
 
-def _widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
+def widget_common(widgets_module: Any, description: str, *, textarea: bool = False) -> dict[str, Any]:
     """Return common style and layout keyword arguments for form controls."""
     common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
     layout_class = getattr(widgets_module, "Layout", None)
@@ -50,7 +50,7 @@ def _html_escape(value: Any) -> str:
     return html.escape(str(value or ""))
 
 
-def _render_searchable_selector(
+def render_searchable_selector(
     *,
     widgets: Any,
     label: str,
@@ -65,8 +65,8 @@ def _render_searchable_selector(
     selected_value: str | None = None,
 ) -> dict[str, Any]:
     """Render a table-backed selector with search and stable-value tracking."""
-    search = widgets.Text(value="", placeholder=placeholder, **_widget_common(widgets, f"Search {label}"))
-    selector = widgets.Select(options=[], **_widget_common(widgets, label))
+    search = widgets.Text(value="", placeholder=placeholder, **widget_common(widgets, f"Search {label}"))
+    selector = widgets.Select(options=[], **widget_common(widgets, label))
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
     indexed_rows: list[dict[str, Any]] = []
@@ -130,7 +130,7 @@ def _render_searchable_selector(
 
 def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render organization-specific custom fields from normalized config."""
-    widgets = _require_ipywidgets()
+    widgets = require_ipywidgets()
     fields = config.get("custom_fields", []) if isinstance(config, dict) else config
     rendered: dict[str, Any] = {}
     values = values or {}
@@ -141,7 +141,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
         label = str(field.get("label") or key.replace("_", " ").title())
         field_type = str(field.get("type") or "text").lower()
         default = values.get(key, field.get("default", ""))
-        common = _widget_common(widgets, label, textarea=field_type == "textarea")
+        common = widget_common(widgets, label, textarea=field_type == "textarea")
         if field_type == "textarea":
             rendered[key] = widgets.Textarea(value=str(default or ""), **common)
         elif field_type == "dropdown":
@@ -156,18 +156,18 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
 
 def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
     """Render a standard widget control for a configured field name."""
-    widgets = _require_ipywidgets()
+    widgets = require_ipywidgets()
     description = field.replace("_", " ").title()
     if options is not None:
         default_value = value if value in options else (options[0] if options else None)
-        return widgets.Dropdown(options=options, value=default_value, **_widget_common(widgets, description))
+        return widgets.Dropdown(options=options, value=default_value, **widget_common(widgets, description))
     if field.endswith("_date") or field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
-        return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **_widget_common(widgets, description))
+        return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **widget_common(widgets, description))
     if field.startswith("approved_usage_") or field == "is_active":
-        return widgets.Checkbox(value=True if value == "" else str(value).strip().lower() in {"1", "true", "yes", "y"}, **_widget_common(widgets, description))
+        return widgets.Checkbox(value=True if value == "" else str(value).strip().lower() in {"1", "true", "yes", "y"}, **widget_common(widgets, description))
     if field in {"business_purpose"}:
-        return widgets.Textarea(value=str(value or ""), **_widget_common(widgets, description, textarea=True))
-    return widgets.Text(value=str(value or ""), **_widget_common(widgets, description))
+        return widgets.Textarea(value=str(value or ""), **widget_common(widgets, description, textarea=True))
+    return widgets.Text(value=str(value or ""), **widget_common(widgets, description))
 
 
 
@@ -243,7 +243,8 @@ def _deserialize_custom_fields(custom_fields_json: Any) -> dict[str, Any]:
         raise ValueError("custom_fields_json must be a JSON object.")
     return values
 
-def _config_value(config: Any, name: str, default: Any) -> Any:
+def config_value(config: Any, name: str, default: Any) -> Any:
+    """Return a data-agreement widget configuration value."""
     agreement_config = getattr(config, "data_agreement_config", config)
     if isinstance(agreement_config, dict):
         return agreement_config.get(name, default)
@@ -265,7 +266,7 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
         Safe editable fields. Technical audit fields are always excluded.
 
     """
-    configured = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(_config_value(config, kind, {}) or {})}.get("visible_columns", [])
+    configured = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}.get("visible_columns", [])
     hidden = set(STANDARD_RUNTIME_AUDIT_COLUMNS) | {"custom_fields_json"}
     if kind == "data_steward_widget":
         hidden.update({"steward_id", "is_active"})
@@ -387,7 +388,7 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
         Latest steward rows sorted by stable ID.
 
     """
-    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table_core(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), target="metadata", schema=metadata_schema, spark_session=spark_session, context={"config": config, "env": env})
     except Exception:
@@ -397,7 +398,8 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
     latest = _latest_by_key(rows, "steward_id")
     return [row for row in latest if _active_steward(row, config)] if active_only else latest
 
-def _write_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
+def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
+    """Append one widget metadata row to the configured metadata target."""
     write_lakehouse_table_core(spark.createDataFrame([coerce_metadata_row_types(table, row)]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
@@ -448,7 +450,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
         raise ValueError("Missing required steward field(s): " + ", ".join(missing))
     configured_roles = {
         str(option).strip()
-        for option in (_config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or [])
+        for option in (config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or [])
         if str(option).strip()
     }
     existing_role = str(values.get("_existing_steward_role") or "").strip()
@@ -467,8 +469,8 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
         row["is_active"] = bool(_active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
     row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
-    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-    _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
+    write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row
 
 def _parse_contract_version(version: Any) -> tuple[int, int, int]:
@@ -484,7 +486,7 @@ def _next_minor_version(version: Any) -> str:
     major, minor, _ = _parse_contract_version(version)
     return "1.0.0" if major == 0 else f"{major}.{minor + 1}.0"
 
-def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
+def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
     """Return the latest semantic version for each stable agreement ID."""
 
     def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
@@ -502,9 +504,9 @@ def _latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
             latest[key] = row
     return sorted(latest.values(), key=lambda row: (str(row.get("agreement_name") or "").lower(), str(row.get("agreement_id") or "")))
 
-def _list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any = None, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List all append-only agreement rows from the metadata lakehouse."""
-    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table_core(str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), target="metadata", schema=metadata_schema or configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session)
     except Exception:
@@ -513,10 +515,10 @@ def _list_all_data_agreement_rows(config: Any, env: str, *, spark_session: Any =
         raise
     return _coerce_row_dicts(rows)
 
-def _list_data_agreements(config: Any, env: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_data_agreements(config: Any, env: str, *, spark_session: Any = None, active_only: bool = False, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest versioned agreements from the configured metadata lakehouse."""
-    rows = _list_all_data_agreement_rows(config, env, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
-    agreements = _latest_agreement_versions(rows)
+    rows = list_all_data_agreement_rows(config, env, spark_session=spark_session, missing_ok=missing_ok, metadata_schema=metadata_schema)
+    agreements = latest_agreement_versions(rows)
     if not active_only:
         return agreements
     today = _audit_date(config)
@@ -545,7 +547,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     backend-managed.
     """
     row = {field: values.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
-    existing_rows = _list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
+    existing_rows = list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
     selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
     if selected_id:
         same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
@@ -579,8 +581,8 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
     row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
-    metadata_tables = _config_value(config, "metadata_tables", {}) or {}
-    _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
+    write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
 
 def _agreement_identity_text(row: dict[str, Any] | None) -> str:
@@ -1335,14 +1337,16 @@ def _dq_records_from_selection(
         records.append(record)
     return records
 
+
 # Widget workflow implementations migrated from data_agreement.py.
-def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
-    widgets = _require_ipywidgets()
+def render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: str, kind: str, display_widget: bool = True) -> dict[str, Any]:
+    """Render the shared steward or data-agreement maintenance widget workflow."""
+    widgets = require_ipywidgets()
     from IPython import display as ip
 
     is_steward = kind == "data_steward_widget"
     prompt = "Create new steward" if is_steward else "Create new agreement"
-    widget_config = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(_config_value(config, kind, {}) or {})}
+    widget_config = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
     fields = _get_widget_visible_fields(config, kind)
     after_save_callbacks: list[Any] = []
     row_lookup: dict[str, dict[str, Any]] = {}
@@ -1351,7 +1355,7 @@ def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: 
         return str(row.get("steward_id" if is_steward else "agreement_id") or "").strip()
 
     def _existing_rows() -> list[dict[str, Any]]:
-        return _list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if is_steward else _list_data_agreements(config, env, spark_session=spark, missing_ok=True)
+        return _list_data_stewards(config, env, spark_session=spark, active_only=False, missing_ok=True) if is_steward else list_data_agreements(config, env, spark_session=spark, missing_ok=True)
 
     def _existing_rows_for_selector() -> list[dict[str, Any]]:
         rows = _existing_rows()
@@ -1371,7 +1375,7 @@ def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: 
 
     existing_rows = _existing_rows_for_selector()
     _refresh_lookup(existing_rows)
-    selected_selector = _render_searchable_selector(
+    selected_selector = render_searchable_selector(
         widgets=widgets,
         label="Create / update",
         rows=existing_rows,
@@ -1389,14 +1393,14 @@ def _render_maintenance_widget_shared_workflow(*, spark: Any, config: Any, env: 
     selected = selected_selector["selector"]
     identity_context = None if is_steward else widgets.HTML(value=_agreement_identity_text(None))
 
-    roles = [str(option).strip() for option in (_config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or []) if str(option).strip()]
+    roles = [str(option).strip() for option in (config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or []) if str(option).strip()]
     steward_role_options = [(role, role) for role in roles] if is_steward else None
     form = {}
     steward_field_selector = None
     for field in fields:
         if field == "steward_id" and not is_steward:
             steward_rows = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-            steward_field_selector = _render_searchable_selector(
+            steward_field_selector = render_searchable_selector(
                 widgets=widgets,
                 label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
                 rows=steward_rows,

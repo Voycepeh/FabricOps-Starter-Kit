@@ -153,7 +153,6 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     removed_symbols = {
         "enforce_dq_rules",
         "get_selected_agreement",
-        "widget_select_agreement",
     }
     automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
     function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
@@ -195,14 +194,14 @@ def test_public_config_classes_have_reference_taxonomy() -> None:
     class_rows = {row["function_name"]: row for row in flow_data["function_inventory"] if row["layer"] == "class"}
     flow_names = {row["function_name"] for row in flow_data["public_entrypoint_flow"]}
 
-    assert "search 27 public functions and 7 public classes" in reference_index
+    assert "search 28 public functions and 7 public classes" in reference_index
     assert '<option value="class">Classes</option>' in inventory_text
     assert set(class_rows) == class_names
-    assert flow_data["summary_counts"]["public_api_surface"]["public_api_entrypoints"] == 27
+    assert flow_data["summary_counts"]["public_api_surface"]["public_api_entrypoints"] == 28
     assert flow_data["summary_counts"]["public_classes"] == 7
     assert landing_stats["public_class_count"] == 7
-    assert landing_stats["public_root_export_count"] == 34
-    assert len(flow_data["public_entrypoint_flow"]) == 27
+    assert landing_stats["public_root_export_count"] == 35
+    assert len(flow_data["public_entrypoint_flow"]) == 28
     assert not (class_names & flow_names)
 
     for name in class_names:
@@ -754,7 +753,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 123
+    assert summary_counts["callable_kind"]["function"] == 134
     assert summary_counts["public_classes"] == 7
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
@@ -1782,6 +1781,7 @@ def test_callable_architecture_layer_rules_and_labels():
 
     assert validator.CALLABLE_FILE_PATTERN == "Public callable file -> domain shared helper -> same-file private helper"
     assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
+    assert "src/fabricops_kit/widgets/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
 
     assert generator._display_label("Cross-layer dependency") == "Architecture violation"
     assert generator._display_label("Deep chain") == "Long chain"
@@ -2480,9 +2480,9 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     inventory = flow_data["function_inventory"]
 
     expected_counts = {
-        "public": 27,
-        "internal": 96,
-        "private_helper": 297,
+        "public": 28,
+        "internal": 106,
+        "private_helper": 289,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 

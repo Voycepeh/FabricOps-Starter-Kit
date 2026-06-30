@@ -6,7 +6,7 @@
 
 - **Written by notebook/template:** 01_agreement.ipynb
 - **Written by function or widget:** [`widget_render_agreement_evidence`](../../api/reference/widget_render_agreement_evidence.md)
-- **Read by function or widget:** `widget_select_agreement`
+- **Read by function or widget:** [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)
 - **Related template step:** 01_agreement.ipynb
 
 ## Implemented schema
@@ -32,4 +32,4 @@
 ## Related function reference
 
 - [`widget_render_agreement_evidence`](../../api/reference/widget_render_agreement_evidence.md)
-- `widget_select_agreement`
+- [`widget_select_agreement`](../../api/reference/widget_select_agreement.md)

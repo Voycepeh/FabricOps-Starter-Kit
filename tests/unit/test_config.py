@@ -516,7 +516,7 @@ def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
     """Verify agreement widget orchestration is not misclassified as an adapter."""
     from scripts.generate_function_reference import ROLE_TAGS_BY_NAME, _role_dependency_signals
 
-    shared_roles = ROLE_TAGS_BY_NAME["_render_maintenance_widget_shared_workflow"]
+    shared_roles = ROLE_TAGS_BY_NAME["render_maintenance_widget_shared_workflow"]
 
     assert shared_roles[:2] == ["internal_workflow", "shared_widget_rendering_workflow"]
     assert "internal_adapter" not in shared_roles
@@ -536,12 +536,10 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
 
     inventory = json.loads(Path("docs/reference/_data/function-call-graph.json").read_text(encoding="utf-8"))["function_inventory"]
     rows = {row["qualified_name"]: row for row in inventory}
-    for qn in [
-        "fabricops_kit.widgets.shared._render_maintenance_widget_shared_workflow",
-        "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow",
-    ]:
-        assert rows[qn]["function_type"] == "Private helper"
-        assert rows[qn]["layer"] == "private_helper"
+    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"] == "Shared helper"
+    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["layer"] == "internal"
+    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["function_type"] == "Private helper"
+    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["layer"] == "private_helper"
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
     assert rows["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
     assert rows["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]

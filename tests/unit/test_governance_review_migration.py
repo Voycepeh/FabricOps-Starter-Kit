@@ -59,13 +59,14 @@ EXPECTED_V1_CALLABLES = [
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
+    "widget_select_agreement",
 ]
 
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(EXPECTED_V1_CALLABLES)
-    assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
+    assert "get_selected_agreement" not in fabricops_kit.__all__
 
 
 def test_widget_public_callables_live_under_widgets_package():
@@ -82,6 +83,7 @@ def test_widget_public_callables_live_under_widgets_package():
         "widget_render_data_steward",
         "widget_review_guardrail_governance",
         "widget_select_guardrail_target",
+        "widget_select_agreement",
     }
     for name in widget_names:
         assert hasattr(widgets, name)
@@ -105,6 +107,7 @@ def test_widget_modules_do_not_call_public_widget_functions():
         "widget_render_data_steward",
         "widget_review_guardrail_governance",
         "widget_select_guardrail_target",
+        "widget_select_agreement",
     }
     offenders = []
     for path in widgets_dir.glob("widget_*.py"):
@@ -118,6 +121,26 @@ def test_widget_modules_do_not_call_public_widget_functions():
                 called = node.func.attr
             if called in public_widget_names - {owned}:
                 offenders.append(f"{path.relative_to(root)} calls {called}")
+    assert offenders == []
+
+
+def test_widget_modules_do_not_import_private_shared_widget_helpers():
+    """Verify widget modules use architecture-visible helpers from widgets.shared."""
+    import ast
+
+    root = Path(__file__).parents[2]
+    widgets_dir = root / "src" / "fabricops_kit" / "widgets"
+    offenders = []
+    for path in widgets_dir.glob("widget_*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            if node.module != "fabricops_kit.widgets.shared":
+                continue
+            for alias in node.names:
+                if alias.name.startswith("_"):
+                    offenders.append(f"{path.relative_to(root)} imports {alias.name} from widgets.shared")
     assert offenders == []
 
 
