@@ -317,7 +317,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## 1. Repository code" in flow_text
     assert "## 2. Scan and analyze" in flow_text
     assert "## 3. Enforce architecture" in flow_text
-    assert "### Architecture violations we are preventing" in flow_text
+    assert "### What the dashboard signals" in flow_text
     assert "### Many dependencies" in flow_text
     assert "### Long nested chains" in flow_text
     assert "## 4. Function Call Graph Dashboard" in flow_text
@@ -338,10 +338,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     expected_flow_phrases = [
         "Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets",
-        "Architecture violations we are preventing",
-        "Public Function Architecture",
-        "public owner files defining more than one public function",
-        "support classes, dataclasses, or value objects living outside `shared.py`",
+        "What the dashboard signals",
+        "Architecture violation | The call graph contains a boundary break",
+        "Shared dependency | The callable uses helper logic",
+        "Maintainability signal | The code may still be valid",
         "Open architecture dashboard",
     ]
     for expected_phrase in expected_flow_phrases:
@@ -875,7 +875,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     callable_flow_text = (REFERENCE_DIR / "function-call-graph.md").read_text(encoding="utf-8")
     assert "First make it exist. Then make it good." in callable_flow_text
     assert "AI generated code can work correctly but still leave behind messy integration patterns" in callable_flow_text
-    assert "Architecture violations we are preventing" in callable_flow_text
+    assert "What the dashboard signals" in callable_flow_text
     assert "Many dependencies" in callable_flow_text
     assert "Long nested chains" in callable_flow_text
     assert "Function Call Graph Dashboard" in callable_flow_text
@@ -1788,7 +1788,11 @@ def test_callable_architecture_layer_rules_and_labels():
         assert edge == {"result": "Allowed", "violation_type": ""}
 
     assert set(generator.ARCHITECTURE_WARNING_TYPES) == {"Same-file private dependency"}
-    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {"Cross-file private dependency"}
+    assert set(generator.ARCHITECTURE_VIOLATION_TYPES) == {
+        "Public function calls public function",
+        "Shared helper calls public function",
+        "Cross-file private dependency",
+    }
 
     import scripts.validate_callable_architecture as validator
 
@@ -2300,6 +2304,17 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert flow["architecture_violation_count"] == 0
     assert all(row["architecture_result"] == "Warning" for row in flow["transitive_callees"])
     assert {row["violation_type"] for row in flow["transitive_callees"]} == {"Same-file private dependency"}
+
+
+def test_callable_dashboard_shared_helper_public_function_is_violation() -> None:
+    """Verify dashboard architecture rules do not allow shared helpers to call public functions."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
+
+    assert "Shared helper calls public function" in dashboard_text
+    assert "['Sharedhelper','Publicfunction','Architectureviolation']" in compact_dashboard_text
+    assert "['Sharedhelper','Publicfunction','Allowed']" not in compact_dashboard_text
+    assert "hasArchitectureViolation(flow)&&isGraphReviewCandidate(flow)" not in compact_dashboard_text
 
 
 def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
