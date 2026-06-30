@@ -48,8 +48,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.package-data]
-fabricops_kit = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
