@@ -594,10 +594,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Contains ${violations} architecture violations." not in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." not in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." not in dashboard_text
-    assert "Max depth; long chain threshold >= " in dashboard_text
+    assert "Too many steps threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
-    assert "Review-for-mergehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
+    assert "Maybecombinehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
     assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
