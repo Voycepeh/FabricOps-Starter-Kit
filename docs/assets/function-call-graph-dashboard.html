@@ -897,7 +897,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-30 18:27 SGT<span
+        <strong>Generated at:</strong> 2026-06-30 18:51 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -1415,7 +1415,11 @@
         return displayLabel(v);
       }
       function architectureViolationBreakdown(flows = publicEntryFlows) {
-        const counts = { "Cross-file private dependency": 0 };
+        const counts = {
+          "Public function calls public function": 0,
+          "Shared helper calls public function": 0,
+          "Cross-file private dependency": 0,
+        };
         flows.forEach((f) =>
           (f.transitive_callees || []).forEach((c) => {
             if (
@@ -1429,6 +1433,10 @@
       }
       function renderArchitectureViolationSection() {
         const meanings = {
+          "Public function calls public function":
+            "A notebook-facing public callable depends on another public callable instead of shared implementation details.",
+          "Shared helper calls public function":
+            "A reusable shared/internal helper calls back into a notebook-facing public callable.",
           "Cross-file private dependency":
             "A helper directly calls a private helper from another source file.",
         };
@@ -1436,10 +1444,10 @@
           ([, count]) => count > 0,
         );
         $("architectureViolationSection").innerHTML =
-          `<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
+          `<h2>Architecture violations</h2><p>Architecture violations show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length ? rows : Object.entries(meanings).map(([k]) => [k, 0])).map(([type, count]) => `<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join("")}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints and must not be called by public callables or shared helpers. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[
             ["Public function", "Shared helper", "Allowed"],
             ["Public function", "Private helper in same file", "Warning only"],
-            ["Shared helper", "Public function", "Allowed"],
+            ["Shared helper", "Public function", "Architecture violation"],
             ["Shared helper", "Private helper in same file", "Warning only"],
             [
               "Shared helper",

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T10:27:42.280484Z",
+    "generated_at_utc": "2026-06-30T10:51:34.134434Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -40687,6 +40687,8 @@
       "end_node_count": 7,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 5,
@@ -41545,6 +41547,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 0,
@@ -41666,6 +41670,8 @@
       "end_node_count": 11,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 7,
@@ -42831,6 +42837,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -43162,6 +43170,8 @@
       "end_node_count": 6,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 7,
@@ -43673,6 +43683,8 @@
       "end_node_count": 8,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 5,
@@ -44420,6 +44432,8 @@
       "end_node_count": 8,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 6,
@@ -45212,6 +45226,8 @@
       "end_node_count": 8,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 5,
@@ -46018,6 +46034,8 @@
       "end_node_count": 9,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 6,
@@ -46846,6 +46864,8 @@
       "end_node_count": 7,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 5,
@@ -47541,6 +47561,8 @@
       "end_node_count": 9,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 5,
@@ -48338,6 +48360,8 @@
       "end_node_count": 54,
       "architecture_violation_count": 5,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 5
       },
       "helper_cleanup_candidates": 47,
@@ -54965,6 +54989,8 @@
       "end_node_count": 7,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 8,
@@ -56364,6 +56390,8 @@
       "end_node_count": 5,
       "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 1
       },
       "helper_cleanup_candidates": 6,
@@ -57118,6 +57146,8 @@
       "end_node_count": 3,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 4,
@@ -57637,6 +57667,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -57929,6 +57961,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -58221,6 +58255,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -58524,6 +58560,8 @@
       "end_node_count": 24,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 13,
@@ -61065,6 +61103,8 @@
       "end_node_count": 30,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 18,
@@ -64763,6 +64803,8 @@
       "end_node_count": 30,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 18,
@@ -68450,6 +68492,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -68755,6 +68799,8 @@
       "end_node_count": 28,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 13,
@@ -71754,6 +71800,8 @@
       "end_node_count": 1,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 1,
@@ -72050,6 +72098,8 @@
       "end_node_count": 10,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 6,
@@ -72962,6 +73012,8 @@
       "end_node_count": 18,
       "architecture_violation_count": 2,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 2
       },
       "helper_cleanup_candidates": 10,
@@ -75015,6 +75067,8 @@
       "end_node_count": 19,
       "architecture_violation_count": 1,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 1
       },
       "helper_cleanup_candidates": 10,
@@ -77075,6 +77129,8 @@
       "end_node_count": 9,
       "architecture_violation_count": 0,
       "architecture_violation_breakdown": {
+        "Public function calls public function": 0,
+        "Shared helper calls public function": 0,
         "Cross-file private dependency": 0
       },
       "helper_cleanup_candidates": 6,
