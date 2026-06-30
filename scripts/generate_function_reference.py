@@ -68,7 +68,12 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.get_fabric_context": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
-    "governance_review": "governance_review",
+    "governance_lookup": "governance_lookup",
+    "widgets.widget_select_guardrail_target": "widgets.widget_select_guardrail_target",
+    "widgets.widget_author_schema_freshness_profile_rules": "widgets.widget_author_schema_freshness_profile_rules",
+    "widgets.widget_author_dq_rules": "widgets.widget_author_dq_rules",
+    "widgets.widget_enrich_table_metadata": "widgets.widget_enrich_table_metadata",
+    "widgets.widget_review_guardrail_governance": "widgets.widget_review_guardrail_governance",
     "data_profiling.profile_dataframe": "data_profiling",
     "io": "io",
     "guardrails": "guardrails",
@@ -77,7 +82,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
-    "governance_review",
+    "governance_lookup",
     "data_profiling",
     "io",
     "guardrails",

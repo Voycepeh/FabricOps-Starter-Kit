@@ -14,11 +14,13 @@ from .guardrails import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
-from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
-from .governance_review import CATALOGUE_TABLE, LINEAGE_TABLE, _run_active_dq_guardrail
 from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from .governance_lookup import CATALOGUE_TABLE
+from .guardrails import _run_active_dq_guardrail
+from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from .metadata import _audit_timestamp_value, _build_metadata_table_key, build_runtime_audit_fields, _write_guardrail_result_row, coerce_metadata_row_types
 
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 

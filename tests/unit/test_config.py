@@ -371,9 +371,10 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
 
 def test_metadata_data_catalogue_schema_is_profile_evidence_only():
     """Verify catalogue schema has profile_mode but excludes old result fields."""
-    from fabricops_kit.governance_review import CATALOGUE_TABLE, _get_governance_metadata_schemas
+    from fabricops_kit.governance_lookup import CATALOGUE_TABLE
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
-    fields = set(_get_governance_metadata_schemas()[CATALOGUE_TABLE].fieldNames())
+    fields = set(metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames())
 
     assert "profile_mode" in fields
     assert "load_behavior" not in fields
@@ -669,7 +670,7 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     writer_paths = [
         Path("src/fabricops_kit/metadata.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
-        Path("src/fabricops_kit/governance_review.py"),
+
         Path("src/fabricops_kit/pipeline.py"),
     ]
 

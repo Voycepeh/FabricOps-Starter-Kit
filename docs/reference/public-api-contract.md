@@ -22,12 +22,12 @@ The canonical machine-readable list lives in `fabricops_kit.public_api.SUPPORTED
 | Data access | `fabricops_kit.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
 | Data access | `fabricops_kit.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
 | Data access | `fabricops_kit.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
-| Governance review | `fabricops_kit.governance_review.get_latest_metadata_catalogue` | Return the latest metadata catalogue rows for an exploratory table lookup. |
-| Governance review | `fabricops_kit.governance_review.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
-| Governance review | `fabricops_kit.governance_review.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |
-| Governance review | `fabricops_kit.governance_review.widget_enrich_table_metadata` | Render one consolidated governed table metadata enrichment widget. |
-| Governance review | `fabricops_kit.governance_review.widget_review_guardrail_governance` | Render interactive governance policy and shared rule-review controls. |
-| Governance review | `fabricops_kit.governance_review.widget_select_guardrail_target` | Render an interactive guardrail target selector and return handover state. |
+| Governance review | `fabricops_kit.governance_lookup.get_latest_metadata_catalogue` | Return the latest metadata catalogue rows for an exploratory table lookup. |
+| Governance review | `fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
+| Governance review | `fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |
+| Governance review | `fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata` | Render one consolidated governed table metadata enrichment widget. |
+| Governance review | `fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance` | Render interactive governance policy and shared rule-review controls. |
+| Governance review | `fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target` | Render an interactive guardrail target selector and return handover state. |
 | Pipeline | `fabricops_kit.pipeline.display_guardrail_results` | Return guardrail results prepared for summary, detailed, or debug display. |
 | Pipeline | `fabricops_kit.pipeline.prepare_pipeline_table_configs` | Prepare source or target table configs for a pipeline notebook. |
 | Pipeline | `fabricops_kit.pipeline.run_table_guardrails` | Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails. |

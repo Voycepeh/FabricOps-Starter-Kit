@@ -4,13 +4,14 @@ import json
 
 import pytest
 
-import fabricops_kit.governance_review as governance_review
-from fabricops_kit.governance_review import (
+from fabricops_kit import guardrails as dq_runtime
+from fabricops_kit.widgets import shared as governance_review
+from fabricops_kit.widgets.shared import (
     CATALOGUE_TABLE,
     GUARDRAIL_RESULTS_TABLE,
     GUARDRAIL_RULES_TABLE,
-    _get_governance_metadata_schemas,
 )
+from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.widgets import widget_author_dq_rules, widget_author_schema_freshness_profile_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
 
 
@@ -101,7 +102,7 @@ def _widget_descriptions(widget):
 
 def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     """Verify catalogue, rule, result, and governance policy fields stay separated."""
-    schemas = _get_governance_metadata_schemas()
+    schemas = metadata_table_schema_registry()
     catalogue_fields = set(schemas[CATALOGUE_TABLE].fieldNames())
     rule_fields = set(schemas[GUARDRAIL_RULES_TABLE].fieldNames())
     result_fields = set(schemas[GUARDRAIL_RESULTS_TABLE].fieldNames())
@@ -267,7 +268,7 @@ def test_profile_behavior_rules_from_guardrail_metadata_are_enforced(spark_sessi
 
 def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session, monkeypatch):
     """Verify DQ rule rows are loaded and enforced."""
-    from fabricops_kit import governance_review
+    from fabricops_kit.widgets import shared as governance_review
 
     df = spark_session.createDataFrame([(1,), (None,)], "order_id int")
     rules_df = spark_session.createDataFrame([
@@ -283,7 +284,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     ])
     monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
 
-    result = governance_review._run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    result = dq_runtime._run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -292,7 +293,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify active-pending-review rules use standard runtime warning metadata."""
-    from fabricops_kit import governance_review
+    from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
     warning = "Rule is active through approval bypass and requires governance post-review."
@@ -329,7 +330,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
         _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
     ])
     monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
-    dq = governance_review._run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    dq = dq_runtime._run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     for result in (schema, freshness, profile, dq):
         assert result["can_continue"] is True
@@ -489,7 +490,7 @@ def test_governance_review_widget_actions(monkeypatch):
 def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatch):
     """Verify target selector reads catalogue, rules, and governance policy."""
     _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit import governance_review
+    from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit import widgets
     from fabricops_kit.widgets import shared as widget_shared
 
@@ -532,7 +533,7 @@ def test_schema_widget_freshness_lag_rejects_negative(monkeypatch):
 def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
     """Verify authoring widget save writes only METADATA_GUARDRAIL_RULES."""
     _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit import governance_review
+    from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit import widgets
     from fabricops_kit.widgets import shared as widget_shared
 
@@ -556,7 +557,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
 def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
     """Verify review widget actions write rule rows, not a separate policy table."""
     _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit import governance_review
+    from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit import widgets
     from fabricops_kit.widgets import shared as widget_shared
 
@@ -608,7 +609,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
 
 def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session):
     """Verify DQ loading excludes approved, missing status, missing active, and blank dataset rows."""
-    from fabricops_kit.governance_review import _load_active_dq_rules
+    from fabricops_kit.guardrails import _load_active_dq_rules
 
     rows = [
         _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from fabricops_kit.governance_review import _load_active_dq_rules, _prepare_dq_profile_input_rows, _run_active_dq_guardrail
+from fabricops_kit.guardrails import _load_active_dq_rules, _prepare_dq_profile_input_rows, _run_active_dq_guardrail
 from fabricops_kit.guardrails import stop_if_failed, _check_schema_runtime
 from tests.helpers import framework_config
 
@@ -155,7 +155,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
 
 def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_session, monkeypatch):
     """Verify load active dq rules reconstructs current governance metadata."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
     from tests.helpers import framework_config
 
     writes = []
@@ -221,7 +221,7 @@ def _dq_metadata_df(spark_session, rows):
 
 def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail returns passed when no active rules."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
@@ -240,7 +240,7 @@ def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sess
 
 def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
     """Verify DQ enforcement writes result rows only when enabled."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
     import fabricops_kit.metadata as metadata
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
@@ -262,7 +262,7 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
 
 def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail warning failure can continue."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "invalid", "amount": 10.0}])
     metadata_df = _dq_metadata_df(
@@ -304,7 +304,7 @@ def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, mo
 
 def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail warning failure adds technical columns and preserves rows."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame(
         [
@@ -376,7 +376,7 @@ def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pre
 
 def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail error failure blocks."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame([(None, "active", 10.0)], "order_id string, status string, amount double")
     metadata_df = _dq_metadata_df(
@@ -416,7 +416,7 @@ def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatc
 
 def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail mixed warning and error failures return failed."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame([(None, "invalid", 10.0)], "order_id string, status string, amount double")
     metadata_df = _dq_metadata_df(
@@ -473,7 +473,7 @@ def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed
 
 def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail supports current v1 metadata shape."""
-    import fabricops_kit.governance_review as governance
+    from fabricops_kit import guardrails as governance
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0, "email": "a@example.com"}])
     metadata_df = _dq_metadata_df(

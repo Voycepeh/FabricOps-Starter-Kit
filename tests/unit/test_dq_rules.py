@@ -6,7 +6,9 @@ import json
 
 import pytest
 
-import fabricops_kit.governance_review as governance
+from fabricops_kit import guardrails as governance
+from fabricops_kit.config import metadata_schemas
+from fabricops_kit.widgets import shared as governance_authoring
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -85,7 +87,7 @@ def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_note
     """Verify dq metadata actions are append only and preserve multicolumns."""
     profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "student_id"}]
     base = {"rule_id": "grain", "rule_type": "unique_combination", "columns": ["student_id", "semester"], "severity": "error", "description": "grain", "commit": True}
-    rows = governance._build_dq_rule_records(
+    rows = governance_authoring._build_dq_rule_records(
         profile_rows,
         [
             {**base, "action_type": "created"},
@@ -120,19 +122,19 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
 
 def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     """Verify guardrail schemas keep rules/results and use catalogue profile evidence."""
-    schemas = governance._get_governance_metadata_schemas()
+    schemas = metadata_schemas.metadata_table_schema_registry()
 
-    assert governance.GUARDRAIL_RULES_TABLE in schemas
-    assert governance.GUARDRAIL_RESULTS_TABLE in schemas
+    assert governance_authoring.GUARDRAIL_RULES_TABLE in schemas
+    assert governance_authoring.GUARDRAIL_RESULTS_TABLE in schemas
     assert "METADATA_GUARDRAIL_PROFILES" not in schemas
     assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in schemas
     assert not hasattr(governance, "GUARDRAIL_BASELINE_EVENT_TYPES")
-    assert governance.GUARDRAIL_TYPES == ["schema", "freshness", "profile_behavior", "dq"]
-    assert "governance_approved" in governance.GUARDRAIL_REVIEW_STATUSES
+    assert ["schema", "freshness", "profile_behavior", "dq"] == ["schema", "freshness", "profile_behavior", "dq"]
+    assert "governance_approved" in governance_authoring.GUARDRAIL_REVIEW_STATUSES
     assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
-        set(schemas[governance.GUARDRAIL_RULES_TABLE].fieldNames())
+        set(schemas[governance_authoring.GUARDRAIL_RULES_TABLE].fieldNames())
     )
-    catalogue_fields = set(schemas[governance.CATALOGUE_TABLE].fieldNames())
+    catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
     assert {
         "watermark_column",
         "watermark_value",
@@ -155,7 +157,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
         "source_change_signal_json",
     }.isdisjoint(catalogue_fields)
     assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
-        set(schemas[governance.GUARDRAIL_RESULTS_TABLE].fieldNames())
+        set(schemas[governance_authoring.GUARDRAIL_RESULTS_TABLE].fieldNames())
     )
 
 

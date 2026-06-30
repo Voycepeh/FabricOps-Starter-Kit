@@ -34,7 +34,7 @@ from .pipeline import (
     write_pipeline_run_summary,
 )
 from .widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
-from .governance_review import get_latest_metadata_catalogue
+from .governance_lookup import get_latest_metadata_catalogue
 from .widgets import (
     widget_author_dq_rules,
     widget_author_schema_freshness_profile_rules,

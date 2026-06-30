@@ -769,7 +769,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 139
+    assert summary_counts["callable_kind"]["function"] == 133
     assert summary_counts["public_classes"] == 7
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
@@ -2512,8 +2512,8 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
     expected_counts = {
         "public": 26,
-        "internal": 113,
-        "private_helper": 259,
+        "internal": 107,
+        "private_helper": 235,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 

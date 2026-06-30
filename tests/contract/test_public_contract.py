@@ -333,7 +333,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.governance_review.get_latest_metadata_catalogue": {
+        "fabricops_kit.governance_lookup.get_latest_metadata_catalogue": {
             "parameters": [
                 {"name": "table_name", "kind": "KEYWORD_ONLY", "required": True},
                 {"name": "agreement", "kind": "KEYWORD_ONLY", "required": False},
