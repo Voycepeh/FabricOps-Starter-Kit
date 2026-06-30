@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fabricops_kit.data_profiling.shared import profile_dataframe_core
+from fabricops_kit.pipeline.shared import profile_dataframe_core
 
 
 def profile_dataframe(

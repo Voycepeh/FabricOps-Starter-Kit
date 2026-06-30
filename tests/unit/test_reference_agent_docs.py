@@ -1255,7 +1255,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     assert "Implementation helper count: 11" not in text
     assert 'class="reference-helper-groups"' not in implementation_section
     assert re.search(
-        r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline\.py#L\d+(?:-L\d+)?"',
+        r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestration\.py#L\d+(?:-L\d+)?"',
         implementation_section,
     )
 

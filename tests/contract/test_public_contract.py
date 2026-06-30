@@ -239,7 +239,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.data_profiling.profile_dataframe": {
+        "fabricops_kit.pipeline.profile_dataframe": {
             "parameters": [
                 {"name": "df", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
@@ -589,7 +589,7 @@ def test_generated_module_docs_are_not_public_surface():
         "config",
         "data_agreement",
         "governance_review",
-        "data_profiling",
+        "pipeline",
             "io",
         "guardrails",
         "metadata",

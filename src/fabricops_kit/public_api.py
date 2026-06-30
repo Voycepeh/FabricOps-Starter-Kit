@@ -6,7 +6,7 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-    "fabricops_kit.data_profiling.profile_dataframe",
+    "fabricops_kit.pipeline.profile_dataframe",
     "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
     "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
     "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",

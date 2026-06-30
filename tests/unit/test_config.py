@@ -610,7 +610,7 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
     assert "from .config.shared import get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/data_profiling/shared.py").read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
 
 
 def test_setup_metadata_tables_uses_public_config_validation_helper_only():
@@ -670,7 +670,7 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
         Path("src/fabricops_kit/metadata.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
 
-        Path("src/fabricops_kit/pipeline.py"),
+        Path("src/fabricops_kit/pipeline/orchestration.py"),
     ]
 
     metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")

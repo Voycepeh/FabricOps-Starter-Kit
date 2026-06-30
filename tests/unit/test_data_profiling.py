@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from fabricops_kit.data_profiling import profile_dataframe
+from fabricops_kit.pipeline import profile_dataframe
 
 pytestmark = [pytest.mark.unit, pytest.mark.spark]
 
@@ -129,7 +129,7 @@ def test_profile_dataframe_selected_columns_behavior(spark_session):
 
 def test_profile_dataframe_min_max_supported_type_behavior(spark_session):
     """Verify unsupported complex types omit min and max values."""
-    from fabricops_kit.data_profiling.shared import is_min_max_supported_type
+    from fabricops_kit.pipeline.shared import is_min_max_supported_type
 
     assert is_min_max_supported_type("string") is True
     assert is_min_max_supported_type("array<string>") is False
@@ -168,6 +168,6 @@ def test_profile_dataframe_empty_column_behavior_raises(spark_session):
 
 def test_profile_dataframe_package_import():
     """Verify package-level public import works after module migration."""
-    from fabricops_kit.data_profiling import profile_dataframe as package_profile_dataframe
+    from fabricops_kit.pipeline import profile_dataframe as package_profile_dataframe
 
     assert package_profile_dataframe is profile_dataframe

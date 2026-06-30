@@ -516,7 +516,7 @@ def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessi
 
 def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):
     """Verify catalogue evidence excludes runtime guardrail result fields."""
-    from fabricops_kit.data_profiling import profile_dataframe
+    from fabricops_kit.pipeline import profile_dataframe
     from fabricops_kit import pipeline
 
     writes = []
@@ -573,7 +573,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
 def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
     """Verify changing-data catalogue writes retain per-watermark baseline fields."""
     from fabricops_kit import pipeline
-    from fabricops_kit.data_profiling import profile_dataframe
+    from fabricops_kit.pipeline import profile_dataframe
 
     writes = []
     monkeypatch.setattr(
