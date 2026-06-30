@@ -911,7 +911,7 @@
         candidates.
       </p>
       <p class="generation-banner">
-        <strong>Generated at:</strong> 2026-06-30 20:30 SGT<span
+        <strong>Generated at:</strong> 2026-06-30 20:36 SGT<span
           ><strong>Data source:</strong> function-call-graph.json</span
         >
       </p>
@@ -1290,7 +1290,7 @@
         );
       }
       function mergeCandidateLabel(count) {
-        return count === 1 ? "Maybe combine" : `${count} review for merge`;
+        return count === 1 ? "Maybe combine" : `${count} maybe combine`;
       }
       function reviewMergeCandidateLabel(count) {
         return count === 1 ? "Review helper" : "Review helpers";
@@ -1370,7 +1370,7 @@
             : suggestedActionLabel(flow)
               ? "warn"
               : "";
-        return `<tr class="summary-row ${open ? "is-open" : ""}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="6"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.downstream_count || 0)} downstream function(s)</li><li>Depth: ${esc(flow.max_depth || 0)}</li><li>Broken rules: ${esc(architectureFindingCount(flow))}</li><li>Shared impact: ${esc(flow.external_dependents_count || 0)}</li><li>Review-for-merge helpers: ${esc(mergeCandidateCount(flow))}</li></ul>${flowSignals(flow).length ? `<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(", "))}</p>` : ""}</div></td></tr>`;
+        return `<tr class="summary-row ${open ? "is-open" : ""}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="6"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.downstream_count || 0)} downstream function(s)</li><li>Depth: ${esc(flow.max_depth || 0)}</li><li>Broken rules: ${esc(architectureFindingCount(flow))}</li><li>Shared impact: ${esc(flow.external_dependents_count || 0)}</li><li>Maybe combine helpers: ${esc(mergeCandidateCount(flow))}</li></ul>${flowSignals(flow).length ? `<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(", "))}</p>` : ""}</div></td></tr>`;
       }
       function renderCards() {
         const s = summaryCounts.public_api_surface || {},
@@ -1811,7 +1811,7 @@
           chips.push('<span class="badge warn">Too many helpers</span>');
         if (mergeCandidates.length)
           chips.push(
-            `<span class="badge muted">${mergeCandidates.length} review for merge</span>`,
+            `<span class="badge muted">${mergeCandidates.length} maybe combine</span>`,
           );
         if ((flow.external_dependents_count || 0) > 0)
           chips.push('<span class="badge info">Shared helper</span>');
@@ -1842,7 +1842,7 @@
           ),
           signals = flowSignalChips(f, architectureFindings, mergeCandidates);
         $("publicFlowDetails").innerHTML =
-          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${publicCallableSeverity(f) === "architecture" ? "critical" : publicCallableSeverity(f) === "review" ? "warn" : "keep"}">${esc(health)}</span></div>${nextStep ? `<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>` : ""}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Max depth; long chain threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Broken rules</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Maybe combine</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${isGraphReviewCandidate(f) ? esc("This callable exceeds a graph width or depth threshold. Review whether nested helpers should stay separate, be shared, or be simplified.") : flowSignals(f).length ? "Informational signals only." : "No review flags detected."}</p></section>${nextStep ? `<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>` : ""}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
+          `<h2>Function call graph</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${publicCallableSeverity(f) === "architecture" ? "critical" : publicCallableSeverity(f) === "review" ? "warn" : "keep"}">${esc(health)}</span></div>${nextStep ? `<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>` : ""}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.downstream_count}</strong><br><span>Downstream count</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold === null ? "Max depth" : "Too many steps threshold >= " + longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Broken rules</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Maybe combine</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files || f.modules_touched || []).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count || 0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${isGraphReviewCandidate(f) ? esc("This callable exceeds a graph width or depth threshold. Review whether nested helpers should stay separate, be shared, or be simplified.") : flowSignals(f).length ? "Informational signals only." : "No review flags detected."}</p></section>${nextStep ? `<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>` : ""}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`;
       }
       function selectedItem() {
         const byQn = new Map(

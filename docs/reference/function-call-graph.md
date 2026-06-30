@@ -62,7 +62,7 @@ AI generated code can work correctly but still leave behind messy integration pa
 * private functions used across files
 * wide dependency surfaces
 * public callables depending on other public callables
-* long chains of thin wrapper functions
+* too many steps across thin wrapper functions
 
 The question is not only whether the code works.
 
