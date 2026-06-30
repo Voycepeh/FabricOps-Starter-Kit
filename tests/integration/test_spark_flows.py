@@ -516,11 +516,16 @@ def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessi
 
 def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):
     """Verify catalogue evidence excludes runtime guardrail result fields."""
-    from fabricops_kit.pipeline import profile_dataframe
     from fabricops_kit import pipeline
+    from fabricops_kit.pipeline import profile_dataframe
+    from fabricops_kit.pipeline import shared as pipeline_shared
 
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(
+        pipeline_shared,
+        "write_lakehouse_table_core",
+        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
+    )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
     profile_df = profile_dataframe(df, "orders")
 
@@ -574,10 +579,11 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
     """Verify changing-data catalogue writes retain per-watermark baseline fields."""
     from fabricops_kit import pipeline
     from fabricops_kit.pipeline import profile_dataframe
+    from fabricops_kit.pipeline import shared as pipeline_shared
 
     writes = []
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "write_lakehouse_table_core",
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
