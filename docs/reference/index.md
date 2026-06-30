@@ -35,9 +35,9 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 29
-    - Total callables: 371
-    - Supporting functions: 107
+    - Source Python files count: 28
+    - Total callables: 374
+    - Supporting functions: 110
     - Private helpers to review: 232
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
@@ -74,7 +74,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
 
   </div>
 </article>
-<article id="pipeline.orchestration-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
+<article id="pipeline.display_guardrail_results-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return summary, detailed, or debug guardrail display output for Fabric notebooks.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
@@ -134,7 +134,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
 
   </div>
 </article>
-<article id="pipeline.orchestration-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
+<article id="pipeline.prepare_pipeline_table_configs-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare source or target table configs for 02_pipeline.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
@@ -214,7 +214,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 15</span></summary><ul><li><code>get_spark_session</code></li><li><code>read_warehouse_synapsesql</code></li><li><code>resolve_configured_warehouse_table</code></li><li><code>_require_fabric_connector</code></li><li><code>resolve_target_store</code></li><li><code>resolve_warehouse_table_location</code></li><li><code>get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_build_warehouse_object_name</code></li><li><code>_normalize_schema_name</code></li><li><code>_normalize_table_name</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_normalize_path_config</code></li><li><code>get_default_fabric_context</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline.orchestration-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
+<article id="pipeline.run_table_guardrails-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, example_dq_rule_smoke_test</span></p>
@@ -344,7 +344,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 17</span></summary><ul><li><code>normalize_write_mode</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>validate_dataframe_writer</code></li><li><code>write_delta_path</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_normalize_path_config</code></li><li><code>get_default_fabric_context</code></li><li><code>_join_lakehouse_area_path</code></li><li><code>_normalize_schema_name</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline.orchestration-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
+<article id="pipeline.shared-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write many-to-many source-to-target lineage evidence.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
@@ -354,7 +354,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
 
   </div>
 </article>
-<article id="pipeline.orchestration-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
+<article id="pipeline.shared-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write one pipeline runtime summary row to metadata.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>

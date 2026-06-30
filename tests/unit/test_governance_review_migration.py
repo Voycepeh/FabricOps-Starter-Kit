@@ -502,7 +502,7 @@ def test_retired_governance_review_module_file_and_imports_are_absent():
 def test_pipeline_and_config_use_new_governance_owners():
     """Verify DQ runtime and metadata schema helpers are owned outside governance review."""
     root = Path(__file__).parents[2]
-    pipeline_source = (root / "src" / "fabricops_kit" / "pipeline/orchestration.py").read_text(encoding="utf-8")
+    pipeline_source = (root / "src" / "fabricops_kit" / "pipeline/shared.py").read_text(encoding="utf-8")
     config_source = (root / "src" / "fabricops_kit" / "config" / "shared.py").read_text(encoding="utf-8")
 
     assert "from ..guardrails import _run_active_dq_guardrail" in pipeline_source

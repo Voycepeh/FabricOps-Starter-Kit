@@ -95,7 +95,7 @@ def _calls_write_lakehouse_table_core(source: str) -> bool:
 
 def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
     """Verify catalogue type casts do not include retired result fields."""
-    source = _function_source("pipeline/orchestration.py", "_normalize_catalogue_evidence_types")
+    source = _function_source("pipeline/shared.py", "_normalize_catalogue_evidence_types")
 
     for profile_field in ("row_count", "null_count", "distinct_count", "null_percent", "distinct_percent", "run_timestamp"):
         assert profile_field in source
@@ -114,7 +114,7 @@ def test_catalogue_type_normalizer_keeps_only_profile_evidence_casts():
 
 def test_catalogue_writer_targets_catalogue_only():
     """Verify catalogue writer writes observed evidence to catalogue only."""
-    source = _function_source("pipeline/orchestration.py", "write_catalogue_evidence")
+    source = _function_source("pipeline/shared.py", "write_catalogue_evidence")
 
     assert _calls_write_lakehouse_table_core(source)
     assert "metadata_table: str = CATALOGUE_TABLE" in source
@@ -155,7 +155,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
     dq_source = _function_source("guardrails.py", "_run_active_dq_guardrail")
-    pipeline_source = _function_source("pipeline/orchestration.py", "run_table_guardrails")
+    pipeline_source = _function_source("pipeline/shared.py", "run_table_guardrails")
 
     assert "_write_guardrail_result_row" in dq_source
     assert "write_results" in dq_source

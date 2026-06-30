@@ -670,7 +670,7 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
         Path("src/fabricops_kit/metadata.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
 
-        Path("src/fabricops_kit/pipeline/orchestration.py"),
+        Path("src/fabricops_kit/pipeline/shared.py"),
     ]
 
     metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")

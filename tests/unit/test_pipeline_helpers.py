@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
-from fabricops_kit.pipeline import orchestration as pipeline
+from fabricops_kit.pipeline import shared as pipeline
 pipeline_bootstrap_module = importlib.import_module("fabricops_kit.widgets.widget_pipeline_bootstrap")
 widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
 from tests.helpers import framework_config
