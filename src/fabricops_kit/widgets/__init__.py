@@ -8,7 +8,6 @@ __all__ = [
     "widget_render_data_agreement",
     "widget_render_data_steward",
     "widget_review_guardrail_governance",
-    "widget_select_agreement",
     "widget_select_guardrail_target",
 ]
 
@@ -25,5 +24,3 @@ def __getattr__(name: str):
     globals()[name] = value
     return value
 
-
-from .widget_select_agreement import widget_select_agreement

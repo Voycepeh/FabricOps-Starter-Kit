@@ -43,7 +43,7 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "read-only" in markdown
     assert "does **not** approve" in markdown
     assert "%run 00_env_config" in code
-    assert "PIPELINE = start_pipeline_run(" in code
+    assert "PIPELINE = widget_pipeline_bootstrap(" in code
     assert "select_agreement=True" in code
     assert "register_notebook=False" in code
     assert "read_only=True" in code

@@ -745,22 +745,22 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     }
 
 
-def test_start_pipeline_run_stores_agreement_context(monkeypatch):
-    """Verify start_pipeline_run stores agreement and runtime defaults."""
+def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
+    """Verify widget_pipeline_bootstrap stores agreement and runtime defaults."""
     spark = FakeSpark()
     run_context = types.SimpleNamespace(
         run_id="run-123",
         runtime_metadata={"currentNotebookName": "02_pipeline", "currentNotebookId": "notebook-1"},
     )
     widget_calls = []
-    monkeypatch.setattr(pipeline, "_load_widget_select_agreement", lambda: (lambda **kwargs: widget_calls.append(kwargs)))
+    monkeypatch.setattr(pipeline, "_render_agreement_selector", lambda **kwargs: widget_calls.append(kwargs))
     monkeypatch.setattr(
         pipeline,
         "get_selected_agreement",
         lambda: {"agreement_id": "agreement-1", "contract_version": "2", "registration_id": "registry-1"},
     )
 
-    result = pipeline.start_pipeline_run(
+    result = pipeline.widget_pipeline_bootstrap(
         notebook_type="02_pipeline",
         select_agreement=True,
         register_notebook=True,

@@ -24,7 +24,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 28 public functions and 7 public classes." in page
+    assert "Use the finder below to search 26 public functions and 7 public classes." in page
     assert "Search public functions and classes" in page
     assert 'placeholder="Search public functions and classes"' in page
     assert "Function taxonomy filters" not in page
@@ -102,7 +102,7 @@ def test_homepage_template_called_function_kpi_matches_reference_count() -> None
     token_body = token_match.group(1).strip()
     token_text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", token_body)).split())
 
-    assert token_text == "28 public callable functions"
+    assert token_text == "26 public callable functions"
     assert "<strong>" in token_body
     assert "<span> public callable functions</span>" in token_body
     assert 'href="reference/"' in homepage
@@ -174,7 +174,7 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "setup_notebook" in called
     assert "write_pipeline_run_summary" in called
     assert "get_latest_metadata_catalogue" in called
-    assert "start_pipeline_run" in called
+    assert "widget_pipeline_bootstrap" in called
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
     assert "read_lakehouse_csv" not in called
@@ -188,7 +188,7 @@ def test_reference_catalogue_rows_include_only_public_root_exports() -> None:
 
     assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == exported_names
-    assert len(_catalogue_row_names()) == 35
+    assert len(_catalogue_row_names()) == 33
 
 
 def test_root_exported_catalogue_functions_have_standalone_pages() -> None:

@@ -62,8 +62,8 @@ def test_pipeline_agreement_selector_registers_notebook_context():
     """Verify pipeline startup selects and registers agreement context."""
     _markdown, code, _cells = _notebook_sources()
 
-    assert "PIPELINE = start_pipeline_run(" in code
-    start_block = code[code.index("PIPELINE = start_pipeline_run(") : code.index("# SOURCE AREA") if "# SOURCE AREA" in code else code.index("source_table = ")]
+    assert "PIPELINE = widget_pipeline_bootstrap(" in code
+    start_block = code[code.index("PIPELINE = widget_pipeline_bootstrap(") : code.index("# SOURCE AREA") if "# SOURCE AREA" in code else code.index("source_table = ")]
     assert 'notebook_type="02_pipeline"' in start_block
     assert "select_agreement=True" in start_block
     assert "register_notebook=True" in start_block

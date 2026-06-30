@@ -14,7 +14,7 @@
         "display_guardrail_results",
         "prepare_pipeline_table_configs",
         "run_table_guardrails",
-        "start_pipeline_run",
+        "widget_pipeline_bootstrap",
         "write_pipeline_lineage",
         "write_pipeline_run_summary"
       ],
