@@ -383,6 +383,21 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "safe to delete" not in combined_dashboard_assets
     assert "No static path found means the call graph scanner did not find a public callable path." in combined_dashboard_assets
     assert "runtime-inventory" in dashboard_text
+    assert "Clear table filters" in dashboard_text
+    assert "Clear all filters" not in dashboard_text
+    assert "Show all runtime assets" in dashboard_text
+    assert "function scrollToRuntimeInventory()" in dashboard_text
+    assert "document.getElementById('runtime-inventory')" in dashboard_text
+    assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text
+    assert "function setArchitectureScope(scope,options={})" in dashboard_text
+    assert "if(options.scroll!==false)scrollToRuntimeInventory()" in dashboard_text
+    assert "currentScope.kind==='public_callable'&&i.qualified_name===currentScope.qualified_name?'scope-highlight':''" in dashboard_text
+    assert "rowReachability(r)==='unreachable_runtime_asset'" in dashboard_text
+    assert "showAllRuntimeAssets" in dashboard_text
+    assert "$('showAllRuntimeAssets').onclick=()=>setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''})" in dashboard_text
+    assert dashboard_text.count('<section class="export-toolbar" aria-label="Advanced cleanup and export actions" hidden>') == 1
+    assert dashboard_text.count('<section class="export-toolbar">') == 1
+    assert dashboard_text.index('id="runtime-inventory"') < dashboard_text.index('<section class="export-toolbar">')
 
     for text in (dashboard_text, inventory_text):
         assert "function-call-graph.json" in text
@@ -658,7 +673,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callables" in inventory_text
     for scope_label in [
         "All runtime assets",
-        "Others / Unreachable runtime assets",
+        "Others / No static path found",
         "Runtime assets",
         "Needs review",
         "Unreachable",
@@ -2581,7 +2596,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
         "Unreachable",
         "Selected for export",
         "All runtime assets",
-        "Others / Unreachable runtime assets",
+        "Others / No static path found",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text

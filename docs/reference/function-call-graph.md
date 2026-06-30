@@ -154,7 +154,7 @@ The dashboard helps reviewers:
 
 ### Choose architecture scope
 
-Start with the architecture scope table. Choose a public callable flow, **All runtime assets**, or **Others / Unreachable runtime assets**. Public callable scopes keep the existing flow review, while the special scopes let maintainers inspect package-level runtime assets without restoring a separate inventory page.
+Start with the architecture scope table. Choose a public callable flow, **All runtime assets**, or **Others / No static path found**. Public callable scopes keep the existing flow review, while the special scopes let maintainers inspect package-level runtime assets without restoring a separate inventory page.
 
 ### Inspect call graph when available
 
