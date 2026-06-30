@@ -31,7 +31,7 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 # Public API layer
 # ---------------------------------------------------------------------------
 
-def start_pipeline_run(
+def widget_pipeline_bootstrap(
     *,
     notebook_type: str = "02_pipeline",
     select_agreement: bool = False,
@@ -43,7 +43,7 @@ def start_pipeline_run(
     pipeline_name: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> Any:
-    """Start a guided notebook run and store runtime defaults.
+    """Bootstrap a guided pipeline notebook run and store runtime defaults.
 
     Parameters
     ----------
@@ -53,7 +53,7 @@ def start_pipeline_run(
         When True, render the agreement selector and capture the selected
         agreement for downstream defaults.
     register_notebook : bool, default=False
-        When True, allow ``widget_select_agreement`` to register this notebook
+        When True, allow the agreement selector to register this notebook
         to the selected agreement. Use ``False`` for read-only exploration.
     read_only : bool, default=False
         Marks the active context as read-only for exploratory notebooks. The
@@ -74,7 +74,7 @@ def start_pipeline_run(
     Returns
     -------
     Any
-        Internal context object with resolved runtime defaults. Most notebooks
+        Pipeline runtime context object with resolved runtime defaults. Most notebooks
         use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
         preparing target configs or lineage. The concrete context class is
         intentionally internal and not part of the primary public API.
@@ -85,7 +85,7 @@ def start_pipeline_run(
     parameters on guardrail and summary helpers for advanced notebooks.
 
     """
-    return _start_pipeline_run_workflow(
+    return _widget_pipeline_bootstrap_workflow(
         notebook_type=notebook_type,
         select_agreement=select_agreement,
         register_notebook=register_notebook,
@@ -126,14 +126,14 @@ class _PipelineRunContext:
 _ACTIVE_PIPELINE_CONTEXT: _PipelineRunContext | None = None
 
 
-def _load_widget_select_agreement():
-    """Return the public agreement selector widget callable."""
-    from importlib import import_module
+def _render_agreement_selector(**kwargs: Any) -> Any:
+    """Render the private agreement selector workflow for pipeline bootstrap."""
+    from fabricops_kit.widgets.widget_select_agreement import _select_agreement_widget_workflow
 
-    return import_module("fabricops_kit.widgets.widget_select_agreement").widget_select_agreement
+    return _select_agreement_widget_workflow(**kwargs)
 
 
-def _start_pipeline_run_workflow(
+def _widget_pipeline_bootstrap_workflow(
     *,
     notebook_type: str = "02_pipeline",
     select_agreement: bool = False,
@@ -155,7 +155,7 @@ def _start_pipeline_run_workflow(
         When True, render the agreement selector and capture the selected
         agreement for downstream defaults.
     register_notebook : bool, default=False
-        When True, allow ``widget_select_agreement`` to register this notebook
+        When True, allow the agreement selector to register this notebook
         to the selected agreement. Use ``False`` for read-only exploration.
     read_only : bool, default=False
         Marks the active context as read-only for exploratory notebooks. The
@@ -218,7 +218,7 @@ def _start_pipeline_run_workflow(
     _ACTIVE_PIPELINE_CONTEXT = active
 
     if select_agreement:
-        _load_widget_select_agreement()(
+        _render_agreement_selector(
             spark_session=active.spark_session,
             metadata_schema=active.metadata_schema or None,
             register_notebook=register_notebook,
@@ -844,10 +844,10 @@ def _run_table_guardrails_workflow(
         behavior.
     run_id : str, optional
         Current pipeline run identifier. When omitted, the active context from
-        :func:`start_pipeline_run` is used.
+        :func:`widget_pipeline_bootstrap` is used.
     spark_session : Any, optional
         Spark session used by profile behavior and DQ helpers. When omitted,
-        the active context from :func:`start_pipeline_run` is used.
+        the active context from :func:`widget_pipeline_bootstrap` is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -893,9 +893,9 @@ def _run_table_guardrails_workflow(
         agreement_id = agreement_id or active.agreement_id
         agreement_contract_version = agreement_contract_version or active.agreement_contract_version
     if not run_id:
-        raise ValueError("run_id is required unless start_pipeline_run has established an active context.")
+        raise ValueError("run_id is required unless widget_pipeline_bootstrap has established an active context.")
     if spark_session is None:
-        raise ValueError("spark_session is required unless start_pipeline_run has established an active context.")
+        raise ValueError("spark_session is required unless widget_pipeline_bootstrap has established an active context.")
     normalized_mode = str(mode or "profile").lower().strip()
     if normalized_mode not in {"profile", "enforce"}:
         raise ValueError("mode must be one of: profile, enforce.")
@@ -1132,7 +1132,7 @@ def write_catalogue_evidence(
         Metadata lakehouse route from ``00_env_config``.
     run_id : str, optional
         Pipeline run identifier. When omitted, the active context from
-        :func:`start_pipeline_run` is used.
+        :func:`widget_pipeline_bootstrap` is used.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
@@ -1257,7 +1257,7 @@ def _write_pipeline_lineage_workflow(
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str, optional
         Pipeline run identifier. When omitted, the active context from
-        :func:`start_pipeline_run` is used.
+        :func:`widget_pipeline_bootstrap` is used.
     source_definitions, target_definitions : mapping
         Source and target definitions keyed by alias.
     relationships : list of mapping, optional
@@ -1384,13 +1384,13 @@ def _write_pipeline_run_summary_workflow(
     ----------
     spark : pyspark.sql.SparkSession, optional
         Spark session used to create the one-row summary DataFrame. When omitted,
-        the active context from :func:`start_pipeline_run` is used.
+        the active context from :func:`widget_pipeline_bootstrap` is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     run_id : str, optional
         Pipeline run identifier. When omitted, the active context from
-        :func:`start_pipeline_run` is used.
+        :func:`widget_pipeline_bootstrap` is used.
     agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
         Agreement and notebook registry context.
     started_at, completed_at : str, optional
@@ -1441,9 +1441,9 @@ def _write_pipeline_run_summary_workflow(
         source_definitions = source_definitions or active.source_definitions
         target_definitions = target_definitions or active.target_definitions
     if spark is None:
-        raise ValueError("spark is required unless start_pipeline_run has established an active context.")
+        raise ValueError("spark is required unless widget_pipeline_bootstrap has established an active context.")
     if not run_id:
-        raise ValueError("run_id is required unless start_pipeline_run has established an active context.")
+        raise ValueError("run_id is required unless widget_pipeline_bootstrap has established an active context.")
 
     source_guardrail_results = source_guardrail_results or {}
     target_guardrail_results = target_guardrail_results or {}

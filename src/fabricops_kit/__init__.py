@@ -12,7 +12,6 @@ from .config import (
     GovernanceConfig,
     NotebookSetupContext,
     PathConfig,
-    get_fabric_context,
     setup_metadata_tables,
     setup_notebook,
 )
@@ -31,7 +30,7 @@ from .pipeline import (
     display_guardrail_results,
     prepare_pipeline_table_configs,
     run_table_guardrails,
-    start_pipeline_run,
+    widget_pipeline_bootstrap,
     write_pipeline_lineage,
     write_pipeline_run_summary,
 )
@@ -44,7 +43,6 @@ from .widgets import (
     widget_render_data_agreement,
     widget_render_data_steward,
     widget_review_guardrail_governance,
-    widget_select_agreement,
     widget_select_guardrail_target,
 )
 
@@ -74,7 +72,6 @@ __all__ = [
     "NotebookSetupContext",
     "setup_notebook",
     "setup_metadata_tables",
-    "get_fabric_context",
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
@@ -91,7 +88,7 @@ __all__ = [
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "start_pipeline_run",
+    "widget_pipeline_bootstrap",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -99,5 +96,4 @@ __all__ = [
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
-    "widget_select_agreement",
 ]

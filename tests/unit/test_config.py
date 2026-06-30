@@ -508,7 +508,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
     pipeline_helper_source = Path("src/fabricops_kit/pipeline.py").read_text(encoding="utf-8")
-    assert "PIPELINE = start_pipeline_run(" in pipeline_source
+    assert "PIPELINE = widget_pipeline_bootstrap(" in pipeline_source
     assert "_current_audit_timestamp" not in pipeline_source
     assert "PIPELINE_STARTED_AT" not in pipeline_source
     assert "pipeline_started_at=_now_iso()" in pipeline_helper_source
@@ -593,7 +593,7 @@ def test_config_public_import_contract_and_package_shape():
     assert root_setup_metadata_tables is fabricops_kit.setup_metadata_tables
     assert fabricops_kit.setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert fabricops_kit.setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
-    assert fabricops_kit.get_fabric_context.__module__ == "fabricops_kit.config.get_fabric_context"
+    assert not hasattr(fabricops_kit, "get_fabric_context")
 
 
 def test_env_config_template_imports_config_from_root_only():

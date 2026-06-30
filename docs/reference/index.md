@@ -4,7 +4,7 @@ Use this page to look up Starter Kit functions and public config classes used by
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">28</strong>
+    <strong class="reference-kpi-value">26</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -19,14 +19,14 @@ Use this page to look up Starter Kit functions and public config classes used by
 
 ## Find a function
 
-Use the finder below to search 28 public functions and 7 public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 26 public functions and 7 public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions and classes</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions and classes" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function or class name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 28 public functions and 7 public classes.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 26 public functions and 7 public classes.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions or classes match your search.</p>
 </div>
 
@@ -36,8 +36,8 @@ Use the finder below to search 28 public functions and 7 public classes. Impleme
     Maintainer inventory metrics:
 
     - Source Python files count: 32
-    - Total callables: 432
-    - Supporting functions: 111
+    - Total callables: 431
+    - Supporting functions: 112
     - Private helpers to review: 286
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
@@ -102,16 +102,6 @@ Use the finder below to search 28 public functions and 7 public classes. Impleme
   <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
   <div class="reference-catalogue-item-counts">
 
-  </div>
-</article>
-<article id="config.get_fabric_context-get_fabric_context" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_fabric_context" data-callable-module="config" data-function-type="public-starter-kit" data-callable-purpose="Create a context dictionary for helper context overrides.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_fabric_context/"><code>get_fabric_context</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Create a context dictionary for helper context overrides.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
-
-  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 1</span></summary><ul><li><code>get_default_fabric_context</code></li></ul></details>
   </div>
 </article>
 <article id="governance_review-get_latest_metadata_catalogue" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_latest_metadata_catalogue" data-callable-module="governance_review" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Fetch the latest metadata catalogue rows for a table without writing metadata.">
@@ -264,16 +254,6 @@ Use the finder below to search 28 public functions and 7 public classes. Impleme
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 12</span></summary><ul><li><code>_setup_notebook_workflow</code></li><li><code>_run_config_smoke_tests</code></li><li><code>_validate_framework_config</code></li><li><code>get_current_audit_timestamp</code></li><li><code>get_store</code></li><li><code>_check_spark_session</code></li><li><code>_get_fabric_runtime_metadata</code></li><li><code>_normalize_path_config</code></li><li><code>_validate_notebook_name</code></li><li><code>get_audit_timezone</code></li><li><code>validate_framework_config</code></li><li><code>_validate_audit_timezone</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline-start_pipeline_run" class="reference-catalogue-item" data-callable-row="true" data-callable-name="start_pipeline_run" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Start a guided notebook run and store runtime defaults.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/start_pipeline_run/"><code>start_pipeline_run</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Start a guided notebook run and store runtime defaults.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
-  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 8</span></summary><ul><li><code>_start_pipeline_run_workflow</code></li><li><code>get_selected_agreement</code></li><li><code>_load_widget_select_agreement</code></li><li><code>_now_iso</code></li><li><code>get_selected_agreement_state</code></li><li><code>get_current_audit_timestamp</code></li><li><code>get_audit_timezone</code></li><li><code>_validate_audit_timezone</code></li></ul></details>
-  </div>
-</article>
 <article id="widgets.widget_author_dq_rules-widget_author_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_dq_rules" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render interactive manual DQ guardrail authoring controls.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render interactive manual DQ guardrail authoring controls.</p>
@@ -302,6 +282,16 @@ Use the finder below to search 28 public functions and 7 public classes. Impleme
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>_table_metadata_enrichment_widget_workflow</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
+  </div>
+</article>
+<article id="pipeline-widget_pipeline_bootstrap" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_pipeline_bootstrap" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Bootstrap a guided pipeline notebook run and store runtime defaults.">
+  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_pipeline_bootstrap/"><code>widget_pipeline_bootstrap</code></a></h3>
+  <p class="reference-catalogue-item-purpose">Bootstrap a guided pipeline notebook run and store runtime defaults.</p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
+  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
+  <div class="reference-catalogue-item-counts">
+    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 59</span></summary><ul><li><code>_widget_pipeline_bootstrap_workflow</code></li><li><code>get_selected_agreement</code></li><li><code>_now_iso</code></li><li><code>_render_agreement_selector</code></li><li><code>get_selected_agreement_state</code></li><li><code>get_current_audit_timestamp</code></li><li><code>_select_agreement_widget_workflow</code></li><li><code>set_selected_agreement</code></li><li><code>get_audit_timezone</code></li><li><code>resolve_fabric_context</code></li><li><code>current_notebook_active_registrations</code></li><li><code>register_current_notebook</code></li><li><code>latest_agreement_versions</code></li><li><code>list_data_agreements</code></li><li><code>render_searchable_selector</code></li><li><code>require_ipywidgets</code></li><li><code>_html_escape</code></li><li><code>_validate_audit_timezone</code></li><li><code>get_default_fabric_context</code></li><li><code>configured_lakehouse_schema</code></li><li><code>write_lakehouse_table_core</code></li><li><code>_audit_timestamp_value</code></li><li><code>_context_get</code></li><li><code>_load_notebook_registry</code></li><li><code>_notebook_registration_key</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>coerce_metadata_row_types</code></li><li><code>_audit_date</code></li><li><code>_coerce_row_dicts</code></li><li><code>_html_escape</code></li><li><code>_parse_contract_version</code></li><li><code>list_all_data_agreement_rows</code></li><li><code>widget_common</code></li><li><code>metadata_table_schema_registry</code></li><li><code>get_store</code></li><li><code>_normalize_schema_name</code></li><li><code>normalize_write_mode</code></li><li><code>read_lakehouse_table_core</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>validate_dataframe_writer</code></li><li><code>write_delta_path</code></li><li><code>_coerce_metadata_value</code></li><li><code>_coerce_row_dicts</code></li><li><code>config_value</code></li><li><code>_schema</code></li><li><code>audit_schema_fields</code></li><li><code>_normalize_path_config</code></li><li><code>get_spark_session</code></li><li><code>read_delta_path</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>spark_types</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_join_lakehouse_area_path</code></li></ul></details>
   </div>
 </article>
 <article id="widgets.widget_render_agreement_evidence-widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="data_agreement" data-callable-starter-path="01_agreement" data-callable-usage-source="01_agreement" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone agreement-evidence widget.">
@@ -342,16 +332,6 @@ Use the finder below to search 28 public functions and 7 public classes. Impleme
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 3</span></summary><ul><li><code>_guardrail_governance_review_widget_workflow</code></li><li><code>resolve_fabric_context</code></li><li><code>get_default_fabric_context</code></li></ul></details>
-  </div>
-</article>
-<article id="widgets.widget_select_agreement-widget_select_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_agreement" data-callable-module="data_agreement" data-function-type="public-starter-kit" data-callable-purpose="Render an agreement selector and optionally register the active notebook.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_agreement/"><code>widget_select_agreement</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Render an agreement selector and optionally register the active notebook.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">—</span></p>
-
-  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 54</span></summary><ul><li><code>_select_agreement_widget_workflow</code></li><li><code>set_selected_agreement</code></li><li><code>get_current_audit_timestamp</code></li><li><code>resolve_fabric_context</code></li><li><code>current_notebook_active_registrations</code></li><li><code>register_current_notebook</code></li><li><code>latest_agreement_versions</code></li><li><code>list_data_agreements</code></li><li><code>render_searchable_selector</code></li><li><code>require_ipywidgets</code></li><li><code>_html_escape</code></li><li><code>get_audit_timezone</code></li><li><code>get_default_fabric_context</code></li><li><code>configured_lakehouse_schema</code></li><li><code>write_lakehouse_table_core</code></li><li><code>_audit_timestamp_value</code></li><li><code>_context_get</code></li><li><code>_load_notebook_registry</code></li><li><code>_notebook_registration_key</code></li><li><code>_runtime_context</code></li><li><code>_safe_str</code></li><li><code>coerce_metadata_row_types</code></li><li><code>_audit_date</code></li><li><code>_coerce_row_dicts</code></li><li><code>_html_escape</code></li><li><code>_parse_contract_version</code></li><li><code>list_all_data_agreement_rows</code></li><li><code>widget_common</code></li><li><code>metadata_table_schema_registry</code></li><li><code>_validate_audit_timezone</code></li><li><code>get_store</code></li><li><code>_normalize_schema_name</code></li><li><code>normalize_write_mode</code></li><li><code>read_lakehouse_table_core</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>validate_dataframe_writer</code></li><li><code>write_delta_path</code></li><li><code>_coerce_metadata_value</code></li><li><code>_coerce_row_dicts</code></li><li><code>config_value</code></li><li><code>_schema</code></li><li><code>audit_schema_fields</code></li><li><code>_normalize_path_config</code></li><li><code>get_spark_session</code></li><li><code>read_delta_path</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>spark_types</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_join_lakehouse_area_path</code></li></ul></details>
   </div>
 </article>
 <article id="widgets.widget_select_guardrail_target-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="governance_review" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">

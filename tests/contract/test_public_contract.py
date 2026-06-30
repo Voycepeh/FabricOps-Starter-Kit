@@ -21,7 +21,7 @@ pytestmark = pytest.mark.contract
 APPROVED_V1_CALLABLES = {qualified_name.rsplit(".", maxsplit=1)[-1] for qualified_name in SUPPORTED_PUBLIC_API}
 APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
 APPROVED_V1_QUALIFIED_FUNCTIONS = {name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()}
-CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES = {"fabricops_kit.config.get_fabric_context.get_fabric_context"}
+CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES = set()
 CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
     "fabricops_kit.config.shared.FabricStore",
     "fabricops_kit.config.shared.PathConfig",
@@ -33,7 +33,6 @@ CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
 }
 LEGACY_APPROVED_V1_CALLABLES = {
     "setup_notebook",
-    "get_fabric_context",
     "setup_metadata_tables",
     "widget_render_data_steward",
     "widget_render_data_agreement",
@@ -51,7 +50,7 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "start_pipeline_run",
+    "widget_pipeline_bootstrap",
     "write_pipeline_lineage",
     "write_pipeline_run_summary",
     "widget_select_guardrail_target",
@@ -59,7 +58,6 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
-    "widget_select_agreement",
 }
 REMOVED_LEGACY_ALIASES = {
     "validate_schema",
@@ -143,15 +141,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the release public API contract keeps exactly 28 functions."""
+    """Verify the release public API contract keeps exactly 26 functions."""
     message = (
-        "The supported public API surface must remain exactly 28 functions during "
+        "The supported public API surface must remain exactly 26 functions during "
         "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
         "intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 28, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 28
+    assert len(SUPPORTED_PUBLIC_API) == 26, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 26
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -205,17 +203,6 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
         snapshots[qualified_name] = _signature_snapshot(function)
 
     assert snapshots == {
-        "fabricops_kit.config.get_fabric_context.get_fabric_context": {
-            "parameters": [
-                {"name": "env", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "config", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "workspace_id", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "lakehouse_id", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "workspace_name", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "lakehouse_name", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "values", "kind": "VAR_KEYWORD", "required": True},
-            ]
-        },
         "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables": {
             "parameters": [
                 {"name": "spark", "kind": "KEYWORD_ONLY", "required": True},
@@ -398,21 +385,6 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement": {
-            "parameters": [
-                {"name": "agreement_rows", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
-                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "register_notebook", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "environment_name", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "dataset_name", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "table_name", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "topic", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
-            ]
-        },
         "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target": {
             "parameters": [
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": True},
@@ -451,7 +423,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "stop_on_failure", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.pipeline.start_pipeline_run": {
+        "fabricops_kit.pipeline.widget_pipeline_bootstrap": {
             "parameters": [
                 {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "select_agreement", "kind": "KEYWORD_ONLY", "required": False},

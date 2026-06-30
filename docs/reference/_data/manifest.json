@@ -64,20 +64,6 @@
       "module_summary": "Owns environment setup, runtime initialization, paths, and notebook-wide configuration.",
       "sidebar_group": "0. Environment setup",
       "sidebar_include": true,
-      "callable_name": "get_fabric_context",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": null,
-      "template_segment": null,
-      "used_in_templates": []
-    },
-    {
-      "module_name": "config",
-      "visibility": "public",
-      "module_summary": "Owns environment setup, runtime initialization, paths, and notebook-wide configuration.",
-      "sidebar_group": "0. Environment setup",
-      "sidebar_include": true,
       "callable_name": "setup_metadata_tables",
       "callable_visibility": "public",
       "callable_type": "callable",
@@ -151,20 +137,6 @@
       "used_in_templates": [
         "01_agreement"
       ]
-    },
-    {
-      "module_name": "data_agreement",
-      "visibility": "public",
-      "module_summary": "Owns agreement metadata capture, audited record building, metadata commit helpers, agreement intake widgets, and 02_pipeline agreement selection/registration helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_select_agreement",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Agreement selection",
-      "used_in_templates": []
     },
     {
       "module_name": "data_profiling",
@@ -461,12 +433,12 @@
       "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "start_pipeline_run",
+      "callable_name": "widget_pipeline_bootstrap",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
       "template_notebook": "02_pipeline",
-      "template_segment": "Runtime context setup",
+      "template_segment": "runtime context setup / pipeline bootstrap",
       "used_in_templates": [
         "02_pipeline",
         "99_explore"

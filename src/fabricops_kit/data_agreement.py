@@ -564,7 +564,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agree
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by :func:`widget_select_agreement`.
+    """Return the agreement selected by :func:`widget_pipeline_bootstrap`.
 
     Returns
     -------
@@ -579,7 +579,7 @@ def get_selected_agreement() -> dict[str, Any]:
     """
     selected = get_selected_agreement_state()
     if not selected:
-        raise RuntimeError("No agreement selected. Run widget_select_agreement(...) first.")
+        raise RuntimeError("No agreement selected. Run widget_pipeline_bootstrap(select_agreement=True) first.")
     return selected
 
 

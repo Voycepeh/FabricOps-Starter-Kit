@@ -1,12 +1,4 @@
 {
-  "get_fabric_context": {
-    "qualified_name": "fabricops_kit.config.get_fabric_context.get_fabric_context",
-    "unique_internal_helper_count": 0,
-    "repeated_helpers": [],
-    "deep_call_chains": [],
-    "single_delegate_helpers": [],
-    "possible_grouping_mismatches": []
-  },
   "setup_metadata_tables": {
     "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
     "unique_internal_helper_count": 10,
@@ -882,24 +874,194 @@
     ],
     "possible_grouping_mismatches": []
   },
-  "start_pipeline_run": {
-    "qualified_name": "fabricops_kit.pipeline.start_pipeline_run",
-    "unique_internal_helper_count": 5,
-    "repeated_helpers": [],
+  "widget_pipeline_bootstrap": {
+    "qualified_name": "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+    "unique_internal_helper_count": 28,
+    "repeated_helpers": [
+      {
+        "helper": "_normalize_path_config",
+        "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
+        "branch_count": 6
+      },
+      {
+        "helper": "_normalize_schema_name",
+        "qualified_name": "fabricops_kit.io.shared._normalize_schema_name",
+        "branch_count": 6
+      },
+      {
+        "helper": "_context_get",
+        "qualified_name": "fabricops_kit.metadata._context_get",
+        "branch_count": 4
+      },
+      {
+        "helper": "_validate_audit_timezone",
+        "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
+        "branch_count": 4
+      },
+      {
+        "helper": "_coerce_row_dicts",
+        "qualified_name": "fabricops_kit.widgets.shared._coerce_row_dicts",
+        "branch_count": 3
+      },
+      {
+        "helper": "_join_lakehouse_area_path",
+        "qualified_name": "fabricops_kit.io.shared._join_lakehouse_area_path",
+        "branch_count": 3
+      },
+      {
+        "helper": "_normalize_table_name",
+        "qualified_name": "fabricops_kit.io.shared._normalize_table_name",
+        "branch_count": 3
+      },
+      {
+        "helper": "_resolve_lakehouse_schema",
+        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
+        "branch_count": 3
+      },
+      {
+        "helper": "_resolve_lakehouse_table_path",
+        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_table_path",
+        "branch_count": 3
+      },
+      {
+        "helper": "_validate_lakehouse_store",
+        "qualified_name": "fabricops_kit.io.shared._validate_lakehouse_store",
+        "branch_count": 3
+      },
+      {
+        "helper": "_validate_warehouse_store",
+        "qualified_name": "fabricops_kit.io.shared._validate_warehouse_store",
+        "branch_count": 3
+      },
+      {
+        "helper": "_notebook_registration_key",
+        "qualified_name": "fabricops_kit.metadata._notebook_registration_key",
+        "branch_count": 2
+      }
+    ],
     "deep_call_chains": [
       {
         "depth": 5,
         "chain": [
-          "fabricops_kit.pipeline.start_pipeline_run",
-          "fabricops_kit.pipeline._start_pipeline_run_workflow",
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
           "fabricops_kit.pipeline._now_iso",
           "fabricops_kit.config.shared.get_current_audit_timestamp",
           "fabricops_kit.config.shared.get_audit_timezone",
           "fabricops_kit.config.shared._validate_audit_timezone"
         ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._context_get"
+        ]
+      },
+      {
+        "depth": 5,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.metadata._coerce_row_dicts"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.metadata._notebook_registration_key"
+        ]
+      },
+      {
+        "depth": 6,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.io.shared.configured_lakehouse_schema"
+        ]
+      },
+      {
+        "depth": 7,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.io.shared.configured_lakehouse_schema",
+          "fabricops_kit.io.shared._normalize_schema_name"
+        ]
+      },
+      {
+        "depth": 7,
+        "chain": [
+          "fabricops_kit.pipeline.widget_pipeline_bootstrap",
+          "fabricops_kit.pipeline._widget_pipeline_bootstrap_workflow",
+          "fabricops_kit.pipeline._render_agreement_selector",
+          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
+          "fabricops_kit.metadata.current_notebook_active_registrations",
+          "fabricops_kit.metadata._load_notebook_registry",
+          "fabricops_kit.io.shared.configured_lakehouse_schema",
+          "fabricops_kit.config.shared.get_store"
+        ]
       }
     ],
-    "single_delegate_helpers": [],
+    "single_delegate_helpers": [
+      {
+        "helper": "_resolve_lakehouse_schema",
+        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
+        "delegates_to": "_normalize_schema_name",
+        "delegates_to_qualified_name": "fabricops_kit.io.shared._normalize_schema_name"
+      },
+      {
+        "helper": "_resolve_lakehouse_table_path",
+        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_table_path",
+        "delegates_to": "_join_lakehouse_area_path",
+        "delegates_to_qualified_name": "fabricops_kit.io.shared._join_lakehouse_area_path"
+      },
+      {
+        "helper": "_runtime_context",
+        "qualified_name": "fabricops_kit.metadata._runtime_context",
+        "delegates_to": "_context_get",
+        "delegates_to_qualified_name": "fabricops_kit.metadata._context_get"
+      },
+      {
+        "helper": "_render_agreement_selector",
+        "qualified_name": "fabricops_kit.pipeline._render_agreement_selector",
+        "delegates_to": "_select_agreement_widget_workflow",
+        "delegates_to_qualified_name": "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow"
+      }
+    ],
     "possible_grouping_mismatches": []
   },
   "write_pipeline_lineage": {
@@ -1845,187 +2007,6 @@
     "repeated_helpers": [],
     "deep_call_chains": [],
     "single_delegate_helpers": [],
-    "possible_grouping_mismatches": []
-  },
-  "widget_select_agreement": {
-    "qualified_name": "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-    "unique_internal_helper_count": 24,
-    "repeated_helpers": [
-      {
-        "helper": "_normalize_path_config",
-        "qualified_name": "fabricops_kit.config.shared._normalize_path_config",
-        "branch_count": 6
-      },
-      {
-        "helper": "_normalize_schema_name",
-        "qualified_name": "fabricops_kit.io.shared._normalize_schema_name",
-        "branch_count": 6
-      },
-      {
-        "helper": "_context_get",
-        "qualified_name": "fabricops_kit.metadata._context_get",
-        "branch_count": 4
-      },
-      {
-        "helper": "_coerce_row_dicts",
-        "qualified_name": "fabricops_kit.widgets.shared._coerce_row_dicts",
-        "branch_count": 3
-      },
-      {
-        "helper": "_join_lakehouse_area_path",
-        "qualified_name": "fabricops_kit.io.shared._join_lakehouse_area_path",
-        "branch_count": 3
-      },
-      {
-        "helper": "_normalize_table_name",
-        "qualified_name": "fabricops_kit.io.shared._normalize_table_name",
-        "branch_count": 3
-      },
-      {
-        "helper": "_resolve_lakehouse_schema",
-        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
-        "branch_count": 3
-      },
-      {
-        "helper": "_resolve_lakehouse_table_path",
-        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_table_path",
-        "branch_count": 3
-      },
-      {
-        "helper": "_validate_audit_timezone",
-        "qualified_name": "fabricops_kit.config.shared._validate_audit_timezone",
-        "branch_count": 3
-      },
-      {
-        "helper": "_validate_lakehouse_store",
-        "qualified_name": "fabricops_kit.io.shared._validate_lakehouse_store",
-        "branch_count": 3
-      },
-      {
-        "helper": "_validate_warehouse_store",
-        "qualified_name": "fabricops_kit.io.shared._validate_warehouse_store",
-        "branch_count": 3
-      },
-      {
-        "helper": "_notebook_registration_key",
-        "qualified_name": "fabricops_kit.metadata._notebook_registration_key",
-        "branch_count": 2
-      }
-    ],
-    "deep_call_chains": [
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.configured_lakehouse_schema",
-          "fabricops_kit.io.shared._normalize_schema_name"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.configured_lakehouse_schema",
-          "fabricops_kit.config.shared.get_store"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.configured_lakehouse_schema",
-          "fabricops_kit.config.shared.get_store",
-          "fabricops_kit.config.shared._normalize_path_config"
-        ]
-      },
-      {
-        "depth": 7,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.configured_lakehouse_schema",
-          "fabricops_kit.config.shared.get_store",
-          "fabricops_kit.config.shared._normalize_path_config",
-          "fabricops_kit.config.shared.PathConfig"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.read_lakehouse_table_core",
-          "fabricops_kit.io.shared.get_spark_session"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.read_lakehouse_table_core",
-          "fabricops_kit.io.shared.read_delta_path"
-        ]
-      },
-      {
-        "depth": 5,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.read_lakehouse_table_core",
-          "fabricops_kit.io.shared.resolve_configured_lakehouse_table"
-        ]
-      },
-      {
-        "depth": 6,
-        "chain": [
-          "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement",
-          "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow",
-          "fabricops_kit.metadata.current_notebook_active_registrations",
-          "fabricops_kit.metadata._load_notebook_registry",
-          "fabricops_kit.io.shared.read_lakehouse_table_core",
-          "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
-          "fabricops_kit.io.shared.resolve_lakehouse_table_location"
-        ]
-      }
-    ],
-    "single_delegate_helpers": [
-      {
-        "helper": "_resolve_lakehouse_schema",
-        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_schema",
-        "delegates_to": "_normalize_schema_name",
-        "delegates_to_qualified_name": "fabricops_kit.io.shared._normalize_schema_name"
-      },
-      {
-        "helper": "_resolve_lakehouse_table_path",
-        "qualified_name": "fabricops_kit.io.shared._resolve_lakehouse_table_path",
-        "delegates_to": "_join_lakehouse_area_path",
-        "delegates_to_qualified_name": "fabricops_kit.io.shared._join_lakehouse_area_path"
-      },
-      {
-        "helper": "_runtime_context",
-        "qualified_name": "fabricops_kit.metadata._runtime_context",
-        "delegates_to": "_context_get",
-        "delegates_to_qualified_name": "fabricops_kit.metadata._context_get"
-      }
-    ],
     "possible_grouping_mismatches": []
   },
   "widget_select_guardrail_target": {
