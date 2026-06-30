@@ -59,6 +59,7 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
+    "widget_select_agreement",
 }
 REMOVED_LEGACY_ALIASES = {
     "validate_schema",
@@ -142,15 +143,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the release public API contract keeps exactly 27 functions."""
+    """Verify the release public API contract keeps exactly 28 functions."""
     message = (
-        "The supported public API surface must remain exactly 27 functions during "
+        "The supported public API surface must remain exactly 28 functions during "
         "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
         "intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 27, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 27
+    assert len(SUPPORTED_PUBLIC_API) == 28, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 28
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -395,6 +396,21 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "state", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.widgets.widget_select_agreement.widget_select_agreement": {
+            "parameters": [
+                {"name": "agreement_rows", "kind": "POSITIONAL_OR_KEYWORD", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "register_notebook", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "environment_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "dataset_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "table_name", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "topic", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "pipeline_name", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
         "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target": {

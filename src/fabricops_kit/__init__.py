@@ -44,6 +44,7 @@ from .widgets import (
     widget_render_data_agreement,
     widget_render_data_steward,
     widget_review_guardrail_governance,
+    widget_select_agreement,
     widget_select_guardrail_target,
 )
 
@@ -98,4 +99,5 @@ __all__ = [
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
+    "widget_select_agreement",
 ]

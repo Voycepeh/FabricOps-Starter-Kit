@@ -59,13 +59,14 @@ EXPECTED_V1_CALLABLES = [
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
+    "widget_select_agreement",
 ]
 
 def test_public_callable_list_includes_guardrail_authoring_widgets():
     """Verify public callable list includes guardrail authoring widgets."""
     assert fabricops_kit.__all__ == EXPECTED_V1_CALLABLES
     assert len(fabricops_kit.__all__) == len(EXPECTED_V1_CALLABLES)
-    assert {"widget_select_agreement", "get_selected_agreement"}.isdisjoint(fabricops_kit.__all__)
+    assert "get_selected_agreement" not in fabricops_kit.__all__
 
 
 def test_widget_public_callables_live_under_widgets_package():
@@ -82,6 +83,7 @@ def test_widget_public_callables_live_under_widgets_package():
         "widget_render_data_steward",
         "widget_review_guardrail_governance",
         "widget_select_guardrail_target",
+        "widget_select_agreement",
     }
     for name in widget_names:
         assert hasattr(widgets, name)
@@ -105,6 +107,7 @@ def test_widget_modules_do_not_call_public_widget_functions():
         "widget_render_data_steward",
         "widget_review_guardrail_governance",
         "widget_select_guardrail_target",
+        "widget_select_agreement",
     }
     offenders = []
     for path in widgets_dir.glob("widget_*.py"):
