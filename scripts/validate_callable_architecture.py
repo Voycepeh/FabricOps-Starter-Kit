@@ -20,7 +20,7 @@ SRC_DIR = ROOT / "src" / "fabricops_kit"
 CALLABLE_FLOW_PATH = ROOT / "docs" / "reference" / "_data" / "function-call-graph.json"
 OWNERSHIP_PLAN_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-ownership-plan.json"
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
-INVENTORY_PATH = ROOT / "docs" / "assets" / "function-inventory.html"
+INVENTORY_PATH = DASHBOARD_PATH
 
 PUBLIC_CONFIG_CLASS_TYPE = "Public config class"
 PUBLIC_CONFIG_CLASS_LAYER = "class"
@@ -457,14 +457,13 @@ def _generated_failures(flow: dict[str, Any]) -> list[str]:
         failures.append("Public API Surface architecture violation count does not match public flow violation rows")
 
     dashboard_text = DASHBOARD_PATH.read_text(encoding="utf-8")
-    inventory_text = INVENTORY_PATH.read_text(encoding="utf-8")
     if "Boundary violations" in dashboard_text or "boundary_violations" in dashboard_text:
         failures.append("Legacy boundary wording remains in dashboard default UI")
     for legacy_type in LEGACY_ARCHITECTURE_VIOLATION_TYPES:
-        if legacy_type in dashboard_text or legacy_type in inventory_text:
+        if legacy_type in dashboard_text:
             failures.append(f"Legacy architecture violation wording remains in dashboard assets: {legacy_type}")
     for label in ("Utility ->", "Adapter layer", "Workflow layer", "Private layer"):
-        if label in dashboard_text or label in inventory_text:
+        if label in dashboard_text:
             failures.append(f"Old architecture wording remains in dashboard assets: {label}")
     return failures
 
