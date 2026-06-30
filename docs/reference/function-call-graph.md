@@ -92,7 +92,7 @@ It does not treat every signal as a failure. Broken rules are boundary breaks, w
 |---|---|---|
 | Broken rule | An architecture rule is broken and must be fixed first. Examples include a public callable calling another public callable, a shared helper calling a public function, or a helper reaching into a private helper owned by another file. | Fix this first before helper cleanup. |
 | Too many steps | Depth is 4 or more. Depth means how many call steps away the public function reaches. | Check whether the chain can be flattened or made easier to follow. |
-| Too many helpers | Width is 10 or more. Width means how many helper functions the public function depends on. | Check whether the function has become too wide or hard to reason about. |
+| Too many helpers | Width is greater than 10. Width means direct calls from this public callable. | Check whether the function has become too wide or hard to reason about. |
 | Shared helper | The helper is used by more than one public function. | Treat this as informational unless the callable also exceeds width or depth thresholds. |
 | Maybe combine | The helper may be too small, too specific, or only useful to one caller. | Decide whether to keep the helper, move it to shared logic, or merge it into the caller. |
 
@@ -115,7 +115,7 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-This matches what the dashboard actually shows: `Broken rule`, `Too many steps`, `Too many helpers`, `Shared helper`, and `Maybe combine`. The dashboard code builds those exact signals in `flowSignals()`. Depth means how many call steps away the public function reaches. Width means how many helper functions the public function depends on.
+This matches what the dashboard actually shows: `Broken rule`, `Too many steps`, `Too many helpers`, `Shared helper`, and `Maybe combine`. The dashboard code builds those exact signals in `flowSignals()`. Depth means how many call steps away the public function reaches. Width means direct calls from this public callable. Scope means total unique runtime assets in this selected architecture scope, including nested/transitive support assets.
 
 ### Too many helpers
 

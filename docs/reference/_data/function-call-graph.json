@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T16:30:15.755357Z",
+    "generated_at_utc": "2026-06-30T16:44:23.651949Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -35152,9 +35152,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 15,
+      "scope_asset_count": 15,
       "downstream_count": 14,
       "max_depth": 4,
       "modules_touched": [
@@ -36017,6 +36020,10 @@
         "Maybe combine",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 5,
+      "scope_asset_count": 5,
       "downstream_count": 4,
       "max_depth": 4,
       "modules_touched": [
@@ -36346,9 +36353,12 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Maybe combine",
-        "Too many helpers"
+        "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 11,
+      "scope_asset_count": 11,
       "downstream_count": 10,
       "max_depth": 3,
       "modules_touched": [
@@ -36859,9 +36869,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 3,
+      "direct_call_count": 3,
+      "scope": 15,
+      "scope_asset_count": 15,
       "downstream_count": 14,
       "max_depth": 4,
       "modules_touched": [
@@ -37608,9 +37621,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 3,
+      "direct_call_count": 3,
+      "scope": 16,
+      "scope_asset_count": 16,
       "downstream_count": 15,
       "max_depth": 4,
       "modules_touched": [
@@ -38402,9 +38418,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 4,
+      "direct_call_count": 4,
+      "scope": 15,
+      "scope_asset_count": 15,
       "downstream_count": 14,
       "max_depth": 4,
       "modules_touched": [
@@ -39210,9 +39229,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 3,
+      "direct_call_count": 3,
+      "scope": 17,
+      "scope_asset_count": 17,
       "downstream_count": 16,
       "max_depth": 4,
       "modules_touched": [
@@ -40040,9 +40062,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 4,
+      "direct_call_count": 4,
+      "scope": 13,
+      "scope_asset_count": 13,
       "downstream_count": 12,
       "max_depth": 4,
       "modules_touched": [
@@ -40737,9 +40762,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 3,
+      "direct_call_count": 3,
+      "scope": 16,
+      "scope_asset_count": 16,
       "downstream_count": 15,
       "max_depth": 4,
       "modules_touched": [
@@ -41526,9 +41554,12 @@
         "Broken rule",
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 120,
+      "scope_asset_count": 120,
       "downstream_count": 119,
       "max_depth": 7,
       "modules_touched": [
@@ -48167,9 +48198,12 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Maybe combine",
-        "Too many helpers"
+        "Maybe combine"
       ],
+      "width": 7,
+      "direct_call_count": 7,
+      "scope": 17,
+      "scope_asset_count": 17,
       "downstream_count": 16,
       "max_depth": 3,
       "modules_touched": [
@@ -49574,9 +49608,12 @@
       "warnings": [
         "Broken rule",
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 13,
+      "scope_asset_count": 13,
       "downstream_count": 12,
       "max_depth": 4,
       "modules_touched": [
@@ -50329,6 +50366,10 @@
       "warnings": [
         "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 4,
+      "scope_asset_count": 4,
       "downstream_count": 3,
       "max_depth": 3,
       "modules_touched": [
@@ -50624,6 +50665,10 @@
       "warnings": [
         "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 4,
+      "scope_asset_count": 4,
       "downstream_count": 3,
       "max_depth": 3,
       "modules_touched": [
@@ -50919,6 +50964,10 @@
       "warnings": [
         "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 4,
+      "scope_asset_count": 4,
       "downstream_count": 3,
       "max_depth": 3,
       "modules_touched": [
@@ -51214,9 +51263,12 @@
       "warnings": [
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 59,
+      "scope_asset_count": 59,
       "downstream_count": 58,
       "max_depth": 8,
       "modules_touched": [
@@ -54403,9 +54455,12 @@
       "warnings": [
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 2,
+      "direct_call_count": 2,
+      "scope": 48,
+      "scope_asset_count": 48,
       "downstream_count": 47,
       "max_depth": 7,
       "modules_touched": [
@@ -56947,9 +57002,12 @@
       "warnings": [
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 2,
+      "direct_call_count": 2,
+      "scope": 68,
+      "scope_asset_count": 68,
       "downstream_count": 67,
       "max_depth": 7,
       "modules_touched": [
@@ -60647,9 +60705,12 @@
       "warnings": [
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 2,
+      "direct_call_count": 2,
+      "scope": 68,
+      "scope_asset_count": 68,
       "downstream_count": 67,
       "max_depth": 7,
       "modules_touched": [
@@ -64347,6 +64408,10 @@
       "warnings": [
         "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 4,
+      "scope_asset_count": 4,
       "downstream_count": 3,
       "max_depth": 3,
       "modules_touched": [
@@ -64642,6 +64707,10 @@
       "warnings": [
         "Maybe combine"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 4,
+      "scope_asset_count": 4,
       "downstream_count": 3,
       "max_depth": 3,
       "modules_touched": [
@@ -64936,9 +65005,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 4,
+      "direct_call_count": 4,
+      "scope": 18,
+      "scope_asset_count": 18,
       "downstream_count": 17,
       "max_depth": 4,
       "modules_touched": [
@@ -65846,9 +65918,12 @@
         "Broken rule",
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 40,
+      "scope_asset_count": 40,
       "downstream_count": 39,
       "max_depth": 6,
       "modules_touched": [
@@ -67902,9 +67977,12 @@
         "Broken rule",
         "Maybe combine",
         "Spans many modules",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 1,
+      "direct_call_count": 1,
+      "scope": 40,
+      "scope_asset_count": 40,
       "downstream_count": 39,
       "max_depth": 6,
       "modules_touched": [
@@ -69970,9 +70048,12 @@
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
         "Maybe combine",
-        "Too many helpers",
         "Too many steps"
       ],
+      "width": 3,
+      "direct_call_count": 3,
+      "scope": 16,
+      "scope_asset_count": 16,
       "downstream_count": 15,
       "max_depth": 4,
       "modules_touched": [

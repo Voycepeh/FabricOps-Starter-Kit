@@ -458,6 +458,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     header_order = [
         compact_dashboard_text.index("data-sort-key='callable'>Function"),
         compact_dashboard_text.index("data-sort-key='width'>Width"),
+        compact_dashboard_text.index("data-sort-key='scope'>Scope"),
         compact_dashboard_text.index("data-sort-key='depth'>Depth"),
         compact_dashboard_text.index("data-sort-key='recommendation'>Recommendation"),
         compact_dashboard_text.index("data-sort-key='signals'>Signals"),
@@ -498,7 +499,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "populateBandFilter('publicMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
-    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.downstream_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='recommendation')returnsuggestedActionLabel(flow).toLowerCase();if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
+    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.width??0);if(key==='scope')returnNumber(flow.scope??flow.scope_asset_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='recommendation')returnsuggestedActionLabel(flow).toLowerCase();if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
     assert "if(key==='downstream')" not in compact_dashboard_text
     assert "if(key==='next_step')" not in compact_dashboard_text
     assert "if(key==='findings')" not in compact_dashboard_text
@@ -522,7 +523,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "label:'Merge candidates'" not in dashboard_text
     assert "value:s.merge_candidates" not in dashboard_text
     assert "305 Merge candidates" not in dashboard_text
-    assert "Review notebook-facing public functions, search for risks, and inspect the selected function call graph below." in normalized_dashboard_text
+    assert "Review architecture scopes, search for risks, and inspect the selected function call graph when available. Width is direct calls; scope is total runtime assets in the selected scope." in normalized_dashboard_text
     assert "Review detailed callable actions in Inventory" not in dashboard_text
     assert "architecture-cta" not in dashboard_text
 
@@ -538,7 +539,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Error message:" in dashboard_text
     assert "function renderLoadedCount()" in dashboard_text
     assert "total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters" in dashboard_text
-    assert "renderLoadedCount();$('publicCallableList').innerHTML" in compact_dashboard_text
+    assert "renderLoadedCount();constallRuntimeCount=inventory.length" in compact_dashboard_text
     assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in compact_dashboard_text
     assert "function longCallChainThreshold()" in dashboard_text
     assert "function largeDependencySurfaceThreshold()" in dashboard_text
@@ -577,7 +578,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "state.activePublicFlow===flow.qualified_name" not in compact_dashboard_text
     assert "data-summary-toggle" in dashboard_text
     assert "View summary" in dashboard_text
-    assert "Width:${esc(flow.downstream_count||0)}downstreamfunction(s)" in compact_dashboard_text
+    assert "Width:${esc(flow.width??0)}directcall(s)" in compact_dashboard_text
+    assert "Scope:${esc(flow.scope??flow.scope_asset_count??0)}runtimeasset(s)" in compact_dashboard_text
+    assert "Width(directcalls)" in compact_dashboard_text
+    assert "Scope(runtimeassets)" in compact_dashboard_text
     assert "Depth:${esc(flow.max_depth||0)}" in compact_dashboard_text
     assert "No decision findings." not in dashboard_text
     assert "Preserve backwards compatibility" in dashboard_text
@@ -597,9 +601,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Contains ${violations} architecture violations." not in dashboard_text
     assert "Depth is ${flow.max_depth}; threshold is >= ${longThreshold}." not in dashboard_text
     assert "Has ${flow.downstream_count} downstream functions; threshold is >= ${largeThreshold}." not in dashboard_text
+    assert "downstream functions, threshold >= ${largeThreshold}" not in dashboard_text
+    assert "Width ${flow.width??flow.direct_call_count??0} direct call(s), threshold > ${largeThreshold}" in dashboard_text
+    assert "Width is greater than 10. Width means direct calls from this public callable." in flow_text
     assert "Too many steps threshold >= " in dashboard_text
     assert "longThreshold!==null" in compact_dashboard_text
     assert "largeThreshold!==null" in compact_dashboard_text
+    assert "(flow.width||0)>largeThreshold" in compact_dashboard_text
+    assert "(flow.downstream_count||0)>=largeThreshold" not in compact_dashboard_text
     assert "Maybecombinehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
@@ -953,6 +962,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "priority",
         "recommended_simplification_action",
         "warnings",
+        "width",
+        "direct_call_count",
+        "scope",
+        "scope_asset_count",
         "downstream_count",
         "max_depth",
         "modules_touched",
@@ -1327,6 +1340,8 @@ def test_display_guardrail_results_dependency_count_matches_callable_architectur
     reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
     detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
 
+    assert flow["width"] == 1
+    assert flow["scope"] == 15
     assert flow["downstream_count"] == 14
     assert any(callee["function_type"] == "Private helper" for callee in flow["transitive_callees"])
     assert 'data-callable-name="display_guardrail_results"' in reference_index
