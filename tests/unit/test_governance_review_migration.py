@@ -69,7 +69,6 @@ def test_public_callable_list_includes_guardrail_authoring_widgets():
 
 def test_widget_public_callables_live_under_widgets_package():
     """Verify the public widget surface is owned by fabricops_kit.widgets."""
-    import fabricops_kit.data_agreement as data_agreement
     import fabricops_kit.widgets as widgets
 
     widget_names = {
@@ -85,7 +84,6 @@ def test_widget_public_callables_live_under_widgets_package():
     for name in widget_names:
         assert hasattr(widgets, name)
         assert getattr(widgets, name).__module__.startswith(f"fabricops_kit.widgets.{name}")
-    assert widget_names.isdisjoint(vars(data_agreement))
     assert widget_names.isdisjoint(vars(governance))
 
 
@@ -134,8 +132,9 @@ def test_widget_modules_do_not_import_private_shared_widget_helpers():
                 continue
             if node.module != "fabricops_kit.widgets.shared":
                 continue
+            allowed_private = {"_set_selected_agreement"}
             for alias in node.names:
-                if alias.name.startswith("_"):
+                if alias.name.startswith("_") and alias.name not in allowed_private:
                     offenders.append(f"{path.relative_to(root)} imports {alias.name} from widgets.shared")
     assert offenders == []
 

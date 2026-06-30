@@ -195,6 +195,27 @@ DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "u
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 
+_SELECTED_AGREEMENT: dict[str, Any] | None = None
+
+
+def _set_selected_agreement(row: dict[str, Any]) -> None:
+    """Store the selected agreement row for private widget workflows."""
+    global _SELECTED_AGREEMENT
+    _SELECTED_AGREEMENT = dict(row)
+
+
+def _get_selected_agreement_state() -> dict[str, Any] | None:
+    """Return the selected agreement row for private widget workflows."""
+    return dict(_SELECTED_AGREEMENT) if _SELECTED_AGREEMENT else None
+
+
+def get_selected_agreement() -> dict[str, Any]:
+    """Return the agreement selected by ``widget_pipeline_bootstrap``."""
+    selected = _get_selected_agreement_state()
+    if not selected:
+        raise RuntimeError("No agreement selected. Run widget_pipeline_bootstrap(select_agreement=True) first.")
+    return selected
+
 
 def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
     """Serialize organization-specific intake values to deterministic JSON.

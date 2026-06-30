@@ -12,7 +12,7 @@ from .config.shared import get_audit_timezone, get_current_audit_timestamp, reso
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .data_profiling.shared import profile_dataframe_core
 from .metadata import _audit_timestamp_value, _now_audit_timestamp, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row, coerce_metadata_row_types
-from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
+from .widgets.shared import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"

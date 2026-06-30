@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 from uuid import uuid4
 
-from .data_agreement import get_selected_agreement
+from .widgets.shared import get_selected_agreement
 from .data_profiling.shared import profile_dataframe_core
 from .guardrails import (
     enforce_freshness,

@@ -10,9 +10,9 @@ The canonical machine-readable list lives in `fabricops_kit.public_api.SUPPORTED
 |---|---|---|
 | Environment setup | `fabricops_kit.config.setup_metadata_tables` | Prepare all FabricOps metadata tables for the configured environment. |
 | Environment setup | `fabricops_kit.config.setup_notebook` | Run consolidated FabricOps startup for delivery and optional support notebooks. |
-| Data agreement | `fabricops_kit.data_agreement.widget_render_agreement_evidence` | Render standalone agreement evidence upload controls. |
-| Data agreement | `fabricops_kit.data_agreement.widget_render_data_agreement` | Render append-only agreement create/update maintenance using active stewards. |
-| Data agreement | `fabricops_kit.data_agreement.widget_render_data_steward` | Render append-only data steward create/update maintenance. |
+| Data agreement | `fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence` | Render standalone agreement evidence upload controls. |
+| Data agreement | `fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement` | Render append-only agreement create/update maintenance using active stewards. |
+| Data agreement | `fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward` | Render append-only data steward create/update maintenance. |
 | Profiling | `fabricops_kit.data_profiling.profile_dataframe` | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
 | Data access | `fabricops_kit.read_lakehouse_csv` | Read a CSV file from a Fabric lakehouse Files path. |
 | Data access | `fabricops_kit.read_lakehouse_excel` | Read an Excel file from a Fabric lakehouse Files path. |

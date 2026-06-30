@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-import fabricops_kit.data_agreement as agreement
+import fabricops_kit.widgets.shared as agreement
+import importlib
+
+evidence = importlib.import_module("fabricops_kit.widgets.widget_render_agreement_evidence")
 from tests.helpers import agreement_config, agreement_row, steward_row
 
 pytestmark = pytest.mark.unit
@@ -32,7 +35,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
     monkeypatch.setattr(agreement, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
     monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement, "_generate_agreement_id", lambda *args, **kwargs: "DA-GENERATED")
-    monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: writes.append(kwargs))
+    monkeypatch.setattr(agreement, "write_widget_metadata_row", lambda **kwargs: writes.append(kwargs))
 
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
     steward = agreement._create_or_update_data_steward(
@@ -55,14 +58,40 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
     """Verify agreement validation and evidence path parsing fail before writes."""
     monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
-    monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
+    monkeypatch.setattr(agreement, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
 
     with pytest.raises(ValueError, match="steward_name"):
         agreement._create_or_update_data_steward(spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_name=""))
     with pytest.raises(ValueError, match="recipient"):
         agreement._create_or_update_data_agreement(spark=object(), config=agreement_config(), env="dev", values=agreement_row(recipient=""))
 
-    references = agreement._prepare_evidence_file_references("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.docx\n")
+    references = evidence._prepare_evidence_file_references("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.docx\n")
     assert [item["file_name"] for item in references] == ["a.pdf", "b.docx"]
     with pytest.raises(ValueError, match="Files/"):
-        agreement._prepare_evidence_file_references("Files/fabricops/evidence/a.pdf\n/tmp/local.pdf")
+        evidence._prepare_evidence_file_references("Files/fabricops/evidence/a.pdf\n/tmp/local.pdf")
+
+
+def test_stale_agreement_modules_are_removed_and_not_imported():
+    """Verify stale agreement modules are removed from source ownership."""
+    from pathlib import Path
+
+    root = Path(__file__).parents[2]
+    assert not (root / "src" / "fabricops_kit" / "data_agreement.py").exists()
+    assert not (root / "src" / "fabricops_kit" / "agreement_selection_state.py").exists()
+
+    scanned = [root / "src", root / "templates", root / "docs"]
+    offenders = []
+    for base in scanned:
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in {".py", ".md", ".yml", ".yaml", ".json", ".ipynb"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            for fragment in (
+                "fabricops_kit.data_agreement",
+                "fabricops_kit.agreement_selection_state",
+                "from .data_agreement",
+                "agreement_selection_state import",
+            ):
+                if fragment in text:
+                    offenders.append(f"{path.relative_to(root)} imports {fragment}")
+    assert offenders == []

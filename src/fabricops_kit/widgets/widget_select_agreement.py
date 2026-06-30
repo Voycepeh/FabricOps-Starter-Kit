@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fabricops_kit.agreement_selection_state import set_selected_agreement
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
 from fabricops_kit.metadata import current_notebook_active_registrations, register_current_notebook
-from fabricops_kit.widgets.shared import latest_agreement_versions, list_data_agreements, render_searchable_selector, require_ipywidgets
+from fabricops_kit.widgets.shared import _set_selected_agreement, latest_agreement_versions, list_data_agreements, render_searchable_selector, require_ipywidgets
 
 
 
@@ -93,11 +92,11 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
         if change.get("name") == "value" and change.get("new") is not None:
             selected_row = rows_by_id.get(str(change["new"]))
             if selected_row is not None:
-                set_selected_agreement(selected_row)
+                _set_selected_agreement(selected_row)
 
     selector.observe(_on_change, names="value")
     if selector.value in rows_by_id:
-        set_selected_agreement(rows_by_id[str(selector.value)])
+        _set_selected_agreement(rows_by_id[str(selector.value)])
     selector.search_box = selector_parts["search"]
     selector.context_html = selector_parts["context"]
 
