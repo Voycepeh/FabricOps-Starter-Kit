@@ -88,11 +88,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_select_agreement',
-  'visibility': 'public',
-  'module_summary': 'Owns widget implementation details for agreement workflows.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_pipeline_bootstrap',
   'visibility': 'public',
   'module_summary': 'Owns the pipeline bootstrap widget and active runtime context setup.',
@@ -519,76 +514,36 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
-  'module': 'widgets.widget_select_agreement',
-  'function_type': 'callable',
-  'summary_override': 'Render an agreement selector and optionally register the active notebook.',
-  'symbol_name': 'widget_select_agreement',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Agreement selection',
-  'use_when': 'Use in 02_pipeline to select an approved data agreement and optionally register the '
-              'active notebook before pipeline evidence is written.',
-  'do_not_use_when': 'Do not use for guardrail target selection; use '
-                     'widget_select_guardrail_target for catalogue-backed guardrail authoring and '
-                     'review targets.',
-  'parameters': 'config, env, optional spark_session, and notebook registration options for '
-                'loading agreement choices from metadata.',
-  'returns': 'Interactive widget state; call get_selected_agreement to retrieve the selected '
-             'agreement record.',
-  'raises': 'Raises metadata read, widget dependency, or configuration errors when agreement '
-            'metadata cannot be loaded.',
-  'side_effects': 'Displays an IPython widget and may register the active notebook selection in '
-                  'metadata when requested.',
-  'fabric_context': 'Requires agreement metadata created through 01_agreement and metadata routing '
-                    'from 00_env_config.',
-  'ai_verification': 'Verify the user selected an agreement and call get_selected_agreement before '
-                     'generating pipeline code that depends on agreement context.',
-  'preferred_example': 'widget_select_agreement(spark_session=spark)\n'
-                       'agreement = get_selected_agreement()',
-  'related_functions': ['get_selected_agreement', 'setup_metadata_tables'],
-  'expanded_purpose': 'Displays an agreement selector and stores the chosen agreement so pipeline '
-                      'and exploration notebooks can bind work to approved business context.',
-  'when_to_use': 'Use near the start of 02_pipeline or 99_explore before reads, profiling, '
-                 'lineage, or governance evidence need an agreement id.',
-  'glossary_terms': ['notebook template'],
-  'return_interpretation': 'A visible selection widget does not mean an agreement is selected; '
-                           'call get_selected_agreement after the user chooses a row.',
-  'common_failure_causes': ['No agreement metadata rows are available.',
-                            'The user has not selected an agreement.',
-                            'Notebook registration metadata cannot be written.',
-                            'The configured metadata lakehouse cannot be read.'],
-  'related_guides': [{'title': 'Notebook Templates Implementation Guide',
-                      'path': '../../notebook-templates-implementation-guide/index.md'}]},
- {'kind': 'function',
   'module': 'widgets.shared',
   'function_type': 'callable',
-  'summary_override': 'Return the agreement selected by widget_select_agreement.',
+  'summary_override': 'Return the agreement selected by widget_pipeline_bootstrap.',
   'symbol_name': 'get_selected_agreement',
   'template_notebook': '02_pipeline',
   'template_segment': 'Agreement selection',
-  'use_when': 'Use immediately after widget_select_agreement to retrieve the selected agreement '
+  'use_when': 'Use after widget_pipeline_bootstrap(select_agreement=True) to retrieve the selected agreement '
               'record for pipeline logic and evidence binding.',
-  'do_not_use_when': 'Do not use before rendering and completing widget_select_agreement, or as a '
+  'do_not_use_when': 'Do not use before running widget_pipeline_bootstrap(select_agreement=True), or as a '
                      'substitute for querying all agreement metadata.',
   'parameters': 'No required parameters; reads the current in-memory widget selection state.',
   'returns': 'Selected agreement dictionary for the active notebook session.',
   'raises': 'Raises an error when no agreement has been selected in the current session.',
   'side_effects': 'Reads session/widget state only; it does not write metadata, tables, or files.',
-  'fabric_context': 'Depends on a prior widget_select_agreement call in the same notebook session '
+  'fabric_context': 'Depends on a prior widget_pipeline_bootstrap(select_agreement=True) call in the same notebook session '
                     'and agreement metadata loaded via 00_env_config routing.',
   'ai_verification': 'Verify the returned agreement has the expected dataset/table identifiers '
                      'before using it to drive reads, writes, or governance evidence.',
   'preferred_example': 'agreement = get_selected_agreement()\n'
                        'dataset_name = agreement["dataset_name"]',
-  'related_functions': ['widget_select_agreement'],
-  'expanded_purpose': 'Returns the agreement chosen by widget_select_agreement so downstream cells '
+  'related_functions': ['widget_pipeline_bootstrap'],
+  'expanded_purpose': 'Returns the agreement chosen by widget_pipeline_bootstrap so downstream cells '
                       'can pass consistent agreement identifiers to pipeline helpers.',
-  'when_to_use': 'Use after rendering and completing widget_select_agreement when code needs the '
+  'when_to_use': 'Use after rendering and completing widget_pipeline_bootstrap when code needs the '
                  'selected agreement values.',
   'glossary_terms': ['notebook template'],
   'return_interpretation': 'A returned dictionary contains the selected agreement fields. A '
                            'missing value means the selector has not been completed in the current '
                            'notebook state.',
-  'common_failure_causes': ['widget_select_agreement has not been run.',
+  'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
                             'The user has not selected an agreement.',
                             'Notebook state was reset.',
                             'The selected row is no longer present in metadata.'],
@@ -867,7 +822,7 @@ PUBLIC_SYMBOL_DOCS = [
   'fabric_context': 'Requires the metadata target configured by 00_env_config and optionally METADATA_SCHEMA for schema-enabled metadata lakehouses.',
   'ai_verification': 'Verify exploratory notebooks call this helper only for context lookup and do not call write or guardrail helpers.',
   'preferred_example': 'latest_catalogue = get_latest_metadata_catalogue(table_name=source_table_name, agreement=AGREEMENT, metadata_schema=METADATA_SCHEMA, spark_session=spark)',
-  'related_functions': ['read_lakehouse_table', 'profile_dataframe', 'widget_select_agreement'],
+  'related_functions': ['read_lakehouse_table', 'profile_dataframe', 'widget_pipeline_bootstrap'],
   'expanded_purpose': 'Fetches existing METADATA_DATA_CATALOGUE evidence for a selected table and agreement context so 99_explore can stay context-aware and read-only.',
   'when_to_use': 'Use in 99_explore for discovery, profiling, troubleshooting, or investigation when existing catalogue context may help.',
   'glossary_terms': ['metadata lakehouse', 'profile', 'data agreement'],
@@ -2071,37 +2026,19 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                   'is selected.',
                                                                   'The metadata target cannot be '
                                                                   'written.']},
- 'widget_select_agreement': {'expanded_purpose': 'Displays an agreement selector and stores the '
-                                                 'chosen agreement so pipeline and exploration '
-                                                 'notebooks can bind work to approved business '
-                                                 'context.',
-                             'when_to_use': 'Use near the start of 02_pipeline or 99_explore '
-                                            'before reads, profiling, lineage, or governance '
-                                            'evidence need an agreement id.',
-                             'glossary_terms': ['notebook template'],
-                             'return_interpretation': 'A visible selection widget does not mean an '
-                                                      'agreement is selected; call '
-                                                      'get_selected_agreement after the user '
-                                                      'chooses a row.',
-                             'common_failure_causes': ['No agreement metadata rows are available.',
-                                                       'The user has not selected an agreement.',
-                                                       'Notebook registration metadata cannot be '
-                                                       'written.',
-                                                       'The configured metadata lakehouse cannot '
-                                                       'be read.']},
  'get_selected_agreement': {'expanded_purpose': 'Returns the agreement chosen by '
-                                                'widget_select_agreement so downstream cells can '
+                                                'widget_pipeline_bootstrap so downstream cells can '
                                                 'pass consistent agreement identifiers to pipeline '
                                                 'helpers.',
                             'when_to_use': 'Use after rendering and completing '
-                                           'widget_select_agreement when code needs the selected '
+                                           'widget_pipeline_bootstrap when code needs the selected '
                                            'agreement values.',
                             'glossary_terms': ['notebook template'],
                             'return_interpretation': 'A returned dictionary contains the selected '
                                                      'agreement fields. A missing value means the '
                                                      'selector has not been completed in the '
                                                      'current notebook state.',
-                            'common_failure_causes': ['widget_select_agreement has not been run.',
+                            'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
                                                       'The user has not selected an agreement.',
                                                       'Notebook state was reset.',
                                                       'The selected row is no longer present in '
@@ -2169,8 +2106,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Notebook Templates Imp
                                  'path': '../../notebook-templates-implementation-guide/pipeline-execution.md'},
                                 {'title': 'Metadata Tables',
                                  'path': '../../reference/metadata.md'}],
- 'widget_select_agreement': [{'title': 'Notebook Templates Implementation Guide',
-                              'path': '../../notebook-templates-implementation-guide/index.md'}],
  'get_selected_agreement': [{'title': 'Notebook Templates Implementation Guide',
                              'path': '../../notebook-templates-implementation-guide/index.md'}]}
 

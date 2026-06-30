@@ -83,13 +83,6 @@
       "module_summary": "Owns widget implementation details for agreement workflows.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false
-    },
-    {
-      "module_name": "widgets.widget_select_agreement",
-      "visibility": "public",
-      "module_summary": "Owns widget implementation details for agreement workflows.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": false
     }
   ],
   "callables": [

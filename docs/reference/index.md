@@ -35,10 +35,10 @@ Use the finder below to search 26 public functions and 7 public classes. Impleme
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 31
-    - Total callables: 407
+    - Source Python files count: 30
+    - Total callables: 405
     - Supporting functions: 113
-    - Private helpers to review: 261
+    - Private helpers to review: 259
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.

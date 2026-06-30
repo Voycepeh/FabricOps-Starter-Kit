@@ -251,5 +251,4 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)
     assert "widget_pipeline_bootstrap" in fabricops_kit.__all__
-    assert "widget_select_agreement" not in fabricops_kit.__all__
     assert "get_selected_agreement" not in fabricops_kit.__all__

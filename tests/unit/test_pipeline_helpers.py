@@ -756,14 +756,6 @@ def test_widget_pipeline_bootstrap_public_import_surface():
     assert pipeline.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
 
 
-def test_widget_pipeline_bootstrap_has_no_stale_select_agreement_private_dependency():
-    """Verify bootstrap no longer imports the standalone selector private workflow."""
-    pipeline_source = Path("src/fabricops_kit/pipeline.py").read_text(encoding="utf-8")
-    bootstrap_source = Path("src/fabricops_kit/widgets/widget_pipeline_bootstrap.py").read_text(encoding="utf-8")
-    assert "_render_agreement_selector" not in pipeline_source
-    assert "_select_agreement_widget_workflow" not in pipeline_source
-    assert "_select_agreement_widget_workflow" not in bootstrap_source
-
 def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
     """Verify widget_pipeline_bootstrap stores agreement and runtime defaults."""
     spark = FakeSpark()

@@ -322,7 +322,7 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
 
     if register_notebook:
         if config is None or env is None or spark_session is None:
-            raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
+            raise ValueError("widget_pipeline_bootstrap(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
         active_rows = current_notebook_active_registrations(
             spark_session,
             config=config,
