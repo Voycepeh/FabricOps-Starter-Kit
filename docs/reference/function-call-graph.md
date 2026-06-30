@@ -13,6 +13,10 @@
 
 The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
 
+## Overview
+
+The Function Call Graph has one maintainer-facing dashboard: the Function Call Graph Dashboard. That dashboard combines public callable flows, architecture checks, the runtime inventory, and cleanup packet export into one review surface.
+
 ## How it works
 
 The Function Call Graph follows a simple flow:
@@ -51,7 +55,7 @@ The scanner then produces generated review artifacts that make the callable arch
 The generated review outputs are:
 
 * [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-* [Function Inventory](../assets/function-inventory.html)
+* [Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)
 * [function-call-graph.json](_data/function-call-graph.json)
 
 ## 3. Enforce architecture
@@ -148,13 +152,29 @@ The dashboard helps reviewers:
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
 
+### Public callable flows
+
+The public callable flow table shows notebook-facing functions, width, depth, recommendations, and signal summaries. Selecting a function opens its dependency tree and supporting helper details.
+
+### Architecture checks
+
+Architecture checks identify broken public-callable boundaries and maintainability review signals such as too many helpers, too many steps, shared helpers, and maybe-combine helpers.
+
+### Runtime inventory
+
+The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and only describes deduplicated runtime code assets under `src/fabricops_kit` that support public callables or template runtime references.
+
+### Cleanup packet export
+
+Cleanup packet export is available from the public callable flow and runtime inventory sections so maintainers can download focused JSON or YAML packets without leaving the dashboard.
+
 ## 5. AI refactor packets
 
 When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
 The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph.
 
-The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function level code assets.
+The dashboard runtime inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
 The packet keeps the AI refactor focused on:
 
@@ -170,4 +190,4 @@ The packet keeps the AI refactor focused on:
 
 The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
 
-<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory) -->

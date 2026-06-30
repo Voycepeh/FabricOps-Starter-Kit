@@ -48,7 +48,7 @@ Use these pages after confirming the v1.0.0 public API release contract:
 
 - [Function Call Graph](function-call-graph.md): generated function call graph relationships and graph context for maintainers.
 - [Function Call Graph](../assets/function-call-graph-dashboard.html): review public API shape, chain depth, fan-out, source Python files, cross-layer warnings, and flattening recommendations.
-- [Function Inventory](../assets/function-inventory.html): search/filter all callables, select rows, and export AI refactor packets.
+- [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory): search/filter runtime code assets, select rows, and export AI refactor packets.
 - [Release Management](../development/release-management.md): release process and checklist guidance.
 - [Release Traceability](../release-info.md): published release traceability and release evidence.
 - [Documentation Versioning](../development/docs-versioning.md): docs versioning expectations for release preparation.

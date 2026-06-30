@@ -67,7 +67,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
 ## For maintainers
 
-FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Function Call Graph Dashboard and Function Inventory to review public API architecture and export raw function-level packets.
+FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Function Call Graph Dashboard to review public API architecture, inspect the runtime inventory, and export focused cleanup packets.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="assets/function-call-graph-dashboard.html">
@@ -83,4 +83,4 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
   </a>
 </div>
 
-<p><small>Function metrics are generated from the function inventory data.</small></p>
+<p><small>Function metrics are generated from the runtime inventory data.</small></p>

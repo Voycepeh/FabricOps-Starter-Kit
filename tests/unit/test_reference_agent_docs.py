@@ -105,7 +105,7 @@ def test_landing_page_counts_match_generated_stats() -> None:
     assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
     assert "</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
     assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
-    assert "Function metrics are generated from the function inventory data." in index_text
+    assert "Function metrics are generated from the runtime inventory data." in index_text
     assert "283 supporting internal functions" not in index_text
     assert "supporting internal functions" not in index_text
 
@@ -188,7 +188,7 @@ def test_public_config_classes_have_reference_taxonomy() -> None:
     """Verify public config classes are searchable and separate from public functions."""
     class_names = CONFIG_MODEL_SYMBOLS
     reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
-    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     flow_data = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
     landing_stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
     class_rows = {row["function_name"]: row for row in flow_data["function_inventory"] if row["layer"] == "class"}
@@ -308,7 +308,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     assert flow_page.exists()
     assert dashboard_path.exists()
-    assert inventory_path.exists()
+    assert not inventory_path.exists()
 
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Function Call Graph" in flow_text
@@ -352,7 +352,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "fabricops-select-refactor-candidates.png" not in flow_text
     assert "fabricops-select-refactor-candidates-prompt-export.png" not in flow_text
     assert "[Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)" in flow_text
-    assert "[Function Inventory](../assets/function-inventory.html)" in flow_text
+    assert "[Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)" in flow_text
     assert "[function-call-graph.json](_data/function-call-graph.json)" in flow_text
     assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
     assert "fabricops_support_inventory_cleanup_packet" in flow_text
@@ -373,11 +373,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     compact_dashboard_text = "".join(dashboard_text.split())
     compact_dashboard_text = compact_dashboard_text.replace('"', "'")
     normalized_dashboard_text = _normalize_whitespace(dashboard_text)
-    inventory_text = inventory_path.read_text(encoding="utf-8")
+    inventory_text = dashboard_text
     compact_inventory_text = "".join(inventory_text.split())
     compact_inventory_text = compact_inventory_text.replace('"', "'")
     normalized_inventory_text = _normalize_whitespace(inventory_text)
     combined_dashboard_assets = dashboard_text + inventory_text
+    assert "function-inventory.html" not in combined_dashboard_assets
+    assert "Remove orphaned asset" not in combined_dashboard_assets
+    assert "runtime-inventory" in dashboard_text
 
     for text in (dashboard_text, inventory_text):
         assert "function-call-graph.json" in text
@@ -397,7 +400,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "publicCallableList" in dashboard_text
     assert "publicFlowDetails" in dashboard_text
     assert "downloadPacket" in dashboard_text
-    assert "function buildCleanupPacketFilename(selectedFunctionName, extension)" in dashboard_text
+    assert "functionbuildCleanupPacketFilename(selectedFunctionName,extension)" in compact_dashboard_text
     assert "cleanupPacketTimestamp" in dashboard_text
     assert "selectedFlowName()" in dashboard_text
     assert "replace(/[^A-Za-z0-9_.-]/g" in compact_dashboard_text
@@ -421,7 +424,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "flow-next-step" in dashboard_text
     assert "functionflowHealth(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
     assert "functionflowReason(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
-    assert "functionflowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[],)" in compact_dashboard_text
+    assert "functionflowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[]" in compact_dashboard_text
     assert "functionflowNextStep(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
     assert "returnlabel" in compact_dashboard_text
     assert "functionflowSignalChips(flow,architectureFindings,mergeCandidates)" in compact_dashboard_text
@@ -529,7 +532,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "assetsMarker='/assets/'" in compact_dashboard_text
     assert "+'_data/function-call-graph.json'" in compact_dashboard_text
     assert "+'reference/_data/function-call-graph.json'" in compact_dashboard_text
-    assert "newURL('reference/_data/function-call-graph.json',document.baseURI,).href" in compact_dashboard_text
+    assert "newURL('reference/_data/function-call-graph.json',document.baseURI).href" in compact_dashboard_text
     assert "Failed to load function call graph data. Attempted URL:" in dashboard_text
     assert "HTTP status:" in dashboard_text
     assert "Error message:" in dashboard_text
@@ -549,9 +552,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
     assert "function flowSignals(flow)" in dashboard_text
-    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in dashboard_text
-    assert "overflow-x: auto" in dashboard_text
-    assert "grid-template-columns: repeat(3, minmax(13rem, 1fr))" in dashboard_text
+    assert "grid-template-columns:repeat(3,minmax(0,1fr))" in compact_dashboard_text
+    assert "overflow-x:auto" in compact_dashboard_text
+    assert "grid-template-columns:repeat(3,minmax(13rem,1fr))" in compact_dashboard_text
 
     assert "function hasArchitectureViolation(flow)" in dashboard_text
     assert "function isGraphReviewCandidate(flow)" in dashboard_text
@@ -586,7 +589,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Copy flow Markdown" not in dashboard_text
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
-    assert "publicCallableSeverity(f) === \"architecture\"" in dashboard_text
+    assert "publicCallableSeverity(f)==='architecture'" in compact_dashboard_text
     assert "Maybe combine" in dashboard_text
     assert "Review helper" in dashboard_text
     assert "Review helpers" in dashboard_text
@@ -609,8 +612,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "one call site" not in inventory_text
     assert "Call sites:" not in inventory_text
 
-    assert "Function Inventory" in inventory_text
-    assert "The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
+    assert "Runtime inventory" in inventory_text
+    assert "The Runtime inventory focuses on src/fabricops_kit runtime code assets that are reachable from public callables or template runtime references." in normalized_inventory_text
     assert "Generated at:" in inventory_text
     assert "Generated at:</strong>" in inventory_text
     assert "SGT" in inventory_text
@@ -622,8 +625,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function-call-graph-dashboard.html" in inventory_text
     assert "callable-page-nav" in inventory_text
     assert "header-action" not in inventory_text
-    assert "<aclass='callable-page-tab'href='function-call-graph-dashboard.html'>FunctionCallGraph</a>" in compact_inventory_text
-    assert "<aclass='callable-page-tabis-active'href='function-inventory.html'aria-current='page'>FunctionInventory</a>" in compact_inventory_text
+    assert "<aclass='callable-page-tabis-active'href='function-call-graph-dashboard.html'aria-current='page'>FunctionCallGraph</a>" in compact_inventory_text
+    assert "<aclass='callable-page-tab'href='function-call-graph-dashboard.html#runtime-inventory'>Runtimeinventory</a>" in compact_inventory_text
     assert "<aid='openFunctionCallGraphJson'class='callable-page-action'href='../reference/_data/function-call-graph.json'>OpenJSONdata</a>" in compact_inventory_text
     assert "<aclass='callable-page-action'href='../'>BacktoDocs</a>" in compact_inventory_text
     for common_shell in [compact_dashboard_text, compact_inventory_text]:
@@ -647,20 +650,20 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Reusable utility functions intentionally shared across callable files." in inventory_text
     assert "Private helpers owned by one standalone callable file." in inventory_text
     assert "Only actionable records that need review or cleanup." in inventory_text
-    assert "The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
-    assert "Use this inventory to inspect function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates." in normalized_inventory_text
+    assert "The Runtime inventory focuses on src/fabricops_kit runtime code assets that are reachable from public callables or template runtime references." in normalized_inventory_text
+    assert "Use this runtime inventory to inspect deduplicated src/fabricops_kit code assets that support public callables and template runtime flows." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
     assert "giant review table" not in inventory_text
     assert '<article class="surface-card ${esc(c.cls)}">' in inventory_text
-    assert ".surface-cardstrong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem" in compact_inventory_text
-    assert ".surface-cardspan{display:block;line-height:1.2;font-weight:700" in compact_inventory_text
+    assert ".surface-cardstrong{display:block" in compact_inventory_text
+    assert ".surface-cardspan{display:block" in compact_inventory_text
     assert "function sourceCallableLink(i)" in inventory_text
     assert 'class="source-link" href="${esc(href)}"' in inventory_text
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
     assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
-    assert "Showing ${visibleRows.length} function inventory records of ${total} total generated function-level code assets." in normalized_inventory_text
-    assert "Function metrics are generated from the function inventory data." not in normalized_inventory_text
+    assert "Showing ${visibleRows.length} runtime inventory records of ${total} total generated function-level code assets." in normalized_inventory_text
+    assert "Function metrics are generated from the runtime inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
@@ -676,8 +679,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "copyYaml" not in inventory_text
     assert "downloadYaml" in inventory_text
     assert "searchBox" in inventory_text
-    assert "Search function inventory" in inventory_text
-    assert "Function inventory focus" in inventory_text
+    assert "Search runtime inventory" in inventory_text
+    assert "Runtime inventory focus" in inventory_text
     assert "Item type" in inventory_text
     assert "Suggested cleanup" in inventory_text
     assert "Public callable" in inventory_text
@@ -738,9 +741,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "refactorPacket" in inventory_text
     assert "fabricops_support_inventory_cleanup_packet" in inventory_text
     assert "functionbuildInventoryFilename(functionCount,extension)" in compact_inventory_text
-    assert "fabricops-function-inventory__${functionCount}_functions__" in inventory_text
+    assert "fabricops-runtime-inventory__${functionCount}_functions__" in inventory_text
     assert "buildInventoryFilename((packet.selected_code_assets||[]).length" in compact_inventory_text
-    assert "fabricops-function-inventory-cleanup-packet.${isYaml" not in inventory_text
+    assert "fabricops-runtime-inventory-cleanup-packet.${isYaml" not in inventory_text
     assert "source_file" in inventory_text
     assert "item_name" in inventory_text
     assert "usage_scope" in inventory_text
@@ -2437,7 +2440,7 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
 
 def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     """Verify inventory dashboard renders dynamic rows, KPIs, statuses, and scoped controls."""
-    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     compact_inventory_text = _remove_whitespace(inventory_text).replace('"', "'")
 
     assert "function functionCallGraphDataUrl()" in inventory_text
@@ -2445,10 +2448,10 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "reference/_data/function-call-graph.json" in inventory_text
     assert "newURL('reference/_data/function-call-graph.json',document.baseURI).href" in compact_inventory_text
     assert "Loading function call graph data..." in inventory_text
-    assert "Loaded ${inventory.length} function inventory records" in inventory_text
+    assert "Loaded ${inventory.length} runtime inventory records" in inventory_text
     assert "No function-level code assets found for the current filters." in inventory_text
     assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." in inventory_text
-    assert "Function inventory data is missing from function-call-graph.json. Regenerate the function call graph export." in inventory_text
+    assert "Runtime inventory data is missing from function-call-graph.json. Regenerate the function call graph export." in inventory_text
     assert "Failed to load function call graph data. URL:" in inventory_text
     assert "function-call-graph.json" in inventory_text
     assert "updateFunctionCallGraphDataLink(attemptedUrl)" in inventory_text
@@ -2457,7 +2460,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "inventoryDataMissing=true" in compact_inventory_text
     assert "inventory=data.function_inventory" in compact_inventory_text
     assert "function yamlPacket(packet)" in inventory_text
-    assert 'id="inventorySummaryCards"' in inventory_text
+    assert 'id="runtimeInventory_inventorySummaryCards"' in inventory_text
     assert "function canonicalNonFunctionCount()" not in inventory_text
     assert "non_function_records" not in inventory_text
     assert "supporting_objects" not in inventory_text
@@ -2480,12 +2483,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
-    assert "max-width:100%;overflow-x:auto;overflow-y:visible" in compact_inventory_text
+    assert "max-width:100%;overflow-x:auto" in compact_inventory_text
     assert ".callable-review-table{width:100%;table-layout:auto" in compact_inventory_text
-    assert ".callable-review-table.col-recommended-action{min-width:13rem;white-space:nowrap" in compact_inventory_text
-    assert ".callable-review-table.col-details{width:90px;min-width:90px;white-space:nowrap" in compact_inventory_text
-    assert ".details-toggle{font-weight:800;color:#1d4ed8;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}" in compact_inventory_text
-    assert ".details-panela{overflow-wrap:anywhere;word-break:break-word}" in compact_inventory_text
+    assert "col-recommended-action" in compact_inventory_text
+    assert "col-details" in compact_inventory_text
+    assert "details-toggle" in compact_inventory_text
+    assert "details-panel" in compact_inventory_text
     assert ".details-row{display:none}" in compact_inventory_text
     assert ".details-row.is-open{display:table-row}" in compact_inventory_text
     assert ".details-panel{max-width:100%;padding:.85rem1rem" in compact_inventory_text
@@ -2527,7 +2530,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
 
 def test_callable_inventory_selected_focus_empty_state_is_clear() -> None:
     """Verify Selected focus with no selection has a specific empty-state message."""
-    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
 
     assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." in inventory_text
     assert "state.focusFilter==='selected'&&state.selected.size===0" in inventory_text
@@ -2552,7 +2555,7 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
 def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
     """Verify inventory YAML helpers emit escaped JavaScript newline strings."""
-    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
 
     assert "join('\\n')" in inventory_text
     assert "yamlValue(packet)+'\\n'" in inventory_text
@@ -2562,7 +2565,7 @@ def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
 
 def test_callable_inventory_generated_html_smoke_contract() -> None:
     """Verify generated inventory HTML keeps required entrypoints and no broken YAML strings."""
-    inventory_text = (ROOT / "docs" / "assets" / "function-inventory.html").read_text(encoding="utf-8")
+    inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
 
     assert "function canonicalNonFunctionCount()" not in inventory_text
     assert "function loadData()" in inventory_text

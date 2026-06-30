@@ -3962,7 +3962,7 @@ def _render_callable_page_nav(active_page: str) -> str:
         '<nav class="callable-page-nav" aria-label="Function reference navigation">'
         '<div class="callable-page-tabs" role="list">'
         f'{tab("architecture", "Function Call Graph", "function-call-graph-dashboard.html")}'
-        f'{tab("inventory", "Function Inventory", "function-inventory.html")}'
+        f'{tab("inventory", "Runtime inventory", "function-call-graph-dashboard.html#runtime-inventory")}'
         '</div>'
         '<div class="callable-page-actions">'
         '<a id="openFunctionCallGraphJson" class="callable-page-action" href="../reference/_data/function-call-graph.json">Open JSON data</a>'
@@ -4019,6 +4019,98 @@ Always call out tests required before changes.`}function refactorPacket(){const 
 
 
 
+def _extract_html_between(text: str, start: str, end: str) -> str:
+    """Return text between two HTML markers."""
+    start_index = text.index(start) + len(start)
+    end_index = text.index(end, start_index)
+    return text[start_index:end_index]
+
+
+def _prefix_runtime_inventory_ids(html_text: str, prefix: str) -> str:
+    """Prefix HTML id attributes in the embedded runtime inventory section."""
+    return re.sub(r'id="([A-Za-z][A-Za-z0-9_-]*)"', lambda match: f'id="{prefix}{match.group(1)}"', html_text)
+
+
+def _runtime_inventory_section_html(flow_data: dict[str, Any]) -> str:
+    """Return runtime inventory markup embedded in the call graph dashboard."""
+    inventory_html = _render_refactor_inventory_html(flow_data)
+    main_html = _extract_html_between(inventory_html, "<main>", "</main>")
+    replacements = {
+        "Function Inventory": "Runtime inventory",
+        "Function inventory": "Runtime inventory",
+        "function inventory": "runtime inventory",
+        "Function inventory focus": "Runtime inventory focus",
+        "Search function inventory": "Search runtime inventory",
+        "The Runtime inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.": "The Runtime inventory focuses on src/fabricops_kit runtime code assets that are reachable from public callables or template runtime references.",
+        "Use this inventory to inspect function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.": "Use this runtime inventory to inspect deduplicated src/fabricops_kit code assets that support public callables and template runtime flows.",
+    }
+    for old, new in replacements.items():
+        main_html = main_html.replace(old, new)
+    main_html = _prefix_runtime_inventory_ids(main_html, "runtimeInventory_")
+    return (
+        '<section id="runtime-inventory" class="flow-details runtime-inventory-section">'
+        '<h2>Runtime inventory</h2>'
+        '<p class="overview-help"><small>The runtime inventory is the deduplicated function_inventory data behind this dashboard. '
+        'It only describes runtime code assets under <code>src/fabricops_kit</code> that support public callables or template runtime references.</small></p>'
+        f"{main_html}"
+        "</section>"
+    )
+
+
+def _runtime_inventory_script(flow_data: dict[str, Any]) -> str:
+    """Return isolated runtime inventory dashboard JavaScript."""
+    inventory_html = _render_refactor_inventory_html(flow_data)
+    script = _extract_html_between(inventory_html, "<script>", "</script>")
+    replacements = {
+        "Function Inventory": "Runtime inventory",
+        "Function inventory": "Runtime inventory",
+        "Function inventory cleanup packet": "Runtime inventory cleanup packet",
+        "Function inventory data is missing": "Runtime inventory data is missing",
+        "function inventory records": "runtime inventory records",
+        "fabricops-function-inventory__": "fabricops-runtime-inventory__",
+    }
+    for old, new in replacements.items():
+        script = script.replace(old, new)
+    script = script.replace(
+        "const $=id=>document.getElementById(id),",
+        "const $=id=>document.getElementById('runtimeInventory_'+id),",
+    )
+    script = script.replace(
+        "document.querySelector('table[data-table-controls=\"excel\"]')",
+        "document.querySelector('#runtime-inventory table[data-table-controls=\"excel\"]')",
+    )
+    return f"<script>\n(()=>{{\n{script}\n}})();\n</script>"
+
+
+def _runtime_inventory_embed_css() -> str:
+    """Return scoped CSS for the embedded runtime inventory section."""
+    return (
+        "<style>"
+        "#runtime-inventory{margin-top:1.25rem}"
+        "#runtime-inventory .inventory-filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.55rem;margin:.75rem 0}"
+        "#runtime-inventory .inventory-note{background:#eff6ff;border-color:#bfdbfe}"
+        "#runtime-inventory .inventory-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}"
+        "#runtime-inventory .callable-review-table-wrap{max-width:100%;overflow-x:auto}"
+        "#runtime-inventory .callable-review-table{width:100%;table-layout:auto;border-collapse:collapse}"
+        "#runtime-inventory .callable-review-table th,#runtime-inventory .callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}"
+        "#runtime-inventory .callable-review-table tr[data-inventory-row]{cursor:pointer}"
+        "#runtime-inventory .callable-review-table tr.selected{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}"
+        "#runtime-inventory .details-row{display:none}"
+        "#runtime-inventory .details-row.is-open{display:table-row}"
+        "#runtime-inventory .details-panel{max-width:100%;padding:.85rem 1rem;border:1px solid #d8e4f5;border-radius:.5rem;background:#fff;line-height:1.45;white-space:normal;overflow-wrap:anywhere}"
+        "</style>"
+    )
+
+
+def _render_combined_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
+    """Render the single maintainer dashboard with embedded runtime inventory."""
+    dashboard = _render_refactor_dashboard_html(flow_data)
+    dashboard = dashboard.replace("</head>", f"{_runtime_inventory_embed_css()}</head>")
+    dashboard = dashboard.replace("</main><script>", f"{_runtime_inventory_section_html(flow_data)}</main><script>", 1)
+    dashboard = dashboard.replace("</body></html>", f"{_runtime_inventory_script(flow_data)}</body></html>")
+    return dashboard
+
+
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global function call graph Markdown page."""
     del flow_data
@@ -4036,6 +4128,10 @@ def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
 > The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
 
 The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
+
+## Overview
+
+The Function Call Graph has one maintainer-facing dashboard: the Function Call Graph Dashboard. That dashboard combines public callable flows, architecture checks, the runtime inventory, and cleanup packet export into one review surface.
 
 ## How it works
 
@@ -4075,7 +4171,7 @@ The scanner then produces generated review artifacts that make the callable arch
 The generated review outputs are:
 
 * [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-* [Function Inventory](../assets/function-inventory.html)
+* [Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)
 * [function-call-graph.json](_data/function-call-graph.json)
 
 ## 3. Enforce architecture
@@ -4172,13 +4268,29 @@ The dashboard helps reviewers:
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
 
+### Public callable flows
+
+The public callable flow table shows notebook-facing functions, width, depth, recommendations, and signal summaries. Selecting a function opens its dependency tree and supporting helper details.
+
+### Architecture checks
+
+Architecture checks identify broken public-callable boundaries and maintainability review signals such as too many helpers, too many steps, shared helpers, and maybe-combine helpers.
+
+### Runtime inventory
+
+The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and only describes deduplicated runtime code assets under `src/fabricops_kit` that support public callables or template runtime references.
+
+### Cleanup packet export
+
+Cleanup packet export is available from the public callable flow and runtime inventory sections so maintainers can download focused JSON or YAML packets without leaving the dashboard.
+
 ## 5. AI refactor packets
 
 When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
 The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph.
 
-The Function Inventory exports `fabricops_support_inventory_cleanup_packet` for selected function level code assets.
+The dashboard runtime inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
 
 The packet keeps the AI refactor focused on:
 
@@ -4194,7 +4306,7 @@ The packet keeps the AI refactor focused on:
 
 The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
 
-<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Function Inventory](../assets/function-inventory.html) -->
+<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory) -->
 '''
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
@@ -5452,7 +5564,7 @@ def main() -> None:
         '  </section>',
         '</div>',
         "",
-        "<p><small>Function metrics are generated from the function inventory data.</small></p>",
+        "<p><small>Function metrics are generated from the runtime inventory data.</small></p>",
         "",
     ]
 
@@ -5484,7 +5596,7 @@ def main() -> None:
             '    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.',
             '    - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.',
             '    - [Function Call Graph](../assets/function-call-graph-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.',
-            '    - [Function Inventory](../assets/function-inventory.html): search/filter function-level code assets, select rows, and export AI refactor packets.',
+            '    - [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory): search/filter runtime code assets, select rows, and export AI refactor packets.',
             '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
             '    - Agent metadata: `_data/automation-manifest.json`.',
             '    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.',
@@ -5902,15 +6014,12 @@ def main() -> None:
     FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
     FUNCTION_CALL_GRAPH_DASHBOARD_PATH.write_text(
-        _format_generated_html_for_review(_render_refactor_dashboard_html(callable_flow_data)),
+        _format_generated_html_for_review(_render_combined_refactor_dashboard_html(callable_flow_data)),
         encoding="utf-8",
         newline="\n",
     )
-    FUNCTION_INVENTORY_PATH.write_text(
-        _format_generated_html_for_review(_render_refactor_inventory_html(callable_flow_data)),
-        encoding="utf-8",
-        newline="\n",
-    )
+    if FUNCTION_INVENTORY_PATH.exists():
+        FUNCTION_INVENTORY_PATH.unlink()
     _remove_stale_function_taxonomy_audit()
 
 
