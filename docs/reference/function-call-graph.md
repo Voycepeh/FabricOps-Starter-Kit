@@ -82,21 +82,21 @@ This helps prevent accidental architecture violations from becoming permanent.
 
 The Function Call Graph Dashboard is a review surface for public callable cleanup.
 
-It does not treat every signal as a failure. Architecture violations are boundary breaks, while the other signals are maintainability review hints that help reviewers decide where to inspect next.
+It does not treat every signal as a failure. Broken rules are boundary breaks, while the other signals are maintainability review hints that help reviewers decide where to inspect next.
 
 | Signal | What it means | Reviewer action |
 |---|---|---|
-| Architecture violation | The call graph contains a boundary break that should not be kept, such as a public callable calling another public callable, a shared helper calling a public function, or a helper reaching into a private helper owned by another file. | Fix this first before helper cleanup. |
-| Long chain | The public callable reaches through a deep helper chain. | Check whether the chain can be flattened or made easier to follow. |
-| Many dependencies | The public callable depends on many downstream helpers. | Check whether the function has become too wide or hard to reason about. |
-| Shared dependency | The callable uses helper logic that is also used elsewhere. | Treat this as informational unless the callable also exceeds width or depth thresholds. |
-| Review for merge | The graph found helper candidates that may be too small, too specific, or only useful to one caller. | Decide whether to keep the helper, move it to shared logic, or merge it into the caller. |
+| Broken rule | An architecture rule is broken and must be fixed first. Examples include a public callable calling another public callable, a shared helper calling a public function, or a helper reaching into a private helper owned by another file. | Fix this first before helper cleanup. |
+| Too many steps | Depth is 4 or more. Depth means how many call steps away the public function reaches. | Check whether the chain can be flattened or made easier to follow. |
+| Too many helpers | Width is 10 or more. Width means how many helper functions the public function depends on. | Check whether the function has become too wide or hard to reason about. |
+| Shared helper | The helper is used by more than one public function. | Treat this as informational unless the callable also exceeds width or depth thresholds. |
+| Maybe combine | The helper may be too small, too specific, or only useful to one caller. | Decide whether to keep the helper, move it to shared logic, or merge it into the caller. |
 
 The key distinction is:
 
 | Type | Meaning |
 |---|---|
-| Architecture violation | A boundary rule is broken and should be fixed. |
+| Broken rule | A boundary rule is broken and should be fixed. |
 | Maintainability signal | The code may still be valid, but it deserves review before refactoring. |
 
 The preferred public callable shape is still:
@@ -111,15 +111,15 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-This matches what the dashboard actually shows: `Architecture violation`, `Long chain`, `Many dependencies`, `Shared dependency`, and `Review for merge`. The dashboard code builds those exact signals in `flowSignals()`.
+This matches what the dashboard actually shows: `Broken rule`, `Too many steps`, `Too many helpers`, `Shared helper`, and `Maybe combine`. The dashboard code builds those exact signals in `flowSignals()`. Depth means how many call steps away the public function reaches. Width means how many helper functions the public function depends on.
 
-### Many dependencies
+### Too many helpers
 
 A public callable can become hard to reason about when it pulls in too many downstream helpers.
 
-![Many dependencies](../assets/fabricops-bad-example-large-surface-area.png)
+![Too many helpers](../assets/fabricops-bad-example-large-surface-area.png)
 
-### Long nested chains
+### Too many steps
 
 Long nested chains make it harder to understand where the real work happens.
 

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T12:04:00.249084Z",
+    "generated_at_utc": "2026-06-30T12:30:58.508548Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -2030,7 +2030,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -2113,7 +2113,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -2361,7 +2361,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -2444,7 +2444,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -2565,7 +2565,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -2860,7 +2860,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -2927,7 +2927,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -2994,7 +2994,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -3074,7 +3074,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -3169,7 +3169,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -3326,7 +3326,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -3393,7 +3393,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -3526,7 +3526,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -3606,7 +3606,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -3862,7 +3862,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -4403,7 +4403,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -6169,7 +6169,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -6955,7 +6955,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -7020,7 +7020,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -7099,7 +7099,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -7163,7 +7163,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -7288,7 +7288,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -7367,7 +7367,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -7490,7 +7490,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -7847,7 +7847,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -8207,7 +8207,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -8548,7 +8548,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -8615,7 +8615,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -8682,7 +8682,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -9482,7 +9482,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -9757,7 +9757,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -10184,7 +10184,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -10429,7 +10429,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -10608,7 +10608,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -10761,7 +10761,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -10825,7 +10825,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -10917,7 +10917,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -11068,7 +11068,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -11134,7 +11134,7 @@
       "priority": "Low",
       "signals": [
         "callee_classification_pending",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -11638,7 +11638,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -11868,7 +11868,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -11948,7 +11948,7 @@
       "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -12091,7 +12091,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -12282,7 +12282,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -12632,7 +12632,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -13129,7 +13129,7 @@
       "recommended_action": "Rename to shared helper",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -13297,7 +13297,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -14534,7 +14534,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -15812,7 +15812,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -16300,7 +16300,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -16635,7 +16635,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -16890,7 +16890,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -17050,7 +17050,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -17601,7 +17601,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -17882,7 +17882,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -17963,7 +17963,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -18992,7 +18992,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -19135,7 +19135,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -19455,7 +19455,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -19588,7 +19588,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -19670,7 +19670,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -19817,7 +19817,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22275,7 +22275,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22418,7 +22418,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -22738,7 +22738,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -22871,7 +22871,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -22953,7 +22953,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -23100,7 +23100,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -26990,7 +26990,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27056,7 +27056,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -27235,7 +27235,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29039,7 +29039,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -29103,7 +29103,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29193,7 +29193,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29283,7 +29283,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -29435,7 +29435,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29527,7 +29527,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29604,7 +29604,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -29922,7 +29922,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -30076,7 +30076,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -30157,7 +30157,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -30247,7 +30247,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -30615,7 +30615,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -31052,7 +31052,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -31506,7 +31506,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -31611,7 +31611,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -31789,7 +31789,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -33107,7 +33107,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -33212,7 +33212,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -33498,7 +33498,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -34034,7 +34034,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -34160,7 +34160,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -34372,7 +34372,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -34731,7 +34731,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -34844,7 +34844,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -34923,7 +34923,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -34987,7 +34987,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -35205,7 +35205,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -35270,7 +35270,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -35335,7 +35335,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -36096,7 +36096,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -36498,7 +36498,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -37003,7 +37003,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -38930,7 +38930,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -39085,7 +39085,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -39240,7 +39240,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -39392,7 +39392,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Leaf internal helper",
         "Layer assignment needs review"
@@ -39456,7 +39456,7 @@
       "recommended_action": "Merge into owner",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -39537,7 +39537,7 @@
       "priority": "Low",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -39675,7 +39675,7 @@
       "recommended_action": "Keep private helper",
       "priority": "Low",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -40063,7 +40063,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -40279,7 +40279,7 @@
       "recommended_action": "Rename to shared helper",
       "priority": "Medium",
       "signals": [
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -40483,7 +40483,7 @@
       "priority": "Medium",
       "signals": [
         "allowed_internal_role_call",
-        "Review for merge",
+        "Maybe combine",
         "Used by one function",
         "Layer assignment needs review"
       ],
@@ -40616,9 +40616,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -40654,7 +40654,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -40697,7 +40697,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41119,7 +41119,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41170,7 +41170,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41221,7 +41221,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41332,7 +41332,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -41405,7 +41405,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41478,9 +41478,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 21,
       "max_depth": 6,
@@ -41521,7 +41521,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -41565,7 +41565,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42094,7 +42094,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42275,7 +42275,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42320,7 +42320,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42365,7 +42365,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -42411,7 +42411,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -42526,7 +42526,7 @@
           "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42648,8 +42648,8 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Review for merge"
+        "Maybe combine",
+        "Too many steps"
       ],
       "downstream_count": 4,
       "max_depth": 4,
@@ -42687,7 +42687,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42730,7 +42730,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42917,7 +42917,7 @@
           "recommended_action": "Merge into owner",
           "priority": "Medium",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -42979,8 +42979,8 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers"
       ],
       "downstream_count": 10,
       "max_depth": 3,
@@ -43358,7 +43358,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -43402,7 +43402,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -43446,7 +43446,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -43491,9 +43491,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -43932,7 +43932,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -44025,7 +44025,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -44110,7 +44110,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -44240,9 +44240,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -44520,7 +44520,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -44726,7 +44726,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -44819,7 +44819,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -44904,7 +44904,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -45034,9 +45034,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 14,
       "max_depth": 4,
@@ -45667,7 +45667,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -45711,7 +45711,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -45755,7 +45755,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -45842,9 +45842,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 16,
       "max_depth": 4,
@@ -46325,7 +46325,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -46368,7 +46368,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -46411,7 +46411,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -46455,7 +46455,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -46499,7 +46499,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -46672,9 +46672,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 12,
       "max_depth": 4,
@@ -47194,7 +47194,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -47238,7 +47238,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -47282,7 +47282,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -47369,9 +47369,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -47853,7 +47853,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -47981,7 +47981,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -48025,7 +48025,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -48069,7 +48069,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48156,11 +48156,11 @@
       "priority": "High",
       "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Broken rule",
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 119,
       "max_depth": 7,
@@ -48210,7 +48210,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48253,7 +48253,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48401,7 +48401,7 @@
           "architecture_result": "Violation",
           "violation_type": "Cross-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48444,7 +48444,7 @@
           "violation_type": "Cross-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48841,7 +48841,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -48883,7 +48883,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49459,7 +49459,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49502,7 +49502,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49545,7 +49545,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49588,7 +49588,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49631,7 +49631,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49674,7 +49674,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -49766,7 +49766,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -50032,7 +50032,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -50120,7 +50120,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -50219,7 +50219,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -50461,7 +50461,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -50990,7 +50990,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -51034,7 +51034,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -51229,7 +51229,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -51823,7 +51823,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -51876,7 +51876,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -51929,7 +51929,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -52087,7 +52087,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -52188,7 +52188,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -52519,7 +52519,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -52677,7 +52677,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -53116,7 +53116,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -53356,7 +53356,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -53415,7 +53415,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -53474,7 +53474,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -53596,7 +53596,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -53822,7 +53822,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -54139,7 +54139,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -54205,7 +54205,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -54271,7 +54271,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -54338,7 +54338,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -54494,7 +54494,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -54798,8 +54798,8 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers"
       ],
       "downstream_count": 16,
       "max_depth": 3,
@@ -54923,7 +54923,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55016,7 +55016,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55057,7 +55057,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55224,7 +55224,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55317,7 +55317,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55358,7 +55358,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55521,7 +55521,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -55609,7 +55609,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55775,7 +55775,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -55839,7 +55839,7 @@
           "recommended_action": "Merge into owner",
           "priority": "Medium",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56014,7 +56014,7 @@
           "recommended_action": "Merge into owner",
           "priority": "Medium",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56097,7 +56097,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56199,10 +56199,10 @@
       "priority": "High",
       "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Broken rule",
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 12,
       "max_depth": 4,
@@ -56241,7 +56241,7 @@
           "violation_type": "Cross-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56285,7 +56285,7 @@
           "violation_type": "Cross-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56326,7 +56326,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56495,7 +56495,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -56539,7 +56539,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -56583,7 +56583,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56633,7 +56633,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -56835,7 +56835,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -56951,9 +56951,9 @@
       "source_start_line": 15,
       "source_end_line": 80,
       "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "recommended_simplification_action": "Inspect helpers marked Maybe combine",
       "warnings": [
-        "Review for merge"
+        "Maybe combine"
       ],
       "downstream_count": 3,
       "max_depth": 3,
@@ -56992,7 +56992,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57036,7 +57036,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57182,7 +57182,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57245,9 +57245,9 @@
       "source_start_line": 15,
       "source_end_line": 59,
       "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "recommended_simplification_action": "Inspect helpers marked Maybe combine",
       "warnings": [
-        "Review for merge"
+        "Maybe combine"
       ],
       "downstream_count": 3,
       "max_depth": 3,
@@ -57286,7 +57286,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57330,7 +57330,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57476,7 +57476,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57539,9 +57539,9 @@
       "source_start_line": 14,
       "source_end_line": 50,
       "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "recommended_simplification_action": "Inspect helpers marked Maybe combine",
       "warnings": [
-        "Review for merge"
+        "Maybe combine"
       ],
       "downstream_count": 3,
       "max_depth": 3,
@@ -57580,7 +57580,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57624,7 +57624,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57770,7 +57770,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57835,11 +57835,11 @@
       "priority": "High",
       "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Broken rule",
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 59,
       "max_depth": 9,
@@ -57891,7 +57891,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -57934,7 +57934,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -58055,7 +58055,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -58195,7 +58195,7 @@
           "architecture_result": "Violation",
           "violation_type": "Cross-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -59057,7 +59057,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -60022,7 +60022,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -60069,7 +60069,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -60252,7 +60252,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -60684,7 +60684,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -60756,7 +60756,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -60828,7 +60828,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -60901,7 +60901,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -61069,7 +61069,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -61155,10 +61155,10 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 47,
       "max_depth": 7,
@@ -61263,7 +61263,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -61365,7 +61365,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -61633,7 +61633,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -62029,7 +62029,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -62599,7 +62599,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -62688,7 +62688,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -63038,7 +63038,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -63229,7 +63229,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -63285,7 +63285,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -63341,7 +63341,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -63398,7 +63398,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -63581,7 +63581,7 @@
           "priority": "Low",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -63698,10 +63698,10 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 67,
       "max_depth": 7,
@@ -64051,7 +64051,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64093,7 +64093,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64135,7 +64135,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64225,7 +64225,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64313,7 +64313,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64355,7 +64355,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64946,7 +64946,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -64989,7 +64989,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -65077,7 +65077,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -66240,7 +66240,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -66709,7 +66709,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -67003,7 +67003,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -67070,7 +67070,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -67137,7 +67137,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -67205,7 +67205,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -67398,10 +67398,10 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 67,
       "max_depth": 7,
@@ -67751,7 +67751,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -67793,7 +67793,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -67835,7 +67835,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -67925,7 +67925,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -68013,7 +68013,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -68055,7 +68055,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -68646,7 +68646,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -68689,7 +68689,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -68777,7 +68777,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -69940,7 +69940,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -70409,7 +70409,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -70703,7 +70703,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -70770,7 +70770,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -70837,7 +70837,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -70905,7 +70905,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -71096,9 +71096,9 @@
       "source_start_line": 15,
       "source_end_line": 39,
       "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "recommended_simplification_action": "Inspect helpers marked Maybe combine",
       "warnings": [
-        "Review for merge"
+        "Maybe combine"
       ],
       "downstream_count": 3,
       "max_depth": 3,
@@ -71137,7 +71137,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71181,7 +71181,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71327,7 +71327,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71390,9 +71390,9 @@
       "source_start_line": 14,
       "source_end_line": 32,
       "priority": "Medium",
-      "recommended_simplification_action": "Inspect helpers marked Review for merge",
+      "recommended_simplification_action": "Inspect helpers marked Maybe combine",
       "warnings": [
-        "Review for merge"
+        "Maybe combine"
       ],
       "downstream_count": 3,
       "max_depth": 3,
@@ -71431,7 +71431,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71475,7 +71475,7 @@
           "violation_type": "Same-file private dependency",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71621,7 +71621,7 @@
           "priority": "Medium",
           "signals": [
             "allowed_internal_role_call",
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -71686,9 +71686,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 17,
       "max_depth": 4,
@@ -72247,7 +72247,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -72290,7 +72290,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -72333,7 +72333,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -72377,7 +72377,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -72421,7 +72421,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -72594,11 +72594,11 @@
       "priority": "High",
       "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Broken rule",
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 39,
       "max_depth": 6,
@@ -72642,7 +72642,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -72685,7 +72685,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -73477,7 +73477,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -73691,7 +73691,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -74177,7 +74177,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -74222,7 +74222,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -74267,7 +74267,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -74313,7 +74313,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -74490,7 +74490,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -74649,11 +74649,11 @@
       "priority": "High",
       "recommended_simplification_action": "Fix architecture issue",
       "warnings": [
-        "Architecture violation",
-        "Long chain",
-        "Many dependencies",
-        "Review for merge",
-        "Spans many modules"
+        "Broken rule",
+        "Maybe combine",
+        "Spans many modules",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 39,
       "max_depth": 6,
@@ -74697,7 +74697,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -74740,7 +74740,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -75575,7 +75575,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -75747,7 +75747,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -76233,7 +76233,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -76278,7 +76278,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -76323,7 +76323,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -76369,7 +76369,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -76546,7 +76546,7 @@
           "recommended_action": "Keep private helper",
           "priority": "Low",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],
@@ -76717,9 +76717,9 @@
       "priority": "Medium",
       "recommended_simplification_action": "Review nested helpers",
       "warnings": [
-        "Long chain",
-        "Many dependencies",
-        "Review for merge"
+        "Maybe combine",
+        "Too many helpers",
+        "Too many steps"
       ],
       "downstream_count": 15,
       "max_depth": 4,
@@ -77201,7 +77201,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -77329,7 +77329,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -77373,7 +77373,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Leaf internal helper",
             "Layer assignment needs review"
@@ -77417,7 +77417,7 @@
           "architecture_result": "Warning",
           "violation_type": "Same-file private dependency",
           "signals": [
-            "Review for merge",
+            "Maybe combine",
             "Used by one function",
             "Layer assignment needs review"
           ],

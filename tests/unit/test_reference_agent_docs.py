@@ -318,8 +318,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "## 2. Scan and analyze" in flow_text
     assert "## 3. Enforce architecture" in flow_text
     assert "### What the dashboard signals" in flow_text
-    assert "### Many dependencies" in flow_text
-    assert "### Long nested chains" in flow_text
+    assert "### Too many helpers" in flow_text
+    assert "### Too many steps" in flow_text
     assert "## 4. Function Call Graph Dashboard" in flow_text
     assert "## 5. AI refactor packets" in flow_text
     assert "## Preferred callable file pattern" not in flow_text
@@ -339,8 +339,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     expected_flow_phrases = [
         "Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets",
         "What the dashboard signals",
-        "Architecture violation | The call graph contains a boundary break",
-        "Shared dependency | The callable uses helper logic",
+        "Broken rule | An architecture rule is broken",
+        "Shared helper | The helper is used by more than one public function",
         "Maintainability signal | The code may still be valid",
         "Open architecture dashboard",
     ]
@@ -449,7 +449,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architectureViolationFlows=flows.filter" in compact_dashboard_text
     assert "function architectureFindingRows(flow)" in dashboard_text
     assert "function architectureFindingCount(flow)" in dashboard_text
-    assert "c.architecture_result==='Violation'||c.recommended_action==='Architectureviolation'" in compact_dashboard_text
+    assert "c.architecture_result==='Violation'||c.recommended_action==='Brokenrule'" in compact_dashboard_text
     assert "functionmarkdownLink(i,label)" in compact_dashboard_text
     assert "cross_layer_issue_count" not in dashboard_text
     header_order = [
@@ -501,7 +501,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "if(key==='findings')" not in compact_dashboard_text
     card_order = [
         compact_dashboard_text.index("label:'Publiccallables'"),
-        compact_dashboard_text.index("label:'Architectureviolations'"),
+        compact_dashboard_text.index("label:'Brokenrules'"),
         compact_dashboard_text.index("label:'Reviewcandidates'"),
     ]
     assert card_order == sorted(card_order)
@@ -558,9 +558,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function publicCallableSeverity(flow)" in dashboard_text
     assert "Review candidates" in dashboard_text
     assert "flows.filter(isGraphReviewCandidate).length" in compact_dashboard_text
-    assert "external_dependents_count||0)>0)signals.push('Shareddependency')" in compact_dashboard_text
+    assert "external_dependents_count||0)>0)signals.push('Sharedhelper')" in compact_dashboard_text
     assert "if(isGraphReviewCandidate(flow))return'Reviewnestedhelpers'" in compact_dashboard_text
-    assert "Shareddependency','Reviewformerge'].includes" not in compact_dashboard_text
+    assert "Shareddependency','Maybecombine'].includes" not in compact_dashboard_text
     assert "severity-${severity}-row" in dashboard_text
     assert "severity-review-row" in dashboard_text
     assert "severity-architecture-row" in dashboard_text
@@ -587,7 +587,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function markdownPacket(packet)" not in dashboard_text
     assert "function yamlPacket(packet)" in dashboard_text
     assert "publicCallableSeverity(f) === \"architecture\"" in dashboard_text
-    assert "Review for merge" in dashboard_text
+    assert "Maybe combine" in dashboard_text
     assert "Review helper" in dashboard_text
     assert "Review helpers" in dashboard_text
     assert "reasons.join('')" not in compact_dashboard_text
@@ -879,7 +879,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "First make it exist. Then make it good." in callable_flow_text
     assert "AI generated code can work correctly but still leave behind messy integration patterns" in callable_flow_text
     assert "What the dashboard signals" in callable_flow_text
-    assert "Many dependencies" in callable_flow_text
+    assert "Too many helpers" in callable_flow_text
     assert "Long nested chains" in callable_flow_text
     assert "Function Call Graph Dashboard" in callable_flow_text
     assert "Open architecture dashboard" in callable_flow_text
@@ -1803,9 +1803,9 @@ def test_callable_architecture_layer_rules_and_labels():
     assert "src/fabricops_kit/io/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
     assert "src/fabricops_kit/widgets/shared.py" in validator.DOMAIN_SHARED_HELPER_FILES
 
-    assert generator._display_label("Cross-layer dependency") == "Architecture violation"
-    assert generator._display_label("Deep chain") == "Long chain"
-    assert generator._display_label("Single-use helper candidate") == "Review for merge"
+    assert generator._display_label("Cross-layer dependency") == "Broken rule"
+    assert generator._display_label("Deep chain") == "Too many steps"
+    assert generator._display_label("Single-use helper candidate") == "Maybe combine"
 
 
 def test_callable_architecture_validation_rejects_private_visible_rows(monkeypatch, tmp_path) -> None:
@@ -1869,7 +1869,7 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("Private helper", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -1918,7 +1918,7 @@ def test_callable_architecture_validation_allows_public_config_classes(monkeypat
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("FabricStore Public config class Classes", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -1955,7 +1955,7 @@ def test_callable_architecture_validation_rejects_unclassified_supporting_object
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -2046,7 +2046,7 @@ def test_callable_architecture_validation_allows_private_helpers_in_public_flow(
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("Private helper", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -2081,7 +2081,7 @@ def test_callable_architecture_validation_rejects_supporting_objects_in_public_f
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -2140,7 +2140,7 @@ def test_callable_architecture_validation_accepts_new_violation_types(monkeypatc
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -2177,7 +2177,7 @@ def test_callable_architecture_validation_rejects_legacy_violation_types(monkeyp
     }
     dashboard = tmp_path / "dashboard.html"
     inventory = tmp_path / "inventory.html"
-    dashboard.write_text("Architecture violations", encoding="utf-8")
+    dashboard.write_text("Broken rules", encoding="utf-8")
     inventory.write_text("", encoding="utf-8")
     monkeypatch.setattr(validator, "DASHBOARD_PATH", dashboard)
     monkeypatch.setattr(validator, "INVENTORY_PATH", inventory)
@@ -2315,7 +2315,7 @@ def test_callable_dashboard_shared_helper_public_function_is_violation() -> None
     compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
 
     assert "Shared helper calls public function" in dashboard_text
-    assert "['Sharedhelper','Publicfunction','Architectureviolation']" in compact_dashboard_text
+    assert "['Sharedhelper','Publicfunction','Brokenrule']" in compact_dashboard_text
     assert "['Sharedhelper','Publicfunction','Allowed']" not in compact_dashboard_text
     assert "hasArchitectureViolation(flow)&&isGraphReviewCandidate(flow)" not in compact_dashboard_text
 
@@ -2346,7 +2346,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Source module" not in dashboard_text
     assert "Called by" in dashboard_text
     assert "Used outside" in dashboard_text
-    assert "Review for merge" in dashboard_text
+    assert "Maybe combine" in dashboard_text
     assert "Violation reason" in dashboard_text
     assert "Warning reason" in dashboard_text
     assert "Path example" in dashboard_text
@@ -2357,7 +2357,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     compact = _remove_whitespace(dashboard_text)
     assert "<spanclass=\"badgemuted\">end</span>" not in compact
     assert "functionflowTreeStatusChips(n)" in compact
-    assert "Reviewformerge" in compact
+    assert "Maybecombine" in compact
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -2680,15 +2680,15 @@ def test_refactor_inventory_distinguishes_single_repeated_recursive_and_heavy_he
 
     assert by_qn[once]["call_site_count"] == 1
     assert by_qn[once]["recursive"] is False
-    assert "Review for merge" in by_qn[once]["signals"]
+    assert "Maybe combine" in by_qn[once]["signals"]
     assert "Used by one function" in by_qn[once]["signals"]
     assert by_qn[repeated]["call_site_count"] == 2
     assert by_qn[repeated]["repeated_within_single_caller"] is True
     assert "Used several times in one function" in by_qn[repeated]["signals"]
-    assert "Review for merge" not in by_qn[repeated]["signals"]
+    assert "Maybe combine" not in by_qn[repeated]["signals"]
     assert by_qn[recursive]["recursive"] is True
     assert "Recursive helper" in by_qn[recursive]["signals"]
-    assert "Review for merge" not in by_qn[recursive]["signals"]
+    assert "Maybe combine" not in by_qn[recursive]["signals"]
     assert by_qn[heavy]["inbound_count"] == 6
     assert "Heavily used helper" in by_qn[heavy]["signals"]
 
