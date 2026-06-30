@@ -29,7 +29,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
     audit_columns = agreement.STANDARD_RUNTIME_AUDIT_COLUMNS
     writes = []
 
-    monkeypatch.setattr(agreement, "_build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
+    monkeypatch.setattr(agreement, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
     monkeypatch.setattr(agreement, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement, "_generate_agreement_id", lambda *args, **kwargs: "DA-GENERATED")
     monkeypatch.setattr(agreement, "_write_row", lambda **kwargs: writes.append(kwargs))

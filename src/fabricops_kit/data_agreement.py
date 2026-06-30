@@ -18,7 +18,7 @@ from typing import Any
 from .agreement_selection_state import get_selected_agreement_state
 from .config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from .metadata import _build_runtime_audit_fields, coerce_metadata_row_types
+from .metadata import build_runtime_audit_fields, coerce_metadata_row_types
 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
@@ -367,7 +367,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     else:
         row["is_active"] = bool(_active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
-    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row
@@ -459,7 +459,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
-    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = _config_value(config, "metadata_tables", {}) or {}
     _write_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
@@ -539,7 +539,7 @@ def _save_agreement_evidence_records(*, spark: Any, config: Any, env: str, agree
         raise ValueError("contract_version is required before saving agreement evidence.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
-    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context)
     uploaded_at = audit.get("_committed_at") or datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
     uploaded_by = audit.get("_committed_by") or ""
 

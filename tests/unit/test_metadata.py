@@ -16,7 +16,7 @@ pytestmark = pytest.mark.unit
 
 def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_notebookutils):
     """Verify runtime audit fields resolve fabric context and allow overrides."""
-    audit = metadata._build_runtime_audit_fields(
+    audit = metadata.build_runtime_audit_fields(
         config=framework_config(),
         env="dev",
         runtime_context={"activityId": "manual-activity"},
@@ -50,7 +50,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
         },
     )
 
-    row = metadata._register_current_notebook(
+    row = metadata.register_current_notebook(
         spark=FakeSpark(),
         config=framework_config(),
         env="dev",
@@ -108,7 +108,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     monkeypatch.setattr(metadata, "_runtime_context", lambda: {"currentNotebookId": "notebook-id"})
     monkeypatch.setattr(metadata, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
 
-    active = metadata._current_notebook_active_registrations(
+    active = metadata.current_notebook_active_registrations(
         object(), config=framework_config(), env="dev", notebook_type="02_pipeline", environment_name="dev", registration_role="primary"
     )
 

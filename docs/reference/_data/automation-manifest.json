@@ -3302,8 +3302,8 @@
       "fabricops_kit.governance_review._dq_summary",
       "fabricops_kit.governance_review._prepare_dq_profile_input_rows",
       "fabricops_kit.metadata._audit_timestamp_value",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._now_audit_timestamp",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.pipeline._now_iso",
       "fabricops_kit.pipeline._prepare_pipeline_table_configs_workflow",
       "fabricops_kit.widgets.shared._audit_date",
@@ -3344,8 +3344,8 @@
       "_dq_summary",
       "_prepare_dq_profile_input_rows",
       "_audit_timestamp_value",
-      "_build_runtime_audit_fields",
       "_now_audit_timestamp",
+      "build_runtime_audit_fields",
       "_now_iso",
       "_prepare_pipeline_table_configs_workflow",
       "_audit_date",
@@ -3412,7 +3412,7 @@
       "fabricops_kit.io.resolve_target_store",
       "fabricops_kit.io.shared.configured_lakehouse_schema",
       "fabricops_kit.io.shared.resolve_target_store",
-      "fabricops_kit.metadata._build_runtime_audit_fields"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "outbound": [
       "fabricops_kit.config.shared._normalize_path_config"
@@ -3450,7 +3450,7 @@
       "resolve_target_store",
       "configured_lakehouse_schema",
       "resolve_target_store",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "_normalize_path_config"
     ]
   },
@@ -3908,7 +3908,7 @@
       "fabricops_kit.data_agreement._parse_iso_date",
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.metadata._build_runtime_audit_fields"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -3943,7 +3943,7 @@
       "_parse_iso_date",
       "_serialize_custom_fields",
       "_write_row",
-      "_build_runtime_audit_fields"
+      "build_runtime_audit_fields"
     ]
   },
   {
@@ -3962,7 +3962,7 @@
       "fabricops_kit.data_agreement._serialize_custom_fields",
       "fabricops_kit.data_agreement._to_bool",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.metadata._build_runtime_audit_fields"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -3994,7 +3994,7 @@
       "_serialize_custom_fields",
       "_to_bool",
       "_write_row",
-      "_build_runtime_audit_fields"
+      "build_runtime_audit_fields"
     ]
   },
   {
@@ -4490,7 +4490,7 @@
       "fabricops_kit.data_agreement._config_value",
       "fabricops_kit.data_agreement._prepare_evidence_file_references",
       "fabricops_kit.data_agreement._write_row",
-      "fabricops_kit.metadata._build_runtime_audit_fields"
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -4519,7 +4519,7 @@
       "_config_value",
       "_prepare_evidence_file_references",
       "_write_row",
-      "_build_runtime_audit_fields"
+      "build_runtime_audit_fields"
     ]
   },
   {
@@ -5122,8 +5122,8 @@
     "outbound": [
       "fabricops_kit.governance_review._value",
       "fabricops_kit.metadata._audit_timestamp_value",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
-      "fabricops_kit.metadata._resolve_action_by"
+      "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -5152,8 +5152,8 @@
       "build_enrichment_rule_records",
       "_value",
       "_audit_timestamp_value",
-      "_build_runtime_audit_fields",
-      "_resolve_action_by"
+      "_resolve_action_by",
+      "build_runtime_audit_fields"
     ]
   },
   {
@@ -5960,8 +5960,8 @@
       "fabricops_kit.governance_review.load_catalogue_profile_rows",
       "fabricops_kit.metadata._audit_timestamp_value",
       "fabricops_kit.metadata._build_metadata_table_key",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
-      "fabricops_kit.metadata._resolve_action_by"
+      "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields"
     ],
     "used_in_templates": [],
     "glossary_terms": [],
@@ -5995,8 +5995,8 @@
       "load_catalogue_profile_rows",
       "_audit_timestamp_value",
       "_build_metadata_table_key",
-      "_build_runtime_audit_fields",
-      "_resolve_action_by"
+      "_resolve_action_by",
+      "build_runtime_audit_fields"
     ]
   },
   {
@@ -11252,8 +11252,8 @@
       "fabricops_kit.governance_review.record_table_governance",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.metadata._load_notebook_registry",
-      "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._write_guardrail_result_row",
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
       "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
       "fabricops_kit.pipeline.write_catalogue_evidence",
@@ -11302,8 +11302,8 @@
       "record_table_governance",
       "enforce_profile_behavior",
       "_load_notebook_registry",
-      "_register_current_notebook",
       "_write_guardrail_result_row",
+      "register_current_notebook",
       "_write_pipeline_lineage_workflow",
       "_write_pipeline_run_summary_workflow",
       "write_catalogue_evidence",
@@ -12203,8 +12203,8 @@
       "fabricops_kit.governance_review._write_rule_records",
       "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
       "fabricops_kit.governance_review.record_table_governance",
-      "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._write_guardrail_result_row",
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
       "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
       "fabricops_kit.pipeline.write_catalogue_evidence",
@@ -12246,8 +12246,8 @@
       "_write_rule_records",
       "_write_table_metadata_enrichment_records",
       "record_table_governance",
-      "_register_current_notebook",
       "_write_guardrail_result_row",
+      "register_current_notebook",
       "_write_pipeline_lineage_workflow",
       "_write_pipeline_run_summary_workflow",
       "write_catalogue_evidence",
@@ -12607,8 +12607,8 @@
       "fabricops_kit.governance_review.apply_governance_rule_action",
       "fabricops_kit.governance_review.build_table_governance_policy_record",
       "fabricops_kit.governance_review.record_table_governance",
-      "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._write_guardrail_result_row",
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.pipeline._timestamp_value",
       "fabricops_kit.widgets.shared._approved_review_context",
       "fabricops_kit.widgets.shared._authoring_lifecycle",
@@ -12650,8 +12650,8 @@
       "apply_governance_rule_action",
       "build_table_governance_policy_record",
       "record_table_governance",
-      "_register_current_notebook",
       "_write_guardrail_result_row",
+      "register_current_notebook",
       "_timestamp_value",
       "_approved_review_context",
       "_authoring_lifecycle",
@@ -12812,74 +12812,6 @@
     ]
   },
   {
-    "name": "_build_runtime_audit_fields",
-    "qualified_name": "fabricops_kit.metadata._build_runtime_audit_fields",
-    "module": "metadata",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.data_agreement._create_or_update_data_agreement",
-      "fabricops_kit.data_agreement._create_or_update_data_steward",
-      "fabricops_kit.data_agreement._save_agreement_evidence_records",
-      "fabricops_kit.governance_review._approved_review_context",
-      "fabricops_kit.governance_review._evaluate_governance_readiness",
-      "fabricops_kit.metadata._write_guardrail_result_row",
-      "fabricops_kit.pipeline._runtime_audit_fields",
-      "fabricops_kit.widgets.shared._approved_review_context",
-      "fabricops_kit.widgets.shared._create_or_update_data_agreement",
-      "fabricops_kit.widgets.shared._create_or_update_data_steward",
-      "fabricops_kit.widgets.widget_render_agreement_evidence._save_agreement_evidence_records"
-    ],
-    "outbound": [
-      "fabricops_kit.config.shared.get_current_audit_timestamp",
-      "fabricops_kit.config.shared.get_store",
-      "fabricops_kit.metadata._context_get",
-      "fabricops_kit.metadata._runtime_context",
-      "fabricops_kit.metadata._safe_str"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/metadata.py",
-    "source_start_line": 238,
-    "source_end_line": 311,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L238-L311",
-    "docs_path": null,
-    "summary": "Build reusable framework-managed audit fields for metadata-table rows.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "config : FrameworkConfig | dict, optional\n    Framework config containing ``path_config.paths[env][\"metadata\"]``.\nenv : str, optional\n    Environment key paired with ``config``.\ntimestamp_field, user_field, workspace_field, notebook_field : str\n    Output keys for timestamp, user, workspace, and notebook audit values.\nmetadata_lakehouse_field, activity_field : str\n    Output keys for metadata lakehouse and Fabric activity audit values.\ncommitted_by, committed_at : str, optional\n    Deterministic audit overrides. When omitted, values resolve from Fabric\n    runtime context and the configured audit timezone timestamp.\nruntime_context : dict[str, Any], optional\n    Values merged over :func:`_runtime_context`, primarily for tests or\n    controlled notebook overrides.",
-    "output": "dict[str, str]\n    Framework-managed metadata audit values keyed by the supplied field\n    names.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_create_or_update_data_agreement",
-      "_create_or_update_data_steward",
-      "_save_agreement_evidence_records",
-      "_approved_review_context",
-      "_evaluate_governance_readiness",
-      "_write_guardrail_result_row",
-      "_runtime_audit_fields",
-      "_approved_review_context",
-      "_create_or_update_data_agreement",
-      "_create_or_update_data_steward",
-      "_save_agreement_evidence_records",
-      "get_current_audit_timestamp",
-      "get_store",
-      "_context_get",
-      "_runtime_context",
-      "_safe_str"
-    ]
-  },
-  {
     "name": "_coerce_metadata_value",
     "qualified_name": "fabricops_kit.metadata._coerce_metadata_value",
     "module": "metadata",
@@ -12961,11 +12893,11 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
-      "fabricops_kit.metadata._current_notebook_active_registrations",
-      "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._resolve_action_by",
-      "fabricops_kit.metadata._runtime_context"
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
+      "fabricops_kit.metadata.current_notebook_active_registrations",
+      "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -12991,57 +12923,11 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_build_runtime_audit_fields",
-      "_current_notebook_active_registrations",
-      "_register_current_notebook",
       "_resolve_action_by",
-      "_runtime_context"
-    ]
-  },
-  {
-    "name": "_current_notebook_active_registrations",
-    "qualified_name": "fabricops_kit.metadata._current_notebook_active_registrations",
-    "module": "metadata",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow"
-    ],
-    "outbound": [
-      "fabricops_kit.metadata._context_get",
-      "fabricops_kit.metadata._load_notebook_registry",
-      "fabricops_kit.metadata._runtime_context",
-      "fabricops_kit.metadata._safe_str"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/metadata.py",
-    "source_start_line": 489,
-    "source_end_line": 545,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L489-L545",
-    "docs_path": null,
-    "summary": "Return active agreement registrations for the running notebook.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to read the metadata table.\nconfig : FrameworkConfig or dict\n    Metadata route configuration from ``00_env_config``.\nenv : str\n    Environment key paired with ``config``.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.\nnotebook_type, environment_name, registration_role : str, optional\n    Optional filters for notebook phase, environment, and primary versus\n    additional registration role.\nmissing_ok : bool, default=True\n    Return an empty list when the registry cannot be read.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override used when reading the\n    notebook registry.",
-    "output": "list[dict[str, Any]]\n    Active latest registration rows for the current notebook runtime.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_select_agreement_widget_workflow",
-      "_context_get",
-      "_load_notebook_registry",
       "_runtime_context",
-      "_safe_str"
+      "build_runtime_audit_fields",
+      "current_notebook_active_registrations",
+      "register_current_notebook"
     ]
   },
   {
@@ -13052,7 +12938,7 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.metadata._current_notebook_active_registrations"
+      "fabricops_kit.metadata.current_notebook_active_registrations"
     ],
     "outbound": [
       "fabricops_kit.io.shared.configured_lakehouse_schema",
@@ -13083,7 +12969,7 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_current_notebook_active_registrations",
+      "current_notebook_active_registrations",
       "configured_lakehouse_schema",
       "read_lakehouse_table_core",
       "_coerce_row_dicts",
@@ -13099,7 +12985,7 @@
     "function_category": "internal-private",
     "inbound": [
       "fabricops_kit.metadata._load_notebook_registry",
-      "fabricops_kit.metadata._register_current_notebook"
+      "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -13126,7 +13012,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "_load_notebook_registry",
-      "_register_current_notebook"
+      "register_current_notebook"
     ]
   },
   {
@@ -13164,60 +13050,6 @@
     "verification": "Not documented yet",
     "related_functions": [
       "get_current_audit_timestamp"
-    ]
-  },
-  {
-    "name": "_register_current_notebook",
-    "qualified_name": "fabricops_kit.metadata._register_current_notebook",
-    "module": "metadata",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow"
-    ],
-    "outbound": [
-      "fabricops_kit.io.shared.configured_lakehouse_schema",
-      "fabricops_kit.io.shared.write_lakehouse_table_core",
-      "fabricops_kit.metadata._audit_timestamp_value",
-      "fabricops_kit.metadata._context_get",
-      "fabricops_kit.metadata._notebook_registration_key",
-      "fabricops_kit.metadata._runtime_context",
-      "fabricops_kit.metadata._safe_str",
-      "fabricops_kit.metadata.coerce_metadata_row_types"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/metadata.py",
-    "source_start_line": 314,
-    "source_end_line": 433,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L314-L433",
-    "docs_path": null,
-    "summary": "Append a runtime notebook registration row.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to append the registration row.\nconfig : FrameworkConfig or dict, optional\n    Recommended metadata route configuration from ``00_env_config``. When\n    paired with ``env``, the row is written through\n    ``write_lakehouse_table(df, metadata_table, schema=<configured_metadata_schema>)``.\nenv : str, optional\n    Environment key paired with ``config`` for metadata lakehouse routing.\nagreement_id : str\n    Agreement identifier this notebook supports.\nnotebook_type : str\n    Notebook family or workflow phase. When blank, the value is inferred\n    from the current notebook name prefix.\nenvironment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Optional workflow context recorded with the notebook registration.\ncontract_version : str, optional\n    Agreement contract version selected when the notebook was registered.\nregistration_role : {\"primary\", \"additional\"}, default=\"primary\"\n    Whether the row represents the notebook's user-facing active agreement\n    or an additional audit link.\nregistration_status : {\"active\", \"superseded\"}, default=\"active\"\n    Current registration event state. Superseded rows are retained for audit\n    and ignored by active-registration helpers.\nregistration_id : str, optional\n    Stable registration identifier. When omitted, a deterministic identifier\n    is generated from the notebook and agreement identity.\nsuperseded_at, superseded_by_registration_id : str, optional\n    Audit values populated when a prior registration is superseded.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override. When omitted, the helper\n    uses the configured metadata target schema when schema routing is\n    enabled.",
-    "output": "dict[str, str]\n    Registration row matching :data:`NOTEBOOK_REGISTRY_FIELDS`.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "ValueError\n    If the recommended ``config``/``env`` route is not provided.",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_select_agreement_widget_workflow",
-      "configured_lakehouse_schema",
-      "write_lakehouse_table_core",
-      "_audit_timestamp_value",
-      "_context_get",
-      "_notebook_registration_key",
-      "_runtime_context",
-      "_safe_str",
-      "coerce_metadata_row_types"
     ]
   },
   {
@@ -13294,10 +13126,10 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
-      "fabricops_kit.metadata._current_notebook_active_registrations",
-      "fabricops_kit.metadata._register_current_notebook",
-      "fabricops_kit.metadata._resolve_action_by"
+      "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
+      "fabricops_kit.metadata.current_notebook_active_registrations",
+      "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [
       "fabricops_kit.metadata._context_get"
@@ -13325,10 +13157,10 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_build_runtime_audit_fields",
-      "_current_notebook_active_registrations",
-      "_register_current_notebook",
       "_resolve_action_by",
+      "build_runtime_audit_fields",
+      "current_notebook_active_registrations",
+      "register_current_notebook",
       "_context_get"
     ]
   },
@@ -13340,9 +13172,9 @@
     "role": "internal",
     "function_category": "internal-private",
     "inbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
-      "fabricops_kit.metadata._current_notebook_active_registrations",
-      "fabricops_kit.metadata._register_current_notebook"
+      "fabricops_kit.metadata.build_runtime_audit_fields",
+      "fabricops_kit.metadata.current_notebook_active_registrations",
+      "fabricops_kit.metadata.register_current_notebook"
     ],
     "outbound": [],
     "used_in_templates": [],
@@ -13368,9 +13200,9 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_build_runtime_audit_fields",
-      "_current_notebook_active_registrations",
-      "_register_current_notebook"
+      "build_runtime_audit_fields",
+      "current_notebook_active_registrations",
+      "register_current_notebook"
     ]
   },
   {
@@ -13430,7 +13262,7 @@
       "fabricops_kit.io.shared.configured_lakehouse_schema",
       "fabricops_kit.io.shared.write_lakehouse_table_core",
       "fabricops_kit.metadata._audit_timestamp_value",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.metadata.coerce_metadata_row_types"
     ],
     "used_in_templates": [],
@@ -13462,8 +13294,76 @@
       "configured_lakehouse_schema",
       "write_lakehouse_table_core",
       "_audit_timestamp_value",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "coerce_metadata_row_types"
+    ]
+  },
+  {
+    "name": "build_runtime_audit_fields",
+    "qualified_name": "fabricops_kit.metadata.build_runtime_audit_fields",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "utility",
+    "inbound": [
+      "fabricops_kit.data_agreement._create_or_update_data_agreement",
+      "fabricops_kit.data_agreement._create_or_update_data_steward",
+      "fabricops_kit.data_agreement._save_agreement_evidence_records",
+      "fabricops_kit.governance_review._approved_review_context",
+      "fabricops_kit.governance_review._evaluate_governance_readiness",
+      "fabricops_kit.metadata._write_guardrail_result_row",
+      "fabricops_kit.pipeline._runtime_audit_fields",
+      "fabricops_kit.widgets.shared._approved_review_context",
+      "fabricops_kit.widgets.shared._create_or_update_data_agreement",
+      "fabricops_kit.widgets.shared._create_or_update_data_steward",
+      "fabricops_kit.widgets.widget_render_agreement_evidence._save_agreement_evidence_records"
+    ],
+    "outbound": [
+      "fabricops_kit.config.shared.get_current_audit_timestamp",
+      "fabricops_kit.config.shared.get_store",
+      "fabricops_kit.metadata._context_get",
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata._safe_str"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/metadata.py",
+    "source_start_line": 238,
+    "source_end_line": 311,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L238-L311",
+    "docs_path": null,
+    "summary": "Build reusable framework-managed audit fields for metadata-table rows.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "config : FrameworkConfig | dict, optional\n    Framework config containing ``path_config.paths[env][\"metadata\"]``.\nenv : str, optional\n    Environment key paired with ``config``.\ntimestamp_field, user_field, workspace_field, notebook_field : str\n    Output keys for timestamp, user, workspace, and notebook audit values.\nmetadata_lakehouse_field, activity_field : str\n    Output keys for metadata lakehouse and Fabric activity audit values.\ncommitted_by, committed_at : str, optional\n    Deterministic audit overrides. When omitted, values resolve from Fabric\n    runtime context and the configured audit timezone timestamp.\nruntime_context : dict[str, Any], optional\n    Values merged over :func:`_runtime_context`, primarily for tests or\n    controlled notebook overrides.",
+    "output": "dict[str, str]\n    Framework-managed metadata audit values keyed by the supplied field\n    names.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_save_agreement_evidence_records",
+      "_approved_review_context",
+      "_evaluate_governance_readiness",
+      "_write_guardrail_result_row",
+      "_runtime_audit_fields",
+      "_approved_review_context",
+      "_create_or_update_data_agreement",
+      "_create_or_update_data_steward",
+      "_save_agreement_evidence_records",
+      "get_current_audit_timestamp",
+      "get_store",
+      "_context_get",
+      "_runtime_context",
+      "_safe_str"
     ]
   },
   {
@@ -13478,8 +13378,8 @@
       "fabricops_kit.governance_review._write_rule_records",
       "fabricops_kit.governance_review._write_table_metadata_enrichment_records",
       "fabricops_kit.governance_review.record_table_governance",
-      "fabricops_kit.metadata._register_current_notebook",
       "fabricops_kit.metadata._write_guardrail_result_row",
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.pipeline._write_pipeline_lineage_workflow",
       "fabricops_kit.pipeline._write_pipeline_run_summary_workflow",
       "fabricops_kit.widgets.shared._write_rule_records",
@@ -13517,8 +13417,8 @@
       "_write_rule_records",
       "_write_table_metadata_enrichment_records",
       "record_table_governance",
-      "_register_current_notebook",
       "_write_guardrail_result_row",
+      "register_current_notebook",
       "_write_pipeline_lineage_workflow",
       "_write_pipeline_run_summary_workflow",
       "_write_rule_records",
@@ -13526,6 +13426,106 @@
       "write_widget_metadata_row",
       "metadata_table_schema_registry",
       "_coerce_metadata_value"
+    ]
+  },
+  {
+    "name": "current_notebook_active_registrations",
+    "qualified_name": "fabricops_kit.metadata.current_notebook_active_registrations",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "utility",
+    "inbound": [
+      "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow"
+    ],
+    "outbound": [
+      "fabricops_kit.metadata._context_get",
+      "fabricops_kit.metadata._load_notebook_registry",
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata._safe_str"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/metadata.py",
+    "source_start_line": 489,
+    "source_end_line": 545,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L489-L545",
+    "docs_path": null,
+    "summary": "Return active agreement registrations for the running notebook.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to read the metadata table.\nconfig : FrameworkConfig or dict\n    Metadata route configuration from ``00_env_config``.\nenv : str\n    Environment key paired with ``config``.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.\nnotebook_type, environment_name, registration_role : str, optional\n    Optional filters for notebook phase, environment, and primary versus\n    additional registration role.\nmissing_ok : bool, default=True\n    Return an empty list when the registry cannot be read.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override used when reading the\n    notebook registry.",
+    "output": "list[dict[str, Any]]\n    Active latest registration rows for the current notebook runtime.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "Not documented yet",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_select_agreement_widget_workflow",
+      "_context_get",
+      "_load_notebook_registry",
+      "_runtime_context",
+      "_safe_str"
+    ]
+  },
+  {
+    "name": "register_current_notebook",
+    "qualified_name": "fabricops_kit.metadata.register_current_notebook",
+    "module": "metadata",
+    "type": "internal",
+    "role": "internal",
+    "function_category": "utility",
+    "inbound": [
+      "fabricops_kit.widgets.widget_select_agreement._select_agreement_widget_workflow"
+    ],
+    "outbound": [
+      "fabricops_kit.io.shared.configured_lakehouse_schema",
+      "fabricops_kit.io.shared.write_lakehouse_table_core",
+      "fabricops_kit.metadata._audit_timestamp_value",
+      "fabricops_kit.metadata._context_get",
+      "fabricops_kit.metadata._notebook_registration_key",
+      "fabricops_kit.metadata._runtime_context",
+      "fabricops_kit.metadata._safe_str",
+      "fabricops_kit.metadata.coerce_metadata_row_types"
+    ],
+    "used_in_templates": [],
+    "glossary_terms": [],
+    "expanded_purpose": null,
+    "when_to_use": null,
+    "source_file": "src/fabricops_kit/metadata.py",
+    "source_start_line": 314,
+    "source_end_line": 433,
+    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/metadata.py#L314-L433",
+    "docs_path": null,
+    "summary": "Append a runtime notebook registration row.",
+    "use_when": "Not documented yet",
+    "do_not_use_when": "Not documented yet",
+    "required_context": "Not documented yet",
+    "inputs": "spark : pyspark.sql.SparkSession\n    Fabric Spark session used to append the registration row.\nconfig : FrameworkConfig or dict, optional\n    Recommended metadata route configuration from ``00_env_config``. When\n    paired with ``env``, the row is written through\n    ``write_lakehouse_table(df, metadata_table, schema=<configured_metadata_schema>)``.\nenv : str, optional\n    Environment key paired with ``config`` for metadata lakehouse routing.\nagreement_id : str\n    Agreement identifier this notebook supports.\nnotebook_type : str\n    Notebook family or workflow phase. When blank, the value is inferred\n    from the current notebook name prefix.\nenvironment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Optional workflow context recorded with the notebook registration.\ncontract_version : str, optional\n    Agreement contract version selected when the notebook was registered.\nregistration_role : {\"primary\", \"additional\"}, default=\"primary\"\n    Whether the row represents the notebook's user-facing active agreement\n    or an additional audit link.\nregistration_status : {\"active\", \"superseded\"}, default=\"active\"\n    Current registration event state. Superseded rows are retained for audit\n    and ignored by active-registration helpers.\nregistration_id : str, optional\n    Stable registration identifier. When omitted, a deterministic identifier\n    is generated from the notebook and agreement identity.\nsuperseded_at, superseded_by_registration_id : str, optional\n    Audit values populated when a prior registration is superseded.\nmetadata_table : str, default=NOTEBOOK_REGISTRY_TABLE\n    Physical notebook registry table name.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override. When omitted, the helper\n    uses the configured metadata target schema when schema routing is\n    enabled.",
+    "output": "dict[str, str]\n    Registration row matching :data:`NOTEBOOK_REGISTRY_FIELDS`.",
+    "return_interpretation": "Not documented yet",
+    "side_effects": "Not documented yet",
+    "failure_modes": "ValueError\n    If the recommended ``config``/``env`` route is not provided.",
+    "common_failure_causes": "Not documented yet",
+    "related_guides": [],
+    "preferred_example": "Not documented yet",
+    "verification": "Not documented yet",
+    "related_functions": [
+      "_select_agreement_widget_workflow",
+      "configured_lakehouse_schema",
+      "write_lakehouse_table_core",
+      "_audit_timestamp_value",
+      "_context_get",
+      "_notebook_registration_key",
+      "_runtime_context",
+      "_safe_str",
+      "coerce_metadata_row_types"
     ]
   },
   {
@@ -14432,7 +14432,7 @@
       "fabricops_kit.pipeline.write_catalogue_evidence"
     ],
     "outbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.pipeline._timestamp_value"
     ],
     "used_in_templates": [],
@@ -14461,7 +14461,7 @@
       "_write_pipeline_lineage_workflow",
       "_write_pipeline_run_summary_workflow",
       "write_catalogue_evidence",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "_timestamp_value"
     ]
   },
@@ -15501,8 +15501,8 @@
     ],
     "outbound": [
       "fabricops_kit.metadata._audit_timestamp_value",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
       "fabricops_kit.metadata._resolve_action_by",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.widgets.shared._value"
     ],
     "used_in_templates": [],
@@ -15530,8 +15530,8 @@
     "related_functions": [
       "build_enrichment_rule_records",
       "_audit_timestamp_value",
-      "_build_runtime_audit_fields",
       "_resolve_action_by",
+      "build_runtime_audit_fields",
       "_value"
     ]
   },
@@ -15922,7 +15922,7 @@
       "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.widgets.shared._business_agreement_snapshot",
       "fabricops_kit.widgets.shared._generate_agreement_id",
       "fabricops_kit.widgets.shared._list_data_stewards",
@@ -15958,7 +15958,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "render_maintenance_widget_shared_workflow",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "_business_agreement_snapshot",
       "_generate_agreement_id",
       "_list_data_stewards",
@@ -15982,7 +15982,7 @@
       "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"
     ],
     "outbound": [
-      "fabricops_kit.metadata._build_runtime_audit_fields",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.widgets.shared._active_steward",
       "fabricops_kit.widgets.shared._generate_steward_id",
       "fabricops_kit.widgets.shared._parse_iso_date",
@@ -16015,7 +16015,7 @@
     "verification": "Not documented yet",
     "related_functions": [
       "render_maintenance_widget_shared_workflow",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "_active_steward",
       "_generate_steward_id",
       "_parse_iso_date",
@@ -18425,7 +18425,7 @@
     ],
     "outbound": [
       "fabricops_kit.config.shared.get_current_audit_timestamp",
-      "fabricops_kit.metadata._build_runtime_audit_fields",
+      "fabricops_kit.metadata.build_runtime_audit_fields",
       "fabricops_kit.widgets.shared.config_value",
       "fabricops_kit.widgets.shared.write_widget_metadata_row",
       "fabricops_kit.widgets.widget_render_agreement_evidence._prepare_evidence_file_references"
@@ -18455,7 +18455,7 @@
     "related_functions": [
       "_render_agreement_evidence_widget_workflow",
       "get_current_audit_timestamp",
-      "_build_runtime_audit_fields",
+      "build_runtime_audit_fields",
       "config_value",
       "write_widget_metadata_row",
       "_prepare_evidence_file_references"
@@ -18746,8 +18746,8 @@
       "fabricops_kit.agreement_selection_state.set_selected_agreement",
       "fabricops_kit.config.shared.get_current_audit_timestamp",
       "fabricops_kit.config.shared.resolve_fabric_context",
-      "fabricops_kit.metadata._current_notebook_active_registrations",
-      "fabricops_kit.metadata._register_current_notebook",
+      "fabricops_kit.metadata.current_notebook_active_registrations",
+      "fabricops_kit.metadata.register_current_notebook",
       "fabricops_kit.widgets.shared.latest_agreement_versions",
       "fabricops_kit.widgets.shared.list_data_agreements",
       "fabricops_kit.widgets.shared.render_searchable_selector",
@@ -18767,7 +18767,7 @@
     "use_when": "Not documented yet",
     "do_not_use_when": "Not documented yet",
     "required_context": "Not documented yet",
-    "inputs": "agreement_rows : iterable, optional\n    Preloaded agreement rows. When omitted, agreements are loaded from the\n    active ``FABRIC_CONTEXT`` initialized by ``00_env_config``.\ncontext : dict, optional\n    Advanced override context. Defaults to the active ``FABRIC_CONTEXT``.\nspark_session : pyspark.sql.SparkSession, optional\n    Fabric Spark session used for configured metadata-table reads.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override. Pass ``METADATA_SCHEMA``\n    from ``00_env_config`` in schema-enabled Lakehouses so agreement reads\n    and notebook registration use the same metadata route.\nregister_notebook : bool, default=False\n    When True, render registration status and a button that links the\n    current notebook to the selected agreement.\nnotebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Workflow metadata passed to ``_register_current_notebook`` when\n    ``register_notebook`` is enabled.",
+    "inputs": "agreement_rows : iterable, optional\n    Preloaded agreement rows. When omitted, agreements are loaded from the\n    active ``FABRIC_CONTEXT`` initialized by ``00_env_config``.\ncontext : dict, optional\n    Advanced override context. Defaults to the active ``FABRIC_CONTEXT``.\nspark_session : pyspark.sql.SparkSession, optional\n    Fabric Spark session used for configured metadata-table reads.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema override. Pass ``METADATA_SCHEMA``\n    from ``00_env_config`` in schema-enabled Lakehouses so agreement reads\n    and notebook registration use the same metadata route.\nregister_notebook : bool, default=False\n    When True, render registration status and a button that links the\n    current notebook to the selected agreement.\nnotebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional\n    Workflow metadata passed to ``register_current_notebook`` when\n    ``register_notebook`` is enabled.",
     "output": "ipywidgets.Select\n    Displayed searchable latest-version agreement selector control. Its\n    ``value`` remains the stable ``agreement_id`` for existing callers.\n    When registration is enabled, registration widgets are attached as\n    attributes on the selector for advanced notebook automation.",
     "return_interpretation": "Not documented yet",
     "side_effects": "Not documented yet",
@@ -18781,8 +18781,8 @@
       "set_selected_agreement",
       "get_current_audit_timestamp",
       "resolve_fabric_context",
-      "_current_notebook_active_registrations",
-      "_register_current_notebook",
+      "current_notebook_active_registrations",
+      "register_current_notebook",
       "latest_agreement_versions",
       "list_data_agreements",
       "render_searchable_selector",

@@ -154,7 +154,7 @@ def _write_guardrail_result_row(
     """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
-    audit = _build_runtime_audit_fields(config=config, env=env)
+    audit = build_runtime_audit_fields(config=config, env=env)
     row = {
         "result_id": str(uuid.uuid4()),
         "run_id": str(run_id or ""),
@@ -235,7 +235,7 @@ def _runtime_context() -> dict[str, Any]:
     return {key: _context_get(context, key) for key in keys}
 
 
-def _build_runtime_audit_fields(
+def build_runtime_audit_fields(
     *,
     config: Any = None,
     env: str | None = None,
@@ -311,7 +311,7 @@ def _build_runtime_audit_fields(
     }
 
 
-def _register_current_notebook(
+def register_current_notebook(
     spark,
     agreement_id=None,
     notebook_type=None,
@@ -390,7 +390,7 @@ def _register_current_notebook(
 
     """
     if config is None or env is None:
-        raise ValueError("_register_current_notebook requires config and env for metadata routing.")
+        raise ValueError("register_current_notebook requires config and env for metadata routing.")
 
     ctx = _runtime_context()
     workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
@@ -486,7 +486,7 @@ def _load_notebook_registry(
     return out
 
 
-def _current_notebook_active_registrations(
+def current_notebook_active_registrations(
     spark,
     *,
     config: Any,
