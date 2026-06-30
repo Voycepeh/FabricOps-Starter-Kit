@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-import fabricops_kit.governance_review as governance
+from fabricops_kit import guardrails as governance
 
 pytestmark = pytest.mark.unit
 

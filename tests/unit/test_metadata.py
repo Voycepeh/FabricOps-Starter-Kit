@@ -235,7 +235,6 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'read_warehouse_query',
         'write_warehouse_table',
         'profile_dataframe',
-        'get_latest_metadata_catalogue',
         'display_guardrail_results',
         'prepare_pipeline_table_configs',
         'run_table_guardrails',

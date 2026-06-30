@@ -144,7 +144,7 @@ def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
 
 def test_governance_rule_writer_targets_guardrail_rules_for_dq():
     """Verify table governance commits DQ approvals to guardrail rules."""
-    source = _function_source("governance_review.py", "record_table_governance")
+    source = _function_source("widgets/shared.py", "record_table_governance")
 
     assert "GUARDRAIL_RULES_TABLE" in source
     assert "ENRICHMENT_RULES_TABLE" in source
@@ -154,7 +154,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
 
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
-    dq_source = _function_source("governance_review.py", "_run_active_dq_guardrail")
+    dq_source = _function_source("guardrails.py", "_run_active_dq_guardrail")
     pipeline_source = _function_source("pipeline.py", "run_table_guardrails")
 
     assert "_write_guardrail_result_row" in dq_source

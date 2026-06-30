@@ -8,7 +8,9 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
-import fabricops_kit.governance_review as governance
+from fabricops_kit import guardrails as dq_runtime
+from fabricops_kit.config import metadata_schemas
+from fabricops_kit.widgets import shared as governance
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -46,7 +48,6 @@ EXPECTED_V1_CALLABLES = [
     'read_warehouse_query',
     'write_warehouse_table',
     'profile_dataframe',
-    'get_latest_metadata_catalogue',
     'display_guardrail_results',
     'prepare_pipeline_table_configs',
     'run_table_guardrails',
@@ -84,7 +85,6 @@ def test_widget_public_callables_live_under_widgets_package():
     for name in widget_names:
         assert hasattr(widgets, name)
         assert getattr(widgets, name).__module__.startswith(f"fabricops_kit.widgets.{name}")
-    assert widget_names.isdisjoint(vars(governance))
 
 
 def test_widget_modules_do_not_call_public_widget_functions():
@@ -168,17 +168,17 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     """Verify dq rule validation rejects unsupported runtime rule types."""
     rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
-    assert governance._validate_dq_rules(rules) == rules
+    assert dq_runtime._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
-        governance._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
+        dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
 
     with pytest.raises(ValueError):
-        governance._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
+        dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "unsupported_rule"}])
 
 
 def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns():
     """Verify governance metadata schemas have no case insensitive duplicate columns."""
-    schemas = governance._get_governance_metadata_schemas()
+    schemas = metadata_schemas.metadata_table_schema_registry()
 
     for table_name, schema in schemas.items():
         field_names = schema.fieldNames()
@@ -187,7 +187,7 @@ def test_governance_metadata_schemas_have_no_case_insensitive_duplicate_columns(
 
 def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     """Verify catalogue schema uses lowercase canonical columns only."""
-    catalogue_fields = governance._get_governance_metadata_schemas()[governance.CATALOGUE_TABLE].fieldNames()
+    catalogue_fields = metadata_schemas.metadata_table_schema_registry()[governance.CATALOGUE_TABLE].fieldNames()
 
     assert all(field == field.lower() for field in catalogue_fields)
 
@@ -264,18 +264,16 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
 
 def test_schema_field_validation_names_table_and_duplicate_logical_columns():
     """Verify schema field validation names table and duplicate logical columns."""
-    string = governance._spark_types()[3]()
-
     with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
-        governance._check_metadata_schema_field_names(
+        metadata_schemas._schema(
             governance.CATALOGUE_TABLE,
-            [("table_name", string), ("TABLE_NAME", string)],
+            [("table_name", "string"), ("TABLE_NAME", "string")],
         )
 
 
 def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tables():
     """Verify governance metadata schemas include guardrail rules without failure tables."""
-    schemas = governance._get_governance_metadata_schemas()
+    schemas = metadata_schemas.metadata_table_schema_registry()
 
     assert governance.GUARDRAIL_RULES_TABLE in schemas
     assert governance.PIPELINE_RUNS_TABLE in schemas
@@ -464,41 +462,78 @@ def test_evaluate_governance_readiness_ignores_pipeline_passed_dq_status(monkeyp
     assert result["review"]["outcome"] == "approved"
 
 
-def test_get_latest_metadata_catalogue_returns_friendly_not_found(monkeypatch):
-    """Verify exploratory catalogue lookup is read-only and tolerant of missing rows."""
-    monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
-    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: [])
+def test_retired_governance_review_module_file_and_imports_are_absent():
+    """Verify the stale mixed governance review module and imports are absent."""
+    root = Path(__file__).parents[2]
+    assert not (root / "src" / "fabricops_kit" / "governance_review.py").exists()
+    assert not (root / "src" / "fabricops_kit" / "governance_lookup.py").exists()
+    assert "get_latest_metadata_catalogue" not in fabricops_kit.__all__
+    scanned_suffixes = {".py", ".md", ".yml", ".yaml", ".json", ".ipynb"}
+    offenders = []
+    for base in [root / "src", root / "templates", root / "docs"]:
+        for path in base.rglob("*"):
+            if not path.is_file() or path.suffix not in scanned_suffixes:
+                continue
+            text = path.read_text(encoding="utf-8")
+            if path == Path(__file__):
+                continue
+            if (
+                "fabricops_kit.governance_review" in text
+                or "from .governance_review import" in text
+                or "import fabricops_kit.governance_lookup" in text
+                or "from fabricops_kit.governance_lookup" in text
+                or "from fabricops_kit import governance_lookup" in text
+            ):
+                offenders.append(str(path.relative_to(root)))
 
-    result = governance.get_latest_metadata_catalogue(
-        table_name="orders",
-        agreement={"agreement_id": "agreement-1", "contract_version": "1"},
-        spark_session=None,
-    )
-
-    assert result == [
-        {
-            "status": "not_found",
-            "table_name": "orders",
-            "message": "No metadata catalogue rows found for orders. Run 02_pipeline profiling to create governed catalogue evidence.",
-        }
-    ]
+    for path in (root / "tests").rglob("*.py"):
+        if path == Path(__file__):
+            continue
+        text = path.read_text(encoding="utf-8")
+        if (
+            "import fabricops_kit.governance_lookup" in text
+            or "from fabricops_kit.governance_lookup" in text
+            or "from fabricops_kit import governance_lookup" in text
+        ):
+            offenders.append(str(path.relative_to(root)))
+    assert offenders == []
 
 
-def test_get_latest_metadata_catalogue_filters_latest_agreement_rows(monkeypatch):
-    """Verify exploratory catalogue lookup returns latest matching catalogue rows."""
-    rows = [
-        {"table_name": "orders", "column_name": "old", "profiled_at": "2026-01-01", "agreement_id": "agreement-1", "contract_version": "1"},
-        {"table_name": "orders", "column_name": "latest_a", "profiled_at": "2026-01-02", "agreement_id": "agreement-1", "contract_version": "1"},
-        {"table_name": "orders", "column_name": "latest_b", "profiled_at": "2026-01-02", "agreement_id": "agreement-1", "contract_version": "1"},
-        {"table_name": "orders", "column_name": "other_agreement", "profiled_at": "2026-01-03", "agreement_id": "agreement-2", "contract_version": "1"},
-    ]
-    monkeypatch.setattr(governance, "resolve_fabric_context", lambda context=None: (object(), "dev", {"config": object(), "env": "dev"}))
-    monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
+def test_pipeline_and_config_use_new_governance_owners():
+    """Verify DQ runtime and metadata schema helpers are owned outside governance review."""
+    root = Path(__file__).parents[2]
+    pipeline_source = (root / "src" / "fabricops_kit" / "pipeline.py").read_text(encoding="utf-8")
+    config_source = (root / "src" / "fabricops_kit" / "config" / "shared.py").read_text(encoding="utf-8")
 
-    result = governance.get_latest_metadata_catalogue(
-        table_name="orders",
-        agreement={"agreement_id": "agreement-1", "contract_version": "1"},
-        spark_session=None,
-    )
+    assert "from .guardrails import _run_active_dq_guardrail" in pipeline_source
+    assert "from .governance_review" not in pipeline_source
+    assert "governance_lookup" not in pipeline_source
+    assert "CATALOGUE_TABLE = \"METADATA_DATA_CATALOGUE\"" in pipeline_source
+    assert "metadata_table_schema_registry" in config_source
+    assert "governance_review" not in config_source
 
-    assert [row["column_name"] for row in result] == ["latest_a", "latest_b"]
+
+
+def test_99_explore_reads_metadata_catalogue_directly():
+    """Verify 99_explore reads catalogue metadata directly instead of using a wrapper."""
+    root = Path(__file__).parents[2]
+
+    notebook = json.loads((root / "templates" / "notebooks" / "99_explore.ipynb").read_text(encoding="utf-8"))
+    code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
+
+    assert "get_latest_metadata_catalogue" not in code
+    assert "read_lakehouse_table" in code
+    assert "METADATA_DATA_CATALOGUE" in code
+    assert 'F.col("table_name") == source_table_name' in code
+
+
+def test_root_public_governance_and_widget_imports_still_work():
+    """Verify supported root governance and widget imports remain available."""
+    for name in [
+        "widget_author_dq_rules",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_enrich_table_metadata",
+        "widget_review_guardrail_governance",
+        "widget_select_guardrail_target",
+    ]:
+        assert callable(getattr(fabricops_kit, name))

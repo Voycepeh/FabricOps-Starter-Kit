@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-import fabricops_kit.governance_review as gr
+from fabricops_kit.widgets import shared as gr
 from tests.helpers import FakeSpark, framework_config
 
-from fabricops_kit.governance_review import (
+from fabricops_kit.widgets.shared import (
     _build_dq_rule_records,
     build_enrichment_rule_records,
 )

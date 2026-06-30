@@ -863,7 +863,7 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
     """
     normalized = _validate_framework_config(config)
     from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
-    from fabricops_kit.governance_review import _get_governance_metadata_schemas
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
 
     metadata_tables = normalized.data_agreement_config.metadata_tables or {}
@@ -872,7 +872,7 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
         str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
         str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
         NOTEBOOK_REGISTRY_TABLE,
-        *_get_governance_metadata_schemas().keys(),
+        *metadata_table_schema_registry().keys(),
     ]
     out: list[str] = []
     for table in tables:
@@ -947,7 +947,7 @@ def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[st
         DATA_STEWARD_FIELDS,
         DATA_STEWARD_TABLE,
     )
-    from fabricops_kit.governance_review import _get_governance_metadata_schemas
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     from fabricops_kit.metadata import NOTEBOOK_REGISTRY_FIELDS, NOTEBOOK_REGISTRY_TABLE
 
     metadata_tables = normalized.data_agreement_config.metadata_tables or {}
@@ -964,7 +964,7 @@ def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[st
         ),
         NOTEBOOK_REGISTRY_TABLE: _string_metadata_schema(NOTEBOOK_REGISTRY_TABLE, NOTEBOOK_REGISTRY_FIELDS),
     }
-    registry.update(_get_governance_metadata_schemas())
+    registry.update(metadata_table_schema_registry())
     return registry
 
 
@@ -989,6 +989,12 @@ def _resolve_metadata_schema(
     return None
 
 
+def _is_table_not_found_error(exc: Exception) -> bool:
+    """Return whether an exception indicates a missing metadata table."""
+    text = str(exc).lower()
+    return any(token in text for token in ("table or view not found", "table not found", "not found", "does not exist", "delta table doesn't exist"))
+
+
 def _setup_metadata_table_registry(
     *,
     spark: Any,
@@ -999,7 +1005,6 @@ def _setup_metadata_table_registry(
 ) -> dict[str, Any]:
     """Create missing metadata tables through configured lakehouse IO helpers."""
     from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
-    from fabricops_kit.governance_review import _is_table_not_found_error
 
     created: list[str] = []
     for table_name, schema in registry.items():

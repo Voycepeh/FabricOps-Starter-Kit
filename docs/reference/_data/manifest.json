@@ -15,13 +15,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true
-    },
-    {
       "module_name": "guardrails",
       "visibility": "public",
       "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.",
@@ -57,6 +50,27 @@
       "sidebar_include": false
     },
     {
+      "module_name": "widgets.widget_author_dq_rules",
+      "visibility": "public",
+      "module_summary": "Owns DQ rule authoring widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false
+    },
+    {
+      "module_name": "widgets.widget_author_schema_freshness_profile_rules",
+      "visibility": "public",
+      "module_summary": "Owns schema, freshness, and profile behavior rule authoring widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false
+    },
+    {
+      "module_name": "widgets.widget_enrich_table_metadata",
+      "visibility": "public",
+      "module_summary": "Owns table metadata enrichment widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false
+    },
+    {
       "module_name": "widgets.widget_pipeline_bootstrap",
       "visibility": "public",
       "module_summary": "Owns the pipeline bootstrap widget and active runtime context setup.",
@@ -81,6 +95,20 @@
       "module_name": "widgets.widget_render_data_steward",
       "visibility": "public",
       "module_summary": "Owns widget implementation details for agreement workflows.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false
+    },
+    {
+      "module_name": "widgets.widget_review_guardrail_governance",
+      "visibility": "public",
+      "module_summary": "Owns guardrail governance review widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false
+    },
+    {
+      "module_name": "widgets.widget_select_guardrail_target",
+      "visibility": "public",
+      "module_summary": "Owns the guardrail target selection widget workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false
     }
@@ -132,107 +160,6 @@
       "template_segment": "Profiling",
       "used_in_templates": [
         "99_explore"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_latest_metadata_catalogue",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "99_explore",
-      "template_segment": "Read-only catalogue context",
-      "used_in_templates": [
-        "99_explore"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_author_dq_rules",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail authoring",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_author_schema_freshness_profile_rules",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Guardrail authoring",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_enrich_table_metadata",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Guardrail governance review",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_review_guardrail_governance",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "03_governance",
-      "template_segment": "Governance review",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
-      ]
-    },
-    {
-      "module_name": "governance_review",
-      "visibility": "public",
-      "module_summary": "Owns current guardrail authoring and governance review widgets plus internal review helpers required by the template-driven workflow.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "widget_select_guardrail_target",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / 03_governance",
-      "template_segment": "Guardrail authoring",
-      "used_in_templates": [
-        "02_pipeline",
-        "03_governance"
       ]
     },
     {
@@ -440,6 +367,57 @@
       ]
     },
     {
+      "module_name": "widgets.widget_author_dq_rules",
+      "visibility": "public",
+      "module_summary": "Owns DQ rule authoring widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false,
+      "callable_name": "widget_author_dq_rules",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guardrail authoring",
+      "used_in_templates": [
+        "02_pipeline",
+        "03_governance"
+      ]
+    },
+    {
+      "module_name": "widgets.widget_author_schema_freshness_profile_rules",
+      "visibility": "public",
+      "module_summary": "Owns schema, freshness, and profile behavior rule authoring widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false,
+      "callable_name": "widget_author_schema_freshness_profile_rules",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline",
+      "template_segment": "Guardrail authoring",
+      "used_in_templates": [
+        "02_pipeline",
+        "03_governance"
+      ]
+    },
+    {
+      "module_name": "widgets.widget_enrich_table_metadata",
+      "visibility": "public",
+      "module_summary": "Owns table metadata enrichment widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false,
+      "callable_name": "widget_enrich_table_metadata",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "03_governance",
+      "template_segment": "Guardrail governance review",
+      "used_in_templates": [
+        "02_pipeline",
+        "03_governance"
+      ]
+    },
+    {
       "module_name": "widgets.widget_pipeline_bootstrap",
       "visibility": "public",
       "module_summary": "Owns the pipeline bootstrap widget and active runtime context setup.",
@@ -502,6 +480,40 @@
       "template_segment": "Agreement intake",
       "used_in_templates": [
         "01_agreement"
+      ]
+    },
+    {
+      "module_name": "widgets.widget_review_guardrail_governance",
+      "visibility": "public",
+      "module_summary": "Owns guardrail governance review widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false,
+      "callable_name": "widget_review_guardrail_governance",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "03_governance",
+      "template_segment": "Governance review",
+      "used_in_templates": [
+        "02_pipeline",
+        "03_governance"
+      ]
+    },
+    {
+      "module_name": "widgets.widget_select_guardrail_target",
+      "visibility": "public",
+      "module_summary": "Owns the guardrail target selection widget workflow.",
+      "sidebar_group": "1. Governance steward",
+      "sidebar_include": false,
+      "callable_name": "widget_select_guardrail_target",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / 03_governance",
+      "template_segment": "Guardrail authoring",
+      "used_in_templates": [
+        "02_pipeline",
+        "03_governance"
       ]
     }
   ]
