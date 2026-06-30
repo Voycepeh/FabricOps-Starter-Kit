@@ -15,7 +15,7 @@ from .config import (
     setup_metadata_tables,
     setup_notebook,
 )
-from .data_profiling import profile_dataframe
+from .pipeline import profile_dataframe
 from .io import (
     read_lakehouse_csv,
     read_lakehouse_excel,

@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any, Mapping
 
-from .data_profiling.shared import profile_dataframe_core
-from .guardrails import (
+from .shared import profile_dataframe_core
+from ..guardrails import (
     enforce_freshness,
     enforce_freshness_rule,
     enforce_profile_behavior,
@@ -14,15 +14,25 @@ from .guardrails import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
-from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from .guardrails import _run_active_dq_guardrail
-from .io.shared import configured_lakehouse_schema, write_lakehouse_table_core
-from .metadata import _audit_timestamp_value, _build_metadata_table_key, build_runtime_audit_fields, _write_guardrail_result_row, coerce_metadata_row_types
+from ..config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
+from ..guardrails import _run_active_dq_guardrail
+from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
+from ..metadata import _audit_timestamp_value, _build_metadata_table_key, build_runtime_audit_fields, _write_guardrail_result_row, coerce_metadata_row_types
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
+
+__all__ = [
+    "display_guardrail_results",
+    "prepare_pipeline_table_configs",
+    "profile_dataframe",
+    "run_table_guardrails",
+    "write_pipeline_lineage",
+    "write_pipeline_run_summary",
+]
+
 
 
 
@@ -30,8 +40,8 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 # Public API layer
 # ---------------------------------------------------------------------------
 
-from .widgets.shared import PipelineRunContext, pipeline_active_context
-from .widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
+from ..widgets.shared import PipelineRunContext, pipeline_active_context
+from ..widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
 
 
 

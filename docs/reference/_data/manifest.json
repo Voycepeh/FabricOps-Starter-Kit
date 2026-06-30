@@ -8,13 +8,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "data_profiling",
-      "visibility": "public",
-      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true
-    },
-    {
       "module_name": "guardrails",
       "visibility": "public",
       "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.",
@@ -144,22 +137,6 @@
       "template_segment": "Environment bootstrap",
       "used_in_templates": [
         "00_env_config"
-      ]
-    },
-    {
-      "module_name": "data_profiling",
-      "visibility": "public",
-      "module_summary": "Owns deterministic profiling evidence such as schema, nulls, distincts, min/max, and optional lightweight distributions.",
-      "sidebar_group": "2. Analyst / data scientist",
-      "sidebar_include": true,
-      "callable_name": "profile_dataframe",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline / optional 99_explore",
-      "template_segment": "Profiling",
-      "used_in_templates": [
-        "99_explore"
       ]
     },
     {
@@ -315,6 +292,22 @@
       "template_segment": "Table config preparation",
       "used_in_templates": [
         "02_pipeline"
+      ]
+    },
+    {
+      "module_name": "pipeline",
+      "visibility": "public",
+      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
+      "sidebar_group": "3. Data engineer",
+      "sidebar_include": true,
+      "callable_name": "profile_dataframe",
+      "callable_visibility": "public",
+      "callable_type": "callable",
+      "callable_role": "callable",
+      "template_notebook": "02_pipeline / optional 99_explore",
+      "template_segment": "Profiling",
+      "used_in_templates": [
+        "99_explore"
       ]
     },
     {

@@ -72,7 +72,7 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "widgets.widget_author_dq_rules": "widgets.widget_author_dq_rules",
     "widgets.widget_enrich_table_metadata": "widgets.widget_enrich_table_metadata",
     "widgets.widget_review_guardrail_governance": "widgets.widget_review_guardrail_governance",
-    "data_profiling.profile_dataframe": "data_profiling",
+    "pipeline.profile_dataframe": "pipeline",
     "io": "io",
     "guardrails": "guardrails",
     "metadata": "metadata",
@@ -80,7 +80,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
-    "data_profiling",
     "io",
     "guardrails",
     "metadata",
@@ -301,15 +300,15 @@ def source_module_name(path: Path) -> str:
 
 def source_module_paths() -> list[Path]:
     """Return package source files that participate in generated callable metadata."""
-    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name == "data_profiling")
+    return sorted(path for path in PKG_DIR.rglob("*.py") if path.name != "__init__.py" or path.parent.name in {"pipeline"})
 
 
 def source_module_path(module: str) -> Path:
     """Return the source path for a dotted package-relative module name."""
     if module == "io":
         return PKG_DIR / "io" / "shared.py"
-    if module == "data_profiling":
-        return PKG_DIR / "data_profiling" / "shared.py"
+    if module == "pipeline":
+        return PKG_DIR / "pipeline" / "__init__.py"
     if module == "config":
         return PKG_DIR / "config" / "__init__.py"
     return PKG_DIR.joinpath(*module.split(".")).with_suffix(".py")
@@ -492,7 +491,7 @@ def resolve_call_target(
             resolved_module = module_candidate.removeprefix(f"{PACKAGE_NAME}.")
             if imported.startswith(PACKAGE_NAME) or resolved_module in package_module_names:
                 exported = exported_symbol_map.get(resolved_symbol)
-                target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
+                target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module in {"data_profiling", "pipeline"} else resolved_module)
                 callee_kind = _classify_callee(resolved_module, resolved_symbol)
                 return (
                     f"{PACKAGE_NAME}.{target_module}.{resolved_symbol}",
@@ -509,7 +508,7 @@ def resolve_call_target(
         if mapped_owner.startswith(PACKAGE_NAME) or resolved_owner in package_module_names or short_owner in package_module_names:
             resolved_module = resolved_owner if resolved_owner in package_module_names else short_owner
             exported = exported_symbol_map.get(member)
-            target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module == "data_profiling" else resolved_module)
+            target_module = (exported.public_module if exported and exported.actual_module == resolved_module and exported.public_module in {"data_profiling", "pipeline"} else resolved_module)
             callee_kind = _classify_callee(resolved_module, member)
             return f"{PACKAGE_NAME}.{target_module}.{member}", "cross_module" if resolved_module != module else "same_module", callee_kind
         return None, "unresolved", "unresolved"
@@ -518,7 +517,7 @@ def resolve_call_target(
     exported = exported_symbol_map.get(raw_name)
     if exported and exported.actual_module != module:
         callee_kind = _classify_callee(exported.actual_module, raw_name)
-        target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+        target_module = exported.public_module if exported.public_module in {"data_profiling", "pipeline"} else exported.actual_module
         return f"{PACKAGE_NAME}.{target_module}.{raw_name}", "cross_module", callee_kind
 
     return None, "unresolved", "unresolved"
@@ -542,7 +541,7 @@ def build_callable_graph(
     def canonical_qualified_name(module: str, callable_name: str) -> str:
         exported = symbol_map.get(callable_name)
         if exported and exported.actual_module == module:
-            target_module = exported.public_module if exported.public_module == "data_profiling" else exported.actual_module
+            target_module = exported.public_module if exported.public_module in {"data_profiling", "pipeline"} else exported.actual_module
             return f"{PACKAGE_NAME}.{target_module}.{callable_name}"
         return f"{PACKAGE_NAME}.{module}.{callable_name}"
 
@@ -1100,6 +1099,8 @@ def callable_docs_link(
 
 def resolve_preferred_actual_module(preferred_module: str) -> str:
     """Return the likely source module that owns callable implementations."""
+    if PUBLIC_MODULE_PREFERRED_NAMES.get(preferred_module) == preferred_module:
+        return preferred_module
     return next((actual for actual, public_name in PUBLIC_MODULE_PREFERRED_NAMES.items() if public_name == preferred_module), preferred_module)
 
 
@@ -2633,7 +2634,7 @@ def _build_function_inventory(
 
     def private_helper_action(qn: str, inbound: set[str], outbound: list[str]) -> tuple[str, str]:
         scope = private_helper_usage_scope(qn, inbound)
-        if node_by_qn[qn]["module_name"] == "data_profiling.shared":
+        if node_by_qn[qn]["module_name"] == "pipeline.shared":
             return "Keep private helper", "Low"
         if scope == "cross_module":
             return "Rename to shared helper", "Medium"
@@ -5417,7 +5418,7 @@ def main() -> None:
             "outbound_count": len(out_mods),
             "inbound_count": len(in_mods),
         }
-    public_qn_by_name = {name: f"{PACKAGE_NAME}.{(symbol.public_module if symbol.public_module == 'data_profiling' else symbol.actual_module)}.{name}" for name, symbol in symbol_map.items()}
+    public_qn_by_name = {name: f"{PACKAGE_NAME}.{(symbol.public_module if symbol.public_module in {'data_profiling', 'pipeline'} else symbol.actual_module)}.{name}" for name, symbol in symbol_map.items()}
     internalized_public_helpers = {
         "read_lakehouse_csv",
         "read_lakehouse_excel",
