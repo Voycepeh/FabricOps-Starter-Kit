@@ -11,7 +11,7 @@ import uuid
 
 from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.metadata import _audit_timestamp_value, _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _resolve_action_by, coerce_metadata_row_types
+from fabricops_kit.metadata import _audit_timestamp_value, _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key, build_runtime_audit_fields, _resolve_action_by, coerce_metadata_row_types
 
 
 _WIDGET_STYLE = {"description_width": "150px"}
@@ -468,7 +468,7 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     else:
         row["is_active"] = bool(_active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
-    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), row=row)
     return row
@@ -580,7 +580,7 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
     if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
         raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
-    row.update(_build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
@@ -609,7 +609,7 @@ def _value(row: dict[str, Any], name: str, default: Any = "") -> Any:
 
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
     actor = _resolve_action_by(approved_by)
-    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
+    audit = build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
     return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _audit_timestamp_value(config), audit
 
 def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str, Any], *, env: str | None = None) -> dict[str, str]:

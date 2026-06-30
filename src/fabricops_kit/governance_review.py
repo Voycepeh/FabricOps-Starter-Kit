@@ -11,7 +11,7 @@ from typing import Any, Iterable, Mapping
 from .config.shared import get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from .data_profiling.shared import profile_dataframe_core
-from .metadata import _audit_timestamp_value, _now_audit_timestamp, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, _build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row, coerce_metadata_row_types
+from .metadata import _audit_timestamp_value, _now_audit_timestamp, _resolve_action_by, _build_metadata_column_key, _build_metadata_table_key, build_runtime_audit_fields, _build_dq_rule_key, _write_guardrail_result_row, coerce_metadata_row_types
 from .data_agreement import DATA_AGREEMENT_TABLE, DATA_AGREEMENT_EVIDENCE_TABLE
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -206,7 +206,7 @@ def _normalize_dq_severity(severity: Any) -> str:
 
 def _approved_review_context(profile_rows: list[dict[str, Any]], *, config: Any = None, env: str | None = None, approved_by: str | None = None) -> tuple[dict[str, dict[str, Any]], str, str, dict[str, Any]]:
     actor = _resolve_action_by(approved_by)
-    audit = _build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
+    audit = build_runtime_audit_fields(config=config, env=env or "", committed_by=actor) if config is not None and env is not None else {}
     return {str(_value(r, "column_name")): r for r in profile_rows}, actor, _audit_timestamp_value(config), audit
 
 
@@ -860,7 +860,7 @@ def _evaluate_governance_readiness(
     outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
     reviewed_at = _audit_timestamp_value(config)
     actor = _resolve_action_by(reviewed_by)
-    audit = _build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
+    audit = build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
     evidence_summary = {
         "agreement_row_count": len(agreement_rows),
         "agreement_attachment_count": len(attachment_rows),

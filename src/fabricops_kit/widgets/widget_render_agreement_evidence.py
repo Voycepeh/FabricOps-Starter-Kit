@@ -8,7 +8,7 @@ import sys
 from typing import Any
 
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
-from fabricops_kit.metadata import _build_runtime_audit_fields
+from fabricops_kit.metadata import build_runtime_audit_fields
 from fabricops_kit.widgets.shared import (
     AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS,
     AGREEMENT_EVIDENCE_MIME_TYPES,
@@ -136,7 +136,7 @@ def _save_agreement_evidence_records(
         raise ValueError("contract_version is required before saving agreement evidence.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
-    audit = _build_runtime_audit_fields(
+    audit = build_runtime_audit_fields(
         config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context
     )
     uploaded_at = audit.get("_committed_at") or datetime.fromisoformat(

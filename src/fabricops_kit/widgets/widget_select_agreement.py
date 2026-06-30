@@ -6,7 +6,7 @@ from typing import Any
 
 from fabricops_kit.agreement_selection_state import set_selected_agreement
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
-from fabricops_kit.metadata import _current_notebook_active_registrations, _register_current_notebook
+from fabricops_kit.metadata import current_notebook_active_registrations, register_current_notebook
 from fabricops_kit.widgets.shared import latest_agreement_versions, list_data_agreements, render_searchable_selector, require_ipywidgets
 
 
@@ -85,7 +85,7 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
         When True, render registration status and a button that links the
         current notebook to the selected agreement.
     notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
-        Workflow metadata passed to ``_register_current_notebook`` when
+        Workflow metadata passed to ``register_current_notebook`` when
         ``register_notebook`` is enabled.
 
     Returns
@@ -183,7 +183,7 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
     if register_notebook:
         if config is None or env is None or spark_session is None:
             raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
-        active_rows = _current_notebook_active_registrations(
+        active_rows = current_notebook_active_registrations(
             spark_session,
             config=config,
             env=env,
@@ -234,7 +234,7 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
                 else:
                     return
 
-            new_row = _register_current_notebook(
+            new_row = register_current_notebook(
                 spark_session,
                 config=config,
                 env=env,
@@ -253,7 +253,7 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
             if other and role == "primary":
                 superseded_at = get_current_audit_timestamp(config=config, drop_microseconds=False)
                 for previous in other:
-                    _register_current_notebook(
+                    register_current_notebook(
                         spark_session,
                         config=config,
                         env=env,
