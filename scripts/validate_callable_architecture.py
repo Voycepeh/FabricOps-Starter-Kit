@@ -29,11 +29,7 @@ VISIBLE_INVENTORY_TYPES = VISIBLE_FUNCTION_TYPES | {PUBLIC_CONFIG_CLASS_TYPE}
 PRIVATE_HELPER_TYPE = "Private helper"
 PUBLIC_FLOW_CALLEE_TYPES = {"Public", "Shared helper", PRIVATE_HELPER_TYPE}
 ALLOWED_ARCHITECTURE_WARNING_TYPES = {"Same-file private dependency"}
-ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {
-    "Public function calls public function",
-    "Shared helper calls public function",
-    "Cross-file private dependency",
-}
+ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {"Cross-file private dependency"}
 LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
     "Public -> Public",
     "Internal -> Public",

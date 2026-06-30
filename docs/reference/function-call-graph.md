@@ -78,42 +78,58 @@ The enforcement test is:
 
 This helps prevent accidental architecture violations from becoming permanent.
 
-### What the dashboard signals
+### Architecture violations we are preventing
 
-The Function Call Graph Dashboard is a review surface for public callable cleanup.
+The Function Call Graph supports the public function architecture rule used by FabricOps.
 
-It does not treat every signal as a failure. Some signals are architecture issues, while others are maintainability hints that help reviewers decide where to inspect next.
+Each public callable should have a clear owner file, shared implementation details should stay in `shared.py`, and the package `__init__.py` should be the supported export surface.
 
-| Signal | What it means | Reviewer action |
-|---|---|---|
-| Architecture violation | The call graph contains a boundary break that should not be kept. For example, a shared helper calling a public function, or a helper reaching into a private helper owned by another file. | Fix this first before helper cleanup. |
-| Long chain | The public callable reaches through a deep helper chain. | Check whether the chain can be flattened or made easier to follow. |
-| Many dependencies | The public callable depends on many downstream helpers. | Check whether the function has become too wide or hard to reason about. |
-| Shared dependency | The callable uses helper logic that is also used elsewhere. | Check whether the helper belongs in `shared.py` or should stay as local implementation detail. |
-| Review for merge | The graph found helper candidates that may be too small, too specific, or only useful to one caller. | Decide whether to keep the helper, move it to shared logic, or merge it into the caller. |
+For the full rule, see:
 
-The key distinction is:
+* [Public Function Architecture](public-function-architecture/)
 
-| Type | Meaning |
-|---|---|
-| Architecture violation | A boundary rule is broken and should be fixed. |
-| Maintainability signal | The code may still be valid, but it deserves review before refactoring. |
+The main violations we want to catch are:
 
-The preferred public callable shape is still:
+* public callables depending directly on other public callables
+* public owner files defining more than one public function
+* public owner files defining classes
+* public function names not matching their owner file names
+* support classes, dataclasses, or value objects living outside `shared.py`
+* forbidden grouping files such as `public.py`, `models.py`, `classes.py`, `adapter.py`, `adapters.py`, `resolver.py`, or `resolvers.py`
+* generated reference outputs drifting away from the codebase
+
+The preferred package shape is:
+
+```text
+src/fabricops_kit/my_feature/
+  __init__.py
+  my_public_function.py
+  shared.py
+```
+
+For multiple public functions in the same batch:
+
+```text
+src/fabricops_kit/my_feature/
+  __init__.py
+  first_public_function.py
+  second_public_function.py
+  shared.py
+```
+
+The intended pattern is simple:
 
 ```text
 public owner file → shared.py → internal implementation details
 ```
 
-The pattern that usually needs review is:
+Avoid this pattern:
 
 ```text
-public callable → helper → helper → helper
+public callable → public callable → public callable
 ```
 
-Public callables should remain clean entry points. Shared logic belongs behind them, and private implementation details should not leak across owner boundaries.
-
-This matches what the dashboard actually shows: `Architecture violation`, `Long chain`, `Many dependencies`, `Shared dependency`, and `Review for merge`. The dashboard code builds those exact signals in `flowSignals()`.
+Public callables should be clean entry points. Shared logic belongs behind them, not inside a chain of public function calls.
 
 ### Many dependencies
 
