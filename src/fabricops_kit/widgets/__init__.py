@@ -4,6 +4,7 @@ __all__ = [
     "widget_author_dq_rules",
     "widget_author_schema_freshness_profile_rules",
     "widget_enrich_table_metadata",
+    "widget_pipeline_bootstrap",
     "widget_render_agreement_evidence",
     "widget_render_data_agreement",
     "widget_render_data_steward",
@@ -24,3 +25,6 @@ def __getattr__(name: str):
     globals()[name] = value
     return value
 
+
+
+from .widget_pipeline_bootstrap import widget_pipeline_bootstrap

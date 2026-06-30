@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field as dataclass_field
 from datetime import date, datetime
 import hashlib
 import json
@@ -195,10 +196,46 @@ DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "u
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 
+
+@dataclass
+class PipelineRunContext:
+    """Internal runtime context resolved for guided notebook defaults."""
+
+    run_id: str
+    pipeline_started_at: str
+    pipeline_name: str
+    spark_session: Any = None
+    metadata_schema: str = ""
+    notebook_type: str = "02_pipeline"
+    notebook_id: str = ""
+    notebook_registry_id: str = ""
+    agreement_id: str = ""
+    agreement_contract_version: str = ""
+    agreement: dict[str, Any] = dataclass_field(default_factory=dict)
+    context: dict[str, Any] | None = None
+    read_only: bool = False
+    source_definitions: dict[str, dict[str, Any]] = dataclass_field(default_factory=dict)
+    target_definitions: dict[str, dict[str, Any]] = dataclass_field(default_factory=dict)
+
+
+_ACTIVE_PIPELINE_CONTEXT: PipelineRunContext | None = None
+
+
+def set_active_pipeline_context(context: PipelineRunContext) -> None:
+    """Store the active pipeline runtime context for downstream helpers."""
+    global _ACTIVE_PIPELINE_CONTEXT
+    _ACTIVE_PIPELINE_CONTEXT = context
+
+
+def pipeline_active_context() -> PipelineRunContext | None:
+    """Return the active pipeline context when one has been started."""
+    return _ACTIVE_PIPELINE_CONTEXT
+
+
 _SELECTED_AGREEMENT: dict[str, Any] | None = None
 
 
-def _set_selected_agreement(row: dict[str, Any]) -> None:
+def set_selected_agreement(row: dict[str, Any]) -> None:
     """Store the selected agreement row for private widget workflows."""
     global _SELECTED_AGREEMENT
     _SELECTED_AGREEMENT = dict(row)

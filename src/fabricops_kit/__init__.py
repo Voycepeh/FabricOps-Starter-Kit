@@ -30,10 +30,10 @@ from .pipeline import (
     display_guardrail_results,
     prepare_pipeline_table_configs,
     run_table_guardrails,
-    widget_pipeline_bootstrap,
     write_pipeline_lineage,
     write_pipeline_run_summary,
 )
+from .widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
 from .governance_review import get_latest_metadata_catalogue
 from .widgets import (
     widget_author_dq_rules,
