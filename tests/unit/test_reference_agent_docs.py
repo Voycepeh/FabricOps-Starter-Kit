@@ -354,8 +354,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "[Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)" in flow_text
     assert "[Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)" in flow_text
     assert "[function-call-graph.json](_data/function-call-graph.json)" in flow_text
-    assert "fabricops_public_callable_flow_cleanup_packet" in flow_text
-    assert "fabricops_support_inventory_cleanup_packet" in flow_text
+    assert "fabricops_runtime_refactor_packet" in flow_text
+    assert "selected architecture scope" in flow_text
     assert "## Callable helper summary" not in flow_text
     assert "## Implementation helper nesting inventory" not in flow_text
     assert '<div class="callable-flow-table-wrap" markdown="0">' not in flow_text
@@ -645,11 +645,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Non functions" not in inventory_text
     assert "Suggested cleanup" in inventory_text
     assert "Public callables" in inventory_text
-    assert "Total function-level code assets" in inventory_text
-    assert "User facing callable functions." in inventory_text
-    assert "Reusable utility functions intentionally shared across callable files." in inventory_text
-    assert "Private helpers owned by one standalone callable file." in inventory_text
-    assert "Only actionable records that need review or cleanup." in inventory_text
+    for scope_label in [
+        "All runtime assets",
+        "Others / Unreachable runtime assets",
+        "Runtime assets",
+        "Needs review",
+        "Unreachable",
+        "Selected for export",
+    ]:
+        assert scope_label in inventory_text
     assert "The Runtime inventory focuses on src/fabricops_kit runtime code assets that are reachable from public callables or template runtime references." in normalized_inventory_text
     assert "Use this runtime inventory to inspect deduplicated src/fabricops_kit code assets that support public callables and template runtime flows." in normalized_inventory_text
     assert "Architecture inventory" not in inventory_text
@@ -662,7 +666,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "if(i.source_url)returni.source_url" in compact_inventory_text
     assert "conststart=i.source_start_line" in compact_inventory_text
     assert "#L${start}" in inventory_text
-    assert "Showing ${visibleRows.length} runtime inventory records of ${total} total generated function-level code assets." in normalized_inventory_text
+    assert "Showing ${visibleRows.length} runtime inventory records in ${currentScope.label} of ${total} scoped runtime assets." in normalized_inventory_text
     assert "Function metrics are generated from the runtime inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
@@ -687,10 +691,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Shared helper" in inventory_text
     assert "Private helper" in inventory_text
     assert "Non functions" not in inventory_text
-    assert "Usage scope" in inventory_text
-    assert "Boundary violation" in inventory_text
+    assert "Reachability" in inventory_text
+    assert "Unreachable runtime asset" in inventory_text
     assert "Recommended action" in inventory_text
     assert "Reached from public flow" not in inventory_text
+    assert "reachable_from_public_runtime" in inventory_text
+    assert "unreachable_runtime_asset" in inventory_text
     assert "function buildFlowSignals(flows)" in inventory_text
     assert "function matchesFilters(i)" in inventory_text
     assert "function supportFocus(i)" in inventory_text
@@ -704,7 +710,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     for removed_filter in [
         "moduleFilter",
         "roleGroupFilter",
-        "reachabilityFilter",
         "signalFilter",
         "priorityFilter",
         "Advanced / Debug filters",
@@ -739,16 +744,19 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Download YAML" in inventory_text
     assert "selectedItems" in inventory_text
     assert "refactorPacket" in inventory_text
-    assert "fabricops_support_inventory_cleanup_packet" in inventory_text
+    assert "fabricops_runtime_refactor_packet" in inventory_text
+    assert "selected_inventory_assets" in inventory_text
+    assert "selection_context" in inventory_text
+    assert "related_public_flows" in inventory_text
+    assert "related_architecture_findings" in inventory_text
     assert "functionbuildInventoryFilename(functionCount,extension)" in compact_inventory_text
-    assert "fabricops-runtime-inventory__${functionCount}_functions__" in inventory_text
-    assert "buildInventoryFilename((packet.selected_code_assets||[]).length" in compact_inventory_text
+    assert "fabricops-runtime-refactor-packet__${functionCount}_assets__" in inventory_text
+    assert "buildInventoryFilename((packet.selected_inventory_assets||[]).length" in compact_inventory_text
     assert "fabricops-runtime-inventory-cleanup-packet.${isYaml" not in inventory_text
     assert "source_file" in inventory_text
     assert "item_name" in inventory_text
-    assert "usage_scope" in inventory_text
+    assert "reachability" in inventory_text
     assert "action_details" in inventory_text
-    assert "Boundary violation" in inventory_text
     assert "data-select-row" not in inventory_text
 
     # Compatibility modes and selected-callable/code-asset packet paths remain available,
@@ -772,7 +780,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 87
+    assert summary_counts["callable_kind"]["function"] == 132
     assert summary_counts["public_classes"] == 7
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
@@ -848,7 +856,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert all(row["owner_function"] or row["usage_scope"] == "unused" for row in private_helper_rows)
     assert all(row["owner_file"] for row in private_helper_rows)
     assert any(row["leaks_outside_owner_file"] for row in private_helper_rows)
-    assert {"Keep private helper", "Merge into owner", "Rename to shared helper", "Move closer to owner", "Remove redundant wrapper"} & {row["recommended_action"] for row in private_helper_rows}
+    assert {"Keep private helper", "Merge into owner", "Rename to shared helper", "Move closer to owner", "Verify possible orphan"} & {row["recommended_action"] for row in private_helper_rows}
+    unreachable_rows = [row for row in function_inventory if row.get("reachability") == "unreachable_runtime_asset"]
+    assert unreachable_rows
+    assert all(row["recommended_action"] == "Verify possible orphan" for row in unreachable_rows)
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
     assert sum(1 for row in function_inventory if row["function_type"] == "Shared helper") == summary_counts["function_type"]["Shared helper"]
     assert any(
@@ -890,6 +901,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "usage_scope_label",
         "architecture_signals",
         "review_signals",
+        "reachability",
         "reachability_kind",
         "reachability_label",
         "recommended_action",
@@ -916,8 +928,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Function Call Graph Dashboard" in callable_flow_text
     assert "Open architecture dashboard" in callable_flow_text
     assert "focused cleanup packets as JSON or YAML" in callable_flow_text
-    assert "fabricops_public_callable_flow_cleanup_packet" in callable_flow_text
-    assert "fabricops_support_inventory_cleanup_packet" in callable_flow_text
+    assert "fabricops_runtime_refactor_packet" in callable_flow_text
+    assert "selected inventory assets" in callable_flow_text
     assert "Pointless wrapper functions" not in callable_flow_text
     assert "Public callable dependencies" not in callable_flow_text
     assert "Public callables → Shared helpers → Utility callables" not in callable_flow_text
@@ -2472,14 +2484,12 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!q&&!supportFocus(i))return false" in inventory_text
     assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.'" in inventory_text
     for label in [
-        "Total function-level code assets",
-        "Public callables",
-        "Classes",
-        "Shared helpers",
-        "Private helpers",
-        "Suggested cleanup",
-        "Public callables",
-        "Total function-level code assets",
+        "Runtime assets",
+        "Needs review",
+        "Unreachable",
+        "Selected for export",
+        "All runtime assets",
+        "Others / Unreachable runtime assets",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
@@ -2516,7 +2526,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "source_file" in inventory_text
     assert "item_name" in inventory_text
     assert "item_type" in inventory_text
-    assert "usage_scope" in inventory_text
+    assert "reachability" in inventory_text
     assert "health" in inventory_text
     assert "recommended_action" in inventory_text
     assert "action_details" in inventory_text
@@ -2544,12 +2554,14 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
 
     expected_counts = {
         "public": 25,
-        "internal": 62,
-        "private_helper": 146,
+        "internal": 107,
+        "private_helper": 232,
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 
     assert actual_counts == expected_counts
+    assert any(row.get("reachability") == "unreachable_runtime_asset" for row in inventory)
+    assert all(row.get("source_path", "").startswith("src/fabricops_kit/") for row in inventory)
     assert "supporting_object" not in {row["layer"] for row in inventory}
     assert all(row["function_type"] != "Non functions" for row in inventory)
 

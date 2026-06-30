@@ -152,29 +152,31 @@ The dashboard helps reviewers:
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
 
-### Public callable flows
+### Choose architecture scope
 
-The public callable flow table shows notebook-facing functions, width, depth, recommendations, and signal summaries. Selecting a function opens its dependency tree and supporting helper details.
+Start with the architecture scope table. Choose a public callable flow, **All runtime assets**, or **Others / Unreachable runtime assets**. Public callable scopes keep the existing flow review, while the special scopes let maintainers inspect package-level runtime assets without restoring a separate inventory page.
 
-### Architecture checks
+### Inspect call graph when available
 
-Architecture checks identify broken public-callable boundaries and maintainability review signals such as too many helpers, too many steps, shared helpers, and maybe-combine helpers.
+When the selected scope is a public callable, the dashboard shows the callable dependency tree, direct/transitive helper details, and architecture findings. The special runtime scopes show a clear no-flow message instead of inventing a fake public call graph.
 
-### Runtime inventory
+### Review runtime inventory
 
-The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and only describes deduplicated runtime code assets under `src/fabricops_kit` that support public callables or template runtime references.
+The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and describes deduplicated runtime code assets under `src/fabricops_kit`, including unreachable runtime assets that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
 
-### Cleanup packet export
+### Select inventory assets
 
-Cleanup packet export is available from the public callable flow and runtime inventory sections so maintainers can download focused JSON or YAML packets without leaving the dashboard.
+Use the runtime inventory filters and multi-select controls to select one function/class, multiple helpers, all visible rows, or a scoped set of possible orphan records. Helper suggestions are review hints, not automatic delete or refactor commands.
+
+### Export AI refactor packet
+
+The dashboard exports one AI refactor packet from selected inventory assets. The packet includes the selected architecture scope, related public callable flow when applicable, related architecture findings, selected inventory assets, and compatibility mode.
 
 ## 5. AI refactor packets
 
 When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
 
-The Function Call Graph Dashboard exports `fabricops_public_callable_flow_cleanup_packet` for one selected public function graph.
-
-The dashboard runtime inventory exports `fabricops_support_inventory_cleanup_packet` for selected function-level code assets.
+The Function Call Graph Dashboard exports one `fabricops_runtime_refactor_packet` built from selected runtime inventory assets. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
 
 The packet keeps the AI refactor focused on:
 
