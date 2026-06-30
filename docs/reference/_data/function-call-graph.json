@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-06-30T17:07:07.235751Z",
+    "generated_at_utc": "2026-06-30T17:31:19.116589Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -70920,6 +70920,9 @@
       "hidden_private_helpers": 232,
       "private_helpers_to_review": 232
     },
+    "inventory_row_count": 371,
+    "unique_inventory_identity_count": 371,
+    "duplicate_inventory_identity_count": 0,
     "private_helper_review": 232,
     "public_classes": 7
   }
