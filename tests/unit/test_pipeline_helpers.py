@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
 import fabricops_kit
 from fabricops_kit import pipeline
+pipeline_bootstrap_module = importlib.import_module("fabricops_kit.widgets.widget_pipeline_bootstrap")
+widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.unit
@@ -745,6 +749,13 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     }
 
 
+
+def test_widget_pipeline_bootstrap_public_import_surface():
+    """Verify widget_pipeline_bootstrap remains available from public package surfaces."""
+    assert fabricops_kit.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
+    assert pipeline.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
+
+
 def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
     """Verify widget_pipeline_bootstrap stores agreement and runtime defaults."""
     spark = FakeSpark()
@@ -753,9 +764,9 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
         runtime_metadata={"currentNotebookName": "02_pipeline", "currentNotebookId": "notebook-1"},
     )
     widget_calls = []
-    monkeypatch.setattr(pipeline, "_render_agreement_selector", lambda **kwargs: widget_calls.append(kwargs))
+    monkeypatch.setattr(pipeline_bootstrap_module, "_render_bootstrap_agreement_selector", lambda **kwargs: widget_calls.append(kwargs))
     monkeypatch.setattr(
-        pipeline,
+        pipeline_bootstrap_module,
         "get_selected_agreement",
         lambda: {"agreement_id": "agreement-1", "contract_version": "2", "registration_id": "registry-1"},
     )
@@ -790,7 +801,7 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
 def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     """Verify run_table_guardrails derives omitted runtime parameters from context."""
     spark = FakeSpark()
-    active = pipeline._PipelineRunContext(
+    active = widgets_shared_module.PipelineRunContext(
         run_id="run-123",
         pipeline_started_at="2026-01-01T00:00:00Z",
         pipeline_name="demo_pipeline",
@@ -801,7 +812,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
         agreement_contract_version="2",
         context={"config": "config", "env": "dev"},
     )
-    monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", active)
+    monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
     monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda *args, **kwargs: FakeDataFrame("profile"))
     monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -841,7 +852,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
 def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_context(monkeypatch):
     """Verify summary writer derives context and guardrail result fields."""
     spark = FakeSpark()
-    active = pipeline._PipelineRunContext(
+    active = widgets_shared_module.PipelineRunContext(
         run_id="run-123",
         pipeline_started_at="2026-01-01T00:00:00Z",
         pipeline_name="demo_pipeline",
@@ -853,7 +864,7 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
         source_definitions={"orders": {"table_name": "orders"}},
         target_definitions={"curated": {"table_name": "curated"}},
     )
-    monkeypatch.setattr(pipeline, "_ACTIVE_PIPELINE_CONTEXT", active)
+    monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", {"config": framework_config(), "env": "dev"}))
     writes = []
     monkeypatch.setattr(pipeline, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))

@@ -33,7 +33,7 @@ The [Public API contract](public-api-contract.md) remains the release anchor for
 | Pipeline | `fabricops_kit.pipeline.display_guardrail_results` | Return guardrail results prepared for summary, detailed, or debug display. |
 | Pipeline | `fabricops_kit.pipeline.prepare_pipeline_table_configs` | Prepare source or target table configs for a pipeline notebook. |
 | Pipeline | `fabricops_kit.pipeline.run_table_guardrails` | Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails. |
-| Pipeline | `fabricops_kit.pipeline.widget_pipeline_bootstrap` | Start a guided notebook run and store runtime defaults. |
+| Pipeline | `fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap` | Start a guided notebook run and store runtime defaults. |
 | Pipeline | `fabricops_kit.pipeline.write_pipeline_lineage` | Write many-to-many source-to-target lineage evidence. |
 | Pipeline | `fabricops_kit.pipeline.write_pipeline_run_summary` | Write a pipeline runtime summary to metadata. |
 

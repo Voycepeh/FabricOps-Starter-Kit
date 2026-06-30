@@ -423,7 +423,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "stop_on_failure", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
-        "fabricops_kit.pipeline.widget_pipeline_bootstrap": {
+        "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap": {
             "parameters": [
                 {"name": "notebook_type", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "select_agreement", "kind": "KEYWORD_ONLY", "required": False},

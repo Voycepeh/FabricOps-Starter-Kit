@@ -1,13 +1,198 @@
-"""Private widget workflow for selecting a data agreement."""
+"""Pipeline bootstrap widget for guided pipeline notebook workflows."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
+from uuid import uuid4
 
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
 from fabricops_kit.metadata import current_notebook_active_registrations, register_current_notebook
-from fabricops_kit.widgets.shared import _set_selected_agreement, latest_agreement_versions, list_data_agreements, render_searchable_selector, require_ipywidgets
+from fabricops_kit.widgets.shared import (
+    set_selected_agreement,
+    PipelineRunContext,
+    get_selected_agreement,
+    latest_agreement_versions,
+    list_data_agreements,
+    render_searchable_selector,
+    require_ipywidgets,
+    set_active_pipeline_context,
+)
 
+
+def widget_pipeline_bootstrap(
+    *,
+    notebook_type: str = "02_pipeline",
+    select_agreement: bool = False,
+    register_notebook: bool = False,
+    read_only: bool = False,
+    run_context: Any = None,
+    spark_session: Any = None,
+    metadata_schema: str | None = None,
+    pipeline_name: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> Any:
+    """Bootstrap a guided pipeline notebook run and store runtime defaults.
+
+    Parameters
+    ----------
+    notebook_type : str, default="02_pipeline"
+        FabricOps notebook type to associate with the active context.
+    select_agreement : bool, default=False
+        When True, render the agreement selector and capture the selected
+        agreement for downstream defaults.
+    register_notebook : bool, default=False
+        When True, allow the agreement selector to register this notebook
+        to the selected agreement. Use ``False`` for read-only exploration.
+    read_only : bool, default=False
+        Marks the active context as read-only for exploratory notebooks. The
+        startup helper itself does not write metadata unless
+        ``register_notebook=True`` is explicitly requested.
+    run_context : object, optional
+        ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook
+        variable named ``RUN_CONTEXT``.
+    spark_session : Any, optional
+        Spark session. Defaults to the active notebook variable named ``spark``.
+    metadata_schema : str, optional
+        ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
+    pipeline_name : str, optional
+        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
+    context : dict, optional
+        Advanced FabricOps context override.
+
+    Returns
+    -------
+    Any
+        Pipeline runtime context object with resolved runtime defaults. Most notebooks
+        use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
+        preparing target configs or lineage. The concrete context class is
+        intentionally internal and not part of the primary public API.
+
+    Notes
+    -----
+    This helper keeps template code concise while preserving explicit lower-level
+    parameters on guardrail and summary helpers for advanced notebooks.
+
+    """
+    return _widget_pipeline_bootstrap_workflow(
+        notebook_type=notebook_type,
+        select_agreement=select_agreement,
+        register_notebook=register_notebook,
+        read_only=read_only,
+        run_context=run_context,
+        spark_session=spark_session,
+        metadata_schema=metadata_schema,
+        pipeline_name=pipeline_name,
+        context=context,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Internal model and run-state resolver layer
+# ---------------------------------------------------------------------------
+
+
+def _widget_pipeline_bootstrap_workflow(
+    *,
+    notebook_type: str = "02_pipeline",
+    select_agreement: bool = False,
+    register_notebook: bool = False,
+    read_only: bool = False,
+    run_context: Any = None,
+    spark_session: Any = None,
+    metadata_schema: str | None = None,
+    pipeline_name: str | None = None,
+    context: dict[str, Any] | None = None,
+) -> Any:
+    """Start a guided notebook run and store runtime defaults.
+
+    Parameters
+    ----------
+    notebook_type : str, default="02_pipeline"
+        FabricOps notebook type to associate with the active context.
+    select_agreement : bool, default=False
+        When True, render the agreement selector and capture the selected
+        agreement for downstream defaults.
+    register_notebook : bool, default=False
+        When True, allow the agreement selector to register this notebook
+        to the selected agreement. Use ``False`` for read-only exploration.
+    read_only : bool, default=False
+        Marks the active context as read-only for exploratory notebooks. The
+        startup helper itself does not write metadata unless
+        ``register_notebook=True`` is explicitly requested.
+    run_context : object, optional
+        ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook
+        variable named ``RUN_CONTEXT``.
+    spark_session : Any, optional
+        Spark session. Defaults to the active notebook variable named ``spark``.
+    metadata_schema : str, optional
+        ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
+    pipeline_name : str, optional
+        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
+    context : dict, optional
+        Advanced FabricOps context override.
+
+    Returns
+    -------
+    Any
+        Internal context object with resolved runtime defaults. Most notebooks
+        use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
+        preparing target configs or lineage. The concrete context class is
+        intentionally internal and not part of the primary public API.
+
+    Notes
+    -----
+    This helper keeps template code concise while preserving explicit lower-level
+    parameters on guardrail and summary helpers for advanced notebooks.
+
+    """
+    if run_context is None or spark_session is None or metadata_schema is None:
+        try:
+            ip = get_ipython()  # type: ignore[name-defined]
+        except Exception:
+            user_ns = {}
+        else:
+            user_ns = getattr(ip, "user_ns", {}) if ip is not None else {}
+        run_context = run_context if run_context is not None else user_ns.get("RUN_CONTEXT")
+        spark_session = spark_session if spark_session is not None else user_ns.get("spark")
+        schema = metadata_schema if metadata_schema is not None else user_ns.get("METADATA_SCHEMA", "")
+    else:
+        schema = metadata_schema
+    runtime_metadata = getattr(run_context, "runtime_metadata", {}) or {}
+    if not isinstance(runtime_metadata, Mapping):
+        runtime_metadata = {}
+    resolved_pipeline_name = str(pipeline_name or runtime_metadata.get("currentNotebookName") or notebook_type)
+    active = PipelineRunContext(
+        run_id=str(getattr(run_context, "run_id", "") or uuid4()),
+        pipeline_started_at=get_current_audit_timestamp(),
+        pipeline_name=resolved_pipeline_name,
+        spark_session=spark_session,
+        metadata_schema=str(schema or ""),
+        notebook_type=str(notebook_type or "02_pipeline"),
+        notebook_id=str(runtime_metadata.get("currentNotebookId") or ""),
+        context=context,
+        read_only=bool(read_only),
+    )
+    set_active_pipeline_context(active)
+
+    if select_agreement:
+        _render_bootstrap_agreement_selector(
+            spark_session=active.spark_session,
+            metadata_schema=active.metadata_schema or None,
+            register_notebook=register_notebook,
+            notebook_type=active.notebook_type,
+            pipeline_name=active.pipeline_name,
+            context=active.context,
+        )
+        agreement = get_selected_agreement()
+        active.agreement = dict(agreement)
+        active.agreement_id = str(agreement.get("agreement_id", ""))
+        active.agreement_contract_version = str(
+            agreement.get("agreement_contract_version", agreement.get("contract_version", ""))
+        )
+        active.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
+        active.notebook_id = str(agreement.get("notebook_id", active.notebook_id))
+
+    return active
 
 
 
@@ -20,8 +205,8 @@ def _html_escape(value: Any) -> str:
 
 
 
-def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
-    """Render the downstream agreement selector workflow and retain the selected row.
+def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+    """Render the bootstrap-owned agreement selector workflow and retain the selected row.
 
     Parameters
     ----------
@@ -92,11 +277,11 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
         if change.get("name") == "value" and change.get("new") is not None:
             selected_row = rows_by_id.get(str(change["new"]))
             if selected_row is not None:
-                _set_selected_agreement(selected_row)
+                set_selected_agreement(selected_row)
 
     selector.observe(_on_change, names="value")
     if selector.value in rows_by_id:
-        _set_selected_agreement(rows_by_id[str(selector.value)])
+        set_selected_agreement(rows_by_id[str(selector.value)])
     selector.search_box = selector_parts["search"]
     selector.context_html = selector_parts["context"]
 
@@ -137,7 +322,7 @@ def _select_agreement_widget_workflow(agreement_rows: Any = None, *, context: di
 
     if register_notebook:
         if config is None or env is None or spark_session is None:
-            raise ValueError("widget_select_agreement(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
+            raise ValueError("widget_pipeline_bootstrap(..., register_notebook=True) requires an active FABRIC_CONTEXT or context override plus spark_session.")
         active_rows = current_notebook_active_registrations(
             spark_session,
             config=config,

@@ -507,13 +507,11 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
         assert "datetime.utcnow" not in source
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
-    pipeline_helper_source = Path("src/fabricops_kit/pipeline.py").read_text(encoding="utf-8")
+    pipeline_helper_source = Path("src/fabricops_kit/widgets/widget_pipeline_bootstrap.py").read_text(encoding="utf-8")
     assert "PIPELINE = widget_pipeline_bootstrap(" in pipeline_source
     assert "_current_audit_timestamp" not in pipeline_source
     assert "PIPELINE_STARTED_AT" not in pipeline_source
-    assert "pipeline_started_at=_now_iso()" in pipeline_helper_source
-    assert "def _now_iso(config: Any = None) -> str:" in pipeline_helper_source
-    assert "return get_current_audit_timestamp(config=config)" in pipeline_helper_source
+    assert "pipeline_started_at=get_current_audit_timestamp()" in pipeline_helper_source
 
 
 def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workflow():

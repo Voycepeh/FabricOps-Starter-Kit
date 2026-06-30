@@ -5,7 +5,7 @@
 ## Starter Kit usage
 
 - **Written by notebook/template:** 02_pipeline.ipynb
-- **Written by function or widget:** `widget_select_agreement`
+- **Written by function or widget:** [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
 - **Read by function or widget:** `get_selected_agreement`, [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
 - **Related template step:** 02_pipeline.ipynb
 
@@ -44,6 +44,6 @@
 ## Related function reference
 
 - `get_selected_agreement`
-- `widget_select_agreement`
+- [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
 - [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)
 - [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

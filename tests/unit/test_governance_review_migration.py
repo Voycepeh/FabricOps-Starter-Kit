@@ -132,9 +132,8 @@ def test_widget_modules_do_not_import_private_shared_widget_helpers():
                 continue
             if node.module != "fabricops_kit.widgets.shared":
                 continue
-            allowed_private = {"_set_selected_agreement"}
             for alias in node.names:
-                if alias.name.startswith("_") and alias.name not in allowed_private:
+                if alias.name.startswith("_"):
                     offenders.append(f"{path.relative_to(root)} imports {alias.name} from widgets.shared")
     assert offenders == []
 
