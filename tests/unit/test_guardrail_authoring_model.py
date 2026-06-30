@@ -268,8 +268,6 @@ def test_profile_behavior_rules_from_guardrail_metadata_are_enforced(spark_sessi
 
 def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session, monkeypatch):
     """Verify DQ rule rows are loaded and enforced."""
-    from fabricops_kit.widgets import shared as governance_review
-
     df = spark_session.createDataFrame([(1,), (None,)], "order_id int")
     rules_df = spark_session.createDataFrame([
         _rule(
@@ -282,7 +280,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
             severity="error",
         )
     ])
-    monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
+    monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
 
     result = dq_runtime._run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
@@ -293,7 +291,6 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify active-pending-review rules use standard runtime warning metadata."""
-    from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
     warning = "Rule is active through approval bypass and requires governance post-review."
@@ -329,7 +326,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     dq_rules_df = spark_session.createDataFrame([
         _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
     ])
-    monkeypatch.setattr(governance_review, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
+    monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
     dq = dq_runtime._run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     for result in (schema, freshness, profile, dq):
