@@ -34,7 +34,6 @@ from .pipeline import (
     write_pipeline_run_summary,
 )
 from .widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
-from .governance_lookup import get_latest_metadata_catalogue
 from .widgets import (
     widget_author_dq_rules,
     widget_author_schema_freshness_profile_rules,
@@ -84,7 +83,6 @@ __all__ = [
     "read_warehouse_query",
     "write_warehouse_table",
     "profile_dataframe",
-    "get_latest_metadata_catalogue",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",

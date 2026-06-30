@@ -64,16 +64,6 @@
         "fabricops_kit.<function>",
         "fabricops_kit.widgets.<function>"
       ]
-    },
-    "src/fabricops_kit/governance_lookup.py": {
-      "status": "dedicated_public_owner_file",
-      "public_functions": [
-        "get_latest_metadata_catalogue"
-      ],
-      "stable_import_paths": [
-        "fabricops_kit.get_latest_metadata_catalogue",
-        "fabricops_kit.governance_lookup.get_latest_metadata_catalogue"
-      ]
     }
   }
 }

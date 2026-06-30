@@ -46,7 +46,6 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "read_warehouse_query",
     "write_warehouse_table",
     "profile_dataframe",
-    "get_latest_metadata_catalogue",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
@@ -141,15 +140,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the release public API contract keeps exactly 26 functions."""
+    """Verify the release public API contract keeps exactly 25 functions."""
     message = (
-        "The supported public API surface must remain exactly 26 functions during "
+        "The supported public API surface must remain exactly 25 functions during "
         "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
         "intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 26, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 26
+    assert len(SUPPORTED_PUBLIC_API) == 25, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 25
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -330,15 +329,6 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
-            ]
-        },
-        "fabricops_kit.governance_lookup.get_latest_metadata_catalogue": {
-            "parameters": [
-                {"name": "table_name", "kind": "KEYWORD_ONLY", "required": True},
-                {"name": "agreement", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "metadata_schema", "kind": "KEYWORD_ONLY", "required": False},
-                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },

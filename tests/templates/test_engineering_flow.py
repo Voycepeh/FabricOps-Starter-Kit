@@ -32,7 +32,7 @@ def test_explore_template_is_read_only_context_aware_sequence():
         "## 02 Import functions",
         "## 03 Select agreement",
         "## 04 Read source",
-        "## 05 Fetch latest metadata catalogue",
+        "## 05 Read metadata catalogue",
         "## 06 Optional profile, no write",
         "## 07 Self exploration",
     ]
@@ -49,7 +49,9 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "read_only=True" in code
     assert 'notebook_type="99_explore"' in code
     assert "AGREEMENT = PIPELINE.agreement" in code
-    assert "get_latest_metadata_catalogue(" in code
+    assert "get_latest_metadata_catalogue(" not in code
+    assert "read_lakehouse_table(" in code
+    assert "METADATA_DATA_CATALOGUE" in code
     assert "latest_catalogue" in code
     assert "RUN_PROFILE = True" in code
     assert "profile_dataframe(" in code

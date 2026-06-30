@@ -3528,7 +3528,6 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.io.resolve_target_store",
       "fabricops_kit.io.shared.resolve_target_store",
       "fabricops_kit.pipeline._run_table_guardrails_workflow",
@@ -3570,7 +3569,6 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_latest_metadata_catalogue_lookup_workflow",
       "resolve_target_store",
       "resolve_target_store",
       "_run_table_guardrails_workflow",
@@ -4001,178 +3999,6 @@
     "verification": "Not documented yet",
     "related_functions": [
       "profile_dataframe_core"
-    ]
-  },
-  {
-    "name": "_catalogue_lookup_value",
-    "qualified_name": "fabricops_kit.governance_lookup._catalogue_lookup_value",
-    "module": "governance_lookup",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/governance_lookup.py",
-    "source_start_line": 21,
-    "source_end_line": 36,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_lookup.py#L21-L36",
-    "docs_path": null,
-    "summary": "Return the first non-empty present catalogue lookup value.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "Not documented yet",
-    "output": "Not documented yet",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_latest_metadata_catalogue_lookup_workflow"
-    ]
-  },
-  {
-    "name": "_coerce_rows",
-    "qualified_name": "fabricops_kit.governance_lookup._coerce_rows",
-    "module": "governance_lookup",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow"
-    ],
-    "outbound": [],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/governance_lookup.py",
-    "source_start_line": 13,
-    "source_end_line": 18,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_lookup.py#L13-L18",
-    "docs_path": null,
-    "summary": "No summary available.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "Not documented yet",
-    "output": "Not documented yet",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "_latest_metadata_catalogue_lookup_workflow"
-    ]
-  },
-  {
-    "name": "_latest_metadata_catalogue_lookup_workflow",
-    "qualified_name": "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow",
-    "module": "governance_lookup",
-    "type": "internal",
-    "role": "internal",
-    "function_category": "internal-private",
-    "inbound": [
-      "fabricops_kit.governance_lookup.get_latest_metadata_catalogue"
-    ],
-    "outbound": [
-      "fabricops_kit.config.shared.resolve_fabric_context",
-      "fabricops_kit.governance_lookup._catalogue_lookup_value",
-      "fabricops_kit.governance_lookup._coerce_rows",
-      "fabricops_kit.io.shared.configured_lakehouse_schema",
-      "fabricops_kit.io.shared.read_lakehouse_table_core"
-    ],
-    "used_in_templates": [],
-    "glossary_terms": [],
-    "expanded_purpose": null,
-    "when_to_use": null,
-    "source_file": "src/fabricops_kit/governance_lookup.py",
-    "source_start_line": 39,
-    "source_end_line": 137,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_lookup.py#L39-L137",
-    "docs_path": null,
-    "summary": "Return the latest metadata catalogue rows for an exploratory table lookup.",
-    "use_when": "Not documented yet",
-    "do_not_use_when": "Not documented yet",
-    "required_context": "Not documented yet",
-    "inputs": "table_name : str\n    Source table name to look up in ``METADATA_DATA_CATALOGUE``.\nagreement : mapping, optional\n    Selected agreement context from :func:`get_selected_agreement`. When an\n    agreement id or contract version is present, matching catalogue rows are\n    preferred.\nmetadata_schema : str, optional\n    Explicit metadata Lakehouse schema from ``00_env_config``. When omitted,\n    the configured metadata schema is resolved from the active context.\nspark_session : Any, optional\n    Spark session used to read metadata and return display-friendly rows.\ncontext : dict, optional\n    Advanced FabricOps context override. Defaults to the active\n    ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
-    "output": "Any\n    A Spark DataFrame when ``spark_session`` can create one; otherwise a\n    list of dictionaries. Existing catalogue rows are limited to the latest\n    profile group for the table. Missing metadata returns one friendly\n    ``not_found`` row instead of raising.",
-    "return_interpretation": "Not documented yet",
-    "side_effects": "Not documented yet",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "Not documented yet",
-    "related_guides": [],
-    "preferred_example": "Not documented yet",
-    "verification": "Not documented yet",
-    "related_functions": [
-      "get_latest_metadata_catalogue",
-      "resolve_fabric_context",
-      "_catalogue_lookup_value",
-      "_coerce_rows",
-      "configured_lakehouse_schema",
-      "read_lakehouse_table_core"
-    ]
-  },
-  {
-    "name": "get_latest_metadata_catalogue",
-    "qualified_name": "fabricops_kit.governance_lookup.get_latest_metadata_catalogue",
-    "module": "governance_lookup",
-    "type": "callable",
-    "role": "callable",
-    "function_category": "public_starter_kit",
-    "inbound": [],
-    "outbound": [
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow"
-    ],
-    "used_in_templates": [
-      "99_explore"
-    ],
-    "glossary_terms": [
-      "metadata lakehouse",
-      "profile",
-      "data agreement"
-    ],
-    "expanded_purpose": "Fetches existing METADATA_DATA_CATALOGUE evidence for a selected table and agreement context so 99_explore can stay context-aware and read-only.",
-    "when_to_use": "Use in 99_explore for discovery, profiling, troubleshooting, or investigation when existing catalogue context may help.",
-    "source_file": "src/fabricops_kit/governance_lookup.py",
-    "source_start_line": 140,
-    "source_end_line": 155,
-    "source_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/governance_lookup.py#L140-L155",
-    "docs_path": "api/reference/get_latest_metadata_catalogue.md",
-    "summary": "Fetch the latest metadata catalogue rows for a table without writing metadata.",
-    "use_when": "Use in 99_explore for discovery, profiling, troubleshooting, or investigation when existing catalogue context may help.",
-    "do_not_use_when": "Do not use as an enforcement, approval, or metadata persistence step; it is read-only exploration support.",
-    "required_context": "Requires the metadata target configured by 00_env_config and optionally METADATA_SCHEMA for schema-enabled metadata lakehouses.",
-    "inputs": "table_name, optional agreement context, metadata_schema, spark_session, and advanced context override.",
-    "output": "Latest matching catalogue rows as a Spark DataFrame when possible, otherwise a list of dictionaries. Missing catalogue evidence returns a friendly not_found row.",
-    "return_interpretation": "Rows describe the latest available catalogue profile for the requested table, or a friendly not_found message when none exists.",
-    "side_effects": "Reads METADATA_DATA_CATALOGUE from the configured metadata target only; does not write metadata.",
-    "failure_modes": "Not documented yet",
-    "common_failure_causes": "- The metadata catalogue table does not exist yet.\n- No profile has been written for the selected table.\n- The metadata lakehouse cannot be read.",
-    "related_guides": [
-      {
-        "title": "Notebook Templates Implementation Guide",
-        "path": "../../notebook-templates-implementation-guide/index.md"
-      }
-    ],
-    "preferred_example": "latest_catalogue = get_latest_metadata_catalogue(table_name=source_table_name, agreement=AGREEMENT, metadata_schema=METADATA_SCHEMA, spark_session=spark)",
-    "verification": "Verify exploratory notebooks call this helper only for context lookup and do not call write or guardrail helpers.",
-    "related_functions": [
-      "read_lakehouse_table",
-      "profile_dataframe",
-      "widget_pipeline_bootstrap"
     ]
   },
   {
@@ -8154,7 +7980,6 @@
     "role": "internal",
     "function_category": "utility",
     "inbound": [
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.guardrails._read_guardrail_rule_metadata",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.metadata._load_notebook_registry",
@@ -8199,7 +8024,6 @@
     "preferred_example": "Not documented yet",
     "verification": "Not documented yet",
     "related_functions": [
-      "_latest_metadata_catalogue_lookup_workflow",
       "_read_guardrail_rule_metadata",
       "enforce_profile_behavior",
       "_load_notebook_registry",
@@ -8471,7 +8295,6 @@
     "inbound": [
       "fabricops_kit.config.shared._setup_metadata_table_registry",
       "fabricops_kit.config.shared._validate_metadata_table_registration",
-      "fabricops_kit.governance_lookup._latest_metadata_catalogue_lookup_workflow",
       "fabricops_kit.guardrails._read_guardrail_rule_metadata",
       "fabricops_kit.guardrails.enforce_profile_behavior",
       "fabricops_kit.metadata._load_notebook_registry",
@@ -8511,7 +8334,6 @@
     "related_functions": [
       "_setup_metadata_table_registry",
       "_validate_metadata_table_registration",
-      "_latest_metadata_catalogue_lookup_workflow",
       "_read_guardrail_rule_metadata",
       "enforce_profile_behavior",
       "_load_notebook_registry",

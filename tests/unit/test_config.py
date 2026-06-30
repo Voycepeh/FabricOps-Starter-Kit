@@ -371,10 +371,9 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
 
 def test_metadata_data_catalogue_schema_is_profile_evidence_only():
     """Verify catalogue schema has profile_mode but excludes old result fields."""
-    from fabricops_kit.governance_lookup import CATALOGUE_TABLE
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
-    fields = set(metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames())
+    fields = set(metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames())
 
     assert "profile_mode" in fields
     assert "load_behavior" not in fields

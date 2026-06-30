@@ -68,7 +68,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.get_fabric_context": "config",
     "config.setup_notebook": "config",
     "config.setup_metadata_tables": "config",
-    "governance_lookup": "governance_lookup",
     "widgets.widget_select_guardrail_target": "widgets.widget_select_guardrail_target",
     "widgets.widget_author_schema_freshness_profile_rules": "widgets.widget_author_schema_freshness_profile_rules",
     "widgets.widget_author_dq_rules": "widgets.widget_author_dq_rules",
@@ -82,7 +81,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
-    "governance_lookup",
     "data_profiling",
     "io",
     "guardrails",
@@ -2221,7 +2219,6 @@ ROLE_TAGS_BY_NAME = {
     "widget_render_agreement_evidence": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_steward": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
-    "get_latest_metadata_catalogue": ["public_api_entrypoint", "metadata_lookup_entrypoint", "public_stable"],
     "widget_author_dq_rules": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_author_schema_freshness_profile_rules": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_enrich_table_metadata": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
@@ -4509,7 +4506,6 @@ _METADATA_TABLE_RELATIONSHIPS = {
         "templates": ["02_pipeline.ipynb", "03_governance.ipynb", "99_explore.ipynb"],
         "written_by": ["run_table_guardrails"],
         "read_by": [
-            "get_latest_metadata_catalogue",
             "widget_select_guardrail_target",
             "widget_review_guardrail_governance",
             "run_table_guardrails",

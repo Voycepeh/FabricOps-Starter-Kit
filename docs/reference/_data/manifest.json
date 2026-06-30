@@ -15,13 +15,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "governance_lookup",
-      "visibility": "public",
-      "module_summary": "Owns read-only governance catalogue lookup helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true
-    },
-    {
       "module_name": "guardrails",
       "visibility": "public",
       "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.",
@@ -165,22 +158,6 @@
       "callable_role": "callable",
       "template_notebook": "02_pipeline / optional 99_explore",
       "template_segment": "Profiling",
-      "used_in_templates": [
-        "99_explore"
-      ]
-    },
-    {
-      "module_name": "governance_lookup",
-      "visibility": "public",
-      "module_summary": "Owns read-only governance catalogue lookup helpers.",
-      "sidebar_group": "1. Governance steward",
-      "sidebar_include": true,
-      "callable_name": "get_latest_metadata_catalogue",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "99_explore",
-      "template_segment": "Read-only catalogue context",
       "used_in_templates": [
         "99_explore"
       ]

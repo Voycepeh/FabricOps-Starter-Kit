@@ -15,7 +15,6 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
-    "fabricops_kit.governance_lookup.get_latest_metadata_catalogue",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
     "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",

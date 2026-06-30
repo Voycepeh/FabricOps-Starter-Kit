@@ -98,18 +98,6 @@
     "decision": "remove_export"
   },
   {
-    "function": "get_latest_metadata_catalogue",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "99_explore"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
     "function": "get_selected_agreement",
     "in_root_exports": false,
     "directly_called_in_core_templates": [],

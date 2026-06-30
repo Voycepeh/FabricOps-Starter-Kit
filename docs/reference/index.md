@@ -4,7 +4,7 @@ Use this page to look up Starter Kit functions and public config classes used by
 
 <div class="reference-kpi-grid" aria-label="Function reference summary">
   <section class="reference-kpi-card surface-card">
-    <strong class="reference-kpi-value">26</strong>
+    <strong class="reference-kpi-value">25</strong>
     <span class="reference-kpi-title">Public functions</span>
     <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>
   </section>
@@ -19,14 +19,14 @@ Use this page to look up Starter Kit functions and public config classes used by
 
 ## Find a function
 
-Use the finder below to search 26 public functions and 7 public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
+Use the finder below to search 25 public functions and 7 public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.
 
 <div class="callable-finder" data-callable-finder>
   <label class="callable-finder-label" for="callable-finder-input">Search public functions and classes</label>
   <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions and classes" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">
   <p id="callable-finder-help" class="callable-finder-help">Search by function or class name, module, starter path, usage source, or description.</p>
   <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>
-  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 26 public functions and 7 public classes.</p>
+  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing 25 public functions and 7 public classes.</p>
   <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions or classes match your search.</p>
 </div>
 
@@ -35,10 +35,10 @@ Use the finder below to search 26 public functions and 7 public classes. Impleme
 
     Maintainer inventory metrics:
 
-    - Source Python files count: 30
-    - Total callables: 375
+    - Source Python files count: 29
+    - Total callables: 371
     - Supporting functions: 107
-    - Private helpers to review: 235
+    - Private helpers to review: 232
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
     - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.
@@ -102,16 +102,6 @@ Use the finder below to search 26 public functions and 7 public classes. Impleme
   <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>
   <div class="reference-catalogue-item-counts">
 
-  </div>
-</article>
-<article id="governance_lookup-get_latest_metadata_catalogue" class="reference-catalogue-item" data-callable-row="true" data-callable-name="get_latest_metadata_catalogue" data-callable-module="governance_lookup" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Fetch the latest metadata catalogue rows for a table without writing metadata.">
-  <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/get_latest_metadata_catalogue/"><code>get_latest_metadata_catalogue</code></a></h3>
-  <p class="reference-catalogue-item-purpose">Fetch the latest metadata catalogue rows for a table without writing metadata.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
-  <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
-  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
-  <div class="reference-catalogue-item-counts">
-    <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 21</span></summary><ul><li><code>_latest_metadata_catalogue_lookup_workflow</code></li><li><code>resolve_fabric_context</code></li><li><code>_catalogue_lookup_value</code></li><li><code>_coerce_rows</code></li><li><code>configured_lakehouse_schema</code></li><li><code>read_lakehouse_table_core</code></li><li><code>get_default_fabric_context</code></li><li><code>get_store</code></li><li><code>_normalize_schema_name</code></li><li><code>get_spark_session</code></li><li><code>read_delta_path</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>_normalize_path_config</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_join_lakehouse_area_path</code></li></ul></details>
   </div>
 </article>
 <article id="config.shared-GovernanceConfig" class="reference-catalogue-item" data-callable-row="true" data-callable-name="GovernanceConfig" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-class" data-callable-purpose="Define governance labels, PII options, and enrichment widget custom fields.">

@@ -1,6 +1,6 @@
 # Public API contract
 
-The FabricOps Starter Kit release contract supports exactly 26 public notebook-facing functions. These functions are the stable API surface for release preparation and should remain available through the internal release refactor.
+The FabricOps Starter Kit release contract supports exactly 25 public notebook-facing functions. These functions are the stable API surface for release preparation and should remain available through the internal release refactor.
 
 Implementation helpers are not part of this stable contract. Shared helpers, private helpers, classes, methods, validators, resolvers, workflows, adapters, and utilities may be reorganized before release without being treated as supported public API. Public function behavior should remain stable through that refactor, and notebook templates should only use the supported public functions below.
 
@@ -22,7 +22,6 @@ The canonical machine-readable list lives in `fabricops_kit.public_api.SUPPORTED
 | Data access | `fabricops_kit.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
 | Data access | `fabricops_kit.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
 | Data access | `fabricops_kit.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
-| Governance review | `fabricops_kit.governance_lookup.get_latest_metadata_catalogue` | Return the latest metadata catalogue rows for an exploratory table lookup. |
 | Governance review | `fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
 | Governance review | `fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |
 | Governance review | `fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata` | Render one consolidated governed table metadata enrichment widget. |

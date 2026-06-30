@@ -24,7 +24,6 @@ The [Public API contract](public-api-contract.md) remains the release anchor for
 | Data access | `fabricops_kit.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
 | Data access | `fabricops_kit.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
 | Data access | `fabricops_kit.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
-| Governance review | `fabricops_kit.governance_lookup.get_latest_metadata_catalogue` | Return the latest metadata catalogue rows for an exploratory table lookup. |
 | Governance review | `fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
 | Governance review | `fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |
 | Governance review | `fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata` | Render one consolidated governed table metadata enrichment widget. |
