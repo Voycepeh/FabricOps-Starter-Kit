@@ -4166,3 +4166,60 @@ setTimeout(() => {
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_generated_dashboard_boot_calls_load_data_before_fetch_resolves(tmp_path: Path) -> None:
+    """Verify DOMContentLoaded boots the dashboard and enters loadData immediately."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    dashboard_fixture = tmp_path / "dashboard.html"
+    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
+    node_script = tmp_path / "boot_calls_load_data.js"
+    node_script.write_text(
+        r"""
+const fs = require('fs');
+const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+let fetchCount = 0;
+let releaseFetch;
+global.fetch = (url) => {
+  fetchCount += 1;
+  global.lastFetchUrl = url;
+  return new Promise(resolve => {
+    releaseFetch = () => resolve({ ok: true, json: async () => ({ function_inventory: [], public_entrypoint_flow: [], summary_counts: {} }) });
+  });
+};
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+if (!listeners['document:DOMContentLoaded']) throw new Error('DOMContentLoaded listener was not registered');
+listeners['document:DOMContentLoaded']();
+if (fetchCount !== 1) throw new Error(`loadData was not called exactly once during boot; fetch count: ${fetchCount}`);
+const debug = publicFlowHydrationDebug('fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel');
+if (!debug.loaded_json_url || debug.loaded_json_url === 'Not loaded') throw new Error(JSON.stringify(debug));
+if (!global.lastFetchUrl.includes('reference/_data/function-call-graph.json')) throw new Error(global.lastFetchUrl);
+const status = element('dataLoadStatus').textContent;
+if (!status.includes('Loading function-call-graph.json')) throw new Error(status);
+releaseFetch();
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML_PATH": str(dashboard_fixture)},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
