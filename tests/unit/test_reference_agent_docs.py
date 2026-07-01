@@ -3159,9 +3159,10 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "No static path found" not in dashboard_text
     assert "Remove orphaned asset" not in dashboard_text
     assert "function exportRows()" in dashboard_text
-    assert "function quickExportRows(){return selectedRows.length?selectedRows:inventory.filter(rowInSelectedScope)}" in dashboard_text
-    assert "let inventory=[],selectedRows=[],visibleRows=[]" in dashboard_text
+    assert "function quickExportRows(){return selectedRows.length?selectedRows:baseRows.filter(rowInSelectedScope)}" in dashboard_text
+    assert "let baseRows=[],inventory=[],selectedRows=[],visibleRows=[]" in dashboard_text
     assert "totalCallables=computeTotalCallables(flows)" in dashboard_text
+    assert "function renderTable(){selectedRows=baseRows.filter(rowInSelectedScope);visibleRows=filteredRows()" in dashboard_text
     assert "visibleRows.forEach(r=>state.selected.add(r.qualified_name))" in dashboard_text
     assert "function handleExportModeChange" in dashboard_text
     assert "Switching selection mode will reset selected rows and clear runtime inventory filters. Continue?" in dashboard_text
