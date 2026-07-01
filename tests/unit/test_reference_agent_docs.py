@@ -3285,7 +3285,9 @@ def test_callable_inventory_selected_focus_empty_state_is_removed() -> None:
 
 def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     """Verify item type filter keys match generated function-level inventory records."""
-    flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
+    flow_data = json.loads(
+        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    )
     inventory = flow_data["function_inventory"]
 
     expected_counts = {
@@ -3888,6 +3890,101 @@ setTimeout(() => {
 
     assert result.returncode == 0, result.stderr
 
+
+
+def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> None:
+    """Verify split pipeline public callables use AST definition source ownership."""
+    import scripts.generate_function_reference as generator
+
+    module_data = {
+        generator.source_module_name(path): generator.parse_module(path)
+        for path in generator.source_module_paths()
+    }
+    expected_paths = {
+        "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
+        "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
+        "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
+        "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
+        "write_pipeline_lineage": "src/fabricops_kit/pipeline/write_pipeline_lineage.py",
+        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
+    }
+
+    for function_name, expected_path in expected_paths.items():
+        qn = f"fabricops_kit.pipeline.{function_name}"
+        assert generator._callable_flow_source_path(qn, module_data) == expected_path
+
+    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_dataframe.py"
+    for function_name, expected_path in expected_paths.items():
+        if function_name != "profile_dataframe":
+            qn = f"fabricops_kit.pipeline.{function_name}"
+            assert generator._callable_flow_source_path(qn, module_data) != wrong_profile_owner
+
+
+def test_generated_inventory_split_pipeline_public_callables_have_owner_files() -> None:
+    """Verify generated inventory rows preserve split pipeline public callable owner files."""
+    flow_data = json.loads(
+        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    )
+    rows_by_name = {
+        row["function_name"]: row
+        for row in flow_data["function_inventory"]
+        if row.get("module", "").startswith("pipeline") and row.get("layer") == "public"
+    }
+    expected_paths = {
+        "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
+        "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
+        "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
+        "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
+        "write_pipeline_lineage": "src/fabricops_kit/pipeline/write_pipeline_lineage.py",
+        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
+    }
+
+    for function_name, expected_path in expected_paths.items():
+        row = rows_by_name[function_name]
+        assert row["source_path"] == expected_path
+        assert row["owner_file"] == expected_path
+
+    wrong_profile_owner = "src/fabricops_kit/pipeline/profile_dataframe.py"
+    wrongly_owned = [
+        name
+        for name, row in rows_by_name.items()
+        if name != "profile_dataframe" and row["source_path"] == wrong_profile_owner
+    ]
+    assert wrongly_owned == []
+
+
+def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> None:
+    """Verify dashboard public flows scope split pipeline callables independently."""
+    flow_data = json.loads(
+        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    )
+    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_flows"]}
+    inventory_by_qn = {row["qualified_name"]: row for row in flow_data["function_inventory"]}
+    split_names = {
+        "display_guardrail_results",
+        "prepare_pipeline_table_configs",
+        "profile_dataframe",
+        "run_table_guardrails",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+    }
+
+    for name in split_names:
+        flow = flows_by_name[name]
+        asset_qns = {flow["qualified_name"], *(callee["qualified_name"] for callee in flow["transitive_callees"])}
+        sibling_qns = {flows_by_name[sibling]["qualified_name"] for sibling in split_names - {name}}
+        assert asset_qns.isdisjoint(sibling_qns), name
+        assert flow["scope"] == len(asset_qns)
+        assert flow["scope_asset_count"] == len(asset_qns)
+        assert all(inventory_by_qn[qn]["source_path"] for qn in asset_qns if qn in inventory_by_qn)
+
+    profile_assets = {
+        flows_by_name["profile_dataframe"]["qualified_name"],
+        *(callee["qualified_name"] for callee in flows_by_name["profile_dataframe"]["transitive_callees"]),
+    }
+    assert flows_by_name["prepare_pipeline_table_configs"]["qualified_name"] not in profile_assets
+    assert flows_by_name["display_guardrail_results"]["qualified_name"] not in profile_assets
+    assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
 
 
 def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: Path) -> None:
