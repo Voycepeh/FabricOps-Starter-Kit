@@ -446,7 +446,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Detailed call flow was not available for this public function." in dashboard_text
     assert "renderPublicCallableList()" in dashboard_text
     assert "renderFlowDetails()" in dashboard_text
-    assert "Loading function call graph data..." in dashboard_text
+    assert "Loading function call graph data..." not in dashboard_text.split('<section id="runtime-inventory"')[0]
     assert "Loaded${inventory.length}totalfunctions;${publicEntryFlows.length}publicfunctionsavailable;${visibleFlows.length}rowsafterfilters.${warning}" in compact_dashboard_text
     assert "Runtime inventory" in dashboard_text
     assert "Cannot trace back to a public function" in dashboard_text
@@ -592,7 +592,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Error message:" in dashboard_text
     assert "function renderLoadedCount()" in dashboard_text
     assert "total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters" in dashboard_text
-    assert "renderLoadedCount();constallRuntimeCount=inventory.length" in compact_dashboard_text
+    assert "renderLoadedCount();syncPreRenderedPublicCallableRows();" in compact_dashboard_text
     assert "architectureThresholds=data.architecture_thresholds||architectureThresholds" in compact_dashboard_text
     assert "function longCallChainThreshold()" in dashboard_text
     assert "function largeDependencySurfaceThreshold()" in dashboard_text
@@ -618,7 +618,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "external_dependents_count||0)>0)signals.push('Sharedhelper')" in compact_dashboard_text
     assert "if(isGraphReviewCandidate(flow))return'Reviewnestedhelpers'" in compact_dashboard_text
     assert "Shareddependency','Maybecombine'].includes" not in compact_dashboard_text
-    assert "severity-${severity}-row" in dashboard_text
+    assert "severity-architecture-row" in dashboard_text or "severity-neutral-row" in dashboard_text
     assert "severity-review-row" in dashboard_text
     assert "severity-architecture-row" in dashboard_text
     assert "function summaryRow(flow)" in dashboard_text
@@ -2618,11 +2618,11 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
 
     assert 'id="architectureScopeTable"' in dashboard_text
     assert 'id="architectureScopeTableBody"' in dashboard_text
-    assert "$('architectureScopeTableBody').innerHTML=specialRows+rows.map" in compact_dashboard_text
-    assert "document.querySelector('#architectureScopeTable')" in dashboard_text
-    assert "document.addEventListener('DOMContentLoaded',loadData)" in dashboard_text
+    assert 'data-public-flow-row="fabricops_kit.' in dashboard_text
+    assert "syncPreRenderedPublicCallableRows()" in dashboard_text
+    assert "document.querySelectorAll('[data-public-flow-row]')" in dashboard_text
+    assert "$('architectureScopeTableBody').innerHTML=specialRows+rows.map" not in compact_dashboard_text
     assert "renderPublicCallableList()" in dashboard_text
-    assert "Failed to render architecture scope table:" in dashboard_text
     assert "Loading function call graph data...</td>" not in dashboard_text
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
 
@@ -2687,10 +2687,11 @@ function element(id) {
     elements.set(id, {
       id,
       innerHTML: id === 'architectureScopeTableBody'
-        ? '<tr><td colspan="7">Loading function call graph data...</td></tr>' : '',
-      textContent: id === 'dataLoadStatus' ? 'Loading function call graph data...' : '',
+        ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '',
+      textContent: '',
       className: '',
       classList: { toggle() {} },
+      setAttribute(name, value) { this[name] = value; },
       value: '',
       hidden: false,
       disabled: false,
