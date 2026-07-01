@@ -492,7 +492,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Selected scope runtime inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    assert "publicEntryFlows=Array.isArray(data.public_flows)&&data.public_flows.length?data.public_flows:" in compact_dashboard_text or "publicEntryFlows=(Array.isArray(data.public_flows)&&data.public_flows.length?data.public_flows:" in compact_dashboard_text
+    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]" in compact_dashboard_text
     assert "derivePublicFlowsFromInventory(inventory)" in dashboard_text
     assert "Public flow details were not found, so this table is using public callable inventory rows." in dashboard_text
     assert "Detailed call flow was not available for this public function." in dashboard_text
@@ -3036,7 +3036,7 @@ def test_function_call_graph_selected_flow_uses_graph_for_qualified_inventory_ke
                 "callees": [],
             }
         ],
-        "public_flows": [
+        "public_entrypoint_flow": [
             {
                 "qualified_name": "widget_select_guardrail_target",
                 "function_name": "widget_select_guardrail_target",
