@@ -2836,6 +2836,7 @@ global.window = {
   FabricOpsTableControls: { enhanced: [], enhance(table) { this.enhanced.push(table && table.id || 'unknown'); } },
 };
 global.document = {
+  readyState: 'loading',
   baseURI: 'http://example.test/assets/function-call-graph-dashboard.html',
   getElementById: element,
   querySelector(selector) { return { id: selector }; },
@@ -2983,7 +2984,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','loadedFlowCount','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson'].forEach(element);
@@ -3078,7 +3079,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
@@ -3839,7 +3840,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
@@ -3913,7 +3914,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 let fetchCount = 0;
 global.fetch = async (url) => {
   fetchCount += 1;
@@ -3996,7 +3997,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8')) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
@@ -4066,7 +4067,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => flowData });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
@@ -4134,7 +4135,7 @@ function element(id) {
 }
 let fetchCount = 0;
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async (url) => { fetchCount += 1; global.lastFetchUrl = url; return { ok: false, status: 404, statusText: 'Not Found', json: async () => ({}) }; };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
@@ -4188,7 +4189,7 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 let fetchCount = 0;
 let releaseFetch;
 global.fetch = (url) => {
@@ -4222,4 +4223,78 @@ releaseFetch();
         check=False,
     )
 
+    assert result.returncode == 0, result.stderr
+
+
+
+def test_generated_dashboard_boot_helper_supports_ready_states_and_guard(tmp_path: Path) -> None:
+    """Verify generated dashboard boot helper handles loading, complete, and double boot."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    flow_json = (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    assert "let dashboardBootStarted=false" in dashboard_text
+    assert "function startDashboardBoot()" in dashboard_text
+    assert "document.readyState==='loading'" in dashboard_text
+    assert "addEventListener('DOMContentLoaded',startDashboardBoot,{once:true})" in dashboard_text
+    assert "loadedFunctionCallGraphUrl=attemptedUrl" in dashboard_text
+
+    dashboard_fixture = tmp_path / "dashboard.html"
+    flow_fixture = tmp_path / "function-call-graph.json"
+    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
+    flow_fixture.write_text(flow_json, encoding="utf-8")
+    node_script = tmp_path / "boot_ready_states.js"
+    node_script.write_text(
+        r"""
+const fs = require('fs');
+const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1])[0];
+async function runCase(readyState, fireDomLoaded, doubleStart) {
+  const elements = new Map();
+  const listeners = {};
+  function element(id) {
+    if (!elements.has(id)) {
+      elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    }
+    return elements.get(id);
+  }
+  global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+  global.document = { readyState, baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb, options) { listeners[`document:${type}`] = cb; listeners[`document:${type}:options`] = options; } };
+  let fetchCount = 0;
+  global.fetch = async (url) => { fetchCount += 1; global.lastFetchUrl = url; return { ok: true, json: async () => JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8')) }; };
+  global.URL = URL; global.Blob = class {};
+  ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+  eval(script);
+  if (fireDomLoaded) {
+    if (!listeners['document:DOMContentLoaded']) throw new Error('missing DOMContentLoaded listener');
+    if (!listeners['document:DOMContentLoaded:options'] || listeners['document:DOMContentLoaded:options'].once !== true) throw new Error('DOMContentLoaded listener must use once:true');
+    listeners['document:DOMContentLoaded']();
+  }
+  if (doubleStart) startDashboardBoot();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const debug = publicFlowHydrationDebug('fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules');
+  if (!debug.loaded_json_url.includes('reference/_data/function-call-graph.json')) throw new Error(JSON.stringify(debug));
+  if (debug.public_entry_flows_length !== 25) throw new Error(JSON.stringify(debug));
+  if (debug.public_flow_by_selection_key_size <= 0) throw new Error(JSON.stringify(debug));
+  if (!selectedPublicFlow('fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules')) throw new Error('missing widget_author_dq_rules flow');
+  if (!selectedPublicFlow('fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel')) throw new Error('missing read_lakehouse_excel flow');
+  return { fetchCount };
+}
+(async () => {
+  let result = await runCase('loading', true, false);
+  if (result.fetchCount !== 1) throw new Error(`loading fetch count ${result.fetchCount}`);
+  result = await runCase('complete', false, false);
+  if (result.fetchCount !== 1) throw new Error(`complete fetch count ${result.fetchCount}`);
+  result = await runCase('interactive', false, true);
+  if (result.fetchCount !== 1) throw new Error(`guard fetch count ${result.fetchCount}`);
+})();
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML_PATH": str(dashboard_fixture), "FLOW_JSON_PATH": str(flow_fixture)},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
     assert result.returncode == 0, result.stderr
