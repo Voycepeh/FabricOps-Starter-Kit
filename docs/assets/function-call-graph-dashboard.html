@@ -210,7 +210,7 @@ th,td{font-size:.78rem;padding:.26rem}
 <h1>Function Call Graph Dashboard</h1>
 <p>The Function Call Graph Dashboard shows how public functions, shared helpers, and private helpers connect across the package. Use it to inspect function dependencies, architecture boundaries, and cleanup candidates.</p>
 <p class="generation-banner">
-<strong>Generated at:</strong> 2026-07-01 13:26 SGT<span>
+<strong>Generated at:</strong> 2026-07-01 13:39 SGT<span>
 <strong>Data source:</strong> function-call-graph.json</span>
 </p>
 <nav class="callable-page-nav" aria-label="Function reference navigation">
@@ -258,10 +258,11 @@ th,td{font-size:.78rem;padding:.26rem}
 <button id="collapsePublicList" type="button" hidden>Collapse list</button>
 <small id="publicListStatus">
 </small>
-<small id="dataLoadStatus" class="load-status" aria-live="polite">Loading function call graph data...</small>
+<small id="dataLoadStatus" class="load-status" aria-live="polite">
+</small>
 </section>
 <section class="table-wrap" id="publicCallableTableWrap">
-<table id="architectureScopeTable" data-table-controls="excel">
+<table id="architectureScopeTable">
 <thead>
 <tr>
 <th>
@@ -280,6 +281,493 @@ th,td{font-size:.78rem;padding:.26rem}
 </tr>
 </thead>
 <tbody id="architectureScopeTableBody">
+<tr data-architecture-scope-special="all" tabindex="0">
+<td>
+<button type="button" class="callable-button">All runtime assets</button>
+</td>
+<td class="num">—</td>
+<td class="num">371</td>
+<td class="num">—</td>
+<td>
+</td>
+<td>
+<span class="badge info">Runtime scope</span>
+</td>
+<td>
+</td>
+</tr>
+<tr data-architecture-scope-special="unreachable" tabindex="0">
+<td>
+<button type="button" class="callable-button">Others / Cannot trace back to a public function</button>
+</td>
+<td class="num">—</td>
+<td class="num">130</td>
+<td class="num">—</td>
+<td>
+<span class="badge warn">Verify possible orphan</span>
+</td>
+<td>
+<span class="badge warn">Cannot trace back to a public function</span>
+</td>
+<td>
+</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.display_guardrail_results" data-public-flow-search="display_guardrail_results fabricops_kit.pipeline.display_guardrail_results broken rule maybe combine shared helper" class=" active severity-architecture-row" tabindex="0" aria-selected="true">
+<td>
+<a class="source-link" href="../../api/reference/display_guardrail_results/">
+<code>display_guardrail_results</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">15</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.prepare_pipeline_table_configs" data-public-flow-search="prepare_pipeline_table_configs fabricops_kit.pipeline.prepare_pipeline_table_configs broken rule maybe combine shared helper" class=" severity-architecture-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="../../api/reference/prepare_pipeline_table_configs/">
+<code>prepare_pipeline_table_configs</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">5</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.profile_dataframe" data-public-flow-search="profile_dataframe fabricops_kit.pipeline.profile_dataframe maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">
+<code>profile_dataframe</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">11</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv" data-public-flow-search="read_lakehouse_csv fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L35">
+<code>read_lakehouse_csv</code>
+</a>
+</td>
+<td class="num">3</td>
+<td class="num">15</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel" data-public-flow-search="read_lakehouse_excel fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L35">
+<code>read_lakehouse_excel</code>
+</a>
+</td>
+<td class="num">3</td>
+<td class="num">16</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet" data-public-flow-search="read_lakehouse_parquet fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L82">
+<code>read_lakehouse_parquet</code>
+</a>
+</td>
+<td class="num">4</td>
+<td class="num">15</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_lakehouse_table.read_lakehouse_table" data-public-flow-search="read_lakehouse_table fabricops_kit.io.read_lakehouse_table.read_lakehouse_table maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L38">
+<code>read_lakehouse_table</code>
+</a>
+</td>
+<td class="num">3</td>
+<td class="num">17</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_warehouse_query.read_warehouse_query" data-public-flow-search="read_warehouse_query fabricops_kit.io.read_warehouse_query.read_warehouse_query maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L46">
+<code>read_warehouse_query</code>
+</a>
+</td>
+<td class="num">4</td>
+<td class="num">13</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.read_warehouse_table.read_warehouse_table" data-public-flow-search="read_warehouse_table fabricops_kit.io.read_warehouse_table.read_warehouse_table maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L49">
+<code>read_warehouse_table</code>
+</a>
+</td>
+<td class="num">3</td>
+<td class="num">16</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.run_table_guardrails" data-public-flow-search="run_table_guardrails fabricops_kit.pipeline.run_table_guardrails broken rule maybe combine shared helper" class=" severity-architecture-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="../../api/reference/run_table_guardrails/">
+<code>run_table_guardrails</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">120</td>
+<td class="num">7</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.config.setup_metadata_tables.setup_metadata_tables" data-public-flow-search="setup_metadata_tables fabricops_kit.config.setup_metadata_tables.setup_metadata_tables maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L98-L177">
+<code>setup_metadata_tables</code>
+</a>
+</td>
+<td class="num">7</td>
+<td class="num">17</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.config.setup_notebook.setup_notebook" data-public-flow-search="setup_notebook fabricops_kit.config.setup_notebook.setup_notebook broken rule maybe combine shared helper" class=" severity-architecture-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L11-L65">
+<code>setup_notebook</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">13</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules" data-public-flow-search="widget_author_dq_rules fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L15-L80">
+<code>widget_author_dq_rules</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules" data-public-flow-search="widget_author_schema_freshness_profile_rules fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L15-L59">
+<code>widget_author_schema_freshness_profile_rules</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata" data-public-flow-search="widget_enrich_table_metadata fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L14-L50">
+<code>widget_enrich_table_metadata</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap" data-public-flow-search="widget_pipeline_bootstrap fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_pipeline_bootstrap.py#L22-L86">
+<code>widget_pipeline_bootstrap</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">59</td>
+<td class="num">8</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence" data-public-flow-search="widget_render_agreement_evidence fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_agreement_evidence.py#L26-L47">
+<code>widget_render_agreement_evidence</code>
+</a>
+</td>
+<td class="num">2</td>
+<td class="num">48</td>
+<td class="num">7</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement" data-public-flow-search="widget_render_data_agreement fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L11-L29">
+<code>widget_render_data_agreement</code>
+</a>
+</td>
+<td class="num">2</td>
+<td class="num">68</td>
+<td class="num">7</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward" data-public-flow-search="widget_render_data_steward fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L11-L29">
+<code>widget_render_data_steward</code>
+</a>
+</td>
+<td class="num">2</td>
+<td class="num">68</td>
+<td class="num">7</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance" data-public-flow-search="widget_review_guardrail_governance fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L15-L39">
+<code>widget_review_guardrail_governance</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target" data-public-flow-search="widget_select_guardrail_target fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L14-L32">
+<code>widget_select_guardrail_target</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.write_lakehouse_table.write_lakehouse_table" data-public-flow-search="write_lakehouse_table fabricops_kit.io.write_lakehouse_table.write_lakehouse_table maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57">
+<code>write_lakehouse_table</code>
+</a>
+</td>
+<td class="num">4</td>
+<td class="num">18</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.write_pipeline_lineage" data-public-flow-search="write_pipeline_lineage fabricops_kit.pipeline.write_pipeline_lineage broken rule maybe combine shared helper" class=" severity-architecture-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="../../api/reference/write_pipeline_lineage/">
+<code>write_pipeline_lineage</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">40</td>
+<td class="num">6</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.pipeline.write_pipeline_run_summary" data-public-flow-search="write_pipeline_run_summary fabricops_kit.pipeline.write_pipeline_run_summary broken rule maybe combine shared helper" class=" severity-architecture-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="../../api/reference/write_pipeline_run_summary/">
+<code>write_pipeline_run_summary</code>
+</a>
+</td>
+<td class="num">1</td>
+<td class="num">40</td>
+<td class="num">6</td>
+<td>
+<span class="badge recommendation-chip issue">Fix architecture issue</span>
+</td>
+<td>
+<span class="badge issue">Broken rule</span>
+<span class="badge issue">Maybe combine</span>
+<span class="badge issue">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
+<tr data-public-flow-row="fabricops_kit.io.write_warehouse_table.write_warehouse_table" data-public-flow-search="write_warehouse_table fabricops_kit.io.write_warehouse_table.write_warehouse_table maybe combine shared helper" class=" severity-neutral-row" tabindex="0" aria-selected="false">
+<td>
+<a class="source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43">
+<code>write_warehouse_table</code>
+</a>
+</td>
+<td class="num">3</td>
+<td class="num">16</td>
+<td class="num">4</td>
+<td>
+<span class="badge recommendation-chip warn">Review helper cleanup</span>
+</td>
+<td>
+<span class="badge warn">Maybe combine</span>
+<span class="badge warn">Shared helper</span>
+</td>
+<td>Public callable architecture scope rendered at generation time.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -403,7 +891,7 @@ th,td{font-size:.78rem;padding:.26rem}
 </section>
 </main>
 <script>
-const FLOW_LAYER_LABELS=['Public function','Shared helper','Private helper','Class','Method','Unknown'];const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};const INTERNAL_LAYERING_SUGGESTED_FIX='Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.';const DISPLAY_LABEL_MAP={'Broken rule':'Broken rule','Too many steps':'Too many steps','Too many helpers':'Too many helpers','Maybe combine':'Maybe combine','Used by one function':'Used by one function','Used several times in one function':'Used several times in one function','Recursive helper':'Recursive helper','Heavily used helper':'Heavily used helper','Shared utility':'Shared utility','None':'Healthy'};let inventory=[],publicEntryFlows=[],visibleFlows=[],summaryCounts={},inventoryByQn=new Map(),publicFlowsFromInventory=false;const state={selectedFlow:'',activePublicFlow:'',openSummaryFlow:'',collapsedPublicList:false,publicSearch:'',sortKey:'callable',sortDirection:'asc'};let architectureThresholds={long_call_chain_depth:null,large_dependency_surface:null};function positiveThreshold(value){const numeric=Number(value);return Number.isFinite(numeric)&&numeric>0?numeric:null}function longCallChainThreshold(){return positiveThreshold(architectureThresholds.long_call_chain_depth)}function largeDependencySurfaceThreshold(){return positiveThreshold(architectureThresholds.large_dependency_surface)}const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function unique(v){return[...new Set(v.filter(Boolean))].sort()}function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function label(v){return displayLabel(text(v).replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase()))}function option(s,v,l){const o=document.createElement('option');o.value=v;o.textContent=l||v;s.appendChild(o)}function compactList(items,limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-list" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="tag">${esc(i)}</span>`).join('')}</span>`}function compactBadges(items,cls='warn',limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-badges" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="badge ${cls}">${esc(i)}</span>`).join('')}</span>`}const GITHUB_SOURCE_BASE='https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/';function sourceHref(i){const row=inventoryByQn.get(i.qualified_name)||i;if(row.docs_path)return '../'+String(row.docs_path).replace(/^docs\//,'').replace(/\.md$/,'/');if(row.source_url)return row.source_url;const path=row.source_path||row.path;if(!path)return '';const start=row.source_start_line||row.start_line||row.line_number;const end=row.source_end_line||row.end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return `${GITHUB_SOURCE_BASE}${path}${anchor}`}function sourceCallableLink(i){const href=sourceHref(i);const label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}"><code>${label}</code></a>`:`<code>${label}</code>`}function moduleHref(module){return ''}function moduleLink(module){const href=moduleHref(module);return href?`<a class="source-link" href="${esc(href)}"><code>${esc(module)}</code></a>`:`<code>${esc(module||'')}</code>`}function linkMetadata(i){const row=inventoryByQn.get(i.qualified_name)||i;return{source_url:row.source_url||null,docs_url:row.docs_url||null,file_path:row.source_path||null,line_start:row.source_start_line||null,line_end:row.source_end_line||null}}function markdownLink(i,label){const href=sourceHref(i);return href?`[${label||i.function_name}](${href})`:(label||i.function_name)}function hasArchitectureViolation(flow){return architectureFindingCount(flow)>0}function isGraphReviewCandidate(flow){const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),deep=longThreshold!==null&&(flow.max_depth||0)>=longThreshold,wide=largeThreshold!==null&&(flow.width||0)>largeThreshold;return !hasArchitectureViolation(flow)&&(deep||wide)}function publicCallableSeverity(flow){if(hasArchitectureViolation(flow))return 'architecture';if(isGraphReviewCandidate(flow))return 'review';return 'neutral'}function architecturePriority(f){const severity=publicCallableSeverity(f);if(severity==='architecture')return 'Critical';if(severity==='review')return 'Medium';return 'Low'}function priorityClass(p){return text(p).toLowerCase()}function riskBadgeClass(warning,priority){if(priority==='Critical')return 'issue';return 'muted'}function mergeCandidateCount(flow){return Number(flow.helper_cleanup_candidates??flow.single_use_helper_candidate_count??0)}function mergeCandidateLabel(count){return count===1?'Maybe combine':`${count} maybe combine`}function reviewMergeCandidateLabel(count){return count===1?'Review helper':'Review helpers'}function architectureFindingCount(flow){return architectureFindingRows(flow).length||(flow.architecture_violation_count??0)}function flowSignals(flow){const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),signals=[];if(architectureFindingCount(flow)>0)signals.push('Broken rule');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)signals.push('Too many steps');if(largeThreshold!==null&&(flow.width||0)>largeThreshold)signals.push('Too many helpers');if((flow.external_dependents_count||0)>0)signals.push('Shared helper');if(mergeCandidateCount(flow)>0)signals.push('Maybe combine');return signals}function suggestedActionLabel(flow){if(hasArchitectureViolation(flow))return 'Fix architecture issue';if(isGraphReviewCandidate(flow))return 'Review nested helpers';return ''}function recommendationBadge(flow){const action=suggestedActionLabel(flow);if(!action)return '';return `<span class="badge recommendation-chip ${action==='Fix architecture issue'?'issue':'warn'}">${esc(action)}</span>`}function signalBadges(flow){const signals=flowSignals(flow).slice(0,3),severity=publicCallableSeverity(flow),cls=severity==='architecture'?'issue':severity==='review'?'warn':'info';return compactBadges(signals,cls,3)}function summaryText(flow){const signals=flowSignals(flow),hasInfo=signals.includes('Shared helper')||signals.includes('Maybe combine');if(hasArchitectureViolation(flow))return 'Architecture issues were detected in this public callable. Fix these first before reviewing helper cleanup.';if(isGraphReviewCandidate(flow))return 'This callable exceeds the width or depth review threshold and may be worth simplifying before refactoring.';if(hasInfo)return 'Informational signals only. No public-callable-level review candidate was detected.';return 'No review flags detected.'}function recommendedCheck(flow){if(hasArchitectureViolation(flow))return 'Resolve the architecture issue, then re-run the call graph review.';if(isGraphReviewCandidate(flow))return 'Review whether the deep or wide helper graph should stay separate, move into shared helper logic, or be simplified.';return 'No follow-up needed.'}function summaryButton(flow){const open=state.openSummaryFlow===flow.qualified_name;return `<button class="summary-toggle" type="button" aria-expanded="${open?'true':'false'}" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`}function summaryRow(flow){const open=state.openSummaryFlow===flow.qualified_name,severity=flowSignals(flow).includes('Broken rule')?'issue':suggestedActionLabel(flow)?'warn':'';return `<tr class="summary-row ${open?'is-open':''}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="7"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.width??0)} direct call(s)</li><li>Scope: ${esc(flow.scope??flow.scope_asset_count??0)} runtime asset(s)</li><li>Depth: ${esc(flow.max_depth||0)}</li><li>Broken rules: ${esc(architectureFindingCount(flow))}</li><li>Shared impact: ${esc(flow.external_dependents_count||0)}</li><li>Maybe combine helpers: ${esc(mergeCandidateCount(flow))}</li></ul>${flowSignals(flow).length?`<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(', '))}</p>`:''}</div></td></tr>`}function renderCards(){const s=summaryCounts.public_api_surface||{},flows=publicEntryFlows||[],publicCallableCount=flows.length||s.public_api_entrypoints||0,architectureViolationFlows=flows.filter(hasArchitectureViolation).length,reviewCandidateFlows=flows.filter(isGraphReviewCandidate).length;const cards=[{label:'Public callables',value:publicCallableCount,subtitle:'Notebook-facing APIs scanned in this review workspace.',cls:'info'},{label:'Broken rules',value:architectureViolationFlows,subtitle:architectureViolationFlows?'Public callables with true architecture violations.':'No architecture violations found.',cls:architectureViolationFlows?'risk':'good'},{label:'Review candidates',value:reviewCandidateFlows,subtitle:reviewCandidateFlows?'Public callables over width or depth review thresholds.':'No graph review candidates found.',cls:reviewCandidateFlows?'review':'good'}];$('publicSurfaceCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function findingLabel(v){return displayLabel(v)}function architectureViolationBreakdown(flows=publicEntryFlows){const counts={'Public function calls public function':0,'Shared helper calls public function':0,'Cross-file private dependency':0};flows.forEach(f=>(f.transitive_callees||[]).forEach(c=>{if(c.architecture_result==='Violation'&&counts[c.violation_type]!==undefined)counts[c.violation_type]++}));return counts}function renderArchitectureViolationSection(){const meanings={'Public function calls public function':'A notebook-facing public callable depends on another public callable instead of shared implementation details.','Shared helper calls public function':'A reusable shared/internal helper calls back into a notebook-facing public callable.','Cross-file private dependency':'A helper directly calls a private helper from another source file.'};const rows=Object.entries(architectureViolationBreakdown()).filter(([,count])=>count>0);$('architectureViolationSection').innerHTML=`<h2>Broken rules</h2><p>Broken rules show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length?rows:Object.entries(meanings).map(([k])=>[k,0])).map(([type,count])=>`<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join('')}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints and must not be called by public callables or shared helpers. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[['Public function','Shared helper','Allowed'],['Public function','Private helper in same file','Warning only'],['Shared helper','Public function','Broken rule'],['Shared helper','Private helper in same file','Warning only'],['Shared helper','Private helper in another file','Broken rule'],['Private helper','Shared helper','Allowed']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></details>`}function architectureViolationCount(flow){const numeric=Number(flow.architecture_violation_count??0);return Number.isFinite(numeric)?numeric:0}function architectureFindingRows(flow){return (flow.transitive_callees||[]).filter(c=>c.architecture_result==='Violation'||c.recommended_action==='Broken rule')}function architectureFindingCount(flow){return architectureFindingRows(flow).length}function updatePublicFilterControls(){}function isPublicCallableInventoryRow(row){const markers=[row.function_type,row.item_type,row.itemType,row.layer,row.callable_role_group,row.reachability,row.reachability_kind,row.recommended_action,...(row.callable_role||[]),...(row.signals||[])].map(v=>text(v).toLowerCase());return markers.includes('public function')||markers.includes('public callable')||markers.includes('public')||markers.includes('public_entrypoint')||markers.includes('public api entrypoint')||markers.includes('public_api_entrypoint')}function inventoryRowToPublicFlow(row){return{...row,qualified_name:row.qualified_name,function_name:row.function_name,module:row.module,source_path:row.source_path,docs_path:row.docs_path,docs_url:row.docs_url,source_url:row.source_url,width:row.calls_count??(row.callees||[]).length??0,scope:1,scope_asset_count:1,max_depth:0,direct_callees:row.callees||[],transitive_callees:[],architecture_findings:[],architecture_violation_count:0,review_for_merge_count:0,flow_source:'function_inventory'}}function derivePublicFlowsFromInventory(rows){return(rows||[]).filter(isPublicCallableInventoryRow).map(inventoryRowToPublicFlow)}function publicSearchHaystack(f){return[f.function_name,f.qualified_name,f.module,f.source_path,f.owner_file,f.recommended_action,...(f.signals||[]),...(f.architecture_signals||[]),...(f.review_signals||[])].map(text).join(' ').toLowerCase()}function filteredPublicFlows(){const q=state.publicSearch.toLowerCase();return publicEntryFlows.filter(f=>(!q||publicSearchHaystack(f).includes(q)))}function sortValue(flow,key){if(key==='callable')return text(flow.function_name).toLowerCase();if(key==='width')return Number(flow.width??0);if(key==='scope')return Number(flow.scope??flow.scope_asset_count??0);if(key==='depth')return Number(flow.max_depth??0);if(key==='recommendation')return suggestedActionLabel(flow).toLowerCase();if(key==='signals')return flowSignals(flow).join(' ').toLowerCase();return text(flow.function_name).toLowerCase()}function stableSortRows(rows){const dir=state.sortDirection==='desc'?-1:1,key=state.sortKey;return rows.map((row,index)=>({row,index})).sort((a,b)=>{const av=sortValue(a.row,key),bv=sortValue(b.row,key);if(av<bv)return -1*dir;if(av>bv)return 1*dir;return a.index-b.index}).map(item=>item.row)}function updateSortButtons(){document.querySelectorAll('[data-sort-key]').forEach(button=>{const active=button.dataset.sortKey===state.sortKey;button.setAttribute('aria-sort',active?(state.sortDirection==='asc'?'ascending':'descending'):'none')})}function rowsForDisplay(){if(!state.collapsedPublicList)return visibleFlows;return visibleFlows.filter(f=>f.qualified_name===state.activePublicFlow)}function setPublicListControls(){const active=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);$('showAllPublicCallables').hidden=!state.collapsedPublicList;$('collapsePublicList').hidden=state.collapsedPublicList||!active;$('publicListStatus').textContent=state.collapsedPublicList&&active?`Showing selected function from ${visibleFlows.length} matching public functions.`:`Showing ${visibleFlows.length} matching public functions.`;const showSelectedBanner=Boolean(state.collapsedPublicList&&active);$('selectedPublicFlowSummary').classList.toggle('is-visible',showSelectedBanner);$('selectedPublicFlowSummary').innerHTML=showSelectedBanner?`<div class="callable-flow-filter-banner"><strong>Showing graph for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public functions</button></div>`:'';const reset=$('backToAllPublicCallables');if(reset)reset.onclick=showAllPublicCallables}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');if(!el)return;el.textContent=message;el.className=isError?'load-status issue':'load-status'}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker)){return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json'}if(path.includes(assetsMarker)){return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json'}return new URL('reference/_data/function-call-graph.json',document.baseURI).href}function updateFunctionCallGraphDataLink(url){const link=$('openFunctionCallGraphJson');if(link)link.href=url}function renderLoadedCount(){const warning=publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found, so this table is using public callable inventory rows.':'';renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters.${warning}`)}function renderPublicCallableList(){visibleFlows=stableSortRows(filteredPublicFlows());updatePublicFilterControls();if(!state.activePublicFlow&&visibleFlows.length)state.activePublicFlow=visibleFlows[0].qualified_name;if(state.activePublicFlow&&!visibleFlows.some(f=>f.qualified_name===state.activePublicFlow))state.collapsedPublicList=false;const rows=rowsForDisplay();renderLoadedCount();const allRuntimeCount=inventory.length,unreachableRuntimeCount=inventory.filter(row=>row.reachability==='unreachable_runtime_asset').length,specialRows=`<tr data-architecture-scope-special="all" tabindex="0"><td><button type="button" class="callable-button">All runtime assets</button></td><td class="num">—</td><td class="num">${esc(allRuntimeCount)}</td><td class="num">—</td><td></td><td><span class="badge info">Runtime scope</span></td><td></td></tr><tr data-architecture-scope-special="unreachable" tabindex="0"><td><button type="button" class="callable-button">Others / Cannot trace back to a public function</button></td><td class="num">—</td><td class="num">${esc(unreachableRuntimeCount)}</td><td class="num">—</td><td><span class="badge warn">Verify possible orphan</span></td><td><span class="badge warn">Cannot trace back to a public function</span></td><td></td></tr>`;$('architectureScopeTableBody').innerHTML=specialRows+rows.map(f=>{const severity=publicCallableSeverity(f),active=f.qualified_name===state.activePublicFlow?'active':'';return `<tr data-public-flow-row="${esc(f.qualified_name)}" class="${active} severity-${severity}-row" tabindex="0" aria-selected="${state.selectedFlow===f.qualified_name?'true':'false'}"><td>${sourceCallableLink(f)}</td><td class="num">${esc(f.width??0)}</td><td class="num">${esc(f.scope??f.scope_asset_count??0)}</td><td class="num">${esc(f.max_depth||0)}</td><td>${recommendationBadge(f)}</td><td>${signalBadges(f)}</td><td>${summaryButton(f)}</td></tr>${summaryRow(f)}`}).join('');setPublicListControls();updateSortButtons();renderFlowDetails();updateExportControls();if(window.FabricOpsTableControls)window.FabricOpsTableControls.enhance(document.querySelector('#architectureScopeTable'))}function showAllPublicCallables(){state.collapsedPublicList=false;renderPublicCallableList();$('publicCallableTableWrap').scrollIntoView({behavior:'smooth',block:'start'})}function collapsePublicList(){state.collapsedPublicList=true;renderPublicCallableList();$('publicFlowDetails').scrollIntoView({behavior:'smooth',block:'start'})}function buildFlowTree(flow){const root={qualified_name:flow.qualified_name,function_name:flow.function_name,module:flow.module,function_type:'Public function',layer_group:'Public function',simple_classification:'Public function',source_path:flow.source_path,calls_inside_flow:(flow.direct_callees||[]).length,called_inside_flow_by:0,used_outside_flow:0,is_end_node:!(flow.direct_callees||[]).length,docs_url:flow.docs_url,docs_path:flow.docs_path,source_url:flow.source_url,children:[]},byParent=new Map();(flow.transitive_callees||[]).forEach(r=>{const p=r.parent_qualified_name||flow.qualified_name;if(!byParent.has(p))byParent.set(p,[]);byParent.get(p).push({...r,children:[]})});function attach(n){n.children=(byParent.get(n.qualified_name)||[]).sort((a,b)=>a.depth-b.depth);n.children.forEach(attach);return n}return attach(root)}function flowTreeStatusChips(n){const chips=[];if(n.architecture_result==='Violation')chips.push('<span class="badge critical" title="This edge breaks the callable architecture boundary.">Violation</span>');if(n.architecture_result==='Warning')chips.push('<span class="badge warn" title="This edge deserves attention before refactoring.">Warning</span>');if(n.helper_cleanup_candidate)chips.push('<span class="badge muted" title="This helper is used by one function, and that function uses it once. Review whether keeping it separate makes the code easier to read.">Maybe combine</span>');if((n.used_outside_flow??0)>0)chips.push('<span class="badge info" title="This helper is reused outside the selected flow; check callers before moving it.">Shared helper</span>');return chips.join('')}function flowTreeDetailRows(n){const rows=[['Called by',n.called_inside_flow_by??0],['Calls',n.calls_inside_flow??0],['Used outside',n.used_outside_flow??0],['Source',n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||'Unknown')]];if(n.architecture_result)rows.push(['Architecture',n.architecture_result]);return rows}function flowTreeLongDetails(n){const details=[];if(n.architecture_result==='Violation')details.push(['Violation reason',n.violation_type||'Broken rule']);if(n.architecture_result==='Warning')details.push(['Warning reason','Nested helper may be too small, too specific, or reused in a way that needs cleanup.']);if(n.helper_cleanup_candidate)details.push(['Review action','Keep as helper, move to shared helper, or merge into caller.']);if(n.path_examples&&n.path_examples.length)details.push(['Path example',n.path_examples[0].join(' -> ')]);return details}function flowTreeDetails(n){const longDetails=flowTreeLongDetails(n);return `<div class="flow-tree-details"><div class="flow-tree-detail-strip">${flowTreeDetailRows(n).map(([label,value])=>`<span class="flow-tree-detail-chip"><span>${esc(label)}</span> <strong>${esc(value)}</strong></span>`).join('')}</div>${longDetails.length?`<div class="flow-tree-detail-notes">${longDetails.map(([label,value])=>`<span><strong>${esc(label)}:</strong> ${esc(value)}</span>`).join('')}</div>`:''}</div>`}function renderTreeNode(n){const type=n.simple_classification||'Unknown',moduleText=n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||''),status=flowTreeStatusChips(n),children=n.children?.length?`<ul>${n.children.map(renderTreeNode).join('')}</ul>`:'';return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText?`<span class="tag">${esc(moduleText)}</span>`:''}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`}function flowHealth(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return 'Needs architecture review';if(isGraphReviewCandidate(flow))return 'Graph review candidate';if((flow.external_dependents_count||0)>0||mergeCandidateCount(flow)>0)return 'Informational signals';return 'Healthy'}function flowReason(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return `${architectureFindings.length} architecture finding(s) need review; open the flow tree for exact nodes.`;if(isGraphReviewCandidate(flow))return 'This public callable exceeds a width or depth review threshold.';if((flow.external_dependents_count||0)>0||mergeCandidates.length)return 'Informational signals are present, but this public callable is not a graph review candidate.';return 'No architecture violations found in this graph.'}function flowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[]){const explicit=text(flow?.recommended_simplification_action??flow?.recommended_action??flow?.next_step).trim();if(explicit&&explicit!=='Next step')return displayLabel(explicit);if(hasArchitectureViolation(flow||{}))return 'Fix architecture issue';if(isGraphReviewCandidate(flow||{}))return 'Review nested helpers';return explicit?displayLabel(explicit):''}function flowNextStep(flow,architectureFindings,mergeCandidates){const label=flowNextStepLabel(flow,architectureFindings,mergeCandidates);if(label==='Fix architecture issue')return 'Fix architecture issues before refactoring this callable.';if(label==='Review nested helpers')return 'Review nested helpers because this public callable exceeds a width or depth threshold.';return label}function flowSignalChips(flow,architectureFindings,mergeCandidates){const chips=[];const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold();chips.push(architectureFindings.length?`<span class="badge critical">${architectureFindings.length} architecture finding${architectureFindings.length===1?'':'s'}</span>`:'<span class="badge keep">No architecture violations</span>');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)chips.push('<span class="badge warn">Too many steps</span>');if(largeThreshold!==null&&(flow.width||0)>largeThreshold)chips.push('<span class="badge warn">Too many helpers</span>');if(mergeCandidates.length)chips.push(`<span class="badge muted">${mergeCandidates.length} maybe combine</span>`);if((flow.external_dependents_count||0)>0)chips.push('<span class="badge info">Shared helper</span>');return chips.slice(0,5).join('')}function renderFlowDetails(){const f=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);if(!f){$('publicFlowDetails').innerHTML='<h2>Selected public function flow</h2><p>No public function graph data found.</p>';return}if(f.flow_source==='function_inventory'){$('publicFlowDetails').innerHTML=`<h2>Selected public function flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge info">Inventory row</span></div><p>Source file: ${esc(f.source_path||f.owner_file||f.module||'Unknown')}</p><p>Detailed call flow was not available for this public function.</p></section>`;return}const tree=buildFlowTree(f),architectureFindings=architectureFindingRows(f),mergeCandidates=(f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate),longThreshold=longCallChainThreshold(),health=flowHealth(f,architectureFindings,mergeCandidates),reason=flowReason(f,architectureFindings,mergeCandidates),nextStep=flowNextStep(f,architectureFindings,mergeCandidates),nextStepLabel=flowNextStepLabel(f,architectureFindings,mergeCandidates),signals=flowSignalChips(f,architectureFindings,mergeCandidates);$('publicFlowDetails').innerHTML=`<h2>Selected public function flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${publicCallableSeverity(f)==='architecture'?'critical':publicCallableSeverity(f)==='review'?'warn':'keep'}">${esc(health)}</span></div>${nextStep?`<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>`:''}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.width??f.direct_call_count??0}</strong><br><span>Width (direct calls)</span></div><div><strong>${f.scope??f.scope_asset_count??f.downstream_count??0}</strong><br><span>Scope (runtime assets)</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold===null?'Max depth':'Too many steps threshold >= '+longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Broken rules</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Maybe combine</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files||f.modules_touched||[]).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count||0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${isGraphReviewCandidate(f)?esc('This callable exceeds a graph width or depth threshold. Review whether nested helpers should stay separate, be shared, or be simplified.'):flowSignals(f).length?'Informational signals only.':'No review flags detected.'}</p></section>${nextStep?`<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>`:''}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`}function selectedItem(){const byQn=new Map(publicEntryFlows.map(r=>[r.qualified_name,r]));return state.selectedFlow?byQn.get(state.selectedFlow):null}function selectedItems(){const item=selectedItem();return item?[item]:[]}function selectedFlowName(){const item=selectedItem();return item?item.function_name:'none'}function publicCallableFindingRows(flow){const findings=architectureFindingRows(flow),longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),rows=[...(flow.architecture_violation_count?[{finding:'Broken rules found',evidence:`${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,next_step:'Inspect the exact edges below.'}]:[]),...((longThreshold!==null&&(flow.max_depth||0)>=longThreshold)?[{finding:'Too many steps',evidence:`Depth ${flow.max_depth}, threshold >= ${longThreshold}`,next_step:'Inspect whether the flow can be simplified.'}]:[]),...((largeThreshold!==null&&(flow.width||0)>largeThreshold)?[{finding:'Too many helpers',evidence:`Width ${flow.width??flow.direct_call_count??0} direct call(s), threshold > ${largeThreshold}`,next_step:'This public callable has many direct calls. Refactor carefully.'}]:[]),...((flow.external_dependents_count||0)>0?[{finding:'Shared helper',evidence:`${flow.external_dependents_count} function(s) in this graph are used outside this graph.`,next_step:'Inspect outside dependents before refactoring shared helpers.'}]:[]),...((flow.helper_cleanup_candidates||0)>0?[{finding:'Maybe combine inside flow',evidence:mergeCandidateCount(flow)===1?'1 helper function is marked Maybe combine.':`${mergeCandidateCount(flow)} helper functions are marked Maybe combine.`,next_step:'Review helper readability without changing the public API.'}]:[])];return rows.length?rows:[{finding:'Healthy',evidence:'Clear',next_step:''}]}function findingRows(f){return architectureFindingRows(f).map(v=>({source_function:(inventoryByQn.get(v.parent_qualified_name)||{}).function_name||v.parent_qualified_name,source_type:(inventoryByQn.get(v.parent_qualified_name)||{}).simple_classification||v.caller_type||'Unknown',target_function:v.function_name,target_type:v.simple_classification||'Unknown',finding_type:v.violation_type||findingLabel(v.recommended_action||'Broken rule'),suggested_fix:v.violation_type==='Cross-file private dependency'?'Move the private helper into the caller file or expose an architecture-visible helper.':INTERNAL_LAYERING_SUGGESTED_FIX,source_link:linkMetadata(inventoryByQn.get(v.parent_qualified_name)||{qualified_name:v.parent_qualified_name}),target_link:linkMetadata(v)}))}function cleanupRows(f){return (f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate).map(c=>({function:c.function_name,function_type:c.simple_classification||c.layer_group,called_by:(inventoryByQn.get(c.parent_qualified_name)||{}).function_name||c.parent_qualified_name,finding:findingLabel(c.recommended_action||'Maybe combine'),next_step:(c.recommended_action||'').includes('Shared')?'Keep as shared internal helper.':(c.recommended_action||'').includes('Used several')?'Keep when repeated use improves readability.':(c.recommended_action||'').includes('Recursive')?'Keep recursive helpers separate unless a careful redesign is planned.':'Review whether merging this helper into its only caller improves readability.',link:linkMetadata(c),called_by_link:linkMetadata(inventoryByQn.get(c.parent_qualified_name)||{qualified_name:c.parent_qualified_name})}))}function serializeTree(n){return {...linkMetadata(n),qualified_name:n.qualified_name,function_name:n.function_name,module:n.module,function_type:n.function_type||n.layer_group||'Public function',classification:n.simple_classification||'Unknown',source_path:n.source_path||null,called_inside_flow_by:n.called_inside_flow_by||0,calls_inside_flow:n.calls_inside_flow||0,used_outside_flow:n.used_outside_flow||0,is_end_node:Boolean(n.is_end_node),review_for_merge:Boolean(n.helper_cleanup_candidate),layer:n.layer||null,layer_group:n.layer_group||n.function_type||'Public function',helper_tags:[...(n.architecture_result==='Violation'&&n.violation_type?[`Broken rule: ${n.violation_type}`]:[])],children:(n.children||[]).map(serializeTree)}}function exportItem(f){const tree=buildFlowTree(f),row=inventoryByQn.get(f.qualified_name)||f,cleanup=cleanupRows(f),publicFindings=publicCallableFindingRows(f),architectureFindings=findingRows(f),health=flowHealth(f,architectureFindingRows(f),cleanup),nextStep=flowNextStep(f,architectureFindingRows(f),cleanup);return{selected_public_callable_name:f.function_name,qualified_name:f.qualified_name,source_file:row.source_path||null,source_url:row.source_url||null,recommendation:suggestedActionLabel(f),overall_health:health,next_step:nextStep,key_signals:(f.warnings||[]).map(findingLabel),downstream_count:f.downstream_count,max_depth:f.max_depth,architecture_violation_count:f.architecture_violation_count||0,review_for_merge_count:f.helper_cleanup_candidates||cleanup.length,modules_touched:f.modules_touched||[],external_shared_impact_count:f.external_dependents_count||0,direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],architecture_findings:architectureFindings,review_for_merge_helpers:cleanup,public_callable_findings:publicFindings,flow_tree:serializeTree(tree),flow_context:{direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],flow_tree:serializeTree(tree)},...linkMetadata(f)}}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function call graph cleanup packet.
+const FLOW_LAYER_LABELS=['Public function','Shared helper','Private helper','Class','Method','Unknown'];const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};const INTERNAL_LAYERING_SUGGESTED_FIX='Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.';const DISPLAY_LABEL_MAP={'Broken rule':'Broken rule','Too many steps':'Too many steps','Too many helpers':'Too many helpers','Maybe combine':'Maybe combine','Used by one function':'Used by one function','Used several times in one function':'Used several times in one function','Recursive helper':'Recursive helper','Heavily used helper':'Heavily used helper','Shared utility':'Shared utility','None':'Healthy'};let inventory=[],publicEntryFlows=[],visibleFlows=[],summaryCounts={},inventoryByQn=new Map(),publicFlowsFromInventory=false;const state={selectedFlow:'',activePublicFlow:'',openSummaryFlow:'',collapsedPublicList:false,publicSearch:'',sortKey:'callable',sortDirection:'asc'};let architectureThresholds={long_call_chain_depth:null,large_dependency_surface:null};function positiveThreshold(value){const numeric=Number(value);return Number.isFinite(numeric)&&numeric>0?numeric:null}function longCallChainThreshold(){return positiveThreshold(architectureThresholds.long_call_chain_depth)}function largeDependencySurfaceThreshold(){return positiveThreshold(architectureThresholds.large_dependency_surface)}const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function unique(v){return[...new Set(v.filter(Boolean))].sort()}function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function label(v){return displayLabel(text(v).replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase()))}function option(s,v,l){const o=document.createElement('option');o.value=v;o.textContent=l||v;s.appendChild(o)}function compactList(items,limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-list" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="tag">${esc(i)}</span>`).join('')}</span>`}function compactBadges(items,cls='warn',limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-badges" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="badge ${cls}">${esc(i)}</span>`).join('')}</span>`}const GITHUB_SOURCE_BASE='https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/';function sourceHref(i){const row=inventoryByQn.get(i.qualified_name)||i;if(row.docs_path)return '../'+String(row.docs_path).replace(/^docs\//,'').replace(/\.md$/,'/');if(row.source_url)return row.source_url;const path=row.source_path||row.path;if(!path)return '';const start=row.source_start_line||row.start_line||row.line_number;const end=row.source_end_line||row.end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return `${GITHUB_SOURCE_BASE}${path}${anchor}`}function sourceCallableLink(i){const href=sourceHref(i);const label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}"><code>${label}</code></a>`:`<code>${label}</code>`}function moduleHref(module){return ''}function moduleLink(module){const href=moduleHref(module);return href?`<a class="source-link" href="${esc(href)}"><code>${esc(module)}</code></a>`:`<code>${esc(module||'')}</code>`}function linkMetadata(i){const row=inventoryByQn.get(i.qualified_name)||i;return{source_url:row.source_url||null,docs_url:row.docs_url||null,file_path:row.source_path||null,line_start:row.source_start_line||null,line_end:row.source_end_line||null}}function markdownLink(i,label){const href=sourceHref(i);return href?`[${label||i.function_name}](${href})`:(label||i.function_name)}function hasArchitectureViolation(flow){return architectureFindingCount(flow)>0}function isGraphReviewCandidate(flow){const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),deep=longThreshold!==null&&(flow.max_depth||0)>=longThreshold,wide=largeThreshold!==null&&(flow.width||0)>largeThreshold;return !hasArchitectureViolation(flow)&&(deep||wide)}function publicCallableSeverity(flow){if(hasArchitectureViolation(flow))return 'architecture';if(isGraphReviewCandidate(flow))return 'review';return 'neutral'}function architecturePriority(f){const severity=publicCallableSeverity(f);if(severity==='architecture')return 'Critical';if(severity==='review')return 'Medium';return 'Low'}function priorityClass(p){return text(p).toLowerCase()}function riskBadgeClass(warning,priority){if(priority==='Critical')return 'issue';return 'muted'}function mergeCandidateCount(flow){return Number(flow.helper_cleanup_candidates??flow.single_use_helper_candidate_count??0)}function mergeCandidateLabel(count){return count===1?'Maybe combine':`${count} maybe combine`}function reviewMergeCandidateLabel(count){return count===1?'Review helper':'Review helpers'}function architectureFindingCount(flow){return architectureFindingRows(flow).length||(flow.architecture_violation_count??0)}function flowSignals(flow){const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),signals=[];if(architectureFindingCount(flow)>0)signals.push('Broken rule');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)signals.push('Too many steps');if(largeThreshold!==null&&(flow.width||0)>largeThreshold)signals.push('Too many helpers');if((flow.external_dependents_count||0)>0)signals.push('Shared helper');if(mergeCandidateCount(flow)>0)signals.push('Maybe combine');return signals}function suggestedActionLabel(flow){if(hasArchitectureViolation(flow))return 'Fix architecture issue';if(isGraphReviewCandidate(flow))return 'Review nested helpers';return ''}function recommendationBadge(flow){const action=suggestedActionLabel(flow);if(!action)return '';return `<span class="badge recommendation-chip ${action==='Fix architecture issue'?'issue':'warn'}">${esc(action)}</span>`}function signalBadges(flow){const signals=flowSignals(flow).slice(0,3),severity=publicCallableSeverity(flow),cls=severity==='architecture'?'issue':severity==='review'?'warn':'info';return compactBadges(signals,cls,3)}function summaryText(flow){const signals=flowSignals(flow),hasInfo=signals.includes('Shared helper')||signals.includes('Maybe combine');if(hasArchitectureViolation(flow))return 'Architecture issues were detected in this public callable. Fix these first before reviewing helper cleanup.';if(isGraphReviewCandidate(flow))return 'This callable exceeds the width or depth review threshold and may be worth simplifying before refactoring.';if(hasInfo)return 'Informational signals only. No public-callable-level review candidate was detected.';return 'No review flags detected.'}function recommendedCheck(flow){if(hasArchitectureViolation(flow))return 'Resolve the architecture issue, then re-run the call graph review.';if(isGraphReviewCandidate(flow))return 'Review whether the deep or wide helper graph should stay separate, move into shared helper logic, or be simplified.';return 'No follow-up needed.'}function summaryButton(flow){const open=state.openSummaryFlow===flow.qualified_name;return `<button class="summary-toggle" type="button" aria-expanded="${open?'true':'false'}" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`}function summaryRow(flow){const open=state.openSummaryFlow===flow.qualified_name,severity=flowSignals(flow).includes('Broken rule')?'issue':suggestedActionLabel(flow)?'warn':'';return `<tr class="summary-row ${open?'is-open':''}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="7"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.width??0)} direct call(s)</li><li>Scope: ${esc(flow.scope??flow.scope_asset_count??0)} runtime asset(s)</li><li>Depth: ${esc(flow.max_depth||0)}</li><li>Broken rules: ${esc(architectureFindingCount(flow))}</li><li>Shared impact: ${esc(flow.external_dependents_count||0)}</li><li>Maybe combine helpers: ${esc(mergeCandidateCount(flow))}</li></ul>${flowSignals(flow).length?`<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(', '))}</p>`:''}</div></td></tr>`}function renderCards(){const s=summaryCounts.public_api_surface||{},flows=publicEntryFlows||[],publicCallableCount=flows.length||s.public_api_entrypoints||0,architectureViolationFlows=flows.filter(hasArchitectureViolation).length,reviewCandidateFlows=flows.filter(isGraphReviewCandidate).length;const cards=[{label:'Public callables',value:publicCallableCount,subtitle:'Notebook-facing APIs scanned in this review workspace.',cls:'info'},{label:'Broken rules',value:architectureViolationFlows,subtitle:architectureViolationFlows?'Public callables with true architecture violations.':'No architecture violations found.',cls:architectureViolationFlows?'risk':'good'},{label:'Review candidates',value:reviewCandidateFlows,subtitle:reviewCandidateFlows?'Public callables over width or depth review thresholds.':'No graph review candidates found.',cls:reviewCandidateFlows?'review':'good'}];$('publicSurfaceCards').innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('')}function findingLabel(v){return displayLabel(v)}function architectureViolationBreakdown(flows=publicEntryFlows){const counts={'Public function calls public function':0,'Shared helper calls public function':0,'Cross-file private dependency':0};flows.forEach(f=>(f.transitive_callees||[]).forEach(c=>{if(c.architecture_result==='Violation'&&counts[c.violation_type]!==undefined)counts[c.violation_type]++}));return counts}function renderArchitectureViolationSection(){const meanings={'Public function calls public function':'A notebook-facing public callable depends on another public callable instead of shared implementation details.','Shared helper calls public function':'A reusable shared/internal helper calls back into a notebook-facing public callable.','Cross-file private dependency':'A helper directly calls a private helper from another source file.'};const rows=Object.entries(architectureViolationBreakdown()).filter(([,count])=>count>0);$('architectureViolationSection').innerHTML=`<h2>Broken rules</h2><p>Broken rules show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length?rows:Object.entries(meanings).map(([k])=>[k,0])).map(([type,count])=>`<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join('')}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints and must not be called by public callables or shared helpers. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[['Public function','Shared helper','Allowed'],['Public function','Private helper in same file','Warning only'],['Shared helper','Public function','Broken rule'],['Shared helper','Private helper in same file','Warning only'],['Shared helper','Private helper in another file','Broken rule'],['Private helper','Shared helper','Allowed']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></details>`}function architectureViolationCount(flow){const numeric=Number(flow.architecture_violation_count??0);return Number.isFinite(numeric)?numeric:0}function architectureFindingRows(flow){return (flow.transitive_callees||[]).filter(c=>c.architecture_result==='Violation'||c.recommended_action==='Broken rule')}function architectureFindingCount(flow){return architectureFindingRows(flow).length}function updatePublicFilterControls(){}function isPublicCallableInventoryRow(row){const markers=[row.function_type,row.item_type,row.itemType,row.layer,row.callable_role_group,row.reachability,row.reachability_kind,row.recommended_action,...(row.callable_role||[]),...(row.signals||[])].map(v=>text(v).toLowerCase());return markers.includes('public function')||markers.includes('public callable')||markers.includes('public')||markers.includes('public_entrypoint')||markers.includes('public api entrypoint')||markers.includes('public_api_entrypoint')}function inventoryRowToPublicFlow(row){return{...row,qualified_name:row.qualified_name,function_name:row.function_name,module:row.module,source_path:row.source_path,docs_path:row.docs_path,docs_url:row.docs_url,source_url:row.source_url,width:row.calls_count??(row.callees||[]).length??0,scope:1,scope_asset_count:1,max_depth:0,direct_callees:row.callees||[],transitive_callees:[],architecture_findings:[],architecture_violation_count:0,review_for_merge_count:0,flow_source:'function_inventory'}}function derivePublicFlowsFromInventory(rows){return(rows||[]).filter(isPublicCallableInventoryRow).map(inventoryRowToPublicFlow)}function publicSearchHaystack(f){return[f.function_name,f.qualified_name,f.module,f.source_path,f.owner_file,f.recommended_action,...(f.signals||[]),...(f.architecture_signals||[]),...(f.review_signals||[])].map(text).join(' ').toLowerCase()}function filteredPublicFlows(){const q=state.publicSearch.toLowerCase();return publicEntryFlows.filter(f=>(!q||publicSearchHaystack(f).includes(q)))}function sortValue(flow,key){if(key==='callable')return text(flow.function_name).toLowerCase();if(key==='width')return Number(flow.width??0);if(key==='scope')return Number(flow.scope??flow.scope_asset_count??0);if(key==='depth')return Number(flow.max_depth??0);if(key==='recommendation')return suggestedActionLabel(flow).toLowerCase();if(key==='signals')return flowSignals(flow).join(' ').toLowerCase();return text(flow.function_name).toLowerCase()}function stableSortRows(rows){const dir=state.sortDirection==='desc'?-1:1,key=state.sortKey;return rows.map((row,index)=>({row,index})).sort((a,b)=>{const av=sortValue(a.row,key),bv=sortValue(b.row,key);if(av<bv)return -1*dir;if(av>bv)return 1*dir;return a.index-b.index}).map(item=>item.row)}function updateSortButtons(){document.querySelectorAll('[data-sort-key]').forEach(button=>{const active=button.dataset.sortKey===state.sortKey;button.setAttribute('aria-sort',active?(state.sortDirection==='asc'?'ascending':'descending'):'none')})}function rowsForDisplay(){if(!state.collapsedPublicList)return visibleFlows;return visibleFlows.filter(f=>f.qualified_name===state.activePublicFlow)}function setPublicListControls(){const active=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);$('showAllPublicCallables').hidden=!state.collapsedPublicList;$('collapsePublicList').hidden=state.collapsedPublicList||!active;$('publicListStatus').textContent=state.collapsedPublicList&&active?`Showing selected function from ${visibleFlows.length} matching public functions.`:`Showing ${visibleFlows.length} matching public functions.`;const showSelectedBanner=Boolean(state.collapsedPublicList&&active);$('selectedPublicFlowSummary').classList.toggle('is-visible',showSelectedBanner);$('selectedPublicFlowSummary').innerHTML=showSelectedBanner?`<div class="callable-flow-filter-banner"><strong>Showing graph for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public functions</button></div>`:'';const reset=$('backToAllPublicCallables');if(reset)reset.onclick=showAllPublicCallables}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');if(!el)return;el.textContent=message;el.className=isError?'load-status issue':'load-status'}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker)){return origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json'}if(path.includes(assetsMarker)){return origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json'}return new URL('reference/_data/function-call-graph.json',document.baseURI).href}function updateFunctionCallGraphDataLink(url){const link=$('openFunctionCallGraphJson');if(link)link.href=url}function renderLoadedCount(){const warning=publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found, so this table is using public callable inventory rows.':'';renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters.${warning}`)}function syncPreRenderedPublicCallableRows(){const visible=new Set(rowsForDisplay().map(f=>f.qualified_name));document.querySelectorAll('[data-public-flow-row]').forEach(row=>{const qn=row.dataset.publicFlowRow;row.hidden=!visible.has(qn);row.classList.toggle('active',qn===state.activePublicFlow);row.setAttribute('aria-selected',state.selectedFlow===qn?'true':'false')});document.querySelectorAll('[data-summary-row]').forEach(row=>{const qn=row.dataset.summaryRow;row.hidden=!visible.has(qn);row.classList.toggle('is-open',state.openSummaryFlow===qn)})}function renderPublicCallableList(){visibleFlows=stableSortRows(filteredPublicFlows());updatePublicFilterControls();if(!state.activePublicFlow&&visibleFlows.length)state.activePublicFlow=visibleFlows[0].qualified_name;if(state.activePublicFlow&&!visibleFlows.some(f=>f.qualified_name===state.activePublicFlow))state.collapsedPublicList=false;renderLoadedCount();syncPreRenderedPublicCallableRows();setPublicListControls();updateSortButtons();renderFlowDetails();updateExportControls()}function showAllPublicCallables(){state.collapsedPublicList=false;renderPublicCallableList();$('publicCallableTableWrap').scrollIntoView({behavior:'smooth',block:'start'})}function collapsePublicList(){state.collapsedPublicList=true;renderPublicCallableList();$('publicFlowDetails').scrollIntoView({behavior:'smooth',block:'start'})}function buildFlowTree(flow){const root={qualified_name:flow.qualified_name,function_name:flow.function_name,module:flow.module,function_type:'Public function',layer_group:'Public function',simple_classification:'Public function',source_path:flow.source_path,calls_inside_flow:(flow.direct_callees||[]).length,called_inside_flow_by:0,used_outside_flow:0,is_end_node:!(flow.direct_callees||[]).length,docs_url:flow.docs_url,docs_path:flow.docs_path,source_url:flow.source_url,children:[]},byParent=new Map();(flow.transitive_callees||[]).forEach(r=>{const p=r.parent_qualified_name||flow.qualified_name;if(!byParent.has(p))byParent.set(p,[]);byParent.get(p).push({...r,children:[]})});function attach(n){n.children=(byParent.get(n.qualified_name)||[]).sort((a,b)=>a.depth-b.depth);n.children.forEach(attach);return n}return attach(root)}function flowTreeStatusChips(n){const chips=[];if(n.architecture_result==='Violation')chips.push('<span class="badge critical" title="This edge breaks the callable architecture boundary.">Violation</span>');if(n.architecture_result==='Warning')chips.push('<span class="badge warn" title="This edge deserves attention before refactoring.">Warning</span>');if(n.helper_cleanup_candidate)chips.push('<span class="badge muted" title="This helper is used by one function, and that function uses it once. Review whether keeping it separate makes the code easier to read.">Maybe combine</span>');if((n.used_outside_flow??0)>0)chips.push('<span class="badge info" title="This helper is reused outside the selected flow; check callers before moving it.">Shared helper</span>');return chips.join('')}function flowTreeDetailRows(n){const rows=[['Called by',n.called_inside_flow_by??0],['Calls',n.calls_inside_flow??0],['Used outside',n.used_outside_flow??0],['Source',n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||'Unknown')]];if(n.architecture_result)rows.push(['Architecture',n.architecture_result]);return rows}function flowTreeLongDetails(n){const details=[];if(n.architecture_result==='Violation')details.push(['Violation reason',n.violation_type||'Broken rule']);if(n.architecture_result==='Warning')details.push(['Warning reason','Nested helper may be too small, too specific, or reused in a way that needs cleanup.']);if(n.helper_cleanup_candidate)details.push(['Review action','Keep as helper, move to shared helper, or merge into caller.']);if(n.path_examples&&n.path_examples.length)details.push(['Path example',n.path_examples[0].join(' -> ')]);return details}function flowTreeDetails(n){const longDetails=flowTreeLongDetails(n);return `<div class="flow-tree-details"><div class="flow-tree-detail-strip">${flowTreeDetailRows(n).map(([label,value])=>`<span class="flow-tree-detail-chip"><span>${esc(label)}</span> <strong>${esc(value)}</strong></span>`).join('')}</div>${longDetails.length?`<div class="flow-tree-detail-notes">${longDetails.map(([label,value])=>`<span><strong>${esc(label)}:</strong> ${esc(value)}</span>`).join('')}</div>`:''}</div>`}function renderTreeNode(n){const type=n.simple_classification||'Unknown',moduleText=n.source_path?String(n.source_path).replace(/^src\/fabricops_kit\//,''):(n.module||''),status=flowTreeStatusChips(n),children=n.children?.length?`<ul>${n.children.map(renderTreeNode).join('')}</ul>`:'';return `<li><details><summary><span class="flow-tree-main"><strong>${sourceCallableLink(n)}</strong><span class="badge muted">${esc(type)}</span>${moduleText?`<span class="tag">${esc(moduleText)}</span>`:''}${status}</span></summary>${flowTreeDetails(n)}</details>${children}</li>`}function flowHealth(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return 'Needs architecture review';if(isGraphReviewCandidate(flow))return 'Graph review candidate';if((flow.external_dependents_count||0)>0||mergeCandidateCount(flow)>0)return 'Informational signals';return 'Healthy'}function flowReason(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return `${architectureFindings.length} architecture finding(s) need review; open the flow tree for exact nodes.`;if(isGraphReviewCandidate(flow))return 'This public callable exceeds a width or depth review threshold.';if((flow.external_dependents_count||0)>0||mergeCandidates.length)return 'Informational signals are present, but this public callable is not a graph review candidate.';return 'No architecture violations found in this graph.'}function flowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[]){const explicit=text(flow?.recommended_simplification_action??flow?.recommended_action??flow?.next_step).trim();if(explicit&&explicit!=='Next step')return displayLabel(explicit);if(hasArchitectureViolation(flow||{}))return 'Fix architecture issue';if(isGraphReviewCandidate(flow||{}))return 'Review nested helpers';return explicit?displayLabel(explicit):''}function flowNextStep(flow,architectureFindings,mergeCandidates){const label=flowNextStepLabel(flow,architectureFindings,mergeCandidates);if(label==='Fix architecture issue')return 'Fix architecture issues before refactoring this callable.';if(label==='Review nested helpers')return 'Review nested helpers because this public callable exceeds a width or depth threshold.';return label}function flowSignalChips(flow,architectureFindings,mergeCandidates){const chips=[];const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold();chips.push(architectureFindings.length?`<span class="badge critical">${architectureFindings.length} architecture finding${architectureFindings.length===1?'':'s'}</span>`:'<span class="badge keep">No architecture violations</span>');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)chips.push('<span class="badge warn">Too many steps</span>');if(largeThreshold!==null&&(flow.width||0)>largeThreshold)chips.push('<span class="badge warn">Too many helpers</span>');if(mergeCandidates.length)chips.push(`<span class="badge muted">${mergeCandidates.length} maybe combine</span>`);if((flow.external_dependents_count||0)>0)chips.push('<span class="badge info">Shared helper</span>');return chips.slice(0,5).join('')}function renderFlowDetails(){const f=publicEntryFlows.find(i=>i.qualified_name===state.activePublicFlow);if(!f){$('publicFlowDetails').innerHTML='<h2>Selected public function flow</h2><p>No public function graph data found.</p>';return}if(f.flow_source==='function_inventory'){$('publicFlowDetails').innerHTML=`<h2>Selected public function flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge info">Inventory row</span></div><p>Source file: ${esc(f.source_path||f.owner_file||f.module||'Unknown')}</p><p>Detailed call flow was not available for this public function.</p></section>`;return}const tree=buildFlowTree(f),architectureFindings=architectureFindingRows(f),mergeCandidates=(f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate),longThreshold=longCallChainThreshold(),health=flowHealth(f,architectureFindings,mergeCandidates),reason=flowReason(f,architectureFindings,mergeCandidates),nextStep=flowNextStep(f,architectureFindings,mergeCandidates),nextStepLabel=flowNextStepLabel(f,architectureFindings,mergeCandidates),signals=flowSignalChips(f,architectureFindings,mergeCandidates);$('publicFlowDetails').innerHTML=`<h2>Selected public function flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${publicCallableSeverity(f)==='architecture'?'critical':publicCallableSeverity(f)==='review'?'warn':'keep'}">${esc(health)}</span></div>${nextStep?`<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>`:''}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.width??f.direct_call_count??0}</strong><br><span>Width (direct calls)</span></div><div><strong>${f.scope??f.scope_asset_count??f.downstream_count??0}</strong><br><span>Scope (runtime assets)</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold===null?'Max depth':'Too many steps threshold >= '+longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Broken rules</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Maybe combine</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files||f.modules_touched||[]).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count||0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${isGraphReviewCandidate(f)?esc('This callable exceeds a graph width or depth threshold. Review whether nested helpers should stay separate, be shared, or be simplified.'):flowSignals(f).length?'Informational signals only.':'No review flags detected.'}</p></section>${nextStep?`<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>`:''}<h3>Function call graph tree</h3><div id="callableFlowTree" class="flow-tree"><ul>${renderTreeNode(tree)}</ul></div>`}function selectedItem(){const byQn=new Map(publicEntryFlows.map(r=>[r.qualified_name,r]));return state.selectedFlow?byQn.get(state.selectedFlow):null}function selectedItems(){const item=selectedItem();return item?[item]:[]}function selectedFlowName(){const item=selectedItem();return item?item.function_name:'none'}function publicCallableFindingRows(flow){const findings=architectureFindingRows(flow),longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),rows=[...(flow.architecture_violation_count?[{finding:'Broken rules found',evidence:`${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,next_step:'Inspect the exact edges below.'}]:[]),...((longThreshold!==null&&(flow.max_depth||0)>=longThreshold)?[{finding:'Too many steps',evidence:`Depth ${flow.max_depth}, threshold >= ${longThreshold}`,next_step:'Inspect whether the flow can be simplified.'}]:[]),...((largeThreshold!==null&&(flow.width||0)>largeThreshold)?[{finding:'Too many helpers',evidence:`Width ${flow.width??flow.direct_call_count??0} direct call(s), threshold > ${largeThreshold}`,next_step:'This public callable has many direct calls. Refactor carefully.'}]:[]),...((flow.external_dependents_count||0)>0?[{finding:'Shared helper',evidence:`${flow.external_dependents_count} function(s) in this graph are used outside this graph.`,next_step:'Inspect outside dependents before refactoring shared helpers.'}]:[]),...((flow.helper_cleanup_candidates||0)>0?[{finding:'Maybe combine inside flow',evidence:mergeCandidateCount(flow)===1?'1 helper function is marked Maybe combine.':`${mergeCandidateCount(flow)} helper functions are marked Maybe combine.`,next_step:'Review helper readability without changing the public API.'}]:[])];return rows.length?rows:[{finding:'Healthy',evidence:'Clear',next_step:''}]}function findingRows(f){return architectureFindingRows(f).map(v=>({source_function:(inventoryByQn.get(v.parent_qualified_name)||{}).function_name||v.parent_qualified_name,source_type:(inventoryByQn.get(v.parent_qualified_name)||{}).simple_classification||v.caller_type||'Unknown',target_function:v.function_name,target_type:v.simple_classification||'Unknown',finding_type:v.violation_type||findingLabel(v.recommended_action||'Broken rule'),suggested_fix:v.violation_type==='Cross-file private dependency'?'Move the private helper into the caller file or expose an architecture-visible helper.':INTERNAL_LAYERING_SUGGESTED_FIX,source_link:linkMetadata(inventoryByQn.get(v.parent_qualified_name)||{qualified_name:v.parent_qualified_name}),target_link:linkMetadata(v)}))}function cleanupRows(f){return (f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate).map(c=>({function:c.function_name,function_type:c.simple_classification||c.layer_group,called_by:(inventoryByQn.get(c.parent_qualified_name)||{}).function_name||c.parent_qualified_name,finding:findingLabel(c.recommended_action||'Maybe combine'),next_step:(c.recommended_action||'').includes('Shared')?'Keep as shared internal helper.':(c.recommended_action||'').includes('Used several')?'Keep when repeated use improves readability.':(c.recommended_action||'').includes('Recursive')?'Keep recursive helpers separate unless a careful redesign is planned.':'Review whether merging this helper into its only caller improves readability.',link:linkMetadata(c),called_by_link:linkMetadata(inventoryByQn.get(c.parent_qualified_name)||{qualified_name:c.parent_qualified_name})}))}function serializeTree(n){return {...linkMetadata(n),qualified_name:n.qualified_name,function_name:n.function_name,module:n.module,function_type:n.function_type||n.layer_group||'Public function',classification:n.simple_classification||'Unknown',source_path:n.source_path||null,called_inside_flow_by:n.called_inside_flow_by||0,calls_inside_flow:n.calls_inside_flow||0,used_outside_flow:n.used_outside_flow||0,is_end_node:Boolean(n.is_end_node),review_for_merge:Boolean(n.helper_cleanup_candidate),layer:n.layer||null,layer_group:n.layer_group||n.function_type||'Public function',helper_tags:[...(n.architecture_result==='Violation'&&n.violation_type?[`Broken rule: ${n.violation_type}`]:[])],children:(n.children||[]).map(serializeTree)}}function exportItem(f){const tree=buildFlowTree(f),row=inventoryByQn.get(f.qualified_name)||f,cleanup=cleanupRows(f),publicFindings=publicCallableFindingRows(f),architectureFindings=findingRows(f),health=flowHealth(f,architectureFindingRows(f),cleanup),nextStep=flowNextStep(f,architectureFindingRows(f),cleanup);return{selected_public_callable_name:f.function_name,qualified_name:f.qualified_name,source_file:row.source_path||null,source_url:row.source_url||null,recommendation:suggestedActionLabel(f),overall_health:health,next_step:nextStep,key_signals:(f.warnings||[]).map(findingLabel),downstream_count:f.downstream_count,max_depth:f.max_depth,architecture_violation_count:f.architecture_violation_count||0,review_for_merge_count:f.helper_cleanup_candidates||cleanup.length,modules_touched:f.modules_touched||[],external_shared_impact_count:f.external_dependents_count||0,direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],architecture_findings:architectureFindings,review_for_merge_helpers:cleanup,public_callable_findings:publicFindings,flow_tree:serializeTree(tree),flow_context:{direct_callees:f.direct_callees||[],transitive_callees:f.transitive_callees||[],flow_tree:serializeTree(tree)},...linkMetadata(f)}}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function call graph cleanup packet.
 
 Use the selected public function and its function call graph context to plan a safe cleanup. Group items by cleanup type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet.
 
