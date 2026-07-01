@@ -489,7 +489,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "publicFlowDetails" in dashboard_text
     assert "Selected public function flow" in dashboard_text
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
-    assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Selected scope runtime inventory")
+    assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Current scope runtime inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
     assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]" in compact_dashboard_text
@@ -3145,7 +3145,12 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "Export all visible runtime assets" in dashboard_text
     assert "Export cannot-trace review packet" in dashboard_text
     assert 'id="runtimeInventory_inventoryStatusBar"' in dashboard_text
-    assert "Selected scope" in dashboard_text and "Showing" in dashboard_text and "Total callables" in dashboard_text
+    assert "Selected scope" not in dashboard_text
+    assert "Total callables" not in dashboard_text
+    assert 'Selected <span id="runtimeInventory_selectedStatusCount"' in dashboard_text
+    assert 'Showing <span id="runtimeInventory_showingStatusCount"' in dashboard_text
+    assert 'Total <span id="runtimeInventory_totalStatusCount"' in dashboard_text
+    assert 'Public callables <span id="runtimeInventory_publicCallableStatusCount"' in dashboard_text
     assert "Showing is affected by the current architecture scope, search text, and table column filters." in dashboard_text
     assert "inventorySummaryCards" not in dashboard_text
     assert "Loaded ${inventory.length} runtime inventory records" not in dashboard_text
@@ -3160,15 +3165,18 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "No static path found" not in dashboard_text
     assert "Remove orphaned asset" not in dashboard_text
     assert "function exportRows()" in dashboard_text
-    assert "function quickExportRows(){return selectedRows.length?selectedRows:baseRows.filter(rowInSelectedScope)}" in dashboard_text
+    assert "function quickExportRows(){return visibleRows.length||selectedRows.length?visibleRows:selectedRows}" in dashboard_text
+    assert "function selectedRuntimeInventoryCount(){return exportMode()==='manual'?selectedItems().length:quickExportRows().length}" in dashboard_text
+    assert "function visibleRuntimeInventoryCount(){return visibleRows.length}" in dashboard_text
+    assert "function totalRuntimeInventoryCount(){return baseRows.length}" in dashboard_text
     assert "let baseRows=[],inventory=[],selectedRows=[],visibleRows=[]" in dashboard_text
-    assert "totalCallables=computeTotalCallables(flows)" in dashboard_text
+    assert "publicCallableCount=computePublicCallableCount(flows)" in dashboard_text
     assert "function renderTable(){selectedRows=baseRows.filter(rowInSelectedScope);visibleRows=filteredRows()" in dashboard_text
     assert "visibleRows.forEach(r=>state.selected.add(r.qualified_name))" in dashboard_text
     assert "function handleExportModeChange" in dashboard_text
-    assert "Switching selection mode will reset selected rows and clear runtime inventory filters. Continue?" in dashboard_text
+    assert "Switching selection mode will reset selected rows and clear runtime inventory filters. Continue?" not in dashboard_text
     assert "resetRuntimeInventorySelectionState" in dashboard_text
-    assert "Quick export scoped rows" in dashboard_text
+    assert "Quick export visible rows" in dashboard_text
     assert "isRowSelectedForMode" in dashboard_text
     assert "export_mode:exportMode()" in compact_dashboard_text
 
