@@ -2665,7 +2665,8 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert "publicFlowBySelectionKey" in dashboard_text
     assert "function publicFlowSelectionKeys(flow)" in dashboard_text
     assert "fabricops_kit.${moduleName}.${functionName}" in dashboard_text
-    assert "qualifiedName.replace(/^fabricops_kit" in dashboard_text
+    assert "function callableIdentityKeys(value)" in dashboard_text
+    assert "raw.replace(/^fabricops_kit" in dashboard_text
     assert "function selectedPublicFlow(" in dashboard_text
     assert "rebuildPublicFlowSelectionIndex()" in dashboard_text
     assert "scrollToPublicFlowDetails" in dashboard_text
@@ -2932,6 +2933,94 @@ setTimeout(() => {
         ["node", str(node_script)],
         cwd=ROOT,
         env={**os.environ, "DASHBOARD_HTML": dashboard_text, "FLOW_JSON": json.dumps(flow_data), "WIDGET_QN": widget_qn},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_function_call_graph_selected_flow_uses_graph_for_qualified_inventory_key(tmp_path: Path) -> None:
+    """Verify selected flow normalizes callable keys and prefers real graph data."""
+    import scripts.generate_function_reference as generator
+
+    flow_data = {
+        "function_inventory": [
+            {
+                "qualified_name": "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",
+                "function_name": "widget_select_guardrail_target",
+                "module": "widgets.widget_select_guardrail_target",
+                "simple_classification": "Public function",
+                "function_type": "Public function",
+                "source_path": "src/fabricops_kit/widgets/widget_select_guardrail_target.py",
+                "reachability": "public_entrypoint",
+                "calls_count": 0,
+                "callees": [],
+            }
+        ],
+        "public_flows": [
+            {
+                "qualified_name": "widget_select_guardrail_target",
+                "function_name": "widget_select_guardrail_target",
+                "module": "widgets.widget_select_guardrail_target",
+                "width": 1,
+                "scope": 2,
+                "scope_asset_count": 2,
+                "max_depth": 1,
+                "architecture_violation_count": 0,
+                "direct_callees": ["fabricops_kit.widgets.widget_select_guardrail_target._select_guardrail_target_workflow"],
+                "transitive_callees": [
+                    {
+                        "qualified_name": "fabricops_kit.widgets.widget_select_guardrail_target._select_guardrail_target_workflow",
+                        "function_name": "_select_guardrail_target_workflow",
+                        "parent_qualified_name": "widget_select_guardrail_target",
+                        "module": "widgets.widget_select_guardrail_target",
+                        "depth": 1,
+                        "calls_inside_flow": 0,
+                        "architecture_result": "Allowed",
+                    }
+                ],
+            }
+        ],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 1}},
+        "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
+    }
+    dashboard_text = generator._render_combined_refactor_dashboard_html(flow_data)
+    node_script = tmp_path / "selected_flow_uses_graph.js"
+    node_script.write_text(
+        r"""
+const html = process.env.DASHBOARD_HTML;
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const fullKey = 'fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target';
+  listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: fullKey } }; return null; } } });
+  const flowHtml = element('publicFlowDetails').innerHTML;
+  if (!flowHtml.includes('_select_guardrail_target_workflow')) throw new Error(flowHtml);
+  if (!flowHtml.includes('Function call graph tree') || flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved')) throw new Error(flowHtml);
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML": dashboard_text, "FLOW_JSON": json.dumps(flow_data)},
         text=True,
         capture_output=True,
         check=False,
