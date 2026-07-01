@@ -210,6 +210,17 @@ th,td{font-size:.78rem;padding:.26rem}
 #runtime-inventory .callable-review-table-wrap{max-width:100%;overflow-x:auto}
 #runtime-inventory .callable-review-table{width:100%;table-layout:auto;border-collapse:collapse}
 #runtime-inventory .callable-review-table th,#runtime-inventory .callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}
+#runtime-inventory .callable-review-table .col-file-area,#runtime-inventory .callable-review-table .col-callable{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.25}
+#runtime-inventory .callable-review-table .col-file-area{width:11rem;max-width:11rem}
+#runtime-inventory .callable-review-table .col-callable{width:14rem;max-width:14rem}
+#runtime-inventory .callable-review-table .col-item-type,#runtime-inventory .callable-review-table .col-usage-scope,#runtime-inventory .callable-review-table .col-health,#runtime-inventory .callable-review-table .col-recommended-action{white-space:nowrap}
+#runtime-inventory .callable-review-table .col-details{width:7rem;min-width:7rem;white-space:nowrap}
+#runtime-inventory .callable-review-table .details-toggle{white-space:nowrap;word-break:keep-all;overflow-wrap:normal}
+@media(max-width:720px){#runtime-inventory .callable-review-table{min-width:700px}
+#runtime-inventory .callable-review-table .col-file-area{width:7.5rem;max-width:7.5rem}
+#runtime-inventory .callable-review-table .col-callable{width:10rem;max-width:10rem}
+#runtime-inventory .callable-review-table .col-details{width:6rem;min-width:6rem}
+}
 #runtime-inventory .callable-review-table tr[data-inventory-row]{cursor:pointer}
 #runtime-inventory .callable-review-table tr.selected{outline:1px solid #bfdbfe;outline-offset:-1px;background:#f8fbff;box-shadow:inset .18rem 0 #93c5fd}
 .callable-review-table tr.scope-highlight{outline:2px solid #15803d;outline-offset:-2px;background:#f0fdf4;box-shadow:inset .25rem 0 #15803d}
@@ -223,7 +234,7 @@ th,td{font-size:.78rem;padding:.26rem}
 <h1>Function Call Graph Dashboard</h1>
 <p>The Function Call Graph Dashboard shows how public functions, shared helpers, and private helpers connect across the package. Review architecture scopes, search for risks, and inspect the selected function call graph when available. Width is direct calls; scope is total runtime assets in the selected scope.</p>
 <p class="generation-banner">
-<strong>Generated at:</strong> 2026-07-01 15:15 SGT<span>
+<strong>Generated at:</strong> 2026-07-01 15:22 SGT<span>
 <strong>Data source:</strong> function-call-graph.json</span>
 </p>
 <nav class="callable-page-nav" aria-label="Function reference navigation">
