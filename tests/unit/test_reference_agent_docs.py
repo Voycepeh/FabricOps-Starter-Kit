@@ -2649,8 +2649,16 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Export runtime inventory cleanup packet")
     assert dashboard_text.index("Export runtime inventory cleanup packet") < dashboard_text.index('id="runtime-inventory"')
     assert dashboard_text.index("Export runtime inventory cleanup packet") < dashboard_text.index('class="callable-review-table"')
-    assert "Quick export mode" in dashboard_text
-    assert "Manual selection mode" in dashboard_text
+    assert ">Quick export<" in dashboard_text
+    assert ">Manual selection<" in dashboard_text
+    assert "Quick export mode" not in dashboard_text
+    assert "Manual selection mode" not in dashboard_text
+    assert "toolbar-card--export-mode" not in dashboard_text
+    assert "export-mode-toggle" in dashboard_text
+    assert "export-summary-grid" in dashboard_text
+    assert "Export scope" in dashboard_text
+    assert "Visible rows" in dashboard_text
+    assert "Selected rows" in dashboard_text
     assert "Export selected public function flow" in dashboard_text
     assert "Export manually selected rows" in dashboard_text
     assert "Export all visible runtime assets" in dashboard_text
