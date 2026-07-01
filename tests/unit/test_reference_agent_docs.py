@@ -307,6 +307,37 @@ def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
     assert json.loads(callable_flow.read_text(encoding="utf-8"))
 
 
+def test_function_call_graph_json_is_populated() -> None:
+    """Verify generated callable flow JSON is valid and populated with real public flows."""
+    path = ROOT / "docs" / "reference" / "_data" / "function-call-graph.json"
+    text = path.read_text(encoding="utf-8").strip()
+
+    assert text, "function-call-graph.json must not be empty"
+
+    data = json.loads(text)
+
+    assert data.get("metadata"), "metadata must not be empty"
+    assert data.get("function_inventory"), "function_inventory must not be empty"
+    assert data.get("public_entrypoint_flow"), "public_entrypoint_flow must not be empty"
+    assert data.get("public_flows"), "public_flows must not be empty"
+    assert data.get("summary_counts"), "summary_counts must not be empty"
+    assert data.get("architecture_thresholds"), "architecture_thresholds must not be empty"
+
+    flows = data["public_entrypoint_flow"]
+    names = {
+        flow.get("function_name") or flow.get("public_callable")
+        for flow in flows
+    }
+
+    assert "read_lakehouse_table" in names
+    assert "display_guardrail_results" in names
+
+    assert any(
+        flow.get("transitive_callees")
+        for flow in flows
+    ), "at least one public flow must include transitive callees"
+
+
 def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify callable flow docs, dashboards, and data contracts are generated."""
     flow_page = REFERENCE_DIR / "function-call-graph.md"
@@ -3743,6 +3774,76 @@ setTimeout(() => {
             "DASHBOARD_HTML": dashboard_text,
             "FLOW_JSON": json.dumps(flow_data),
             "PUBLIC_QNS": json.dumps([flow["qualified_name"] for flow in flows]),
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_generated_dashboard_selects_real_public_flow_data(tmp_path: Path) -> None:
+    """Verify generated dashboard selection uses populated call graph JSON for key flows."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    flow_json = (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    flow_data = json.loads(flow_json)
+    required_names = ["read_lakehouse_table", "display_guardrail_results", "write_pipeline_lineage"]
+    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
+
+    for name in required_names:
+        assert flows_by_name[name]["transitive_callees"], name
+
+    dashboard_fixture = tmp_path / "dashboard.html"
+    flow_fixture = tmp_path / "function-call-graph.json"
+    selected_fixture = tmp_path / "selected-flows.json"
+    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
+    flow_fixture.write_text(flow_json, encoding="utf-8")
+    selected_fixture.write_text(json.dumps([flows_by_name[name] for name in required_names]), encoding="utf-8")
+    node_script = tmp_path / "select_generated_public_flows.js"
+    node_script.write_text(
+        r"""
+const fs = require('fs');
+const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8')) });
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const flows = JSON.parse(fs.readFileSync(process.env.PUBLIC_FLOWS_PATH, 'utf8'));
+  const bodyHtml = element('architectureScopeTableBody').innerHTML;
+  if (!bodyHtml.includes('read_lakehouse_table')) throw new Error(bodyHtml);
+  for (const flow of flows) {
+    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: flow.qualified_name } }; return null; } } });
+    const flowHtml = element('publicFlowDetails').innerHTML;
+    if (!flowHtml.includes(flow.function_name)) throw new Error(flowHtml);
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) throw new Error(flowHtml);
+    if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
+  }
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DASHBOARD_HTML_PATH": str(dashboard_fixture),
+            "FLOW_JSON_PATH": str(flow_fixture),
+            "PUBLIC_FLOWS_PATH": str(selected_fixture),
         },
         text=True,
         capture_output=True,
