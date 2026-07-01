@@ -5054,10 +5054,9 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.pipeline.display_guardrail_results",
-        "fabricops_kit.pipeline.shared.display_guardrail_results"
+        "fabricops_kit.pipeline.display_guardrail_results"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5221,10 +5220,9 @@
       ],
       "calls_count": 1,
       "used_by": [
-        "fabricops_kit.pipeline.prepare_pipeline_table_configs",
-        "fabricops_kit.pipeline.shared.prepare_pipeline_table_configs"
+        "fabricops_kit.pipeline.prepare_pipeline_table_configs"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -5341,10 +5339,9 @@
       ],
       "calls_count": 19,
       "used_by": [
-        "fabricops_kit.pipeline.run_table_guardrails",
-        "fabricops_kit.pipeline.shared.run_table_guardrails"
+        "fabricops_kit.pipeline.run_table_guardrails"
       ],
-      "used_by_count": 2,
+      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [
         "fabricops_kit.pipeline.shared._build_guardrail_blocking_message_from_bundle",
@@ -5657,25 +5654,6 @@
       ],
       "internal_helper_count": 6
     },
-    "fabricops_kit.pipeline.shared.display_guardrail_results": {
-      "qualified_name": "fabricops_kit.pipeline.shared.display_guardrail_results",
-      "short_name": "display_guardrail_results",
-      "module": "pipeline.shared",
-      "callable": "display_guardrail_results",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.pipeline.shared._display_guardrail_results_workflow"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.pipeline.shared._display_guardrail_results_workflow"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.pipeline.shared.is_min_max_supported_type": {
       "qualified_name": "fabricops_kit.pipeline.shared.is_min_max_supported_type",
       "short_name": "is_min_max_supported_type",
@@ -5692,25 +5670,6 @@
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
-    },
-    "fabricops_kit.pipeline.shared.prepare_pipeline_table_configs": {
-      "qualified_name": "fabricops_kit.pipeline.shared.prepare_pipeline_table_configs",
-      "short_name": "prepare_pipeline_table_configs",
-      "module": "pipeline.shared",
-      "callable": "prepare_pipeline_table_configs",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.pipeline.shared._prepare_pipeline_table_configs_workflow"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.pipeline.shared._prepare_pipeline_table_configs_workflow"
-      ],
-      "internal_helper_count": 1
     },
     "fabricops_kit.pipeline.shared.profile_dataframe_core": {
       "qualified_name": "fabricops_kit.pipeline.shared.profile_dataframe_core",
@@ -5755,25 +5714,6 @@
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
-    "fabricops_kit.pipeline.shared.run_table_guardrails": {
-      "qualified_name": "fabricops_kit.pipeline.shared.run_table_guardrails",
-      "short_name": "run_table_guardrails",
-      "module": "pipeline.shared",
-      "callable": "run_table_guardrails",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "calls_count": 1,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "internal_helper_count": 1
-    },
     "fabricops_kit.pipeline.shared.write_catalogue_evidence": {
       "qualified_name": "fabricops_kit.pipeline.shared.write_catalogue_evidence",
       "short_name": "write_catalogue_evidence",
@@ -5809,7 +5749,7 @@
     "fabricops_kit.pipeline.write_pipeline_lineage": {
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
       "short_name": "write_pipeline_lineage",
-      "module": "pipeline.shared",
+      "module": "pipeline.write_pipeline_lineage",
       "callable": "write_pipeline_lineage",
       "docs_url": "/FabricOps-Starter-Kit/reference/write_pipeline_lineage/",
       "classification": "callable",
@@ -5822,15 +5762,13 @@
       "used_in_templates": [
         "02_pipeline"
       ],
-      "internal_helpers_used": [
-        "fabricops_kit.pipeline.shared._write_pipeline_lineage_workflow"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.pipeline.write_pipeline_run_summary": {
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary",
       "short_name": "write_pipeline_run_summary",
-      "module": "pipeline.shared",
+      "module": "pipeline.write_pipeline_run_summary",
       "callable": "write_pipeline_run_summary",
       "docs_url": "/FabricOps-Starter-Kit/reference/write_pipeline_run_summary/",
       "classification": "callable",
@@ -5843,10 +5781,8 @@
       "used_in_templates": [
         "02_pipeline"
       ],
-      "internal_helpers_used": [
-        "fabricops_kit.pipeline.shared._write_pipeline_run_summary_workflow"
-      ],
-      "internal_helper_count": 1
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
     },
     "fabricops_kit.widgets.shared.PipelineRunContext": {
       "qualified_name": "fabricops_kit.widgets.shared.PipelineRunContext",
@@ -8334,8 +8270,24 @@
       "inbound_count": 0
     },
     "pipeline.shared": {
-      "callable_count": 2,
+      "callable_count": 0,
       "internal_count": 31,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "pipeline.write_pipeline_lineage": {
+      "callable_count": 1,
+      "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "pipeline.write_pipeline_run_summary": {
+      "callable_count": 1,
+      "internal_count": 0,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,

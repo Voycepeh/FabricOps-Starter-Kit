@@ -516,7 +516,6 @@ def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessi
 
 def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):
     """Verify catalogue evidence excludes runtime guardrail result fields."""
-    from fabricops_kit import pipeline
     from fabricops_kit.pipeline import profile_dataframe
     from fabricops_kit.pipeline import shared as pipeline_shared
 
@@ -529,7 +528,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
     profile_df = profile_dataframe(df, "orders")
 
-    result = pipeline.write_catalogue_evidence(
+    result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
         {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "profile_mode": "static_data"}},
         config={},
@@ -577,7 +576,6 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
 
 def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
     """Verify changing-data catalogue writes retain per-watermark baseline fields."""
-    from fabricops_kit import pipeline
     from fabricops_kit.pipeline import profile_dataframe
     from fabricops_kit.pipeline import shared as pipeline_shared
 
@@ -590,7 +588,7 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
     profile_df = profile_dataframe(df, "orders")
 
-    result = pipeline.write_catalogue_evidence(
+    result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
         {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "profile_mode": "changing_data"}},
         config={},

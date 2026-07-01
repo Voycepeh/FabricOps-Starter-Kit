@@ -1,6 +1,7 @@
 """Tests for 02_pipeline guardrail display modes."""
 
-from fabricops_kit.pipeline import build_guardrail_detail_rows, build_guardrail_summary_rows, display_guardrail_results
+from fabricops_kit.pipeline import display_guardrail_results
+from fabricops_kit.pipeline.shared import build_guardrail_detail_rows, build_guardrail_summary_rows
 
 
 def _bundle(**overrides):

@@ -36,8 +36,8 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
     Maintainer inventory metrics:
 
     - Source Python files count: 28
-    - Total callables: 374
-    - Supporting functions: 110
+    - Total callables: 371
+    - Supporting functions: 107
     - Private helpers to review: 232
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
@@ -344,7 +344,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
     <details class="reference-count-details"><summary><span class="reference-chip reference-chip-count">Downstream callables: 17</span></summary><ul><li><code>normalize_write_mode</code></li><li><code>resolve_configured_lakehouse_table</code></li><li><code>validate_dataframe_writer</code></li><li><code>write_delta_path</code></li><li><code>resolve_lakehouse_table_location</code></li><li><code>resolve_target_store</code></li><li><code>get_store</code></li><li><code>resolve_fabric_context</code></li><li><code>_normalize_table_name</code></li><li><code>_resolve_lakehouse_schema</code></li><li><code>_resolve_lakehouse_table_path</code></li><li><code>_validate_lakehouse_store</code></li><li><code>_validate_warehouse_store</code></li><li><code>_normalize_path_config</code></li><li><code>get_default_fabric_context</code></li><li><code>_join_lakehouse_area_path</code></li><li><code>_normalize_schema_name</code></li></ul></details>
   </div>
 </article>
-<article id="pipeline.shared-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
+<article id="pipeline.write_pipeline_lineage-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write many-to-many source-to-target lineage evidence.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
@@ -354,7 +354,7 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
 
   </div>
 </article>
-<article id="pipeline.shared-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
+<article id="pipeline.write_pipeline_run_summary-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write one pipeline runtime summary row to metadata.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
