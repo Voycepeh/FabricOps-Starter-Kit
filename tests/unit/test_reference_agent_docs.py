@@ -4479,6 +4479,83 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
     assert result.returncode == 0, result.stderr
 
 
+def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags() -> None:
+    """Verify the shared call-tree renderer enriches function docs and dashboard trees."""
+    from scripts import generate_function_reference as generator
+
+    root_qn = "fabricops_kit.pipeline.display_guardrail_results.display_guardrail_results"
+    shared_qn = "fabricops_kit.pipeline.shared._display_guardrail_results_workflow"
+    private_qn = "fabricops_kit.pipeline.shared._guardrail_reason"
+    node_by_qn = {
+        root_qn: {
+            "callable_name": "display_guardrail_results",
+            "module_name": "pipeline.display_guardrail_results",
+            "exported": True,
+            "callable_kind": "function",
+        },
+        shared_qn: {
+            "callable_name": "_display_guardrail_results_workflow",
+            "module_name": "pipeline.shared",
+            "exported": False,
+            "callable_kind": "function",
+        },
+        private_qn: {
+            "callable_name": "_guardrail_reason",
+            "module_name": "pipeline.shared",
+            "exported": False,
+            "callable_kind": "function",
+        },
+    }
+    rendered = "\n".join(
+        generator._render_clickable_call_tree(
+            root_qn,
+            {root_qn: [shared_qn], shared_qn: [private_qn]},
+            node_by_qn,
+            {},
+        )
+    )
+    flow_rendered = "\n".join(
+        generator._render_callable_architecture_flow_tree(
+            {
+                "qualified_name": root_qn,
+                "function_name": "display_guardrail_results",
+                "source_path": "src/fabricops_kit/pipeline/display_guardrail_results.py",
+                "function_type": "Public function",
+                "architecture_violation_count": 1,
+                "transitive_callees": [
+                    {
+                        "qualified_name": shared_qn,
+                        "function_name": "_display_guardrail_results_workflow",
+                        "source_path": "src/fabricops_kit/pipeline/shared.py",
+                        "function_type": "Shared helper",
+                        "parent_qualified_name": root_qn,
+                        "depth": 1,
+                    },
+                    {
+                        "qualified_name": private_qn,
+                        "function_name": "_guardrail_reason",
+                        "source_path": "src/fabricops_kit/pipeline/shared.py",
+                        "function_type": "Private helper",
+                        "parent_qualified_name": shared_qn,
+                        "depth": 2,
+                        "architecture_result": "Violation",
+                    },
+                ],
+            },
+            node_by_qn,
+            {},
+        )
+    )
+
+    assert "[pipeline/display_guardrail_results.py]" in rendered
+    assert "display_guardrail_results(...)" in rendered
+    assert "[public callable]" in rendered
+    assert "[pipeline/shared.py]" in rendered
+    assert "_display_guardrail_results_workflow(...)" in rendered
+    assert "[private helper]" in rendered
+    assert "[architecture violation]" in flow_rendered
+
+
 def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table() -> None:
     """Verify dashboard selected-flow payload reuses generated reference tree HTML."""
     from scripts import generate_function_reference as generator
@@ -4499,13 +4576,21 @@ def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table
     )
     tree_html = flow["selected_flow_tree_html"]
 
+    assert flow.get("flow_source") != "function_inventory"
     assert 'data-callable-architecture-flow="true"' in tree_html
-    assert "read_lakehouse_table" in tree_html
-    assert "get_spark_session" in tree_html
-    assert "read_delta_path" in tree_html
-    assert "resolve_configured_lakehouse_table" in tree_html
-    assert "_resolve_lakehouse_schema" in tree_html
-    assert "_normalize_schema_name" in tree_html
+    assert "[io/read_lakehouse_table.py]" in tree_html
+    assert "read_lakehouse_table(...)" in tree_html
+    assert "[public callable]" in tree_html
+    assert "get_spark_session(...)" in tree_html
+    assert "[shared helper]" in tree_html
+    assert "read_delta_path(...)" in tree_html
+    assert "resolve_configured_lakehouse_table(...)" in tree_html
+    assert "[io/shared.py]" in tree_html
+    assert "_resolve_lakehouse_schema(...)" in tree_html
+    assert "[private helper]" in tree_html
+    assert "_normalize_schema_name(...)" in tree_html
+    assert "Maybe combine" not in tree_html
+    assert "Shared helper</span>" not in tree_html
     assert tree_html.index("resolve_lakehouse_table_location") < tree_html.index("_resolve_lakehouse_schema")
     assert tree_html.index("_resolve_lakehouse_schema") < tree_html.index("_normalize_schema_name")
 

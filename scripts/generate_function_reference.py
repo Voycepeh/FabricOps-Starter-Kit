@@ -1468,6 +1468,45 @@ def _call_tree_link(
     return None
 
 
+def _call_tree_source_prefix(
+    qn: str,
+    node_by_qn: dict[str, dict[str, Any]],
+    context: dict[str, Any] | None = None,
+) -> str:
+    """Return the display source path prefix for a call-tree node."""
+    context = context or {}
+    source_path = str(context.get("source_path") or context.get("owner_file") or "").strip()
+    if source_path:
+        return source_path.removeprefix("src/fabricops_kit/")
+    module_name = str(context.get("module") or node_by_qn.get(qn, {}).get("module_name") or "").strip()
+    return f"{module_name.replace('.', '/')}.py" if module_name else "unknown"
+
+
+def _call_tree_callable_type(
+    qn: str,
+    node_by_qn: dict[str, dict[str, Any]],
+    context: dict[str, Any] | None = None,
+) -> str:
+    """Return the display callable type suffix for a call-tree node."""
+    context = context or {}
+    explicit_type = str(
+        context.get("function_type")
+        or context.get("simple_classification")
+        or context.get("layer_group")
+        or ""
+    ).strip()
+    if explicit_type:
+        return explicit_type.replace("Public function", "public callable").lower()
+    node = node_by_qn.get(qn, {})
+    if node.get("exported"):
+        return "public callable"
+    if node.get("callable_name", "").startswith("_"):
+        return "private helper"
+    if node.get("callable_kind") in {"class", "method", "property_accessor", "implicit_lifecycle_method"}:
+        return str(node.get("callable_kind", "callable")).replace("_", " ")
+    return "shared helper"
+
+
 def _call_tree_label(
     qn: str,
     root_qn: str,
@@ -1475,14 +1514,24 @@ def _call_tree_label(
     module_data: dict[str, dict[str, Any]],
     *,
     recursive: bool = False,
+    context: dict[str, Any] | None = None,
 ) -> str:
-    """Render one call-tree callable label, linking package callables when possible."""
+    """Render one enriched call-tree callable label, linking package callables when possible."""
     node = node_by_qn.get(qn)
-    name = node.get("callable_name", qn) if node else qn
-    label = f"<code>{html_escape(name)}(...)</code>"
+    context = context or {}
+    name = context.get("function_name") or context.get("callable") or (node.get("callable_name", qn) if node else qn)
+    source_prefix = _call_tree_source_prefix(qn, node_by_qn, context)
+    callable_type = _call_tree_callable_type(qn, node_by_qn, context)
+    label = (
+        f'<span class="reference-call-tree-source">[{html_escape(source_prefix)}]</span> '
+        f"<code>{html_escape(str(name))}(...)</code> "
+        f'<span class="reference-call-tree-type">[{html_escape(callable_type)}]</span>'
+    )
     href = _call_tree_link(qn, root_qn, node_by_qn, module_data)
     if href:
         label = f'<a href="{html_escape(href)}">{label}</a>'
+    if context.get("architecture_result") == "Violation" or context.get("architecture_violation_count"):
+        label += ' <span class="reference-call-tree-note">[architecture violation]</span>'
     if recursive:
         label += ' <span class="reference-call-tree-note">(recursive)</span>'
     return label
@@ -1566,7 +1615,7 @@ def _render_callable_architecture_flow_tree(
 
     lines = [
         '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">',
-        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data)}</div>',
+        f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span>{_call_tree_label(root_qn, root_qn, node_by_qn, module_data, context=flow)}</div>',
     ]
 
     def sort_key(row: dict[str, Any]) -> tuple[int, str, str, str]:
@@ -1586,7 +1635,7 @@ def _render_callable_architecture_flow_tree(
             connector = "└── " if index == len(child_rows) - 1 else "├── "
             recursive = child_qn in ancestors
             lines.append(
-                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child_qn, root_qn, node_by_qn, module_data, recursive=recursive)}</div>'
+                f'  <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">{html_escape(prefix + connector)}</span>{_call_tree_label(child_qn, root_qn, node_by_qn, module_data, recursive=recursive, context=child_row)}</div>'
             )
             if not recursive:
                 extension = "    " if index == len(child_rows) - 1 else "│   "
