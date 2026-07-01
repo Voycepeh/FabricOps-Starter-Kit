@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import html
 import json
+import os
 import subprocess
 import re
 from pathlib import Path
@@ -2626,6 +2627,144 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
 
 
+def test_function_call_graph_architecture_scope_table_executes_with_public_rows(tmp_path: Path) -> None:
+    """Execute dashboard JavaScript and verify public callable rows render."""
+    import scripts.generate_function_reference as generator
+
+    flow_data = {
+        "function_inventory": [
+            {
+                "qualified_name": "fabricops_kit.demo_public",
+                "function_name": "demo_public",
+                "simple_classification": "Public function",
+                "source_path": "src/fabricops_kit/demo_public.py",
+                "reachability": "public_entrypoint",
+            },
+            {
+                "qualified_name": "fabricops_kit.shared.demo_helper",
+                "function_name": "demo_helper",
+                "simple_classification": "Shared helper",
+                "source_path": "src/fabricops_kit/shared.py",
+                "reachability": "reachable_from_public",
+            },
+        ],
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": "fabricops_kit.demo_public",
+                "function_name": "demo_public",
+                "module": "fabricops_kit",
+                "width": 1,
+                "scope": 2,
+                "max_depth": 1,
+                "architecture_violation_count": 0,
+                "external_dependents_count": 0,
+                "helper_cleanup_candidates": 0,
+                "direct_callees": ["fabricops_kit.shared.demo_helper"],
+                "transitive_callees": [
+                    {
+                        "qualified_name": "fabricops_kit.shared.demo_helper",
+                        "function_name": "demo_helper",
+                        "parent_qualified_name": "fabricops_kit.demo_public",
+                        "depth": 1,
+                        "simple_classification": "Shared helper",
+                    }
+                ],
+            }
+        ],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 1}},
+        "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
+    }
+    dashboard_text = generator._render_combined_refactor_dashboard_html(flow_data)
+    node_script = tmp_path / "execute_dashboard.js"
+    node_script.write_text(
+        """
+const html = process.env.DASHBOARD_HTML;
+const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, {
+      id,
+      innerHTML: id === 'architectureScopeTableBody'
+        ? '<tr><td colspan="7">Loading function call graph data...</td></tr>' : '',
+      textContent: id === 'dataLoadStatus' ? 'Loading function call graph data...' : '',
+      className: '',
+      classList: { toggle() {} },
+      value: '',
+      hidden: false,
+      disabled: false,
+      checked: id === 'quickExportMode',
+      dataset: {},
+      addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; },
+      scrollIntoView() {},
+      closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; },
+    });
+  }
+  return elements.get(id);
+}
+global.window = {
+  location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' },
+  FabricOpsTableControls: { enhanced: [], enhance(table) { this.enhanced.push(table && table.id || 'unknown'); } },
+};
+global.document = {
+  baseURI: 'http://example.test/assets/function-call-graph-dashboard.html',
+  getElementById: element,
+  querySelector(selector) { return { id: selector }; },
+  querySelectorAll() { return []; },
+  addEventListener(type, cb) { listeners[`document:${type}`] = cb; },
+};
+global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
+global.URL = URL;
+global.Blob = class {};
+['publicSurfaceCards','dataLoadStatus','architectureScopeTableBody','publicFlowDetails',
+ 'publicSearchBox','publicCallableTableWrap','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets',
+ 'quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle',
+ 'exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected',
+ 'downloadJson','downloadYaml','openFunctionCallGraphJson'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const body = element('architectureScopeTableBody');
+  if (!body.innerHTML.includes('demo_public')) throw new Error(body.innerHTML);
+  if (body.innerHTML.includes('Loading function call graph data...')) throw new Error('loading row was not replaced');
+  if (element('dataLoadStatus').textContent.includes('Loading function call graph data...')) {
+    throw new Error('load status was not replaced');
+  }
+  listeners['document:click']({
+    target: {
+      closest(selector) {
+        if (selector === '[data-architecture-scope-special]') return null;
+        if (selector === '[data-public-flow-row]') {
+          return { dataset: { publicFlowRow: 'fabricops_kit.demo_public' } };
+        }
+        return null;
+      },
+    },
+  });
+  if (!element('publicFlowDetails').innerHTML.includes('demo_public')) {
+    throw new Error(element('publicFlowDetails').innerHTML);
+  }
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DASHBOARD_HTML": dashboard_text,
+            "FLOW_JSON": json.dumps(flow_data),
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     """Verify public callable rows can fall back to function_inventory only when flows are absent."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -2765,10 +2904,8 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "recommended_action" in inventory_text
     assert "action_details" in inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
-    assert re.search(
-        r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]#runtime-inventory table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",
-        inventory_text,
-    )
+    assert "const runtimeTable=$('inventoryBody')?$('inventoryBody').closest('table'):null" in inventory_text
+    assert "if(runtimeTable)window.FabricOpsTableControls.enhance(runtimeTable)" in inventory_text
     assert "enhanceAll(document)" not in inventory_text
 
 
