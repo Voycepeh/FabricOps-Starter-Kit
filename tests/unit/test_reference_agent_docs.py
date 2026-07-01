@@ -3144,7 +3144,7 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "Export all visible runtime assets" in dashboard_text
     assert "Export cannot-trace review packet" in dashboard_text
     assert 'id="runtimeInventory_inventoryStatusBar"' in dashboard_text
-    assert "Selected" in dashboard_text and "Showing" in dashboard_text and "Total" in dashboard_text
+    assert "Selected scope" in dashboard_text and "Showing" in dashboard_text and "Total callables" in dashboard_text
     assert "Showing is affected by the current architecture scope, search text, and table column filters." in dashboard_text
     assert "inventorySummaryCards" not in dashboard_text
     assert "Loaded ${inventory.length} runtime inventory records" not in dashboard_text
@@ -3159,7 +3159,11 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "No static path found" not in dashboard_text
     assert "Remove orphaned asset" not in dashboard_text
     assert "function exportRows()" in dashboard_text
-    assert "function quickExportRows(){return inventory.filter(rowInSelectedScope)}" in dashboard_text
+    assert "function quickExportRows(){return selectedRows.length?selectedRows:baseRows.filter(rowInSelectedScope)}" in dashboard_text
+    assert "let baseRows=[],inventory=[],selectedRows=[],visibleRows=[]" in dashboard_text
+    assert "totalCallables=computeTotalCallables(flows)" in dashboard_text
+    assert "function renderTable(){selectedRows=baseRows.filter(rowInSelectedScope);visibleRows=filteredRows()" in dashboard_text
+    assert "visibleRows.forEach(r=>state.selected.add(r.qualified_name))" in dashboard_text
     assert "function handleExportModeChange" in dashboard_text
     assert "Switching selection mode will reset selected rows and clear runtime inventory filters. Continue?" in dashboard_text
     assert "resetRuntimeInventorySelectionState" in dashboard_text
@@ -3368,6 +3372,51 @@ def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     assert(t.rowMatchesFilter(row,{column:1,kind:'numeric',operator:'between',a:'5',b:'8'}), 'numeric between filtering');
     assert(t.rowMatchesFilter(row,{column:2,kind:'values',values:new Set(['(blank)'])}), 'blank value filtering');
     assert(t.rowMatchesFilter(row,{column:3,kind:'values',values:new Set(['Public'])}) && t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'multiple column filters AND logic');
+    const makeCell = (text, filterValue) => ({
+      textContent: text,
+      innerText: text,
+      dataset: filterValue === undefined ? {} : {filterValue},
+    });
+    const sourceRow = {
+      cells:[
+        makeCell('src/fabricops_kit/metadata.py Finding: Reason: Evidence: Notes: Cleanup action:', 'src/fabricops_kit/metadata.py'),
+        makeCell('build_metadata', 'build_metadata'),
+        makeCell('Public function', 'Public function'),
+      ],
+      matches(selector){ return false; },
+    };
+    const otherSourceRow = {
+      cells:[makeCell('src/fabricops_kit/io.py', 'src/fabricops_kit/io.py'), makeCell('read_table', 'read_table'), makeCell('Shared helper', 'Shared helper')],
+      matches(selector){ return false; },
+    };
+    const detailRow = {
+      cells:[makeCell('Finding: Reason: Evidence: Notes: Cleanup action:')],
+      matches(selector){ return selector === '[data-details-row]'; },
+    };
+    const blankRow = {
+      cells:[makeCell('', ''), makeCell('unnamed', 'unnamed'), makeCell('Private helper', 'Private helper')],
+      matches(selector){ return false; },
+    };
+    const table = {
+      dataset:{tableControls:'excel'},
+      tHead:{rows:[{cells:[{}, {}, {}]}]},
+      tBodies:[{rows:[sourceRow, detailRow, otherSourceRow]}],
+    };
+    const values = t.uniqueValues(table, 0);
+    assert(values.includes('src/fabricops_kit/metadata.py'), 'source file filter includes raw source path');
+    assert(values.includes('src/fabricops_kit/io.py'), 'source file filter includes second raw source path');
+    assert(!values.some((value) => /Finding:|Reason:|Evidence:|Notes:|Cleanup action:/.test(value)), 'source file filter excludes details text');
+    assert(!values.includes('(blank)'), 'source file filter excludes blank when no raw source file is blank');
+    assert(t.filterableRows(table).length === 2, 'expanded details rows are not filterable rows');
+    assert(t.rowMatchesFilter(sourceRow,{column:0,kind:'values',values:new Set(['src/fabricops_kit/metadata.py'])}), 'raw source file filtering works');
+    const blankTable = {dataset:{tableControls:'excel'}, tHead:{rows:[{cells:[{}, {}, {}]}]}, tBodies:[{rows:[sourceRow, blankRow]}]};
+    const blankValues = t.uniqueValues(blankTable, 0);
+    assert(blankValues.includes('(blank)'), 'blank filter appears for true blank raw values');
+    assert(t.rowMatchesFilter(blankRow,{column:0,kind:'values',values:new Set(['(blank)'])}), 'blank raw values filter correctly');
+    sourceRow.dataset = {inventoryRow:'source'};
+    otherSourceRow.dataset = {inventoryRow:'other'};
+    blankRow.dataset = {inventoryRow:'blank'};
+    assert(t.getVisibleRowKeys(table).join(',') === 'source,other', 'visible row keys follow unfiltered rows');
     """
     subprocess.run(["node", "-e", node_script], cwd=ROOT, check=True)
 
