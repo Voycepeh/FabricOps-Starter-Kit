@@ -428,6 +428,16 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "data-public-flow" in dashboard_text
     assert "publicCallableList" in dashboard_text
     assert "publicFlowDetails" in dashboard_text
+    assert "Selected public function flow" in dashboard_text
+    assert "publicEntryFlows=data.public_flows||data.public_entrypoint_flow||[]" in dashboard_text
+    assert "renderPublicCallableList()" in dashboard_text
+    assert "renderFlowDetails()" in dashboard_text
+    assert "Loading function call graph data..." in dashboard_text
+    assert "renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters.`)" in dashboard_text
+    assert "Runtime inventory" in dashboard_text
+    assert "Cannot trace back to a public function" in dashboard_text
+    assert "Unreachable runtime asset" not in dashboard_text
+    assert "No static path found" not in dashboard_text
     assert "downloadPacket" in dashboard_text
     assert "functionbuildCleanupPacketFilename(selectedFunctionName,extension)" in compact_dashboard_text
     assert "cleanupPacketTimestamp" in dashboard_text
@@ -809,14 +819,24 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "metadata",
         "function_inventory",
         "public_entrypoint_flow",
+        "public_flows",
         "summary_counts",
         "architecture_thresholds",
+        "inventory_row_count",
+        "unique_inventory_identity_count",
+        "duplicate_inventory_identity_count",
     }
     assert flow_data["metadata"]["generated_at_utc"].endswith("Z")
     assert flow_data["metadata"]["data_source"] == "function-call-graph.json"
 
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
+    assert flow_data["public_flows"]
+    assert flow_data["public_flows"] == flow_data["public_entrypoint_flow"]
+    assert flow_data["inventory_row_count"] == len(flow_data["function_inventory"])
+    assert flow_data["unique_inventory_identity_count"] == len(flow_data["function_inventory"])
+    assert flow_data["duplicate_inventory_identity_count"] == 0
+    assert any("read" in flow["function_name"].lower() for flow in flow_data["public_flows"])
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
     assert summary_counts["callable_kind"]["function"] == 135
     assert summary_counts["public_classes"] == 7
