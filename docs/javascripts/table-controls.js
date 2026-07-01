@@ -3,13 +3,40 @@
   const TABLE_CLASS = "fo-table-enhanced";
   const state = new WeakMap();
 
-  function cellText(row, index) {
+  function normalizeFilterValue(value) {
+    return value === null || value === undefined ? "" : String(value).trim();
+  }
+
+  function filterColumnKey(index) {
+    return `filterCol${index}`;
+  }
+
+  function isFilterableRow(row) {
+    return row && row.dataset.tableFilterRow !== "false";
+  }
+
+  function filterableRows(table) {
+    return currentRows(table).filter(isFilterableRow);
+  }
+
+  function rawCellValue(row, index) {
+    const key = filterColumnKey(index);
+    if (row.dataset && Object.prototype.hasOwnProperty.call(row.dataset, key)) {
+      return normalizeFilterValue(row.dataset[key]);
+    }
     const cell = row.cells[index];
-    return (cell ? cell.innerText || cell.textContent || "" : "").trim();
+    if (cell && cell.dataset && Object.prototype.hasOwnProperty.call(cell.dataset, "filterValue")) {
+      return normalizeFilterValue(cell.dataset.filterValue);
+    }
+    return normalizeFilterValue(cell ? cell.innerText || cell.textContent || "" : "");
+  }
+
+  function cellText(row, index) {
+    return rawCellValue(row, index);
   }
 
   function displayValue(value) {
-    return value === "" ? BLANK : value;
+    return normalizeFilterValue(value) === "" ? BLANK : normalizeFilterValue(value);
   }
 
   function isNumericColumn(rows, index) {
@@ -36,7 +63,7 @@
 
   function tableState(table) {
     if (!state.has(table)) {
-      state.set(table, { sort: null, filters: new Map(), originalRows: Array.from(table.tBodies[0]?.rows || []) });
+      state.set(table, { sort: null, filters: new Map(), originalRows: filterableRows(table) });
     }
     return state.get(table);
   }
@@ -51,11 +78,11 @@
 
   function uniqueValues(table, column) {
     const rows = tableState(table).originalRows;
-    return [...new Set(rows.map((row) => displayValue(cellText(row, column))))].sort((a, b) => compareValues(a, b, false));
+    return [...new Set(rows.map((row) => displayValue(rawCellValue(row, column))))].sort((a, b) => compareValues(a, b, false));
   }
 
   function rowMatchesFilter(row, filter) {
-    const value = cellText(row, filter.column);
+    const value = rawCellValue(row, filter.column);
     if (filter.kind === "values") {
       return filter.values.has(displayValue(value));
     }
@@ -74,6 +101,8 @@
     const cfg = tableState(table);
     const tbody = table.tBodies[0];
     if (!tbody) return;
+    const allRows = currentRows(table);
+    const detailsByOwner = new Map(allRows.filter((row) => !isFilterableRow(row) && row.dataset.detailsRow).map((row) => [row.dataset.detailsRow, row]));
     let rows = cfg.originalRows.filter((row) => [...cfg.filters.values()].every((filter) => rowMatchesFilter(row, filter)));
     if (cfg.sort) {
       const { column, direction, numeric } = cfg.sort;
@@ -83,8 +112,15 @@
         return result === 0 ? left.index - right.index : result * dir;
       }).map((item) => item.row);
     }
-    rows.forEach((row) => tbody.appendChild(row));
+    rows.forEach((row) => {
+      tbody.appendChild(row);
+      const detailsRow = row.dataset ? detailsByOwner.get(row.dataset.inventoryRow) : null;
+      if (detailsRow) tbody.appendChild(detailsRow);
+    });
     cfg.originalRows.forEach((row) => { row.hidden = !rows.includes(row); });
+    allRows.filter((row) => !isFilterableRow(row)).forEach((row) => {
+      row.hidden = row.dataset.detailsRow ? !rows.some((item) => item.dataset && item.dataset.inventoryRow === row.dataset.detailsRow) : false;
+    });
     updateHeaderStates(table);
     renderClearAll(table);
   }
@@ -235,7 +271,7 @@
     if (!isOptInTable(table)) return;
     if (table.classList.contains(TABLE_CLASS)) {
       const cfg = tableState(table);
-      cfg.originalRows = currentRows(table);
+      cfg.originalRows = filterableRows(table);
       applyTable(table);
       return;
     }
@@ -290,5 +326,5 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
   document.addEventListener("DOMContentLoaded", () => enhanceAll());
 
-  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, positionMenu, rowMatchesFilter } };
+  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, normalizeFilterValue, positionMenu, rawCellValue, rowMatchesFilter, uniqueValues } };
 })();

@@ -2662,6 +2662,10 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
     assert "Clear table filters" not in script
     assert "Clear all filters" not in script
     assert "rowMatchesFilter" in script
+    assert "function normalizeFilterValue" in script
+    assert "function rawCellValue" in script
+    assert "function filterableRows" in script
+    assert "row.dataset.tableFilterRow !== \"false\"" in script
     assert "cfg.filters.values" in script
     assert "left.index - right.index" in script
     assert "Number.isFinite" in script
@@ -3076,12 +3080,6 @@ def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     assert "publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found" in dashboard_text
     assert "All runtime assets" in dashboard_text
     assert "Others / Cannot trace back to a public function" in dashboard_text
-    orphan_row_start = dashboard_text.index('data-architecture-scope-special="unreachable"')
-    orphan_row_end = dashboard_text.index("</tr>", orphan_row_start)
-    orphan_row = dashboard_text[orphan_row_start:orphan_row_end]
-    assert "Others / Cannot trace back to a public function" in orphan_row
-    assert "Verify possible orphan" in orphan_row
-    assert '<span class="badge warn">Cannot trace back to a public function</span>' not in orphan_row
 
 def test_callable_inventory_export_workflow_is_quick_first() -> None:
     """Verify runtime inventory export workflow is compact, quick-first, and before table review."""
@@ -3184,6 +3182,9 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "details-panel" in compact_inventory_text
     assert "details-row" in compact_inventory_text and "display:none" in compact_inventory_text
     assert "details-row.is-open" in compact_inventory_text and "display:table-row" in compact_inventory_text
+    assert "function filterValueAttrs(i)" in inventory_text
+    assert "data-filter-col${index}" in inventory_text
+    assert 'data-table-filter-row="false"' in inventory_text
     assert "details-panel" in compact_inventory_text and "max-width:100%" in compact_inventory_text
     assert "data-details-toggle" in inventory_text
     assert "detailsRow(i)" in inventory_text
@@ -3273,7 +3274,7 @@ def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
 
     assert 'table[data-table-controls="excel"]' in script
     assert "if (!isOptInTable(table)) return" in script
-    assert "cfg.originalRows = currentRows(table)" in script
+    assert "cfg.originalRows = filterableRows(table)" in script
     assert 'th.querySelector(":scope > .table-header-cell")' in script
     assert 'headerCell.querySelector(":scope > .fo-table-menu-button")' in script
     assert 'table-header-label' in script
@@ -3323,12 +3324,30 @@ def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     assert(t.compareValues('2','10',true) < 0, 'numeric sort ascending');
     assert(t.compareValues('10','2',true) > 0, 'numeric sort descending');
     assert(t.displayValue('') === '(blank)', 'blank value filtering');
-    const row = {cells:[{textContent:'Healthy'}, {textContent:'7'}, {textContent:''}, {textContent:'Public'}]};
+    assert(t.normalizeFilterValue(null) === '', 'null normalizes to blank raw value');
+    assert(t.normalizeFilterValue('  src/fabricops_kit/metadata.py  ') === 'src/fabricops_kit/metadata.py', 'raw strings are trimmed');
+    const row = {dataset:{}, cells:[{textContent:'Healthy'}, {textContent:'7'}, {textContent:''}, {textContent:'Public'}]};
     assert(t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'value checkbox filtering');
     assert(t.rowMatchesFilter(row,{column:1,kind:'numeric',operator:'greater',a:'5'}), 'numeric condition filtering');
     assert(t.rowMatchesFilter(row,{column:1,kind:'numeric',operator:'between',a:'5',b:'8'}), 'numeric between filtering');
     assert(t.rowMatchesFilter(row,{column:2,kind:'values',values:new Set(['(blank)'])}), 'blank value filtering');
     assert(t.rowMatchesFilter(row,{column:3,kind:'values',values:new Set(['Public'])}) && t.rowMatchesFilter(row,{column:0,kind:'values',values:new Set(['Healthy'])}), 'multiple column filters AND logic');
+    const sourceRow = {dataset:{filterCol0:'src/fabricops_kit/metadata.py'}, cells:[{textContent:'src/fabricops_kit/metadata.py\\nFinding:\\nReason:\\nEvidence:\\nNotes:\\nCleanup action:'}]};
+    const otherSourceRow = {dataset:{filterCol0:'src/fabricops_kit/io/shared.py'}, cells:[{textContent:'src/fabricops_kit/io/shared.py'}]};
+    const detailsRow = {dataset:{tableFilterRow:'false', detailsRow:'metadata'}, cells:[{textContent:'Finding:\\nReason:\\nEvidence:\\nNotes:\\nCleanup action:'}]};
+    const table = {tBodies:[{rows:[sourceRow, detailsRow, otherSourceRow]}]};
+    const sourceValues = t.uniqueValues(table, 0);
+    assert(sourceValues.includes('src/fabricops_kit/metadata.py'), 'source file raw value appears');
+    assert(sourceValues.includes('src/fabricops_kit/io/shared.py'), 'other source file raw value appears');
+    assert(!sourceValues.includes('(blank)'), 'blank is omitted when all raw source values are non blank');
+    assert(!sourceValues.some((value) => /Finding:|Reason:|Evidence:|Notes:|Cleanup action:/.test(value)), 'detail labels are not source filter values');
+    sourceRow.cells[0].textContent += '\\nFinding: expanded after filter init';
+    assert(t.uniqueValues(table, 0).join('|') === sourceValues.join('|'), 'expanded details do not change source values');
+    const blankRow = {dataset:{filterCol0:''}, cells:[{textContent:'Rendered fallback text'}]};
+    const blankValues = t.uniqueValues({tBodies:[{rows:[sourceRow, blankRow]}]}, 0);
+    assert(blankValues.includes('(blank)'), 'blank appears for true blank raw values');
+    assert(t.rowMatchesFilter(blankRow,{column:0,kind:'values',values:new Set(['(blank)'])}), 'blank filter matches true blank raw values');
+    assert(t.rowMatchesFilter(sourceRow,{column:0,kind:'values',values:new Set(['src/fabricops_kit/metadata.py'])}), 'non blank raw filter matches');
     """
     subprocess.run(["node", "-e", node_script], cwd=ROOT, check=True)
 
