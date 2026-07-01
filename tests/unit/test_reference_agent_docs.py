@@ -2725,6 +2725,24 @@ def test_function_call_graph_dashboard_status_summary_artifact_is_fresh() -> Non
     assert intro_start < cards_start
     assert '<p class="sr-only">Public callables with signals are summarized by architecture status.</p>' not in committed
 
+
+def test_function_call_graph_initial_all_scope_has_no_selected_public_row() -> None:
+    """Verify fresh all-runtime-assets dashboard view does not preselect a public row."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    compact_dashboard_text = ''.join(dashboard_text.split())
+
+    assert 'data-public-flow-row="fabricops_kit.pipeline.display_guardrail_results"' in dashboard_text
+    assert 'class=" active severity-' not in dashboard_text
+    assert 'aria-selected="true"' not in dashboard_text
+    assert "const selected=Boolean(state.selectedFlow)&&qn===state.selectedFlow" in dashboard_text
+    assert "if(!state.activePublicFlow&&visibleFlows.length)state.activePublicFlow=visibleFlows[0].qualified_name" not in dashboard_text
+    assert "state.activePublicFlow='';state.selectedFlow=''" in dashboard_text
+    assert "severity-architecture-row" in dashboard_text
+    assert "severity-review-row" in dashboard_text
+    assert "severity-neutral-row" in dashboard_text
+    assert "All runtime assets selected. No single public callable flow is shown for this scope." in dashboard_text
+    assert "row.classList.toggle('active',selected);row.setAttribute('aria-selected',selected?'true':'false')" in compact_dashboard_text
+
 def test_function_call_graph_architecture_scope_table_rendering_contract() -> None:
     """Verify architecture scope table DOM and JavaScript stay connected."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
