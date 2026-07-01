@@ -380,7 +380,36 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     combined_dashboard_assets = dashboard_text + inventory_text
     assert "function-inventory.html" not in combined_dashboard_assets
     assert "Remove orphaned asset" not in combined_dashboard_assets
+    assert "Unreachable runtime asset" not in dashboard_text
+    assert "No static path found" not in dashboard_text
+    assert "safe to delete" not in combined_dashboard_assets
+    assert "The scanner could not trace this asset back to a public FabricOps function. This is not proof that the asset is unused or safe to " in combined_dashboard_assets
+    assert "safe to '+'delete" in combined_dashboard_assets
     assert "runtime-inventory" in dashboard_text
+    assert "Clear table filters" in dashboard_text
+    assert "Clear all filters" not in dashboard_text
+    assert "Show all runtime assets" in dashboard_text
+    assert "Current scope:" in dashboard_text
+    assert "scopeBannerName" in dashboard_text
+    assert "scopeBannerHelp" in dashboard_text
+    assert "function scopeHelpText()" in dashboard_text
+    assert "function renderScopeBanner()" in dashboard_text
+    assert "renderScopeBanner();const scoped=inventory.filter(rowInSelectedScope)" in dashboard_text
+    assert "function scrollToRuntimeInventory()" in dashboard_text
+    assert "document.getElementById('runtime-inventory')" in dashboard_text
+    assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text
+    assert "function setArchitectureScope(scope,options={})" in dashboard_text
+    assert "if(options.scroll!==false)scrollToRuntimeInventory()" in dashboard_text
+    assert "currentScope.kind==='public_callable'&&i.qualified_name===currentScope.qualified_name?'scope-highlight':''" in dashboard_text
+    assert "rowReachability(r)==='unreachable_runtime_asset'" in dashboard_text
+    assert "showAllRuntimeAssets" in dashboard_text
+    assert "$('showAllRuntimeAssets').onclick=()=>setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''})" in dashboard_text
+    assert "Object.assign(state,{search:'',typeFilter:'all',reachabilityFilter:'all',healthFilter:'all',actionFilter:'all'})" in dashboard_text
+    assert "$('focusFilter').value='all'" not in dashboard_text
+    assert dashboard_text.count('<section class="export-toolbar" aria-label="Advanced cleanup and export actions" hidden>') == 0
+    assert dashboard_text.count('<section class="export-toolbar"') == 1
+    assert dashboard_text.count('<section class="export-toolbar">') == 1
+    assert dashboard_text.index('id="runtime-inventory"') < dashboard_text.index('<section class="export-toolbar">')
 
     for text in (dashboard_text, inventory_text):
         assert "function-call-graph.json" in text
@@ -656,10 +685,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Public callables" in inventory_text
     for scope_label in [
         "All runtime assets",
-        "Others / Unreachable runtime assets",
+        "Others / Cannot trace back to a public function",
         "Runtime assets",
         "Needs review",
-        "Unreachable",
+        "Cannot trace back to a public function",
         "Selected for export",
     ]:
         assert scope_label in inventory_text
@@ -701,7 +730,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Private helper" in inventory_text
     assert "Non functions" not in inventory_text
     assert "Reachability" in inventory_text
-    assert "Unreachable runtime asset" in inventory_text
+    assert "Cannot trace back to a public function" in inventory_text
     assert "Recommended action" in inventory_text
     assert "Reached from public flow" not in inventory_text
     assert "reachable_from_public_runtime" in inventory_text
@@ -835,6 +864,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         for row in function_inventory
     }
     assert len(stable_identities) == len(function_inventory)
+    inventory_metrics = summary_counts["callable_inventory_metrics"]
+    assert inventory_metrics["inventory_row_count"] == len(function_inventory)
+    assert inventory_metrics["unique_inventory_identity_count"] == len(function_inventory)
+    assert inventory_metrics["duplicate_inventory_identity_count"] == 0
     assert all(str(row["source_path"]).startswith("src/fabricops_kit/") for row in function_inventory)
     assert all(
         not str(row["source_path"]).startswith(("tests/", "docs/", "scripts/", "notebooks/", "templates/"))
@@ -869,6 +902,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     unreachable_rows = [row for row in function_inventory if row.get("reachability") == "unreachable_runtime_asset"]
     assert unreachable_rows
     assert all(row["recommended_action"] == "Verify possible orphan" for row in unreachable_rows)
+    assert all(row["review_status_label"] == "Cannot trace back to a public function" for row in unreachable_rows)
     assert sum(1 for row in function_inventory if row["function_type"] == "Public function") == summary_counts["function_type"]["Public function"]
     assert sum(1 for row in function_inventory if row["function_type"] == "Shared helper") == summary_counts["function_type"]["Shared helper"]
     assert any(
@@ -881,6 +915,55 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "fabricops_kit.config.FabricStore.root" not in rows_by_qn
     assert all(row["reachability_kind"] == "public_entrypoint" for row in function_inventory if row["layer"] == "public")
     assert all(row["review_status"] != "unreachable" for row in function_inventory)
+    expected_runtime_chains = {
+        "fabricops_kit.io.shared.write_lakehouse_table_core": {
+            "fabricops_kit.io.shared.validate_dataframe_writer",
+            "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+            "fabricops_kit.io.shared.normalize_write_mode",
+            "fabricops_kit.io.shared.write_delta_path",
+        },
+        "fabricops_kit.io.shared.read_lakehouse_table_core": {
+            "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+            "fabricops_kit.io.shared.read_delta_path",
+        },
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table": {
+            "fabricops_kit.io.shared.resolve_target_store",
+            "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        },
+        "fabricops_kit.io.shared.resolve_configured_file_path": {
+            "fabricops_kit.io.shared.resolve_target_store",
+            "fabricops_kit.io.shared.resolve_lakehouse_file_location",
+        },
+    }
+    for caller_qn, expected_callees in expected_runtime_chains.items():
+        matching_flows = [
+            flow for flow in public_flows
+            if caller_qn in {row["qualified_name"] for row in flow["transitive_callees"]}
+        ]
+        observed = {
+            row["qualified_name"]
+            for flow in matching_flows
+            for row in flow["transitive_callees"]
+        }
+        assert expected_callees <= observed
+    known_symbols = {
+        "resolve_lakehouse_file_location",
+        "resolve_lakehouse_table_location",
+        "resolve_target_store",
+        "validate_dataframe_writer",
+        "write_delta_path",
+        "write_lakehouse_table_core",
+        "write_warehouse_synapsesql",
+        "read_lakehouse_table_core",
+        "read_delta_path",
+        "resolve_configured_lakehouse_table",
+        "resolve_configured_file_path",
+        "resolve_configured_warehouse_table",
+    }
+    for name in known_symbols:
+        rows = [row for row in function_inventory if row["function_name"] == name]
+        assert rows
+        assert all(row["function_type"] != "Unknown" for row in rows)
     expected_inventory_keys = {
         "qualified_name",
         "function_name",
@@ -2053,7 +2136,7 @@ def test_callable_graph_resolves_relative_import_alias_forms() -> None:
         set(),
         {},
         package_modules,
-    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "internal_callable")
+    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "shared_helper")
     assert generator.resolve_call_target(
         "io.read_lakehouse_csv",
         "shared.get_spark_session",
@@ -2062,7 +2145,7 @@ def test_callable_graph_resolves_relative_import_alias_forms() -> None:
         set(),
         {},
         package_modules,
-    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "internal_callable")
+    ) == ("fabricops_kit.io.shared.get_spark_session", "cross_module", "shared_helper")
     assert generator.resolve_call_target(
         "io.read_lakehouse_csv",
         "_private_helper",
@@ -2071,7 +2154,25 @@ def test_callable_graph_resolves_relative_import_alias_forms() -> None:
         set(),
         {},
         package_modules,
-    ) == ("fabricops_kit.io.shared._private_helper", "cross_module", "internal_helper")
+    ) == ("fabricops_kit.io.shared._private_helper", "cross_module", "private_helper")
+
+
+def test_callable_graph_collects_simple_dispatch_map_function_values() -> None:
+    """Verify simple dispatch maps surface callable object values as local calls."""
+    import ast
+
+    import scripts.generate_function_reference as generator
+
+    node = ast.parse(
+        "def public_entrypoint(kind):\n"
+        "    handlers = {'a': helper, 'b': shared.helper}\n"
+        "    return handlers[kind]()\n"
+    ).body[0]
+
+    calls = generator.collect_function_calls(node)
+
+    assert {"raw_name": "helper", "call_type": "dispatch_map"} in calls
+    assert {"raw_name": "shared.helper", "call_type": "dispatch_map"} in calls
 
 
 def test_callable_architecture_validation_allows_private_helpers_in_public_flow(monkeypatch, tmp_path) -> None:
@@ -2504,10 +2605,10 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     for label in [
         "Runtime assets",
         "Needs review",
-        "Unreachable",
+        "Cannot trace back to a public function",
         "Selected for export",
         "All runtime assets",
-        "Others / Unreachable runtime assets",
+        "Others / Cannot trace back to a public function",
     ]:
         assert label in inventory_text
     assert 'data-table-controls="excel"' in inventory_text
