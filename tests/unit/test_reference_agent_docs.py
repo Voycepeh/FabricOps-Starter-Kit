@@ -429,11 +429,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "publicCallableList" in dashboard_text
     assert "publicFlowDetails" in dashboard_text
     assert "Selected public function flow" in dashboard_text
-    assert "publicEntryFlows=data.public_flows||data.public_entrypoint_flow||[]" in dashboard_text
+    assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Selected scope runtime inventory")
+    assert "publicSearchHaystack" in dashboard_text
+    assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    assert "publicEntryFlows=(Array.isArray(data.public_flows)&&data.public_flows.length?data.public_flows:" in dashboard_text
+    assert "derivePublicFlowsFromInventory(inventory)" in dashboard_text
+    assert "Public flow details were not found, so this table is using public callable inventory rows." in dashboard_text
+    assert "Detailed call flow was not available for this public function." in dashboard_text
     assert "renderPublicCallableList()" in dashboard_text
     assert "renderFlowDetails()" in dashboard_text
     assert "Loading function call graph data..." in dashboard_text
-    assert "renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters.`)" in dashboard_text
+    assert "renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters.${warning}`)" in dashboard_text
     assert "Runtime inventory" in dashboard_text
     assert "Cannot trace back to a public function" in dashboard_text
     assert "Unreachable runtime asset" not in dashboard_text
@@ -869,6 +875,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     )
 
     public_inventory = {row["function_name"] for row in function_inventory if row["layer"] == "public"}
+    public_callable_inventory = {row["function_name"] for row in function_inventory if row["function_type"] == "Public function" or row.get("layer") == "public" or row.get("reachability_kind") == "public_entrypoint"}
+    assert {"read_lakehouse_table", "read_lakehouse_csv", "profile_dataframe"} <= public_callable_inventory
     assert public_inventory == function_exported_symbols
     assert len(function_inventory) == summary_counts["total_callables"]
     assert function_inventory
@@ -2572,7 +2580,8 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
     assert "Less than" in script
     assert "Between" in script
     assert "Clear filter" in script
-    assert "Clear all filters" in script
+    assert "Clear table filters" in script
+    assert "Clear all filters" not in script
     assert "rowMatchesFilter" in script
     assert "cfg.filters.values" in script
     assert "left.index - right.index" in script
