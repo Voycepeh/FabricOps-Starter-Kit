@@ -115,7 +115,7 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-This matches what the dashboard actually shows: `Broken rule`, `Too many steps`, `Too many helpers`, `Shared helper`, and `Maybe combine`. The dashboard code builds those exact signals in `flowSignals()`. Depth means how many call steps away the public function reaches. Width means direct calls from this public callable. Scope means total unique runtime assets in this selected architecture scope, including nested/transitive support assets.
+The dashboard keeps public-function review focused on `Contains architecture violation`, `Large depth / width`, and healthy public functions. Depth means how many call steps away the public function reaches. Width means direct calls from this public callable. Scope means total unique runtime assets in this selected architecture scope, including nested/transitive support assets.
 
 ### Too many helpers
 
