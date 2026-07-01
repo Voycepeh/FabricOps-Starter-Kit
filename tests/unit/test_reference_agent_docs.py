@@ -2780,13 +2780,19 @@ setTimeout(() => {
   if (element('dataLoadStatus').textContent.includes('Loading function call graph data...')) {
     throw new Error('load status was not replaced');
   }
+  const rowMatch = body.innerHTML.match(/<tr[^>]*data-public-flow-row="([^"]+)"(?:(?!<\/tr>)[\s\S])*?<button[^>]*data-public-flow-select="([^"]+)"[^>]*><code>write_lakehouse_table<\/code><\/button>/);
+  if (!rowMatch) throw new Error(body.innerHTML);
+  if (rowMatch[1] !== rowMatch[2]) throw new Error(`row/select mismatch: ${rowMatch[1]} vs ${rowMatch[2]}`);
+  const realRow = { dataset: { publicFlowRow: rowMatch[1] } };
+  const realButton = { dataset: { publicFlowSelect: rowMatch[2] } };
   listeners['document:click']({
+    preventDefault() { this.prevented = true; },
+    stopPropagation() { this.stopped = true; },
     target: {
       closest(selector) {
+        if (selector === '[data-public-flow-select]') return realButton;
         if (selector === '[data-architecture-scope-special]') return null;
-        if (selector === '[data-public-flow-row]') {
-          return { dataset: { publicFlowRow: process.env.PUBLIC_FLOW_ROW || 'fabricops_kit.io.write_lakehouse_table.write_lakehouse_table' } };
-        }
+        if (selector === '[data-public-flow-row]') return realRow;
         return null;
       },
     },
@@ -2906,7 +2912,12 @@ listeners['document:DOMContentLoaded']();
 setTimeout(() => {
   const bodyHtml = element('architectureScopeTableBody').innerHTML;
   if (!bodyHtml.includes('widget_review_guardrail_governance')) throw new Error(bodyHtml);
-  listeners['document:click']({ target: { closest(selector) { return selector === '[data-public-flow-row]' ? { dataset: { publicFlowRow: process.env.WIDGET_QN } } : null; } } });
+  const rowMatch = bodyHtml.match(/<tr[^>]*data-public-flow-row="([^"]+)"(?:(?!<\/tr>)[\s\S])*?<button[^>]*data-public-flow-select="([^"]+)"[^>]*><code>widget_review_guardrail_governance<\/code><\/button>/);
+  if (!rowMatch) throw new Error(bodyHtml);
+  if (rowMatch[1] !== rowMatch[2]) throw new Error(`row/select mismatch: ${rowMatch[1]} vs ${rowMatch[2]}`);
+  const realRow = { dataset: { publicFlowRow: rowMatch[1] } };
+  const realButton = { dataset: { publicFlowSelect: rowMatch[2] } };
+  listeners['document:click']({ preventDefault() {}, stopPropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return realButton; return selector === '[data-public-flow-row]' ? realRow : null; } } });
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!flowHtml.includes('widget_review_guardrail_governance') || !flowHtml.includes('_guardrail_governance_review_widget_workflow')) throw new Error(flowHtml);
   if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
