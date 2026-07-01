@@ -405,7 +405,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "document.getElementById('runtime-inventory')" in dashboard_text or 'document.getElementById("runtime-inventory")' in dashboard_text
     assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text or "scrollIntoView({ behavior: \"smooth\", block: \"start\" })" in dashboard_text
     assert "function setArchitectureScope(scope,options={})" in dashboard_text or "function setArchitectureScope(scope, options = {})" in dashboard_text
-    assert "if(options.scroll!==false)scrollToRuntimeInventory()" in compact_dashboard_text
+    assert "functionscrollToPublicFlowDetails()" in compact_dashboard_text
+    assert "scope.kind==='public_callable'?scrollToPublicFlowDetails():scrollToRuntimeInventory()" in compact_dashboard_text
     assert "scope-highlight" in dashboard_text and "currentScope.kind" in dashboard_text
     assert "rowReachability(r)==='unreachable_runtime_asset'" in compact_dashboard_text or "rowReachability(r)=='unreachable_runtime_asset'" in compact_dashboard_text
     assert "showAllRuntimeAssets" in dashboard_text
@@ -515,7 +516,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         compact_dashboard_text.index("data-sort-key='depth'>Depth"),
         compact_dashboard_text.index("data-sort-key='recommendation'>Recommendation"),
         compact_dashboard_text.index("data-sort-key='signals'>Signals"),
-        compact_dashboard_text.index("<th>Summary</th>"),
     ]
     assert header_order == sorted(header_order)
     assert "No review flags detected." in dashboard_text
@@ -2619,10 +2619,18 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert 'id="architectureScopeTable"' in dashboard_text
     assert 'id="architectureScopeTableBody"' in dashboard_text
     assert 'data-public-flow-row="fabricops_kit.' in dashboard_text
+    assert '<th>Summary</th>' not in dashboard_text
+    assert 'data-public-flow-summary=' in dashboard_text
     assert "syncPreRenderedPublicCallableRows()" in dashboard_text
     assert "document.querySelectorAll('[data-public-flow-row]')" in dashboard_text
     assert "$('architectureScopeTableBody').innerHTML=specialRows+rows.map" not in compact_dashboard_text
     assert "renderPublicCallableList()" in dashboard_text
+    assert "publicFlowBySelectionKey" in dashboard_text
+    assert "function publicFlowSelectionKeys(flow)" in dashboard_text
+    assert "function selectedPublicFlow(" in dashboard_text
+    assert "rebuildPublicFlowSelectionIndex()" in dashboard_text
+    assert "scrollToPublicFlowDetails" in dashboard_text
+    assert "No call graph is available for the selected public callable" in dashboard_text
     assert "Loading function call graph data...</td>" not in dashboard_text
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
 
@@ -2634,10 +2642,10 @@ def test_function_call_graph_architecture_scope_table_executes_with_public_rows(
     flow_data = {
         "function_inventory": [
             {
-                "qualified_name": "fabricops_kit.demo_public",
-                "function_name": "demo_public",
+                "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+                "function_name": "write_lakehouse_table",
                 "simple_classification": "Public function",
-                "source_path": "src/fabricops_kit/demo_public.py",
+                "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
                 "reachability": "public_entrypoint",
             },
             {
@@ -2650,9 +2658,9 @@ def test_function_call_graph_architecture_scope_table_executes_with_public_rows(
         ],
         "public_entrypoint_flow": [
             {
-                "qualified_name": "fabricops_kit.demo_public",
-                "function_name": "demo_public",
-                "module": "fabricops_kit",
+                "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+                "function_name": "write_lakehouse_table",
+                "module": "io.write_lakehouse_table",
                 "width": 1,
                 "scope": 2,
                 "max_depth": 1,
@@ -2664,7 +2672,7 @@ def test_function_call_graph_architecture_scope_table_executes_with_public_rows(
                     {
                         "qualified_name": "fabricops_kit.shared.demo_helper",
                         "function_name": "demo_helper",
-                        "parent_qualified_name": "fabricops_kit.demo_public",
+                        "parent_qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
                         "depth": 1,
                         "simple_classification": "Shared helper",
                     }
@@ -2727,7 +2735,8 @@ eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
   const body = element('architectureScopeTableBody');
-  if (!body.innerHTML.includes('demo_public')) throw new Error(body.innerHTML);
+  if (!body.innerHTML.includes('write_lakehouse_table')) throw new Error(body.innerHTML);
+  if (body.innerHTML.includes('<th>Summary</th>')) throw new Error('Summary header should not render');
   if (body.innerHTML.includes('Loading function call graph data...')) throw new Error('loading row was not replaced');
   if (element('dataLoadStatus').textContent.includes('Loading function call graph data...')) {
     throw new Error('load status was not replaced');
@@ -2737,14 +2746,21 @@ setTimeout(() => {
       closest(selector) {
         if (selector === '[data-architecture-scope-special]') return null;
         if (selector === '[data-public-flow-row]') {
-          return { dataset: { publicFlowRow: 'fabricops_kit.demo_public' } };
+          return { dataset: { publicFlowRow: 'fabricops_kit.io.write_lakehouse_table.write_lakehouse_table' } };
         }
         return null;
       },
     },
   });
-  if (!element('publicFlowDetails').innerHTML.includes('demo_public')) {
-    throw new Error(element('publicFlowDetails').innerHTML);
+  const flowHtml = element('publicFlowDetails').innerHTML;
+  if (!flowHtml.includes('write_lakehouse_table')) {
+    throw new Error(flowHtml);
+  }
+  if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) {
+    throw new Error(flowHtml);
+  }
+  if (flowHtml.includes('No public function graph data found') || flowHtml.includes('No call graph is available')) {
+    throw new Error(flowHtml);
   }
 }, 0);
         """,
