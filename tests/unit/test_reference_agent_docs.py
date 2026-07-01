@@ -3988,6 +3988,48 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
 
 
+
+def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> None:
+    """Verify selected public callable helper data matches exact public flow assets."""
+    flow_data = json.loads(
+        (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    )
+    flows_by_qn = {flow["qualified_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
+    expected_counts = {
+        "fabricops_kit.pipeline.display_guardrail_results": 15,
+        "fabricops_kit.pipeline.prepare_pipeline_table_configs": 5,
+        "fabricops_kit.pipeline.profile_dataframe": 11,
+        "fabricops_kit.pipeline.run_table_guardrails": 120,
+        "fabricops_kit.io.read_warehouse_query.read_warehouse_query": 13,
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": 17,
+    }
+    for qn, expected_count in expected_counts.items():
+        flow = flows_by_qn[qn]
+        flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
+        assert flow["scope"] == expected_count
+        assert len(flow_assets) == flow["scope"]
+
+    forbidden = {
+        "fabricops_kit.pipeline.display_guardrail_results": {
+            "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+            "fabricops_kit.pipeline.profile_dataframe",
+            "fabricops_kit.pipeline.run_table_guardrails",
+            "fabricops_kit.pipeline.write_pipeline_lineage",
+            "fabricops_kit.pipeline.write_pipeline_run_summary",
+        },
+        "fabricops_kit.pipeline.profile_dataframe": {
+            "fabricops_kit.pipeline.display_guardrail_results",
+            "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+            "fabricops_kit.pipeline.run_table_guardrails",
+            "fabricops_kit.pipeline.write_pipeline_lineage",
+            "fabricops_kit.pipeline.write_pipeline_run_summary",
+        },
+    }
+    for qn, siblings in forbidden.items():
+        flow = flows_by_qn[qn]
+        flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
+        assert flow_assets.isdisjoint(siblings)
+
 def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: Path) -> None:
     """Verify live dashboard async hydration populates public flow lookup for key callables."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -3997,6 +4039,13 @@ def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: 
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
         "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
+        "fabricops_kit.pipeline.display_guardrail_results",
+        "fabricops_kit.pipeline.prepare_pipeline_table_configs",
+        "fabricops_kit.pipeline.profile_dataframe",
+        "fabricops_kit.pipeline.run_table_guardrails",
+        "fabricops_kit.pipeline.write_pipeline_lineage",
+        "fabricops_kit.pipeline.write_pipeline_run_summary",
+        "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
     ]
     flow_data = json.loads(flow_json)
     assert len(flow_data["public_entrypoint_flow"]) == 25
