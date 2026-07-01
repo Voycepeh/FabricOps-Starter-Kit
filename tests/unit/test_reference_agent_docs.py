@@ -455,7 +455,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function setArchitectureScope(scope,options={})" in dashboard_text or "function setArchitectureScope(scope, options = {})" in dashboard_text
     assert "functionscrollToPublicFlowDetails()" in compact_dashboard_text
     assert "scope.kind==='public_callable'?scrollToPublicFlowDetails():scrollToRuntimeInventory()" in compact_dashboard_text
-    assert "scope-highlight" in dashboard_text and "currentScope.kind" in dashboard_text
+    assert "scope-highlight" not in dashboard_text
+    assert "function isRowVisuallySelected(qn)" in dashboard_text and "currentScope.kind" in dashboard_text
     assert "rowReachability(r)==='unreachable_runtime_asset'" in compact_dashboard_text or "rowReachability(r)=='unreachable_runtime_asset'" in compact_dashboard_text
     assert "showAllRuntimeAssets" in dashboard_text
     assert "showAllRuntimeAssets" in dashboard_text and "All runtime assets" in dashboard_text
@@ -695,7 +696,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "constopen=state.openSummaryFlow===flow.qualified_name" in compact_dashboard_text
     assert "aria-expanded='${open?'true':'false'}'" in compact_dashboard_text
     assert "state.openSummaryFlow=state.openSummaryFlow===summaryToggle.dataset.summaryToggle?'':summaryToggle.dataset.summaryToggle" in compact_dashboard_text
-    assert "state.activePublicFlow=row.dataset.publicFlowRow;state.selectedFlow=row.dataset.publicFlowRow;state.collapsedPublicList=true" in compact_dashboard_text
+    assert "selectPublicFlowFromClick(row.dataset.publicFlowRow)" in compact_dashboard_text
     assert "state.openSummaryFlow=row.dataset.publicFlowRow" not in compact_dashboard_text
     assert "state.activePublicFlow===flow.qualified_name" not in compact_dashboard_text
     assert "data-summary-toggle" in dashboard_text
