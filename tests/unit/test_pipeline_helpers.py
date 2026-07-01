@@ -11,6 +11,12 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
+from fabricops_kit.pipeline import (
+    prepare_pipeline_table_configs,
+    run_table_guardrails,
+    write_pipeline_lineage,
+    write_pipeline_run_summary,
+)
 from fabricops_kit.pipeline import shared as pipeline
 pipeline_bootstrap_module = importlib.import_module("fabricops_kit.widgets.widget_pipeline_bootstrap")
 widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
@@ -90,7 +96,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
     """Verify prepare pipeline table configs source role derives defaults from preloaded dataframe."""
     source_df = FakeDataFrame("source")
 
-    enriched, by_key = pipeline.prepare_pipeline_table_configs(
+    enriched, by_key = prepare_pipeline_table_configs(
         [
             {
                 "key": "source_01",
@@ -126,7 +132,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
 def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe():
     """Verify prepare pipeline table configs source role requires preloaded dataframe."""
     with pytest.raises(ValueError, match="must include a pre-loaded DataFrame"):
-        pipeline.prepare_pipeline_table_configs(
+        prepare_pipeline_table_configs(
             [{"key": "source_01", "layer": "source", "table_name": "orders_raw"}],
             {},
             table_role="source",
@@ -147,7 +153,7 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
     _install_fake_pyspark_functions(monkeypatch)
     df = FakeDataFrame("target")
 
-    enriched, by_key = pipeline.prepare_pipeline_table_configs(
+    enriched, by_key = prepare_pipeline_table_configs(
         [
             {
                 "key": "target_01",
@@ -190,7 +196,7 @@ def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezo
     config = framework_config()
     object.__setattr__(config, "audit_timezone", "Asia/Singapore")
 
-    enriched, _by_key = pipeline.prepare_pipeline_table_configs(
+    enriched, _by_key = prepare_pipeline_table_configs(
         [
             {
                 "key": "target_01",
@@ -227,7 +233,7 @@ def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch)
 
     monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
 
-    result = pipeline.write_pipeline_lineage(
+    result = write_pipeline_lineage(
         spark=FakeSpark(),
         context={"config": {}, "env": "dev"},
         run_id="run-1",
@@ -255,7 +261,7 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
 
     monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
 
-    row = pipeline.write_pipeline_run_summary(
+    row = write_pipeline_run_summary(
         spark=fake_spark,
         context={"config": {}, "env": "dev"},
         run_id="run-1",
@@ -400,7 +406,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         },
     ]
 
-    result = pipeline.run_table_guardrails(
+    result = run_table_guardrails(
         table_configs,
         context={"config": {"config": True}, "env": "dev"},
         run_id="run-1",
@@ -458,7 +464,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
 
     monkeypatch.setattr(pipeline, "_write_guardrail_result_row", fake_result_writer)
 
-    pipeline.run_table_guardrails(
+    run_table_guardrails(
         [{
             "key": "orders",
             "df": "df",
@@ -520,7 +526,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
         },
     ]
 
-    pipeline.run_table_guardrails(
+    run_table_guardrails(
         table_configs,
         context={"config": {}, "env": "dev"},
         run_id="run-1",
@@ -545,7 +551,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
     monkeypatch.setattr(pipeline, "stop_if_failed", lambda result: stopped.append(result))
 
-    pipeline.run_table_guardrails(
+    run_table_guardrails(
         [
             {
                 "key": "target_01",
@@ -671,7 +677,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
     monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
 
-    result = pipeline.run_table_guardrails(
+    result = run_table_guardrails(
         [
             {
                 "key": "orders",
@@ -719,7 +725,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 
     monkeypatch.setattr(pipeline, "_run_active_dq_guardrail", fail_if_called)
 
-    result = pipeline.run_table_guardrails(
+    result = run_table_guardrails(
         [
             {
                 "key": "orders",
@@ -836,7 +842,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     monkeypatch.setattr(pipeline, "write_catalogue_evidence", fake_write_catalogue_evidence)
     table_configs = [{"key": "orders", "df": FakeDataFrame("orders"), "expected_schema": {}}]
 
-    result = pipeline.run_table_guardrails(table_configs, table_role="source", mode="profile")
+    result = run_table_guardrails(table_configs, table_role="source", mode="profile")
 
     assert result["can_continue"] is True
     assert captured["profile_behavior"] == {"spark_session": spark, "run_id": "run-123"}
@@ -871,7 +877,7 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
     source_results = {"can_continue": True, "schema_results": {"orders": {"status": "passed"}}, "catalogue_status": {"orders": "written"}}
     target_results = {"can_continue": False, "dq_results": {"curated": {"status": "failed"}}, "catalogue_status": {"curated": "written"}}
 
-    row = pipeline.write_pipeline_run_summary(
+    row = write_pipeline_run_summary(
         source_guardrail_results=source_results,
         target_guardrail_results=target_results,
         target_write_status={"curated": "written"},
