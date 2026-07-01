@@ -1805,7 +1805,14 @@ def _deepest_call_chain_depth(
 
 
 def _callable_flow_source_metadata(qn: str, module_data: dict[str, dict[str, Any]]) -> tuple[str | None, str | None, dict[str, int]]:
-    """Return module key, callable name, and source location for a function call graph node."""
+    """Return module key, callable name, and source location for a function call graph node.
+
+    Public package-level namespaces such as ``fabricops_kit.pipeline`` can
+    re-export callables from split implementation owner files. The inventory
+    keeps those public qualified names for API surface metadata, but source
+    ownership must still resolve to the AST definition file that declares the
+    callable.
+    """
     parts = qn.split(".")
     package_parts = parts[1:] if parts and parts[0] == PACKAGE_NAME else parts
     for split_at in range(len(package_parts) - 1, 0, -1):
@@ -1814,6 +1821,21 @@ def _callable_flow_source_metadata(qn: str, module_data: dict[str, dict[str, Any
         source_location = module_data.get(module_key, {}).get("source_locations", {}).get(callable_name)
         if source_location:
             return module_key, callable_name, source_location
+
+    if not package_parts:
+        return None, None, {}
+    callable_name = package_parts[-1]
+    implementation_matches = [
+        (module_key, source_locations[callable_name])
+        for module_key, info in module_data.items()
+        if module_key not in {"docs_metadata"}
+        for source_locations in [info.get("source_locations", {})]
+        if callable_name in source_locations
+    ]
+    if len(implementation_matches) == 1:
+        module_key, source_location = implementation_matches[0]
+        return module_key, callable_name, source_location
+
     return None, None, {}
 
 
