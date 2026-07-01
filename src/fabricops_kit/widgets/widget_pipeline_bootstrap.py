@@ -6,7 +6,7 @@ from typing import Any, Mapping
 from uuid import uuid4
 
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
-from fabricops_kit.metadata import current_notebook_active_registrations, register_current_notebook
+from fabricops_kit.widgets.notebook_registry import current_notebook_active_registrations, register_current_notebook
 from fabricops_kit.widgets.shared import (
     set_selected_agreement,
     PipelineRunContext,

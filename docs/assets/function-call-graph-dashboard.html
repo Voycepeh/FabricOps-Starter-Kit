@@ -199,7 +199,6 @@ th,td{font-size:.78rem;padding:.26rem}
 #runtime-inventory .inventory-filter-grid{display:grid;grid-template-columns:minmax(16rem,1fr) auto;gap:.55rem;margin:.75rem 0;align-items:end}
 .scope-banner-row{display:flex;justify-content:space-between;gap:.75rem;align-items:center}
 .scope-banner-row p{margin:.25rem 0 0}
-
 .inventory-search-grid .inventory-clear-all{align-self:end}
 #runtime-inventory .inventory-status-bar{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;margin:.75rem 0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a}
 .inventory-status-bar strong,.inventory-status-bar span{font-weight:800}
@@ -235,8 +234,8 @@ th,td{font-size:.78rem;padding:.26rem}
 <h1>Function Call Graph Dashboard</h1>
 <p>The Function Call Graph Dashboard shows how public callables, shared helpers, and private helpers connect across the package. Review architecture scopes, search for risks, and inspect the selected function call graph when available. Width is direct calls; scope is total runtime assets in the selected scope.</p>
 <p class="generation-banner">
-<strong>Data source generated at:</strong> 02 Jul 2026, 01:42 AM SGT<span>
-<strong>Dashboard UI generated at:</strong> 02 Jul 2026, 01:42 AM SGT</span>
+<strong>Data source generated at:</strong> 02 Jul 2026, 02:04 AM SGT<span>
+<strong>Dashboard UI generated at:</strong> 02 Jul 2026, 02:04 AM SGT</span>
 </p>
 <nav class="callable-page-nav" aria-label="Function reference navigation">
 <div class="callable-page-tabs" role="list">
@@ -265,7 +264,7 @@ th,td{font-size:.78rem;padding:.26rem}
 </article>
 <article class="architecture-summary-card risk">
 <span>Contains architecture violation</span>
-<strong id="architectureSummaryIssues">6</strong>
+<strong id="architectureSummaryIssues">7</strong>
 <small>Call graph contains an architecture violation</small>
 </article>
 <article class="architecture-summary-card review">
@@ -535,7 +534,7 @@ th,td{font-size:.78rem;padding:.26rem}
 <td>
 </td>
 </tr>
-<tr data-public-flow-row="fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap" data-public-flow-summary="Public callable architecture scope rendered at generation time. Inventory row fallback." data-public-flow-search="widget_pipeline_bootstrap fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap large depth / width" class=" severity-review-row" tabindex="0" aria-selected="false">
+<tr data-public-flow-row="fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap" data-public-flow-summary="Public callable architecture scope rendered at generation time. Inventory row fallback." data-public-flow-search="widget_pipeline_bootstrap fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap contains architecture violation large depth / width" class=" severity-architecture-row" tabindex="0" aria-selected="false">
 <td>
 <button type="button" class="callable-button" data-public-flow-select="fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap">
 <code>widget_pipeline_bootstrap</code>
@@ -546,6 +545,7 @@ th,td{font-size:.78rem;padding:.26rem}
 <td class="num">59</td>
 <td class="num">8</td>
 <td>
+<span class="badge issue">Contains architecture violation</span>
 <span class="badge warn">Large depth / width</span>
 </td>
 </tr>
