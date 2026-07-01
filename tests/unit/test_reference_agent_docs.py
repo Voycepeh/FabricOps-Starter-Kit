@@ -531,21 +531,23 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         compact_dashboard_text.index("data-sort-key='width'>Width"),
         compact_dashboard_text.index("data-sort-key='scope'>Scope"),
         compact_dashboard_text.index("data-sort-key='depth'>Depth"),
-        compact_dashboard_text.index("data-sort-key='recommendation'>Recommendation"),
         compact_dashboard_text.index("data-sort-key='signals'>Signals"),
     ]
     assert header_order == sorted(header_order)
-    assert "No review flags detected." in dashboard_text
+    assert "No meaningful signals detected." in dashboard_text
     assert "Review helper placement" not in dashboard_text
-    assert "Review nested helpers" in dashboard_text
+    assert "Review nested helpers" not in dashboard_text
+    assert "Large depth / width" in dashboard_text
     assert "Finding note" not in dashboard_text
-    assert "Fix architecture issue" in dashboard_text
+    assert "Fix architecture issue" not in dashboard_text
+    assert "Contains architecture violation" in dashboard_text
+    assert "Large depth / width" in dashboard_text
     assert "Selected architecture scope summary" in dashboard_text
     assert "Public functions" in dashboard_text
-    assert "Shared helpers" in dashboard_text
-    assert "Private helpers" in dashboard_text
-    assert "Needs review" in dashboard_text
-    assert "Architecture issues" in dashboard_text
+    assert "Supported by" in dashboard_text
+    assert "shared helpers" in dashboard_text
+    assert "nested private helpers" in dashboard_text
+    assert "Public functions with signals" in dashboard_text
     assert "architectureSummaryRuntime" not in dashboard_text
     assert "function renderArchitectureSummaryCards(scopedRows)" in dashboard_text
     assert "setSummaryValue('architectureSummaryRuntime',rows.length)" not in compact_dashboard_text
@@ -581,17 +583,18 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "populateBandFilter('publicMinIssues'" not in dashboard_text
     assert "function numericFilterValue(value)" not in dashboard_text
     assert "Number(e.target.value||0)" not in dashboard_text
-    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.width??0);if(key==='scope')returnNumber(flow.scope??flow.scope_asset_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='recommendation')returnsuggestedActionLabel(flow).toLowerCase();if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
+    assert "functionsortValue(flow,key){if(key==='callable')returntext(flow.function_name).toLowerCase();if(key==='width')returnNumber(flow.width??0);if(key==='scope')returnNumber(flow.scope??flow.scope_asset_count??0);if(key==='depth')returnNumber(flow.max_depth??0);if(key==='signals')returnflowSignals(flow).join('').toLowerCase();" in compact_dashboard_text
     assert "if(key==='downstream')" not in compact_dashboard_text
     assert "if(key==='next_step')" not in compact_dashboard_text
     assert "if(key==='findings')" not in compact_dashboard_text
     card_order = [
-        compact_dashboard_text.index("label:'Publiccallables'"),
-        compact_dashboard_text.index("label:'Brokenrules'"),
-        compact_dashboard_text.index("label:'Reviewcandidates'"),
+        compact_dashboard_text.index("label:'Publicfunctions'"),
+        compact_dashboard_text.index("label:'Containsarchitectureviolation'"),
+        compact_dashboard_text.index("label:'Largedepth/width'"),
+        compact_dashboard_text.index("label:'Publicfunctionswithsignals'"),
     ]
     assert card_order == sorted(card_order)
-    assert "Notebook-facing APIs scanned in this review workspace." in dashboard_text
+    assert "Public callable or runtime public functions in scope." in dashboard_text
     assert "No architecture violations found." in dashboard_text
     assert "High-priority public callables" not in dashboard_text
     assert "Long public flows" not in dashboard_text
@@ -635,17 +638,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
     assert "function flowSignals(flow)" in dashboard_text
-    assert "grid-template-columns:repeat(3,minmax(0,1fr))" in compact_dashboard_text
+    assert "grid-template-columns:repeat(4,minmax(0,1fr))" in compact_dashboard_text
     assert "overflow-x:auto" in compact_dashboard_text
     assert "grid-template-columns:repeat(3,minmax(13rem,1fr))" in compact_dashboard_text
 
     assert "function hasArchitectureViolation(flow)" in dashboard_text
     assert "function isGraphReviewCandidate(flow)" in dashboard_text
     assert "function publicCallableSeverity(flow)" in dashboard_text
-    assert "Review candidates" in dashboard_text
+    assert "Large depth / width" in dashboard_text
     assert "flows.filter(isGraphReviewCandidate).length" in compact_dashboard_text
-    assert "external_dependents_count||0)>0)signals.push('Sharedhelper')" in compact_dashboard_text
-    assert "if(isGraphReviewCandidate(flow))return'Reviewnestedhelpers'" in compact_dashboard_text
+    assert "signals.push('Sharedhelper')" not in compact_dashboard_text
+    assert "if(isGraphReviewCandidate(flow))return'Reviewnestedhelpers'" not in compact_dashboard_text
     assert "Shareddependency','Maybecombine'].includes" not in compact_dashboard_text
     assert "severity-architecture-row" in dashboard_text or "severity-neutral-row" in dashboard_text
     assert "severity-review-row" in dashboard_text
@@ -691,7 +694,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "largeThreshold!==null" in compact_dashboard_text
     assert "(flow.width||0)>largeThreshold" in compact_dashboard_text
     assert "(flow.downstream_count||0)>=largeThreshold" not in compact_dashboard_text
-    assert "Maybecombinehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
+    assert "Architectureviolations:${esc(architectureFindingCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
     assert "function timesUsedLabel(count)" in inventory_text
@@ -734,7 +737,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Private helpers" in inventory_text
     assert "Non functions" not in inventory_text
     assert "Suggested cleanup" not in inventory_text
-    assert "Public callables" in inventory_text
+    assert "Public functions" in inventory_text
     for scope_label in [
         "All runtime assets",
         "Others / Cannot trace back to a public function",
@@ -854,7 +857,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "source_file" in inventory_text
     assert "item_name" in inventory_text
     assert "reachability" in inventory_text
-    assert "action_details" in inventory_text
+    assert "action_details" not in inventory_text
     assert "data-select-row" not in inventory_text
 
     # Compatibility modes and selected-callable/code-asset packet paths remain available,
@@ -3172,7 +3175,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "reachability" in inventory_text
     assert "health" in inventory_text
     assert "recommended_action" in inventory_text
-    assert "action_details" in inventory_text
+    assert "action_details" not in inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
     assert "const runtimeTable=$('inventoryBody')?$('inventoryBody').closest('table'):null" in inventory_text
     assert "if(runtimeTable)window.FabricOpsTableControls.enhance(runtimeTable)" in inventory_text
