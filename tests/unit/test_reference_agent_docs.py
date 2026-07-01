@@ -2817,6 +2817,110 @@ setTimeout(() => {
     assert result.returncode == 0, result.stderr
 
 
+
+def test_function_call_graph_selected_widget_scope_falls_back_to_inventory_dependency_graph(tmp_path: Path) -> None:
+    """Verify selected widget scope renders dependency details when public flow data is missing."""
+    import scripts.generate_function_reference as generator
+
+    widget_qn = "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance"
+    workflow_qn = "fabricops_kit.widgets.widget_review_guardrail_governance._guardrail_governance_review_widget_workflow"
+    resolver_qn = "fabricops_kit.config.shared.resolve_fabric_context"
+    flow_data = {
+        "function_inventory": [
+            {
+                "qualified_name": widget_qn,
+                "function_name": "widget_review_guardrail_governance",
+                "module": "widgets.widget_review_guardrail_governance",
+                "simple_classification": "Public function",
+                "function_type": "Public function",
+                "source_path": "src/fabricops_kit/widgets/widget_review_guardrail_governance.py",
+                "reachability": "public_entrypoint",
+                "calls_count": 1,
+                "scope": 3,
+                "scope_asset_count": 3,
+                "max_depth": 2,
+                "callees": [{"qualified_name": workflow_qn, "function": "_guardrail_governance_review_widget_workflow", "module": "widgets.widget_review_guardrail_governance", "layer": "private_helper"}],
+            },
+            {
+                "qualified_name": workflow_qn,
+                "function_name": "_guardrail_governance_review_widget_workflow",
+                "module": "widgets.widget_review_guardrail_governance",
+                "function_type": "Private helper",
+                "source_path": "src/fabricops_kit/widgets/widget_review_guardrail_governance.py",
+                "reachability": "reachable_from_public_runtime",
+                "calls_count": 1,
+                "callees": [{"qualified_name": resolver_qn, "function": "resolve_fabric_context", "module": "config.shared", "layer": "internal"}],
+            },
+            {
+                "qualified_name": resolver_qn,
+                "function_name": "resolve_fabric_context",
+                "module": "config.shared",
+                "function_type": "Shared helper",
+                "source_path": "src/fabricops_kit/config/shared.py",
+                "reachability": "reachable_from_public_runtime",
+                "calls_count": 0,
+                "callees": [],
+            },
+        ],
+        "public_flows": [
+            {
+                "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
+                "function_name": "display_guardrail_results",
+                "module": "pipeline",
+                "width": 0,
+                "scope": 1,
+                "max_depth": 0,
+                "direct_callees": [],
+                "transitive_callees": [],
+            }
+        ],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 2}},
+        "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
+    }
+    dashboard_text = generator._render_combined_refactor_dashboard_html(flow_data)
+    node_script = tmp_path / "execute_widget_scope_fallback.js"
+    node_script.write_text(
+        """
+const html = process.env.DASHBOARD_HTML;
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','loadedFlowCount','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const bodyHtml = element('architectureScopeTableBody').innerHTML;
+  if (!bodyHtml.includes('widget_review_guardrail_governance')) throw new Error(bodyHtml);
+  listeners['document:click']({ target: { closest(selector) { return selector === '[data-public-flow-row]' ? { dataset: { publicFlowRow: process.env.WIDGET_QN } } : null; } } });
+  const flowHtml = element('publicFlowDetails').innerHTML;
+  if (!flowHtml.includes('widget_review_guardrail_governance') || !flowHtml.includes('_guardrail_governance_review_widget_workflow')) throw new Error(flowHtml);
+  if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
+  if (flowHtml.includes('No public callable selected') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML": dashboard_text, "FLOW_JSON": json.dumps(flow_data), "WIDGET_QN": widget_qn},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
 def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     """Verify public callable rows can fall back to function_inventory only when flows are absent."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -2826,7 +2930,8 @@ def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     assert "function inventoryRowToPublicFlow(row)" in dashboard_text
     assert "function derivePublicFlowsFromInventory(rows)" in dashboard_text
     assert "publicEntryFlows=derivePublicFlowsFromInventory(inventory);publicFlowsFromInventory=publicEntryFlows.length>0" in compact_dashboard_text
-    assert "publicFlowsFromInventory=false;if(!publicEntryFlows.length)" in compact_dashboard_text
+    assert "publicFlowsFromInventory=false;if(publicEntryFlows.length)" in compact_dashboard_text
+    assert "publicEntryFlows=mergeMissingInventoryPublicFlows(publicEntryFlows,inventory)" in compact_dashboard_text
     assert "publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found" in dashboard_text
     assert "All runtime assets" in dashboard_text
     assert "Others / Cannot trace back to a public function" in dashboard_text
