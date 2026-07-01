@@ -492,7 +492,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Selected scope runtime inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    assert "publicEntryFlows=Array.isArray(data.public_flows)&&data.public_flows.length?data.public_flows:" in compact_dashboard_text or "publicEntryFlows=(Array.isArray(data.public_flows)&&data.public_flows.length?data.public_flows:" in compact_dashboard_text
+    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]" in compact_dashboard_text
     assert "derivePublicFlowsFromInventory(inventory)" in dashboard_text
     assert "Public flow details were not found, so this table is using public callable inventory rows." in dashboard_text
     assert "Detailed call flow was not available for this public function." in dashboard_text
@@ -3036,7 +3036,7 @@ def test_function_call_graph_selected_flow_uses_graph_for_qualified_inventory_ke
                 "callees": [],
             }
         ],
-        "public_flows": [
+        "public_entrypoint_flow": [
             {
                 "qualified_name": "widget_select_guardrail_target",
                 "function_name": "widget_select_guardrail_target",
@@ -3914,7 +3914,12 @@ function element(id) {
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
 global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
-global.fetch = async () => ({ ok: true, json: async () => JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8')) });
+let fetchCount = 0;
+global.fetch = async (url) => {
+  fetchCount += 1;
+  global.lastFetchUrl = url;
+  return { ok: true, json: async () => JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8')) };
+};
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
 eval(scripts[0]);
@@ -3923,7 +3928,12 @@ setTimeout(() => {
   const required = JSON.parse(process.env.REQUIRED_QNS);
   const excelKey = 'fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel';
   const debug = publicFlowHydrationDebug(excelKey);
+  if (fetchCount !== 1) throw new Error(`fetch count: ${fetchCount}`);
+  if (!global.lastFetchUrl.includes('reference/_data/function-call-graph.json')) throw new Error(global.lastFetchUrl);
+  if (!debug.loaded_json_url.includes('reference/_data/function-call-graph.json')) throw new Error(JSON.stringify(debug));
   if (debug.public_entry_flows_length !== 25) throw new Error(JSON.stringify(debug));
+  if (debug.public_flow_by_selection_key_size <= 0) throw new Error(JSON.stringify(debug));
+  if (!element('dataLoadStatus').textContent.includes('Loaded function-call-graph.json: 25 public flows')) throw new Error(element('dataLoadStatus').textContent);
   if (!debug.has_clicked_key) throw new Error(JSON.stringify(debug));
   if (!selectedPublicFlow(excelKey)) throw new Error(`selectedPublicFlow failed for ${excelKey}`);
   for (const qn of required) {
@@ -4095,6 +4105,61 @@ setTimeout(() => {
             "DASHBOARD_HTML_PATH": str(dashboard_fixture),
             "FLOW_JSON_PATH": str(flow_fixture),
         },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_generated_dashboard_failed_fetch_shows_load_failure_context(tmp_path: Path) -> None:
+    """Verify dashboard fetch failures show attempted URL without regeneration guidance."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    dashboard_fixture = tmp_path / "dashboard.html"
+    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
+    node_script = tmp_path / "failed_fetch_dashboard.js"
+    node_script.write_text(
+        r"""
+const fs = require('fs');
+const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+let fetchCount = 0;
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async (url) => { fetchCount += 1; global.lastFetchUrl = url; return { ok: false, status: 404, statusText: 'Not Found', json: async () => ({}) }; };
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const key = 'fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel';
+  if (fetchCount !== 1) throw new Error(`fetch count: ${fetchCount}`);
+  const debug = publicFlowHydrationDebug(key);
+  if (!debug.loaded_json_url.includes('reference/_data/function-call-graph.json')) throw new Error(JSON.stringify(debug));
+  if (!debug.last_fetch_error.includes('HTTP 404 Not Found')) throw new Error(JSON.stringify(debug));
+  listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: key } }; return null; } } });
+  const status = element('dataLoadStatus').textContent;
+  const flowHtml = element('publicFlowDetails').innerHTML;
+  if (!status.includes('Failed to load function-call-graph.json') || !status.includes('HTTP 404 Not Found')) throw new Error(status);
+  if (!flowHtml.includes('Dashboard did not load') || !flowHtml.includes('HTTP 404 Not Found') || !flowHtml.includes('reference/_data/function-call-graph.json')) throw new Error(flowHtml);
+  if (flowHtml.includes('Regenerate <code>function-call-graph.json</code>')) throw new Error(flowHtml);
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML_PATH": str(dashboard_fixture)},
         text=True,
         capture_output=True,
         check=False,
