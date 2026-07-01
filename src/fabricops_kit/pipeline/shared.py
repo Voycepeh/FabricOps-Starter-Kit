@@ -275,8 +275,8 @@ def profile_dataframe_core(
         out = out.unionByName(next_row)
     return out
 
-from ..guardrails import _run_active_dq_guardrail
-from ..guardrails import (
+from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail
+from fabricops_kit.pipeline.guardrails_shared import (
     enforce_freshness,
     enforce_freshness_rule,
     enforce_profile_behavior,
