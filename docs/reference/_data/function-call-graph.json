@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generated_at_utc": "2026-07-01T08:21:32.646795Z",
+    "generated_at_utc": "2026-07-01T09:14:33.430996Z",
     "data_source": "function-call-graph.json"
   },
   "architecture_thresholds": {
@@ -35149,7 +35149,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -36018,7 +36018,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -36357,7 +36357,7 @@
       "source_start_line": 10,
       "source_end_line": 65,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine"
       ],
@@ -36872,7 +36872,7 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -37624,7 +37624,7 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -38421,7 +38421,7 @@
       "source_start_line": 15,
       "source_end_line": 82,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -39232,7 +39232,7 @@
       "source_start_line": 10,
       "source_end_line": 38,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -40065,7 +40065,7 @@
       "source_start_line": 10,
       "source_end_line": 46,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -40765,7 +40765,7 @@
       "source_start_line": 10,
       "source_end_line": 49,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -41555,7 +41555,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -48212,7 +48212,7 @@
       "source_start_line": 98,
       "source_end_line": 177,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine"
       ],
@@ -49620,7 +49620,7 @@
       "source_start_line": 11,
       "source_end_line": 65,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -51275,7 +51275,7 @@
       "source_start_line": 22,
       "source_end_line": 86,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -54467,7 +54467,7 @@
       "source_start_line": 26,
       "source_end_line": 47,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -57014,7 +57014,7 @@
       "source_start_line": 11,
       "source_end_line": 29,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -60717,7 +60717,7 @@
       "source_start_line": 11,
       "source_end_line": 29,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -65018,7 +65018,7 @@
       "source_start_line": 10,
       "source_end_line": 57,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -65929,7 +65929,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -67990,7 +67990,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -70065,7 +70065,7 @@
       "source_start_line": 10,
       "source_end_line": 43,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -70857,7 +70857,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -71726,7 +71726,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -72065,7 +72065,7 @@
       "source_start_line": 10,
       "source_end_line": 65,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine"
       ],
@@ -72580,7 +72580,7 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -73332,7 +73332,7 @@
       "source_start_line": 10,
       "source_end_line": 35,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -74129,7 +74129,7 @@
       "source_start_line": 15,
       "source_end_line": 82,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -74940,7 +74940,7 @@
       "source_start_line": 10,
       "source_end_line": 38,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -75773,7 +75773,7 @@
       "source_start_line": 10,
       "source_end_line": 46,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -76473,7 +76473,7 @@
       "source_start_line": 10,
       "source_end_line": 49,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -77263,7 +77263,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -83920,7 +83920,7 @@
       "source_start_line": 98,
       "source_end_line": 177,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine"
       ],
@@ -85328,7 +85328,7 @@
       "source_start_line": 11,
       "source_end_line": 65,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -86983,7 +86983,7 @@
       "source_start_line": 22,
       "source_end_line": 86,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -90175,7 +90175,7 @@
       "source_start_line": 26,
       "source_end_line": 47,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -92722,7 +92722,7 @@
       "source_start_line": 11,
       "source_end_line": 29,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -96425,7 +96425,7 @@
       "source_start_line": 11,
       "source_end_line": 29,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Spans many modules",
@@ -100726,7 +100726,7 @@
       "source_start_line": 10,
       "source_end_line": 57,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
@@ -101637,7 +101637,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -103698,7 +103698,7 @@
       "source_start_line": null,
       "source_end_line": null,
       "priority": "High",
-      "recommended_simplification_action": "Fix architecture issue",
+      "recommended_simplification_action": "Contains architecture violation",
       "warnings": [
         "Broken rule",
         "Maybe combine",
@@ -105773,7 +105773,7 @@
       "source_start_line": 10,
       "source_end_line": 43,
       "priority": "Medium",
-      "recommended_simplification_action": "Review nested helpers",
+      "recommended_simplification_action": "Large depth / width",
       "warnings": [
         "Maybe combine",
         "Too many steps"
