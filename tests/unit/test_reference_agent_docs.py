@@ -2602,7 +2602,8 @@ def test_callable_dashboard_shared_helper_public_function_is_violation() -> None
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
 
-    assert "Shared helper calls public callable" in dashboard_text
+    assert "Shared helper calls public function" in dashboard_text
+    assert ("Shared helper calls public " + "callable") not in dashboard_text
     assert "['Sharedhelper','Publiccallable','Brokenrule']" in compact_dashboard_text
     assert "['Sharedhelper','Publicfunction','Allowed']" not in compact_dashboard_text
     assert "hasArchitectureViolation(flow)&&isGraphReviewCandidate(flow)" not in compact_dashboard_text

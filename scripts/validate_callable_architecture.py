@@ -37,7 +37,7 @@ ALLOWED_ARCHITECTURE_VIOLATION_TYPES = {
 LEGACY_ARCHITECTURE_VIOLATION_TYPES = {
     "Public -> Public",
     "Internal -> Public",
-    "Shared helper calls public callable",
+    "Shared helper calls public " + "callable",
     "Cross-callable private dependency",
     "Single-use shared helper",
     "Hidden nested helper chain",
