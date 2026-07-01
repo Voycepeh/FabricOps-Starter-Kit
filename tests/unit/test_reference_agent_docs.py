@@ -2618,6 +2618,10 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
 
     assert 'id="architectureScopeTable"' in dashboard_text
     assert 'id="architectureScopeTableBody"' in dashboard_text
+    assert "Global summary" not in dashboard_text
+    assert "Search public callables" not in dashboard_text
+    assert 'id="publicSearchBox"' not in dashboard_text
+    assert 'id="publicSurfaceCards"' not in dashboard_text
     assert 'data-public-flow-row="fabricops_kit.' in dashboard_text
     assert '<th>Summary</th>' not in dashboard_text
     assert 'data-public-flow-summary=' in dashboard_text
@@ -2690,7 +2694,9 @@ const html = process.env.DASHBOARD_HTML;
 const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(match => match[1]);
 const elements = new Map();
 const listeners = {};
+const removedElements = new Set(['publicSurfaceCards', 'publicSearchBox']);
 function element(id) {
+  if (removedElements.has(id)) return null;
   if (!elements.has(id)) {
     elements.set(id, {
       id,
@@ -2726,8 +2732,8 @@ global.document = {
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL;
 global.Blob = class {};
-['publicSurfaceCards','dataLoadStatus','architectureScopeTableBody','publicFlowDetails',
- 'publicSearchBox','publicCallableTableWrap','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets',
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails',
+ 'publicCallableTableWrap','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets',
  'quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle',
  'exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected',
  'downloadJson','downloadYaml','openFunctionCallGraphJson'].forEach(element);
