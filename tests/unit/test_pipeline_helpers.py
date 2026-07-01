@@ -298,7 +298,7 @@ def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_
         ]
     )
 
-    normalized = pipeline._normalize_catalogue_evidence_types(evidence)
+    normalized = pipeline_shared._normalize_catalogue_evidence_types(evidence)
     dtypes = dict(normalized.dtypes)
 
     for column_name in ["row_count", "null_count", "distinct_count"]:
@@ -629,7 +629,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
     df = spark_session.createDataFrame([("not-an-int", "2026-06-01")], "id string, business_date string")
 
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "profile_dataframe_core",
         lambda dataframe, **kwargs: [
             {
@@ -642,7 +642,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         ],
     )
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "enforce_freshness",
         lambda dataframe, freshness_column, max_lag_days, severity="blocking", **kwargs: {
             "status": "failed",
@@ -665,7 +665,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         },
     )
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "_run_active_dq_guardrail",
         lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
     )
@@ -707,7 +707,7 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
     df = spark_session.createDataFrame([(1, "2026-06-14")], "id int, business_date string")
 
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "profile_dataframe_core",
         lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
     )
