@@ -581,7 +581,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Supported by" in dashboard_text
     assert "shared helpers" in dashboard_text
     assert "nested private helpers" in dashboard_text
-    assert "Public functions with signals" in dashboard_text
+    assert "Architecture status summary" in dashboard_text
+    assert "Public functions with signals are summarized by architecture status." in dashboard_text
+    assert "Healthy functions" in dashboard_text
+    assert "<span>Public functions with signals</span>" not in dashboard_text
     assert "architectureSummaryRuntime" not in dashboard_text
     assert "function renderArchitectureSummaryCards(scopedRows)" in dashboard_text
     assert "setSummaryValue('architectureSummaryRuntime',rows.length)" not in compact_dashboard_text
@@ -625,11 +628,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         compact_dashboard_text.index("label:'Publicfunctions'"),
         compact_dashboard_text.index("label:'Containsarchitectureviolation'"),
         compact_dashboard_text.index("label:'Largedepth/width'"),
-        compact_dashboard_text.index("label:'Publicfunctionswithsignals'"),
+        compact_dashboard_text.index("label:'Healthyfunctions'"),
     ]
     assert card_order == sorted(card_order)
     assert "Public callable or runtime public functions in scope." in dashboard_text
-    assert "No architecture violations found." in dashboard_text
+    assert "No architecture violation or large depth / width" in dashboard_text
     assert "High-priority public callables" not in dashboard_text
     assert "Long public flows" not in dashboard_text
     assert "Public flows that can be shortened" not in dashboard_text
@@ -2681,6 +2684,42 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
 
 
 
+
+
+def test_function_call_graph_dashboard_status_summary_artifact_is_fresh() -> None:
+    """Verify committed dashboard status summary markup matches the generator."""
+    import scripts.generate_function_reference as generator
+
+    dashboard_path = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
+    data_path = ROOT / "docs" / "reference" / "_data" / "function-call-graph.json"
+    committed = dashboard_path.read_text(encoding="utf-8")
+    generated = generator._render_refactor_dashboard_html(json.loads(data_path.read_text(encoding="utf-8")))
+
+    for html_text in (committed, generated):
+        assert "Architecture status summary" in html_text
+        assert "Public functions with signals are summarized by architecture status." in html_text
+        assert "Healthy functions" in html_text
+        assert "<span>Public functions with signals</span>" not in html_text
+        assert "Others / Cannot trace back to a public function" in html_text
+        assert "Verify possible orphan" in html_text
+
+    committed_compact = _remove_whitespace(committed)
+    generated_compact = _remove_whitespace(generated)
+    intro = '<sectionclass="architecture-status-intro"aria-labelledby="architectureStatusSummaryHeading"><h2id="architectureStatusSummaryHeading">Architecturestatussummary</h2><p>Publicfunctionswithsignalsaresummarizedbyarchitecturestatus.</p></section><sectionclass="architecture-summary-cards"'
+    healthy_card = '<articleclass="architecture-summary-cardgood"><span>Healthyfunctions</span>'
+    orphan_row = 'Others/Cannottracebacktoapublicfunction</button></td><tdclass="num">—</td><tdclass="num">'
+    orphan_signal_cell = '<td><spanclass="badgewarn">Verifypossibleorphan</span></td><td></td></tr>'
+    for snippet in (intro, healthy_card, orphan_row, orphan_signal_cell):
+        assert snippet in committed_compact
+        assert snippet in generated_compact
+    orphan_start = committed_compact.index(orphan_row)
+    orphan_end = committed_compact.index("</tr>", orphan_start)
+    orphan_html = committed_compact[orphan_start:orphan_end]
+    assert '<spanclass="badgewarn">Cannottracebacktoapublicfunction</span>' not in orphan_html
+    intro_start = committed_compact.index("Architecturestatussummary")
+    cards_start = committed_compact.index('<sectionclass="architecture-summary-cards"aria-label="Selectedarchitecturescopesummary"')
+    assert intro_start < cards_start
+    assert '<p class="sr-only">Public functions with signals are summarized by architecture status.</p>' not in committed
 
 def test_function_call_graph_architecture_scope_table_rendering_contract() -> None:
     """Verify architecture scope table DOM and JavaScript stay connected."""
