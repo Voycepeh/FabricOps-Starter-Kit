@@ -656,9 +656,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "+'_data/function-call-graph.json'" in compact_dashboard_text
     assert "+'reference/_data/function-call-graph.json'" in compact_dashboard_text
     assert "newURL('reference/_data/function-call-graph.json',document.baseURI).href" in compact_dashboard_text or "newURL('reference/_data/function-call-graph.json',document.baseURI,).href" in compact_dashboard_text
-    assert "Failed to load function call graph data. Attempted URL:" in dashboard_text
-    assert "HTTP status:" in dashboard_text
-    assert "Error message:" in dashboard_text
+    assert "EMBEDDED_FUNCTION_CALL_GRAPH_DATA" in dashboard_text
+    assert "embedded function-call-graph data" in dashboard_text
+    assert "function hydrateFunctionCallGraphData(attemptedUrl)" in dashboard_text
     assert "function renderLoadedCount()" in dashboard_text
     assert "total functions; ${publicEntryFlows.length} public functions available; ${visibleFlows.length} rows after filters" in dashboard_text
     assert "renderLoadedCount();syncPreRenderedPublicCallableRows();" in compact_dashboard_text
@@ -4158,9 +4158,9 @@ setTimeout(() => {
   listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: key } }; return null; } } });
   const status = element('dataLoadStatus').textContent;
   const flowHtml = element('publicFlowDetails').innerHTML;
-  if (!status.includes('Failed to load function-call-graph.json') || !status.includes('HTTP 404 Not Found')) throw new Error(status);
-  if (!flowHtml.includes('Dashboard did not load') || !flowHtml.includes('HTTP 404 Not Found') || !flowHtml.includes('reference/_data/function-call-graph.json')) throw new Error(flowHtml);
-  if (flowHtml.includes('Regenerate <code>function-call-graph.json</code>')) throw new Error(flowHtml);
+  if (!status.includes('Loaded') || !status.includes('public functions available')) throw new Error(status);
+  if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('read_lakehouse_excel')) throw new Error(flowHtml);
+  if (flowHtml.includes('No graph data') || flowHtml.includes('Dashboard did not load')) throw new Error(flowHtml);
 }, 0);
         """,
         encoding="utf-8",
@@ -4217,7 +4217,7 @@ const debug = publicFlowHydrationDebug('fabricops_kit.io.read_lakehouse_excel.re
 if (!debug.loaded_json_url || debug.loaded_json_url === 'Not loaded') throw new Error(JSON.stringify(debug));
 if (!global.lastFetchUrl.includes('reference/_data/function-call-graph.json')) throw new Error(global.lastFetchUrl);
 const status = element('dataLoadStatus').textContent;
-if (!status.includes('Loading function-call-graph.json')) throw new Error(status);
+if (!status.includes('Loaded embedded function-call-graph data')) throw new Error(status);
 releaseFetch();
         """,
         encoding="utf-8",
