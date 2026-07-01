@@ -540,6 +540,17 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Review nested helpers" in dashboard_text
     assert "Finding note" not in dashboard_text
     assert "Fix architecture issue" in dashboard_text
+    assert "Selected architecture scope summary" in dashboard_text
+    assert "Public functions" in dashboard_text
+    assert "Shared helpers" in dashboard_text
+    assert "Private helpers" in dashboard_text
+    assert "Needs review" in dashboard_text
+    assert "Architecture issues" in dashboard_text
+    assert "Runtime assets" in dashboard_text
+    assert "function renderArchitectureSummaryCards(scopedRows)" in dashboard_text
+    assert "setSummaryValue('architectureSummaryRuntime',rows.length)" in compact_dashboard_text
+    assert "rows.filter(isPublicCallable).length" in compact_dashboard_text
+    assert "rows.filter(isActionable).length" in compact_dashboard_text
     assert "Keep public" not in dashboard_text
     assert "No action needed" not in dashboard_text
     assert "disabled>CopyJSON" not in compact_dashboard_text
