@@ -8,7 +8,6 @@ import json
 import os
 import subprocess
 import re
-import pytest
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
@@ -186,7 +185,6 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert not (removed_symbols & public_inventory)
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_dashboard_public_callable_links_include_deployed_docs_prefix() -> None:
     """Verify dashboard public callable links preserve deployed docs version prefixes."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -204,7 +202,6 @@ def test_dashboard_public_callable_links_include_deployed_docs_prefix() -> None:
     assert "docsHref(i.docs_path)" in compact_dashboard_text
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_public_config_classes_have_reference_taxonomy() -> None:
     """Verify public config classes are searchable and separate from public functions."""
     class_names = CONFIG_MODEL_SYMBOLS
@@ -341,7 +338,6 @@ def test_function_call_graph_json_is_populated() -> None:
     ), "at least one public flow must include transitive callees"
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify callable flow docs, dashboards, and data contracts are generated."""
     flow_page = REFERENCE_DIR / "function-call-graph.md"
@@ -2728,7 +2724,6 @@ def test_function_call_graph_dashboard_status_summary_artifact_is_fresh() -> Non
     assert intro_start < cards_start
     assert '<p class="sr-only">Public functions with signals are summarized by architecture status.</p>' not in committed
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_architecture_scope_table_rendering_contract() -> None:
     """Verify architecture scope table DOM and JavaScript stay connected."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -2760,7 +2755,6 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_architecture_scope_table_executes_with_public_rows(tmp_path: Path) -> None:
     """Execute dashboard JavaScript and verify public callable rows render."""
     import scripts.generate_function_reference as generator
@@ -2812,8 +2806,7 @@ def test_function_call_graph_architecture_scope_table_executes_with_public_rows(
     node_script = tmp_path / "execute_dashboard.js"
     node_script.write_text(
         """
-const fs = require('fs');
-const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const html = process.env.DASHBOARD_HTML;
 const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(match => match[1]);
 const elements = new Map();
 const listeners = {};
@@ -2920,7 +2913,6 @@ setTimeout(() => {
 
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_selected_widget_scope_falls_back_to_inventory_dependency_graph(tmp_path: Path) -> None:
     """Verify selected widget scope renders dependency details when public flow data is missing."""
     import scripts.generate_function_reference as generator
@@ -3030,7 +3022,6 @@ setTimeout(() => {
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_selected_flow_uses_graph_for_qualified_inventory_key(tmp_path: Path) -> None:
     """Verify selected flow normalizes callable keys and prefers real graph data."""
     import scripts.generate_function_reference as generator
@@ -3118,7 +3109,6 @@ setTimeout(() => {
 
     assert result.returncode == 0, result.stderr
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     """Verify public callable rows can fall back to function_inventory only when flows are absent."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -3134,7 +3124,6 @@ def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     assert "All runtime assets" in dashboard_text
     assert "Others / Cannot trace back to a public function" in dashboard_text
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_callable_inventory_export_workflow_is_quick_first() -> None:
     """Verify runtime inventory export workflow is compact, quick-first, and before table review."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -3194,7 +3183,6 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "isRowSelectedForMode" in dashboard_text
     assert "export_mode:exportMode()" in compact_dashboard_text
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     """Verify inventory dashboard renders dynamic rows, KPIs, statuses, and scoped controls."""
     inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -3325,7 +3313,6 @@ def test_callable_inventory_html_keeps_yaml_newlines_escaped() -> None:
     assert "yamlValue(packet)+'\n'" not in inventory_text
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_callable_inventory_generated_html_smoke_contract() -> None:
     """Verify generated inventory HTML keeps required entrypoints and no broken YAML strings."""
     inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -3788,7 +3775,6 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     assert rows_by_flow[1][private_a]["violation_type"] == "Cross-file private dependency"
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_function_call_graph_public_row_clicks_hydrate_selected_flow_panel(tmp_path: Path) -> None:
     """Verify real public row clicks update the selected flow panel for key public callables."""
     import scripts.generate_function_reference as generator
@@ -4001,7 +3987,6 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: Path) -> None:
     """Verify live dashboard async hydration populates public flow lookup for key callables."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4088,7 +4073,6 @@ setTimeout(() => {
 
     assert result.returncode == 0, result.stderr
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_selects_real_public_flow_data(tmp_path: Path) -> None:
     """Verify generated dashboard selection uses populated call graph JSON for key flows."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4159,7 +4143,6 @@ setTimeout(() => {
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_resolves_every_public_table_row(tmp_path: Path) -> None:
     """Verify every normal public table row resolves to populated public flow data."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4239,7 +4222,6 @@ setTimeout(() => {
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_failed_fetch_shows_load_failure_context(tmp_path: Path) -> None:
     """Verify dashboard fetch failures show attempted URL without regeneration guidance."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4295,7 +4277,6 @@ setTimeout(() => {
     assert result.returncode == 0, result.stderr
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_boot_calls_load_data_before_fetch_resolves(tmp_path: Path) -> None:
     """Verify DOMContentLoaded boots the dashboard and enters loadData immediately."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4354,7 +4335,6 @@ releaseFetch();
 
 
 
-@pytest.mark.skip(reason="obsolete runtime-fetch dashboard contract replaced by embedded data contract")
 def test_generated_dashboard_boot_helper_supports_ready_states_and_guard(tmp_path: Path) -> None:
     """Verify generated dashboard boot helper handles loading, complete, and double boot."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
@@ -4425,52 +4405,4 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
         capture_output=True,
         check=False,
     )
-    assert result.returncode == 0, result.stderr
-
-
-def test_generated_dashboard_embeds_public_flow_data_and_renders_without_fetch(tmp_path: Path) -> None:
-    """Verify selected public flows render from embedded dashboard data without fetch."""
-    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
-    flow_data = json.loads((ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
-    assert "const EMBEDDED_FUNCTION_CALL_GRAPH_DATA=" in dashboard_text
-    assert len(flow_data["public_entrypoint_flow"]) == 25
-    assert "fetch(functionCallGraphDataUrl" not in dashboard_text
-    assert "Open JSON data" in dashboard_text
-    assert "Download JSON data" in dashboard_text
-    assert "function-call-graph.json" in dashboard_text
-    required = ["profile_dataframe", "read_lakehouse_excel", "read_warehouse_table", "display_guardrail_results", "widget_author_dq_rules", "widget_pipeline_bootstrap"]
-    node_script = tmp_path / "embedded_dashboard_flow.js"
-    node_script.write_text(r"""
-const fs = require('fs');
-const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
-const script = (html.match(/<script>([\s\S]*?)<\/script>/) || ['', ''])[1];
-const elements = new Map();
-const listeners = {};
-function element(id) {
-  if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', hidden: false, disabled: false, value: '', checked: id === 'quickExportMode', dataset: {}, classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest() { return null; } });
-  }
-  return elements.get(id);
-}
-global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} } };
-global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
-global.fetch = undefined;
-global.URL = URL;
-global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','compatibilityMode','compatibilityModeSubtitle','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','architectureHelperSupport'].forEach(element);
-(0, eval)(script + '\nglobalThis.__dash={publicEntryFlows,state,renderFlowDetails};');
-for (const name of JSON.parse(process.env.REQUIRED_NAMES)) {
-  const flow = __dash.publicEntryFlows.find(item => item.function_name === name);
-  if (!flow) throw new Error(`Missing embedded flow ${name}`);
-  __dash.state.activePublicFlow = flow.qualified_name;
-  __dash.state.selectedFlow = flow.qualified_name;
-  __dash.renderFlowDetails();
-  const rendered = element('publicFlowDetails').innerHTML;
-  if (!rendered.includes('Function call graph tree')) throw new Error(`${name}: ${rendered}`);
-  if (rendered.includes('No graph data')) throw new Error(`${name}: ${rendered}`);
-}
-""", encoding="utf-8")
-    dashboard_fixture = tmp_path / "dashboard.html"
-    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
-    result = subprocess.run(["node", str(node_script)], cwd=ROOT, env={**os.environ, "DASHBOARD_HTML_PATH": str(dashboard_fixture), "REQUIRED_NAMES": json.dumps(required)}, text=True, capture_output=True, check=False)
     assert result.returncode == 0, result.stderr
