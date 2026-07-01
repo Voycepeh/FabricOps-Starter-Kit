@@ -857,14 +857,14 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
     """Return the canonical active metadata tables prepared by ``00_env_config``.
 
     The active registry is intentionally source-driven: agreement tables come
-    from ``DataAgreementConfig``, notebook registry from ``metadata.py``, and
+    from ``DataAgreementConfig``, notebook registry from ``widgets.notebook_registry``, and
     governance/pipeline tables from the governance schema registry.
     ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
     normalized = _validate_framework_config(config)
     from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_TABLE
+    from fabricops_kit.widgets.notebook_registry import NOTEBOOK_REGISTRY_TABLE
 
     metadata_tables = normalized.data_agreement_config.metadata_tables or {}
     tables = [
@@ -948,7 +948,7 @@ def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[st
         DATA_STEWARD_TABLE,
     )
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    from fabricops_kit.metadata import NOTEBOOK_REGISTRY_FIELDS, NOTEBOOK_REGISTRY_TABLE
+    from fabricops_kit.widgets.notebook_registry import NOTEBOOK_REGISTRY_FIELDS, NOTEBOOK_REGISTRY_TABLE
 
     metadata_tables = normalized.data_agreement_config.metadata_tables or {}
     registry: dict[str, Any] = {
