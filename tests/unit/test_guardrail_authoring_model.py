@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from fabricops_kit import guardrails as dq_runtime
+from fabricops_kit.pipeline import guardrails_shared as dq_runtime
 from fabricops_kit.widgets import shared as governance_review
 from fabricops_kit.widgets.shared import (
     CATALOGUE_TABLE,
@@ -204,7 +204,7 @@ def _rule(**overrides):
 
 def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify schema rule rows are loaded and enforced."""
-    from fabricops_kit.guardrails import _check_schema_rule_runtime
+    from fabricops_kit.pipeline.guardrails_shared import _check_schema_rule_runtime
 
     df = spark_session.createDataFrame([(1, "ok", "extra")], "order_id int, status string, extra string")
     rules = [_rule(rule_parameters_json=json.dumps({"columns": ["order_id", "status"], "data_types": {"order_id": "int", "status": "string"}}))]
@@ -218,7 +218,7 @@ def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
 
 def test_freshness_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify freshness rule rows are loaded and enforced."""
-    from fabricops_kit.guardrails import enforce_freshness_rule
+    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness_rule
 
     df = spark_session.createDataFrame([("2026-06-14",)], "business_date string")
     rules = [
@@ -237,7 +237,7 @@ def test_freshness_rules_from_guardrail_metadata_are_enforced(spark_session):
 
 def test_profile_behavior_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify profile behavior rule rows are loaded and enforced."""
-    from fabricops_kit.guardrails import enforce_profile_behavior
+    from fabricops_kit.pipeline.guardrails_shared import enforce_profile_behavior
 
     df = spark_session.createDataFrame([(1, "2026-06-14")], "order_id int, business_date string")
     rules = [
@@ -291,7 +291,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify active-pending-review rules use standard runtime warning metadata."""
-    from fabricops_kit.guardrails import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
+    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness_rule, enforce_profile_behavior, _check_schema_rule_runtime
 
     warning = "Rule is active through approval bypass and requires governance post-review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
@@ -576,7 +576,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
 def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
     """Verify only new active rule statuses are enforced for schema rules."""
-    from fabricops_kit.guardrails import _check_schema_rule_runtime
+    from fabricops_kit.pipeline.guardrails_shared import _check_schema_rule_runtime
 
     class Frame:
         dtypes = [("order_id", "int")]
@@ -606,7 +606,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
 
 def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session):
     """Verify DQ loading excludes approved, missing status, missing active, and blank dataset rows."""
-    from fabricops_kit.guardrails import _load_active_dq_rules
+    from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules
 
     rows = [
         _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),

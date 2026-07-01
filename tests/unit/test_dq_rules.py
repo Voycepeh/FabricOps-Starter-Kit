@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from fabricops_kit import guardrails as governance
+from fabricops_kit.pipeline import guardrails_shared as governance
 from fabricops_kit.config import metadata_schemas
 from fabricops_kit.widgets import shared as governance_authoring
 from tests.helpers import FakeSpark, framework_config

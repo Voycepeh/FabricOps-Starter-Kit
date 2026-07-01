@@ -74,14 +74,13 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "widgets.widget_review_guardrail_governance": "widgets.widget_review_guardrail_governance",
     "pipeline.profile_dataframe": "pipeline",
     "io": "io",
-    "guardrails": "guardrails",
+    "pipeline.guardrails_shared": "pipeline",
     "metadata": "metadata",
     "pipeline": "pipeline",
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
     "io",
-    "guardrails",
     "metadata",
     "pipeline",
 ]
@@ -112,8 +111,8 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
 
 
 SCHEMA_RUNTIME_INTERNAL_HELPERS = {
-    f"{PACKAGE_NAME}.guardrails._check_schema_runtime",
-    f"{PACKAGE_NAME}.guardrails._check_schema_rule_runtime",
+    f"{PACKAGE_NAME}.pipeline.guardrails_shared._check_schema_runtime",
+    f"{PACKAGE_NAME}.pipeline.guardrails_shared._check_schema_rule_runtime",
 }
 
 

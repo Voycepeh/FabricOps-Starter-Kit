@@ -16,10 +16,10 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from .config.shared import get_current_audit_timestamp
-from .pipeline.shared import profile_dataframe_core
-from .io.shared import configured_lakehouse_schema, read_lakehouse_table_core
-from .metadata import _write_guardrail_result_row
+from fabricops_kit.config.shared import get_current_audit_timestamp
+from fabricops_kit.pipeline.shared import profile_dataframe_core
+from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
+from fabricops_kit.metadata import _write_guardrail_result_row
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {

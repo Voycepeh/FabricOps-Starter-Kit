@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from fabricops_kit import guardrails as governance
+from fabricops_kit.pipeline import guardrails_shared as governance
 
 pytestmark = pytest.mark.unit
 

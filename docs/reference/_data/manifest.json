@@ -8,13 +8,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "guardrails",
-      "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior checks as pipeline guardrails during enforcement.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true
-    },
-    {
       "module_name": "io",
       "visibility": "public",
       "module_summary": "Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.",
