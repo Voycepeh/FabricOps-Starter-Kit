@@ -3529,3 +3529,119 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
     assert rows_by_flow[1][private_a]["architecture_result"] == "Violation"
     assert rows_by_flow[1][private_a]["violation_type"] == "Cross-file private dependency"
+
+
+def test_function_call_graph_public_row_clicks_hydrate_selected_flow_panel(tmp_path: Path) -> None:
+    """Verify real public row clicks update the selected flow panel for key public callables."""
+    import scripts.generate_function_reference as generator
+
+    callable_names = [
+        "display_guardrail_results",
+        "widget_review_guardrail_governance",
+        "read_warehouse_query",
+    ]
+    flows = []
+    inventory = []
+    for name in callable_names:
+        qn = f"fabricops_kit.demo.{name}.{name}"
+        helper_qn = f"fabricops_kit.demo.{name}._helper"
+        inventory.extend([
+            {
+                "qualified_name": qn,
+                "function_name": name,
+                "module": f"demo.{name}",
+                "simple_classification": "Public function",
+                "function_type": "Public function",
+                "source_path": f"src/fabricops_kit/demo/{name}.py",
+                "reachability": "public_entrypoint",
+            },
+            {
+                "qualified_name": helper_qn,
+                "function_name": "_helper",
+                "module": f"demo.{name}",
+                "simple_classification": "Private helper",
+                "function_type": "Private helper",
+                "source_path": f"src/fabricops_kit/demo/{name}.py",
+                "reachability": "reachable_from_public_runtime",
+            },
+        ])
+        flows.append(
+            {
+                "qualified_name": qn,
+                "function_name": name,
+                "module": f"demo.{name}",
+                "width": 1,
+                "scope": 2,
+                "max_depth": 1,
+                "architecture_violation_count": 0,
+                "external_dependents_count": 0,
+                "helper_cleanup_candidates": 0,
+                "direct_callees": [helper_qn],
+                "transitive_callees": [
+                    {
+                        "qualified_name": helper_qn,
+                        "function_name": "_helper",
+                        "parent_qualified_name": qn,
+                        "depth": 1,
+                        "simple_classification": "Private helper",
+                    }
+                ],
+            }
+        )
+    flow_data = {
+        "function_inventory": inventory,
+        "public_flows": flows,
+        "summary_counts": {},
+        "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
+    }
+    dashboard_text = generator._render_combined_refactor_dashboard_html(flow_data)
+    node_script = tmp_path / "click_public_rows.js"
+    node_script.write_text(
+        r"""
+const html = process.env.DASHBOARD_HTML;
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const qns = JSON.parse(process.env.PUBLIC_QNS);
+  for (const qn of qns) {
+    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
+    const flowHtml = element('publicFlowDetails').innerHTML;
+    if (flowHtml.includes('No public callable selected') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
+    if (!flowHtml.includes(qn.split('.').pop())) throw new Error(flowHtml);
+    if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
+  }
+  const cardValues = ['architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues'].map(id => element(id).textContent);
+  if (cardValues.every(value => value === '0' || value === '')) throw new Error(`summary cards all zero: ${cardValues.join(',')}`);
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DASHBOARD_HTML": dashboard_text,
+            "FLOW_JSON": json.dumps(flow_data),
+            "PUBLIC_QNS": json.dumps([flow["qualified_name"] for flow in flows]),
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
