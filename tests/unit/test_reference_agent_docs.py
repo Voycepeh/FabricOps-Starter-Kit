@@ -546,9 +546,10 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Private helpers" in dashboard_text
     assert "Needs review" in dashboard_text
     assert "Architecture issues" in dashboard_text
-    assert "Runtime assets" in dashboard_text
+    assert "architectureSummaryRuntime" not in dashboard_text
     assert "function renderArchitectureSummaryCards(scopedRows)" in dashboard_text
-    assert "setSummaryValue('architectureSummaryRuntime',rows.length)" in compact_dashboard_text
+    assert "setSummaryValue('architectureSummaryRuntime',rows.length)" not in compact_dashboard_text
+    assert re.search(r'id="architectureSummaryPublic">[1-9]\d*<', dashboard_text)
     assert "rows.filter(isPublicCallable).length" in compact_dashboard_text
     assert "rows.filter(isActionable).length" in compact_dashboard_text
     assert "Keep public" not in dashboard_text
