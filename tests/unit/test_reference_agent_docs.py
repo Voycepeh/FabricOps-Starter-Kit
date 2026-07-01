@@ -2648,6 +2648,8 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert "renderPublicCallableList()" in dashboard_text
     assert "publicFlowBySelectionKey" in dashboard_text
     assert "function publicFlowSelectionKeys(flow)" in dashboard_text
+    assert "fabricops_kit.${moduleName}.${functionName}" in dashboard_text
+    assert "qualifiedName.replace(/^fabricops_kit" in dashboard_text
     assert "function selectedPublicFlow(" in dashboard_text
     assert "rebuildPublicFlowSelectionIndex()" in dashboard_text
     assert "scrollToPublicFlowDetails" in dashboard_text
@@ -2769,7 +2771,7 @@ setTimeout(() => {
       closest(selector) {
         if (selector === '[data-architecture-scope-special]') return null;
         if (selector === '[data-public-flow-row]') {
-          return { dataset: { publicFlowRow: 'fabricops_kit.io.write_lakehouse_table.write_lakehouse_table' } };
+          return { dataset: { publicFlowRow: process.env.PUBLIC_FLOW_ROW || 'fabricops_kit.io.write_lakehouse_table.write_lakehouse_table' } };
         }
         return null;
       },
@@ -2796,6 +2798,7 @@ setTimeout(() => {
             **os.environ,
             "DASHBOARD_HTML": dashboard_text,
             "FLOW_JSON": json.dumps(flow_data),
+            "PUBLIC_FLOW_ROW": "write_lakehouse_table",
         },
         text=True,
         capture_output=True,
