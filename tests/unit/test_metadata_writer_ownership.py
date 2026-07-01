@@ -135,7 +135,7 @@ def test_runtime_result_writers_target_guardrail_results_only():
 
 def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
     """Verify profile behavior enforcement writes outcomes to results, not catalogue."""
-    source = _function_source("guardrails.py", "enforce_profile_behavior")
+    source = _function_source("pipeline/guardrails_shared.py", "enforce_profile_behavior")
 
     assert "_write_guardrail_result_row" in source
     assert "profile_evidence_rows" in source
@@ -154,7 +154,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
 
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
-    dq_source = _function_source("guardrails.py", "_run_active_dq_guardrail")
+    dq_source = _function_source("pipeline/guardrails_shared.py", "_run_active_dq_guardrail")
     pipeline_source = _function_source("pipeline/shared.py", "_run_table_guardrails_workflow")
 
     assert "_write_guardrail_result_row" in dq_source

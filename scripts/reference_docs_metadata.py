@@ -123,12 +123,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.',
   'sidebar_group': '3. Data engineer',
   'sidebar_include': True},
- {'module_name': 'guardrails',
-  'visibility': 'public',
-  'module_summary': 'Owns schema, freshness, and profile behavior checks as pipeline guardrails '
-                    'during enforcement.',
-  'sidebar_group': '3. Data engineer',
-  'sidebar_include': True},
  {'module_name': 'metadata',
   'visibility': 'public',
   'module_summary': 'Owns metadata evidence persistence, stable keys, notebook registry, catalogue '
@@ -861,7 +855,7 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Governance Review',
                       'path': '../../notebook-templates-implementation-guide/governance-review.md'}]},
  {'kind': 'function',
-  'module': 'guardrails',
+  'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Enforce whether the latest data arrived within the configured freshness '
                       'lag.',
@@ -904,7 +898,7 @@ PUBLIC_SYMBOL_DOCS = [
   'related_guides': [{'title': 'Pipeline Execution',
                       'path': '../../notebook-templates-implementation-guide/pipeline-execution.md'}]},
  {'kind': 'function',
-  'module': 'guardrails',
+  'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted '
                       'catalogue profiles.',
@@ -997,7 +991,7 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Governance Review',
                       'path': '../../notebook-templates-implementation-guide/governance-review.md'}]},
  {'kind': 'function',
-  'module': 'guardrails',
+  'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Stop a notebook only when a schema, freshness, profile behavior, or DQ '
                       'guardrail result blocks continuation.',

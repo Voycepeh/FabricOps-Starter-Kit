@@ -2073,7 +2073,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             if isinstance(columns, str):
                 columns = [c.strip() for c in columns.split(",") if c.strip()]
             draft["columns"] = list(columns or [])
-        from fabricops_kit.guardrails import _validate_dq_rules
+        from fabricops_kit.pipeline.guardrails_shared import _validate_dq_rules
         _validate_dq_rules([draft])
         columns = [str(c) for c in draft.get("columns", [])]
         display_column = str(rule.get("column_name") or ", ".join(columns) or "")

@@ -83,7 +83,7 @@ def test_public_owner_files_define_only_their_named_public_function() -> None:
     """Verify public owner files expose at most one matching public function."""
     for package_dir in _package_dirs():
         for path in package_dir.glob("*.py"):
-            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py"}:
+            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py", "guardrails_shared.py"}:
                 continue
 
             public_functions = _public_functions(path)
@@ -103,7 +103,7 @@ def test_public_owner_files_do_not_define_classes() -> None:
     """Verify public owner files keep support classes and value objects in shared.py."""
     for package_dir in _package_dirs():
         for path in package_dir.glob("*.py"):
-            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py"}:
+            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py", "guardrails_shared.py"}:
                 continue
 
             assert not _classes(path), (
@@ -116,7 +116,7 @@ def test_package_batch_classes_live_in_shared_py() -> None:
     """Verify package-level classes are defined only in package shared.py files."""
     for package_dir in _package_dirs():
         for path in package_dir.glob("*.py"):
-            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py"}:
+            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py", "guardrails_shared.py"}:
                 continue
 
             assert not _classes(path), (
@@ -131,7 +131,7 @@ def test_package_init_re_exports_public_owner_functions() -> None:
         owner_public_functions: set[str] = set()
         shared_classes = _classes(package_dir / "shared.py") if (package_dir / "shared.py").exists() else set()
         for path in package_dir.glob("*.py"):
-            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py"}:
+            if path.name in {"__init__.py", "shared.py", "metadata_schemas.py", "guardrails_shared.py"}:
                 continue
             owner_public_functions.update(_public_functions(path))
 

@@ -1590,11 +1590,11 @@
       "calls_count": 1,
       "used_by": [
         "fabricops_kit.config.shared._setup_notebook_workflow",
-        "fabricops_kit.guardrails._dq_summary",
-        "fabricops_kit.guardrails._prepare_dq_profile_input_rows",
         "fabricops_kit.metadata._audit_timestamp_value",
         "fabricops_kit.metadata._now_audit_timestamp",
         "fabricops_kit.metadata.build_runtime_audit_fields",
+        "fabricops_kit.pipeline.guardrails_shared._dq_summary",
+        "fabricops_kit.pipeline.guardrails_shared._prepare_dq_profile_input_rows",
         "fabricops_kit.pipeline.shared._now_iso",
         "fabricops_kit.pipeline.shared._prepare_pipeline_table_configs_workflow",
         "fabricops_kit.widgets.shared._audit_date",
@@ -1724,1095 +1724,6 @@
       "calls_count": 0,
       "used_by": [],
       "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails.SchemaDriftError": {
-      "qualified_name": "fabricops_kit.guardrails.SchemaDriftError",
-      "short_name": "SchemaDriftError",
-      "module": "guardrails",
-      "callable": "SchemaDriftError",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails.stop_if_failed"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._accepted_profile_rows": {
-      "qualified_name": "fabricops_kit.guardrails._accepted_profile_rows",
-      "short_name": "_accepted_profile_rows",
-      "module": "guardrails",
-      "callable": "_accepted_profile_rows",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.guardrails._actual_schema": {
-      "qualified_name": "fabricops_kit.guardrails._actual_schema",
-      "short_name": "_actual_schema",
-      "module": "guardrails",
-      "callable": "_actual_schema",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._normalize_datatype"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._check_schema_runtime",
-        "fabricops_kit.guardrails._schema_signature"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._normalize_datatype"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._apply_bypass_post_review_warning": {
-      "qualified_name": "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-      "short_name": "_apply_bypass_post_review_warning",
-      "module": "guardrails",
-      "callable": "_apply_bypass_post_review_warning",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._rule_review_status"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails.enforce_freshness_rule",
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 3,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._rule_review_status"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._canonical_dq_rule_type": {
-      "qualified_name": "fabricops_kit.guardrails._canonical_dq_rule_type",
-      "short_name": "_canonical_dq_rule_type",
-      "module": "guardrails",
-      "callable": "_canonical_dq_rule_type",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._catalogue_value": {
-      "qualified_name": "fabricops_kit.guardrails._catalogue_value",
-      "short_name": "_catalogue_value",
-      "module": "guardrails",
-      "callable": "_catalogue_value",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._accepted_profile_rows",
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._parse_rule_parameters",
-        "fabricops_kit.guardrails._rule_review_status",
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails.enforce_freshness_rule",
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 9,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._check_schema_rule_runtime": {
-      "qualified_name": "fabricops_kit.guardrails._check_schema_rule_runtime",
-      "short_name": "_check_schema_rule_runtime",
-      "module": "guardrails",
-      "callable": "_check_schema_rule_runtime",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._check_schema_runtime",
-        "fabricops_kit.guardrails._parse_rule_parameters",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 6,
-      "used_by": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._check_schema_runtime",
-        "fabricops_kit.guardrails._parse_rule_parameters",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 6
-    },
-    "fabricops_kit.guardrails._check_schema_runtime": {
-      "qualified_name": "fabricops_kit.guardrails._check_schema_runtime",
-      "short_name": "_check_schema_runtime",
-      "module": "guardrails",
-      "callable": "_check_schema_runtime",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._actual_schema",
-        "fabricops_kit.guardrails._normalize_datatype"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._actual_schema",
-        "fabricops_kit.guardrails._normalize_datatype"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.guardrails._coerce_date": {
-      "qualified_name": "fabricops_kit.guardrails._coerce_date",
-      "short_name": "_coerce_date",
-      "module": "guardrails",
-      "callable": "_coerce_date",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._iso_date_value",
-        "fabricops_kit.guardrails.enforce_freshness"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._coerce_rows": {
-      "qualified_name": "fabricops_kit.guardrails._coerce_rows",
-      "short_name": "_coerce_rows",
-      "module": "guardrails",
-      "callable": "_coerce_rows",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._load_active_dq_rules"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._dq_check_status": {
-      "qualified_name": "fabricops_kit.guardrails._dq_check_status",
-      "short_name": "_dq_check_status",
-      "module": "guardrails",
-      "callable": "_dq_check_status",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._run_dq_guardrail_checks"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._dq_failed_expression": {
-      "qualified_name": "fabricops_kit.guardrails._dq_failed_expression",
-      "short_name": "_dq_failed_expression",
-      "module": "guardrails",
-      "callable": "_dq_failed_expression",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._dq_failed_row_count",
-        "fabricops_kit.guardrails._dq_tagged_dataframe",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks"
-      ],
-      "used_by_count": 3,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.guardrails._dq_failed_row_count": {
-      "qualified_name": "fabricops_kit.guardrails._dq_failed_row_count",
-      "short_name": "_dq_failed_row_count",
-      "module": "guardrails",
-      "callable": "_dq_failed_row_count",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.guardrails._dq_summary": {
-      "qualified_name": "fabricops_kit.guardrails._dq_summary",
-      "short_name": "_dq_summary",
-      "module": "guardrails",
-      "callable": "_dq_summary",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.shared.get_current_audit_timestamp",
-        "fabricops_kit.guardrails._summarize_dq_guardrail"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._summarize_dq_guardrail"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._dq_tagged_dataframe": {
-      "qualified_name": "fabricops_kit.guardrails._dq_tagged_dataframe",
-      "short_name": "_dq_tagged_dataframe",
-      "module": "guardrails",
-      "callable": "_dq_tagged_dataframe",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.guardrails._guardrail_exclude_columns": {
-      "qualified_name": "fabricops_kit.guardrails._guardrail_exclude_columns",
-      "short_name": "_guardrail_exclude_columns",
-      "module": "guardrails",
-      "callable": "_guardrail_exclude_columns",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._is_active_guardrail_rule": {
-      "qualified_name": "fabricops_kit.guardrails._is_active_guardrail_rule",
-      "short_name": "_is_active_guardrail_rule",
-      "module": "guardrails",
-      "callable": "_is_active_guardrail_rule",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._rule_review_status",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._select_table_guardrail_rule"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._rule_review_status",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.guardrails._is_missing_table_error": {
-      "qualified_name": "fabricops_kit.guardrails._is_missing_table_error",
-      "short_name": "_is_missing_table_error",
-      "module": "guardrails",
-      "callable": "_is_missing_table_error",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._iso_date_value": {
-      "qualified_name": "fabricops_kit.guardrails._iso_date_value",
-      "short_name": "_iso_date_value",
-      "module": "guardrails",
-      "callable": "_iso_date_value",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._coerce_date"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_freshness"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._coerce_date"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._json_dumps_stable": {
-      "qualified_name": "fabricops_kit.guardrails._json_dumps_stable",
-      "short_name": "_json_dumps_stable",
-      "module": "guardrails",
-      "callable": "_json_dumps_stable",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._profile_hash",
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._latest_dq_rule_versions": {
-      "qualified_name": "fabricops_kit.guardrails._latest_dq_rule_versions",
-      "short_name": "_latest_dq_rule_versions",
-      "module": "guardrails",
-      "callable": "_latest_dq_rule_versions",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._load_active_dq_rules"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._load_active_dq_rules": {
-      "qualified_name": "fabricops_kit.guardrails._load_active_dq_rules",
-      "short_name": "_load_active_dq_rules",
-      "module": "guardrails",
-      "callable": "_load_active_dq_rules",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._canonical_dq_rule_type",
-        "fabricops_kit.guardrails._coerce_rows",
-        "fabricops_kit.guardrails._latest_dq_rule_versions",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "calls_count": 6,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._canonical_dq_rule_type",
-        "fabricops_kit.guardrails._coerce_rows",
-        "fabricops_kit.guardrails._latest_dq_rule_versions",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "internal_helper_count": 6
-    },
-    "fabricops_kit.guardrails._max_column_value": {
-      "qualified_name": "fabricops_kit.guardrails._max_column_value",
-      "short_name": "_max_column_value",
-      "module": "guardrails",
-      "callable": "_max_column_value",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_freshness"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._normalize_datatype": {
-      "qualified_name": "fabricops_kit.guardrails._normalize_datatype",
-      "short_name": "_normalize_datatype",
-      "module": "guardrails",
-      "callable": "_normalize_datatype",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._actual_schema",
-        "fabricops_kit.guardrails._check_schema_runtime"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._normalize_dq_severity": {
-      "qualified_name": "fabricops_kit.guardrails._normalize_dq_severity",
-      "short_name": "_normalize_dq_severity",
-      "module": "guardrails",
-      "callable": "_normalize_dq_severity",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._dq_tagged_dataframe",
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "used_by_count": 4,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._normalize_profile": {
-      "qualified_name": "fabricops_kit.guardrails._normalize_profile",
-      "short_name": "_normalize_profile",
-      "module": "guardrails",
-      "callable": "_normalize_profile",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._normalize_profile"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._normalize_profile",
-        "fabricops_kit.guardrails._profile_payload_from_profile",
-        "fabricops_kit.guardrails._profile_row_count"
-      ],
-      "used_by_count": 3,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._normalize_profile"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._parse_rule_parameters": {
-      "qualified_name": "fabricops_kit.guardrails._parse_rule_parameters",
-      "short_name": "_parse_rule_parameters",
-      "module": "guardrails",
-      "callable": "_parse_rule_parameters",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails.enforce_freshness_rule"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._prepare_dq_profile_input_rows": {
-      "qualified_name": "fabricops_kit.guardrails._prepare_dq_profile_input_rows",
-      "short_name": "_prepare_dq_profile_input_rows",
-      "module": "guardrails",
-      "callable": "_prepare_dq_profile_input_rows",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.config.shared.get_current_audit_timestamp",
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.pipeline.shared.profile_dataframe_core"
-      ],
-      "calls_count": 3,
-      "used_by": [],
-      "used_by_count": 0,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._profile_hash": {
-      "qualified_name": "fabricops_kit.guardrails._profile_hash",
-      "short_name": "_profile_hash",
-      "module": "guardrails",
-      "callable": "_profile_hash",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._json_dumps_stable"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._json_dumps_stable"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._profile_payload_from_profile": {
-      "qualified_name": "fabricops_kit.guardrails._profile_payload_from_profile",
-      "short_name": "_profile_payload_from_profile",
-      "module": "guardrails",
-      "callable": "_profile_payload_from_profile",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._normalize_profile",
-        "fabricops_kit.guardrails._profile_row_count",
-        "fabricops_kit.guardrails._schema_signature",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._normalize_profile",
-        "fabricops_kit.guardrails._profile_row_count",
-        "fabricops_kit.guardrails._schema_signature",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.guardrails._profile_row_count": {
-      "qualified_name": "fabricops_kit.guardrails._profile_row_count",
-      "short_name": "_profile_row_count",
-      "module": "guardrails",
-      "callable": "_profile_row_count",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._normalize_profile"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._profile_payload_from_profile"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._normalize_profile"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._read_guardrail_rule_metadata": {
-      "qualified_name": "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-      "short_name": "_read_guardrail_rule_metadata",
-      "module": "guardrails",
-      "callable": "_read_guardrail_rule_metadata",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.io.shared.configured_lakehouse_schema",
-        "fabricops_kit.io.shared.read_lakehouse_table_core"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._spark_sql_helpers"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._row_to_dict": {
-      "qualified_name": "fabricops_kit.guardrails._row_to_dict",
-      "short_name": "_row_to_dict",
-      "module": "guardrails",
-      "callable": "_row_to_dict",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._accepted_profile_rows",
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._select_table_guardrail_rule"
-      ],
-      "used_by_count": 3,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._rule_review_status": {
-      "qualified_name": "fabricops_kit.guardrails._rule_review_status",
-      "short_name": "_rule_review_status",
-      "module": "guardrails",
-      "callable": "_rule_review_status",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._is_active_guardrail_rule"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.guardrails._run_active_dq_guardrail": {
-      "qualified_name": "fabricops_kit.guardrails._run_active_dq_guardrail",
-      "short_name": "_run_active_dq_guardrail",
-      "module": "guardrails",
-      "callable": "_run_active_dq_guardrail",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._dq_failed_row_count",
-        "fabricops_kit.guardrails._dq_summary",
-        "fabricops_kit.guardrails._dq_tagged_dataframe",
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks",
-        "fabricops_kit.guardrails._summarize_dq_guardrail",
-        "fabricops_kit.metadata._write_guardrail_result_row"
-      ],
-      "calls_count": 8,
-      "used_by": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._dq_failed_row_count",
-        "fabricops_kit.guardrails._dq_summary",
-        "fabricops_kit.guardrails._dq_tagged_dataframe",
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks",
-        "fabricops_kit.guardrails._summarize_dq_guardrail"
-      ],
-      "internal_helper_count": 7
-    },
-    "fabricops_kit.guardrails._run_dq_guardrail_checks": {
-      "qualified_name": "fabricops_kit.guardrails._run_dq_guardrail_checks",
-      "short_name": "_run_dq_guardrail_checks",
-      "module": "guardrails",
-      "callable": "_run_dq_guardrail_checks",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._dq_check_status",
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "calls_count": 5,
-      "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._dq_check_status",
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._normalize_dq_severity",
-        "fabricops_kit.guardrails._spark_sql_helpers",
-        "fabricops_kit.guardrails._validate_dq_rules"
-      ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.guardrails._schema_signature": {
-      "qualified_name": "fabricops_kit.guardrails._schema_signature",
-      "short_name": "_schema_signature",
-      "module": "guardrails",
-      "callable": "_schema_signature",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._actual_schema"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.guardrails._profile_payload_from_profile"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._actual_schema"
-      ],
-      "internal_helper_count": 1
-    },
-    "fabricops_kit.guardrails._select_profile_behavior_rule": {
-      "qualified_name": "fabricops_kit.guardrails._select_profile_behavior_rule",
-      "short_name": "_select_profile_behavior_rule",
-      "module": "guardrails",
-      "callable": "_select_profile_behavior_rule",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.guardrails._select_table_guardrail_rule": {
-      "qualified_name": "fabricops_kit.guardrails._select_table_guardrail_rule",
-      "short_name": "_select_table_guardrail_rule",
-      "module": "guardrails",
-      "callable": "_select_table_guardrail_rule",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "calls_count": 4,
-      "used_by": [
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails.enforce_freshness_rule"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._row_to_dict",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 4
-    },
-    "fabricops_kit.guardrails._spark_sql_helpers": {
-      "qualified_name": "fabricops_kit.guardrails._spark_sql_helpers",
-      "short_name": "_spark_sql_helpers",
-      "module": "guardrails",
-      "callable": "_spark_sql_helpers",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._dq_failed_row_count",
-        "fabricops_kit.guardrails._dq_tagged_dataframe",
-        "fabricops_kit.guardrails._latest_dq_rule_versions",
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._prepare_dq_profile_input_rows",
-        "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks"
-      ],
-      "used_by_count": 8,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._string_value": {
-      "qualified_name": "fabricops_kit.guardrails._string_value",
-      "short_name": "_string_value",
-      "module": "guardrails",
-      "callable": "_string_value",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._accepted_profile_rows",
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails._is_active_guardrail_rule",
-        "fabricops_kit.guardrails._profile_payload_from_profile",
-        "fabricops_kit.guardrails._rule_review_status",
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails.enforce_freshness_rule",
-        "fabricops_kit.guardrails.enforce_profile_behavior"
-      ],
-      "used_by_count": 9,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._summarize_dq_guardrail": {
-      "qualified_name": "fabricops_kit.guardrails._summarize_dq_guardrail",
-      "short_name": "_summarize_dq_guardrail",
-      "module": "guardrails",
-      "callable": "_summarize_dq_guardrail",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [],
-      "calls_count": 0,
-      "used_by": [
-        "fabricops_kit.guardrails._dq_summary",
-        "fabricops_kit.guardrails._run_active_dq_guardrail"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [],
-      "internal_helper_count": 0
-    },
-    "fabricops_kit.guardrails._validate_dq_rules": {
-      "qualified_name": "fabricops_kit.guardrails._validate_dq_rules",
-      "short_name": "_validate_dq_rules",
-      "module": "guardrails",
-      "callable": "_validate_dq_rules",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._canonical_dq_rule_type",
-        "fabricops_kit.guardrails._normalize_dq_severity"
-      ],
-      "calls_count": 2,
-      "used_by": [
-        "fabricops_kit.guardrails._dq_failed_expression",
-        "fabricops_kit.guardrails._load_active_dq_rules",
-        "fabricops_kit.guardrails._run_dq_guardrail_checks",
-        "fabricops_kit.widgets.shared._build_dq_rule_records"
-      ],
-      "used_by_count": 4,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._canonical_dq_rule_type",
-        "fabricops_kit.guardrails._normalize_dq_severity"
-      ],
-      "internal_helper_count": 2
-    },
-    "fabricops_kit.guardrails.enforce_freshness": {
-      "qualified_name": "fabricops_kit.guardrails.enforce_freshness",
-      "short_name": "enforce_freshness",
-      "module": "guardrails",
-      "callable": "enforce_freshness",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._coerce_date",
-        "fabricops_kit.guardrails._iso_date_value",
-        "fabricops_kit.guardrails._max_column_value"
-      ],
-      "calls_count": 3,
-      "used_by": [
-        "fabricops_kit.guardrails.enforce_freshness_rule",
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 2,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._coerce_date",
-        "fabricops_kit.guardrails._iso_date_value",
-        "fabricops_kit.guardrails._max_column_value"
-      ],
-      "internal_helper_count": 3
-    },
-    "fabricops_kit.guardrails.enforce_freshness_rule": {
-      "qualified_name": "fabricops_kit.guardrails.enforce_freshness_rule",
-      "short_name": "enforce_freshness_rule",
-      "module": "guardrails",
-      "callable": "enforce_freshness_rule",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._parse_rule_parameters",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails._string_value",
-        "fabricops_kit.guardrails.enforce_freshness"
-      ],
-      "calls_count": 6,
-      "used_by": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._parse_rule_parameters",
-        "fabricops_kit.guardrails._select_table_guardrail_rule",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 5
-    },
-    "fabricops_kit.guardrails.enforce_profile_behavior": {
-      "qualified_name": "fabricops_kit.guardrails.enforce_profile_behavior",
-      "short_name": "enforce_profile_behavior",
-      "module": "guardrails",
-      "callable": "enforce_profile_behavior",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails._accepted_profile_rows",
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._guardrail_exclude_columns",
-        "fabricops_kit.guardrails._is_missing_table_error",
-        "fabricops_kit.guardrails._json_dumps_stable",
-        "fabricops_kit.guardrails._profile_hash",
-        "fabricops_kit.guardrails._profile_payload_from_profile",
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._string_value",
-        "fabricops_kit.io.shared.configured_lakehouse_schema",
-        "fabricops_kit.io.shared.read_lakehouse_table_core",
-        "fabricops_kit.metadata._write_guardrail_result_row",
-        "fabricops_kit.pipeline.shared.profile_dataframe_core"
-      ],
-      "calls_count": 14,
-      "used_by": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 1,
-      "used_in_templates": [],
-      "internal_helpers_used": [
-        "fabricops_kit.guardrails._accepted_profile_rows",
-        "fabricops_kit.guardrails._apply_bypass_post_review_warning",
-        "fabricops_kit.guardrails._catalogue_value",
-        "fabricops_kit.guardrails._guardrail_exclude_columns",
-        "fabricops_kit.guardrails._is_missing_table_error",
-        "fabricops_kit.guardrails._json_dumps_stable",
-        "fabricops_kit.guardrails._profile_hash",
-        "fabricops_kit.guardrails._profile_payload_from_profile",
-        "fabricops_kit.guardrails._select_profile_behavior_rule",
-        "fabricops_kit.guardrails._string_value"
-      ],
-      "internal_helper_count": 10
-    },
-    "fabricops_kit.guardrails.stop_if_failed": {
-      "qualified_name": "fabricops_kit.guardrails.stop_if_failed",
-      "short_name": "stop_if_failed",
-      "module": "guardrails",
-      "callable": "stop_if_failed",
-      "docs_url": null,
-      "classification": "internal",
-      "calls": [
-        "fabricops_kit.guardrails.SchemaDriftError"
-      ],
-      "calls_count": 1,
-      "used_by": [
-        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
-      ],
-      "used_by_count": 1,
       "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
@@ -3740,11 +2651,11 @@
       ],
       "calls_count": 2,
       "used_by": [
-        "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-        "fabricops_kit.guardrails.enforce_profile_behavior",
         "fabricops_kit.metadata._load_notebook_registry",
         "fabricops_kit.metadata._write_guardrail_result_row",
         "fabricops_kit.metadata.register_current_notebook",
+        "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
         "fabricops_kit.pipeline.shared._write_pipeline_lineage_workflow",
         "fabricops_kit.pipeline.shared._write_pipeline_run_summary_workflow",
         "fabricops_kit.pipeline.shared.write_catalogue_evidence",
@@ -3894,9 +2805,9 @@
       "used_by": [
         "fabricops_kit.config.shared._setup_metadata_table_registry",
         "fabricops_kit.config.shared._validate_metadata_table_registration",
-        "fabricops_kit.guardrails._read_guardrail_rule_metadata",
-        "fabricops_kit.guardrails.enforce_profile_behavior",
         "fabricops_kit.metadata._load_notebook_registry",
+        "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
         "fabricops_kit.widgets.shared._list_data_stewards",
         "fabricops_kit.widgets.shared._read_metadata_rows",
         "fabricops_kit.widgets.shared._read_metadata_table_or_empty",
@@ -4700,8 +3611,8 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.guardrails._run_active_dq_guardrail",
-        "fabricops_kit.guardrails.enforce_profile_behavior",
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
         "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
       ],
       "used_by_count": 3,
@@ -4848,6 +3759,1095 @@
       "used_in_templates": [
         "02_pipeline"
       ],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared.SchemaDriftError": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.SchemaDriftError",
+      "short_name": "SchemaDriftError",
+      "module": "pipeline.guardrails_shared",
+      "callable": "SchemaDriftError",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.stop_if_failed"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+      "short_name": "_accepted_profile_rows",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_accepted_profile_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.pipeline.guardrails_shared._actual_schema": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._actual_schema",
+      "short_name": "_actual_schema",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_actual_schema",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_datatype"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._schema_signature"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_datatype"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+      "short_name": "_apply_bypass_post_review_warning",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_apply_bypass_post_review_warning",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type",
+      "short_name": "_canonical_dq_rule_type",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_canonical_dq_rule_type",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._catalogue_value": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+      "short_name": "_catalogue_value",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_catalogue_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status",
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 9,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+      "short_name": "_check_schema_rule_runtime",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_check_schema_rule_runtime",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 6,
+      "used_by": [
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime",
+      "short_name": "_check_schema_runtime",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_check_schema_runtime",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._actual_schema",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_datatype"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._actual_schema",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_datatype"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.pipeline.guardrails_shared._coerce_date": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._coerce_date",
+      "short_name": "_coerce_date",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_coerce_date",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._iso_date_value",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._coerce_rows": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._coerce_rows",
+      "short_name": "_coerce_rows",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_coerce_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._dq_check_status": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._dq_check_status",
+      "short_name": "_dq_check_status",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_dq_check_status",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+      "short_name": "_dq_failed_expression",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_dq_failed_expression",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks"
+      ],
+      "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count",
+      "short_name": "_dq_failed_row_count",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_dq_failed_row_count",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.pipeline.guardrails_shared._dq_summary": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._dq_summary",
+      "short_name": "_dq_summary",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_dq_summary",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.shared.get_current_audit_timestamp",
+        "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+      "short_name": "_dq_tagged_dataframe",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_dq_tagged_dataframe",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.pipeline.guardrails_shared._guardrail_exclude_columns": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._guardrail_exclude_columns",
+      "short_name": "_guardrail_exclude_columns",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_guardrail_exclude_columns",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+      "short_name": "_is_active_guardrail_rule",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_is_active_guardrail_rule",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.pipeline.guardrails_shared._is_missing_table_error": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._is_missing_table_error",
+      "short_name": "_is_missing_table_error",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_is_missing_table_error",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._iso_date_value": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._iso_date_value",
+      "short_name": "_iso_date_value",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_iso_date_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._coerce_date"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._coerce_date"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable",
+      "short_name": "_json_dumps_stable",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_json_dumps_stable",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._profile_hash",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._latest_dq_rule_versions": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._latest_dq_rule_versions",
+      "short_name": "_latest_dq_rule_versions",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_latest_dq_rule_versions",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+      "short_name": "_load_active_dq_rules",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_load_active_dq_rules",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type",
+        "fabricops_kit.pipeline.guardrails_shared._coerce_rows",
+        "fabricops_kit.pipeline.guardrails_shared._latest_dq_rule_versions",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "calls_count": 6,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type",
+        "fabricops_kit.pipeline.guardrails_shared._coerce_rows",
+        "fabricops_kit.pipeline.guardrails_shared._latest_dq_rule_versions",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "internal_helper_count": 6
+    },
+    "fabricops_kit.pipeline.guardrails_shared._max_column_value": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._max_column_value",
+      "short_name": "_max_column_value",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_max_column_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._normalize_datatype": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._normalize_datatype",
+      "short_name": "_normalize_datatype",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_normalize_datatype",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._actual_schema",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+      "short_name": "_normalize_dq_severity",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_normalize_dq_severity",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "used_by_count": 4,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._normalize_profile": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._normalize_profile",
+      "short_name": "_normalize_profile",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_normalize_profile",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile",
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile",
+        "fabricops_kit.pipeline.guardrails_shared._profile_row_count"
+      ],
+      "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+      "short_name": "_parse_rule_parameters",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_parse_rule_parameters",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._prepare_dq_profile_input_rows": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._prepare_dq_profile_input_rows",
+      "short_name": "_prepare_dq_profile_input_rows",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_prepare_dq_profile_input_rows",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.config.shared.get_current_audit_timestamp",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.shared.profile_dataframe_core"
+      ],
+      "calls_count": 3,
+      "used_by": [],
+      "used_by_count": 0,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._profile_hash": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._profile_hash",
+      "short_name": "_profile_hash",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_profile_hash",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile",
+      "short_name": "_profile_payload_from_profile",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_profile_payload_from_profile",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile",
+        "fabricops_kit.pipeline.guardrails_shared._profile_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._schema_signature",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile",
+        "fabricops_kit.pipeline.guardrails_shared._profile_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._schema_signature",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.pipeline.guardrails_shared._profile_row_count": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._profile_row_count",
+      "short_name": "_profile_row_count",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_profile_row_count",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._normalize_profile"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+      "short_name": "_read_guardrail_rule_metadata",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_read_guardrail_rule_metadata",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io.shared.configured_lakehouse_schema",
+        "fabricops_kit.io.shared.read_lakehouse_table_core",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._row_to_dict": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+      "short_name": "_row_to_dict",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_row_to_dict",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule"
+      ],
+      "used_by_count": 3,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._rule_review_status": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._rule_review_status",
+      "short_name": "_rule_review_status",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_rule_review_status",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail",
+      "short_name": "_run_active_dq_guardrail",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_run_active_dq_guardrail",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._dq_summary",
+        "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks",
+        "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail"
+      ],
+      "calls_count": 8,
+      "used_by": [
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._dq_summary",
+        "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks",
+        "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail"
+      ],
+      "internal_helper_count": 7
+    },
+    "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks",
+      "short_name": "_run_dq_guardrail_checks",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_run_dq_guardrail_checks",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_check_status",
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "calls_count": 5,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_check_status",
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity",
+        "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules"
+      ],
+      "internal_helper_count": 5
+    },
+    "fabricops_kit.pipeline.guardrails_shared._schema_signature": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._schema_signature",
+      "short_name": "_schema_signature",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_schema_signature",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._actual_schema"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._actual_schema"
+      ],
+      "internal_helper_count": 1
+    },
+    "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+      "short_name": "_select_profile_behavior_rule",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_select_profile_behavior_rule",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+      "short_name": "_select_table_guardrail_rule",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_select_table_guardrail_rule",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "calls_count": 4,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._row_to_dict",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 4
+    },
+    "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._spark_sql_helpers",
+      "short_name": "_spark_sql_helpers",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_spark_sql_helpers",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_row_count",
+        "fabricops_kit.pipeline.guardrails_shared._dq_tagged_dataframe",
+        "fabricops_kit.pipeline.guardrails_shared._latest_dq_rule_versions",
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._prepare_dq_profile_input_rows",
+        "fabricops_kit.pipeline.guardrails_shared._read_guardrail_rule_metadata",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks"
+      ],
+      "used_by_count": 8,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._string_value": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._string_value",
+      "short_name": "_string_value",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_string_value",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._is_active_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile",
+        "fabricops_kit.pipeline.guardrails_shared._rule_review_status",
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior"
+      ],
+      "used_by_count": 9,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._summarize_dq_guardrail",
+      "short_name": "_summarize_dq_guardrail",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_summarize_dq_guardrail",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [],
+      "calls_count": 0,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_summary",
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [],
+      "internal_helper_count": 0
+    },
+    "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules",
+      "short_name": "_validate_dq_rules",
+      "module": "pipeline.guardrails_shared",
+      "callable": "_validate_dq_rules",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity"
+      ],
+      "calls_count": 2,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared._dq_failed_expression",
+        "fabricops_kit.pipeline.guardrails_shared._load_active_dq_rules",
+        "fabricops_kit.pipeline.guardrails_shared._run_dq_guardrail_checks",
+        "fabricops_kit.widgets.shared._build_dq_rule_records"
+      ],
+      "used_by_count": 4,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._canonical_dq_rule_type",
+        "fabricops_kit.pipeline.guardrails_shared._normalize_dq_severity"
+      ],
+      "internal_helper_count": 2
+    },
+    "fabricops_kit.pipeline.guardrails_shared.enforce_freshness": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.enforce_freshness",
+      "short_name": "enforce_freshness",
+      "module": "pipeline.guardrails_shared",
+      "callable": "enforce_freshness",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._coerce_date",
+        "fabricops_kit.pipeline.guardrails_shared._iso_date_value",
+        "fabricops_kit.pipeline.guardrails_shared._max_column_value"
+      ],
+      "calls_count": 3,
+      "used_by": [
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 2,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._coerce_date",
+        "fabricops_kit.pipeline.guardrails_shared._iso_date_value",
+        "fabricops_kit.pipeline.guardrails_shared._max_column_value"
+      ],
+      "internal_helper_count": 3
+    },
+    "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+      "short_name": "enforce_freshness_rule",
+      "module": "pipeline.guardrails_shared",
+      "callable": "enforce_freshness_rule",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness"
+      ],
+      "calls_count": 6,
+      "used_by": [
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._parse_rule_parameters",
+        "fabricops_kit.pipeline.guardrails_shared._select_table_guardrail_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 5
+    },
+    "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
+      "short_name": "enforce_profile_behavior",
+      "module": "pipeline.guardrails_shared",
+      "callable": "enforce_profile_behavior",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.io.shared.configured_lakehouse_schema",
+        "fabricops_kit.io.shared.read_lakehouse_table_core",
+        "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._guardrail_exclude_columns",
+        "fabricops_kit.pipeline.guardrails_shared._is_missing_table_error",
+        "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable",
+        "fabricops_kit.pipeline.guardrails_shared._profile_hash",
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile",
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value",
+        "fabricops_kit.pipeline.shared.profile_dataframe_core"
+      ],
+      "calls_count": 14,
+      "used_by": [
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
+      "internal_helpers_used": [
+        "fabricops_kit.pipeline.guardrails_shared._accepted_profile_rows",
+        "fabricops_kit.pipeline.guardrails_shared._apply_bypass_post_review_warning",
+        "fabricops_kit.pipeline.guardrails_shared._catalogue_value",
+        "fabricops_kit.pipeline.guardrails_shared._guardrail_exclude_columns",
+        "fabricops_kit.pipeline.guardrails_shared._is_missing_table_error",
+        "fabricops_kit.pipeline.guardrails_shared._json_dumps_stable",
+        "fabricops_kit.pipeline.guardrails_shared._profile_hash",
+        "fabricops_kit.pipeline.guardrails_shared._profile_payload_from_profile",
+        "fabricops_kit.pipeline.guardrails_shared._select_profile_behavior_rule",
+        "fabricops_kit.pipeline.guardrails_shared._string_value"
+      ],
+      "internal_helper_count": 10
+    },
+    "fabricops_kit.pipeline.guardrails_shared.stop_if_failed": {
+      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
+      "short_name": "stop_if_failed",
+      "module": "pipeline.guardrails_shared",
+      "callable": "stop_if_failed",
+      "docs_url": null,
+      "classification": "internal",
+      "calls": [
+        "fabricops_kit.pipeline.guardrails_shared.SchemaDriftError"
+      ],
+      "calls_count": 1,
+      "used_by": [
+        "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
+      ],
+      "used_by_count": 1,
+      "used_in_templates": [],
       "internal_helpers_used": [],
       "internal_helper_count": 0
     },
@@ -5318,15 +5318,15 @@
       "classification": "internal",
       "calls": [
         "fabricops_kit.config.shared.resolve_fabric_context",
-        "fabricops_kit.guardrails._check_schema_rule_runtime",
-        "fabricops_kit.guardrails._check_schema_runtime",
-        "fabricops_kit.guardrails._run_active_dq_guardrail",
-        "fabricops_kit.guardrails.enforce_freshness",
-        "fabricops_kit.guardrails.enforce_freshness_rule",
-        "fabricops_kit.guardrails.enforce_profile_behavior",
-        "fabricops_kit.guardrails.stop_if_failed",
         "fabricops_kit.metadata._build_metadata_table_key",
         "fabricops_kit.metadata._write_guardrail_result_row",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._check_schema_runtime",
+        "fabricops_kit.pipeline.guardrails_shared._run_active_dq_guardrail",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_freshness_rule",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
+        "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
         "fabricops_kit.pipeline.shared._build_guardrail_blocking_message_from_bundle",
         "fabricops_kit.pipeline.shared._build_guardrail_evidence_definitions",
         "fabricops_kit.pipeline.shared._table_key",
@@ -5687,8 +5687,8 @@
       ],
       "calls_count": 5,
       "used_by": [
-        "fabricops_kit.guardrails._prepare_dq_profile_input_rows",
-        "fabricops_kit.guardrails.enforce_profile_behavior",
+        "fabricops_kit.pipeline.guardrails_shared._prepare_dq_profile_input_rows",
+        "fabricops_kit.pipeline.guardrails_shared.enforce_profile_behavior",
         "fabricops_kit.pipeline.profile_dataframe",
         "fabricops_kit.pipeline.shared._run_table_guardrails_workflow"
       ],
@@ -5991,8 +5991,8 @@
       "docs_url": null,
       "classification": "internal",
       "calls": [
-        "fabricops_kit.guardrails._validate_dq_rules",
         "fabricops_kit.metadata._build_dq_rule_key",
+        "fabricops_kit.pipeline.guardrails_shared._validate_dq_rules",
         "fabricops_kit.widgets.shared._approved_column_identity",
         "fabricops_kit.widgets.shared._approved_review_context",
         "fabricops_kit.widgets.shared._canonical_dq_rule_type",
@@ -8116,19 +8116,6 @@
       "outbound_count": 0,
       "inbound_count": 0
     },
-    "guardrails": {
-      "callable_count": 0,
-      "internal_count": 42,
-      "outbound_modules": [
-        "metadata",
-        "shared"
-      ],
-      "inbound_modules": [
-        "shared"
-      ],
-      "outbound_count": 2,
-      "inbound_count": 1
-    },
     "io": {
       "callable_count": 0,
       "internal_count": 12,
@@ -8219,7 +8206,7 @@
         "shared"
       ],
       "inbound_modules": [
-        "guardrails",
+        "guardrails_shared",
         "shared",
         "widget_pipeline_bootstrap",
         "widget_render_agreement_evidence"
@@ -8240,6 +8227,14 @@
     "pipeline.display_guardrail_results": {
       "callable_count": 1,
       "internal_count": 0,
+      "outbound_modules": [],
+      "inbound_modules": [],
+      "outbound_count": 0,
+      "inbound_count": 0
+    },
+    "pipeline.guardrails_shared": {
+      "callable_count": 0,
+      "internal_count": 42,
       "outbound_modules": [],
       "inbound_modules": [],
       "outbound_count": 0,
