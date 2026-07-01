@@ -3,17 +3,30 @@
   const TABLE_CLASS = "fo-table-enhanced";
   const state = new WeakMap();
 
+  function normalizeValue(value) {
+    return value === null || value === undefined ? "" : String(value).trim();
+  }
+
   function cellText(row, index) {
     const cell = row.cells[index];
-    return (cell ? cell.innerText || cell.textContent || "" : "").trim();
+    return normalizeValue(cell ? cell.innerText || cell.textContent || "" : "");
+  }
+
+  function cellFilterValue(row, index) {
+    const cell = row.cells[index];
+    if (cell && cell.dataset && Object.prototype.hasOwnProperty.call(cell.dataset, "filterValue")) {
+      return normalizeValue(cell.dataset.filterValue);
+    }
+    return cellText(row, index);
   }
 
   function displayValue(value) {
-    return value === "" ? BLANK : value;
+    const normalized = normalizeValue(value);
+    return normalized === "" ? BLANK : normalized;
   }
 
   function isNumericColumn(rows, index) {
-    const values = rows.map((row) => cellText(row, index)).filter(Boolean);
+    const values = rows.map((row) => cellFilterValue(row, index)).filter(Boolean);
     return values.length > 0 && values.every((value) => /^-?\d+(\.\d+)?$/.test(value.replace(/,/g, "")));
   }
 
@@ -49,13 +62,31 @@
     return Array.from(table.tBodies[0]?.rows || []);
   }
 
-  function uniqueValues(table, column) {
+  function isFilterableRow(table, row) {
+    const columnCount = table.tHead?.rows[0]?.cells.length || 0;
+    return !row.matches?.("[data-details-row]") && (!columnCount || row.cells.length >= columnCount);
+  }
+
+  function filterableRows(table) {
+    return tableState(table).originalRows.filter((row) => isFilterableRow(table, row));
+  }
+
+  function rowGroup(table, row) {
     const rows = tableState(table).originalRows;
-    return [...new Set(rows.map((row) => displayValue(cellText(row, column))))].sort((a, b) => compareValues(a, b, false));
+    const index = rows.indexOf(row);
+    const group = [row];
+    const next = rows[index + 1];
+    if (next && next.matches?.("[data-details-row]")) group.push(next);
+    return group;
+  }
+
+  function uniqueValues(table, column) {
+    const rows = filterableRows(table);
+    return [...new Set(rows.map((row) => displayValue(cellFilterValue(row, column))))].sort((a, b) => compareValues(a, b, false));
   }
 
   function rowMatchesFilter(row, filter) {
-    const value = cellText(row, filter.column);
+    const value = cellFilterValue(row, filter.column);
     if (filter.kind === "values") {
       return filter.values.has(displayValue(value));
     }
@@ -70,23 +101,43 @@
     return true;
   }
 
+  function filteredRows(table) {
+    const cfg = tableState(table);
+    return filterableRows(table).filter((row) => [...cfg.filters.values()].every((filter) => rowMatchesFilter(row, filter)));
+  }
+
+  function getVisibleRowKeys(table) {
+    return filteredRows(table).map((row) => row.dataset?.inventoryRow || row.dataset?.rowKey || "").filter(Boolean);
+  }
+
+  function notifyApplied(table) {
+    if (typeof window.CustomEvent === "function" && typeof table.dispatchEvent === "function") {
+      table.dispatchEvent(new window.CustomEvent("fabricops:table-controls-applied", { bubbles: true, detail: { visibleRowKeys: getVisibleRowKeys(table) } }));
+    }
+  }
+
   function applyTable(table) {
     const cfg = tableState(table);
     const tbody = table.tBodies[0];
     if (!tbody) return;
-    let rows = cfg.originalRows.filter((row) => [...cfg.filters.values()].every((filter) => rowMatchesFilter(row, filter)));
+    let rows = filteredRows(table);
     if (cfg.sort) {
       const { column, direction, numeric } = cfg.sort;
       const dir = direction === "desc" ? -1 : 1;
       rows = rows.map((row, index) => ({ row, index })).sort((left, right) => {
-        const result = compareValues(cellText(left.row, column), cellText(right.row, column), numeric);
+        const result = compareValues(cellFilterValue(left.row, column), cellFilterValue(right.row, column), numeric);
         return result === 0 ? left.index - right.index : result * dir;
       }).map((item) => item.row);
     }
-    rows.forEach((row) => tbody.appendChild(row));
-    cfg.originalRows.forEach((row) => { row.hidden = !rows.includes(row); });
+    const visibleSet = new Set(rows);
+    rows.forEach((row) => rowGroup(table, row).forEach((groupRow) => tbody.appendChild(groupRow)));
+    cfg.originalRows.forEach((row) => {
+      const owner = row.matches?.("[data-details-row]") ? cfg.originalRows[cfg.originalRows.indexOf(row) - 1] : row;
+      row.hidden = !visibleSet.has(owner);
+    });
     updateHeaderStates(table);
     renderClearAll(table);
+    notifyApplied(table);
   }
 
   function closeMenus() {
@@ -187,7 +238,7 @@
 
   function openMenu(table, th, column, button) {
     closeMenus();
-    const rows = tableState(table).originalRows;
+    const rows = filterableRows(table);
     const numeric = isNumericColumn(rows, column);
     const menu = document.createElement("div");
     menu.className = "fo-table-menu";
@@ -290,5 +341,5 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenus(); });
   document.addEventListener("DOMContentLoaded", () => enhanceAll());
 
-  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, _test: { compareValues, displayValue, numericValue, positionMenu, rowMatchesFilter } };
+  window.FabricOpsTableControls = { enhance, enhanceAll, resetAll, getVisibleRowKeys, _test: { cellFilterValue, compareValues, displayValue, filterableRows, filteredRows, getVisibleRowKeys, normalizeValue, numericValue, positionMenu, rowMatchesFilter, uniqueValues } };
 })();
