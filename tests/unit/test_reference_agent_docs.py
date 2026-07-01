@@ -762,9 +762,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Function metrics are generated from the runtime inventory data." not in normalized_inventory_text
     assert "<tdclass='col-callable'>${sourceCallableLink(i)}</td>" in compact_inventory_text
     assert "#runtime-inventory.callable-review-table.col-file-area,#runtime-inventory.callable-review-table.col-callable{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.25}" in compact_inventory_text
-    assert "#runtime-inventory.callable-review-table.col-details{width:7rem;min-width:7rem;white-space:nowrap}" in compact_inventory_text
-    assert "#runtime-inventory.callable-review-table.details-toggle{white-space:nowrap;word-break:keep-all;overflow-wrap:normal}" in compact_inventory_text
-    assert "@media(max-width:720px){#runtime-inventory.callable-review-table{min-width:700px}" in compact_inventory_text
+    assert "#runtime-inventory.callable-review-table.col-details{width:7rem!important;min-width:7rem!important;white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important}" in compact_inventory_text
+    assert "#runtime-inventory.callable-review-table.col-details.table-header-cell,#runtime-inventory.callable-review-table.col-details.table-header-label{white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important}" in compact_inventory_text
+    assert "#runtime-inventory.callable-review-table.details-toggle{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}" in compact_inventory_text
+    assert "@media(max-width:720px){#runtime-inventory.callable-review-table{min-width:760px}" in compact_inventory_text
+    assert "#runtime-inventory.callable-review-table.col-details{width:7rem!important;min-width:7rem!important}" in compact_inventory_text
     assert "class='callable-review-table'data-table-controls='excel'" in compact_inventory_text
     assert "callable-review-table-wrap" in inventory_text
     assert "<thclass='col-file-area'>Sourcefile</th><thclass='col-callable'>Itemname</th><thclass='col-item-type'>Itemtype</th><thclass='col-usage-scope'>Usagescope</th><thclass='col-health'>Health</th><thclass='col-recommended-action'>Recommendedaction</th><thclass='col-details'>Details</th>" in compact_inventory_text
