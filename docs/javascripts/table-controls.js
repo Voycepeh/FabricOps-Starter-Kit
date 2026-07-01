@@ -100,7 +100,7 @@
       action = document.createElement("button");
       action.type = "button";
       action.className = "fo-table-clear-all";
-      action.textContent = "Clear table filters";
+      action.textContent = "Reset column filters";
       action.addEventListener("click", () => {
         cfg.filters.clear();
         cfg.sort = null;

@@ -195,7 +195,8 @@ def test_public_config_classes_have_reference_taxonomy() -> None:
     flow_names = {row["function_name"] for row in flow_data["public_entrypoint_flow"]}
 
     assert "search 25 public functions and 7 public classes" in reference_index
-    assert '<option value="class">Classes</option>' in inventory_text
+    assert '<option value="class">Classes</option>' not in inventory_text
+    assert "Classes" in inventory_text
     assert set(class_rows) == class_names
     assert flow_data["summary_counts"]["public_api_surface"]["public_api_entrypoints"] == 25
     assert flow_data["summary_counts"]["public_classes"] == 7
@@ -386,7 +387,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "The scanner could not trace this asset back to a public FabricOps function. This is not proof that the asset is unused or safe to " in combined_dashboard_assets
     assert "safe to '+'delete" in combined_dashboard_assets
     assert "runtime-inventory" in dashboard_text
-    assert "Clear table filters" in dashboard_text
+    assert "Clear search" in dashboard_text
+    assert "Clear table filters" not in dashboard_text
     assert "Clear all filters" not in dashboard_text
     assert "Show all runtime assets" in dashboard_text
     assert "Current scope:" in dashboard_text
@@ -404,7 +406,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "rowReachability(r)==='unreachable_runtime_asset'" in dashboard_text
     assert "showAllRuntimeAssets" in dashboard_text
     assert "$('showAllRuntimeAssets').onclick=()=>setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''})" in dashboard_text
-    assert "Object.assign(state,{search:'',typeFilter:'all',reachabilityFilter:'all',healthFilter:'all',actionFilter:'all'})" in dashboard_text
+    assert "state.search=''" in dashboard_text
+    assert "Object.assign(state,{search:'',typeFilter:'all',reachabilityFilter:'all',healthFilter:'all',actionFilter:'all'})" not in dashboard_text
     assert "$('focusFilter').value='all'" not in dashboard_text
     assert dashboard_text.count('<section class="export-toolbar" aria-label="Advanced cleanup and export actions" hidden>') == 0
     assert dashboard_text.count('<section class="export-toolbar"') == 1
@@ -697,7 +700,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Shared helpers" in inventory_text
     assert "Private helpers" in inventory_text
     assert "Non functions" not in inventory_text
-    assert "Suggested cleanup" in inventory_text
+    assert "Suggested cleanup" not in inventory_text
     assert "Public callables" in inventory_text
     for scope_label in [
         "All runtime assets",
@@ -738,14 +741,14 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "downloadYaml" in inventory_text
     assert "searchBox" in inventory_text
     assert "Search runtime inventory" in inventory_text
-    assert "Runtime inventory focus" in inventory_text
-    assert "Item type" in inventory_text
-    assert "Suggested cleanup" in inventory_text
-    assert "Public callable" in inventory_text
-    assert "Shared helper" in inventory_text
-    assert "Private helper" in inventory_text
+    assert "Runtime inventory focus <select" not in inventory_text
+    assert 'id="runtimeInventory_focusFilter"' not in inventory_text
+    assert 'id="runtimeInventory_typeFilter"' not in inventory_text
+    assert 'id="runtimeInventory_reachabilityFilter"' not in inventory_text
+    assert 'id="runtimeInventory_healthFilter"' not in inventory_text
+    assert 'id="runtimeInventory_actionFilter"' not in inventory_text
+    assert "Suggested cleanup" not in inventory_text
     assert "Non functions" not in inventory_text
-    assert "Reachability" in inventory_text
     assert "Cannot trace back to a public function" in inventory_text
     assert "Recommended action" in inventory_text
     assert "Reached from public flow" not in inventory_text
@@ -759,7 +762,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "function matchesQuickFilter(i)" not in inventory_text
     assert "function updateQuickFilterChips()" not in inventory_text
     assert 'data-quick-filter=' not in inventory_text
-    assert "resetAll(document)" in inventory_text
+    assert "resetAll(document)" not in inventory_text
     assert "selectedItems()" in inventory_text
     for removed_filter in [
         "moduleFilter",
@@ -2580,7 +2583,8 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
     assert "Less than" in script
     assert "Between" in script
     assert "Clear filter" in script
-    assert "Clear table filters" in script
+    assert "Reset column filters" in script
+    assert "Clear table filters" not in script
     assert "Clear all filters" not in script
     assert "rowMatchesFilter" in script
     assert "cfg.filters.values" in script
@@ -2609,8 +2613,8 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "newURL('reference/_data/function-call-graph.json',document.baseURI).href" in compact_inventory_text
     assert "Loading function call graph data..." in inventory_text
     assert "Loaded ${inventory.length} runtime inventory records" in inventory_text
-    assert "No function-level code assets found for the current filters." in inventory_text
-    assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." in inventory_text
+    assert "No function-level code assets found for the current search or column filters." in inventory_text
+    assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." not in inventory_text
     assert "Runtime inventory data is missing from function-call-graph.json. Regenerate the function call graph export." in inventory_text
     assert "Failed to load function call graph data. URL:" in inventory_text
     assert "function-call-graph.json" in inventory_text
@@ -2628,9 +2632,9 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "nonFunctionCount=canonicalNonFunctionCount()" not in compact_inventory_text
     assert "const ITEM_TYPE_LABELS={public:'Public callable',class:'Classes',internal:'Shared helper',private_helper:'Private helper'}" in inventory_text
     assert '<option value="supporting_object">Non functions</option>' not in inventory_text
-    assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" in inventory_text
-    assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!q&&!supportFocus(i))return false" in inventory_text
-    assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.'" in inventory_text
+    assert "if(state.typeFilter!=='all'&&itemTypeKey(i)!==state.typeFilter)return false" not in inventory_text
+    assert "if(state.focusFilter==='actionable'&&state.typeFilter==='all'&&!q&&!supportFocus(i))return false" not in inventory_text
+    assert "if(state.focusFilter==='selected'&&state.selected.size===0)return 'No selected function-level code assets. Clear the Selected focus or select visible rows first.'" not in inventory_text
     for label in [
         "Runtime assets",
         "Needs review",
@@ -2686,13 +2690,13 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "enhanceAll(document)" not in inventory_text
 
 
-def test_callable_inventory_selected_focus_empty_state_is_clear() -> None:
-    """Verify Selected focus with no selection has a specific empty-state message."""
+def test_callable_inventory_selected_focus_empty_state_is_removed() -> None:
+    """Verify separate Selected focus empty-state copy is removed with dropdown filters."""
     inventory_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
 
-    assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." in inventory_text
-    assert "state.focusFilter==='selected'&&state.selected.size===0" in inventory_text
-    assert "state.focusFilter==='selected'&&!state.selected.has(i.qualified_name)" in inventory_text
+    assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." not in inventory_text
+    assert "state.focusFilter==='selected'&&state.selected.size===0" not in inventory_text
+    assert "state.focusFilter==='selected'&&!state.selected.has(i.qualified_name)" not in inventory_text
 
 
 def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
