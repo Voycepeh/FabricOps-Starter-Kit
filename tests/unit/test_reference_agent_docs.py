@@ -431,9 +431,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     assert "openFunctionCallGraphJson" in dashboard_text
     assert "data-public-flow" in dashboard_text
-    assert "publicCallableList" in dashboard_text
+    assert "architectureScopeTableBody" in dashboard_text
+    assert "publicCallableList" not in dashboard_text
     assert "publicFlowDetails" in dashboard_text
     assert "Selected public function flow" in dashboard_text
+    assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
     assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Selected scope runtime inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
@@ -2607,11 +2609,43 @@ def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
 
 
 
+
+def test_function_call_graph_architecture_scope_table_rendering_contract() -> None:
+    """Verify architecture scope table DOM and JavaScript stay connected."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
+
+    assert 'id="architectureScopeTable"' in dashboard_text
+    assert 'id="architectureScopeTableBody"' in dashboard_text
+    assert "$('architectureScopeTableBody').innerHTML=specialRows+rows.map" in compact_dashboard_text
+    assert "document.querySelector('#architectureScopeTable')" in dashboard_text
+    assert "document.addEventListener('DOMContentLoaded',loadData)" in dashboard_text
+    assert "renderPublicCallableList()" in dashboard_text
+    assert "Failed to render architecture scope table:" in dashboard_text
+    assert "Loading function call graph data...</td>" not in dashboard_text
+    assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
+
+
+def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
+    """Verify public callable rows can fall back to function_inventory only when flows are absent."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
+
+    assert "function isPublicCallableInventoryRow(row)" in dashboard_text
+    assert "function inventoryRowToPublicFlow(row)" in dashboard_text
+    assert "function derivePublicFlowsFromInventory(rows)" in dashboard_text
+    assert "publicEntryFlows=derivePublicFlowsFromInventory(inventory);publicFlowsFromInventory=publicEntryFlows.length>0" in compact_dashboard_text
+    assert "publicFlowsFromInventory=false;if(!publicEntryFlows.length)" in compact_dashboard_text
+    assert "publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found" in dashboard_text
+    assert "All runtime assets" in dashboard_text
+    assert "Others / Cannot trace back to a public function" in dashboard_text
+
 def test_callable_inventory_export_workflow_is_quick_first() -> None:
     """Verify runtime inventory export workflow is compact, quick-first, and before table review."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
 
+    assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public function flow")
     assert dashboard_text.index("Selected public function flow") < dashboard_text.index("Export runtime inventory cleanup packet")
     assert dashboard_text.index("Export runtime inventory cleanup packet") < dashboard_text.index('id="runtime-inventory"')
     assert dashboard_text.index("Export runtime inventory cleanup packet") < dashboard_text.index('class="callable-review-table"')
@@ -2724,7 +2758,7 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "action_details" in inventory_text
     assert re.search(r"\$\(['\"]inventoryBody['\"]\)\.innerHTML\s*=\s*visibleRows\s*\.map", inventory_text)
     assert re.search(
-        r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",
+        r"window\.FabricOpsTableControls\.enhance\(\s*document\.querySelector\(['\"]#runtime-inventory table\[data-table-controls=\"excel\"\]['\"]\s*,?\s*\)\s*,?\s*\)",
         inventory_text,
     )
     assert "enhanceAll(document)" not in inventory_text
