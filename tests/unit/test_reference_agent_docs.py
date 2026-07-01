@@ -3851,3 +3851,82 @@ setTimeout(() => {
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_generated_dashboard_resolves_every_public_table_row(tmp_path: Path) -> None:
+    """Verify every normal public table row resolves to populated public flow data."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    flow_json = (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+    flow_data = json.loads(flow_json)
+    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_flows"]}
+
+    assert flow_data["public_flows"]
+    assert flows_by_name["read_lakehouse_table"]["transitive_callees"]
+    assert flows_by_name["display_guardrail_results"]["transitive_callees"]
+    assert flows_by_name["widget_pipeline_bootstrap"]["transitive_callees"]
+
+    dashboard_fixture = tmp_path / "dashboard.html"
+    flow_fixture = tmp_path / "function-call-graph.json"
+    dashboard_fixture.write_text(dashboard_text, encoding="utf-8")
+    flow_fixture.write_text(flow_json, encoding="utf-8")
+    node_script = tmp_path / "resolve_every_public_row.js"
+    node_script.write_text(
+        r"""
+const fs = require('fs');
+const html = fs.readFileSync(process.env.DASHBOARD_HTML_PATH, 'utf8');
+const flowData = JSON.parse(fs.readFileSync(process.env.FLOW_JSON_PATH, 'utf8'));
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.fetch = async () => ({ ok: true, json: async () => flowData });
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+setTimeout(() => {
+  const bodyHtml = element('architectureScopeTableBody').innerHTML;
+  const rowKeys = [...bodyHtml.matchAll(/<tr[^>]*data-public-flow-row="([^"]+)"/g)].map(match => match[1]);
+  if (!rowKeys.length) throw new Error(bodyHtml);
+  const requiredClickKeys = [
+    'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table',
+    'fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap',
+  ];
+  for (const key of requiredClickKeys) {
+    if (!rowKeys.includes(key)) throw new Error(`Missing expected public row key: ${key}`);
+  }
+  for (const qn of rowKeys) {
+    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
+    const flowHtml = element('publicFlowDetails').innerHTML;
+    if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) {
+      throw new Error(`Unresolved public row ${qn}: ${flowHtml}`);
+    }
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) {
+      throw new Error(`Missing graph tree for ${qn}: ${flowHtml}`);
+    }
+  }
+}, 0);
+        """,
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "DASHBOARD_HTML_PATH": str(dashboard_fixture),
+            "FLOW_JSON_PATH": str(flow_fixture),
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
