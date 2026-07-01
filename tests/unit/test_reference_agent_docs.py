@@ -500,7 +500,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "renderPublicCallableList()" in dashboard_text
     assert "renderFlowDetails()" in dashboard_text
     assert "Loading function call graph data..." not in dashboard_text.split('<section id="runtime-inventory"')[0]
-    assert "Loaded${inventory.length}totalfunctions;${publicEntryFlows.length}publiccallablesavailable;${visibleFlows.length}rowsafterfilters.${warning}" in compact_dashboard_text
+    assert "Loadedfunction-call-graph.json:${publicEntryFlows.length}publicflows" in compact_dashboard_text
+    assert "function-call-graph-dashboard-meta.json" in dashboard_text
+    assert "fetch(url,{headers:{Accept:'application/json'}})" in compact_dashboard_text
+    assert "EMBEDDED_FUNCTION_CALL_GRAPH_DATA" not in dashboard_text
+    assert '"function_inventory"' not in dashboard_text
     assert "Runtime inventory" in dashboard_text
     assert "Cannot trace back to a public callable" in dashboard_text
     assert "Unreachable runtime asset" not in dashboard_text
@@ -589,7 +593,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "architectureSummaryRuntime" not in dashboard_text
     assert "function renderArchitectureSummaryCards(scopedRows)" in dashboard_text
     assert "setSummaryValue('architectureSummaryRuntime',rows.length)" not in compact_dashboard_text
-    assert re.search(r'id="architectureSummaryPublic">[1-9]\d*<', dashboard_text)
+    assert 'id="architectureSummaryPublic">0<' in dashboard_text
     assert "rows.filter(isPublicCallable).length" in compact_dashboard_text
     assert "rows.filter(isActionable).length" in compact_dashboard_text
     assert "Keep public" not in dashboard_text
@@ -657,9 +661,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "+'_data/function-call-graph.json'" in compact_dashboard_text
     assert "+'reference/_data/function-call-graph.json'" in compact_dashboard_text
     assert "newURL('reference/_data/function-call-graph.json',document.baseURI).href" in compact_dashboard_text or "newURL('reference/_data/function-call-graph.json',document.baseURI,).href" in compact_dashboard_text
-    assert "Failed to load function call graph data. Attempted URL:" in dashboard_text
-    assert "HTTP status:" in dashboard_text
-    assert "Error message:" in dashboard_text
+    assert "Failed to load function-call-graph.json" in dashboard_text
     assert "function renderLoadedCount()" in dashboard_text
     assert "total functions; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters" in dashboard_text
     assert "renderLoadedCount();syncPreRenderedPublicCallableRows();" in compact_dashboard_text
@@ -751,7 +753,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Data source:</strong>" not in inventory_text
     assert "SGT" in inventory_text
     assert " UTC" not in inventory_text
-    assert re.search(r"\d{2} [A-Z][a-z]{2} \d{4}, \d{1,2}:\d{2} [AP]M SGT", inventory_text)
     assert "Date.now" not in inventory_text
     assert "Function Call Graph" in inventory_text
     assert "function-call-graph-dashboard.html" in inventory_text
@@ -907,6 +908,13 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert combined_dashboard_assets.count("Allow breaking changes") >= 2
     assert "compatibility_mode" in combined_dashboard_assets
     assert "function downloadPacket(format)" in combined_dashboard_assets
+
+    meta_path = REFERENCE_DIR / "_data" / "function-call-graph-dashboard-meta.json"
+    assert meta_path.exists()
+    dashboard_meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert dashboard_meta["data_source"] == "function-call-graph.json"
+    assert dashboard_meta["source_generated_at_utc"].endswith("Z")
+    assert dashboard_meta["dashboard_ui_generated_at_utc"].endswith("Z")
 
     flow_data = json.loads(flow_data_path.read_text(encoding="utf-8"))
     assert set(flow_data) == {
@@ -1177,6 +1185,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "private_helper_review_items",
         "external_dependents_count",
         "end_node_count",
+        "selected_flow_tree_html",
     }
     assert all(set(flow) == expected_public_flow_keys for flow in public_flows)
     assert all(flow["source_python_files"] for flow in public_flows)
@@ -1459,8 +1468,8 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     )
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f"><code>{helper_name}(...)</code></a>" in implementation_section
-    assert "><code>_guardrail_reason(...)</code></a>" in implementation_section
+        assert f"<code>{helper_name}(...)</code>" in implementation_section
+    assert "<code>_guardrail_reason(...)</code>" in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
@@ -1481,15 +1490,15 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert "```text" not in implementation_section
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f"><code>{helper_name}(...)</code></a>" in implementation_section
-    assert "><code>_guardrail_reason(...)</code></a>" in implementation_section
+        assert f"<code>{helper_name}(...)</code>" in implementation_section
+    assert "<code>_guardrail_reason(...)</code>" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
     """Return normalized callable names and prefixes from a generated call tree."""
     rows = []
     for prefix, name in re.findall(
-        r'<div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">(?P<prefix>.*?)</span>.*?<code>(?P<name>[^(<]+)\(\.\.\.\)</code></(?:a|div)>',
+        r'<div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">(?P<prefix>.*?)</span>.*?<code>(?P<name>[^(<]+)\(\.\.\.\)</code>',
         text,
     ):
         rows.append(f"{prefix}{name}")
@@ -2712,7 +2721,7 @@ def test_function_call_graph_dashboard_status_summary_artifact_is_fresh() -> Non
     intro = '<sectionclass="architecture-status-intro"aria-labelledby="architectureStatusSummaryHeading"><h2id="architectureStatusSummaryHeading">Publiccallablessummary</h2><p>Publiccallableswithsignalsaresummarizedbyarchitecturestatus.</p></section><sectionclass="architecture-summary-cards"'
     healthy_card = '<articleclass="architecture-summary-cardgood"><span>Healthypubliccallables</span>'
     orphan_row = 'Others/Cannottracebacktoapubliccallable</button></td><tdclass="num">—</td><tdclass="num">'
-    orphan_signal_cell = '<td><spanclass="badgewarn">Verifypossibleorphan</span></td><td></td></tr>'
+    orphan_signal_cell = '<td><spanclass="badgewarn">Verifypossibleorphan</span></td></tr>'
     for snippet in (intro, healthy_card, orphan_row, orphan_signal_cell):
         assert snippet in committed_compact
         assert snippet in generated_compact
@@ -2731,17 +2740,17 @@ def test_function_call_graph_initial_all_scope_has_no_selected_public_row() -> N
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     compact_dashboard_text = ''.join(dashboard_text.split())
 
-    assert 'data-public-flow-row="fabricops_kit.pipeline.display_guardrail_results"' in dashboard_text
+    assert 'data-public-flow-row="${qn}"' in dashboard_text
     assert 'class=" active severity-' not in dashboard_text
     assert 'aria-selected="true"' not in dashboard_text
-    assert "const selected=Boolean(state.selectedFlow)&&qn===state.selectedFlow" in dashboard_text
+    assert "selected=Boolean(state.selectedFlow)&&flow.qualified_name===state.selectedFlow" in dashboard_text
     assert "if(!state.activePublicFlow&&visibleFlows.length)state.activePublicFlow=visibleFlows[0].qualified_name" not in dashboard_text
     assert "state.activePublicFlow='';state.selectedFlow=''" in dashboard_text
     assert "severity-architecture-row" in dashboard_text
     assert "severity-review-row" in dashboard_text
-    assert "severity-neutral-row" in dashboard_text
+    assert "severity-${severity}-row" in dashboard_text
     assert "All runtime assets selected. No single public callable flow is shown for this scope." in dashboard_text
-    assert "row.classList.toggle('active',selected);row.setAttribute('aria-selected',selected?'true':'false')" in compact_dashboard_text
+    assert "class=\"${selected?'active ':''}severity-${severity}-row\"" in dashboard_text
 
 def test_function_call_graph_architecture_scope_table_rendering_contract() -> None:
     """Verify architecture scope table DOM and JavaScript stay connected."""
@@ -2754,11 +2763,10 @@ def test_function_call_graph_architecture_scope_table_rendering_contract() -> No
     assert "Search public callables" not in dashboard_text
     assert 'id="publicSearchBox"' not in dashboard_text
     assert 'id="publicSurfaceCards"' not in dashboard_text
-    assert 'data-public-flow-row="fabricops_kit.' in dashboard_text
+    assert 'data-public-flow-row="${qn}"' in dashboard_text
     assert '<th>Summary</th>' not in dashboard_text
-    assert 'data-public-flow-summary=' in dashboard_text
     assert "syncPreRenderedPublicCallableRows()" in dashboard_text
-    assert "document.querySelectorAll('[data-public-flow-row]')" in dashboard_text
+    assert "function renderArchitectureScopeRows()" in dashboard_text
     assert "$('architectureScopeTableBody').innerHTML=specialRows+rows.map" not in compact_dashboard_text
     assert "renderPublicCallableList()" in dashboard_text
     assert "publicFlowBySelectionKey" in dashboard_text
@@ -3216,9 +3224,9 @@ def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
     assert "No function-level code assets found for the current search or column filters." in inventory_text
     assert "No selected function-level code assets. Clear the Selected focus or select visible rows first." not in inventory_text
     assert "Runtime inventory data is missing from function-call-graph.json. Regenerate the function call graph export." in inventory_text
-    assert "Failed to load function call graph data. URL:" in inventory_text
+    assert "Failed to load function-call-graph.json" in inventory_text
     assert "function-call-graph.json" in inventory_text
-    assert "updateFunctionCallGraphDataLink(attemptedUrl)" in inventory_text
+    assert "updateFunctionCallGraphDataLink(url)" in inventory_text
     assert "downloadLink.href=url" in compact_inventory_text
     assert "downloadLink.download='function-call-graph.json'" in compact_inventory_text
     assert "Error: ${error&&error.message?error.message:String(error)}" in inventory_text or "Error: ${error && error.message ? error.message : String(error)}" in inventory_text
@@ -4105,7 +4113,7 @@ setTimeout(() => {
   const required = JSON.parse(process.env.REQUIRED_QNS);
   const excelKey = 'fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel';
   const debug = publicFlowHydrationDebug(excelKey);
-  if (fetchCount !== 1) throw new Error(`fetch count: ${fetchCount}`);
+  if (fetchCount !== 2) throw new Error(`fetch count: ${fetchCount}`);
   if (!global.lastFetchUrl.includes('reference/_data/function-call-graph.json')) throw new Error(global.lastFetchUrl);
   if (!debug.loaded_json_url.includes('reference/_data/function-call-graph.json')) throw new Error(JSON.stringify(debug));
   if (debug.public_entry_flows_length !== 25) throw new Error(JSON.stringify(debug));
@@ -4322,15 +4330,15 @@ eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
   const key = 'fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel';
-  if (fetchCount !== 1) throw new Error(`fetch count: ${fetchCount}`);
+  if (fetchCount !== 2) throw new Error(`fetch count: ${fetchCount}`);
   const debug = publicFlowHydrationDebug(key);
   if (!debug.loaded_json_url.includes('reference/_data/function-call-graph.json')) throw new Error(JSON.stringify(debug));
-  if (!debug.last_fetch_error.includes('HTTP 404 Not Found')) throw new Error(JSON.stringify(debug));
+  if (!debug.last_load_error.includes('HTTP 404 Not Found')) throw new Error(JSON.stringify(debug));
   listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: key } }; return null; } } });
   const status = element('dataLoadStatus').textContent;
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!status.includes('Failed to load function-call-graph.json') || !status.includes('HTTP 404 Not Found')) throw new Error(status);
-  if (!flowHtml.includes('Dashboard did not load') || !flowHtml.includes('HTTP 404 Not Found') || !flowHtml.includes('reference/_data/function-call-graph.json')) throw new Error(flowHtml);
+  if (!flowHtml.includes('Function call graph data could not load') || !flowHtml.includes('HTTP 404 Not Found') || !flowHtml.includes('reference/_data/function-call-graph.json')) throw new Error(flowHtml);
   if (flowHtml.includes('Regenerate <code>function-call-graph.json</code>')) throw new Error(flowHtml);
 }, 0);
         """,
@@ -4383,10 +4391,10 @@ global.URL = URL; global.Blob = class {};
 eval(scripts[0]);
 if (!listeners['document:DOMContentLoaded']) throw new Error('DOMContentLoaded listener was not registered');
 listeners['document:DOMContentLoaded']();
-if (fetchCount !== 1) throw new Error(`loadData was not called exactly once during boot; fetch count: ${fetchCount}`);
+if (fetchCount !== 1) throw new Error(`loadData should start metadata fetch during boot; fetch count: ${fetchCount}`);
 const debug = publicFlowHydrationDebug('fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel');
 if (!debug.loaded_json_url || debug.loaded_json_url === 'Not loaded') throw new Error(JSON.stringify(debug));
-if (!global.lastFetchUrl.includes('reference/_data/function-call-graph.json')) throw new Error(global.lastFetchUrl);
+if (!global.lastFetchUrl.includes('reference/_data/function-call-graph-dashboard-meta.json')) throw new Error(global.lastFetchUrl);
 const status = element('dataLoadStatus').textContent;
 if (!status.includes('Loading function-call-graph.json')) throw new Error(status);
 releaseFetch();
@@ -4414,7 +4422,7 @@ def test_generated_dashboard_boot_helper_supports_ready_states_and_guard(tmp_pat
     assert "function startDashboardBoot()" in dashboard_text
     assert "document.readyState==='loading'" in dashboard_text
     assert "addEventListener('DOMContentLoaded',startDashboardBoot,{once:true})" in dashboard_text
-    assert "loadedFunctionCallGraphUrl=attemptedUrl" in dashboard_text
+    assert "loadedFunctionCallGraphUrl=functionCallGraphDataUrl()" in dashboard_text
 
     dashboard_fixture = tmp_path / "dashboard.html"
     flow_fixture = tmp_path / "function-call-graph.json"
@@ -4459,11 +4467,11 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
 }
 (async () => {
   let result = await runCase('loading', true, false);
-  if (result.fetchCount !== 1) throw new Error(`loading fetch count ${result.fetchCount}`);
+  if (result.fetchCount !== 2) throw new Error(`loading fetch count ${result.fetchCount}`);
   result = await runCase('complete', false, false);
-  if (result.fetchCount !== 1) throw new Error(`complete fetch count ${result.fetchCount}`);
+  if (result.fetchCount !== 2) throw new Error(`complete fetch count ${result.fetchCount}`);
   result = await runCase('interactive', false, true);
-  if (result.fetchCount !== 1) throw new Error(`guard fetch count ${result.fetchCount}`);
+  if (result.fetchCount !== 2) throw new Error(`guard fetch count ${result.fetchCount}`);
 })();
         """,
         encoding="utf-8",
@@ -4595,16 +4603,14 @@ def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table
     assert tree_html.index("_resolve_lakehouse_schema") < tree_html.index("_normalize_schema_name")
 
 
-def test_dashboard_generator_uses_embedded_data_without_runtime_json_fetch() -> None:
-    """Verify dashboard source initializes from embedded generator data, not runtime JSON URLs."""
+def test_dashboard_generator_fetches_runtime_json_without_embedded_payload() -> None:
+    """Verify dashboard source fetches runtime JSON instead of embedding graph data."""
     source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
 
-    assert "const EMBEDDED_FUNCTION_CALL_GRAPH_DATA=" in source
-    assert "function loadData(){lastFunctionCallGraphLoadError=''" in source
-    assert "fetch(attemptedUrl" not in source
-    assert "Attempted URL" not in source
-    assert "Loaded JSON URL" not in source
-    assert "Embedded graph data present" in source
-    assert "Embedded graph generated_at_utc" in source
-    assert "Embedded selected-flow records count" in source
+    assert "const EMBEDDED_FUNCTION_CALL_GRAPH_DATA=" not in source
+    assert "function-call-graph-dashboard-meta.json" in source
+    assert "function-call-graph.json" in source
+    assert "fetchJson(loadedFunctionCallGraphUrl)" in source
+    assert "Loaded JSON URL" in source
+    assert "Embedded graph data present" not in source
     assert "boot-dashboard-v2-static" in source
