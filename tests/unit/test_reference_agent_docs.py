@@ -3076,6 +3076,12 @@ def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     assert "publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found" in dashboard_text
     assert "All runtime assets" in dashboard_text
     assert "Others / Cannot trace back to a public function" in dashboard_text
+    orphan_row_start = dashboard_text.index('data-architecture-scope-special="unreachable"')
+    orphan_row_end = dashboard_text.index("</tr>", orphan_row_start)
+    orphan_row = dashboard_text[orphan_row_start:orphan_row_end]
+    assert "Others / Cannot trace back to a public function" in orphan_row
+    assert "Verify possible orphan" in orphan_row
+    assert '<span class="badge warn">Cannot trace back to a public function</span>' not in orphan_row
 
 def test_callable_inventory_export_workflow_is_quick_first() -> None:
     """Verify runtime inventory export workflow is compact, quick-first, and before table review."""

@@ -4109,7 +4109,7 @@ def _render_dashboard_architecture_scope_rows(flow_data: dict[str, Any]) -> str:
         '<tr data-architecture-scope-special="all" tabindex="0"><td><button type="button" class="callable-button">All runtime assets</button></td><td class="num">—</td>'
         f'<td class="num">{all_runtime_count}</td><td class="num">—</td><td></td><td></td></tr>',
         '<tr data-architecture-scope-special="unreachable" tabindex="0"><td><button type="button" class="callable-button">Others / Cannot trace back to a public function</button></td><td class="num">—</td>'
-        f'<td class="num">{unreachable_count}</td><td class="num">—</td><td><span class="badge warn">Verify possible orphan</span></td><td><span class="badge warn">Cannot trace back to a public function</span></td></tr>',
+        f'<td class="num">{unreachable_count}</td><td class="num">—</td><td><span class="badge warn">Verify possible orphan</span></td></tr>',
     ]
     if not public_flows:
         rows.append('<tr data-public-flow-empty="true"><td colspan="5">No public callable flows found in function-call-graph.json.</td></tr>')
