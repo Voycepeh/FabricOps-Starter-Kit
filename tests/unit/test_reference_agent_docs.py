@@ -682,8 +682,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Maybecombinehelpers:${esc(mergeCandidateCount(flow))}" in compact_dashboard_text
     assert "deep cross-module helper chains" not in dashboard_text
     assert "inline single-use helper" not in dashboard_text
-    assert "Helper suggestions are review hints, not automatic judgments." in dashboard_text
-    assert "Helper suggestions are review hints, not automatic judgments." in inventory_text
     assert "function timesUsedLabel(count)" in inventory_text
     assert "Times used:" in inventory_text
     assert "Used once" in inventory_text
@@ -2837,10 +2835,10 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "Manual selection mode" not in dashboard_text
     assert "toolbar-card--export-mode" not in dashboard_text
     assert "export-mode-toggle" in dashboard_text
-    assert "export-summary-grid" in dashboard_text
-    assert "Export scope" in dashboard_text
-    assert "Visible rows" in dashboard_text
-    assert "Selected rows" in dashboard_text
+    assert "export-summary-grid" not in dashboard_text
+    assert "Export scope" not in dashboard_text
+    assert "Visible rows" not in dashboard_text
+    assert "Selected rows" not in dashboard_text
     assert "Export selected public function flow" in dashboard_text
     assert "Export manually selected rows" in dashboard_text
     assert "Export all visible runtime assets" in dashboard_text
@@ -2861,6 +2859,12 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "No static path found" not in dashboard_text
     assert "Remove orphaned asset" not in dashboard_text
     assert "function exportRows()" in dashboard_text
+    assert "function quickExportRows(){return inventory.filter(rowInSelectedScope)}" in dashboard_text
+    assert "function handleExportModeChange" in dashboard_text
+    assert "Switching selection mode will reset selected rows and clear runtime inventory filters. Continue?" in dashboard_text
+    assert "resetRuntimeInventorySelectionState" in dashboard_text
+    assert "Quick export scoped rows" in dashboard_text
+    assert "isRowSelectedForMode" in dashboard_text
     assert "export_mode:exportMode()" in compact_dashboard_text
 
 def test_callable_inventory_dashboard_dynamic_table_contract() -> None:
