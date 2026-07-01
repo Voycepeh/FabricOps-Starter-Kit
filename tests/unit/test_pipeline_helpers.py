@@ -11,7 +11,8 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
-from fabricops_kit.pipeline import shared as pipeline
+import fabricops_kit.pipeline as pipeline
+from fabricops_kit.pipeline import shared as pipeline_shared
 pipeline_bootstrap_module = importlib.import_module("fabricops_kit.widgets.widget_pipeline_bootstrap")
 widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
 from tests.helpers import framework_config
@@ -225,7 +226,7 @@ def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch)
         assert context["env"] == "dev"
         writes.append((df, context["env"], target, table, kwargs))
 
-    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
+    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", write_table)
 
     result = pipeline.write_pipeline_lineage(
         spark=FakeSpark(),
@@ -253,7 +254,7 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
         assert context["env"] == "dev"
         writes.append((df, context["env"], target, table, kwargs))
 
-    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", write_table)
+    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", write_table)
 
     row = pipeline.write_pipeline_run_summary(
         spark=fake_spark,
@@ -276,9 +277,9 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
 
 def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
     """Verify summary status treats baseline created as passed and skipped as nonblocking."""
-    assert pipeline._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
-    assert pipeline._summary_status({"s1": {"status": "skipped"}}) == "skipped"
-    assert pipeline._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
+    assert pipeline_shared._summary_status({"s1": {"status": "baseline_created"}}) == "passed"
+    assert pipeline_shared._summary_status({"s1": {"status": "skipped"}}) == "skipped"
+    assert pipeline_shared._summary_status({"s1": {"status": "passed"}, "s2": {"status": "skipped"}}) == "passed"
 
 
 def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_boolean_columns(spark_session):
@@ -311,7 +312,7 @@ def test_normalize_catalogue_evidence_types_casts_numeric_percent_timestamp_and_
 
 def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves_target_fields():
     """Verify private guardrail evidence definitions excludes dataframes and resolves target fields."""
-    definitions = pipeline._build_guardrail_evidence_definitions(
+    definitions = pipeline_shared._build_guardrail_evidence_definitions(
         [
             {
                 "key": "target_01",
@@ -372,12 +373,12 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         catalogue_calls.append((profiles, definitions, kwargs))
         return {"status": "written"}
 
-    monkeypatch.setattr(pipeline, "profile_dataframe_core", fake_profile)
-    monkeypatch.setattr(pipeline, "_check_schema_runtime", fake_validate)
-    monkeypatch.setattr(pipeline, "enforce_freshness", fake_freshness)
-    monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
-    monkeypatch.setattr(pipeline, "_run_active_dq_guardrail", fake_dq)
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", fake_catalogue)
+    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", fake_profile)
+    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", fake_validate)
+    monkeypatch.setattr(pipeline_shared, "enforce_freshness", fake_freshness)
+    monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", fake_stability)
+    monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", fake_dq)
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", fake_catalogue)
 
     table_configs = [
         {
@@ -446,17 +447,17 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
         def createDataFrame(self, rows):
             return rows
 
-    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []})
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []})
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
 
     def fake_result_writer(**kwargs):
         result_writes.append(kwargs)
 
-    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", fake_result_writer)
+    monkeypatch.setattr(pipeline_shared, "_write_guardrail_result_row", fake_result_writer)
 
     pipeline.run_table_guardrails(
         [{
@@ -479,16 +480,16 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     """Verify profile behavior config uses clean profile_mode values only."""
     stability_calls = []
 
-    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
 
     def fake_stability(*args, **kwargs):
         stability_calls.append(kwargs)
         return {"status": "passed", "can_continue": True}
 
-    monkeypatch.setattr(pipeline, "enforce_profile_behavior", fake_stability)
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
+    monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", fake_stability)
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
 
     table_configs = [
         {
@@ -538,12 +539,12 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []
 
-    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
-    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
-    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
-    monkeypatch.setattr(pipeline, "stop_if_failed", lambda result: stopped.append(result))
+    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
+    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
+    monkeypatch.setattr(pipeline_shared, "stop_if_failed", lambda result: stopped.append(result))
 
     pipeline.run_table_guardrails(
         [
@@ -652,7 +653,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         },
     )
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "enforce_profile_behavior",
         lambda *args, **kwargs: {
             "status": "skipped",
@@ -668,8 +669,8 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
         "_run_active_dq_guardrail",
         lambda *args, **kwargs: {"status": "failed", "can_continue": False, "checks": [{"rule_id": "id_required", "status": "failed"}]},
     )
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
-    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline_shared, "_write_guardrail_result_row", lambda **kwargs: None)
 
     result = pipeline.run_table_guardrails(
         [
@@ -710,14 +711,14 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
         "profile_dataframe_core",
         lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
     )
-    monkeypatch.setattr(pipeline, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
-    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+    monkeypatch.setattr(pipeline_shared, "_write_guardrail_result_row", lambda **kwargs: None)
 
     def fail_if_called(*args, **kwargs):
         raise AssertionError("dq_preset='skip' should not call _run_active_dq_guardrail")
 
-    monkeypatch.setattr(pipeline, "_run_active_dq_guardrail", fail_if_called)
+    monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", fail_if_called)
 
     result = pipeline.run_table_guardrails(
         [
@@ -753,7 +754,6 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 def test_widget_pipeline_bootstrap_public_import_surface():
     """Verify widget_pipeline_bootstrap remains available from public package surfaces."""
     assert fabricops_kit.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
-    assert pipeline.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
 
 
 def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
@@ -771,7 +771,7 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
         lambda: {"agreement_id": "agreement-1", "contract_version": "2", "registration_id": "registry-1"},
     )
 
-    result = pipeline.widget_pipeline_bootstrap(
+    result = fabricops_kit.widget_pipeline_bootstrap(
         notebook_type="02_pipeline",
         select_agreement=True,
         register_notebook=True,
@@ -813,27 +813,27 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
         context={"config": "config", "env": "dev"},
     )
     monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
-    monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
-    monkeypatch.setattr(pipeline, "profile_dataframe_core", lambda *args, **kwargs: FakeDataFrame("profile"))
-    monkeypatch.setattr(pipeline, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
+    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda *args, **kwargs: FakeDataFrame("profile"))
+    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     captured = {}
     monkeypatch.setattr(
-        pipeline,
+        pipeline_shared,
         "enforce_profile_behavior",
         lambda spark_session, dataframe, catalogue_table, dataset_name, table_name, **kwargs: captured.setdefault(
             "profile_behavior",
             {"spark_session": spark_session, "run_id": kwargs["run_id"]},
         ) or {"status": "passed", "can_continue": True},
     )
-    monkeypatch.setattr(pipeline, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline, "_write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "_write_guardrail_result_row", lambda **kwargs: None)
 
     def fake_write_catalogue_evidence(profiles, definitions, **kwargs):
         captured["catalogue"] = kwargs
         return {"orders": "written"}
 
-    monkeypatch.setattr(pipeline, "write_catalogue_evidence", fake_write_catalogue_evidence)
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", fake_write_catalogue_evidence)
     table_configs = [{"key": "orders", "df": FakeDataFrame("orders"), "expected_schema": {}}]
 
     result = pipeline.run_table_guardrails(table_configs, table_role="source", mode="profile")
@@ -865,9 +865,9 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
         target_definitions={"curated": {"table_name": "curated"}},
     )
     monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
-    monkeypatch.setattr(pipeline, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", {"config": framework_config(), "env": "dev"}))
+    monkeypatch.setattr(pipeline_shared, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", {"config": framework_config(), "env": "dev"}))
     writes = []
-    monkeypatch.setattr(pipeline, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
+    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
     source_results = {"can_continue": True, "schema_results": {"orders": {"status": "passed"}}, "catalogue_status": {"orders": "written"}}
     target_results = {"can_continue": False, "dq_results": {"curated": {"status": "failed"}}, "catalogue_status": {"curated": "written"}}
 
