@@ -4477,3 +4477,49 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
         check=False,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table() -> None:
+    """Verify dashboard selected-flow payload reuses generated reference tree HTML."""
+    from scripts import generate_function_reference as generator
+
+    graph = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
+    node_by_qn = {
+        row["qualified_name"]: {
+            "callable_name": row.get("function_name") or row["qualified_name"].split(".")[-1],
+            "module_name": row.get("module"),
+            "exported": row.get("function_type") == "Public function",
+        }
+        for row in graph["function_inventory"]
+        if row.get("qualified_name")
+    }
+    trimmed = generator._trim_callable_flow_dashboard_contract(graph, node_by_qn, {})
+    flow = next(
+        item for item in trimmed["public_entrypoint_flow"] if item["function_name"] == "read_lakehouse_table"
+    )
+    tree_html = flow["selected_flow_tree_html"]
+
+    assert 'data-callable-architecture-flow="true"' in tree_html
+    assert "read_lakehouse_table" in tree_html
+    assert "get_spark_session" in tree_html
+    assert "read_delta_path" in tree_html
+    assert "resolve_configured_lakehouse_table" in tree_html
+    assert "_resolve_lakehouse_schema" in tree_html
+    assert "_normalize_schema_name" in tree_html
+    assert tree_html.index("resolve_lakehouse_table_location") < tree_html.index("_resolve_lakehouse_schema")
+    assert tree_html.index("_resolve_lakehouse_schema") < tree_html.index("_normalize_schema_name")
+
+
+def test_dashboard_generator_uses_embedded_data_without_runtime_json_fetch() -> None:
+    """Verify dashboard source initializes from embedded generator data, not runtime JSON URLs."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+
+    assert "const EMBEDDED_FUNCTION_CALL_GRAPH_DATA=" in source
+    assert "function loadData(){lastFunctionCallGraphLoadError=''" in source
+    assert "fetch(attemptedUrl" not in source
+    assert "Attempted URL" not in source
+    assert "Loaded JSON URL" not in source
+    assert "Embedded graph data present" in source
+    assert "Embedded graph generated_at_utc" in source
+    assert "Embedded selected-flow records count" in source
+    assert "boot-dashboard-v2-static" in source
