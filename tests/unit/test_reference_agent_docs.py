@@ -185,6 +185,23 @@ def test_generated_callable_surface_matches_all_exports() -> None:
     assert not (removed_symbols & public_inventory)
 
 
+def test_dashboard_public_callable_links_include_deployed_docs_prefix() -> None:
+    """Verify dashboard public callable links preserve deployed docs version prefixes."""
+    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    compact_dashboard_text = "".join(dashboard_text.split())
+
+    assert "function docsHref(docsPath)" in dashboard_text
+    assert "if(row.docs_path)return docsHref(row.docs_path)" in dashboard_text
+    assert "if(i.docs_path)return docsHref(i.docs_path)" in dashboard_text
+    assert "path.slice(0,path.indexOf(assetsMarker)+1)+clean" in dashboard_text
+    assert "path.slice(0,path.indexOf(referenceMarker)+1)+clean" in dashboard_text
+    assert "../'+String(row.docs_path)" not in dashboard_text
+    assert "../'+String(i.docs_path)" not in dashboard_text
+    assert 'href="/FabricOps-Starter-Kit/api/reference/' not in dashboard_text
+    assert "docsHref(row.docs_path)" in compact_dashboard_text
+    assert "docsHref(i.docs_path)" in compact_dashboard_text
+
+
 def test_public_config_classes_have_reference_taxonomy() -> None:
     """Verify public config classes are searchable and separate from public functions."""
     class_names = CONFIG_MODEL_SYMBOLS
