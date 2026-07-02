@@ -1612,6 +1612,59 @@ def _remove_stale_function_taxonomy_audit() -> None:
     FUNCTION_TAXONOMY_AUDIT_PATH.unlink(missing_ok=True)
 
 
+
+def _callable_identity_keys(value: str | None) -> list[str]:
+    """Return dashboard lookup keys for a callable identity."""
+    raw = str(value or "").strip()
+    if not raw:
+        return []
+    keys = [raw]
+    without_prefix = re.sub(r"^fabricops_kit\.", "", raw)
+    keys.append(without_prefix)
+
+    def add(candidate: str | None) -> None:
+        if candidate:
+            cleaned = re.sub(r"^fabricops_kit\.", "", candidate)
+            keys.append(candidate)
+            keys.append(f"fabricops_kit.{cleaned}")
+
+    parts = [part for part in without_prefix.split(".") if part]
+    last = parts[-1] if parts else ""
+    if last:
+        keys.append(last)
+    if len(parts) >= 2:
+        owner = ".".join(parts[:-1])
+        keys.append(owner)
+        add(owner)
+        if parts[-1] == parts[-2]:
+            deduped_owner = ".".join(parts[:-1])
+            keys.append(deduped_owner)
+            add(deduped_owner)
+    if len(parts) >= 3:
+        module_owner = ".".join(parts[:2])
+        module_function = ".".join([*parts[:2], last])
+        keys.extend([module_owner, module_function])
+        add(module_owner)
+        add(module_function)
+    return list(dict.fromkeys(key for key in keys if key))
+
+
+def _public_flow_selection_keys(flow: dict[str, Any]) -> list[str]:
+    """Return all dashboard selection keys for a public callable flow."""
+    module_name = str(flow.get("module") or "").removeprefix("fabricops_kit.")
+    function_name = str(flow.get("function_name") or flow.get("public_callable") or "")
+    qualified_name = str(flow.get("qualified_name") or "")
+    keys: list[str] = []
+    for value in (
+        qualified_name,
+        function_name,
+        module_name,
+        f"{module_name}.{function_name}" if module_name and function_name else "",
+        f"fabricops_kit.{module_name}.{function_name}" if module_name and function_name else "",
+    ):
+        keys.extend(_callable_identity_keys(value))
+    return list(dict.fromkeys(key for key in keys if key))
+
 def _flow_by_public_qualified_name(callable_flow_data: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Return callable architecture flow records keyed by public qualified name."""
     return {
@@ -3432,6 +3485,7 @@ def _build_public_entrypoint_flow(
             )
             return {
                 "callable": row["function_name"],
+                "function_name": row["function_name"],
                 "qualified_name": qn,
                 "module": row["module"],
                 "depth": seen_depth[qn],
@@ -3486,6 +3540,7 @@ def _build_public_entrypoint_flow(
         modules_touched = sorted({node_by_qn[public_qn]["module_name"], *(node_by_qn[qn]["module_name"] for qn in seen_depth)})
         flow = {
             "public_callable": node_by_qn[public_qn]["callable_name"],
+            "function_name": node_by_qn[public_qn]["callable_name"],
             "qualified_name": public_qn,
             "module": node_by_qn[public_qn]["module_name"],
             "docs_path": f"docs/api/reference/{node_by_qn[public_qn]['callable_name']}.md",
@@ -3526,6 +3581,7 @@ def _build_public_entrypoint_flow(
                 if row.get("layer") == HIDDEN_PRIVATE_LAYER and row.get("owner_qualified_name") == public_qn
             ],
         }
+        flow["selection_keys"] = _public_flow_selection_keys(flow)
         flow["recommended_simplification_action"] = _decision_action(flow, callee_rows)
         flow["warnings"] = _decision_warnings(flow, callee_rows)
         flows.append(flow)
@@ -3627,6 +3683,7 @@ PUBLIC_ENTRYPOINT_FLOW_DASHBOARD_KEYS = (
     "max_depth",
     "modules_touched",
     "source_python_files",
+    "selection_keys",
     "external_dependents_count",
     "end_node_count",
     "architecture_violation_count",
@@ -3785,6 +3842,7 @@ def _trim_callable_flow_dashboard_contract(
     for flow in callable_flow_data["public_entrypoint_flow"]:
         trimmed_flow = dict(flow)
         trimmed_flow["function_name"] = flow.get("function_name", flow.get("public_callable"))
+        trimmed_flow["selection_keys"] = _public_flow_selection_keys(trimmed_flow)
         trimmed_flow["width"] = flow.get("width", flow.get("direct_call_count", 0))
         trimmed_flow["direct_call_count"] = flow.get("direct_call_count", trimmed_flow["width"])
         trimmed_flow["scope"] = flow.get("scope", flow.get("scope_asset_count", 0))
