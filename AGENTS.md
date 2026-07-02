@@ -61,8 +61,9 @@ approved. See `docs/reference/public-function-architecture.md`.
 ## Before opening a PR
 
 - Run the architecture guardrail tests that validate source code directly.
-- Run dashboard snapshot tests when the PR intentionally changes dashboard behavior or generated-reference outputs.
-- Treat generated reference validation as optional unless the PR is explicitly a reference/docs refresh.
+- Run dashboard snapshot tests when the PR intentionally changes dashboard behavior, generated-reference outputs, or generated-reference snapshot expectations.
+- Treat generated reference validation as optional unless the PR is explicitly a reference/docs refresh or changes generator/dashboard/reference-contract logic.
+- When changing `scripts/generate_function_reference.py`, dashboard rendering, embedded call-graph contracts, architecture classification, callable inventory/public flow generation, or tests that intentionally assert generated output, update relevant tests and verify the generator works locally or in CI.
 - Confirm no new underscore function is surfaced as an Internal function.
 - Confirm no private helper appears in Public API Surface KPIs.
 - Confirm public-to-public calls are not introduced.
@@ -91,21 +92,22 @@ approved. See `docs/reference/public-function-architecture.md`.
 ## Generated reference artifacts and Codex runs
 
 Codex source PRs should stay focused on source changes. Generated reference
-artifacts are refreshed by the merge/release/reference-refresh path, not by
-every Codex source PR.
+files are built during the docs/GitHub Pages workflow, which runs the generator
+before MkDocs builds the site.
 
-- Codex must not run `scripts/generate_function_reference.py` during ordinary
-  source-code PRs.
-- Codex must not run reference or dashboard generators unless the prompt
-  explicitly asks for a generated-reference refresh.
-- Codex must not modify generated reference artifacts during surgical
-  code/refactor PRs.
-- If a Codex task is fixing source code, treat generated reference changes as
-  out of scope unless the user explicitly requested a generated reference
-  refresh.
-- If generated reference artifacts are stale, Codex should mention that a
-  separate generated-docs refresh is needed instead of updating them in the
-  same source PR.
+- Agents must not manually edit generated reference outputs as source of truth.
+- Ordinary source PR: do not commit generated reference artifacts; the docs
+  build regenerates them before deployment.
+- Generator/dashboard/reference-contract PR: when changing
+  `scripts/generate_function_reference.py`, dashboard rendering logic, embedded
+  call-graph data contracts, architecture classification, callable inventory or
+  public flow generation, or tests that intentionally assert generated
+  dashboard/reference output, update relevant tests and verify the generator
+  works locally or in CI.
+- GitHub Pages/docs builds must run
+  `PYTHONPATH=src python scripts/generate_function_reference.py` before
+  `mkdocs build` so the dashboard and reference files are produced in the build
+  workspace before the site artifact is built.
 
 Avoid these generated files and folders in normal Codex source PRs:
 
@@ -119,11 +121,11 @@ Avoid these generated files and folders in normal Codex source PRs:
 
 ### When generated references are required
 
-Generated references should be refreshed in a dedicated generated-docs PR or
-merge/release automation after source PRs are merged. That PR should contain
-generated artifacts only, unless the prompt explicitly says otherwise.
+Generated references are refreshed by the docs/GitHub Pages build. Run the
+generator locally or in CI when validating generator/dashboard/reference-contract
+changes; do not manually edit generated outputs.
 
-To refresh generated references when explicitly required:
+Generator validation command:
 
 ```bash
 PYTHONPATH=src python scripts/generate_function_reference.py
@@ -135,6 +137,7 @@ PYTHONPATH=src python scripts/generate_function_reference.py
 Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate when a release or public API/reference change requires it.
 
 Generated artifacts:
+- `docs/assets/function-call-graph-dashboard.html`
 - `docs/reference/index.md`
 - `docs/reference/_data/dependency-metadata.json`
 - `docs/reference/call-graph.md`
@@ -237,8 +240,14 @@ Applies to all `METADATA_*` tables (including future additions).
 
 ### 4) Generated reference change
 
-- Update source metadata/generator first (not generated markdown/json directly).
-- Regenerate outputs and commit generated artifacts in the same PR.
+- Update source metadata, tests, or generator logic first; do not manually edit
+  generated markdown, JSON, dashboard HTML, or navigation as source of truth.
+- Run or validate `PYTHONPATH=src python scripts/generate_function_reference.py`
+  locally or in CI.
+- Do not commit generated reference artifacts in ordinary source PRs; the
+  docs/GitHub Pages workflow regenerates them before MkDocs builds the site.
+- For generator/dashboard/reference-contract PRs, validate that generated
+  timestamps or embedded data change when expected.
 
 ### 5) Metadata/lakehouse routing change
 

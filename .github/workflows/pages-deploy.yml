@@ -34,6 +34,13 @@ jobs:
       - name: Install locked documentation dependencies
         run: uv sync --frozen --extra docs
 
+      - name: Regenerate generated reference artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_function_reference.py
+
       - name: Build strict documentation
         env:
           FABRICOPS_GIT_SHA: ${{ github.sha }}
