@@ -3147,12 +3147,14 @@ def test_dashboard_public_flow_click_handler_source_owns_row_and_button_events()
     """Verify public callable clicks stop competing handlers for row and button clicks."""
     source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
 
-    click_handler = source[source.index("const key=publicFlowClickKeyFromEvent(e);if(key){"):]
-    click_handler = click_handler[: click_handler.index("}});") + len("}});")]
+    start = source.index("function handlePublicFlowSelectionEvent(event){")
+    click_handler = source[start : source.index("function handlePublicFlowSelectionKeydown", start)]
 
-    assert "e.preventDefault();e.stopImmediatePropagation();selectPublicFlowFromClick(key);" in click_handler
+    assert "const clickedKey=publicFlowClickKeyFromEvent(event);if(!clickedKey)return false" in click_handler
+    assert "event.preventDefault();event.stopPropagation();" in click_handler
+    assert "if(event.stopImmediatePropagation)event.stopImmediatePropagation()" in click_handler
+    assert "selectPublicFlowFromClick(clickedKey);scrollToPublicFlowDetails();return true" in click_handler
     assert "if(e.target.closest('[data-public-flow-select]')){e.preventDefault();e.stopImmediatePropagation()}" not in source
-    assert "const target=$('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return" in click_handler
 
 
 def test_dashboard_public_flow_rows_render_direct_selection_handler() -> None:
@@ -3206,13 +3208,13 @@ def test_dashboard_public_flow_selection_source_keeps_flow_details_owner() -> No
     """Verify public flow selection renders details after runtime inventory sync."""
     source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
     start = source.index("function selectPublicFlowFromClick(key){")
-    body = source[start : source.index("}window.fabricOpsSelectPublicFlowFromClickDirect", start) + 1]
+    body = source[start : source.index("function handlePublicFlowSelectionEvent", start)]
 
     assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in body
-    assert "renderPublicCallableList();" in body
     assert "window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false})" in body
-    assert "renderFlowDetails()}else" in body
-    assert "renderFlowDetails()}return Boolean(flow)" in body
+    assert body.index("window.setArchitectureScope") < body.index("renderPublicCallableList();renderFlowDetails();updateExportControls();return true")
+    assert "renderUnresolvedPublicFlowDebug(key)" in body
+    assert "return false" in body
 
 
 def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> None:
@@ -4347,16 +4349,16 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 eval(scripts[1]);
 function assertSelectedTree() {
   const flowHtml = element('publicFlowDetails').innerHTML;
@@ -4369,7 +4371,7 @@ assertSelectedTree();
 const banner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
 if (!banner.includes('All runtime assets')) throw new Error(banner);
 const readKey = 'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table';
-listeners['document:click']({ preventDefault() {}, stopImmediatePropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return { dataset: { publicFlowSelect: readKey } }; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: readKey } }; if (selector === '[data-architecture-scope-special]') return null; return null; } } });
+(listeners['document:click'] || []).forEach(cb => cb({ preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return { dataset: { publicFlowSelect: readKey } }; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: readKey } }; if (selector === '[data-architecture-scope-special]') return null; return null; } } }));
 assertSelectedTree();
 const scopedBanner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
 if (!scopedBanner.includes(readKey)) throw new Error(scopedBanner);
