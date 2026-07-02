@@ -3138,6 +3138,58 @@ setTimeout(() => {
 
     assert result.returncode == 0, result.stderr
 
+
+def test_dashboard_public_flow_click_handler_source_owns_row_and_button_events() -> None:
+    """Verify public callable clicks stop competing handlers for row and button clicks."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+
+    click_handler = source[source.index("const key=publicFlowClickKeyFromEvent(e);if(key){"):]
+    click_handler = click_handler[: click_handler.index("}});") + len("}});")]
+
+    assert "e.preventDefault();e.stopImmediatePropagation();selectPublicFlowFromClick(key);" in click_handler
+    assert "if(e.target.closest('[data-public-flow-select]')){e.preventDefault();e.stopImmediatePropagation()}" not in source
+    assert "const target=$('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return" in click_handler
+
+
+def test_dashboard_public_flow_selection_source_keeps_flow_details_owner() -> None:
+    """Verify public flow selection renders details after runtime inventory sync."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    start = source.index("function selectPublicFlowFromClick(key){")
+    body = source[start : source.index("}document.addEventListener('click'", start) + 1]
+
+    assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in body
+    assert "renderPublicCallableList();" in body
+    assert "window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false})" in body
+    assert "renderFlowDetails()}else" in body
+    assert "renderFlowDetails()}return Boolean(flow)" in body
+
+
+def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> None:
+    """Verify runtime inventory scope sync does not overwrite selected flow details."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    start = source.index("function setArchitectureScope(scope,options={})")
+    body = source[start : source.index("window.setArchitectureScope=setArchitectureScope", start)]
+
+    assert "document.getElementById('publicFlowDetails')" not in body
+    assert "$('publicFlowDetails')" not in body
+    assert "renderFlowDetails" not in body
+    assert "if(options.scroll!==false)scrollToRuntimeInventory()" in body
+
+
+def test_dashboard_source_uses_public_entrypoint_flow_canonical_key_only() -> None:
+    """Verify rendered dashboard source keeps public_entrypoint_flow canonical."""
+    import scripts.generate_function_reference as generator
+
+    dashboard_text = generator._render_combined_refactor_dashboard_html({
+        "function_inventory": [],
+        "public_entrypoint_flow": [],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 0}},
+    })
+
+    assert "public_entrypoint_flow" in dashboard_text
+    assert "data.public_flows" not in dashboard_text
+    assert "\"public_flows\"" not in dashboard_text
+
 def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     """Verify public callable rows can fall back to function_inventory only when flows are absent."""
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
