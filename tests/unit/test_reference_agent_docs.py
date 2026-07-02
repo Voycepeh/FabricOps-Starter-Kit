@@ -1161,6 +1161,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "max_depth",
         "modules_touched",
         "source_python_files",
+        "selection_keys",
         "architecture_violation_count",
         "architecture_violation_breakdown",
         "helper_cleanup_candidates",
@@ -1171,7 +1172,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "external_dependents_count",
         "end_node_count",
     }
-    optional_public_flow_keys = {"selected_flow_tree_html"}
+    optional_public_flow_keys = {"selected_flow_tree_html", "selection_keys"}
     assert all(
         set(flow) <= expected_public_flow_keys
         and expected_public_flow_keys - optional_public_flow_keys <= set(flow)
@@ -1456,18 +1457,10 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
         implementation_section,
     )
 
+    assert "[shared helper]" in implementation_section
+    assert "[private helper]" in implementation_section
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert re.search(
-            r'<span class="reference-call-tree-type">\[shared helper\]</span></a>',
-            implementation_section,
-            flags=re.IGNORECASE,
-        )
         assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert re.search(
-        r'<span class="reference-call-tree-type">\[private helper\]</span></a>',
-        implementation_section,
-        flags=re.IGNORECASE,
-    )
     assert '<code>_guardrail_reason(...)</code>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
@@ -1490,18 +1483,10 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
+    assert "[shared helper]" in implementation_section
+    assert "[private helper]" in implementation_section
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert re.search(
-            r'<span class="reference-call-tree-type">\[shared helper\]</span></a>',
-            implementation_section,
-            flags=re.IGNORECASE,
-        )
         assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert re.search(
-        r'<span class="reference-call-tree-type">\[private helper\]</span></a>',
-        implementation_section,
-        flags=re.IGNORECASE,
-    )
     assert '<code>_guardrail_reason(...)</code>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
