@@ -143,9 +143,27 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "../reference/_data/public-function-call-flows.json" in html
     assert "public-function-call-flows-json" not in html
     assert "fabricops_public_function_call_flows_v2" not in html
-    assert "selected-flow-panel" in html
+    assert "Public functions" in html
+    assert "Architecture violations / refactor warnings" in html
+    assert "Large depth / width" in html
+    assert "Defined but not used" in html
+    assert "Used functions" in html
+    assert "Defined functions" in html
+    assert "searchBox" in html
+    assert "signalFilter" in html
+    assert "actionFilter" in html
+    assert "selected-public-function-panel" in html
+    assert "selected-call-tree" in html
+    assert "selectedCallableInventoryTable" in html
+    assert "definedButNotUsedTable" in html
+    assert "selectVisibleInventory" in html
+    assert "selectVisibleCleanup" in html
+    assert "compatibilityMode" in html
+    assert "Export selected packet as JSON" in html
+    assert "Export selected packet as YAML" in html
+    assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
     assert "renderSelected" in html
-    assert "addEventListener('click'" in html
+    assert "if(e.target.closest('a'))return" in html
 
 
 def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
