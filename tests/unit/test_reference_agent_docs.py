@@ -3274,6 +3274,18 @@ def test_dashboard_generation_banner_uses_function_graph_json_timestamp() -> Non
     assert "Dashboard HTML rendered at:" in dashboard_html
     assert "03 Feb 2026, 12:05 PM SGT" in dashboard_html
 
+    pm_dashboard_html = generator._render_refactor_dashboard_html({
+        "metadata": {"generated_at_utc": "2026-01-02T07:04:05Z"},
+        "function_inventory": [],
+        "public_entrypoint_flow": [],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 0}},
+    })
+
+    pm_banner = pm_dashboard_html[: pm_dashboard_html.index("</header>")]
+    assert "02 Jan 2026, 03:04 PM SGT" in pm_banner
+    assert "2026-01-02T07:04:05Z" not in pm_banner
+    assert "02 Jan 2026, 15:04" not in pm_banner
+
 
 def test_dashboard_generation_banner_falls_back_to_root_json_timestamp() -> None:
     """Verify source/data generated time falls back to root generated_at_utc only."""
