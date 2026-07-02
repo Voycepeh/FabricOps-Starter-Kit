@@ -2617,7 +2617,9 @@ def test_callable_dashboard_shared_helper_public_function_is_violation() -> None
 
 def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
     """Verify dashboard flow rendering uses one simple classification badge."""
-    dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
+    import scripts.generate_function_reference as generator
+
+    dashboard_text = generator._render_refactor_dashboard_html({"function_inventory": [], "public_entrypoint_flow": []})
 
     assert "Public callable" in dashboard_text
     assert "Shared helper" in dashboard_text
@@ -2627,7 +2629,7 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "functionflowTreeNodeType(n)" in compact_dashboard_text
     assert "[${esc(flowTreeNodeFile(n))}]" in dashboard_text
     assert "[${esc(flowTreeNodeType(n))}]" in dashboard_text
-    assert "${flowTreeCallableLink(n)}${status}" in dashboard_text
+    assert "${flowTreeCallableLink(n)}</span>" in dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
@@ -2653,10 +2655,10 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert '<span class="badge muted">${esc(type)}</span>' not in dashboard_text
     compact = _remove_whitespace(dashboard_text)
     assert "<spanclass=\"badgemuted\">end</span>" not in compact
-    assert "functionflowTreeStatusChips(n)" in compact
-    assert "[warning]" in dashboard_text
-    assert "[violation]" in dashboard_text
-    assert "[shared dependency]" in dashboard_text
+    assert "functionflowTreeStatusChips(n)" not in compact
+    assert "[warning]" not in dashboard_text
+    assert "[violation]" not in dashboard_text
+    assert "[shared dependency]" not in dashboard_text
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -4814,7 +4816,7 @@ def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags(
     assert "[pipeline/shared.py]" in rendered
     assert "_display_guardrail_results_workflow(...)" in rendered
     assert "[private helper]" in rendered
-    assert "[violation]" in flow_rendered
+    assert "[violation]" not in flow_rendered
     assert "[architecture violation]" not in flow_rendered
 
 
