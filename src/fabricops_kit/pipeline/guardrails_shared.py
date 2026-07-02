@@ -19,7 +19,7 @@ from uuid import uuid4
 from fabricops_kit.config.shared import get_current_audit_timestamp
 from fabricops_kit.pipeline.shared import profile_dataframe_core
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
-from fabricops_kit.metadata import _write_guardrail_result_row
+from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
@@ -969,7 +969,7 @@ def enforce_profile_behavior(
 
     if write_results and config is not None and env is not None:
         try:
-            from fabricops_kit.metadata import _write_guardrail_result_row
+            from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
             _write_guardrail_result_row(spark_session=spark, config=config, env=env, run_id=run_id, dataset_name=dataset_name, table_name=table_name, guardrail_type="profile_behavior", rule_type=mode, result=result, rule_key=rule_key)
         except Exception as exc:
             if not _is_missing_table_error(exc):
