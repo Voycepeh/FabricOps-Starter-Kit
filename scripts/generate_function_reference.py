@@ -75,13 +75,11 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "pipeline.profile_dataframe": "pipeline",
     "io": "io",
     "pipeline.guardrails_shared": "pipeline",
-    "metadata": "metadata",
     "pipeline": "pipeline",
 }
 MAJOR_IMPLEMENTATION_MODULE_ORDER = [
     "config",
     "io",
-    "metadata",
     "pipeline",
 ]
 MAJOR_IMPLEMENTATION_MODULES = set(MAJOR_IMPLEMENTATION_MODULE_ORDER)
@@ -5299,7 +5297,7 @@ def main() -> None:
         "",
         "Implementation Modules document only current major source boundaries for package maintainers and internal helper traceability, not every `.py` file in `src/fabricops_kit`.",
         "",
-        "Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing. `metadata` is allowlisted as shared internal plumbing because it owns metadata keys, audit fields, and persistence helpers used by multiple workflows. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
+        "Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing. Documentation-only grouping labels, such as the metadata table reference section, are not treated as source modules. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
         "",
     ]
     all_doc_modules = discovered_doc_modules
@@ -5550,7 +5548,12 @@ def main() -> None:
     for stale_module_page in MODULE_DIR.glob("*.md"):
         stale_module_page.unlink()
     discovered_set = set(discovered_doc_modules)
-    module_sidebar_rows = [row for row in module_docs_metadata if row.get("sidebar_include")]
+    documentation_group_modules = {"metadata"}
+    module_sidebar_rows = [
+        row
+        for row in module_docs_metadata
+        if row.get("sidebar_include") and row.get("module_name") not in documentation_group_modules
+    ]
     module_sidebar_groups: dict[str, list[str]] = {}
     for row in module_sidebar_rows:
         module_name = row["module_name"]

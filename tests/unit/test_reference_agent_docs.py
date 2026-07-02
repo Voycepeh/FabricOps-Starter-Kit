@@ -493,7 +493,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert dashboard_text.index("Selected public callable flow") < dashboard_text.index("Current scoped callables inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[]" in compact_dashboard_text
+    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)&&data.public_entrypoint_flow.length?data.public_entrypoint_flow:Array.isArray(data.public_flows)?data.public_flows:[]" in compact_dashboard_text
     assert "derivePublicFlowsFromInventory(inventory)" in dashboard_text
     assert "Public flow details were not found, so this table is using public callable inventory rows." in dashboard_text
     assert "Detailed call flow was not available for this public callable." in dashboard_text
@@ -1464,8 +1464,10 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     )
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code> <span class="reference-call-tree-type">[shared helper]</span>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code> <span class="reference-call-tree-type">[private helper]</span>' in implementation_section
+        assert '<span class="reference-call-tree-type">[shared helper]</span> <a href=' in implementation_section
+        assert f'<code>{helper_name}(...)</code></a>' in implementation_section
+    assert '<span class="reference-call-tree-type">[private helper]</span> <a href=' in implementation_section
+    assert '<code>_guardrail_reason(...)</code></a>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
 
@@ -1488,8 +1490,10 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert "```text" not in implementation_section
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code> <span class="reference-call-tree-type">[shared helper]</span>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code> <span class="reference-call-tree-type">[private helper]</span>' in implementation_section
+        assert '<span class="reference-call-tree-type">[shared helper]</span> <a href=' in implementation_section
+        assert f'<code>{helper_name}(...)</code></a>' in implementation_section
+    assert '<span class="reference-call-tree-type">[private helper]</span> <a href=' in implementation_section
+    assert '<code>_guardrail_reason(...)</code></a>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
 
@@ -2618,8 +2622,10 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "Private helper" in dashboard_text
     compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
 
-    assert ("simple_classification:'Publiccallable'" in compact_dashboard_text or 'simple_classification:"Publiccallable"' in compact_dashboard_text)
-    assert ("consttype=n.simple_classification||'Unknown'" in compact_dashboard_text or 'consttype=n.simple_classification||"Unknown"' in compact_dashboard_text)
+    assert "functionflowTreeNodeType(n)" in compact_dashboard_text
+    assert "[${esc(flowTreeNodeFile(n))}]" in dashboard_text
+    assert "[${esc(flowTreeNodeType(n))}]" in dashboard_text
+    assert "${flowTreeCallableLink(n)}${status}" in dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "flow-tree-main" in dashboard_text
@@ -2642,11 +2648,13 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "node-signals" not in dashboard_text
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
-    assert '<span class="badge muted">${esc(type)}</span>' in dashboard_text
+    assert '<span class="badge muted">${esc(type)}</span>' not in dashboard_text
     compact = _remove_whitespace(dashboard_text)
     assert "<spanclass=\"badgemuted\">end</span>" not in compact
     assert "functionflowTreeStatusChips(n)" in compact
-    assert "Maybecombine" in compact
+    assert "[warning]" in dashboard_text
+    assert "[violation]" in dashboard_text
+    assert "[shared dependency]" in dashboard_text
 
 
 def test_global_table_controls_asset_supports_excel_style_table_menus() -> None:
@@ -4527,7 +4535,8 @@ def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags(
     assert "[pipeline/shared.py]" in rendered
     assert "_display_guardrail_results_workflow(...)" in rendered
     assert "[private helper]" in rendered
-    assert "[architecture violation]" in flow_rendered
+    assert "[violation]" in flow_rendered
+    assert "[architecture violation]" not in flow_rendered
 
 
 def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table() -> None:
