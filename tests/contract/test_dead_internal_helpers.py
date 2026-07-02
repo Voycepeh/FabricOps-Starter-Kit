@@ -8,6 +8,7 @@ SRC = ROOT / "src" / "fabricops_kit"
 SEARCH_ROOTS = [SRC, ROOT / "templates" / "notebooks", ROOT / "scripts", ROOT / "tests"]
 
 PRIVATE_HELPER_ALLOWLIST = {
+    "__getattr__": "Package lazy-loading hook is invoked by Python attribute access rather than by a source-level call.",
     "_load_package_version": "Package metadata fallback is invoked during module import rather than by a source-level call.",
     "_now_audit_timestamp": "Legacy audit timestamp helper retained for metadata compatibility but not currently called.",
 }
@@ -15,11 +16,9 @@ PRIVATE_HELPER_ALLOWLIST = {
 
 def _public_exports() -> set[str]:
     """Return names exported from fabricops_kit.__all__."""
-    tree = ast.parse((SRC / "__init__.py").read_text(encoding="utf-8"))
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-            return {item.value for item in node.value.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)}
-    raise AssertionError("fabricops_kit.__all__ was not found")
+    import fabricops_kit
+
+    return set(fabricops_kit.__all__)
 
 
 def _top_level_functions() -> dict[str, Path]:

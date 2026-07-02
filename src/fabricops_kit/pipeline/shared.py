@@ -299,8 +299,6 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 # Public API layer
 # ---------------------------------------------------------------------------
 
-from ..widgets.shared import PipelineRunContext, pipeline_active_context
-from ..widgets.widget_pipeline_bootstrap import widget_pipeline_bootstrap
 
 
 
@@ -944,6 +942,8 @@ def _run_table_guardrails_workflow(
     are routed through the configured metadata target by the called helpers.
 
     """
+    from ..widgets.shared import pipeline_active_context
+
     active = pipeline_active_context()
     if active is not None:
         context = context if context is not None else active.context
@@ -1488,6 +1488,8 @@ def _write_pipeline_run_summary_workflow(
     evidence never relies on a default attached lakehouse.
 
     """
+    from ..widgets.shared import pipeline_active_context
+
     active = pipeline_active_context()
     if active is not None:
         context = context if context is not None else active.context

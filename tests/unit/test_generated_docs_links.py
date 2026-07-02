@@ -15,15 +15,9 @@ DOCS = ROOT / "docs"
 
 def _exported_symbols() -> list[str]:
     """Return exported public symbol names from the package root."""
-    tree = ast.parse((ROOT / "src" / "fabricops_kit" / "__init__.py").read_text(encoding="utf-8"))
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
-        ):
-            return [
-                elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
-            ]
-    raise AssertionError("Could not parse __all__")
+    import fabricops_kit
+
+    return list(fabricops_kit.__all__)
 
 
 def _local_link_target_exists(markdown_path: Path, href: str) -> bool:
