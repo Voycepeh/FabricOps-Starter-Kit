@@ -12,7 +12,9 @@ import uuid
 
 from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.metadata import _audit_timestamp_value, _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key, build_runtime_audit_fields, _resolve_action_by, coerce_metadata_row_types
+from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
+from fabricops_kit.config.metadata_keys import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 
 
 _WIDGET_STYLE = {"description_width": "150px"}

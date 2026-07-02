@@ -9,6 +9,8 @@ import pytest
 import fabricops_kit
 import fabricops_kit.widgets.shared as agreement
 import fabricops_kit.metadata as metadata
+from fabricops_kit.config import audit as audit_helpers
+from fabricops_kit.config import metadata_keys
 from fabricops_kit.widgets import notebook_registry
 from tests.helpers import FakeSpark, framework_config
 
@@ -17,7 +19,7 @@ pytestmark = pytest.mark.unit
 
 def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_notebookutils):
     """Verify runtime audit fields resolve fabric context and allow overrides."""
-    audit = metadata.build_runtime_audit_fields(
+    audit = audit_helpers.build_runtime_audit_fields(
         config=framework_config(),
         env="dev",
         runtime_context={"activityId": "manual-activity"},
@@ -129,13 +131,13 @@ def test_notebook_registry_read_requires_configured_metadata_route():
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     """Verify metadata key builders are stable for governance and dq rules."""
-    table_key = metadata._build_metadata_table_key(" DEV ", "Sales", "Orders")
-    column_key = metadata._build_metadata_column_key("dev", "sales", "orders", "Order_ID")
-    dq_key = metadata._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
+    table_key = metadata_keys._build_metadata_table_key(" DEV ", "Sales", "Orders")
+    column_key = metadata_keys._build_metadata_column_key("dev", "sales", "orders", "Order_ID")
+    dq_key = metadata_keys._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
 
-    assert table_key == metadata._build_metadata_table_key("dev", "sales", "orders")
-    assert column_key == metadata._build_metadata_column_key("DEV", "SALES", "ORDERS", " order_id ")
-    assert dq_key == metadata._build_dq_rule_key("DEV", "SALES", "ORDERS", " order_id_required ")
+    assert table_key == metadata_keys._build_metadata_table_key("dev", "sales", "orders")
+    assert column_key == metadata_keys._build_metadata_column_key("DEV", "SALES", "ORDERS", " order_id ")
+    assert dq_key == metadata_keys._build_dq_rule_key("DEV", "SALES", "ORDERS", " order_id_required ")
     assert len({table_key, column_key, dq_key}) == 3
     assert all(len(value) == 64 for value in (table_key, column_key, dq_key))
 

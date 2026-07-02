@@ -8,7 +8,7 @@ import sys
 from typing import Any
 
 from fabricops_kit.config.shared import get_current_audit_timestamp, resolve_fabric_context
-from fabricops_kit.metadata import build_runtime_audit_fields
+from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.widgets.shared import (
     AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS,
     AGREEMENT_EVIDENCE_MIME_TYPES,
