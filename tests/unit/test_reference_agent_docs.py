@@ -1457,10 +1457,18 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     )
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert '<span class="reference-call-tree-type">[shared helper]</span> <a href=' in implementation_section
-        assert f'<code>{helper_name}(...)</code></a>' in implementation_section
-    assert '<span class="reference-call-tree-type">[private helper]</span> <a href=' in implementation_section
-    assert '<code>_guardrail_reason(...)</code></a>' in implementation_section
+        assert re.search(
+            r'<span class="reference-call-tree-type">\[shared helper\]</span></a>',
+            implementation_section,
+            flags=re.IGNORECASE,
+        )
+        assert f'<code>{helper_name}(...)</code>' in implementation_section
+    assert re.search(
+        r'<span class="reference-call-tree-type">\[private helper\]</span></a>',
+        implementation_section,
+        flags=re.IGNORECASE,
+    )
+    assert '<code>_guardrail_reason(...)</code>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
 
@@ -1483,10 +1491,18 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert "```text" not in implementation_section
 
     for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert '<span class="reference-call-tree-type">[shared helper]</span> <a href=' in implementation_section
-        assert f'<code>{helper_name}(...)</code></a>' in implementation_section
-    assert '<span class="reference-call-tree-type">[private helper]</span> <a href=' in implementation_section
-    assert '<code>_guardrail_reason(...)</code></a>' in implementation_section
+        assert re.search(
+            r'<span class="reference-call-tree-type">\[shared helper\]</span></a>',
+            implementation_section,
+            flags=re.IGNORECASE,
+        )
+        assert f'<code>{helper_name}(...)</code>' in implementation_section
+    assert re.search(
+        r'<span class="reference-call-tree-type">\[private helper\]</span></a>',
+        implementation_section,
+        flags=re.IGNORECASE,
+    )
+    assert '<code>_guardrail_reason(...)</code>' in implementation_section
     assert "[pipeline/display_guardrail_results.py]" in implementation_section
     assert "[public callable]" in implementation_section
 
@@ -4584,3 +4600,94 @@ def test_dashboard_generator_uses_embedded_data_without_runtime_json_fetch() -> 
     assert "Embedded graph generated_at_utc" in source
     assert "Embedded selected-flow records count" in source
     assert "boot-dashboard-v2-static" in source
+
+
+def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source() -> None:
+    """Verify read_lakehouse_table selected-flow data is built from callable dependencies."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+    helper_qns = [
+        "fabricops_kit.io.shared.get_spark_session",
+        "fabricops_kit.io.shared.read_delta_path",
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+        "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        "fabricops_kit.io.shared.normalize_table_name",
+        "fabricops_kit.io.shared.resolve_target_store",
+    ]
+    node_by_qn = {
+        public_qn: {
+            "callable_name": "read_lakehouse_table",
+            "module_name": "io.read_lakehouse_table",
+            "callable_kind": "function",
+            "is_underscore": False,
+        },
+        **{
+            qn: {
+                "callable_name": qn.rsplit(".", 1)[-1],
+                "module_name": "io.shared",
+                "callable_kind": "function",
+                "is_underscore": False,
+            }
+            for qn in helper_qns
+        },
+    }
+    calls_by_qn = {
+        public_qn: [
+            "fabricops_kit.io.shared.get_spark_session",
+            "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+            "fabricops_kit.io.shared.read_delta_path",
+        ],
+        "fabricops_kit.io.shared.resolve_configured_lakehouse_table": [
+            "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+            "fabricops_kit.io.shared.normalize_table_name",
+        ],
+        "fabricops_kit.io.shared.resolve_lakehouse_table_location": [
+            "fabricops_kit.io.shared.resolve_target_store",
+        ],
+        **{qn: [] for qn in helper_qns if qn not in {
+            "fabricops_kit.io.shared.resolve_configured_lakehouse_table",
+            "fabricops_kit.io.shared.resolve_lakehouse_table_location",
+        }},
+    }
+    function_inventory = [
+        {
+            "qualified_name": public_qn,
+            "function_name": "read_lakehouse_table",
+            "module": "io.read_lakehouse_table",
+            "layer": "public",
+            "function_type": "Public function",
+            "callable_kind": "function",
+        },
+        *[
+            {
+                "qualified_name": qn,
+                "function_name": qn.rsplit(".", 1)[-1],
+                "module": "io.shared",
+                "layer": "internal",
+                "function_type": "Shared helper",
+                "callable_kind": "function",
+            }
+            for qn in helper_qns
+        ],
+    ]
+
+    flows = generator._build_public_entrypoint_flow([public_qn], calls_by_qn, node_by_qn, {}, function_inventory)
+    flow = flows[0]
+
+    assert flow["function_name"] == "read_lakehouse_table"
+    assert flow["qualified_name"] == "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+    downstream_names = {row["function_name"] for row in flow["transitive_callees"]}
+    assert {
+        "get_spark_session",
+        "read_delta_path",
+        "resolve_configured_lakehouse_table",
+        "resolve_lakehouse_table_location",
+        "normalize_table_name",
+        "resolve_target_store",
+    } <= downstream_names
+    assert {
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+        "io.read_lakehouse_table.read_lakehouse_table",
+        "read_lakehouse_table",
+    } <= set(generator._public_flow_selection_keys(flow))
