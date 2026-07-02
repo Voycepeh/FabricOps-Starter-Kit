@@ -19,7 +19,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_GRAPH = ROOT / "docs/reference/_data/function-call-graph.json"
-DEFAULT_OUTPUT = ROOT / "docs/reference/_data/callable-orphan-audit.json"
+DEFAULT_OUTPUT = ROOT / "build/reports/callable-orphan-audit.json"
 FABRIC_PATTERNS = (
     "pyspark", "SparkSession", "mssparkutils", "notebookutils", "synapsesql",
     "delta", "lakehouse", "warehouse", "dbutils",
@@ -119,17 +119,12 @@ def defined_names(nodes: list[ast.AST]) -> set[str]:
     return names
 
 
-def compile_status(row: dict[str, Any], deps: list[dict[str, Any]], index: dict[tuple[str, str], NodeRef]) -> tuple[str, list[str], list[str]]:
-    """Compile an isolated module made from imports, target node, and graph dependencies."""
+def extracted_closure_nodes(row: dict[str, Any], deps: list[dict[str, Any]], index: dict[tuple[str, str], NodeRef]) -> tuple[NodeRef | None, list[ast.AST], list[str], list[str]]:
+    """Extract target and graph dependency nodes without importing or executing code."""
     source = row.get("source_path", "")
     ref = index.get((source, row.get("function_name", "")))
     if ref is None:
-        return "missing_source_dependency", [row.get("function_name", "")], [f"Target source node not found in {source}"]
-    text = ref.path.read_text(encoding="utf-8")
-    if ref.parent is not None or row.get("callable_kind") in {"method", "property"}:
-        return "skipped_class_or_method_context", [], ["Callable is a class member and may require class context"]
-    if any(pat.lower() in text.lower() for pat in FABRIC_PATTERNS):
-        return "skipped_fabric_runtime", [], ["Source module mentions Fabric/Spark runtime patterns"]
+        return None, [], [row.get("function_name", "")], [f"Target source node not found in {source}"]
     target_and_deps: list[ast.AST] = [ref.node]
     missing: list[str] = []
     evidence: list[str] = []
@@ -140,6 +135,23 @@ def compile_status(row: dict[str, Any], deps: list[dict[str, Any]], index: dict[
             evidence.append(f"Graph dependency source not extractable: {dep.get('qualified_name')}")
         else:
             target_and_deps.append(dep_ref.node)
+    return ref, target_and_deps, missing, evidence
+
+
+def closure_source(nodes: list[ast.AST]) -> str:
+    """Return source text for extracted target and dependency nodes only."""
+    return "\n\n".join(ast.unparse(node) for node in nodes)
+
+
+def compile_status(row: dict[str, Any], deps: list[dict[str, Any]], index: dict[tuple[str, str], NodeRef]) -> tuple[str, list[str], list[str]]:
+    """Compile an isolated module made from imports, target node, and graph dependencies."""
+    ref, target_and_deps, missing, evidence = extracted_closure_nodes(row, deps, index)
+    if ref is None:
+        return "missing_source_dependency", missing, evidence
+    if ref.parent is not None or row.get("callable_kind") in {"method", "property"}:
+        return "skipped_class_or_method_context", [], ["Callable is a class member and may require class context"]
+    if any(pat.lower() in closure_source(target_and_deps).lower() for pat in FABRIC_PATTERNS):
+        return "skipped_fabric_runtime", [], ["Extracted callable closure mentions Fabric/Spark runtime patterns"]
     imports = module_imports(ref.path)
     body = imports + [ast.fix_missing_locations(ast.parse(ast.unparse(n)).body[0]) for n in target_and_deps]
     module = ast.fix_missing_locations(ast.Module(body=body, type_ignores=[]))
@@ -154,8 +166,8 @@ def compile_status(row: dict[str, Any], deps: list[dict[str, Any]], index: dict[
     return "compiled_with_graph_closure", [], evidence
 
 
-def inventory_by_source(index: dict[tuple[str, str], NodeRef]) -> set[dict[str, str]]:
-    """Return index rows as simple dictionaries for name matching."""
+def inventory_by_source(index: dict[tuple[str, str], NodeRef]) -> set[str]:
+    """Return indexed source callable names for name matching."""
     return {name for _, name in index}
 
 
@@ -222,10 +234,10 @@ def audit(graph_path: Path, output_path: Path, limit: int | None = None) -> list
             "tests": reference_matches(needles, [ROOT / "tests"]),
             "docs": reference_matches(needles, [ROOT / "docs"]),
         }
-        source_file = src_path(row.get("source_path", ""))
-        source_text = source_file.read_text(encoding="utf-8", errors="ignore") if source_file.exists() else ""
+        _, closure_nodes, _, _ = extracted_closure_nodes(row, deps, index)
+        closure_text = closure_source(closure_nodes) if closure_nodes else ""
         docs_meta = any(n and n in docs_meta_text for n in needles)
-        classification, action = classify(row, status, missing, refs, docs_meta, deps, source_text)
+        classification, action = classify(row, status, missing, refs, docs_meta, deps, closure_text)
         record = {
             "qualified_name": row.get("qualified_name", ""), "function_name": row.get("function_name", ""),
             "module": row.get("module", ""), "source_path": row.get("source_path", ""),

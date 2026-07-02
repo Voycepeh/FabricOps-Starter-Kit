@@ -117,3 +117,47 @@ def test_audit_compiles_without_executing_runtime_function(tmp_path: Path, monke
     records = audit_script.audit(graph_path, output_path)
 
     assert records[0]["standalone_compile_status"] == "compiled_with_graph_closure"
+
+
+def test_unrelated_fabric_text_in_same_file_does_not_force_runtime_classification(tmp_path: Path, monkeypatch) -> None:
+    """Verify Fabric text outside the extracted closure does not force runtime classification."""
+    monkeypatch.setattr(audit_script, "ROOT", tmp_path)
+    _write(
+        tmp_path / "src/fabricops_kit/a.py",
+        "from pyspark.sql import SparkSession\n\n"
+        "def fabric_only():\n"
+        "    return SparkSession.builder.getOrCreate()\n\n"
+        "def pure_helper():\n"
+        "    return 1\n",
+    )
+    graph_path = tmp_path / "docs/reference/_data/function-call-graph.json"
+    output_path = tmp_path / "build/reports/callable-orphan-audit.json"
+    row = {
+        "qualified_name": "fabricops_kit.a.pure_helper",
+        "function_name": "pure_helper",
+        "module": "a",
+        "source_path": "src/fabricops_kit/a.py",
+        "callable_kind": "function",
+        "layer": "private_helper",
+        "function_type": "Private helper",
+        "reachability": "unreachable_runtime_asset",
+        "reachability_label": "Unknown / possible entrypoint",
+        "recommended_action": "Verify possible orphan",
+        "signals": [],
+        "callees": [],
+    }
+    graph_path.parent.mkdir(parents=True, exist_ok=True)
+    graph_path.write_text(json.dumps(_graph(row)), encoding="utf-8")
+
+    records = audit_script.audit(graph_path, output_path)
+
+    assert records[0]["standalone_compile_status"] == "compiled_with_graph_closure"
+    assert records[0]["likely_classification"] == "truly_unreferenced_candidate"
+
+
+def test_default_output_path_is_not_generated_reference_data() -> None:
+    """Verify the default audit output stays out of generated reference data."""
+    relative_output = audit_script.DEFAULT_OUTPUT.relative_to(audit_script.ROOT).as_posix()
+
+    assert relative_output == "build/reports/callable-orphan-audit.json"
+    assert not relative_output.startswith("docs/reference/_data/")
