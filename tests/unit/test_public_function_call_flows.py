@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from scripts import generate_public_function_call_flows as flows
@@ -77,16 +76,27 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert {"public_functions", "defined_functions", "used_functions", "defined_but_not_used", "summary"} <= set(payload)
 
 
-def test_dashboard_contains_embedded_json_and_selected_flow_wiring(tmp_path: Path) -> None:
-    """Validate dashboard renders the embedded data and click-driven selected-flow panel."""
+def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
+    """Validate the default dashboard fetches JSON and keeps selected-flow wiring."""
     root, pkg, init_path = write_project(tmp_path)
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
     html = flows.render_dashboard(payload)
 
-    assert "public-function-call-flows-json" in html
+    assert "../reference/_data/public-function-call-flows.json" in html
+    assert "public-function-call-flows-json" not in html
+    assert "fabricops_public_function_call_flows_v2" not in html
     assert "selected-flow-panel" in html
     assert "renderSelected" in html
     assert "addEventListener('click'" in html
-    embedded = html.split('type="application/json">', 1)[1].split("</script>", 1)[0]
-    assert json.loads(embedded.replace("&quot;", '"'))["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
+
+
+def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
+    """Validate optional standalone/debug mode can still embed JSON."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    html = flows.render_dashboard(payload, embed_json=True)
+
+    assert "public-function-call-flows-json" in html
+    assert "fabricops_public_function_call_flows_v2" in html

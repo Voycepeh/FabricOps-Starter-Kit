@@ -16,6 +16,14 @@ PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
 DATA_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json"
 DASHBOARD_PATH = ROOT / "docs" / "assets" / "public-function-call-flows-dashboard.html"
+DASHBOARD_DATA_URL = "../reference/_data/public-function-call-flows.json"
+
+# v1 parity backlog for future focused PRs:
+# TODO: Add JSON/YAML AI refactor packet export.
+# TODO: Add compatibility mode for legacy function-call-graph consumers.
+# TODO: Add a selected public function cleanup packet schema.
+# TODO: Revisit source/docs link behavior once the v2 dashboard route is published.
+# TODO: Polish the dashboard mobile layout.
 
 
 @dataclass(frozen=True)
@@ -332,10 +340,34 @@ def unused_record(info: FunctionInfo) -> dict[str, Any]:
     }
 
 
-def render_dashboard(payload: dict[str, Any]) -> str:
-    """Render a standalone dashboard HTML document."""
-    data = json.dumps(payload, indent=2)
-    escaped = html.escape(data)
+def render_dashboard(
+    payload: dict[str, Any] | None = None,
+    *,
+    embed_json: bool = False,
+    data_url: str = DASHBOARD_DATA_URL,
+) -> str:
+    """Render the dashboard HTML document.
+
+    Parameters
+    ----------
+    payload : dict[str, Any] | None, optional
+        Payload to embed when ``embed_json`` is true. The default published
+        dashboard fetches JSON from ``data_url`` instead of embedding it.
+    embed_json : bool, default=False
+        Whether to embed ``payload`` for standalone/debug use.
+    data_url : str, default=DASHBOARD_DATA_URL
+        Relative URL used by the published dashboard to fetch v2 JSON.
+
+    """
+    embedded_script = ""
+    load_expression = f"fetch('{data_url}').then(response => response.json())"
+    if embed_json:
+        if payload is None:
+            raise ValueError("payload is required when embed_json is true")
+        escaped = html.escape(json.dumps(payload, indent=2))
+        embedded_script = f'<script id="public-function-call-flows-json" type="application/json">{escaped}</script>'
+        load_expression = "Promise.resolve(JSON.parse(document.getElementById('public-function-call-flows-json').textContent))"
+
     return f"""<!doctype html>
 <html lang=\"en\"><head><meta charset=\"utf-8\"><title>Public Function Call Flows</title>
 <style>body{{font-family:system-ui,sans-serif;margin:2rem;color:#172033}}.cards{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}}.card{{border:1px solid #d7deea;border-radius:12px;padding:1rem;background:#f8fbff}}.value{{font-size:2rem;font-weight:700}}table{{border-collapse:collapse;width:100%;margin-top:1rem}}th,td{{border-bottom:1px solid #e2e8f0;padding:.55rem;text-align:left;vertical-align:top}}tr.clickable{{cursor:pointer}}tr.clickable:hover{{background:#f1f7ff}}code,.pill{{background:#eef3fb;border-radius:999px;padding:.15rem .45rem}}.tree-row{{font-family:ui-monospace,monospace;margin:.25rem 0}}.signal{{color:#8a3ffc;font-weight:600}}</style></head>
@@ -344,9 +376,9 @@ def render_dashboard(payload: dict[str, Any]) -> str:
 <h2>Public function flows</h2><table><thead><tr><th>Function</th><th>File</th><th>Direct calls</th><th>Transitive functions</th><th>Max depth</th><th>Files touched</th><th>Signals</th></tr></thead><tbody id=\"public-table\"></tbody></table>
 <section id=\"selected-flow-panel\"><h2>Selected flow</h2><div id=\"selected-flow\">Select a public function row.</div></section>
 <h2>Defined but not used</h2><table><thead><tr><th>Function</th><th>File</th><th>Reason</th></tr></thead><tbody id=\"unused-table\"></tbody></table>
-<script id=\"public-function-call-flows-json\" type=\"application/json\">{escaped}</script>
+{embedded_script}
 <script>
-const DATA = JSON.parse(document.getElementById('public-function-call-flows-json').textContent);
+let DATA = null;
 const qs = (id) => document.getElementById(id);
 function link(path, line) {{ return `<a href="../../../${{path}}#L${{line}}">${{path}}</a>`; }}
 function signals(items) {{ return items.length ? items.map(s => `<span class="signal">${{s}}</span>`).join(', ') : '—'; }}
@@ -354,7 +386,8 @@ function renderCards() {{ qs('card-public').textContent = DATA.summary.public_fu
 function renderPublicTable() {{ qs('public-table').innerHTML = DATA.public_functions.map((f, i) => `<tr class="clickable" data-index="${{i}}"><td><code>${{f.function_name}}</code></td><td>${{link(f.source_path, f.source_start_line)}}</td><td>${{f.direct_call_count}}</td><td>${{f.transitive_function_count}}</td><td>${{f.max_depth}}</td><td>${{f.files_touched.length}}</td><td>${{signals(f.signals)}}</td></tr>`).join(''); document.querySelectorAll('#public-table tr').forEach(row => row.addEventListener('click', () => renderSelected(DATA.public_functions[Number(row.dataset.index)]))); }}
 function renderSelected(f) {{ qs('selected-flow').innerHTML = `<h3>${{f.function_name}}</h3>` + f.flow.map(n => `<div class="tree-row" style="padding-left:${{n.depth * 1.5}}rem">${{'└─'.repeat(n.depth)}} [${{n.source_path}}] [${{n.function_type}}] ${{n.function_name}}(...)</div>`).join(''); }}
 function renderUnused() {{ qs('unused-table').innerHTML = DATA.defined_but_not_used.map(f => `<tr><td><code>${{f.function_name}}</code></td><td>${{link(f.source_path, f.source_start_line)}}</td><td>${{f.reason}}</td></tr>`).join(''); }}
-renderCards(); renderPublicTable(); renderUnused(); if (DATA.public_functions.length) renderSelected(DATA.public_functions[0]);
+function renderDashboard(data) {{ DATA = data; renderCards(); renderPublicTable(); renderUnused(); if (DATA.public_functions.length) renderSelected(DATA.public_functions[0]); }}
+{load_expression}.then(renderDashboard).catch(error => {{ qs('selected-flow').textContent = `Unable to load public-function-call-flows.json: ${{error}}`; }});
 </script></body></html>"""
 
 
@@ -363,7 +396,7 @@ def write_outputs(payload: dict[str, Any], data_path: Path = DATA_PATH, dashboar
     data_path.parent.mkdir(parents=True, exist_ok=True)
     dashboard_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    dashboard_path.write_text(render_dashboard(payload), encoding="utf-8")
+    dashboard_path.write_text(render_dashboard(), encoding="utf-8")
 
 
 def main() -> None:
