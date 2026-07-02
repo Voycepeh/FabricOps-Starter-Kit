@@ -609,7 +609,7 @@ def test_env_config_template_imports_config_from_root_only():
 def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
-    assert "from .config.shared import get_current_audit_timestamp, get_store" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from .config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
 
 
@@ -627,7 +627,7 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     from datetime import date, datetime
 
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, CANONICAL_METADATA_TABLES, metadata_table_schema_registry
-    from fabricops_kit.metadata import coerce_metadata_row_types
+    from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 
     audit_columns = {name for name, _kind in AUDIT_SCHEMA_FIELDS}
     registry = metadata_table_schema_registry()
@@ -674,7 +674,7 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     ]
 
     metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
-    assert "from .config.metadata_schemas import metadata_table_schema_registry" in metadata_source
+    assert "from .config.metadata_schemas import coerce_metadata_row_types" in metadata_source
     assert "from fabricops_kit.config.setup_metadata_tables" not in metadata_source
     assert "from .config.setup_metadata_tables" not in metadata_source
 
@@ -691,7 +691,7 @@ def test_metadata_schema_registry_is_shared_source_for_setup_and_runtime_coercio
     schema_source = Path("src/fabricops_kit/config/metadata_schemas.py").read_text(encoding="utf-8")
 
     assert "metadata_table_schema_registry()" in setup_source
-    assert "metadata_table_schema_registry().get(table_name)" in metadata_source
+    assert "metadata_table_schema_registry().get(table_name)" in schema_source
     assert "def metadata_table_schema_registry" in schema_source
     assert "def _metadata_table_schema_registry" not in schema_source
 

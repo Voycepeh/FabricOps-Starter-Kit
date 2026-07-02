@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
 
 CANONICAL_METADATA_TABLES = [
@@ -121,6 +122,49 @@ def metadata_table_schema_registry() -> dict[str, Any]:
     }
 
 
+def _coerce_metadata_value(value: Any, type_name: str) -> Any:
+    """Coerce one metadata value to the Python type expected by the setup schema."""
+    if value in (None, ""):
+        return None if type_name in {"TimestampType", "DateType", "BooleanType", "LongType", "DoubleType"} else ""
+    if type_name == "TimestampType":
+        return value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+    if type_name == "DateType":
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, date):
+            return value
+        return date.fromisoformat(str(value)[:10])
+    if type_name == "BooleanType":
+        if isinstance(value, bool):
+            return value
+        normalized = str(value).strip().lower()
+        if normalized in {"true", "1", "yes", "y"}:
+            return True
+        if normalized in {"false", "0", "no", "n"}:
+            return False
+        return bool(value)
+    if type_name == "LongType":
+        return int(value)
+    if type_name == "DoubleType":
+        return float(value)
+    return value
+
+
+def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
+    """Return a metadata row with values aligned to the bootstrap schema types."""
+    try:
+        schema = metadata_table_schema_registry().get(table_name)
+    except Exception:
+        schema = None
+    if schema is None:
+        return dict(row)
+    coerced = dict(row)
+    for field in getattr(schema, "fields", []):
+        if field.name in coerced:
+            coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
+    return coerced
+
+
 def metadata_schema_type_name(data_type: Any) -> str:
     """Return the stable documentation label for a Spark metadata data type."""
     type_name = type(data_type).__name__
@@ -167,6 +211,7 @@ __all__ = [
     "CANONICAL_METADATA_TABLES",
     "audit_schema_fields",
     "canonical_metadata_tables",
+    "coerce_metadata_row_types",
     "metadata_schema_type_name",
     "metadata_table_field_names",
     "metadata_table_schema_rows",

@@ -10,14 +10,9 @@ from fabricops_kit.io.shared import (
     read_lakehouse_table_core,
     write_lakehouse_table_core,
 )
-from fabricops_kit.metadata import (
-    _audit_timestamp_value,
-    _coerce_row_dicts,
-    _context_get,
-    _runtime_context,
-    _safe_str,
-    coerce_metadata_row_types,
-)
+from fabricops_kit.config.audit import _audit_timestamp_value, _context_get, _runtime_context, _safe_str
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+from fabricops_kit.metadata import _coerce_row_dicts
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 NOTEBOOK_REGISTRY_BASE_FIELDS = [
