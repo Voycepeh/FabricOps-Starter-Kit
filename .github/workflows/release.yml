@@ -54,6 +54,13 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Regenerate generated reference artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_function_reference.py
+
       - name: Build strict documentation
         run: uv run mkdocs build --strict
 

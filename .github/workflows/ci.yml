@@ -40,6 +40,13 @@ jobs:
       - name: Validate callable architecture outputs
         run: uv run python scripts/validate_callable_architecture.py
 
+      - name: Regenerate generated reference artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_function_reference.py
+
       - name: Build strict documentation
         env:
           FABRICOPS_GIT_SHA: ${{ github.sha }}
