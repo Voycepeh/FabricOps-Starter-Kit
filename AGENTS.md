@@ -60,8 +60,9 @@ approved. See `docs/reference/public-function-architecture.md`.
 
 ## Before opening a PR
 
-- Run the architecture guardrail tests, including source-code architecture validation rather than only generated asset checks.
-- Run the dashboard snapshot tests.
+- Run the architecture guardrail tests that validate source code directly.
+- Run dashboard snapshot tests when the PR intentionally changes dashboard behavior or generated-reference outputs.
+- Treat generated reference validation as optional unless the PR is explicitly a reference/docs refresh.
 - Confirm no new underscore function is surfaced as an Internal function.
 - Confirm no private helper appears in Public API Surface KPIs.
 - Confirm public-to-public calls are not introduced.
@@ -86,9 +87,43 @@ approved. See `docs/reference/public-function-architecture.md`.
 - `docs/reference/*`, `docs/api/modules/*`, and related navigation are generated artifacts.
 - Do not manually treat generated docs as source of truth; source code, docstrings, `__all__`, and reference metadata remain the source inputs.
 - Routine implementation changes to existing functions do not require running `scripts/generate_function_reference.py`.
-- Regenerate generated reference artifacts only when preparing a release, adding/removing/renaming public callables, changing `src/fabricops_kit/__init__.py::__all__`, changing callable/module ownership metadata, intentionally changing public callable documentation/API contracts, or intentionally refreshing the published API reference.
 
-To refresh generated references when required:
+## Generated reference artifacts and Codex runs
+
+Codex source PRs should stay focused on source changes. Generated reference
+artifacts are refreshed by the merge/release/reference-refresh path, not by
+every Codex source PR.
+
+- Codex must not run `scripts/generate_function_reference.py` during ordinary
+  source-code PRs.
+- Codex must not run reference or dashboard generators unless the prompt
+  explicitly asks for a generated-reference refresh.
+- Codex must not modify generated reference artifacts during surgical
+  code/refactor PRs.
+- If a Codex task is fixing source code, treat generated reference changes as
+  out of scope unless the user explicitly requested a generated reference
+  refresh.
+- If generated reference artifacts are stale, Codex should mention that a
+  separate generated-docs refresh is needed instead of updating them in the
+  same source PR.
+
+Avoid these generated files and folders in normal Codex source PRs:
+
+- `docs/assets/function-call-graph-dashboard.html`
+- `docs/reference/_data/`
+- `docs/api/reference/`
+- `docs/api/modules/`
+- `docs/reference/index.md`
+- `mkdocs.yml` reference/module navigation when changed only because of
+  generation
+
+### When generated references are required
+
+Generated references should be refreshed in a dedicated generated-docs PR or
+merge/release automation after source PRs are merged. That PR should contain
+generated artifacts only, unless the prompt explicitly says otherwise.
+
+To refresh generated references when explicitly required:
 
 ```bash
 PYTHONPATH=src python scripts/generate_function_reference.py
@@ -186,8 +221,8 @@ Applies to all `METADATA_*` tables (including future additions).
 
 - For routine implementation changes to existing functions, update tests/docs as needed; generated reference docs are not required.
 - For public contract/catalogue/reference changes, update `src/fabricops_kit` public API docstrings (NumPy style) and intentional exports in `src/fabricops_kit/__init__.py::__all__`.
-- Regenerate reference/module docs only for release prep, public callable additions/removals/renames, `__all__` changes, callable/module ownership metadata changes, intentional public callable documentation/API contract changes, or intentional published API reference refreshes.
-- Include generated docs updates in the same PR only when regeneration is required.
+- Do not regenerate reference/module docs in normal source PRs, even for source changes that may make generated artifacts stale.
+- Note any needed generated-docs refresh in the PR summary so the merge/release/reference-refresh path or a dedicated generated-docs PR can update generated artifacts separately.
 
 ### 2) Docs-only change
 
@@ -239,11 +274,14 @@ PY
 
 ## Minimum validation before PR
 
-Run relevant checks (at least for repo-wide hygiene PRs):
+Run these checks for normal source PRs:
 
 - `uv run python -m compileall src tests`
 - `uv run python -m pytest -q`
-- `uv run mkdocs build`
+- `uv run ruff check .`
+
+Do not include `scripts/generate_function_reference.py` as a normal validation
+command.
 
 ## Glossary-backed documentation wording
 
