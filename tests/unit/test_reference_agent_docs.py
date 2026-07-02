@@ -2629,26 +2629,25 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     assert "functionflowTreeNodeType(n)" in compact_dashboard_text
     assert "[${esc(flowTreeNodeFile(n))}]" in dashboard_text
     assert "[${esc(flowTreeNodeType(n))}]" in dashboard_text
-    assert "${flowTreeCallableLink(n)}</span>" in dashboard_text
+    assert "${flowTreeCallableLink(n)}" in dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
-    assert "flow-tree-main" in dashboard_text
-    assert "flow-tree-details" in dashboard_text
-    assert "flow-tree-detail-strip" in dashboard_text
-    assert "flow-tree-detail-chip" in dashboard_text
+    assert "reference-call-tree" in dashboard_text
+    assert "reference-call-tree-row" in dashboard_text
+    assert "reference-call-tree-prefix" in dashboard_text
+    assert "reference-call-tree-source" in dashboard_text
+    assert "reference-call-tree-type" in dashboard_text
     assert "flow-tree-detail-grid" not in dashboard_text
-    assert "flowTreeDetailRows(n)" in dashboard_text
+    assert "flowTreeDetailRows(n)" not in dashboard_text
+    assert "flow-tree-details" not in dashboard_text
     assert "Called inside this flow by count" not in dashboard_text
     assert "Calls inside this flow count" not in dashboard_text
     assert "Used outside this flow count" not in dashboard_text
     assert "End node status" not in dashboard_text
     assert "Source module" not in dashboard_text
-    assert "Called by" in dashboard_text
-    assert "Used outside" in dashboard_text
-    assert "Maybe combine" in dashboard_text
-    assert "Violation reason" in dashboard_text
-    assert "Warning reason" in dashboard_text
-    assert "Path example" in dashboard_text
+    assert "Violation reason" not in dashboard_text
+    assert "Warning reason" not in dashboard_text
+    assert "Path example" not in dashboard_text
     assert "node-signals" not in dashboard_text
     assert "called by count" not in dashboard_text.lower()
     assert "<th>Called by</th>" not in dashboard_text
@@ -4854,7 +4853,12 @@ def test_dashboard_generator_embeds_reference_call_tree_for_read_lakehouse_table
     assert "[private helper]" in tree_html
     assert "_normalize_schema_name(...)" in tree_html
     assert "Maybe combine" not in tree_html
+    assert "[warning]" not in tree_html
+    assert "[shared dependency]" not in tree_html
     assert "Shared helper</span>" not in tree_html
+    assert "├──" in tree_html
+    assert "└──" in tree_html
+    assert "│" in tree_html
     assert tree_html.index("resolve_lakehouse_table_location") < tree_html.index("_resolve_lakehouse_schema")
     assert tree_html.index("_resolve_lakehouse_schema") < tree_html.index("_normalize_schema_name")
 
