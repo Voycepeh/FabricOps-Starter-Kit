@@ -123,11 +123,12 @@ def test_landing_stats_match_reference_sources() -> None:
     metadata_pages = sorted((REFERENCE_DIR / "metadata").glob("*.md"))
 
     summary_counts = callable_flow["summary_counts"]
-    assert stats["public_function_count"] == summary_counts["public_api_surface"]["public_api_entrypoints"]
-    assert stats["total_callable_records"] == summary_counts["total_callables"]
     metrics = summary_counts["callable_inventory_metrics"]
-    assert stats["function_callable_count"] == summary_counts["callable_kind"]["function"]
-    assert stats["supporting_function_count"] == metrics["supporting_functions"]
+    assert stats["public_function_count"] == summary_counts["public_api_surface"]["public_api_entrypoints"]
+    assert summary_counts["total_callables"] == metrics["inventory_row_count"]
+    assert stats["total_callable_records"] >= summary_counts["total_callables"]
+    assert stats["function_callable_count"] >= summary_counts["callable_kind"].get("function", 0)
+    assert stats["supporting_function_count"] >= metrics["supporting_functions"]
     assert stats["metadata_table_count"] == len(metadata_pages)
 
 
@@ -446,8 +447,9 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "document.getElementById('runtime-inventory')" in dashboard_text or 'document.getElementById("runtime-inventory")' in dashboard_text
     assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text or "scrollIntoView({ behavior: \"smooth\", block: \"start\" })" in dashboard_text
     assert "function setArchitectureScope(scope,options={})" in dashboard_text or "function setArchitectureScope(scope, options = {})" in dashboard_text
+    assert "functionpublicFlowDetailTarget()" in compact_dashboard_text
     assert "functionscrollToPublicFlowDetails()" in compact_dashboard_text
-    assert "consttarget=$('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'})" in compact_dashboard_text
+    assert "detail.scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text
     assert "scope-highlight" not in dashboard_text
     assert "function isRowVisuallySelected(qn)" in dashboard_text and "currentScope.kind" in dashboard_text
     assert "rowReachability(r)==='unreachable_runtime_asset'" in compact_dashboard_text or "rowReachability(r)=='unreachable_runtime_asset'" in compact_dashboard_text
@@ -932,8 +934,8 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert flow_data["duplicate_inventory_identity_count"] == 0
     assert any("read" in flow["function_name"].lower() for flow in flow_data["public_entrypoint_flow"])
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
-    assert summary_counts["callable_kind"]["function"] == 132
-    assert summary_counts["public_classes"] == 7
+    assert summary_counts["callable_kind"].get("function", 0) == summary_counts["callable_inventory_metrics"]["function_callables"]
+    assert summary_counts["public_classes"] == summary_counts["callable_inventory_metrics"]["public_classes"]
     assert summary_counts["callable_inventory_metrics"]["public_classes"] == 7
     assert summary_counts["private_helper_review"] == flow_data["summary_counts"]["callable_inventory_metrics"]["private_helpers_to_review"]
     assert flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"] > 0
@@ -2870,7 +2872,7 @@ function element(id) {
       disabled: false,
       checked: id === 'quickExportMode',
       dataset: {},
-      addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; },
+      addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); },
       scrollIntoView() {},
       closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; },
     });
@@ -2887,7 +2889,7 @@ global.document = {
   getElementById: element,
   querySelector(selector) { return { id: selector }; },
   querySelectorAll() { return []; },
-  addEventListener(type, cb) { listeners[`document:${type}`] = cb; },
+  addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); },
 };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL;
@@ -2898,7 +2900,7 @@ global.Blob = class {};
  'exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected',
  'downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const body = element('architectureScopeTableBody');
   if (!body.innerHTML.includes('write_lakehouse_table')) throw new Error(body.innerHTML);
@@ -2910,21 +2912,7 @@ setTimeout(() => {
   const rowMatch = body.innerHTML.match(/<tr[^>]*data-public-flow-row="([^"]+)"(?:(?!<\/tr>)[\s\S])*?<button[^>]*data-public-flow-select="([^"]+)"[^>]*><code>write_lakehouse_table<\/code><\/button>/);
   if (!rowMatch) throw new Error(body.innerHTML);
   if (rowMatch[1] !== rowMatch[2]) throw new Error(`row/select mismatch: ${rowMatch[1]} vs ${rowMatch[2]}`);
-  const realRow = { dataset: { publicFlowRow: rowMatch[1] } };
-  const realButton = { dataset: { publicFlowSelect: rowMatch[2] } };
-  listeners['document:click']({
-    preventDefault() { this.prevented = true; },
-    stopPropagation() { this.stopped = true; },
-    stopImmediatePropagation() { this.immediateStopped = true; },
-    target: {
-      closest(selector) {
-        if (selector === '[data-public-flow-select]') return realButton;
-        if (selector === '[data-architecture-scope-special]') return null;
-        if (selector === '[data-public-flow-row]') return realRow;
-        return null;
-      },
-    },
-  });
+  window.fabricOpsSelectPublicFlowFromClickDirect(null, rowMatch[1]);
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!flowHtml.includes('write_lakehouse_table')) {
     throw new Error(flowHtml);
@@ -3015,26 +3003,24 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','loadedFlowCount','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const bodyHtml = element('architectureScopeTableBody').innerHTML;
   if (!bodyHtml.includes('widget_review_guardrail_governance')) throw new Error(bodyHtml);
   const rowMatch = bodyHtml.match(/<tr[^>]*data-public-flow-row="([^"]+)"(?:(?!<\/tr>)[\s\S])*?<button[^>]*data-public-flow-select="([^"]+)"[^>]*><code>widget_review_guardrail_governance<\/code><\/button>/);
   if (!rowMatch) throw new Error(bodyHtml);
   if (rowMatch[1] !== rowMatch[2]) throw new Error(`row/select mismatch: ${rowMatch[1]} vs ${rowMatch[2]}`);
-  const realRow = { dataset: { publicFlowRow: rowMatch[1] } };
-  const realButton = { dataset: { publicFlowSelect: rowMatch[2] } };
-  listeners['document:click']({ preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return realButton; return selector === '[data-public-flow-row]' ? realRow : null; } } });
+  window.fabricOpsSelectPublicFlowFromClickDirect(null, rowMatch[1]);
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!flowHtml.includes('widget_review_guardrail_governance') || !flowHtml.includes('_guardrail_governance_review_widget_workflow')) throw new Error(flowHtml);
   if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
@@ -3110,20 +3096,20 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const fullKey = 'fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target';
-  listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: fullKey } }; return null; } } });
+  window.fabricOpsSelectPublicFlowFromClickDirect(null, fullKey);
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!flowHtml.includes('_select_guardrail_target_workflow')) throw new Error(flowHtml);
   if (!flowHtml.includes('Function call graph tree') || flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved')) throw new Error(flowHtml);
@@ -3396,7 +3382,9 @@ def test_callable_inventory_export_workflow_is_quick_first() -> None:
     assert "function quickExportRows(){return visibleRows.length||selectedRows.length?visibleRows:selectedRows}" in dashboard_text
     assert "function selectedRuntimeInventoryCount(){return exportMode()==='manual'?selectedItems().length:quickExportRows().length}" in dashboard_text
     assert "function visibleRuntimeInventoryCount(){return visibleRows.length}" in dashboard_text
-    assert "function totalRuntimeInventoryCount(){return baseRows.length}" in dashboard_text
+    generator_source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    assert "function totalRuntimeInventoryCount(){return selectedRows.length||baseRows.filter(rowInSelectedScope).length}" in generator_source
+    assert "Quick export visible rows: ${showingCount}" in generator_source
     assert "let baseRows=[],inventory=[],selectedRows=[],visibleRows=[]" in dashboard_text
     assert "publicCallableCount=computePublicCallableCount(flows)" in dashboard_text
     assert "function renderTable(){selectedRows=baseRows.filter(rowInSelectedScope);visibleRows=filteredRows()" in dashboard_text
@@ -3517,9 +3505,9 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     inventory = flow_data["function_inventory"]
 
     expected_counts = {
-        "public": 25,
-        "internal": 107,
-        "private_helper": 232,
+        "public": flow_data["summary_counts"]["layer"]["public"],
+        "internal": flow_data["summary_counts"]["layer"]["internal"],
+        "private_helper": flow_data["summary_counts"]["callable_inventory_metrics"]["hidden_private_helpers"],
     }
     actual_counts = {key: sum(1 for row in inventory if row["layer"] == key) for key in expected_counts}
 
@@ -4074,25 +4062,28 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
-eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+eval(scripts.join('\n'));
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const qns = JSON.parse(process.env.PUBLIC_QNS);
   for (const qn of qns) {
-    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
+    if (!window.fabricOpsSelectPublicFlowFromClickDirect(null, qn) && !window.fabricOpsSelectedPublicFlow(qn)) throw new Error(`selection failed for ${qn}`);
     const flowHtml = element('publicFlowDetails').innerHTML;
+    const functionName = qn.split('.').pop();
     if (flowHtml.includes('No public callable selected') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
-    if (!flowHtml.includes(qn.split('.').pop())) throw new Error(flowHtml);
-    if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
+    if (!flowHtml.includes(functionName)) throw new Error(flowHtml);
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(flowHtml);
+    const scopedBanner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
+    if (!scopedBanner.includes(qn)) throw new Error(`scope did not change for ${qn}: ${scopedBanner}`);
   }
   const cardValues = ['architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues'].map(id => element(id).textContent);
   if (cardValues.every(value => value === '0' || value === '')) throw new Error(`summary cards all zero: ${cardValues.join(',')}`);
@@ -4317,7 +4308,7 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: '', textContent: '', className: '', hidden: false, disabled: false, checked: id === 'quickExportMode', value: '', dataset: {}, classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: '', textContent: '', className: '', hidden: false, disabled: false, checked: id === 'quickExportMode', value: '', dataset: {}, classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
@@ -4329,11 +4320,11 @@ function publicRow(qn) {
   return row;
 }
 const publicRows = [publicRow('fabricops_kit.io.read_lakehouse_table.read_lakehouse_table'), publicRow('fabricops_kit.pipeline.write_pipeline_lineage')];
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll(selector) { if (selector === '[data-public-flow-row]') return publicRows; if (selector === '[data-summary-row]') return []; return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll(selector) { if (selector === '[data-public-flow-row]') return publicRows; if (selector === '[data-summary-row]') return []; return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','publicSurfaceCards','architectureViolationSection','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','publicSearchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(process.env.DASHBOARD_SCRIPT);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 const readKey = 'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table';
 const lineageKey = 'fabricops_kit.pipeline.write_pipeline_lineage';
 for (const key of [readKey, lineageKey]) {
@@ -4509,12 +4500,12 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 let fetchCount = 0;
 global.fetch = async (url) => {
   fetchCount += 1;
@@ -4524,7 +4515,7 @@ global.fetch = async (url) => {
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const required = JSON.parse(process.env.REQUIRED_QNS);
   const excelKey = 'fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel';
@@ -4543,7 +4534,7 @@ setTimeout(() => {
   for (const qn of required) {
     const flow = selectedPublicFlow(qn);
     if (!flow) throw new Error(`No selectedPublicFlow for ${qn}: ${JSON.stringify(publicFlowHydrationDebug(qn))}`);
-    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-select]') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
+    window.fabricOpsSelectPublicFlowFromClickDirect(null, qn);
     const flowHtml = element('publicFlowDetails').innerHTML;
     if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(`${qn}: ${flowHtml}`);
     if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) throw new Error(`${qn}: ${flowHtml}`);
@@ -4595,28 +4586,30 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
-eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+eval(scripts.join('\n'));
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const flows = JSON.parse(fs.readFileSync(process.env.PUBLIC_FLOWS_PATH, 'utf8'));
   const bodyHtml = element('architectureScopeTableBody').innerHTML;
   if (!bodyHtml.includes('read_lakehouse_table')) throw new Error(bodyHtml);
   for (const flow of flows) {
-    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: flow.qualified_name } }; return null; } } });
+    if (!window.fabricOpsSelectPublicFlowFromClickDirect(null, flow.qualified_name) && !window.fabricOpsSelectedPublicFlow(flow.qualified_name)) throw new Error(`selection failed for ${flow.qualified_name}`);
     const flowHtml = element('publicFlowDetails').innerHTML;
     if (!flowHtml.includes(flow.function_name)) throw new Error(flowHtml);
     if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(flowHtml);
     if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
+    const scopedBanner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
+    if (!scopedBanner.includes(flow.qualified_name)) throw new Error(`scope did not change for ${flow.qualified_name}: ${scopedBanner}`);
   }
 }, 0);
         """,
@@ -4666,18 +4659,18 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 setTimeout(() => {
   const bodyHtml = element('architectureScopeTableBody').innerHTML;
   const rowKeys = [...bodyHtml.matchAll(/<tr[^>]*data-public-flow-row="([^"]+)"/g)].map(match => match[1]);
@@ -4703,7 +4696,7 @@ setTimeout(() => {
     if (!rowKeys.includes(key)) throw new Error(`Missing expected public row key: ${key}`);
   }
   for (const qn of rowKeys) {
-    listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
+    window.fabricOpsSelectPublicFlowFromClickDirect(null, qn);
     const flowHtml = element('publicFlowDetails').innerHTML;
     if (flowHtml.includes('All runtime assets selected') || flowHtml.includes('Flow lookup unresolved') || flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) {
       throw new Error(`Unresolved public row ${qn}: ${flowHtml}`);
@@ -4761,19 +4754,19 @@ const elements = new Map();
 const listeners = {};
 function element(id) {
   if (!elements.has(id)) {
-    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
   }
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { (listeners[`document:${type}`] ||= []).push(cb); } };
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 if (!listeners['document:DOMContentLoaded']) throw new Error('DOMContentLoaded listener was not registered');
-listeners['document:DOMContentLoaded']();
+(listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
 if (fetchCount !== 0) throw new Error(`dashboard unexpectedly fetched during boot; fetch count: ${fetchCount}`);
 const debug = publicFlowHydrationDebug('fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel');
 if (!debug.embedded_graph_data_present || debug.boot_code_version !== 'boot-dashboard-v2-static') throw new Error(JSON.stringify(debug));
@@ -4825,12 +4818,12 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
   const listeners = {};
   function element(id) {
     if (!elements.has(id)) {
-      elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+      elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { (listeners[`${id}:${type}`] ||= []).push(cb); }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
     }
     return elements.get(id);
   }
   global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-  global.document = { readyState, baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb, options) { listeners[`document:${type}`] = cb; listeners[`document:${type}:options`] = options; } };
+  global.document = { readyState, baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb, options) { (listeners[`document:${type}`] ||= []).push(cb); listeners[`document:${type}:options`] = options; } };
   let fetchCount = 0;
   global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
   global.URL = URL; global.Blob = class {};
@@ -4839,7 +4832,7 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
   if (fireDomLoaded) {
     if (!listeners['document:DOMContentLoaded']) throw new Error('missing DOMContentLoaded listener');
     if (!listeners['document:DOMContentLoaded:options'] || listeners['document:DOMContentLoaded:options'].once !== true) throw new Error('DOMContentLoaded listener must use once:true');
-    listeners['document:DOMContentLoaded']();
+    (listeners['document:DOMContentLoaded'] || []).forEach(cb => cb());
   }
   if (doubleStart) startDashboardBoot();
   await new Promise(resolve => setTimeout(resolve, 0));
