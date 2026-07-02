@@ -3155,11 +3155,58 @@ def test_dashboard_public_flow_click_handler_source_owns_row_and_button_events()
     assert "const target=$('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return" in click_handler
 
 
+def test_dashboard_public_flow_rows_render_direct_selection_handler() -> None:
+    """Verify generated public callable buttons directly invoke selected-flow selection."""
+    import scripts.generate_function_reference as generator
+
+    dashboard_text = generator._render_combined_refactor_dashboard_html({
+        "function_inventory": [],
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+                "function_name": "read_lakehouse_table",
+                "module": "io.read_lakehouse_table",
+                "docs_url": "../../api/reference/read_lakehouse_table/",
+                "width": 1,
+                "scope": 1,
+                "max_depth": 1,
+                "architecture_violation_count": 0,
+                "direct_callees": [],
+                "transitive_callees": [],
+            }
+        ],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 1}},
+    })
+
+    assert 'data-public-flow-row="fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"' in dashboard_text
+    assert 'data-public-flow-select="fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"' in dashboard_text
+    assert (
+        'onclick="return window.fabricOpsSelectPublicFlowFromClickDirect &amp;&amp; '
+        "window.fabricOpsSelectPublicFlowFromClickDirect(event, '"
+        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table')"
+    ) in dashboard_text
+    source_link = dashboard_text[dashboard_text.index('<a class="source-link"') : dashboard_text.index('↗</a>') + len('↗</a>')]
+    assert "fabricOpsSelectPublicFlowFromClickDirect" not in source_link
+
+
+def test_dashboard_direct_public_flow_handler_source_contract() -> None:
+    """Verify direct public callable selection handler owns event isolation and scrolling."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    start = source.index("window.fabricOpsSelectPublicFlowFromClickDirect=function(event,key){")
+    body = source[start : source.index("};document.addEventListener('click'", start) + 1]
+
+    assert "event.preventDefault();event.stopPropagation();" in body
+    assert "if(event.stopImmediatePropagation)event.stopImmediatePropagation()" in body
+    assert "const ok=selectPublicFlowFromClick(key);" in body
+    assert "document.getElementById('publicFlowDetails')" in body
+    assert "detail.scrollIntoView({behavior:'smooth',block:'start'});return false" in body
+
+
 def test_dashboard_public_flow_selection_source_keeps_flow_details_owner() -> None:
     """Verify public flow selection renders details after runtime inventory sync."""
     source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
     start = source.index("function selectPublicFlowFromClick(key){")
-    body = source[start : source.index("}document.addEventListener('click'", start) + 1]
+    body = source[start : source.index("}window.fabricOpsSelectPublicFlowFromClickDirect", start) + 1]
 
     assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in body
     assert "renderPublicCallableList();" in body
