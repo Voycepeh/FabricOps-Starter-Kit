@@ -5311,6 +5311,114 @@ def update_landing_page_counts(stats: dict[str, int]) -> None:
             raise RuntimeError(f"Landing page is missing generated count token block: {token_name}")
     LANDING_PAGE_PATH.write_text(text, encoding="utf-8", newline="\n")
 
+
+def _collect_call_graph_generation_inputs() -> tuple[
+    dict[str, dict[str, Any]],
+    dict[str, dict[str, Any]],
+    dict[str, list[str]],
+    list[str],
+    list[str],
+]:
+    """Collect the minimal source-scanning inputs for call graph generation.
+
+    The full reference generator uses this same source inventory as one part of a
+    complete reference refresh. The focused call graph generator intentionally
+    stops after collecting the inputs needed for the call graph JSON/dashboard so
+    dashboard refreshes do not touch unrelated generated reference artifacts.
+    """
+    public = parse_public_exports()
+    module_data = {source_module_name(path): parse_module(path) for path in source_module_paths()}
+    if "io.shared" in module_data:
+        module_data["io"] = module_data["io.shared"]
+
+    docs_metadata = parse_docs_metadata()
+    missing_metadata = sorted(name for name in public if name not in docs_metadata)
+    if missing_metadata:
+        raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
+    invalid_public_exports = sorted(
+        name for name in public if str(docs_metadata[name].get("function_type", "")).lower() not in {"callable", "class"}
+    )
+    if invalid_public_exports:
+        raise RuntimeError(
+            "__all__ exports must have PUBLIC_SYMBOL_DOCS function_type=callable or function_type=class: "
+            + ", ".join(invalid_public_exports)
+        )
+
+    symbol_map: dict[str, Symbol] = {}
+    for name in public:
+        preferred_module = canonical_public_module(docs_metadata[name]["module"])
+        preferred_actual_module = resolve_preferred_actual_module(preferred_module)
+        modules_to_check = ([preferred_actual_module] if preferred_actual_module in module_data else []) + [
+            module for module in module_data if module != preferred_actual_module
+        ]
+        for module in modules_to_check:
+            info = module_data[module]
+            if name in info["functions"]:
+                symbol_map[name] = Symbol(name, module, preferred_module, "function", info["functions"][name])
+                break
+            if name in info["classes"]:
+                symbol_map[name] = Symbol(name, module, preferred_module, "class", info["classes"][name])
+                break
+            if name in info["constants"]:
+                symbol_map[name] = Symbol(name, module, preferred_module, "constant", info["constants"][name])
+                break
+        if name not in symbol_map:
+            raise RuntimeError(f"Could not resolve exported symbol {name} to a module-level function/class.")
+
+    for symbol in symbol_map.values():
+        meta = docs_metadata[symbol.name]
+        symbol.role = str(meta.get("function_type") or "").lower()
+        if symbol.role not in {"callable", "class", "internal"}:
+            raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/class/internal")
+
+    nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
+    node_by_qn = {node["qualified_name"]: node for node in nodes}
+    calls_by_qn: dict[str, list[str]] = {}
+    for edge in edges:
+        caller = edge["caller_qualified_name"]
+        callee = edge.get("callee_qualified_name")
+        if callee:
+            calls_by_qn.setdefault(caller, []).append(callee)
+
+    public_flow_qns = sorted(
+        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "function"],
+        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    )
+    public_class_qns = sorted(
+        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "class"],
+        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    )
+    return module_data, node_by_qn, calls_by_qn, public_flow_qns, public_class_qns
+
+
+def generate_function_call_graph_artifacts() -> None:
+    """Generate only the Function Call Graph JSON data and dashboard HTML.
+
+    Use :func:`main` for the complete reference refresh, including API pages,
+    module pages, manifests, landing stats, metadata references, glossary output,
+    MkDocs navigation, and all call graph artifacts. Use this focused seam when
+    only `function-call-graph.json` and `function-call-graph-dashboard.html`
+    need to be refreshed.
+    """
+    REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
+    module_data, node_by_qn, calls_by_qn, public_flow_qns, public_class_qns = _collect_call_graph_generation_inputs()
+    callable_flow_data = _build_callable_flow_data(
+        public_flow_qns,
+        public_class_qns,
+        calls_by_qn,
+        node_by_qn,
+        module_data,
+        generated_at_utc=datetime.now(UTC),
+    )
+    FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
+    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.write_text(
+        _format_generated_html_for_review(_render_combined_refactor_dashboard_html(callable_flow_data)),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
 def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
