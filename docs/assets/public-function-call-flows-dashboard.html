@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Public Function Call Flows</title>
+<style>body{font-family:system-ui,sans-serif;margin:2rem;color:#172033}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}.card{border:1px solid #d7deea;border-radius:12px;padding:1rem;background:#f8fbff}.value{font-size:2rem;font-weight:700}table{border-collapse:collapse;width:100%;margin-top:1rem}th,td{border-bottom:1px solid #e2e8f0;padding:.55rem;text-align:left;vertical-align:top}tr.clickable{cursor:pointer}tr.clickable:hover{background:#f1f7ff}code,.pill{background:#eef3fb;border-radius:999px;padding:.15rem .45rem}.tree-row{font-family:ui-monospace,monospace;margin:.25rem 0}.signal{color:#8a3ffc;font-weight:600}</style></head>
+<body><h1>Public Function Call Flows v2</h1>
+<div class="cards"><div class="card"><div>Public functions</div><div id="card-public" class="value"></div></div><div class="card"><div>Architecture violations</div><div id="card-violations" class="value"></div></div><div class="card"><div>Large depth / width</div><div id="card-large" class="value"></div></div><div class="card"><div>Defined but not used</div><div id="card-unused" class="value"></div></div></div>
+<h2>Public function flows</h2><table><thead><tr><th>Function</th><th>File</th><th>Direct calls</th><th>Transitive functions</th><th>Max depth</th><th>Files touched</th><th>Signals</th></tr></thead><tbody id="public-table"></tbody></table>
+<section id="selected-flow-panel"><h2>Selected flow</h2><div id="selected-flow">Select a public function row.</div></section>
+<h2>Defined but not used</h2><table><thead><tr><th>Function</th><th>File</th><th>Reason</th></tr></thead><tbody id="unused-table"></tbody></table>
+
+<script>
+let DATA = null;
+const qs = (id) => document.getElementById(id);
+function link(path, line) { return `<a href="../../../${path}#L${line}">${path}</a>`; }
+function signals(items) { return items.length ? items.map(s => `<span class="signal">${s}</span>`).join(', ') : '—'; }
+function renderCards() { qs('card-public').textContent = DATA.summary.public_function_count; qs('card-violations').textContent = DATA.public_functions.filter(f => f.signals.includes('public_calls_public') || f.signals.includes('cross_file_private_dependency')).length; qs('card-large').textContent = DATA.public_functions.filter(f => f.signals.includes('large_depth') || f.signals.includes('large_width')).length; qs('card-unused').textContent = DATA.summary.defined_but_not_used_count; }
+function renderPublicTable() { qs('public-table').innerHTML = DATA.public_functions.map((f, i) => `<tr class="clickable" data-index="${i}"><td><code>${f.function_name}</code></td><td>${link(f.source_path, f.source_start_line)}</td><td>${f.direct_call_count}</td><td>${f.transitive_function_count}</td><td>${f.max_depth}</td><td>${f.files_touched.length}</td><td>${signals(f.signals)}</td></tr>`).join(''); document.querySelectorAll('#public-table tr').forEach(row => row.addEventListener('click', () => renderSelected(DATA.public_functions[Number(row.dataset.index)]))); }
+function renderSelected(f) { qs('selected-flow').innerHTML = `<h3>${f.function_name}</h3>` + f.flow.map(n => `<div class="tree-row" style="padding-left:${n.depth * 1.5}rem">${'└─'.repeat(n.depth)} [${n.source_path}] [${n.function_type}] ${n.function_name}(...)</div>`).join(''); }
+function renderUnused() { qs('unused-table').innerHTML = DATA.defined_but_not_used.map(f => `<tr><td><code>${f.function_name}</code></td><td>${link(f.source_path, f.source_start_line)}</td><td>${f.reason}</td></tr>`).join(''); }
+function renderDashboard(data) { DATA = data; renderCards(); renderPublicTable(); renderUnused(); if (DATA.public_functions.length) renderSelected(DATA.public_functions[0]); }
+fetch('../reference/_data/public-function-call-flows.json').then(response => response.json()).then(renderDashboard).catch(error => { qs('selected-flow').textContent = `Unable to load public-function-call-flows.json: ${error}`; });
+</script></body></html>
