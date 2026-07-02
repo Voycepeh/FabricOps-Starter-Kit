@@ -12,7 +12,6 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _context_get, _runtime_context, _safe_str
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
-from fabricops_kit.metadata import _coerce_row_dicts
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 NOTEBOOK_REGISTRY_BASE_FIELDS = [
@@ -43,6 +42,14 @@ NOTEBOOK_REGISTRY_STATE_FIELDS = [
 ]
 
 NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS]
+
+
+def _coerce_row_dicts(rows):
+    if rows is None:
+        return []
+    if hasattr(rows, "collect"):
+        rows = rows.collect()
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
 
 
 def _notebook_registration_key(row: dict[str, Any]) -> str:

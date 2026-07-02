@@ -8,7 +8,6 @@ import pytest
 
 import fabricops_kit
 import fabricops_kit.widgets.shared as agreement
-import fabricops_kit.metadata as metadata
 from fabricops_kit.config import audit as audit_helpers
 from fabricops_kit.config import metadata_keys
 from fabricops_kit.widgets import notebook_registry
@@ -204,8 +203,6 @@ def test_deleted_metadata_helpers_are_not_referenced_by_active_modules():
     root = Path(__file__).parents[2] / "src" / "fabricops_kit"
     offenders = []
     for path in root.glob("*.py"):
-        if path.name == "metadata.py":
-            continue
         text = path.read_text(encoding="utf-8")
         for helper in deleted_helpers:
             if helper in text:

@@ -242,7 +242,7 @@ def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> N
     calls_by_qn = {
         root_qn: [
             "fabricops_kit.pipeline._load_metadata_rules",
-            "fabricops_kit.metadata._load_metadata_table",
+            "fabricops_kit.widgets.shared._load_metadata_table",
         ],
     }
     node_by_qn = {
@@ -252,15 +252,15 @@ def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> N
             "module_name": "pipeline",
             "exported": False,
         },
-        "fabricops_kit.metadata._load_metadata_table": {
+        "fabricops_kit.widgets.shared._load_metadata_table": {
             "callable_name": "_load_metadata_table",
-            "module_name": "metadata",
+            "module_name": "widgets.shared",
             "exported": False,
         },
     }
     module_data = {
         "pipeline": {"functions": {"_load_metadata_rules": "Load metadata rules for the callable."}},
-        "metadata": {"functions": {"_load_metadata_table": "Load metadata table rows."}},
+        "widgets.shared": {"functions": {"_load_metadata_table": "Load metadata table rows."}},
     }
 
     signal_data = _collect_refactor_signals(root_qn, calls_by_qn, node_by_qn, module_data)
@@ -3423,7 +3423,7 @@ def test_global_table_controls_core_sort_and_filter_helpers() -> None:
     });
     const sourceRow = {
       cells:[
-        makeCell('src/fabricops_kit/metadata.py Finding: Reason: Evidence: Notes: Cleanup action:', 'src/fabricops_kit/metadata.py'),
+        makeCell('src/fabricops_kit/widgets/shared.py Finding: Reason: Evidence: Notes: Cleanup action:', 'src/fabricops_kit/widgets/shared.py'),
         makeCell('build_metadata', 'build_metadata'),
         makeCell('Public function', 'Public function'),
       ],
@@ -3447,12 +3447,12 @@ def test_global_table_controls_core_sort_and_filter_helpers() -> None:
       tBodies:[{rows:[sourceRow, detailRow, otherSourceRow]}],
     };
     const values = t.uniqueValues(table, 0);
-    assert(values.includes('src/fabricops_kit/metadata.py'), 'source file filter includes raw source path');
+    assert(values.includes('src/fabricops_kit/widgets/shared.py'), 'source file filter includes raw source path');
     assert(values.includes('src/fabricops_kit/io.py'), 'source file filter includes second raw source path');
     assert(!values.some((value) => /Finding:|Reason:|Evidence:|Notes:|Cleanup action:/.test(value)), 'source file filter excludes details text');
     assert(!values.includes('(blank)'), 'source file filter excludes blank when no raw source file is blank');
     assert(t.filterableRows(table).length === 2, 'expanded details rows are not filterable rows');
-    assert(t.rowMatchesFilter(sourceRow,{column:0,kind:'values',values:new Set(['src/fabricops_kit/metadata.py'])}), 'raw source file filtering works');
+    assert(t.rowMatchesFilter(sourceRow,{column:0,kind:'values',values:new Set(['src/fabricops_kit/widgets/shared.py'])}), 'raw source file filtering works');
     const blankTable = {dataset:{tableControls:'excel'}, tHead:{rows:[{cells:[{}, {}, {}]}]}, tBodies:[{rows:[sourceRow, blankRow]}]};
     const blankValues = t.uniqueValues(blankTable, 0);
     assert(blankValues.includes('(blank)'), 'blank filter appears for true blank raw values');
