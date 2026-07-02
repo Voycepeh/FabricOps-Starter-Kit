@@ -482,6 +482,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "publicCallableList" not in dashboard_text
     assert "publicFlowDetails" in dashboard_text
     assert "Selected public callable flow" in dashboard_text
+    assert "Static preview" in dashboard_text
+    assert "Function call graph tree" in dashboard_text
+    assert "read_lakehouse_table" in dashboard_text
+    public_flow_start = dashboard_text.index('<section id="publicFlowDetails" class="flow-details">')
+    public_flow_end = dashboard_text.index('<section id="runtime-inventory"', public_flow_start)
+    public_flow_section = dashboard_text[public_flow_start:public_flow_end]
+    assert "Static preview" in public_flow_section
+    assert "Function call graph tree" in public_flow_section
+    assert "read_lakehouse_table" in public_flow_section
     assert dashboard_text.index('id="architectureScopeTableBody"') < dashboard_text.index("Selected public callable flow")
     assert dashboard_text.index("Selected public callable flow") < dashboard_text.index("Current scoped callables inventory")
     assert "publicSearchHaystack" in dashboard_text
