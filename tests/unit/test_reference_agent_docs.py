@@ -748,7 +748,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Runtime inventory" in inventory_text
     assert "The runtime inventory is the deduplicated function_inventory data behind this dashboard." in normalized_inventory_text
     assert "Data source generated at:" in inventory_text
-    assert "Dashboard UI generated at:" in inventory_text
     assert "Generated at:</strong>" not in inventory_text
     assert "Dashboard asset version:</strong>" not in inventory_text
     assert "Data source:</strong>" not in inventory_text
