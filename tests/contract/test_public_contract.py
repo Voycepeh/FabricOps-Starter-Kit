@@ -646,3 +646,62 @@ def test_reference_generation_script_succeeds_for_reference_and_module_docs():
     assert "api-chip-module" not in function_text
     assert not (root / "docs" / "api" / "modules" / "config.md").exists()
     assert "api/modules/config.md" not in mkdocs_text
+
+
+def test_package_root_all_exports_are_importable() -> None:
+    """Verify every package-root export supports notebook-friendly imports."""
+    for name in fabricops_kit.__all__:
+        namespace: dict[str, object] = {}
+        exec(f"from fabricops_kit import {name}", namespace)
+        assert namespace[name] is getattr(fabricops_kit, name)
+
+
+def test_package_root_expected_public_names_are_present() -> None:
+    """Verify expected notebook-friendly package-root names are exported."""
+    expected_names = {
+        "setup_notebook",
+        "setup_metadata_tables",
+        "read_lakehouse_table",
+        "read_lakehouse_excel",
+        "write_lakehouse_table",
+        "profile_dataframe",
+        "run_table_guardrails",
+        "write_pipeline_lineage",
+        "write_pipeline_run_summary",
+        "widget_pipeline_bootstrap",
+        "widget_render_data_steward",
+        "widget_render_data_agreement",
+        "widget_render_agreement_evidence",
+    }
+
+    assert expected_names <= set(fabricops_kit.__all__)
+
+
+def test_package_root_widget_exports_are_lazy() -> None:
+    """Verify package-root import does not eagerly import widget modules."""
+    code = """
+import sys
+import fabricops_kit
+widget_modules = [
+    "fabricops_kit.widgets.widget_author_dq_rules",
+    "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules",
+    "fabricops_kit.widgets.widget_enrich_table_metadata",
+    "fabricops_kit.widgets.widget_pipeline_bootstrap",
+    "fabricops_kit.widgets.widget_render_agreement_evidence",
+    "fabricops_kit.widgets.widget_render_data_agreement",
+    "fabricops_kit.widgets.widget_render_data_steward",
+    "fabricops_kit.widgets.widget_review_guardrail_governance",
+    "fabricops_kit.widgets.widget_select_guardrail_target",
+]
+assert not any(name in sys.modules for name in widget_modules), sorted(name for name in widget_modules if name in sys.modules)
+value = fabricops_kit.widget_render_data_agreement
+assert callable(value)
+assert fabricops_kit.__dict__["widget_render_data_agreement"] is value
+assert "fabricops_kit.widgets.widget_render_data_agreement" in sys.modules
+assert "fabricops_kit.widgets.widget_author_dq_rules" not in sys.modules
+"""
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2] / "src")
+    result = subprocess.run([sys.executable, "-c", code], env=env, text=True, capture_output=True, check=False)
+
+    assert result.returncode == 0, result.stderr or result.stdout

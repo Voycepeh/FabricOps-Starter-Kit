@@ -683,10 +683,27 @@ def build_callable_graph(
 def parse_public_exports() -> list[str]:
     """Parse public exports."""
     tree = ast.parse(INIT_PATH.read_text(encoding="utf-8"))
+    export_groups: dict[str, list[str]] = {}
+
     for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "__all__" for t in node.targets):
-            if isinstance(node.value, ast.List):
-                return [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
+        if not isinstance(node, ast.Assign):
+            continue
+        target_names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+        if not target_names:
+            continue
+        if isinstance(node.value, ast.Tuple):
+            values = [elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]
+            for target_name in target_names:
+                export_groups[target_name] = values
+        if "__all__" in target_names and isinstance(node.value, ast.List):
+            exports: list[str] = []
+            for elt in node.value.elts:
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                    exports.append(elt.value)
+                elif isinstance(elt, ast.Starred) and isinstance(elt.value, ast.Name):
+                    exports.extend(export_groups.get(elt.value.id, []))
+            if exports:
+                return exports
     raise RuntimeError("Could not parse __all__ from __init__.py")
 
 

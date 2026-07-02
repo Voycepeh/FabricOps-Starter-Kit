@@ -27,11 +27,9 @@ def _module_name(path: Path) -> str:
 
 def _public_exports() -> set[str]:
     """Return root public callable names from ``__all__``."""
-    tree = ast.parse((SRC / "__init__.py").read_text(encoding="utf-8"))
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-            return {item.value for item in node.value.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)}
-    raise AssertionError("fabricops_kit.__all__ was not found")
+    import fabricops_kit
+
+    return set(fabricops_kit.__all__)
 
 
 def _functions() -> dict[tuple[str, str], FunctionRef]:

@@ -25,6 +25,3 @@ def __getattr__(name: str):
     globals()[name] = value
     return value
 
-
-
-from .widget_pipeline_bootstrap import widget_pipeline_bootstrap

@@ -76,16 +76,9 @@ def _remove_whitespace(value: str) -> str:
 
 def _exported_symbols() -> list[str]:
     """Return exported public symbol names from the package root."""
-    init_path = ROOT / "src" / "fabricops_kit" / "__init__.py"
-    tree = ast.parse(init_path.read_text(encoding="utf-8"))
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and any(
-            isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets
-        ):
-            return [
-                elt.value for elt in node.value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
-            ]
-    raise AssertionError("Could not parse __all__")
+    import fabricops_kit
+
+    return list(fabricops_kit.__all__)
 
 
 def _landing_token_text(page_text: str, token_name: str) -> str:
