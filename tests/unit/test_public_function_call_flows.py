@@ -32,11 +32,55 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
         "    imported_helper()\n"
         "    shared_alias._private_shared()\n"
         "    DISPATCH['x']()\n"
-        "    public_b()\n\n"
+        "    public_b()\n"
+        "    depth_1()\n"
+        "    width_0()\n"
+        "    width_1()\n"
+        "    width_2()\n"
+        "    width_3()\n"
+        "    width_4()\n"
+        "    width_5()\n"
+        "    width_6()\n"
+        "    width_7()\n"
+        "    width_8()\n"
+        "    width_9()\n"
+        "    width_10()\n\n"
         "def same_file_helper():\n"
         "    recursive_helper()\n\n"
         "def recursive_helper():\n"
         "    recursive_helper()\n\n"
+        "def depth_1():\n"
+        "    depth_2()\n\n"
+        "def depth_2():\n"
+        "    depth_3()\n\n"
+        "def depth_3():\n"
+        "    depth_4()\n\n"
+        "def depth_4():\n"
+        "    depth_5()\n\n"
+        "def depth_5():\n"
+        "    return None\n\n"
+        "def width_0():\n"
+        "    return None\n\n"
+        "def width_1():\n"
+        "    return None\n\n"
+        "def width_2():\n"
+        "    return None\n\n"
+        "def width_3():\n"
+        "    return None\n\n"
+        "def width_4():\n"
+        "    return None\n\n"
+        "def width_5():\n"
+        "    return None\n\n"
+        "def width_6():\n"
+        "    return None\n\n"
+        "def width_7():\n"
+        "    return None\n\n"
+        "def width_8():\n"
+        "    return None\n\n"
+        "def width_9():\n"
+        "    return None\n\n"
+        "def width_10():\n"
+        "    return None\n\n"
         "def unused_local():\n"
         "    return None\n\n"
         "from .public_b import public_b\n",
@@ -70,9 +114,22 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert public_a["max_depth"] < 10
     assert "public_calls_public" in public_a["signals"]
     assert "cross_file_private_dependency" in public_a["signals"]
+    assert "large_depth" in public_a["signals"]
+    assert "large_width" in public_a["signals"]
+    assert {"refactor_signals", "refactor_summary", "suggested_refactor_action"} <= set(public_a)
+    assert public_a["suggested_refactor_action"] == "review_public_calls_public"
 
-    unused = {item["function_name"] for item in payload["defined_but_not_used"]}
+    refactor_by_signal = {item["signal"]: item for item in public_a["refactor_signals"]}
+    assert refactor_by_signal["public_calls_public"]["severity"] == "warning"
+    assert refactor_by_signal["public_calls_public"]["evidence"][0]["function_name"] == "public_b"
+    assert refactor_by_signal["cross_file_private_dependency"]["evidence"]
+    assert refactor_by_signal["large_depth"]["evidence"][0]["max_depth"] == public_a["max_depth"]
+    assert len(refactor_by_signal["large_width"]["evidence"]) == public_a["direct_call_count"]
+
+    unused_records = payload["defined_but_not_used"]
+    unused = {item["function_name"] for item in unused_records}
     assert unused == {"unused_local"}
+    assert unused_records[0]["suggested_action"] == "review_for_deletion_or_connection"
     assert {"public_functions", "defined_functions", "used_functions", "defined_but_not_used", "summary"} <= set(payload)
 
 

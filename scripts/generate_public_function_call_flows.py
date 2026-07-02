@@ -24,6 +24,7 @@ DASHBOARD_DATA_URL = "../reference/_data/public-function-call-flows.json"
 # TODO: Add a selected public function cleanup packet schema.
 # TODO: Revisit source/docs link behavior once the v2 dashboard route is published.
 # TODO: Polish the dashboard mobile layout.
+# TODO: Detect unresolved calls that appear to target local/internal helpers without faking the signal.
 
 
 @dataclass(frozen=True)
@@ -265,8 +266,10 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
         used_all.update(used)
         root_info = functions[root_qn]
         direct = [item for item in flow if item["parent_qualified_name"] == root_qn]
+        direct_call_count = len({item["qualified_name"] for item in direct})
         max_depth = max(item["depth"] for item in flow)
-        signals = calculate_signals(root_info, flow)
+        refactor_signals = calculate_refactor_signals(root_info, flow, direct_call_count, max_depth)
+        signals = [item["signal"] for item in refactor_signals]
         public_functions.append({
             "function_name": root_info.function_name,
             "qualified_name": root_qn,
@@ -274,11 +277,14 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_start_line": root_info.source_start_line,
             "source_end_line": root_info.source_end_line,
             "flow": flow,
-            "direct_call_count": len({item["qualified_name"] for item in direct}),
+            "direct_call_count": direct_call_count,
             "transitive_function_count": len({item["qualified_name"] for item in flow}) - 1,
             "max_depth": max_depth,
             "files_touched": sorted({item["source_path"] for item in flow}),
             "signals": signals,
+            "refactor_signals": refactor_signals,
+            "refactor_summary": summarize_refactor_signals(refactor_signals),
+            "suggested_refactor_action": suggest_refactor_action(refactor_signals),
         })
     defined_functions = [function_record(info, public_qns) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
     unused = [unused_record(functions[qn]) for qn in sorted(set(functions) - used_all)]
@@ -302,18 +308,90 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
     }
 
 
-def calculate_signals(root_info: FunctionInfo, flow: list[dict[str, Any]]) -> list[str]:
-    """Calculate architecture and complexity signals for a public flow."""
-    signals = set()
-    if any(item["function_type"] == "public_dependency" for item in flow):
-        signals.add("public_calls_public")
-    if max(item["depth"] for item in flow) > 4:
-        signals.add("large_depth")
-    if len({item["qualified_name"] for item in flow if item["parent_qualified_name"] == root_info.qualified_name}) > 10:
-        signals.add("large_width")
-    if any(item["function_type"] == "private_function" and item["source_path"] != root_info.source_path for item in flow):
-        signals.add("cross_file_private_dependency")
-    return sorted(signals)
+def calculate_refactor_signals(
+    root_info: FunctionInfo,
+    flow: list[dict[str, Any]],
+    direct_call_count: int,
+    max_depth: int,
+) -> list[dict[str, Any]]:
+    """Calculate structured refactor signals for a public flow."""
+    refactor_signals: list[dict[str, Any]] = []
+    public_dependencies = [item for item in flow if item["function_type"] == "public_dependency"]
+    if public_dependencies:
+        refactor_signals.append({
+            "signal": "public_calls_public",
+            "severity": "warning",
+            "message": "Public function flow reaches another exported public function; review architecture boundaries.",
+            "evidence": [flow_evidence(item) for item in public_dependencies],
+        })
+
+    if max_depth > 4:
+        deepest = [item for item in flow if item["depth"] == max_depth]
+        refactor_signals.append({
+            "signal": "large_depth",
+            "severity": "warning",
+            "message": f"Public function flow reaches depth {max_depth}; consider splitting or extracting clearer helpers.",
+            "evidence": [{"max_depth": max_depth}, *[flow_evidence(item) for item in deepest]],
+        })
+
+    if direct_call_count > 10:
+        direct_children = [item for item in flow if item["parent_qualified_name"] == root_info.qualified_name]
+        refactor_signals.append({
+            "signal": "large_width",
+            "severity": "warning",
+            "message": f"Public function has {direct_call_count} direct package-local calls; review orchestration width.",
+            "evidence": [flow_evidence(item) for item in direct_children],
+        })
+
+    cross_file_private = [
+        item
+        for item in flow
+        if item["function_type"] == "private_function" and item["source_path"] != root_info.source_path
+    ]
+    if cross_file_private:
+        refactor_signals.append({
+            "signal": "cross_file_private_dependency",
+            "severity": "warning",
+            "message": "Public function flow reaches private helpers in another file; consider a shared non-private helper boundary.",
+            "evidence": [flow_evidence(item) for item in cross_file_private],
+        })
+
+    return refactor_signals
+
+
+def flow_evidence(item: dict[str, Any]) -> dict[str, Any]:
+    """Return compact evidence for a flow node."""
+    return {
+        "qualified_name": item["qualified_name"],
+        "function_name": item["function_name"],
+        "source_path": item["source_path"],
+        "source_start_line": item["source_start_line"],
+        "source_end_line": item["source_end_line"],
+        "function_type": item["function_type"],
+        "depth": item["depth"],
+    }
+
+
+def summarize_refactor_signals(refactor_signals: list[dict[str, Any]]) -> str:
+    """Return a short human-readable summary for structured refactor signals."""
+    if not refactor_signals:
+        return "No refactor signals detected."
+    signal_names = ", ".join(item["signal"] for item in refactor_signals)
+    return f"Review {len(refactor_signals)} refactor signal(s): {signal_names}."
+
+
+def suggest_refactor_action(refactor_signals: list[dict[str, Any]]) -> str:
+    """Return the highest-priority suggested refactor action."""
+    signals = {item["signal"] for item in refactor_signals}
+    if "unresolved_internal_call" in signals:
+        return "review_unresolved_internal_call"
+    if "public_calls_public" in signals:
+        return "review_public_calls_public"
+    if "cross_file_private_dependency" in signals:
+        return "review_cross_file_private_dependency"
+    if "large_depth" in signals or "large_width" in signals:
+        return "split_large_flow"
+    return "no_action"
 
 
 def function_record(info: FunctionInfo, public_qns: set[str]) -> dict[str, Any]:
@@ -337,6 +415,7 @@ def unused_record(info: FunctionInfo) -> dict[str, Any]:
         "source_start_line": info.source_start_line,
         "source_end_line": info.source_end_line,
         "reason": "Defined in src but not reached from any public function flow",
+        "suggested_action": "review_for_deletion_or_connection",
     }
 
 
