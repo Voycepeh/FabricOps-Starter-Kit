@@ -2615,8 +2615,8 @@ def test_callable_dashboard_shared_helper_public_function_is_violation() -> None
     assert "hasArchitectureViolation(flow)&&isGraphReviewCandidate(flow)" not in compact_dashboard_text
 
 
-def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> None:
-    """Verify dashboard flow rendering uses one simple classification badge."""
+def test_callable_dashboard_flow_tree_exports_preformatted_text_lines() -> None:
+    """Verify dashboard flow rendering uses one preformatted plain-text tree."""
     import scripts.generate_function_reference as generator
 
     dashboard_text = generator._render_refactor_dashboard_html({"function_inventory": [], "public_entrypoint_flow": []})
@@ -2627,16 +2627,19 @@ def test_callable_dashboard_flow_tree_exports_simple_classification_chips() -> N
     compact_dashboard_text = _remove_whitespace(dashboard_text).replace('"', "'")
 
     assert "functionflowTreeNodeType(n)" in compact_dashboard_text
-    assert "[${esc(flowTreeNodeFile(n))}]" in dashboard_text
-    assert "[${esc(flowTreeNodeType(n))}]" in dashboard_text
-    assert "${flowTreeCallableLink(n)}" in dashboard_text
+    assert "functionflowTreeLine(n,prefix='')" in compact_dashboard_text
+    assert "[${flowTreeNodeFile(n)}] [${flowTreeNodeType(n)}]" in dashboard_text
+    assert "${flowTreeCallableLink(n)}" not in dashboard_text
     assert "dependency_role:n.dependency_role||null" not in compact_dashboard_text
     assert "label(n.dependency_role)" not in dashboard_text
     assert "reference-call-tree" in dashboard_text
-    assert "reference-call-tree-row" in dashboard_text
-    assert "reference-call-tree-prefix" in dashboard_text
-    assert "reference-call-tree-source" in dashboard_text
-    assert "reference-call-tree-type" in dashboard_text
+    assert "reference-call-tree-row" not in dashboard_text
+    assert "reference-call-tree-prefix" not in dashboard_text
+    assert "reference-call-tree-source" not in dashboard_text
+    assert "reference-call-tree-type" not in dashboard_text
+    assert '<pre id="callableFlowTree"' in dashboard_text
+    assert "white-space:pre" in dashboard_text
+    assert "overflow-x:auto" in dashboard_text
     assert "flow-tree-detail-grid" not in dashboard_text
     assert "flowTreeDetailRows(n)" not in dashboard_text
     assert "flow-tree-details" not in dashboard_text
