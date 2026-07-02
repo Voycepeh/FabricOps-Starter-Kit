@@ -609,7 +609,7 @@ def test_env_config_template_imports_config_from_root_only():
 def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
-    assert "from .config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path("src/fabricops_kit/pipeline/metadata_evidence.py").read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
 
 
@@ -667,16 +667,16 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
 def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     """Verify runtime metadata writers do not import private setup owner helpers."""
     writer_paths = [
-        Path("src/fabricops_kit/metadata.py"),
+        Path("src/fabricops_kit/pipeline/metadata_evidence.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
 
         Path("src/fabricops_kit/pipeline/shared.py"),
     ]
 
-    metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
-    assert "from .config.metadata_schemas import coerce_metadata_row_types" in metadata_source
-    assert "from fabricops_kit.config.setup_metadata_tables" not in metadata_source
-    assert "from .config.setup_metadata_tables" not in metadata_source
+    metadata_evidence_source = Path("src/fabricops_kit/pipeline/metadata_evidence.py").read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types" in metadata_evidence_source
+    assert "from fabricops_kit.config.setup_metadata_tables" not in metadata_evidence_source
+    assert "from .config.setup_metadata_tables" not in metadata_evidence_source
 
     for path in writer_paths:
         source = path.read_text(encoding="utf-8")

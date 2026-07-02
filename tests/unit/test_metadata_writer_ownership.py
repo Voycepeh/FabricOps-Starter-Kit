@@ -126,7 +126,7 @@ def test_catalogue_writer_targets_catalogue_only():
 
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
-    for path, function_name in [("metadata.py", "_write_guardrail_result_row")]:
+    for path, function_name in [("pipeline/metadata_evidence.py", "_write_guardrail_result_row")]:
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
@@ -166,18 +166,18 @@ def test_runtime_enforcement_functions_route_outcomes_to_results():
 
 
 def test_guardrail_result_writer_has_single_shared_implementation():
-    """Verify guardrail result writing is consolidated in metadata utilities."""
+    """Verify guardrail result writing is consolidated in pipeline evidence utilities."""
     writer_definitions = []
-    for path in SRC.glob("*.py"):
+    for path in SRC.rglob("*.py"):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         writer_definitions.extend(
-            f"{path.name}:{node.name}"
+            f"{path.relative_to(SRC)}:{node.name}"
             for node in ast.walk(tree)
             if isinstance(node, ast.FunctionDef) and node.name == "_write_guardrail_result_row"
         )
 
-    assert writer_definitions == ["metadata.py:_write_guardrail_result_row"]
+    assert writer_definitions == ["pipeline/metadata_evidence.py:_write_guardrail_result_row"]
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget wrappers delegate and workflows keep metadata ownership."""
@@ -230,7 +230,7 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         assert "GUARDRAIL_RESULTS_TABLE" not in wrapper_source
         assert "ENRICHMENT_RULES_TABLE" not in wrapper_source
 
-    for path in SRC.glob("*.py"):
+    for path in SRC.rglob("*.py"):
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         for node in ast.walk(tree):

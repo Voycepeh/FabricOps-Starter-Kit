@@ -246,13 +246,13 @@ def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sess
 def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
     """Verify DQ enforcement writes result rows only when enabled."""
     from fabricops_kit.pipeline import guardrails_shared as governance
-    import fabricops_kit.metadata as metadata
+    import fabricops_kit.pipeline.metadata_evidence as metadata_evidence
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
     writes = []
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
-    monkeypatch.setattr(metadata, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
     assert writes == []
@@ -550,12 +550,12 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
 
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
-    from fabricops_kit import metadata
+    from fabricops_kit.pipeline import metadata_evidence
 
     writes = []
-    monkeypatch.setattr(metadata, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
-    metadata._write_guardrail_result_row(
+    metadata_evidence._write_guardrail_result_row(
         spark_session=spark_session,
         config={},
         env="dev",
