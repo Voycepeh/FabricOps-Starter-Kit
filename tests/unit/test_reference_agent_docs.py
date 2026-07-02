@@ -4125,7 +4125,14 @@ function element(id) {
   return elements.get(id);
 }
 global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
-global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+const rowStates = new Map();
+function publicRow(qn) {
+  const row = { dataset: { publicFlowRow: qn }, hidden: false, style: {}, attributes: {}, classes: new Set(), setAttribute(name, value) { this.attributes[name] = value; }, classList: { toggle(cls, active) { active ? row.classes.add(cls) : row.classes.delete(cls); } } };
+  rowStates.set(qn, row);
+  return row;
+}
+const publicRows = [publicRow('fabricops_kit.io.read_lakehouse_table.read_lakehouse_table'), publicRow('fabricops_kit.pipeline.write_pipeline_lineage')];
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll(selector) { if (selector === '[data-public-flow-row]') return publicRows; if (selector === '[data-summary-row]') return []; return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.URL = URL; global.Blob = class {};
 ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','publicSurfaceCards','architectureViolationSection','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','publicSearchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
 eval(process.env.DASHBOARD_SCRIPT);
@@ -4142,6 +4149,17 @@ for (const key of [readKey, lineageKey]) {
 if (selectedPublicFlow('read_lakehouse_table').qualified_name !== readKey) throw new Error('function_name lookup failed');
 if (selectedPublicFlow('io.read_lakehouse_table.read_lakehouse_table').qualified_name !== readKey) throw new Error('selection_keys lookup failed');
 if (selectedPublicFlow('pipeline.write_pipeline_lineage').qualified_name !== lineageKey) throw new Error('module.function_name lookup failed');
+const flowHtml = element('publicFlowDetails').innerHTML;
+if (!flowHtml.includes('read_lakehouse_table')) throw new Error(flowHtml);
+if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) throw new Error(flowHtml);
+for (const forbidden of ['All runtime assets selected', 'Flow lookup unresolved', 'No call graph is available']) {
+  if (flowHtml.includes(forbidden)) throw new Error(`${forbidden}: ${flowHtml}`);
+}
+const readRow = rowStates.get(readKey);
+if (!readRow.classes.has('active') || readRow.attributes['aria-selected'] !== 'true') throw new Error(JSON.stringify({classes: [...readRow.classes], attributes: readRow.attributes}));
+for (const className of ['PathConfig', 'ConfigSmokeCheckResult']) {
+  if (publicRows.some(row => row.dataset.publicFlowRow.includes(className))) throw new Error(`Config class row should not render: ${className}`);
+}
 publicFlowBySelectionKey = new Map();
 if (selectedPublicFlow(readKey).qualified_name !== readKey) throw new Error('empty index rebuild failed');
 """,
