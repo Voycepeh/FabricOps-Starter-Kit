@@ -486,7 +486,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert dashboard_text.index("Selected public callable flow") < dashboard_text.index("Current scoped callables inventory")
     assert "publicSearchHaystack" in dashboard_text
     assert "read_lakehouse" in (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
-    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)&&data.public_entrypoint_flow.length?data.public_entrypoint_flow:Array.isArray(data.public_flows)?data.public_flows:[]" in compact_dashboard_text
+    assert "publicEntryFlows=Array.isArray(data.public_entrypoint_flow)&&data.public_entrypoint_flow.length?data.public_entrypoint_flow:Array.isArray(data.public_flows)?data.public_flows:[]" in compact_dashboard_text or "publicEntryFlows=embeddedPublicEntryFlows()" in compact_dashboard_text
     assert "derivePublicFlowsFromInventory(inventory)" in dashboard_text
     assert "Public flow details were not found, so this table is using public callable inventory rows." in dashboard_text
     assert "Detailed call flow was not available for this public callable." in dashboard_text
@@ -4060,6 +4060,105 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
         flow = flows_by_qn[qn]
         flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
         assert flow_assets.isdisjoint(siblings)
+
+
+def test_dashboard_source_selected_public_flow_uses_embedded_entrypoint_data(tmp_path: Path) -> None:
+    """Verify selected public flow lookup is robust with embedded entrypoint data."""
+    source_text = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    script_match = re.search(r"<script>\n([\s\S]*?)\n</script>", source_text)
+    assert script_match is not None
+
+    flows = [
+        {
+            "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+            "function_name": "read_lakehouse_table",
+            "public_callable": "read_lakehouse_table",
+            "selection_keys": ["io.read_lakehouse_table.read_lakehouse_table"],
+            "module": "fabricops_kit.io.read_lakehouse_table",
+            "width": 1,
+            "scope": 2,
+            "max_depth": 1,
+            "architecture_violation_count": 0,
+            "direct_callees": ["fabricops_kit.io.shared.read_lakehouse_table"],
+            "transitive_callees": [
+                {
+                    "qualified_name": "fabricops_kit.io.shared.read_lakehouse_table",
+                    "function_name": "read_lakehouse_table",
+                    "parent_qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+                    "depth": 1,
+                    "layer_group": "Shared helper",
+                }
+            ],
+        },
+        {
+            "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+            "function_name": "write_pipeline_lineage",
+            "public_callable": "write_pipeline_lineage",
+            "selection_keys": ["pipeline.write_pipeline_lineage"],
+            "module": "fabricops_kit.pipeline",
+            "width": 1,
+            "scope": 2,
+            "max_depth": 1,
+            "architecture_violation_count": 0,
+            "direct_callees": ["fabricops_kit.pipeline.build_lineage_payload"],
+            "transitive_callees": [
+                {
+                    "qualified_name": "fabricops_kit.pipeline.build_lineage_payload",
+                    "function_name": "build_lineage_payload",
+                    "parent_qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage",
+                    "depth": 1,
+                    "layer_group": "Shared helper",
+                }
+            ],
+        },
+    ]
+    script_text = script_match.group(1).replace(
+        "<!--EMBEDDED_FUNCTION_CALL_GRAPH_DATA-->",
+        json.dumps({"metadata": {"generated_at_utc": "2026-07-02T00:00:00Z"}, "function_inventory": [], "public_entrypoint_flow": flows}),
+    )
+    node_script = tmp_path / "embedded_selected_public_flow.js"
+    node_script.write_text(
+        r"""
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: '', textContent: '', className: '', hidden: false, disabled: false, checked: id === 'quickExportMode', value: '', dataset: {}, classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','publicSurfaceCards','architectureViolationSection','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','publicSearchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+eval(process.env.DASHBOARD_SCRIPT);
+listeners['document:DOMContentLoaded']();
+const readKey = 'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table';
+const lineageKey = 'fabricops_kit.pipeline.write_pipeline_lineage';
+for (const key of [readKey, lineageKey]) {
+  const debug = publicFlowHydrationDebug(key);
+  if (debug.public_entry_flows_length <= 0) throw new Error(JSON.stringify(debug));
+  if (debug.public_flow_by_selection_key_size <= 0) throw new Error(JSON.stringify(debug));
+  const flow = selectedPublicFlow(key);
+  if (!flow) throw new Error(`missing flow for ${key}: ${JSON.stringify(debug)}`);
+}
+if (selectedPublicFlow('read_lakehouse_table').qualified_name !== readKey) throw new Error('function_name lookup failed');
+if (selectedPublicFlow('io.read_lakehouse_table.read_lakehouse_table').qualified_name !== readKey) throw new Error('selection_keys lookup failed');
+if (selectedPublicFlow('pipeline.write_pipeline_lineage').qualified_name !== lineageKey) throw new Error('module.function_name lookup failed');
+publicFlowBySelectionKey = new Map();
+if (selectedPublicFlow(readKey).qualified_name !== readKey) throw new Error('empty index rebuild failed');
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_SCRIPT": script_text},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: Path) -> None:
     """Verify live dashboard async hydration populates public flow lookup for key callables."""
