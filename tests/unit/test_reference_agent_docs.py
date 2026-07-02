@@ -447,7 +447,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text or "scrollIntoView({ behavior: \"smooth\", block: \"start\" })" in dashboard_text
     assert "function setArchitectureScope(scope,options={})" in dashboard_text or "function setArchitectureScope(scope, options = {})" in dashboard_text
     assert "functionscrollToPublicFlowDetails()" in compact_dashboard_text
-    assert "scope.kind==='public_callable'?scrollToPublicFlowDetails():scrollToRuntimeInventory()" in compact_dashboard_text
+    assert "scope.kind==='public_callable'?scrollToRuntimeInventory():scrollToRuntimeInventory()" in compact_dashboard_text
     assert "scope-highlight" not in dashboard_text
     assert "function isRowVisuallySelected(qn)" in dashboard_text and "currentScope.kind" in dashboard_text
     assert "rowReachability(r)==='unreachable_runtime_asset'" in compact_dashboard_text or "rowReachability(r)=='unreachable_runtime_asset'" in compact_dashboard_text
@@ -3105,7 +3105,7 @@ global.window = { location: { pathname: '/assets/function-call-graph-dashboard.h
 global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
@@ -3885,7 +3885,7 @@ global.window = { location: { pathname: '/assets/function-call-graph-dashboard.h
 global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.fetch = async () => ({ ok: true, json: async () => JSON.parse(process.env.FLOW_JSON) });
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
@@ -4134,7 +4134,7 @@ function publicRow(qn) {
 const publicRows = [publicRow('fabricops_kit.io.read_lakehouse_table.read_lakehouse_table'), publicRow('fabricops_kit.pipeline.write_pipeline_lineage')];
 global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll(selector) { if (selector === '[data-public-flow-row]') return publicRows; if (selector === '[data-summary-row]') return []; return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','publicSurfaceCards','architectureViolationSection','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','publicSearchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','publicSurfaceCards','architectureViolationSection','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','publicSearchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(process.env.DASHBOARD_SCRIPT);
 listeners['document:DOMContentLoaded']();
 const readKey = 'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table';
@@ -4173,6 +4173,106 @@ if (selectedPublicFlow(readKey).qualified_name !== readKey) throw new Error('emp
         capture_output=True,
         check=False,
     )
+    assert result.returncode == 0, result.stderr
+
+
+def test_combined_dashboard_runtime_inventory_preserves_default_public_flow(tmp_path: Path) -> None:
+    """Verify runtime inventory boot does not overwrite the selected public flow panel."""
+    import scripts.generate_function_reference as generator
+
+    public_qn = "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
+    helper_qn = "fabricops_kit.io.shared.read_lakehouse_table"
+    flow_data = {
+        "function_inventory": [
+            {
+                "qualified_name": public_qn,
+                "function_name": "read_lakehouse_table",
+                "module": "fabricops_kit.io.read_lakehouse_table",
+                "simple_classification": "Public function",
+                "function_type": "Public function",
+                "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
+                "reachability": "public_entrypoint",
+                "calls_count": 1,
+                "callees": [{"qualified_name": helper_qn, "function": "read_lakehouse_table", "module": "fabricops_kit.io.shared", "layer": "internal"}],
+            },
+            {
+                "qualified_name": helper_qn,
+                "function_name": "read_lakehouse_table",
+                "module": "fabricops_kit.io.shared",
+                "simple_classification": "Shared helper",
+                "function_type": "Shared helper",
+                "source_path": "src/fabricops_kit/io/shared.py",
+                "reachability": "reachable_from_public_runtime",
+                "calls_count": 0,
+                "callees": [],
+            },
+        ],
+        "public_entrypoint_flow": [
+            {
+                "qualified_name": public_qn,
+                "function_name": "read_lakehouse_table",
+                "module": "fabricops_kit.io.read_lakehouse_table",
+                "width": 1,
+                "scope": 2,
+                "scope_asset_count": 2,
+                "max_depth": 1,
+                "architecture_violation_count": 0,
+                "direct_callees": [helper_qn],
+                "transitive_callees": [{"qualified_name": helper_qn, "function_name": "read_lakehouse_table", "parent_qualified_name": public_qn, "module": "fabricops_kit.io.shared", "depth": 1, "layer_group": "Shared helper", "architecture_result": "Allowed"}],
+            }
+        ],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 1}},
+        "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
+    }
+    dashboard_text = generator._render_combined_refactor_dashboard_html(flow_data)
+    node_script = tmp_path / "combined_runtime_preserves_default_flow.js"
+    node_script.write_text(
+        r"""
+const html = process.env.DASHBOARD_HTML;
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+if (scripts.length < 2) throw new Error(`expected combined dashboard scripts, found ${scripts.length}`);
+const elements = new Map();
+const listeners = {};
+function element(id) {
+  if (!elements.has(id)) {
+    elements.set(id, { id, innerHTML: id === 'architectureScopeTableBody' ? (html.match(/<tbody id="architectureScopeTableBody">([\s\S]*?)<\/tbody>/) || ['', ''])[1] : '', textContent: '', className: '', classList: { toggle() {} }, setAttribute(name, value) { this[name] = value; }, value: '', hidden: false, disabled: false, checked: id === 'quickExportMode', dataset: {}, addEventListener(type, cb) { listeners[`${id}:${type}`] = cb; }, scrollIntoView() {}, closest(selector) { return selector === 'table' ? { id: `${id}Table` } : null; } });
+  }
+  return elements.get(id);
+}
+global.window = { location: { pathname: '/assets/function-call-graph-dashboard.html', origin: 'http://example.test' }, FabricOpsTableControls: { enhance() {}, resetAll() {} }, confirm: () => true };
+global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/function-call-graph-dashboard.html', getElementById: element, querySelector() { return { id: 'table' }; }, querySelectorAll() { return []; }, addEventListener(type, cb) { listeners[`document:${type}`] = cb; } };
+global.URL = URL; global.Blob = class {};
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','architectureSummarySignals','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
+eval(scripts[0]);
+listeners['document:DOMContentLoaded']();
+eval(scripts[1]);
+function assertSelectedTree() {
+  const flowHtml = element('publicFlowDetails').innerHTML;
+  if (!flowHtml.includes('Function call graph tree')) throw new Error(flowHtml);
+  for (const forbidden of ['All runtime assets selected', 'Flow lookup unresolved', 'No call graph is available']) {
+    if (flowHtml.includes(forbidden)) throw new Error(`${forbidden}: ${flowHtml}`);
+  }
+}
+assertSelectedTree();
+const banner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
+if (!banner.includes('All runtime assets')) throw new Error(banner);
+const readKey = 'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table';
+listeners['document:click']({ preventDefault() {}, stopImmediatePropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return { dataset: { publicFlowSelect: readKey } }; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: readKey } }; if (selector === '[data-architecture-scope-special]') return null; return null; } } });
+assertSelectedTree();
+const scopedBanner = element('scopeBannerName').textContent || element('runtimeInventory_scopeBannerName').textContent;
+if (!scopedBanner.includes(readKey)) throw new Error(scopedBanner);
+""",
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        ["node", str(node_script)],
+        cwd=ROOT,
+        env={**os.environ, "DASHBOARD_HTML": dashboard_text},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
     assert result.returncode == 0, result.stderr
 
 def test_generated_dashboard_hydrates_runtime_public_entrypoint_flows(tmp_path: Path) -> None:
@@ -4225,7 +4325,7 @@ global.fetch = async (url) => {
   throw new Error(`Dashboard must not fetch ${url}`);
 };
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
@@ -4307,7 +4407,7 @@ global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
@@ -4378,7 +4478,7 @@ global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 listeners['document:DOMContentLoaded']();
 setTimeout(() => {
@@ -4473,7 +4573,7 @@ global.document = { readyState: 'loading', baseURI: 'http://example.test/assets/
 let fetchCount = 0;
 global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
 global.URL = URL; global.Blob = class {};
-['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
 eval(scripts[0]);
 if (!listeners['document:DOMContentLoaded']) throw new Error('DOMContentLoaded listener was not registered');
 listeners['document:DOMContentLoaded']();
@@ -4537,7 +4637,7 @@ async function runCase(readyState, fireDomLoaded, doubleStart) {
   let fetchCount = 0;
   global.fetch = async (url) => { fetchCount += 1; throw new Error(`Dashboard must not fetch ${url}`); };
   global.URL = URL; global.Blob = class {};
-  ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount'].forEach(element);
+  ['dataLoadStatus','architectureScopeTableBody','publicFlowDetails','publicCallableTableWrap','showAllPublicCallables','collapsePublicList','publicListStatus','scopeAllRuntimeAssets','scopeUnreachableRuntimeAssets','quickExportMode','manualExportMode','compatibilityMode','compatibilityModeSubtitle','exportActionLabel','exportModeHelp','selectedCount','selectVisible','clearSelected','downloadJson','downloadYaml','openFunctionCallGraphJson','downloadFunctionCallGraphJson','architectureSummaryPublic','architectureSummaryShared','architectureSummaryPrivate','architectureSummaryReview','architectureSummaryIssues','inventoryBody','resultCount','resetFilters','searchBox','showAllRuntimeAssets','runtime-inventory','scopeBannerName','scopeBannerHelp','selectedStatusCount','showingStatusCount','totalStatusCount','publicCallableStatusCount','runtimeInventory_scopeBannerName','runtimeInventory_scopeBannerHelp','runtimeInventory_inventoryBody','runtimeInventory_resultCount','runtimeInventory_resetFilters','runtimeInventory_searchBox','runtimeInventory_selectedStatusCount','runtimeInventory_showingStatusCount','runtimeInventory_totalStatusCount'].forEach(element);
   eval(script);
   if (fireDomLoaded) {
     if (!listeners['document:DOMContentLoaded']) throw new Error('missing DOMContentLoaded listener');
