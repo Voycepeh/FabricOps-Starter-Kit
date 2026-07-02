@@ -1,0 +1,38 @@
+"""Shared filesystem paths for reference generation."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+PKG_DIR = ROOT / "src" / "fabricops_kit"
+PACKAGE_NAME = "fabricops_kit"
+INIT_PATH = PKG_DIR / "__init__.py"
+DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
+REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
+REFERENCE_DATA_DIR = ROOT / "docs" / "reference" / "_data"
+MODULE_DIR = ROOT / "docs" / "api" / "modules"
+MKDOCS_PATH = ROOT / "mkdocs.yml"
+DEPENDENCY_METADATA_PATH = REFERENCE_DATA_DIR / "dependency-metadata.json"
+CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
+CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
+LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
+INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
+MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
+AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
+FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
+REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
+FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
+FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
+FUNCTION_CALL_GRAPH_DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
+CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
+FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
+GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
+GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
+LANDING_PAGE_PATH = ROOT / "docs" / "index.md"
+LANDING_STATS_PATH = REFERENCE_DATA_DIR / "landing-stats.json"
+METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata"
+METADATA_REFERENCE_OVERVIEW = ROOT / "docs" / "reference" / "metadata.md"
+GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
+DEFAULT_SOURCE_REF = "main"
+GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"

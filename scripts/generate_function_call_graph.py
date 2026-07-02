@@ -2,13 +2,17 @@
 
 This focused entrypoint refreshes `docs/reference/_data/function-call-graph.json`
 and `docs/assets/function-call-graph-dashboard.html` without running the complete
-reference generator. Use `scripts/generate_function_reference.py` when a full
-reference refresh is required.
+reference generator. Use the full reference generator when a complete reference refresh is required.
 """
 
 from __future__ import annotations
 
-from generate_function_reference import generate_function_call_graph_artifacts
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from reference_generation.call_graph_data import generate_function_call_graph_artifacts
 
 
 def main() -> None:

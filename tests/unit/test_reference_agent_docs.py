@@ -5019,9 +5019,58 @@ def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source(
     } <= set(generator._public_flow_selection_keys(flow))
 
 
+def test_reference_generator_orchestrator_has_no_job_owned_definitions() -> None:
+    """Verify the full generator entrypoint no longer owns job implementation functions."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    defined_names = {node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+    assert not {
+        "_render_refactor_dashboard_html",
+        "_render_runtime_inventory_source_html",
+        "_runtime_inventory_script",
+        "_build_callable_flow_data",
+        "_build_function_inventory",
+        "_build_public_entrypoint_flow",
+        "generate_metadata_table_reference",
+        "_render_glossary_page",
+        "generate_landing_stats",
+        "update_landing_page_counts",
+    } & defined_names
+
+
+def test_reference_generator_orchestrator_imports_and_calls_job_modules() -> None:
+    """Verify the full generator entrypoint imports job modules and calls the orchestrated refresh."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    imported_modules = {alias.name for node in tree.body if isinstance(node, ast.ImportFrom) and node.module == "reference_generation" for alias in node.names}
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+
+    assert {
+        "source_scan",
+        "call_graph_data",
+        "runtime_inventory_dashboard",
+        "callable_reference_pages",
+        "metadata_reference_pages",
+        "glossary",
+        "manifests",
+        "landing_page",
+        "module_pages",
+    } <= imported_modules
+    assert "generate_full_reference" in calls
+
+
+def test_focused_call_graph_script_imports_real_call_graph_module() -> None:
+    """Verify the focused call graph entrypoint bypasses the full generator orchestrator."""
+    source = (ROOT / "scripts" / "generate_function_call_graph.py").read_text(encoding="utf-8")
+
+    assert "from reference_generation.call_graph_data import generate_function_call_graph_artifacts" in source
+    assert "generate_function_reference" not in source
+
+
 def test_focused_call_graph_generator_writes_only_call_graph_artifacts(monkeypatch):
     """Verify focused call graph generation avoids unrelated reference writes."""
-    import scripts.generate_function_reference as generator
+    from scripts.reference_generation import call_graph_data as generator
 
     writes: list[Path] = []
 
