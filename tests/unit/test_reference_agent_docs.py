@@ -312,7 +312,7 @@ def test_function_call_graph_json_is_populated() -> None:
     assert data.get("metadata"), "metadata must not be empty"
     assert data.get("function_inventory"), "function_inventory must not be empty"
     assert data.get("public_entrypoint_flow"), "public_entrypoint_flow must not be empty"
-    assert data.get("public_flows"), "public_flows must not be empty"
+    assert "public_flows" not in data, "public_flows must not be generated"
     assert data.get("summary_counts"), "summary_counts must not be empty"
     assert data.get("architecture_thresholds"), "architecture_thresholds must not be empty"
 
@@ -905,7 +905,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         "metadata",
         "function_inventory",
         "public_entrypoint_flow",
-        "public_flows",
         "summary_counts",
         "architecture_thresholds",
         "inventory_row_count",
@@ -917,12 +916,12 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
     summary_counts = flow_data["summary_counts"]
     public_api_surface = summary_counts["public_api_surface"]
-    assert flow_data["public_flows"]
-    assert flow_data["public_flows"] == flow_data["public_entrypoint_flow"]
+    assert flow_data["public_entrypoint_flow"]
+    assert "public_flows" not in flow_data
     assert flow_data["inventory_row_count"] == len(flow_data["function_inventory"])
     assert flow_data["unique_inventory_identity_count"] == len(flow_data["function_inventory"])
     assert flow_data["duplicate_inventory_identity_count"] == 0
-    assert any("read" in flow["function_name"].lower() for flow in flow_data["public_flows"])
+    assert any("read" in flow["function_name"].lower() for flow in flow_data["public_entrypoint_flow"])
     assert summary_counts["total_callables"] == len(flow_data["function_inventory"])
     assert summary_counts["callable_kind"]["function"] == 132
     assert summary_counts["public_classes"] == 7
@@ -2903,6 +2902,7 @@ setTimeout(() => {
   listeners['document:click']({
     preventDefault() { this.prevented = true; },
     stopPropagation() { this.stopped = true; },
+    stopImmediatePropagation() { this.immediateStopped = true; },
     target: {
       closest(selector) {
         if (selector === '[data-public-flow-select]') return realButton;
@@ -2988,18 +2988,7 @@ def test_function_call_graph_selected_widget_scope_falls_back_to_inventory_depen
                 "callees": [],
             },
         ],
-        "public_flows": [
-            {
-                "qualified_name": "fabricops_kit.pipeline.display_guardrail_results",
-                "function_name": "display_guardrail_results",
-                "module": "pipeline",
-                "width": 0,
-                "scope": 1,
-                "max_depth": 0,
-                "direct_callees": [],
-                "transitive_callees": [],
-            }
-        ],
+        "public_entrypoint_flow": [],
         "summary_counts": {"public_api_surface": {"public_api_entrypoints": 2}},
         "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
     }
@@ -3032,7 +3021,7 @@ setTimeout(() => {
   if (rowMatch[1] !== rowMatch[2]) throw new Error(`row/select mismatch: ${rowMatch[1]} vs ${rowMatch[2]}`);
   const realRow = { dataset: { publicFlowRow: rowMatch[1] } };
   const realButton = { dataset: { publicFlowSelect: rowMatch[2] } };
-  listeners['document:click']({ preventDefault() {}, stopPropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return realButton; return selector === '[data-public-flow-row]' ? realRow : null; } } });
+  listeners['document:click']({ preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}, target: { closest(selector) { if (selector === '[data-public-flow-select]') return realButton; return selector === '[data-public-flow-row]' ? realRow : null; } } });
   const flowHtml = element('publicFlowDetails').innerHTML;
   if (!flowHtml.includes('widget_review_guardrail_governance') || !flowHtml.includes('_guardrail_governance_review_widget_workflow')) throw new Error(flowHtml);
   if (!flowHtml.includes('Function call graph tree') && !flowHtml.includes('Dependency path')) throw new Error(flowHtml);
@@ -3150,7 +3139,15 @@ def test_function_call_graph_public_flows_inventory_fallback_contract() -> None:
     assert "function derivePublicFlowsFromInventory(rows)" in dashboard_text
     assert "publicEntryFlows=derivePublicFlowsFromInventory(inventory);publicFlowsFromInventory=publicEntryFlows.length>0" in compact_dashboard_text
     assert "publicFlowsFromInventory=false;if(publicEntryFlows.length)" in compact_dashboard_text
-    assert "publicEntryFlows=mergeMissingInventoryPublicFlows(publicEntryFlows,inventory)" in compact_dashboard_text
+    expected_canonical_flow_boot = (
+        "if(publicEntryFlows.length){publicEntryFlows=[...publicEntryFlows]}"
+        "else{publicEntryFlows=derivePublicFlowsFromInventory(inventory);"
+        "publicFlowsFromInventory=publicEntryFlows.length>0}"
+    )
+    assert (
+        expected_canonical_flow_boot in compact_dashboard_text
+        or expected_canonical_flow_boot.replace("=", "") in compact_dashboard_text
+    )
     assert "publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found" in dashboard_text
     assert "All runtime assets" in dashboard_text
     assert "Others / Cannot trace back to a public callable" in dashboard_text
@@ -3866,7 +3863,7 @@ def test_function_call_graph_public_row_clicks_hydrate_selected_flow_panel(tmp_p
         )
     flow_data = {
         "function_inventory": inventory,
-        "public_flows": flows,
+        "public_entrypoint_flow": flows,
         "summary_counts": {},
         "architecture_thresholds": {"long_call_chain_depth": 3, "large_dependency_surface": 3},
     }
@@ -3990,7 +3987,7 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     flow_data = json.loads(
         (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
     )
-    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_flows"]}
+    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
     inventory_by_qn = {row["qualified_name"]: row for row in flow_data["function_inventory"]}
     split_names = {
         "display_guardrail_results",
@@ -4332,9 +4329,9 @@ def test_generated_dashboard_resolves_every_public_table_row(tmp_path: Path) -> 
     dashboard_text = (ROOT / "docs" / "assets" / "function-call-graph-dashboard.html").read_text(encoding="utf-8")
     flow_json = (ROOT / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
     flow_data = json.loads(flow_json)
-    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_flows"]}
+    flows_by_name = {flow["function_name"]: flow for flow in flow_data["public_entrypoint_flow"]}
 
-    assert flow_data["public_flows"]
+    assert flow_data["public_entrypoint_flow"]
     assert flows_by_name["read_lakehouse_table"]["transitive_callees"]
     assert flows_by_name["display_guardrail_results"]["transitive_callees"]
     assert flows_by_name["widget_pipeline_bootstrap"]["transitive_callees"]
@@ -4370,8 +4367,21 @@ setTimeout(() => {
   const bodyHtml = element('architectureScopeTableBody').innerHTML;
   const rowKeys = [...bodyHtml.matchAll(/<tr[^>]*data-public-flow-row="([^"]+)"/g)].map(match => match[1]);
   if (!rowKeys.length) throw new Error(bodyHtml);
+  const forbiddenClassKeys = [
+    'ConfigSmokeCheckResult',
+    'PathConfig',
+    'DataAgreementConfig',
+    'FabricStore',
+    'FrameworkConfig',
+    'GovernanceConfig',
+    'NotebookSetupContext',
+  ];
+  for (const className of forbiddenClassKeys) {
+    if (rowKeys.some(key => key.includes(`.${className}`))) throw new Error(`Config class row should not render: ${className}`);
+  }
   const requiredClickKeys = [
     'fabricops_kit.io.read_lakehouse_table.read_lakehouse_table',
+    'fabricops_kit.config.setup_metadata_tables.setup_metadata_tables',
     'fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap',
   ];
   for (const key of requiredClickKeys) {
@@ -4380,11 +4390,8 @@ setTimeout(() => {
   for (const qn of rowKeys) {
     listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
     const flowHtml = element('publicFlowDetails').innerHTML;
-    if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) {
-      if (!qn.includes('.ConfigSmokeCheckResult') && !qn.includes('.FabricStore') && !qn.includes('.PathConfig') && !qn.includes('.GovernanceConfig') && !qn.includes('.DataAgreementConfig') && !qn.includes('.FrameworkConfig') && !qn.includes('.NotebookSetupContext')) {
-        throw new Error(`Unresolved public row ${qn}: ${flowHtml}`);
-      }
-      continue;
+    if (flowHtml.includes('All runtime assets selected') || flowHtml.includes('Flow lookup unresolved') || flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) {
+      throw new Error(`Unresolved public row ${qn}: ${flowHtml}`);
     }
     if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) {
       throw new Error(`Missing graph tree for ${qn}: ${flowHtml}`);
