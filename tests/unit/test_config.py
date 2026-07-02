@@ -687,10 +687,11 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
 def test_metadata_schema_registry_is_shared_source_for_setup_and_runtime_coercion():
     """Verify setup and runtime coercion use the shared schema registry service."""
     setup_source = Path("src/fabricops_kit/config/setup_metadata_tables.py").read_text(encoding="utf-8")
-    metadata_source = Path("src/fabricops_kit/metadata.py").read_text(encoding="utf-8")
     schema_source = Path("src/fabricops_kit/config/metadata_schemas.py").read_text(encoding="utf-8")
 
     assert "metadata_table_schema_registry()" in setup_source
+    assert "def coerce_metadata_row_types" in schema_source
+    assert "def _coerce_metadata_value" in schema_source
     assert "metadata_table_schema_registry().get(table_name)" in schema_source
     assert "def metadata_table_schema_registry" in schema_source
     assert "def _metadata_table_schema_registry" not in schema_source
