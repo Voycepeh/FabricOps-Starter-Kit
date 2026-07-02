@@ -3168,9 +3168,8 @@ def test_dashboard_public_flow_rows_render_direct_selection_handler() -> None:
     assert 'data-public-flow-row="fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"' in dashboard_text
     assert 'data-public-flow-select="fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"' in dashboard_text
     assert (
-        'onclick="return window.fabricOpsSelectPublicFlowFromClickDirect &amp;&amp; '
-        "window.fabricOpsSelectPublicFlowFromClickDirect(event, '"
-        "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table')"
+        'onclick="return window.fabricOpsSelectPublicFlowFromClickDirect ? '
+        'window.fabricOpsSelectPublicFlowFromClickDirect(event, this.dataset.publicFlowRow) : false"'
     ) in dashboard_text
     source_link = dashboard_text[dashboard_text.index('<a class="source-link"') : dashboard_text.index('↗</a>') + len('↗</a>')]
     assert "fabricOpsSelectPublicFlowFromClickDirect" not in source_link
@@ -3182,9 +3181,10 @@ def test_dashboard_direct_public_flow_handler_source_contract() -> None:
     start = source.index("window.fabricOpsSelectPublicFlowFromClickDirect=function(event,key){")
     body = source[start : source.index("};document.addEventListener('click'", start) + 1]
 
+    assert "event&&event.target&&event.target.closest&&event.target.closest('a.source-link')" in body
     assert "event.preventDefault();event.stopPropagation();" in body
     assert "if(event.stopImmediatePropagation)event.stopImmediatePropagation()" in body
-    assert "const ok=selectPublicFlowFromClick(key);" in body
+    assert "selectPublicFlowFromClick(key);" in body
     assert "document.getElementById('publicFlowDetails')" in body
     assert "detail.scrollIntoView({behavior:'smooth',block:'start'});return false" in body
 
@@ -3203,7 +3203,10 @@ def test_dashboard_public_flow_selection_source_keeps_flow_details_owner() -> No
     scope_body = source[scope_start : source.index("function selectPublicFlowFromClick", scope_start)]
     assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in scope_body
     assert "window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false})" in scope_body
-    assert scope_body.index("window.setArchitectureScope") < scope_body.index("renderPublicCallableList();renderFlowDetails();updateExportControls()")
+    first_render = scope_body.index("renderPublicCallableList();renderFlowDetails();")
+    scope_sync = scope_body.index("window.setArchitectureScope")
+    final_render = scope_body.index("renderPublicCallableList();renderFlowDetails();updateExportControls()")
+    assert first_render < scope_sync < final_render
 
 
 def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> None:
@@ -3218,6 +3221,25 @@ def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> 
     assert "if(options.scroll!==false)scrollToRuntimeInventory()" in body
 
 
+
+
+def test_runtime_inventory_script_does_not_own_public_flow_row_selection() -> None:
+    """Verify runtime inventory script does not duplicate public callable selection wiring."""
+    import scripts.generate_function_reference as generator
+
+    script = generator._runtime_inventory_script({
+        "function_inventory": [],
+        "public_entrypoint_flow": [],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 0}},
+    })
+
+    assert "window.fabricOpsSelectPublicFlowFromClickDirect" not in script
+    assert "function selectPublicFlowFromClick" not in script
+    assert "[data-public-flow-row]" not in script
+    assert "[data-public-flow-select]" not in script
+    assert "$('publicFlowDetails').innerHTML" not in script
+    assert "document.getElementById('publicFlowDetails').innerHTML" not in script
+    assert "window.setArchitectureScope=setArchitectureScope" in script
 
 def test_runtime_inventory_scope_source_uses_selected_public_flow_assets() -> None:
     """Verify selected public callable scopes derive runtime inventory rows from flow assets."""
