@@ -3210,11 +3210,15 @@ def test_dashboard_public_flow_selection_source_keeps_flow_details_owner() -> No
     start = source.index("function selectPublicFlowFromClick(key){")
     body = source[start : source.index("function handlePublicFlowSelectionEvent", start)]
 
-    assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in body
-    assert "window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false})" in body
-    assert body.index("window.setArchitectureScope") < body.index("renderPublicCallableList();renderFlowDetails();updateExportControls();return true")
+    assert "selectPublicCallableScope(flow);return true" in body
     assert "renderUnresolvedPublicFlowDebug(key)" in body
     assert "return false" in body
+
+    scope_start = source.index("function selectPublicCallableScope(flow,options={})")
+    scope_body = source[scope_start : source.index("function selectPublicFlowFromClick", scope_start)]
+    assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in scope_body
+    assert "window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false})" in scope_body
+    assert scope_body.index("window.setArchitectureScope") < scope_body.index("renderPublicCallableList();renderFlowDetails();updateExportControls()")
 
 
 def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> None:
@@ -3228,6 +3232,85 @@ def test_runtime_inventory_scope_source_does_not_write_public_flow_details() -> 
     assert "renderFlowDetails" not in body
     assert "if(options.scroll!==false)scrollToRuntimeInventory()" in body
 
+
+
+def test_runtime_inventory_scope_source_uses_selected_public_flow_assets() -> None:
+    """Verify selected public callable scopes derive runtime inventory rows from flow assets."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    start = source.index("function buildFlowSignals(flows){")
+    body = source[start : source.index("function scrollToRuntimeInventory", start)]
+
+    assert "const qn=typeof row==='string'?row:row&&row.qualified_name" in body
+    assert "(flow.direct_callees||[]).forEach" in body
+    assert "(flow.transitive_callees||[]).forEach" in body
+    assert "publicFlowSelectionKeys(flow).forEach(key=>flowAssetsByQn.set(key,assets))" in body
+
+    scope_start = source.index("function rowInSelectedScope(r){")
+    scope_body = source[scope_start : source.index("function fileArea", scope_start)]
+    assert "currentScope.kind==='public_callable'" in scope_body
+    assert "flowAssetsByQn.get(clickedQn)" in scope_body
+    assert "return flowAssets.has(r.qualified_name)" in scope_body
+
+
+def test_public_callable_scope_selection_source_links_flow_inventory_and_export_counts() -> None:
+    """Verify public callable clicks use one live selection path for flow and inventory state."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+    scope_start = source.index("function selectPublicCallableScope(flow,options={})")
+    scope_body = source[scope_start : source.index("function selectPublicFlowFromClick", scope_start)]
+
+    assert "state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name" in scope_body
+    assert "window.setArchitectureScope({kind:'public_callable'" in scope_body
+    assert "renderPublicCallableList();renderFlowDetails();updateExportControls()" in scope_body
+
+    controls_start = source.index("function updateExportControls(){const manual=exportMode()==='manual'")
+    controls_body = source[controls_start : source.index("function resultCountText", controls_start)]
+    assert "showingCount=visibleRuntimeInventoryCount()" in controls_body
+    assert "`Quick export visible rows: ${showingCount}`" in controls_body
+
+
+def test_dashboard_generation_banner_uses_function_graph_json_timestamp() -> None:
+    """Verify source/data generated time comes from function-call-graph JSON metadata."""
+    import scripts.generate_function_reference as generator
+
+    dashboard_html = generator._render_refactor_dashboard_html({
+        "metadata": {
+            "generated_at_utc": "2026-01-02T03:04:05Z",
+            "dashboard_ui_generated_at_utc": "2026-02-03T04:05:06Z",
+        },
+        "generated_at_utc": "2025-12-31T23:59:59Z",
+        "function_inventory": [],
+        "public_entrypoint_flow": [],
+        "summary_counts": {"public_api_surface": {"public_api_entrypoints": 0}},
+    })
+
+    assert "02 Jan 2026, 11:04 AM SGT" in dashboard_html
+    assert "01 Jan 2026, 07:59 AM SGT" not in dashboard_html
+    assert "Dashboard HTML rendered at:" in dashboard_html
+    assert "03 Feb 2026, 12:05 PM SGT" in dashboard_html
+
+
+def test_dashboard_generation_banner_falls_back_to_root_json_timestamp() -> None:
+    """Verify source/data generated time falls back to root generated_at_utc only."""
+    import scripts.generate_function_reference as generator
+
+    banner = generator._render_callable_generation_banner({
+        "metadata": {},
+        "generated_at_utc": "2026-03-04T05:06:07Z",
+    })
+
+    assert "Data source generated at:" in banner
+    assert "04 Mar 2026, 01:06 PM SGT" in banner
+    assert "Dashboard UI generated at:" not in banner
+    assert "Dashboard HTML rendered at:" not in banner
+
+
+def test_dashboard_load_status_uses_embedded_json_generated_timestamp() -> None:
+    """Verify live load status reports the embedded JSON timestamp, not HTML render time."""
+    source = (ROOT / "scripts" / "generate_function_reference.py").read_text(encoding="utf-8")
+
+    assert "loadedFunctionCallGraphGeneratedAtUtc=(data.metadata&&data.metadata.generated_at_utc)||data.generated_at_utc||''" in source
+    assert "Embedded graph generated_at_utc: ${loadedFunctionCallGraphGeneratedAtUtc||'unknown'}" in source
+    assert "Dashboard UI generated at: ${loadedFunctionCallGraphGeneratedAtUtc||'unknown'}" not in source
 
 def test_dashboard_source_uses_public_entrypoint_flow_canonical_key_only() -> None:
     """Verify rendered dashboard source keeps public_entrypoint_flow canonical."""
