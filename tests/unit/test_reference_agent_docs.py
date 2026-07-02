@@ -447,7 +447,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "scrollIntoView({behavior:'smooth',block:'start'})" in dashboard_text or "scrollIntoView({ behavior: \"smooth\", block: \"start\" })" in dashboard_text
     assert "function setArchitectureScope(scope,options={})" in dashboard_text or "function setArchitectureScope(scope, options = {})" in dashboard_text
     assert "functionscrollToPublicFlowDetails()" in compact_dashboard_text
-    assert "scope.kind==='public_callable'?scrollToRuntimeInventory():scrollToRuntimeInventory()" in compact_dashboard_text
+    assert "consttarget=$('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'})" in compact_dashboard_text
     assert "scope-highlight" not in dashboard_text
     assert "function isRowVisuallySelected(qn)" in dashboard_text and "currentScope.kind" in dashboard_text
     assert "rowReachability(r)==='unreachable_runtime_asset'" in compact_dashboard_text or "rowReachability(r)=='unreachable_runtime_asset'" in compact_dashboard_text
@@ -673,7 +673,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "Number.isFinite(numeric)&&numeric>0?numeric:null" in compact_dashboard_text
     assert "architecture_violation_count??0" in compact_dashboard_text
     assert "down>=12" not in dashboard_text
-    assert "Violation reason" in dashboard_text
+    assert "Meaning" in dashboard_text
     assert "Helper-level architecture findings found" not in dashboard_text
     assert "No architecture violations found in this graph." in dashboard_text
     assert "function flowSignals(flow)" in dashboard_text
@@ -2926,7 +2926,7 @@ setTimeout(() => {
   if (!flowHtml.includes('write_lakehouse_table')) {
     throw new Error(flowHtml);
   }
-  if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) {
+  if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) {
     throw new Error(flowHtml);
   }
   if (flowHtml.includes('No public function graph data found') || flowHtml.includes('No call graph is available')) {
@@ -4213,7 +4213,7 @@ if (selectedPublicFlow('io.read_lakehouse_table.read_lakehouse_table').qualified
 if (selectedPublicFlow('pipeline.write_pipeline_lineage').qualified_name !== lineageKey) throw new Error('module.function_name lookup failed');
 const flowHtml = element('publicFlowDetails').innerHTML;
 if (!flowHtml.includes('read_lakehouse_table')) throw new Error(flowHtml);
-if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) throw new Error(flowHtml);
+if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(flowHtml);
 for (const forbidden of ['All runtime assets selected', 'Flow lookup unresolved', 'No call graph is available']) {
   if (flowHtml.includes(forbidden)) throw new Error(`${forbidden}: ${flowHtml}`);
 }
@@ -4410,7 +4410,7 @@ setTimeout(() => {
     if (!flow) throw new Error(`No selectedPublicFlow for ${qn}: ${JSON.stringify(publicFlowHydrationDebug(qn))}`);
     listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-select]') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: qn } }; return null; } } });
     const flowHtml = element('publicFlowDetails').innerHTML;
-    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) throw new Error(`${qn}: ${flowHtml}`);
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(`${qn}: ${flowHtml}`);
     if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) throw new Error(`${qn}: ${flowHtml}`);
   }
 }, 0);
@@ -4480,7 +4480,7 @@ setTimeout(() => {
     listeners['document:click']({ target: { closest(selector) { if (selector === '[data-summary-toggle]') return null; if (selector === 'a.source-link,input,select,textarea,label,summary,.review-note') return null; if (selector === '[data-public-flow-row]') return { dataset: { publicFlowRow: flow.qualified_name } }; return null; } } });
     const flowHtml = element('publicFlowDetails').innerHTML;
     if (!flowHtml.includes(flow.function_name)) throw new Error(flowHtml);
-    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) throw new Error(flowHtml);
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) throw new Error(flowHtml);
     if (flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) throw new Error(flowHtml);
   }
 }, 0);
@@ -4573,7 +4573,7 @@ setTimeout(() => {
     if (flowHtml.includes('All runtime assets selected') || flowHtml.includes('Flow lookup unresolved') || flowHtml.includes('No graph data') || flowHtml.includes('No public flow resolved') || flowHtml.includes('No call graph is available')) {
       throw new Error(`Unresolved public row ${qn}: ${flowHtml}`);
     }
-    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('callableFlowTree')) {
+    if (!flowHtml.includes('Function call graph tree') || !flowHtml.includes('data-callable-architecture-flow="true"')) {
       throw new Error(`Missing graph tree for ${qn}: ${flowHtml}`);
     }
   }
