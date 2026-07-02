@@ -15,13 +15,6 @@
       "sidebar_include": true
     },
     {
-      "module_name": "metadata",
-      "visibility": "public",
-      "module_summary": "Owns metadata evidence persistence, stable keys, notebook registry, catalogue keys, and runtime audit helpers.",
-      "sidebar_group": "5. Metadata store",
-      "sidebar_include": true
-    },
-    {
       "module_name": "pipeline",
       "visibility": "public",
       "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
