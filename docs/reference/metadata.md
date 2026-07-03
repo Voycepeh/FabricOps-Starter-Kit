@@ -1,6 +1,6 @@
 # List of Metadata Tables
 
-These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
+FabricOps metadata tables describe the data, agreements, stewards, catalogue, lineage, guardrail rules, guardrail results, notebook registry, and pipeline runs created by the notebook workflow. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
 
 <figure class="metadata-model-image">
   <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />
@@ -22,19 +22,19 @@ These pages are generated from the implemented metadata setup schema registry us
 
 -   **[METADATA_DATA_AGREEMENT_EVIDENCE](metadata/metadata_data_agreement_evidence.md)**
 
-    Supporting agreement files and evidence metadata captured during agreement intake.
+    Supporting agreement files and related metadata captured during agreement intake.
 
     `01_agreement.ipynb`
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 
-    Observed table and column profile evidence. This is runtime evidence, not approved guardrail intent.
+    Observed table and column profiles used for catalogue review and runtime comparisons. This is runtime metadata, not approved guardrail intent.
 
     `02_pipeline.ipynb, 03_governance.ipynb, 99_explore.ipynb`
 
 -   **[METADATA_DATA_LINEAGE_TABLE](metadata/metadata_data_lineage_table.md)**
 
-    Source-to-target lineage evidence written by pipeline runs.
+    Source-to-target lineage rows written by pipeline runs.
 
     `02_pipeline.ipynb`
 
@@ -70,7 +70,7 @@ These pages are generated from the implemented metadata setup schema registry us
 
 -   **[METADATA_PIPELINE_RUNS](metadata/metadata_pipeline_runs.md)**
 
-    Pipeline run summary evidence for execution, guardrail, lineage, and catalogue status.
+    Pipeline run summaries for execution, guardrail, lineage, and catalogue status.
 
     `02_pipeline.ipynb`
 

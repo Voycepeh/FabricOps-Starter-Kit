@@ -23,7 +23,7 @@ Centralizes environment, workspace, path, metadata routing, runtime validation, 
 
     **When to use it**
 
-    Run it first in every workspace setup, demo, or delivery flow. Revisit it when workspace item names, schemas, metadata targets, validation behavior, or audit values change.
+    Run it first in every workspace setup, demo, or governed workflow. Revisit it when workspace item names, schemas, metadata targets, validation behavior, or audit values change.
 
     **What users normally edit**
 
@@ -43,30 +43,30 @@ Centralizes environment, workspace, path, metadata routing, runtime validation, 
 
 ## [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb)
 
-Captures business agreement, ownership, purpose, readiness, and supporting evidence before engineering execution begins.
+Captures business agreement, ownership, purpose, readiness, and supporting context before engineering execution begins.
 
 [Open Agreement Setup Guide](agreement-setup.md){ .md-button }
 
 ??? info "Details"
     **Purpose**
 
-    Record steward details, agreement scope, business purpose, readiness notes, approvals, and public-safe evidence.
+    Record steward details, agreement scope, business purpose, readiness notes, approvals, and public-safe supporting files.
 
     **When to use it**
 
-    Use it when a governed delivery needs approved context before pipeline work starts.
+    Use it when governed data work needs approved context before pipeline execution starts.
 
     **What users normally edit**
 
-    Steward and owner details, agreement name, scope, status, purpose, evidence labels, notes, links, and readiness context.
+    Steward and owner details, agreement name, scope, status, purpose, supporting file labels, notes, links, and readiness context.
 
     **What it validates or produces**
 
-    It validates required agreement and steward fields, then writes steward, agreement, and agreement evidence metadata to the configured metadata target.
+    It validates required agreement and steward fields, then writes steward, agreement, and agreement file metadata to the configured metadata target.
 
     **Downstream dependencies**
 
-    `02_pipeline`, `03_governance`, and `99_explore` use agreement context to connect technical evidence to ownership and purpose.
+    `02_pipeline`, `03_governance`, and `99_explore` use agreement context to connect technical metadata to ownership and purpose.
 
 </div>
 
@@ -74,7 +74,7 @@ Captures business agreement, ownership, purpose, readiness, and supporting evide
 
 ## [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb)
 
-Provides the engineering notebook for data loading, transformation, validation, publishing, lineage, and run evidence.
+Provides the engineering notebook for data loading, transformation, validation, publishing, lineage, and run history.
 
 [Open Pipeline Execution Guide](pipeline-execution.md){ .md-button }
 
@@ -93,7 +93,7 @@ Provides the engineering notebook for data loading, transformation, validation, 
 
     **What it validates or produces**
 
-    It validates agreement context, source reads, schema, freshness, profile, DQ, and load behavior; it produces catalogue evidence, guardrail results, lineage, run summaries, and governed outputs.
+    It validates agreement context, source reads, schema, freshness, profile, DQ, and load behavior; it produces catalogue profiles, guardrail results, lineage, run summaries, and reviewed outputs.
 
     **Downstream dependencies**
 
@@ -116,7 +116,7 @@ Supports metadata enrichment review, guardrail review, lifecycle decisions, and 
 
     **When to use it**
 
-    Use it after pipeline evidence exists, or when reviewers need to approve, reject, replace, deactivate, or update enrichment and guardrail intent.
+    Use it after pipeline run details exist, or when reviewers need to approve, reject, replace, deactivate, or update enrichment and guardrail intent.
 
     **What users normally edit**
 
@@ -165,7 +165,7 @@ Provides optional read-only inspection and troubleshooting helpers for metadata,
 
 ## Optional example notebooks
 
-The example notebooks support demos, training, and smoke tests. They are optional and are not part of the required production delivery sequence.
+The example notebooks support demos, training, and smoke tests. They are optional and are not part of the required production workflow sequence.
 
 <div class="template-card-grid" markdown="1">
 
@@ -182,7 +182,7 @@ Generates deterministic demo source tables for the guided demo.
 
     **When to use it**
 
-    Use it only for demos, training, and local validation of the starter workflow. It is not a production delivery notebook.
+    Use it only for demos, training, and local validation of the starter workflow. It is not a production workflow notebook.
 
     **What users normally edit**
 
@@ -211,7 +211,7 @@ Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a sm
 
     **When to use it**
 
-    Use it when learning supported DQ rule outcomes or validating helper behavior. It is not a production delivery notebook.
+    Use it when learning supported DQ rule outcomes or validating helper behavior. It is not a production workflow notebook.
 
     **What users normally edit**
 
@@ -219,7 +219,7 @@ Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a sm
 
     **What it validates or produces**
 
-    It validates supported DQ rule behavior in a controlled context and does not define production workflow evidence.
+    It validates supported DQ rule behavior in a controlled context and does not define production workflow history.
 
     **Downstream dependencies**
 
