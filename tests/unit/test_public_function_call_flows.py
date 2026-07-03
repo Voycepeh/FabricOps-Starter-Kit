@@ -144,8 +144,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
 
     assert "Width &gt; 10 or Depth &gt; 5" in html
 
-    assert "Signal rules and calculations" in html
-    assert '<details class="flow-details signal-rules">' in html
+    assert "Signals highlight public callable flows that may need cleanup" in html
+    assert '<section class="flow-details signal-rules">' in html
+    assert "Signal rules and calculations" not in html
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
         assert violation_type in html
     assert "Public function calls another public function directly." in html
@@ -154,10 +155,10 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Shared function calls a private function from another file." in html
     assert "Private function calls a private function from another file." in html
     assert "Private function calls a shared function directly." in html
-    assert "Yes when called by exactly one parent function" in html
-    assert "Yes when function_type is private_function" in html
-    assert "<th>Chip</th>" in html
-    assert "<th>Relevant section</th>" in html
+    assert "called by exactly one parent, not recursive" in html
+    assert "private function called by more than one distinct caller" in html
+    assert "<th>Chip</th>" not in html
+    assert "<th>Relevant section</th>" not in html
     assert "<th>Color</th>" not in html
     assert "<th>Where shown</th>" not in html
     assert '<span class="badge warn">Large width/depth</span>' in html
@@ -166,14 +167,13 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="badge muted">Promote to shared</span>' in html
     for violation_type in range(1, 7):
         assert f'<span class="badge danger">Type {violation_type}</span>' in html
-    assert '<span class="badge muted">Public function summary cards</span>' in html
-    assert '<span class="badge muted">Public function table</span>' in html
-    assert '<span class="badge muted">Selected call tree</span>' in html
-    assert '<span class="badge muted">Selected callable inventory</span>' in html
-    assert '<span class="badge muted">Inventory violation chips</span>' in html
-    assert "Width means number of direct package-local calls" in html
-    assert "Depth means the deepest nested call path" in html
-    assert "Scope means total downstream functions" in html
+    assert "Public function summary card signals" in html
+    assert "Public function table signals" in html
+    assert "Call tree violation rules" in html
+    assert "Selected callable inventory signals" in html
+    assert "Width = direct package-local calls" in html
+    assert "Depth = deepest nested call path" in html
+    assert "Scope = total downstream functions" in html
     assert 'type="button">Width</button>' in html
     assert 'type="button">Scope</button>' in html
     assert 'type="button">Depth</button>' in html
@@ -184,6 +184,15 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Promote to shared" in html
     assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" in html
     assert "voycepeh.github.io/src" not in html
+
+    assert "selected-function-strip" in html
+    assert "flow-summary-card" not in html
+    assert "flow-meta" not in html
+    assert '<span class="metric-chip">Width ${esc(f.derived_width)}</span>' in html
+    assert '<span class="metric-chip">Scope ${esc(f.derived_scope)}</span>' in html
+    assert '<span class="metric-chip">Depth ${esc(f.derived_depth)}</span>' in html
+    assert '<span class="metric-chip">Files ${esc((f.files_touched||[]).length)}</span>' in html
+    assert '${badges(publicSignalsForFunction(f))}</div></div>`' in html
     assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
     assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}</td>" in html
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
@@ -255,12 +264,15 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert 'data-tree-node-toggle' in html
     assert 'aria-expanded' in html
     assert 'function hiddenTreeStats(node)' in html
-    assert 'function treeSummaryChips(node)' in html
-    assert 'children ${stats.children}' in html
-    assert 'downstream ${stats.downstream}' in html
-    assert 'max depth ${stats.maxDepth}' in html
-    assert 'violations ${stats.violations}' in html
-    assert '+ ${stats.downstream} hidden' in html
+    assert 'function treeSummaryMeta(node)' in html
+    assert 'class="tree-summary"' not in html
+    assert 'class="tree-meta"' in html
+    assert '`children ${stats.children}`' in html
+    assert '`downstream ${stats.downstream}`' in html
+    assert '`max depth ${stats.maxDepth}`' in html
+    assert '`${stats.downstream} hidden`' in html
+    assert '`violations ${stats.violations}`' in html
+    assert 'title="${esc(summary)}"' in html
     assert 'function setTreeDepth(depth)' in html
     assert 'function initializeTreeExpansion(flow)' in html
     assert "selected_flow_functions" in html
