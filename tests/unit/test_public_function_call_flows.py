@@ -179,10 +179,13 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Supported by" in html
     assert "Shared helper functions" in html
     assert "Nested private functions" in html
-    assert 'class="card-kicker">Main review</div><div class="card-title">Public functions</div>' in html
-    assert 'class="card-title">Public functions with architecture violation</div>' in html
-    assert 'class="card-title">Public functions with large width/depth</div>' in html
-    assert 'class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-public">0</strong><div class="card-title">Public functions</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card risk"><strong id="card-warnings">0</strong><div class="card-title">Public functions with architecture violation</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card review"><strong id="card-large">0</strong><div class="card-title">Public functions with large width/depth</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-shared-helpers">0</strong><div class="card-title">Shared helper functions</div><div class="card-kicker">Supported by</div></article>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-private-functions">0</strong><div class="card-title">Nested private functions</div><div class="card-kicker">Supported by</div></article>' in html
+    assert '<article class="architecture-summary-card info"><div class="card-kicker">Main review</div><div class="card-title">Public functions</div>' not in html
+    assert '<article class="architecture-summary-card good"><div class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' not in html
     assert "Main reviewPublic functions" not in html
     assert "card-shared-helpers" in html
     assert "card-private-functions" in html
