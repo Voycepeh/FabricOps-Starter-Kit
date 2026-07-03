@@ -92,6 +92,11 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert public_a["public_signals"] == ["large_width_or_depth", "architecture_violation"]
     assert public_a["architecture_violation_count"] >= 1
 
+    public_b = next(item for item in payload["public_functions"] if item["function_name"] == "public_b")
+    assert public_b["has_large_width_or_depth"] is False
+    assert public_b["has_architecture_violation"] is False
+    assert public_b["signals"] == []
+
     public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
     assert public_b_row["violation_types"] == ["Type 1"]
     assert public_b_row["violation_details"] == ["Public function calls another public function directly."]
@@ -169,15 +174,25 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
-    assert "With architecture violation" in html
-    assert "With large width/depth" in html
+    assert "Public functions with architecture violation" in html
+    assert "Public functions with large width/depth" in html
     assert "Supported by" in html
     assert "Shared helper functions" in html
     assert "Nested private functions" in html
+    assert 'class="card-kicker">Main review</div><div class="card-title">Public functions</div>' in html
+    assert 'class="card-title">Public functions with architecture violation</div>' in html
+    assert 'class="card-title">Public functions with large width/depth</div>' in html
+    assert 'class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' in html
+    assert "Main reviewPublic functions" not in html
     assert "card-shared-helpers" in html
     assert "card-private-functions" in html
     assert "uniqueFlowCount('shared_function')" in html
     assert "uniqueFlowCount('private_function')" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
+    assert "Number(f.depth??f.max_depth??0)>5" in html
+    assert "Number(f.width??f.direct_call_count??0)>10" in html
+    assert "publicSignalsFor(f)" in html
     assert 'id="card-used"' not in html
     assert 'id="card-defined"' not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
@@ -197,7 +212,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "public_calls_public" not in html
     assert "cross_file_private_dependency" not in html
     assert "large_depth" not in html
-    assert "large_width'" not in html
+    assert ">large_width<" not in html
+    assert ">large_width</span>" not in html
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
