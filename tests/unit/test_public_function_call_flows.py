@@ -185,8 +185,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Promote to shared" in html
     assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" in html
     assert "voycepeh.github.io/src" not in html
-    assert "functionLink(f)}</td><td>${esc(f.source_path)}</td>" in html
-    assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
+    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}</td>" in html
+    assert "functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.source_path)}</td>" in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
     assert "Public functions with architecture violation" in html
@@ -317,6 +318,8 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "function treeNode(root,node)" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
+    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" in html
+    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" in html
     assert "Download architecture refactor packet" in html
     assert html.count("Download architecture refactor packet") == 1
     assert "Download orphan cleanup packet" in html
