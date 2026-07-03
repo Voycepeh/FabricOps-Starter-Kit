@@ -119,6 +119,26 @@ Avoid these generated files and folders in normal Codex source PRs:
 - `mkdocs.yml` reference/module navigation when changed only because of
   generation
 
+### Generated artifact boundaries
+
+Keep source changes, generated reference refreshes, dashboard builds, and docs
+wording changes as separate PRs by default.
+
+- Do not regenerate or commit generated artifacts unless the PR is explicitly
+  scoped as a generator, reference refresh, or dashboard build refresh PR.
+- Backend generated artifacts include call graph JSON, export JSON, reference
+  JSON, snapshots, generated API reference output, generated navigation, and
+  generated docs.
+- Frontend generated artifacts include dashboard HTML, built dashboard bundles,
+  static dashboard output, and other compiled frontend artifacts.
+- Backend/source PRs should not touch dashboard HTML, frontend build output, or
+  frontend-only source unless explicitly required.
+- Frontend/source PRs should not regenerate backend JSON, backend reference
+  artifacts, snapshots, generated API reference output, or generated navigation
+  unless the backend contract is intentionally changed.
+- If generated artifacts become stale after a source change, mention the needed
+  refresh in the PR summary instead of committing generated diffs.
+
 ### When generated references are required
 
 Generated references are refreshed by the docs/GitHub Pages build. Run the
