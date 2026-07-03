@@ -165,26 +165,25 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
 
 
 def test_supported_public_api_matches_generated_inventory_classification():
-    """Verify contract entries remain generated function inventory entries."""
+    """Verify contract entries remain generated v2 callable-flow entries."""
     root = Path(__file__).parents[2]
     function_manifest = json.loads(
         (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
     )
     callable_flow = json.loads(
-        (root / "docs" / "reference" / "_data" / "function-call-graph.json").read_text(encoding="utf-8")
+        (root / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8")
     )
+    dashboard_path = root / "docs" / "assets" / "public-function-call-flows-dashboard.html"
 
     manifest_public = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Callable"}
     manifest_classes = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Public class"}
-    flow_public = {
-        row["qualified_name"]
-        for row in callable_flow["function_inventory"]
-        if row.get("layer") == "public" or row.get("function_type") == "Public Starter Kit function"
-    }
+    flow_public = {row["function_name"] for row in callable_flow["public_functions"]}
 
+    assert dashboard_path.exists()
+    assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
     assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
     assert manifest_classes == CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES
-    assert flow_public == APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
+    assert flow_public == {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES}
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():

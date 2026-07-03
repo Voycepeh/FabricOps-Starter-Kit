@@ -67,13 +67,13 @@ They abstract the important but tedious work into a simplified plug and play wor
 
 ## For maintainers
 
-FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Function Call Graph Dashboard to review public API architecture, inspect the runtime inventory, and export focused cleanup packets.
+FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Public Function Call Flows Dashboard to review public API architecture, inspect the selected callable inventory, and export focused cleanup packets.
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="assets/function-call-graph-dashboard.html">
-    <span class="fabricops-landing-card__title">Function Call Graph Dashboard</span>
+  <a class="fabricops-landing-card" href="assets/public-function-call-flows-dashboard.html">
+    <span class="fabricops-landing-card__title">Public Function Call Flows Dashboard</span>
     <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, source Python files, and architecture signals.</span>
-    <span class="fabricops-landing-card__meta">Open Function Call Graph Dashboard</span>
+    <span class="fabricops-landing-card__meta">Open Public Function Call Flows Dashboard</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/function-call-graph/">
@@ -83,4 +83,4 @@ FabricOps Starter Kit includes maintainer tooling to keep the framework clean, e
   </a>
 </div>
 
-<p><small>Function metrics are generated from the runtime inventory data.</small></p>
+<p><small>Function metrics are generated from the selected callable inventory data.</small></p>

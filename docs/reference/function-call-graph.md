@@ -15,7 +15,7 @@ The Function Call Graph helps reviewers inspect public callable functions, under
 
 ## Overview
 
-The Function Call Graph has one maintainer-facing dashboard: the Function Call Graph Dashboard. That dashboard combines public callable flows, architecture checks, the runtime inventory, and cleanup packet export into one review surface.
+The Function Call Graph has one maintainer-facing dashboard: the Public Function Call Flows Dashboard. That dashboard combines public callable flows, architecture checks, the selected callable inventory, and cleanup packet export into one review surface.
 
 ## How it works
 
@@ -54,9 +54,9 @@ The scanner then produces generated review artifacts that make the callable arch
 
 The generated review outputs are:
 
-* [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-* [Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)
-* [function-call-graph.json](_data/function-call-graph.json)
+* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
+* [Public Function Call Flows Dashboard selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel)
+* [public-function-call-flows.json](_data/public-function-call-flows.json)
 
 ## 3. Enforce architecture
 
@@ -84,7 +84,7 @@ This helps prevent accidental architecture violations from becoming permanent.
 
 ### What the dashboard signals
 
-The Function Call Graph Dashboard is a review surface for public callable cleanup.
+The Public Function Call Flows Dashboard is a review surface for public callable cleanup.
 
 It does not treat every signal as a failure. Broken rules are boundary breaks, while the other signals are maintainability review hints that help reviewers decide where to inspect next.
 
@@ -131,17 +131,17 @@ Long nested chains make it harder to understand where the real work happens.
 
 Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
 
-## 4. Function Call Graph Dashboard
+## 4. Public Function Call Flows Dashboard
 
-The Function Call Graph Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
+The Public Function Call Flows Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
 
 After the scanner identifies public callables, supporting private functions, shared helpers, classes, internal methods, and dependency edges, the dashboard turns that scan into something reviewers can inspect.
 
-![Function Call Graph Dashboard](../assets/fabricops-call-graph-dashboard.png)
+![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
 <div align="center" markdown>
 
-[Open architecture dashboard](../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
+[Open architecture dashboard](../assets/public-function-call-flows-dashboard.html){ .md-button .md-button--primary }
 
 </div>
 
@@ -160,13 +160,13 @@ Start with the architecture scope table. Choose a public callable flow, **All ru
 
 When the selected scope is a public callable, the dashboard shows the callable dependency tree, direct/transitive helper details, and architecture findings. The special runtime scopes show a clear no-flow message instead of inventing a fake public call graph.
 
-### Review runtime inventory
+### Review selected callable inventory
 
-The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and describes deduplicated runtime code assets under `src/fabricops_kit`, including unreachable runtime assets that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
+The selected callable inventory is an in-page section at [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel). It uses the `public_functions[].flow[]` JSON section and describes deduplicated callable-flow functions under `src/fabricops_kit`, including defined-but-not-used cleanup candidates that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
 
 ### Select inventory assets
 
-Use the runtime inventory filters and multi-select controls to select one function/class, multiple helpers, all visible rows, or a scoped set of possible orphan records. Helper suggestions are review hints, not automatic delete or refactor commands.
+Use the selected callable inventory filters and multi-select controls to select one function/class, multiple helpers, all visible rows, or a scoped set of possible orphan records. Helper suggestions are review hints, not automatic delete or refactor commands.
 
 ### Export AI refactor packet
 
@@ -174,9 +174,9 @@ The dashboard exports one AI refactor packet from selected inventory assets. The
 
 ## 5. AI refactor packets
 
-When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
+When a function is worth refactoring, the Public Function Call Flows Dashboard can export focused cleanup packets as JSON or YAML.
 
-The Function Call Graph Dashboard exports one `fabricops_runtime_refactor_packet` built from selected runtime inventory assets. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
+The Public Function Call Flows Dashboard exports one `fabricops_public_function_call_flow_refactor_packet_v2` built from selected callable inventory assets. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
 
 The packet keeps the AI refactor focused on:
 
@@ -192,4 +192,4 @@ The packet keeps the AI refactor focused on:
 
 The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
 
-<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory) -->
+<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel) -->
