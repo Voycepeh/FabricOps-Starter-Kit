@@ -190,9 +190,16 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "uniqueFlowCount('private_function')" in html
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
-    assert "Number(f.depth??f.max_depth??0)>5" in html
-    assert "Number(f.width??f.direct_call_count??0)>10" in html
-    assert "publicSignalsFor(f)" in html
+    assert "function publicSignalsForFunction(f)" in html
+    assert "const signals=new Set(f.public_signals||[])" in html
+    assert "if(f.has_large_width_or_depth)signals.add('large_width_or_depth')" in html
+    assert "if(f.has_architecture_violation)signals.add('architecture_violation')" in html
+    assert "return publicSignalsForFunction(f).includes(signal)" in html
+    assert "publicSignalsForFunction(f)" in html
+    assert "DATA.public_functions.flatMap(publicSignalsForFunction)" in html
+    assert "${esc(signalLabel(v))}" in html
+    assert "publicSignalsForFunction(f).map(signalLabel).join(' ')" in html
+    assert "f.signals" not in html
     assert 'id="card-used"' not in html
     assert 'id="card-defined"' not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
