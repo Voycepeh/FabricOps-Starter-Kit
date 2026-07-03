@@ -228,7 +228,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "f.signals" not in html
     assert 'id="card-used"' not in html
     assert 'id="card-defined"' not in html
-    assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
+    assert "fabricops_public_function_call_flow_refactor_packet_v3" in html
     assert "signal_rules" in html
     assert "architecture_violation_rules" in html
     assert "inventory_suggestion_rules" in html
@@ -347,8 +347,10 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "definedButNotUsedTable" in html
     assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" in html
     assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" in html
-    assert "Download architecture refactor packet" in html
-    assert html.count("Download architecture refactor packet") == 1
+    assert "Download Codex cleanup packet" in html
+    assert html.count("Download Codex cleanup packet") == 1
+    assert "Download a Codex/GPT-ready cleanup packet with a focused prompt before the evidence." in html
+    assert "Downloaded Codex/GPT-ready cleanup packet." in html
     assert "Download orphan cleanup packet" in html
     assert "Export scope" in html
     assert "Full selected flow" in html
@@ -359,7 +361,7 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Cleanup mode" in html
     assert "Breaking cleanup" in html
     assert "Preserve compatibility" in html
-    assert "Default:</strong> the packet includes the full selected flow." in html
+    assert "Default:</strong> the packet includes a ready-to-paste prompt for the full selected flow plus raw evidence." in html
     assert "All functions in this selected flow will be included." in html
     assert "Only checked rows will be included." in html
     assert "Only deterministic inline candidates will be included." in html
@@ -372,6 +374,49 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Copy AI refactor prompt" not in html
     assert "showWorkflow" in html
     assert "if(e.target.closest('a'))return" in html
+
+
+def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: Path) -> None:
+    """Validate all export scopes produce Codex-ready prompt branches."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    html = flows.render_dashboard(payload)
+
+    assert "return {codex_prompt:buildCodexPrompt(evidence),evidence_packet:evidence}" in html
+    assert "schema:'fabricops_public_function_call_flow_refactor_packet_v3'" in html
+    assert "selected_flow_summary" in html
+    assert "deterministic_signal_rules" in html
+    assert "architecture_violation_rules" in html
+    assert "selected_flow_functions" in html
+    assert "selected_inventory_assets" in html
+    assert "omitted_inventory_assets" in html
+    assert "instructions_for_ai" in html
+    assert "Create a focused PR against main" in html
+    assert "Selected public callable:" in html
+    assert "cleanup_mode: ${mode}" in html
+    assert "export_scope: ${scope}" in html
+    assert "Expected touched files when available" in html
+    assert "Do not regenerate generated docs, dashboard HTML, call graph JSON, snapshots, navigation, or reference artifacts" in html
+    assert "Mention stale generated artifacts in the PR summary instead of committing generated diffs" in html
+    assert "do not preserve backwards compatibility" in html
+    assert "Do not add wrappers, aliases, adapters, resolver layers, or transitional shims" in html
+    assert "Run targeted tests first" in html
+    assert "Acceptance criteria:" in html
+    assert "clean the complete selected public callable flow" in html
+    assert "clean only the explicitly checked/exported functions" in html
+    assert "Checked/exported functions:" in html
+    assert "clean deterministic inline candidates only" in html
+    assert "Inline candidates:" in html
+    assert "move the logic beside the public callable as private local helpers" in html
+    assert "Delete obsolete helpers after cleanup" in html
+    assert "remove Type 1 to Type 6 architecture violations only" in html
+    assert "Violating parent/child edges:" in html
+    assert "Fix boundary rules with the smallest valid seam" in html
+    assert "review promote-to-shared candidates called by more than one distinct parent" in html
+    assert "Promote-to-shared candidates and caller counts:" in html
+    assert "Update imports/tests only where directly needed" in html
+    assert "docs/assets/function-call-graph-dashboard.html" not in html
 
 
 def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
