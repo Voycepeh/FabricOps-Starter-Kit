@@ -156,6 +156,21 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Private function calls a shared function directly." in html
     assert "Yes when called by exactly one parent function" in html
     assert "Yes when function_type is private_function" in html
+    assert "<th>Chip</th>" in html
+    assert "<th>Relevant section</th>" in html
+    assert "<th>Color</th>" not in html
+    assert "<th>Where shown</th>" not in html
+    assert '<span class="badge warn">Large width/depth</span>' in html
+    assert '<span class="badge danger">Architecture violation</span>' in html
+    assert '<span class="badge muted">Inline candidate</span>' in html
+    assert '<span class="badge muted">Promote to shared</span>' in html
+    for violation_type in range(1, 7):
+        assert f'<span class="badge danger">Type {violation_type}</span>' in html
+    assert '<span class="badge muted">Public function summary cards</span>' in html
+    assert '<span class="badge muted">Public function table</span>' in html
+    assert '<span class="badge muted">Selected call tree</span>' in html
+    assert '<span class="badge muted">Selected callable inventory</span>' in html
+    assert '<span class="badge muted">Inventory violation chips</span>' in html
     assert "Width means number of direct package-local calls" in html
     assert "Depth means the deepest nested call path" in html
     assert "Scope means total downstream functions" in html
@@ -170,8 +185,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Promote to shared" in html
     assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" in html
     assert "voycepeh.github.io/src" not in html
-    assert "functionLink(f)}</td><td>${esc(f.source_path)}</td>" in html
-    assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
+    assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}</td>" in html
+    assert "functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.source_path)}</td>" in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
     assert "Public functions with architecture violation" in html
@@ -179,10 +195,13 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Supported by" in html
     assert "Shared helper functions" in html
     assert "Nested private functions" in html
-    assert 'class="card-kicker">Main review</div><div class="card-title">Public functions</div>' in html
-    assert 'class="card-title">Public functions with architecture violation</div>' in html
-    assert 'class="card-title">Public functions with large width/depth</div>' in html
-    assert 'class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-public">0</strong><div class="card-title">Public functions</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card risk"><strong id="card-warnings">0</strong><div class="card-title">Public functions with architecture violation</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card review"><strong id="card-large">0</strong><div class="card-title">Public functions with large width/depth</div><div class="card-kicker">Main review</div></article>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-shared-helpers">0</strong><div class="card-title">Shared helper functions</div><div class="card-kicker">Supported by</div></article>' in html
+    assert '<article class="architecture-summary-card"><strong id="card-private-functions">0</strong><div class="card-title">Nested private functions</div><div class="card-kicker">Supported by</div></article>' in html
+    assert '<article class="architecture-summary-card info"><div class="card-kicker">Main review</div><div class="card-title">Public functions</div>' not in html
+    assert '<article class="architecture-summary-card good"><div class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' not in html
     assert "Main reviewPublic functions" not in html
     assert "card-shared-helpers" in html
     assert "card-private-functions" in html
@@ -299,6 +318,8 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "function treeNode(root,node)" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
+    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" in html
+    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" in html
     assert "Download architecture refactor packet" in html
     assert html.count("Download architecture refactor packet") == 1
     assert "Download orphan cleanup packet" in html
