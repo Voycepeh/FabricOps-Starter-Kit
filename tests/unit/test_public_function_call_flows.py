@@ -144,8 +144,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
 
     assert "Width &gt; 10 or Depth &gt; 5" in html
 
-    assert "Signals highlight public callable flows that may need cleanup" in html
-    assert '<section class="flow-details signal-rules">' in html
+    assert "Signals highlight public callable flows that may need cleanup" not in html
+    assert '<section class="flow-details signal-rules">' not in html
     assert "Signal rules and calculations" not in html
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
         assert violation_type in html
@@ -155,8 +155,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Shared function calls a private function from another file." in html
     assert "Private function calls a private function from another file." in html
     assert "Private function calls a shared function directly." in html
-    assert "called by exactly one parent, not recursive" in html
-    assert "private function called by more than one distinct caller" in html
+    assert "Called by exactly one parent, not recursive" in html
+    assert "Private function called by more than one distinct caller" in html
     assert "<th>Chip</th>" not in html
     assert "<th>Relevant section</th>" not in html
     assert "<th>Color</th>" not in html
@@ -167,13 +167,14 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="badge muted">Promote to shared</span>' in html
     for violation_type in range(1, 7):
         assert f'<span class="badge danger">Type {violation_type}</span>' in html
-    assert "Public function summary card signals" in html
+    assert "Public function summary card signals" not in html
     assert "Public function table signals" in html
     assert "Call tree violation rules" in html
     assert "Selected callable inventory signals" in html
-    assert "Width = direct package-local calls" in html
-    assert "Depth = deepest nested call path" in html
-    assert "Scope = total downstream functions" in html
+    assert '<details class="flow-details signal-explainer" open><summary>Public function table signals</summary>' in html
+    assert '<details class="flow-details signal-explainer" open><summary>Call tree violation rules</summary>' in html
+    assert '<details class="flow-details signal-explainer" open><summary>Selected callable inventory signals</summary>' in html
+    assert '<div class="signal-row"><span class="badge warn">Large width/depth</span><span class="signal-text">Width &gt; 10 or Depth &gt; 5.</span></div>' in html
     assert 'type="button">Width</button>' in html
     assert 'type="button">Scope</button>' in html
     assert 'type="button">Depth</button>' in html
@@ -251,16 +252,22 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "promote_to_shared_candidate" in html
     assert 'id="selected-call-tree-heading"' in html
     assert 'id="selected-callable-inventory-heading"' in html
-    assert 'href="#selected-callable-inventory-heading"' in html
-    assert 'href="#selected-call-tree-heading"' in html
+    assert '<a class="nav-button" href="#selected-callable-inventory-heading">View callable inventory</a>' in html
+    assert '<a class="nav-button" href="#selected-call-tree-heading">Back to call tree</a>' in html
+    assert 'Go to selected callable inventory' not in html
+    assert '<p><a class="section-jump source-link" href="#selected-call-tree-heading">Back to call tree</a></p>' not in html
+    assert 'section-heading-row' in html
     assert 'id="treeDepthControls"' in html
     assert 'function selectedMaxCallDepth(flow)' in html
-    assert 'function depthButtonValues(maxDepth)' in html
-    assert 'if(maxDepth<=6)return Array.from({length:maxDepth},(_,i)=>i+1)' in html
-    assert 'return [1,2,3,4,5,maxDepth]' in html
-    assert "Expand ${d===maxDepth&&maxDepth>6?'max depth':`depth ${d}`}" in html
-    assert 'data-tree-depth="all"' in html
-    assert 'data-tree-depth="0"' in html
+    assert 'function depthButtonValues(maxDepth)' not in html
+    assert 'Expand ${d===maxDepth&&maxDepth>6?' not in html
+    assert 'data-tree-depth-slider' in html
+    assert 'type="range" min="1" max="${maxDepth}" value="${currentDepth}"' in html
+    assert 'Min depth' in html
+    assert 'Max depth' in html
+    assert 'Depth ${currentDepth} of ${maxDepth}' in html
+    assert 'data-tree-depth-action="all"' in html
+    assert 'data-tree-depth-action="0"' in html
     assert 'data-tree-node-toggle' in html
     assert 'aria-expanded' in html
     assert 'function hiddenTreeStats(node)' in html
@@ -274,6 +281,8 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '`violations ${stats.violations}`' in html
     assert 'title="${esc(summary)}"' in html
     assert 'function setTreeDepth(depth)' in html
+    assert 'selectedTreeDepth=Math.min(2,Math.max(1,selectedMaxCallDepth(flow)))' in html
+    assert "if(e.target.matches('[data-tree-depth-slider]'))setTreeDepth(Number(e.target.value))" in html
     assert 'function initializeTreeExpansion(flow)' in html
     assert "selected_flow_functions" in html
     assert "selected_inventory_assets" in html
@@ -357,13 +366,26 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "function treeNode(root,node)" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
-    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" in html
-    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "<th>Select</th><th>Function</th><th>File</th>" in html
+    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" not in html
+    assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" not in html
     assert "Download Codex cleanup packet" in html
     assert html.count("Download Codex cleanup packet") == 1
     assert "Download a Codex/GPT-ready cleanup packet with a focused prompt before the evidence." in html
     assert "Downloaded Codex/GPT-ready cleanup packet." in html
-    assert "Download orphan cleanup packet" in html
+    assert "Unused function cleanup" in html
+    assert "Orphan function cleanup" not in html
+    assert "Total functions" in html
+    assert "Unused functions" in html
+    assert "Orphan functions" not in html
+    assert ">Select all</button>" in html
+    assert ">Clear</button>" in html
+    assert "Select all visible defined-but-not-used rows" not in html
+    assert "Clear selected cleanup rows" not in html
+    assert ">Export packet</button>" in html
+    assert "Downloaded unused cleanup packet." in html
+    assert "Download orphan cleanup packet" not in html
     assert "Export scope" in html
     assert "Full selected flow" in html
     assert "Checked functions only" in html
