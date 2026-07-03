@@ -244,10 +244,12 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert 'id="selected-callable-inventory-heading"' in html
     assert 'href="#selected-callable-inventory-heading"' in html
     assert 'href="#selected-call-tree-heading"' in html
-    assert 'data-tree-depth="1"' in html
-    assert 'data-tree-depth="2"' in html
-    assert 'data-tree-depth="3"' in html
-    assert 'data-tree-depth="4"' in html
+    assert 'id="treeDepthControls"' in html
+    assert 'function selectedMaxCallDepth(flow)' in html
+    assert 'function depthButtonValues(maxDepth)' in html
+    assert 'if(maxDepth<=6)return Array.from({length:maxDepth},(_,i)=>i+1)' in html
+    assert 'return [1,2,3,4,5,maxDepth]' in html
+    assert "Expand ${d===maxDepth&&maxDepth>6?'max depth':`depth ${d}`}" in html
     assert 'data-tree-depth="all"' in html
     assert 'data-tree-depth="0"' in html
     assert 'data-tree-node-toggle' in html
