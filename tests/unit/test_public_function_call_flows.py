@@ -366,13 +366,26 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "function treeNode(root,node)" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
-    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" in html
-    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "<th>Select</th><th>Function</th><th>File</th>" in html
+    assert "<th>Select</th><th>Function</th><th>Reason</th><th>Suggested action</th><th>File</th>" not in html
+    assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "functionLink(n)}</td><td>${esc(n.reason)}</td><td>${esc(n.suggested_action)}</td><td>${esc(n.source_path)}</td>" not in html
     assert "Download Codex cleanup packet" in html
     assert html.count("Download Codex cleanup packet") == 1
     assert "Download a Codex/GPT-ready cleanup packet with a focused prompt before the evidence." in html
     assert "Downloaded Codex/GPT-ready cleanup packet." in html
-    assert "Download orphan cleanup packet" in html
+    assert "Unused function cleanup" in html
+    assert "Orphan function cleanup" not in html
+    assert "Total functions" in html
+    assert "Unused functions" in html
+    assert "Orphan functions" not in html
+    assert ">Select all</button>" in html
+    assert ">Clear</button>" in html
+    assert "Select all visible defined-but-not-used rows" not in html
+    assert "Clear selected cleanup rows" not in html
+    assert ">Export packet</button>" in html
+    assert "Downloaded unused cleanup packet." in html
+    assert "Download orphan cleanup packet" not in html
     assert "Export scope" in html
     assert "Full selected flow" in html
     assert "Checked functions only" in html
