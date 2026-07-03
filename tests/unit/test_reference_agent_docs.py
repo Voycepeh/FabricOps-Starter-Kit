@@ -99,7 +99,7 @@ def test_landing_page_counts_match_generated_stats() -> None:
     assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
     assert "</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
     assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
-    assert "Function metrics are generated from the runtime inventory data." in index_text
+    assert "Function metrics are generated from the selected callable inventory data." in index_text
     assert "283 supporting internal functions" not in index_text
     assert "supporting internal functions" not in index_text
 
