@@ -191,9 +191,12 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
     assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
     assert "function publicSignalsForFunction(f)" in html
-    assert "const signals=new Set(f.public_signals||[])" in html
-    assert "if(f.has_large_width_or_depth)signals.add('large_width_or_depth')" in html
-    assert "if(f.has_architecture_violation)signals.add('architecture_violation')" in html
+    assert "function normalizePublicFunction(f)" in html
+    assert "function derivePublicMetrics(f)" in html
+    assert "function deriveFlowEdges(flow)" in html
+    assert "function deriveArchitectureViolations(flow)" in html
+    assert "function deriveInventorySignals(flow)" in html
+    assert "(f.derived_width??0)>10||(f.derived_depth??0)>5" in html
     assert "return publicSignalsForFunction(f).includes(signal)" in html
     assert "publicSignalsForFunction(f)" in html
     assert "DATA.public_functions.flatMap(publicSignalsForFunction)" in html
@@ -216,11 +219,69 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "promote_to_shared_candidate" in html
     assert "selected_flow_functions" in html
     assert "selected_inventory_assets" in html
+    assert "derived_width" in html
+    assert "derived_scope" in html
+    assert "derived_depth" in html
+    assert "derived_public_signals" in html
+    assert "deterministic_signal_rules" in html
+    assert "derived_architecture_violations" in html
     assert "public_calls_public" not in html
     assert "cross_file_private_dependency" not in html
     assert "large_depth" not in html
     assert ">large_width<" not in html
     assert ">large_width</span>" not in html
+
+
+def test_dashboard_derives_signals_from_old_shape_payload() -> None:
+    """Validate dashboard JavaScript derives V2 signals from old-shape JSON."""
+    html = flows.render_dashboard({
+        "public_functions": [{
+            "function_name": "public_root",
+            "qualified_name": "pkg.public_root",
+            "source_path": "src/pkg/root.py",
+            "flow": [
+                {"function_name": "public_root", "qualified_name": "pkg.public_root", "function_type": "public_function", "source_path": "src/pkg/root.py", "parent_qualified_name": None, "depth": 0},
+                {"function_name": "public_child", "qualified_name": "pkg.public_child", "function_type": "public_dependency", "source_path": "src/pkg/child.py", "parent_qualified_name": "pkg.public_root", "depth": 1},
+                {"function_name": "shared_parent", "qualified_name": "pkg.shared_parent", "function_type": "shared_function", "source_path": "src/pkg/shared.py", "parent_qualified_name": "pkg.public_root", "depth": 1},
+                {"function_name": "public_from_shared", "qualified_name": "pkg.public_from_shared", "function_type": "public_dependency", "source_path": "src/pkg/pub.py", "parent_qualified_name": "pkg.shared_parent", "depth": 2},
+                {"function_name": "private_parent", "qualified_name": "pkg.private_parent", "function_type": "private_function", "source_path": "src/pkg/private.py", "parent_qualified_name": "pkg.public_root", "depth": 1},
+                {"function_name": "public_from_private", "qualified_name": "pkg.public_from_private", "function_type": "public_dependency", "source_path": "src/pkg/pub2.py", "parent_qualified_name": "pkg.private_parent", "depth": 2},
+                {"function_name": "cross_private", "qualified_name": "pkg.cross_private", "function_type": "private_function", "source_path": "src/pkg/other.py", "parent_qualified_name": "pkg.shared_parent", "depth": 2},
+                {"function_name": "other_private", "qualified_name": "pkg.other_private", "function_type": "private_function", "source_path": "src/pkg/other2.py", "parent_qualified_name": "pkg.private_parent", "depth": 2},
+                {"function_name": "shared_from_private", "qualified_name": "pkg.shared_from_private", "function_type": "shared_function", "source_path": "src/pkg/shared2.py", "parent_qualified_name": "pkg.private_parent", "depth": 2},
+                {"function_name": "deep_helper", "qualified_name": "pkg.deep_helper", "function_type": "private_function", "source_path": "src/pkg/deep.py", "parent_qualified_name": "pkg.shared_from_private", "depth": 6},
+                {"function_name": "inline_helper", "qualified_name": "pkg.inline_helper", "function_type": "private_function", "source_path": "src/pkg/inline.py", "parent_qualified_name": "pkg.public_root", "depth": 1},
+                {"function_name": "promote_helper", "qualified_name": "pkg.promote_helper", "function_type": "private_function", "source_path": "src/pkg/promote.py", "parent_qualified_name": "pkg.shared_parent", "depth": 2},
+                {"function_name": "promote_helper", "qualified_name": "pkg.promote_helper", "function_type": "private_function", "source_path": "src/pkg/promote.py", "parent_qualified_name": "pkg.private_parent", "depth": 2},
+            ] + [
+                {"function_name": f"wide_{i}", "qualified_name": f"pkg.wide_{i}", "function_type": "private_function", "source_path": f"src/pkg/wide_{i}.py", "parent_qualified_name": "pkg.public_root", "depth": 1}
+                for i in range(11)
+            ],
+        }]
+    })
+
+    assert "normalizeDashboardData(data)" in html
+    assert "derived_width:width||f.direct_call_count||f.width||0" in html
+    assert "derived_scope:scope||f.transitive_function_count||f.scope||0" in html
+    assert "derived_depth:depths.length?Math.max(...depths):f.max_depth||f.depth||0" in html
+    assert "pt==='public_function'||pt==='public_dependency'" in html
+    assert "return 'Type 1'" in html
+    assert "return 'Type 2'" in html
+    assert "return 'Type 3'" in html
+    assert "return 'Type 4'" in html
+    assert "return 'Type 5'" in html
+    assert "return 'Type 6'" in html
+    assert "row.promote_to_shared_candidate=row.function_type==='private_function'&&row.distinct_caller_count>1" in html
+    assert "row.inline_candidate=row.depth!==0&&row.incoming_edge_count===1" in html
+    assert "!row.called_multiple_times_by_same_parent" in html
+    assert "badges(publicSignalsForFunction(f))" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
+    assert "treeNode(root,node)" in html
+    assert "violationBadges(n)" in html
+    assert "packetFields(n)" in html
+    assert "large_depth" not in html
+    assert ">large_width<" not in html
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
