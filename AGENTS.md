@@ -139,6 +139,29 @@ wording changes as separate PRs by default.
 - If generated artifacts become stale after a source change, mention the needed
   refresh in the PR summary instead of committing generated diffs.
 
+### CI and generated artifact policy
+
+CI may run backend generation, frontend builds, or dashboard builds as validation
+steps, but validation builds must not be treated as source-of-truth repository
+updates.
+
+A PR build or GitHub Pages deployment can prove that generated output still
+builds, but it does not refresh the generated artifacts stored on `main` unless
+those generated files are explicitly committed in a scoped refresh PR.
+
+Do not rely on GitHub Pages deployment output as evidence that `main` contains
+fresh generated JSON, dashboard HTML, snapshots, navigation, or API reference
+output.
+
+If a source PR makes generated artifacts stale, mention the required refresh in
+the PR summary instead of committing generated diffs.
+
+Use separate explicit refresh PRs for:
+
+- Backend reference/export regeneration.
+- Frontend/dashboard build output regeneration.
+- Docs wording-only updates.
+
 ### When generated references are required
 
 Generated references are refreshed by the docs/GitHub Pages build. Run the
