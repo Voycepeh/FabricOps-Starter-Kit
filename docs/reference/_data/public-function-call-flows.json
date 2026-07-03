@@ -1,7 +1,9 @@
 {
   "metadata": {
     "schema": "fabricops_public_function_call_flows_v2",
-    "generated_at_utc": "2026-07-02T19:44:38.277708+00:00",
+    "generated_at_utc": "2026-07-03T03:44:16.866212+00:00",
+    "generated_at_sgt": "03 Jul 2026, 11:44 AM SGT",
+    "source_json_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/docs/reference/_data/public-function-call-flows.json",
     "source": "src/fabricops_kit",
     "public_function_source": "src/fabricops_kit/__init__.py::__all__"
   },
