@@ -180,14 +180,18 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert 'type="button">Direct calls</button>' not in html
     assert 'data-sort="suggested_refactor_action"' not in html
     assert "Suggested refactor action" not in html
-    assert "Violation detail" in html
     assert "Inline candidate" in html
     assert "Promote to shared" in html
     assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" in html
     assert "voycepeh.github.io/src" not in html
     assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
     assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)}</td>" in html
-    assert "functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.source_path)}</td>" in html
+    assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
+    assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
+    assert "function enrichInventoryRows(rows,flow)" in html
+    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
+    assert "<td>${n.promote_to_shared_candidate?'Yes':'No'}</td><td>${esc(n.source_path)}</td>" in html
+    assert ">Parent</button>" not in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
     assert "Public functions with architecture violation" in html
