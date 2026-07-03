@@ -177,16 +177,19 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "cleanupActionFilter" in html
     assert "cleanupRowCount" in html
     assert "data-cleanup-sort" in html
-    assert "function-col" in html
-    assert "file-col" in html
+    assert "col-function" in html
+    assert "col-file" in html
+    assert "<colgroup><col class=\"col-function\"><col class=\"col-file\"><col class=\"col-small\"" in html
     assert "#publicFlowTable{min-width:1180px}" in html
     assert "#selectedCallableInventoryTable{min-width:1060px}" in html
     assert "#definedButNotUsedTable{min-width:1120px}" in html
     assert "word-break:keep-all" in html
     assert "overflow-x:auto" in html
-    assert "class=\"signals-col\">Signals" in html
-    assert "class=\"action-col\"><button class=\"sort-button\" data-sort=\"suggested_refactor_action\"" in html
-    assert "class=\"select-col\">Select checkbox" in html
+    assert "class=\"col-signals\">Signals" in html
+    assert "class=\"col-action\"><button class=\"sort-button\" data-sort=\"suggested_refactor_action\"" in html
+    assert "class=\"col-select\">Select checkbox" in html
+    assert "<col class=\"col-type\"><col class=\"col-file\"><col class=\"col-small\"><col class=\"col-parent\">" in html
+    assert "<col class=\"col-reason\"><col class=\"col-action\">" in html
     assert "data-inventory-sort=\"function_type\" type=\"button\">Type</button>" in html
     assert "Type if available" not in html
     assert "<th>Source</th>" not in html
