@@ -236,6 +236,27 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "violation_details" in html
     assert "inline_candidate" in html
     assert "promote_to_shared_candidate" in html
+    assert 'id="selected-call-tree-heading"' in html
+    assert 'id="selected-callable-inventory-heading"' in html
+    assert 'href="#selected-callable-inventory-heading"' in html
+    assert 'href="#selected-call-tree-heading"' in html
+    assert 'data-tree-depth="1"' in html
+    assert 'data-tree-depth="2"' in html
+    assert 'data-tree-depth="3"' in html
+    assert 'data-tree-depth="4"' in html
+    assert 'data-tree-depth="all"' in html
+    assert 'data-tree-depth="0"' in html
+    assert 'data-tree-node-toggle' in html
+    assert 'aria-expanded' in html
+    assert 'function hiddenTreeStats(node)' in html
+    assert 'function treeSummaryChips(node)' in html
+    assert 'children ${stats.children}' in html
+    assert 'downstream ${stats.downstream}' in html
+    assert 'max depth ${stats.maxDepth}' in html
+    assert 'violations ${stats.violations}' in html
+    assert '+ ${stats.downstream} hidden' in html
+    assert 'function setTreeDepth(depth)' in html
+    assert 'function initializeTreeExpansion(flow)' in html
     assert "selected_flow_functions" in html
     assert "selected_inventory_assets" in html
     assert "derived_width" in html
