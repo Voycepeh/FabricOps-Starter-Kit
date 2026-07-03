@@ -131,6 +131,9 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert unused == {"unused_local"}
     assert unused_records[0]["suggested_action"] == "review_for_deletion_or_connection"
     assert {"public_functions", "defined_functions", "used_functions", "defined_but_not_used", "summary"} <= set(payload)
+    assert payload["metadata"]["generated_at_sgt"].endswith(" SGT")
+    assert " AM SGT" in payload["metadata"]["generated_at_sgt"] or " PM SGT" in payload["metadata"]["generated_at_sgt"]
+    assert payload["metadata"]["source_json_url"] == flows.SOURCE_JSON_URL
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
@@ -153,6 +156,10 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "signalFilter" in html
     assert "actionFilter" in html
     assert "selected-public-function-panel" in html
+    assert "generatedTimestamp" in html
+    assert "Source JSON:" in html
+    assert "Download from GitHub" in html
+    assert flows.SOURCE_JSON_URL in html
     assert "function loadDashboardData(dataUrl)" in html
     assert "new URL(dataUrl,window.location.href).href" in html
     assert "Failed to load public-function-call-flows.json from" in html
@@ -162,9 +169,10 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "definedButNotUsedTable" in html
     assert "selectVisibleInventory" in html
     assert "selectVisibleCleanup" in html
-    assert "compatibilityMode" in html
-    assert "Export selected packet as JSON" in html
-    assert "Export selected packet as YAML" in html
+    assert "compatibilityMode" not in html
+    assert "Download AI refactor packet" in html
+    assert "Export selected packet as YAML" not in html
+    assert "Copy AI refactor prompt" not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
     assert "renderSelected" in html
     assert "if(e.target.closest('a'))return" in html
