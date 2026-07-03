@@ -182,7 +182,22 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert 'id="card-defined"' not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
     assert "signal_rules" in html
-    assert "per_function_violation_details" in html
+    assert "architecture_violation_rules" in html
+    assert "inventory_suggestion_rules" in html
+    assert "cleanup_mode" in html
+    assert "export_scope" in html
+    assert "export_scope_reason" in html
+    assert "omitted_inventory_assets" in html
+    assert "violation_types" in html
+    assert "violation_details" in html
+    assert "inline_candidate" in html
+    assert "promote_to_shared_candidate" in html
+    assert "selected_flow_functions" in html
+    assert "selected_inventory_assets" in html
+    assert "public_calls_public" not in html
+    assert "cross_file_private_dependency" not in html
+    assert "large_depth" not in html
+    assert "large_width'" not in html
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
@@ -201,7 +216,26 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
     assert "Download architecture refactor packet" in html
+    assert html.count("Download architecture refactor packet") == 1
     assert "Download orphan cleanup packet" in html
+    assert "Export scope" in html
+    assert "Full selected flow" in html
+    assert "Checked functions only" in html
+    assert "Inline candidates only" in html
+    assert "Architecture violations only" in html
+    assert "Promote-to-shared candidates only" in html
+    assert "Cleanup mode" in html
+    assert "Breaking cleanup" in html
+    assert "Preserve compatibility" in html
+    assert "Default:</strong> the packet includes the full selected flow." in html
+    assert "All functions in this selected flow will be included." in html
+    assert "Only checked rows will be included." in html
+    assert "Only deterministic inline candidates will be included." in html
+    assert "Only rows with Type 1–Type 6 architecture violations will be included." in html
+    assert "Only private helpers called by more than one distinct caller will be included." in html
+    assert "functions will be exported" in html
+    assert "Included by full flow" in html
+    assert "checkEnabled=exportScope()==='checked_functions_only'" in html
     assert "Export selected packet as YAML" not in html
     assert "Copy AI refactor prompt" not in html
     assert "showWorkflow" in html
