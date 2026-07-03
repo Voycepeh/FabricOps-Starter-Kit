@@ -9,20 +9,20 @@
 > * keep it if the behaviour is worth preserving
 > * clean the architecture before the prototype becomes permanent
 >
-> The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
+> The Function Call Graph is the v2 architecture review surface that helps us decide whether the public callable implementation is clean enough to keep.
 
-The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
+The Function Call Graph helps reviewers inspect public callable flows, understand deterministic architecture signals, and plan focused cleanup PRs before prototype structure becomes permanent.
 
 ## Overview
 
-The Function Call Graph has one maintainer-facing dashboard: the Public Function Call Flows Dashboard. That dashboard combines public callable flows, architecture checks, the selected callable inventory, and cleanup packet export into one review surface.
+The Function Call Graph has one maintainer-facing dashboard: the Public Function Call Flows Dashboard. That dashboard turns the v2 public function call flow payload into an interactive review surface for public callable cleanup.
 
 ## How it works
 
 The Function Call Graph follows a simple flow:
 
 ```text
-Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets
+Repository Code → Static Analysis → Public Function Call Flow Payload → Dashboard Review → Focused Cleanup PRs
 ```
 
 ![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
@@ -31,32 +31,32 @@ Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI
 
 The repository is the source of truth.
 
-FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.
+FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by analyzing this code structure instead of relying on manually maintained documentation.
 
 ## 2. Scan and analyze
 
-The Function Call Graph is generated from repository scans.
+The v2 Function Call Graph is generated from static repository analysis.
 
-The source scanner is:
+The v2 call flow generator is:
 
-* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+* [`scripts/generate_public_function_call_flows.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows.py)
 
-The scanner reads the codebase and identifies:
+The generator parses `src/fabricops_kit` and identifies:
 
-* public callable functions
-* supporting private functions
-* shared helpers
-* classes
-* internal methods
-* dependency edges between functions and modules
+* public functions exported from `src/fabricops_kit/__init__.py::__all__`
+* defined top level functions
+* package local function calls
+* dependency edges between functions
+* function types used for review
+* deterministic architecture violation edges
+* refactor signals such as large width/depth and architecture violations
 
-The scanner then produces generated review artifacts that make the callable architecture easier to inspect.
+The generator produces v2 review artifacts that make public callable flow architecture easier to inspect.
 
 The generated review outputs are:
 
-* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
-* [Public Function Call Flows Dashboard selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel)
 * [public-function-call-flows.json](_data/public-function-call-flows.json)
+* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
 
 ## 3. Enforce architecture
 
@@ -84,14 +84,14 @@ This helps prevent accidental architecture violations from becoming permanent.
 
 ### What the dashboard signals
 
-The dashboard uses deterministic rules. It separates public-flow signals from per-function inventory suggestions.
+The dashboard uses deterministic rules from the v2 public function call flow payload.
 
 #### Public-flow signals
 
 | Signal | Color | Calculation | Reviewer action |
 |---|---|---|---|
 | Large width/depth | Yellow | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
-| Architecture violation | Red | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
+| Architecture violation | Red | Any Type 1-6 architecture violation appears in the callable flow. | Fix boundary violations before helper cleanup. |
 
 #### Architecture violation types
 
@@ -131,13 +131,11 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
+Generated dashboard and JSON outputs should normally be refreshed in a separate generator/reference refresh PR unless the PR is explicitly about refreshing generated outputs.
 
 ## 4. Public Function Call Flows Dashboard
 
-The Public Function Call Flows Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
-
-After the scanner identifies public callables, supporting private functions, shared helpers, classes, internal methods, and dependency edges, the dashboard turns that scan into something reviewers can inspect.
+The Public Function Call Flows Dashboard is the interactive review surface for the v2 call-flow data.
 
 ![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
@@ -147,38 +145,18 @@ After the scanner identifies public callables, supporting private functions, sha
 
 </div>
 
-The dashboard helps reviewers:
+Reviewers use the dashboard to:
 
-* see all public callable functions in one place
-* understand what supports each public callable
-* trace where dependencies go
-* spot architecture violations and dependency chains that deserve a closer look
-
-### Choose architecture scope
-
-Start with the architecture scope table. Choose a public callable flow, **All runtime assets**, or **Others / Cannot trace back to a public callable**. Public callable scopes keep the existing flow review, while the special scopes let maintainers inspect package-level runtime assets without restoring a separate inventory page.
-
-### Inspect call graph when available
-
-When the selected scope is a public callable, the dashboard shows the callable dependency tree, direct/transitive helper details, and architecture findings. The special runtime scopes show a clear no-flow message instead of inventing a fake public call graph.
-
-### Review selected callable inventory
-
-The selected callable inventory is an in-page section at [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel). It uses the `public_functions[].flow[]` JSON section and describes deduplicated callable-flow functions under `src/fabricops_kit`, including defined-but-not-used cleanup candidates that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
-
-### Select inventory assets
-
-Use the selected callable inventory filters and multi-select controls to select one function/class, multiple helpers, all visible rows, or a scoped set of possible orphan records. Helper suggestions are review hints, not automatic delete or refactor commands.
-
-### Export AI refactor packet
-
-The dashboard exports one AI refactor packet from selected inventory assets. The packet includes the selected architecture scope, related public callable flow when applicable, related architecture findings, selected inventory assets, and compatibility mode.
+* choose a public callable scope
+* inspect the dependency tree
+* review architecture findings
+* export a focused AI refactor packet when cleanup is needed
 
 ## 5. AI refactor packets
 
 When a function is worth refactoring, the Public Function Call Flows Dashboard can export focused cleanup packets as JSON or YAML.
 
-The Public Function Call Flows Dashboard exports one `fabricops_public_function_call_flow_refactor_packet_v2` built from selected callable inventory assets. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
+The Public Function Call Flows Dashboard exports one `fabricops_public_function_call_flow_refactor_packet_v2` built from selected callable flow data. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
 
 The packet keeps the AI refactor focused on:
 
@@ -194,4 +172,4 @@ The packet keeps the AI refactor focused on:
 
 The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
 
-<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel) -->
+<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) -->
