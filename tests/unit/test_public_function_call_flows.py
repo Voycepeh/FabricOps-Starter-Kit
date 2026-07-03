@@ -156,6 +156,21 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Private function calls a shared function directly." in html
     assert "Yes when called by exactly one parent function" in html
     assert "Yes when function_type is private_function" in html
+    assert "<th>Chip</th>" in html
+    assert "<th>Relevant section</th>" in html
+    assert "<th>Color</th>" not in html
+    assert "<th>Where shown</th>" not in html
+    assert '<span class="badge warn">Large width/depth</span>' in html
+    assert '<span class="badge danger">Architecture violation</span>' in html
+    assert '<span class="badge muted">Inline candidate</span>' in html
+    assert '<span class="badge muted">Promote to shared</span>' in html
+    for violation_type in range(1, 7):
+        assert f'<span class="badge danger">Type {violation_type}</span>' in html
+    assert '<span class="badge muted">Public function summary cards</span>' in html
+    assert '<span class="badge muted">Public function table</span>' in html
+    assert '<span class="badge muted">Selected call tree</span>' in html
+    assert '<span class="badge muted">Selected callable inventory</span>' in html
+    assert '<span class="badge muted">Inventory violation chips</span>' in html
     assert "Width means number of direct package-local calls" in html
     assert "Depth means the deepest nested call path" in html
     assert "Scope means total downstream functions" in html
