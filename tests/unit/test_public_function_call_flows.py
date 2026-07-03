@@ -92,6 +92,11 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert public_a["public_signals"] == ["large_width_or_depth", "architecture_violation"]
     assert public_a["architecture_violation_count"] >= 1
 
+    public_b = next(item for item in payload["public_functions"] if item["function_name"] == "public_b")
+    assert public_b["has_large_width_or_depth"] is False
+    assert public_b["has_architecture_violation"] is False
+    assert public_b["signals"] == []
+
     public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
     assert public_b_row["violation_types"] == ["Type 1"]
     assert public_b_row["violation_details"] == ["Public function calls another public function directly."]
@@ -169,20 +174,53 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
-    assert "With architecture violation" in html
-    assert "With large width/depth" in html
+    assert "Public functions with architecture violation" in html
+    assert "Public functions with large width/depth" in html
     assert "Supported by" in html
     assert "Shared helper functions" in html
     assert "Nested private functions" in html
+    assert 'class="card-kicker">Main review</div><div class="card-title">Public functions</div>' in html
+    assert 'class="card-title">Public functions with architecture violation</div>' in html
+    assert 'class="card-title">Public functions with large width/depth</div>' in html
+    assert 'class="card-kicker">Supported by</div><div class="card-title">Shared helper functions</div>' in html
+    assert "Main reviewPublic functions" not in html
     assert "card-shared-helpers" in html
     assert "card-private-functions" in html
     assert "uniqueFlowCount('shared_function')" in html
     assert "uniqueFlowCount('private_function')" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'architecture_violation')).length" in html
+    assert "DATA.public_functions.filter(f=>hasPublicSignal(f,'large_width_or_depth')).length" in html
+    assert "function publicSignalsForFunction(f)" in html
+    assert "const signals=new Set(f.public_signals||[])" in html
+    assert "if(f.has_large_width_or_depth)signals.add('large_width_or_depth')" in html
+    assert "if(f.has_architecture_violation)signals.add('architecture_violation')" in html
+    assert "return publicSignalsForFunction(f).includes(signal)" in html
+    assert "publicSignalsForFunction(f)" in html
+    assert "DATA.public_functions.flatMap(publicSignalsForFunction)" in html
+    assert "${esc(signalLabel(v))}" in html
+    assert "publicSignalsForFunction(f).map(signalLabel).join(' ')" in html
+    assert "f.signals" not in html
     assert 'id="card-used"' not in html
     assert 'id="card-defined"' not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
     assert "signal_rules" in html
-    assert "per_function_violation_details" in html
+    assert "architecture_violation_rules" in html
+    assert "inventory_suggestion_rules" in html
+    assert "cleanup_mode" in html
+    assert "export_scope" in html
+    assert "export_scope_reason" in html
+    assert "omitted_inventory_assets" in html
+    assert "violation_types" in html
+    assert "violation_details" in html
+    assert "inline_candidate" in html
+    assert "promote_to_shared_candidate" in html
+    assert "selected_flow_functions" in html
+    assert "selected_inventory_assets" in html
+    assert "public_calls_public" not in html
+    assert "cross_file_private_dependency" not in html
+    assert "large_depth" not in html
+    assert ">large_width<" not in html
+    assert ">large_width</span>" not in html
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
@@ -201,7 +239,26 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
     assert "Download architecture refactor packet" in html
+    assert html.count("Download architecture refactor packet") == 1
     assert "Download orphan cleanup packet" in html
+    assert "Export scope" in html
+    assert "Full selected flow" in html
+    assert "Checked functions only" in html
+    assert "Inline candidates only" in html
+    assert "Architecture violations only" in html
+    assert "Promote-to-shared candidates only" in html
+    assert "Cleanup mode" in html
+    assert "Breaking cleanup" in html
+    assert "Preserve compatibility" in html
+    assert "Default:</strong> the packet includes the full selected flow." in html
+    assert "All functions in this selected flow will be included." in html
+    assert "Only checked rows will be included." in html
+    assert "Only deterministic inline candidates will be included." in html
+    assert "Only rows with Type 1–Type 6 architecture violations will be included." in html
+    assert "Only private helpers called by more than one distinct caller will be included." in html
+    assert "functions will be exported" in html
+    assert "Included by full flow" in html
+    assert "checkEnabled=exportScope()==='checked_functions_only'" in html
     assert "Export selected packet as YAML" not in html
     assert "Copy AI refactor prompt" not in html
     assert "showWorkflow" in html
