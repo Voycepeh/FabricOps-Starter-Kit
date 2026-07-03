@@ -4672,24 +4672,40 @@ This helps prevent accidental architecture violations from becoming permanent.
 
 ### What the dashboard signals
 
-The Function Call Graph Dashboard is a review surface for public callable cleanup.
+The dashboard uses deterministic rules. It separates public-flow signals from per-function inventory suggestions.
 
-It does not treat every signal as a failure. Broken rules are boundary breaks, while the other signals are maintainability review hints that help reviewers decide where to inspect next.
+#### Public-flow signals
 
-| Signal | What it means | Reviewer action |
+| Signal | Color | Calculation | Reviewer action |
+|---|---|---|---|
+| Large width/depth | Yellow | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
+| Architecture violation | Red | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
+
+#### Architecture violation types
+
+| Type | Rule | Why it matters |
 |---|---|---|
-| Broken rule | An architecture rule is broken and must be fixed first. Examples include a public callable calling another public callable, a shared helper calling a public function, or a helper reaching into a private helper owned by another file. | Fix this first before helper cleanup. |
-| Too many steps | Depth is 4 or more. Depth means how many call steps away the public function reaches. | Check whether the chain can be flattened or made easier to follow. |
-| Too many helpers | Width is greater than 10. Width means direct calls from this public callable. | Check whether the function has become too wide or hard to reason about. |
-| Shared helper | The helper is used by more than one public function. | Treat this as informational unless the callable also exceeds width or depth thresholds. |
-| Maybe combine | The helper may be too small, too specific, or only useful to one caller. | Decide whether to keep the helper, move it to shared logic, or merge it into the caller. |
+| Type 1 | Public function calls another public function directly | Public callables should own their workflow rather than chaining public entry points. |
+| Type 2 | Shared function calls a public function directly | Shared helpers should not depend on public entry points. |
+| Type 3 | Private function calls a public function directly | Private implementation details should not call public entry points. |
+| Type 4 | Shared function calls a private function from another file | Shared helpers should not reach into another file’s private implementation. |
+| Type 5 | Private function calls a private function from another file | Private helpers should stay file-local. |
+| Type 6 | Private function calls a shared function directly | Private implementation details may need boundary review if they depend outward on shared helpers. |
 
-The key distinction is:
+#### Inventory suggestions
 
-| Type | Meaning |
+| Suggestion | Calculation | Reviewer action |
+|---|---|---|
+| Inline candidate | Called by exactly one parent, not used elsewhere, not recursive, not called multiple times by the same parent | Consider absorbing the helper into its caller. |
+| Promote to shared | Private function called by more than one distinct caller | Consider moving it to a shared helper boundary. |
+
+#### Metric definitions
+
+| Metric | Definition |
 |---|---|
-| Broken rule | A boundary rule is broken and should be fixed. |
-| Maintainability signal | The code may still be valid, but it deserves review before refactoring. |
+| Width | Direct package-local calls from the selected public function. |
+| Depth | Deepest nested call path. |
+| Scope | Total downstream functions reached by the selected public function flow. |
 
 The preferred public callable shape is still:
 
@@ -4703,29 +4719,15 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-The dashboard keeps public-function review focused on `Contains architecture violation`, `Large depth / width`, and healthy public functions. Depth means how many call steps away the public function reaches. Width means direct calls from this public callable. Scope means total unique runtime assets in this selected architecture scope, including nested/transitive support assets.
-
-### Too many helpers
-
-A public callable can become hard to reason about when it pulls in too many downstream helpers.
-
-![Too many helpers](../assets/fabricops-bad-example-large-surface-area.png)
-
-### Too many steps
-
-Long nested chains make it harder to understand where the real work happens.
-
-![Long nested chain](../assets/fabricops-bad-example-nested-functions.png)
-
 Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
 
-## 4. Function Call Graph Dashboard
+## 4. Public Function Call Flows Dashboard
 
-The Function Call Graph Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
+The Public Function Call Flows Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
 
 After the scanner identifies public callables, supporting private functions, shared helpers, classes, internal methods, and dependency edges, the dashboard turns that scan into something reviewers can inspect.
 
-![Function Call Graph Dashboard](../assets/fabricops-call-graph-dashboard.png)
+![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
 <div align="center" markdown>
 

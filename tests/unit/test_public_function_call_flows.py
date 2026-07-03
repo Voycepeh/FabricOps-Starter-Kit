@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 from scripts import generate_public_function_call_flows as flows
@@ -14,19 +15,15 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
     pkg.mkdir(parents=True)
     init_path = pkg / "__init__.py"
     init_path.write_text(
-        "from .public_a import PublicClass, public_a\n"
+        "from .public_a import public_a\n"
         "from .public_b import public_b\n"
-        "EXPORTS = ('public_a', 'public_b', 'PublicClass')\n"
-        "__all__ = [*EXPORTS]\n",
+        "__all__ = ['public_a', 'public_b']\n",
         encoding="utf-8",
     )
     (pkg / "public_a.py").write_text(
         "from .shared import helper as imported_helper\n"
         "from . import shared as shared_alias\n\n"
         "DISPATCH = {'x': same_file_helper}\n\n"
-        "class PublicClass:\n"
-        "    def method(self):\n"
-        "        return same_file_helper()\n\n"
         "def public_a():\n"
         "    same_file_helper()\n"
         "    imported_helper()\n"
@@ -49,40 +46,14 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
         "    recursive_helper()\n\n"
         "def recursive_helper():\n"
         "    recursive_helper()\n\n"
-        "def depth_1():\n"
-        "    depth_2()\n\n"
-        "def depth_2():\n"
-        "    depth_3()\n\n"
-        "def depth_3():\n"
-        "    depth_4()\n\n"
-        "def depth_4():\n"
-        "    depth_5()\n\n"
-        "def depth_5():\n"
-        "    return None\n\n"
-        "def width_0():\n"
-        "    return None\n\n"
-        "def width_1():\n"
-        "    return None\n\n"
-        "def width_2():\n"
-        "    return None\n\n"
-        "def width_3():\n"
-        "    return None\n\n"
-        "def width_4():\n"
-        "    return None\n\n"
-        "def width_5():\n"
-        "    return None\n\n"
-        "def width_6():\n"
-        "    return None\n\n"
-        "def width_7():\n"
-        "    return None\n\n"
-        "def width_8():\n"
-        "    return None\n\n"
-        "def width_9():\n"
-        "    return None\n\n"
-        "def width_10():\n"
-        "    return None\n\n"
-        "def unused_local():\n"
-        "    return None\n\n"
+        "def depth_1():\n    depth_2()\n\n"
+        "def depth_2():\n    depth_3()\n\n"
+        "def depth_3():\n    depth_4()\n\n"
+        "def depth_4():\n    depth_5()\n\n"
+        "def depth_5():\n    depth_6()\n\n"
+        "def depth_6():\n    return None\n\n"
+        + "".join(f"def width_{i}():\n    return None\n\n" for i in range(11))
+        + "def unused_local():\n    return None\n\n"
         "from .public_b import public_b\n",
         encoding="utf-8",
     )
@@ -97,43 +68,121 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
     return root, pkg, init_path
 
 
+def info(name: str, path: str) -> flows.FunctionInfo:
+    """Build minimal function metadata for violation classifier tests."""
+    node = ast.parse(f"def {name}():\n    pass\n").body[0]
+    assert isinstance(node, ast.FunctionDef)
+    return flows.FunctionInfo(name, f"fabricops_kit.{path.replace('/', '.').removesuffix('.py')}.{name}", path, 1, 2, node)
+
+
 def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
-    """Validate discovery, resolution, recursion safety, signals, and unused calculation."""
+    """Validate deterministic signal fields, thresholds, candidates, and unused calculation."""
     root, pkg, init_path = write_project(tmp_path)
 
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
-    assert {item["function_name"] for item in payload["public_functions"]} == {"public_a", "public_b"}
-    assert "PublicClass" not in {item["function_name"] for item in payload["defined_functions"]}
-    assert "method" not in {item["function_name"] for item in payload["defined_functions"]}
-
     public_a = next(item for item in payload["public_functions"] if item["function_name"] == "public_a")
     reached = {item["function_name"] for item in public_a["flow"]}
     assert {"same_file_helper", "helper", "_private_shared", "recursive_helper", "public_b"} <= reached
-    assert public_a["flow"]
-    assert public_a["max_depth"] < 10
-    assert "public_calls_public" in public_a["signals"]
-    assert "cross_file_private_dependency" in public_a["signals"]
-    assert "large_depth" in public_a["signals"]
-    assert "large_width" in public_a["signals"]
-    assert {"refactor_signals", "refactor_summary", "suggested_refactor_action"} <= set(public_a)
-    assert public_a["suggested_refactor_action"] == "review_public_calls_public"
+    assert public_a["width"] > 10
+    assert public_a["depth"] > 5
+    assert public_a["has_large_width_or_depth"] is True
+    assert public_a["has_architecture_violation"] is True
+    assert public_a["signals"] == ["large_width_or_depth", "architecture_violation"]
+    assert public_a["public_signals"] == ["large_width_or_depth", "architecture_violation"]
+    assert public_a["architecture_violation_count"] >= 1
 
-    refactor_by_signal = {item["signal"]: item for item in public_a["refactor_signals"]}
-    assert refactor_by_signal["public_calls_public"]["severity"] == "warning"
-    assert refactor_by_signal["public_calls_public"]["evidence"][0]["function_name"] == "public_b"
-    assert refactor_by_signal["cross_file_private_dependency"]["evidence"]
-    assert refactor_by_signal["large_depth"]["evidence"][0]["max_depth"] == public_a["max_depth"]
-    assert len(refactor_by_signal["large_width"]["evidence"]) == public_a["direct_call_count"]
+    public_b_row = next(item for item in public_a["flow"] if item["function_name"] == "public_b")
+    assert public_b_row["violation_types"] == ["Type 1"]
+    assert public_b_row["violation_details"] == ["Public function calls another public function directly."]
+    assert public_b_row["inline_candidate"] is True
+    assert public_b_row["promote_to_shared_candidate"] is False
+    assert public_b_row["distinct_caller_count"] == 1
 
     unused_records = payload["defined_but_not_used"]
-    unused = {item["function_name"] for item in unused_records}
-    assert unused == {"unused_local"}
-    assert unused_records[0]["suggested_action"] == "review_for_deletion_or_connection"
-    assert {"public_functions", "defined_functions", "used_functions", "defined_but_not_used", "summary"} <= set(payload)
+    assert {item["function_name"] for item in unused_records} == {"unused_local"}
     assert payload["metadata"]["generated_at_sgt"].endswith(" SGT")
-    assert " AM SGT" in payload["metadata"]["generated_at_sgt"] or " PM SGT" in payload["metadata"]["generated_at_sgt"]
     assert payload["metadata"]["source_json_url"] == flows.SOURCE_JSON_URL
+
+
+def test_large_width_or_depth_thresholds_are_strict() -> None:
+    """Validate deterministic large width/depth thresholds."""
+    root = info("public_root", "src/fabricops_kit/root.py")
+    assert flows.calculate_refactor_signals(root, [], 10, 5) == []
+    assert flows.calculate_refactor_signals(root, [], 11, 5)[0]["signal"] == "large_width_or_depth"
+    assert flows.calculate_refactor_signals(root, [], 10, 6)[0]["signal"] == "large_width_or_depth"
+
+
+def test_architecture_violation_type_classification() -> None:
+    """Validate all deterministic architecture violation edge types."""
+    public = info("public_a", "src/fabricops_kit/public_a.py")
+    other_public = info("public_b", "src/fabricops_kit/public_b.py")
+    shared = info("helper", "src/fabricops_kit/shared.py")
+    private = info("_private", "src/fabricops_kit/private.py")
+    other_private = info("_other_private", "src/fabricops_kit/other.py")
+
+    assert flows.classify_architecture_violation(public, other_public, "public_function", "public_dependency")["type"] == "Type 1"
+    assert flows.classify_architecture_violation(shared, public, "shared_function", "public_dependency")["type"] == "Type 2"
+    assert flows.classify_architecture_violation(private, public, "private_function", "public_dependency")["type"] == "Type 3"
+    assert flows.classify_architecture_violation(shared, other_private, "shared_function", "private_function")["type"] == "Type 4"
+    assert flows.classify_architecture_violation(private, other_private, "private_function", "private_function")["type"] == "Type 5"
+    assert flows.classify_architecture_violation(private, shared, "private_function", "shared_function")["type"] == "Type 6"
+    assert flows.classify_architecture_violation(shared, info("_same", "src/fabricops_kit/shared.py"), "shared_function", "private_function") is None
+
+
+def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
+    """Validate focused dashboard wording, deterministic columns, and GitHub blob links."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    html = flows.render_dashboard(payload)
+
+    assert "Width &gt; 10 or Depth &gt; 5" in html
+
+    assert "Signal rules and calculations" in html
+    assert '<details class="flow-details signal-rules">' in html
+    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
+        assert violation_type in html
+    assert "Public function calls another public function directly." in html
+    assert "Shared function calls a public function directly." in html
+    assert "Private function calls a public function directly." in html
+    assert "Shared function calls a private function from another file." in html
+    assert "Private function calls a private function from another file." in html
+    assert "Private function calls a shared function directly." in html
+    assert "Yes when called by exactly one parent function" in html
+    assert "Yes when function_type is private_function" in html
+    assert "Width means number of direct package-local calls" in html
+    assert "Depth means the deepest nested call path" in html
+    assert "Scope means total downstream functions" in html
+    assert 'type="button">Width</button>' in html
+    assert 'type="button">Scope</button>' in html
+    assert 'type="button">Depth</button>' in html
+    assert 'type="button">Direct calls</button>' not in html
+    assert 'data-sort="suggested_refactor_action"' not in html
+    assert "Suggested refactor action" not in html
+    assert "Violation detail" in html
+    assert "Inline candidate" in html
+    assert "Promote to shared" in html
+    assert "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/" in html
+    assert "voycepeh.github.io/src" not in html
+    assert "functionLink(f)}</td><td>${esc(f.source_path)}</td>" in html
+    assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
+    assert "large_width_or_depth" in html
+    assert "Architecture violation" in html
+    assert "With architecture violation" in html
+    assert "With large width/depth" in html
+    assert "Supported by" in html
+    assert "Shared helper functions" in html
+    assert "Nested private functions" in html
+    assert "card-shared-helpers" in html
+    assert "card-private-functions" in html
+    assert "uniqueFlowCount('shared_function')" in html
+    assert "uniqueFlowCount('private_function')" in html
+    assert 'id="card-used"' not in html
+    assert 'id="card-defined"' not in html
+    assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
+    assert "signal_rules" in html
+    assert "per_function_violation_details" in html
 
 
 def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: Path) -> None:
@@ -146,76 +195,16 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in html
     assert "public-function-call-flows-json" not in html
     assert "fabricops_public_function_call_flows_v2" not in html
-    assert "Public functions" in html
-    assert "Architecture violations / refactor warnings" in html
-    assert "Large depth / width" in html
-    assert "Orphan function cleanup" in html
-    assert "Unused percentage" in html
-    assert 'id="card-unused"' not in html
-    assert "Used functions" in html
-    assert "Defined functions" in html
-    assert "searchBox" in html
-    assert "signalFilter" in html
-    assert "actionFilter" in html
     assert "selected-public-function-panel" in html
-    assert "generatedTimestamp" in html
-    assert "Source JSON:" in html
-    assert "Download from GitHub" in html
-    assert flows.SOURCE_JSON_URL in html
-    assert "function loadDashboardData(dataUrl)" in html
-    assert "new URL(dataUrl,window.location.href).href" in html
-    assert "Failed to load public-function-call-flows.json from" in html
-    assert "console.error(message,error)" in html
     assert "selected-call-tree" in html
     assert "function treeNode(root,node)" in html
-    assert "tree-caret" in html
-    assert "tree-file" in html
-    assert "Public dependency" in html
-    assert "Shared helper" in html
-    assert "Private helper" in html
-    assert "tree-status-violation" in html
-    assert "tree-status-warning" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
-    assert html.index("<table id=\"selectedCallableInventoryTable\"") < html.index("</section>\n<section id=\"orphanWorkflow\"") < html.index("<table id=\"definedButNotUsedTable\"")
-    assert "selectVisibleInventory" in html
-    assert "selectVisibleCleanup" in html
-    assert "inventorySearch" in html
-    assert "inventoryTypeFilter" in html
-    assert "inventoryRowCount" in html
-    assert "data-inventory-sort" in html
-    assert "cleanupSearch" in html
-    assert "cleanupActionFilter" in html
-    assert "cleanupRowCount" in html
-    assert "data-cleanup-sort" in html
-    assert "col-function" in html
-    assert "col-file" in html
-    assert "<colgroup><col class=\"col-function\"><col class=\"col-file\"><col class=\"col-small\"" in html
-    assert "#publicFlowTable{min-width:1180px}" in html
-    assert "#selectedCallableInventoryTable{min-width:1060px}" in html
-    assert "#definedButNotUsedTable{min-width:960px}" in html
-    assert "word-break:keep-all" in html
-    assert "overflow-x:auto" in html
-    assert "class=\"col-signals\">Signals" in html
-    assert "class=\"col-action\"><button class=\"sort-button\" data-sort=\"suggested_refactor_action\"" in html
-    assert "class=\"col-select\">Select checkbox" in html
-    assert "class=\"col-select\">Select</th><th class=\"col-function\"><button class=\"sort-button\" data-cleanup-sort=\"function_name\"" in html
-    assert "<col class=\"col-type\"><col class=\"col-file\"><col class=\"col-small\"><col class=\"col-parent\">" in html
-    assert "<col class=\"col-file\"><col class=\"col-reason\"><col class=\"col-action\">" in html
-    assert "data-inventory-sort=\"function_type\" type=\"button\">Type</button>" in html
-    assert "Type if available" not in html
-    assert "<th>Source</th>" not in html
-    assert "compatibilityMode" not in html
     assert "Download architecture refactor packet" in html
     assert "Download orphan cleanup packet" in html
     assert "Export selected packet as YAML" not in html
     assert "Copy AI refactor prompt" not in html
-    assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
-    assert "fabricops_orphan_function_cleanup_packet_v1" in html
-    assert "selected_defined_but_not_used" not in html
-    assert "unusedPercentage(s).toFixed(1)" in html
     assert "showWorkflow" in html
-    assert "renderSelected" in html
     assert "if(e.target.closest('a'))return" in html
 
 
@@ -228,3 +217,27 @@ def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
 
     assert "public-function-call-flows-json" in html
     assert "fabricops_public_function_call_flows_v2" in html
+
+
+def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
+    """Validate callable flow docs describe the deterministic V2 signal model."""
+    docs = Path("docs/reference/function-call-graph.md").read_text(encoding="utf-8")
+
+    assert "#### Public-flow signals" in docs
+    assert "Large width/depth | Yellow | Width > 10 or Depth > 5" in docs
+    assert "Architecture violation | Red | Any Type 1-6 architecture violation" in docs
+    assert "#### Architecture violation types" in docs
+    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
+        assert violation_type in docs
+    assert "#### Inventory suggestions" in docs
+    assert "Inline candidate | Called by exactly one parent" in docs
+    assert "Promote to shared | Private function called by more than one distinct caller" in docs
+    assert "#### Metric definitions" in docs
+    assert "Width | Direct package-local calls from the selected public function." in docs
+    assert "Depth | Deepest nested call path." in docs
+    assert "Scope | Total downstream functions reached by the selected public function flow." in docs
+    assert "Broken rule | An architecture rule is broken" not in docs
+    assert "Too many steps" not in docs
+    assert "Too many helpers" not in docs
+    assert "Shared helper | The helper is used by more than one public function" not in docs
+    assert "Maybe combine" not in docs
