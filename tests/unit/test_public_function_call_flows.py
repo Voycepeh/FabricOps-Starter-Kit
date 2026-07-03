@@ -149,7 +149,9 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Public functions" in html
     assert "Architecture violations / refactor warnings" in html
     assert "Large depth / width" in html
-    assert "Defined but not used" in html
+    assert "Orphan function cleanup" in html
+    assert "Unused percentage" in html
+    assert 'id="card-unused"' not in html
     assert "Used functions" in html
     assert "Defined functions" in html
     assert "searchBox" in html
@@ -165,8 +167,17 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Failed to load public-function-call-flows.json from" in html
     assert "console.error(message,error)" in html
     assert "selected-call-tree" in html
+    assert "function treeNode(root,node)" in html
+    assert "tree-caret" in html
+    assert "tree-file" in html
+    assert "Public dependency" in html
+    assert "Shared helper" in html
+    assert "Private helper" in html
+    assert "tree-status-violation" in html
+    assert "tree-status-warning" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
+    assert html.index("<table id=\"selectedCallableInventoryTable\"") < html.index("</section>\n<section id=\"orphanWorkflow\"") < html.index("<table id=\"definedButNotUsedTable\"")
     assert "selectVisibleInventory" in html
     assert "selectVisibleCleanup" in html
     assert "inventorySearch" in html
@@ -182,22 +193,28 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "<colgroup><col class=\"col-function\"><col class=\"col-file\"><col class=\"col-small\"" in html
     assert "#publicFlowTable{min-width:1180px}" in html
     assert "#selectedCallableInventoryTable{min-width:1060px}" in html
-    assert "#definedButNotUsedTable{min-width:1120px}" in html
+    assert "#definedButNotUsedTable{min-width:960px}" in html
     assert "word-break:keep-all" in html
     assert "overflow-x:auto" in html
     assert "class=\"col-signals\">Signals" in html
     assert "class=\"col-action\"><button class=\"sort-button\" data-sort=\"suggested_refactor_action\"" in html
     assert "class=\"col-select\">Select checkbox" in html
+    assert "class=\"col-select\">Select</th><th class=\"col-function\"><button class=\"sort-button\" data-cleanup-sort=\"function_name\"" in html
     assert "<col class=\"col-type\"><col class=\"col-file\"><col class=\"col-small\"><col class=\"col-parent\">" in html
-    assert "<col class=\"col-reason\"><col class=\"col-action\">" in html
+    assert "<col class=\"col-file\"><col class=\"col-reason\"><col class=\"col-action\">" in html
     assert "data-inventory-sort=\"function_type\" type=\"button\">Type</button>" in html
     assert "Type if available" not in html
     assert "<th>Source</th>" not in html
     assert "compatibilityMode" not in html
-    assert "Download AI refactor packet" in html
+    assert "Download architecture refactor packet" in html
+    assert "Download orphan cleanup packet" in html
     assert "Export selected packet as YAML" not in html
     assert "Copy AI refactor prompt" not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
+    assert "fabricops_orphan_function_cleanup_packet_v1" in html
+    assert "selected_defined_but_not_used" not in html
+    assert "unusedPercentage(s).toFixed(1)" in html
+    assert "showWorkflow" in html
     assert "renderSelected" in html
     assert "if(e.target.closest('a'))return" in html
 
