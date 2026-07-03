@@ -140,7 +140,7 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
 
     html = flows.render_dashboard(payload)
 
-    assert "../reference/_data/public-function-call-flows.json" in html
+    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in html
     assert "public-function-call-flows-json" not in html
     assert "fabricops_public_function_call_flows_v2" not in html
     assert "Public functions" in html
@@ -153,6 +153,10 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "signalFilter" in html
     assert "actionFilter" in html
     assert "selected-public-function-panel" in html
+    assert "function loadDashboardData(dataUrl)" in html
+    assert "new URL(dataUrl,window.location.href).href" in html
+    assert "Failed to load public-function-call-flows.json from" in html
+    assert "console.error(message,error)" in html
     assert "selected-call-tree" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
