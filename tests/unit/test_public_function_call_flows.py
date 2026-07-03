@@ -169,6 +169,17 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "functionLink(n)}</td><td>${esc(n.source_path)}</td>" in html
     assert "large_width_or_depth" in html
     assert "Architecture violation" in html
+    assert "With architecture violation" in html
+    assert "With large width/depth" in html
+    assert "Supported by" in html
+    assert "Shared helper functions" in html
+    assert "Nested private functions" in html
+    assert "card-shared-helpers" in html
+    assert "card-private-functions" in html
+    assert "uniqueFlowCount('shared_function')" in html
+    assert "uniqueFlowCount('private_function')" in html
+    assert 'id="card-used"' not in html
+    assert 'id="card-defined"' not in html
     assert "fabricops_public_function_call_flow_refactor_packet_v2" in html
     assert "signal_rules" in html
     assert "per_function_violation_details" in html
