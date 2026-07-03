@@ -169,6 +169,17 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "definedButNotUsedTable" in html
     assert "selectVisibleInventory" in html
     assert "selectVisibleCleanup" in html
+    assert "inventorySearch" in html
+    assert "inventoryTypeFilter" in html
+    assert "inventoryRowCount" in html
+    assert "data-inventory-sort" in html
+    assert "cleanupSearch" in html
+    assert "cleanupActionFilter" in html
+    assert "cleanupRowCount" in html
+    assert "data-cleanup-sort" in html
+    assert "function-col" in html
+    assert "file-col" in html
+    assert "overflow-wrap:anywhere" in html
     assert "compatibilityMode" not in html
     assert "Download AI refactor packet" in html
     assert "Export selected packet as YAML" not in html
