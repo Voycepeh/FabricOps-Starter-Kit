@@ -4642,9 +4642,9 @@ The scanner then produces generated review artifacts that make the callable arch
 
 The generated review outputs are:
 
-* [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-* [Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)
-* [function-call-graph.json](_data/function-call-graph.json)
+* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
+* [Public Function Call Flows Dashboard selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel)
+* [public-function-call-flows.json](_data/public-function-call-flows.json)
 
 ## 3. Enforce architecture
 
@@ -4729,7 +4729,7 @@ After the scanner identifies public callables, supporting private functions, sha
 
 <div align="center" markdown>
 
-[Open architecture dashboard](../assets/function-call-graph-dashboard.html){ .md-button .md-button--primary }
+[Open architecture dashboard](../assets/public-function-call-flows-dashboard.html){ .md-button .md-button--primary }
 
 </div>
 
@@ -4750,7 +4750,7 @@ When the selected scope is a public callable, the dashboard shows the callable d
 
 ### Review runtime inventory
 
-The runtime inventory is an in-page section at [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory). It uses the `function_inventory` JSON section and describes deduplicated runtime code assets under `src/fabricops_kit`, including unreachable runtime assets that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
+The runtime inventory is an in-page section at [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel). It uses the `public_functions[].flow[]` JSON section and describes deduplicated callable-flow functions under `src/fabricops_kit`, including defined-but-not-used cleanup candidates that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
 
 ### Select inventory assets
 
@@ -4780,7 +4780,7 @@ The packet keeps the AI refactor focused on:
 
 The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
 
-<!-- Test compatibility breadcrumbs: [Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html) [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory) -->
+<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel) -->
 '''
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
@@ -5439,34 +5439,6 @@ def _collect_call_graph_generation_inputs() -> tuple[
         key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
     )
     return module_data, node_by_qn, calls_by_qn, public_flow_qns, public_class_qns
-
-
-def generate_function_call_graph_artifacts() -> None:
-    """Generate only the Function Call Graph JSON data and dashboard HTML.
-
-    Use :func:`main` for the complete reference refresh, including API pages,
-    module pages, manifests, landing stats, metadata references, glossary output,
-    MkDocs navigation, and all call graph artifacts. Use this focused seam when
-    only `function-call-graph.json` and `function-call-graph-dashboard.html`
-    need to be refreshed.
-    """
-    REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.parent.mkdir(parents=True, exist_ok=True)
-    module_data, node_by_qn, calls_by_qn, public_flow_qns, public_class_qns = _collect_call_graph_generation_inputs()
-    callable_flow_data = _build_callable_flow_data(
-        public_flow_qns,
-        public_class_qns,
-        calls_by_qn,
-        node_by_qn,
-        module_data,
-        generated_at_utc=datetime.now(UTC),
-    )
-    FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
-    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.write_text(
-        _format_generated_html_for_review(_render_combined_refactor_dashboard_html(callable_flow_data)),
-        encoding="utf-8",
-        newline="\n",
-    )
 
 
 def main() -> None:
@@ -6182,8 +6154,8 @@ def main() -> None:
             '',
             '    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.',
             '    - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.',
-            '    - [Function Call Graph](../assets/function-call-graph-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.',
-            '    - [Runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory): search/filter runtime code assets, select rows, and export AI refactor packets.',
+            '    - [Function Call Graph](../assets/public-function-call-flows-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.',
+            '    - [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel): search/filter callable-flow functions, select rows, and export AI refactor packets.',
             '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
             '    - Agent metadata: `_data/automation-manifest.json`.',
             '    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.',
@@ -6598,13 +6570,7 @@ def main() -> None:
         json.dumps(refactor_signals_manifest, indent=2) + "\n",
         encoding="utf-8",
     )
-    FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
-    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.write_text(
-        _format_generated_html_for_review(_render_combined_refactor_dashboard_html(callable_flow_data)),
-        encoding="utf-8",
-        newline="\n",
-    )
     _remove_stale_function_taxonomy_audit()
 
 
