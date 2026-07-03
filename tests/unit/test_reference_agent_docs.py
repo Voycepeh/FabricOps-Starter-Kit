@@ -99,7 +99,7 @@ def test_landing_page_counts_match_generated_stats() -> None:
     assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
     assert "</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
     assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
-    assert "Function metrics are generated from the runtime inventory data." in index_text
+    assert "Function metrics are generated from the selected callable inventory data." in index_text
     assert "283 supporting internal functions" not in index_text
     assert "supporting internal functions" not in index_text
 
@@ -5130,39 +5130,9 @@ def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source(
     } <= set(generator._public_flow_selection_keys(flow))
 
 
-def test_focused_call_graph_generator_writes_only_call_graph_artifacts(monkeypatch):
-    """Verify focused call graph generation avoids unrelated reference writes."""
+def test_retired_focused_call_graph_entrypoint_is_removed() -> None:
+    """Verify the retired v1-only call graph entrypoint is no longer available."""
     import scripts.generate_function_reference as generator
 
-    writes: list[Path] = []
-
-    def record_write_text(self: Path, data: str, *args: object, **kwargs: object) -> int:
-        writes.append(self.resolve())
-        return len(data)
-
-    monkeypatch.setattr(Path, "write_text", record_write_text)
-
-    generator.generate_function_call_graph_artifacts()
-
-    assert writes == [
-        generator.FUNCTION_CALL_GRAPH_DATA_PATH.resolve(),
-        generator.FUNCTION_CALL_GRAPH_DASHBOARD_PATH.resolve(),
-    ]
-
-
-def test_focused_call_graph_script_imports_and_compiles(monkeypatch):
-    """Verify the focused call graph entrypoint script is importable and valid."""
-    import importlib.util
-    import py_compile
-    import sys
-
-    script_path = ROOT / "scripts" / "generate_function_call_graph.py"
-    assert script_path.exists()
-    py_compile.compile(str(script_path), doraise=True)
-    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
-    spec = importlib.util.spec_from_file_location("generate_function_call_graph_entrypoint", script_path)
-    assert spec and spec.loader
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    assert callable(module.main)
+    assert not hasattr(generator, "generate_function_call_graph_artifacts")
+    assert not (ROOT / "scripts" / "generate_function_call_graph.py").exists()

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "schema": "fabricops_public_function_call_flows_v2",
-    "generated_at_utc": "2026-07-02T18:51:27.871863+00:00",
+    "generated_at_utc": "2026-07-02T19:44:38.277708+00:00",
     "source": "src/fabricops_kit",
     "public_function_source": "src/fabricops_kit/__init__.py::__all__"
   },

@@ -543,18 +543,17 @@ def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
 
 
 def test_data_agreement_widget_callable_inventory_roles_are_current():
-    """Verify generated widget inventory reflects the shared workflow role split."""
+    """Verify generated v2 callable-flow inventory reflects the widget role split."""
     import json
 
-    inventory = json.loads(Path("docs/reference/_data/function-call-graph.json").read_text(encoding="utf-8"))["function_inventory"]
-    rows = {row["qualified_name"]: row for row in inventory}
-    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"] == "Shared helper"
-    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["layer"] == "internal"
-    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["function_type"] == "Private helper"
-    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["layer"] == "private_helper"
+    flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
+    rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
+    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"] == "shared_function"
+    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["function_type"] == "private_function"
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
-    assert rows["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["signals"] == ["allowed_internal_role_call"]
-    assert rows["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["signals"] == ["allowed_internal_role_call"]
+    public_functions = {row["qualified_name"]: row for row in flow_data["public_functions"]}
+    assert public_functions["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["flow"][0]["function_type"] == "public_function"
+    assert public_functions["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["flow"][0]["function_type"] == "public_function"
 
 
 def test_config_public_import_contract_and_package_shape():
