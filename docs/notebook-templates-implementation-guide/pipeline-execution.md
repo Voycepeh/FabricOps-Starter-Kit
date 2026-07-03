@@ -1,6 +1,6 @@
 # 02 Pipeline Execution
 
-`02_pipeline` is the executable delivery notebook. It starts a guided pipeline context, reads data, prepares source and target table configs, runs guardrails, writes outputs, and records evidence for support and governance review. The notebook flow is intentionally small: establish context once, keep table settings visible, call reduced-API helpers, and let active defaults carry shared run metadata downstream.
+`02_pipeline` is the executable pipeline workflow notebook. It starts a guided pipeline context, reads data, prepares source and target table configs, runs guardrails, writes outputs, and records run details for support and governance review. The notebook flow is intentionally small: establish context once, keep table settings visible, call reduced-API helpers, and let active defaults carry shared run metadata downstream.
 
 ## Guided pipeline context startup
 
@@ -35,7 +35,7 @@ As a rule of thumb, small Warehouse reads are usually acceptable for narrow refe
 
 ## Pipeline table config preparation
 
-Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md) to enrich beginner-editable table settings into the config shape expected by guardrail and evidence helpers. The template prepares source configs before source profiling/checks and target configs before target profiling/checks.
+Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md) to enrich beginner-editable table settings into the config shape expected by guardrail and metadata helpers. The template prepares source configs before source profiling/checks and target configs before target profiling/checks.
 
 ![FabricOps pipeline guardrails](../assets/fabricops-pipeline-guardrails.png)
 
@@ -43,7 +43,7 @@ Use [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_c
 
 Guardrails are part of `02_pipeline`. They are the runtime checks that decide whether a run can continue, continue with warnings, or stop before writing pipeline outputs. They turn agreement and rule expectations into executable checks for schema, freshness, profile behaviour, and data quality.
 
-Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) for guardrail orchestration to evaluate table guardrails and write runtime evidence. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
+Use [`run_table_guardrails`](../api/reference/run_table_guardrails.md) for guardrail orchestration to evaluate table guardrails and write runtime results. Run profile checks before writes for non-blocking visibility, then run enforcement checks before publishing targets:
 
 ```python
 source_profile_results = run_table_guardrails(
@@ -73,7 +73,7 @@ target_enforcement_results = run_table_guardrails(
 
 `mode="profile"` is non-blocking by default, so the notebook can collect catalogue and guardrail visibility without stopping the run. `mode="enforce"` defaults `stop_on_failure=True`, so failed error-severity checks stop before unsafe target publication. Omitted `run_id`, `spark_session`, `pipeline_name`, `notebook_id`, `notebook_registry_id`, `agreement_id`, and `agreement_contract_version` values are resolved from the active pipeline context created by `widget_pipeline_bootstrap`.
 
-Guardrail results are not just UI messages. They are evidence rows and continuation decisions. A Warning-severity failure can continue with evidence; an Error-severity failure blocks before the next critical step.
+Guardrail results are not just UI messages. They are metadata rows and continuation decisions. A Warning-severity failure can continue with a recorded result; an Error-severity failure blocks before the next critical step.
 
 ## Contract expectation versus enforcement
 
@@ -134,9 +134,9 @@ Freshness is separate from profile behaviour: a table can follow its `profile_mo
 
 Profile mode options are `static_data`, `changing_data`, and `skip`. `static_data` profiles the full table as one baseline. `changing_data` requires `watermark_column` and profiles each distinct watermark value separately. `skip` returns `skipped` with `can_continue=true`.
 
-When previous accepted evidence exists, the current profile is compared to previous approved `METADATA_DATA_CATALOGUE` evidence. If no previous evidence exists, the current profile establishes the baseline. If differences are found, status depends on severity.
+When previous accepted profile rows exist, the current profile is compared to previous approved `METADATA_DATA_CATALOGUE` rows. If no previous profile rows exist, the current profile establishes the baseline. If differences are found, status depends on severity.
 
-`append` and `overwrite` are physical write modes only. They are not profile behaviour concepts. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed by governance or represented by superseding rule or evidence history.
+`append` and `overwrite` are physical write modes only. They are not profile behaviour concepts. Baselines are not silently reset inside `02_pipeline`; intentional blocked changes should be reviewed by governance or represented by superseding rule or profile history.
 
 ![FabricOps load behaviour guardrails](../assets/fabricops-load-behaviour-guardrails.png)
 
@@ -144,7 +144,7 @@ When previous accepted evidence exists, the current profile is compared to previ
 | --- | --- | --- |
 | `static_data` | The full table should remain stable. | Treat the full table as one profile group with `watermark_value="__FULL_TABLE__"`. Row count, schema signature, profile hash, and configured profile differences must match the previous accepted or passed full-table profile. |
 | `changing_data` | New business periods or partitions can arrive, but old periods must remain stable. | Require `watermark_column`, profile one group per watermark value, allow new watermark values, and fail or warn when a previously seen watermark group changes or disappears. |
-| `skip` | Profile behaviour should not run for the table. | Do not create profile-behaviour comparison evidence; other guardrails still run. |
+| `skip` | Profile behaviour should not run for the table. | Do not create profile-behaviour comparison rows; other guardrails still run. |
 
 ## DQ rules
 
@@ -156,7 +156,7 @@ DQ does not quarantine rows, write row-level failure metadata, filter invalid ro
 
 ## Guardrail authoring and governance handoff
 
-Guardrail authoring is still part of the pipeline workflow, not a separate public documentation page. After profiling evidence exists, the simplified `02_pipeline` flow can use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment.
+Guardrail authoring is still part of the pipeline workflow, not a separate public documentation page. After profiling rows exist, the simplified `02_pipeline` flow can use [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md) to pick a profiled table, [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md) and [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md) to author guardrail intent, and [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata.md) to author descriptive enrichment.
 
 For ungoverned tables, engineering-authored saves remain active and non-pending with `review_status="self_approved"`. For governed tables, authors can save drafts, submit rules for governance review, or apply rules immediately as `active_pending_governance_review` when pipeline continuity requires it.
 
@@ -168,7 +168,7 @@ Use explicit Fabric IO callables such as [`write_lakehouse_table`](../api/refere
 
 ## Lineage writing
 
-Use [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md) to append source-to-target lineage evidence to `METADATA_DATA_LINEAGE_TABLE`. The simplified flow writes lineage after successful target writes so the run summary can include lineage status.
+Use [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage.md) to append source-to-target lineage rows to `METADATA_DATA_LINEAGE_TABLE`. The simplified flow writes lineage after successful target writes so the run summary can include lineage status.
 
 ## Pipeline run summary
 
@@ -189,11 +189,11 @@ The summary helper derives status, guardrail rollups, target write status, linea
 
 Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md) to show profile or enforcement outcomes in `summary`, `detailed`, or `debug` mode. The display mode changes presentation only; the runtime result bundles remain available for continuation checks and run summary writing.
 
-## Guardrail evidence tables
+## Guardrail metadata tables
 
-| Evidence area | Metadata table | Why it matters during `02_pipeline` |
+| Metadata area | Metadata table | Why it matters during `02_pipeline` |
 | --- | --- | --- |
-| Profile/evidence | `METADATA_DATA_CATALOGUE` | Stores observed table/column profiles, profile hashes, watermark values, and run context for later comparison and review. |
+| Profile/catalogue | `METADATA_DATA_CATALOGUE` | Stores observed table/column profiles, profile hashes, watermark values, and run context for later comparison and review. |
 | Rule intent | `METADATA_GUARDRAIL_RULES` | Stores schema, freshness, profile-behaviour, and DQ rules that enforcement loads. |
 | Runtime results | `METADATA_GUARDRAIL_RESULTS` | Stores pass/warn/fail/skipped status, severity, continuation flag, reason, expected/actual values, and result payloads. |
 | Run summary | `METADATA_PIPELINE_RUNS` | Summarizes source/target counts, guardrail rollups, lineage/catalogue write status, and JSON detail. |
@@ -205,7 +205,7 @@ Use [`display_guardrail_results`](../api/reference/display_guardrail_results.md)
 - Keep source and target table config dictionaries beginner-editable, then let [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md) normalize them for runtime helpers.
 - Treat `append` and `overwrite` as physical write modes only; profile behaviour uses `static_data`, `changing_data`, or `skip`.
 - Use warning DQ rules for observability that should not block writes, and error DQ rules for checks that must stop publication.
-- Do not reset baselines silently in `02_pipeline`; intentional changes should be reviewed by governance or represented by superseding rule/evidence history.
+- Do not reset baselines silently in `02_pipeline`; intentional changes should be reviewed by governance or represented by superseding rule or profile history.
 
 ## Related navigation
 

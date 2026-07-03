@@ -2,15 +2,15 @@
 
 # FabricOps Starter Kit
 
-Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
+FabricOps Starter Kit is a lightweight starter kit for data teams working in Microsoft Fabric.
 
-FabricOps Starter Kit helps teams quickly bootstrap config driven Fabric notebook using reusable templates and a lightweight helper wheel.
+It brings together reusable notebook templates, helper functions, metadata tables, guardrails, and guided demos so Fabric notebook projects can start with a clearer structure.
 
-It gives teams a standardized operating model for configuration, notebook execution, metadata collection, and pipeline guardrails.
+Teams can configure workspaces, run pipelines, track lineage, review data quality checks, and maintain pipeline run history without building every support piece from scratch.
 
-<section class="fabricops-delivery-model" aria-labelledby="fabricops-delivery-model-heading" markdown="1">
+<section class="fabricops-delivery-model" aria-labelledby="fabricops-workflow-model-heading" markdown="1">
 
-## How FabricOps connects delivery teams { #fabricops-delivery-model-heading }
+## How FabricOps connects data teams { #fabricops-workflow-model-heading }
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
@@ -18,12 +18,12 @@ It gives teams a standardized operating model for configuration, notebook execut
 
 FabricOps helps governance, engineering, and analytics teams work from the same notebook flow.
 
-Governance captures agreement, enrichment, and pipeline guardrail evidence. 
-Engineering configures the environment, runs notebooks, and writes metadata. 
+Governance reviews agreement context, enrichment, and pipeline guardrail results.
+Engineering configures the environment, runs notebooks, and writes metadata tables.
 Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
 
-The shared metadata tables act as the handoff layer. 
-They record what was agreed, what ran, what passed, and what is ready for review. 
+The shared metadata tables act as the handoff layer.
+They record what was agreed, what ran, what passed, and what is ready for review.
 They abstract the important but tedious work into a simplified plug and play workflow that makes handover easy, even for new team members.
 
 </section>
@@ -51,7 +51,7 @@ They abstract the important but tedious work into a simplified plug and play wor
 
   <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>25</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Each public callable is documented as a standalone function, with supporting private functions, classes, and internal methods kept behind the scenes<!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
+    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Helper functions support the notebook templates and demo workflows, with supporting private functions, classes, and internal methods kept behind the scenes<!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
@@ -61,13 +61,13 @@ They abstract the important but tedious work into a simplified plug and play wor
 
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>11</strong><span>metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Written by functions and widgets during runtime for enforcement and review.</span>
+    <span class="fabricops-landing-card__body">Stores data about agreements, catalogue entries, lineage, guardrail results, notebook registry entries, and pipeline runs.</span>
   </a>
 </div>
 
 ## For maintainers
 
-FabricOps Starter Kit includes maintainer tooling to keep the framework clean, explainable, and safe to refactor as it grows. Use the Public Function Call Flows Dashboard to review public API architecture, inspect the selected callable inventory, and export focused cleanup packets.
+FabricOps Starter Kit includes maintainer tooling to keep the project clean, explainable, and safe to refactor as it grows. Use the Public Function Call Flows Dashboard to review public API architecture, inspect the selected callable inventory, and export focused cleanup packets.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="assets/public-function-call-flows-dashboard.html">

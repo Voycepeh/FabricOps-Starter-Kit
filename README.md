@@ -1,8 +1,8 @@
 # FabricOps Starter Kit
 
-Lightweight, notebook centric, plug and play starter kit for Microsoft Fabric.
+FabricOps Starter Kit helps data teams start Microsoft Fabric notebook projects with a clearer structure.
 
-FabricOps Starter Kit helps teams quickly bootstrap governed Fabric notebook delivery using reusable templates and a lightweight helper wheel.
+It provides reusable notebook templates, helper functions, metadata tables, guardrails, and guided demos so teams can configure workspaces, run pipelines, track lineage, review data quality checks, and maintain pipeline run history without building everything from scratch.
 
 <div align="center">
 
