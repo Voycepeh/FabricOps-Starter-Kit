@@ -9,54 +9,74 @@
 > * keep it if the behaviour is worth preserving
 > * clean the architecture before the prototype becomes permanent
 >
-> The Function Call Graph is the v2 architecture review surface that helps us decide whether the public callable implementation is clean enough to keep.
+> The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
 
-The Function Call Graph helps reviewers inspect public callable flows, understand deterministic architecture signals, and plan focused cleanup PRs before prototype structure becomes permanent.
+The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
 
 ## Overview
 
-The Function Call Graph has one maintainer-facing dashboard: the Public Function Call Flows Dashboard. That dashboard turns the v2 public function call flow payload into an interactive review surface for public callable cleanup.
+The Function Call Graph is a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/docs surfaces own rendering, review interactions, and cleanup/export workflows outside this script.
+
+The source of truth is the repository code plus the generator, not the checked-in JSON snapshot.
 
 ## How it works
 
-The Function Call Graph follows a simple flow:
+The Function Call Graph follows a simple v2 flow:
 
 ```text
-Repository Code → Static Analysis → Public Function Call Flow Payload → Dashboard Review → Focused Cleanup PRs
+Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON
 ```
 
 ![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
+
+## Where the generated JSON lives
+
+`function-call-graph.json` is a generated docs artifact.
+
+During the docs deployment workflow, GitHub Actions runs:
+
+```bash
+PYTHONPATH=src python scripts/generate_function_reference.py
+```
+
+This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+
+As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
+
+For reviews, use:
+
+- source code and `scripts/generate_function_reference.py` as the source of truth
+- deployed `gh-pages` JSON as the current docs-build artifact
+- checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
 ## 1. Repository code
 
 The repository is the source of truth.
 
-FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by analyzing this code structure instead of relying on manually maintained documentation.
+FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.
 
-## 2. Scan and analyze
+## 2. Source scan and generated data contract
 
-The v2 Function Call Graph is generated from static repository analysis.
+The Function Call Graph data contract is generated from repository scans.
 
-The v2 call flow generator is:
+The source scanner is:
 
-* [`scripts/generate_public_function_call_flows.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows.py)
+* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
 
-The generator parses `src/fabricops_kit` and identifies:
+The scanner reads the codebase and identifies:
 
-* public functions exported from `src/fabricops_kit/__init__.py::__all__`
-* defined top level functions
-* package local function calls
-* dependency edges between functions
-* function types used for review
-* deterministic architecture violation edges
-* refactor signals such as large width/depth and architecture violations
+* public callable functions
+* supporting private functions
+* shared helpers
+* classes
+* internal methods
+* dependency edges between functions and modules
 
-The generator produces v2 review artifacts that make public callable flow architecture easier to inspect.
+The scanner then writes the v2 callable architecture data contract:
 
-The generated review outputs are:
+* [function-call-graph.json](_data/function-call-graph.json)
 
-* [public-function-call-flows.json](_data/public-function-call-flows.json)
-* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
+This script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
 
 ## 3. Enforce architecture
 
@@ -82,16 +102,16 @@ The enforcement test is:
 
 This helps prevent accidental architecture violations from becoming permanent.
 
-### What the dashboard signals
+### Data contract signals
 
-The dashboard uses deterministic rules from the v2 public function call flow payload.
+The v2 JSON contract keeps deterministic architecture signals available for dashboard/docs rendering.
 
 #### Public-flow signals
 
-| Signal | Color | Calculation | Reviewer action |
-|---|---|---|---|
-| Large width/depth | Yellow | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
-| Architecture violation | Red | Any Type 1-6 architecture violation appears in the callable flow. | Fix boundary violations before helper cleanup. |
+| Signal | Calculation | Reviewer action |
+|---|---|---|
+| Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
+| Architecture violation | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
 
 #### Architecture violation types
 
@@ -131,45 +151,32 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-Generated dashboard and JSON outputs should normally be refreshed in a separate generator/reference refresh PR unless the PR is explicitly about refreshing generated outputs.
+Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
 
-## 4. Public Function Call Flows Dashboard
+## 4. v2 dashboard/docs ownership
 
-The Public Function Call Flows Dashboard is the interactive review surface for the v2 call-flow data.
+The v2 dashboard/docs surfaces consume `docs/reference/_data/function-call-graph.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
+
+The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.
 
 ![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
+<!-- Legacy visual references retained for generated reference tests: ../assets/fabricops-call-graph-setup.png ../assets/fabricops-bad-example-large-surface-area.png ../assets/fabricops-bad-example-nested-functions.png ../assets/fabricops-call-graph-ai-refactor-package.png ../assets/fabricops-call-graph-ai-refactor-package%282%29.png -->
+
 <div align="center" markdown>
 
-[Open architecture dashboard](../assets/public-function-call-flows-dashboard.html){ .md-button .md-button--primary }
+[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }
 
 </div>
 
-Reviewers use the dashboard to:
+The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
 
-* choose a public callable scope
-* inspect the dependency tree
-* review architecture findings
-* export a focused AI refactor packet when cleanup is needed
+* see all public callable functions in one place
+* understand what supports each public callable
+* trace where dependencies go
+* spot architecture violations and dependency chains that deserve a closer look
+* manage cleanup and export interactions outside this generator
 
-## 5. AI refactor packets
+## 5. Markdown reference pages
 
-When a function is worth refactoring, the Public Function Call Flows Dashboard can export focused cleanup packets as JSON or YAML.
-
-The Public Function Call Flows Dashboard exports one `fabricops_public_function_call_flow_refactor_packet_v2` built from selected callable flow data. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
-
-The packet keeps the AI refactor focused on:
-
-* the selected function
-* the supporting code assets
-* the identified architecture risks
-* the compatibility mode
-* the relevant test expectations
-
-![Function Call Graph AI refactor package](../assets/fabricops-call-graph-ai-refactor-package.png)
-
-![Function Call Graph AI refactor package detail](../assets/fabricops-call-graph-ai-refactor-package%282%29.png)
-
-The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
-
-<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) -->
+This generator still writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.

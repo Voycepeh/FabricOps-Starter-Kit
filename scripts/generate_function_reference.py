@@ -33,6 +33,9 @@ AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
+# Generated during local reference refreshes and CI docs builds.
+# The docs deploy workflow publishes the regenerated artifact to gh-pages;
+# it does not commit regenerated JSON back to main.
 FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
@@ -4036,7 +4039,189 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global function call graph Markdown page."""
     del flow_data
-    return '# Function Call Graph\n\n> **First make it exist. Then make it good.**\n>\n> AI helps FabricOps move quickly from idea to working public callable function:\n>\n> * create the function quickly\n> * test whether the behaviour is useful\n> * keep it if the behaviour is worth preserving\n> * clean the architecture before the prototype becomes permanent\n>\n> The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.\n\nThe Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.\n\n## Overview\n\nThe Function Call Graph is now a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/app owns rendering, review interactions, and cleanup/export workflows outside this script.\n\n## How it works\n\nThe Function Call Graph follows a simple v2 flow:\n\n```text\nRepository code → source scan → function-call-graph.json → v2 dashboard/app consumes JSON\n```\n\n![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)\n\n## 1. Repository code\n\nThe repository is the source of truth.\n\nFabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.\n\n## 2. Source scan and generated data contract\n\nThe Function Call Graph data contract is generated from repository scans.\n\nThe source scanner is:\n\n* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)\n\nThe scanner reads the codebase and identifies:\n\n* public callable functions\n* supporting private functions\n* shared helpers\n* classes\n* internal methods\n* dependency edges between functions and modules\n\nThe scanner then writes the v2 callable architecture data contract:\n\n* [function-call-graph.json](_data/function-call-graph.json)\n\nThis script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.\n\n## 3. Enforce architecture\n\nAI generated code can work correctly but still leave behind messy integration patterns:\n\n* duplicated helpers\n* private functions used across files\n* wide dependency surfaces\n* public callables depending on other public callables\n* too many steps across thin wrapper functions\n\nThe question is not only whether the code works.\n\nThe question is whether the structure is still simple enough to keep.\n\nThe Function Call Graph is protected by an enforcement test that keeps the callable architecture intentional as the codebase changes.\n\nThe enforcement test makes sure public callables, shared helpers, and generated reference outputs do not drift silently.\n\nThe enforcement test is:\n\n* [`tests/contract/test_callable_architecture_validation.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/tests/contract/test_callable_architecture_validation.py)\n\nThis helps prevent accidental architecture violations from becoming permanent.\n\n### Data contract signals\n\nThe v2 JSON contract keeps deterministic architecture signals available for dashboard/app rendering.\n\n#### Public-flow signals\n\n| Signal | Calculation | Reviewer action |\n|---|---|---|\n| Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |\n| Architecture violation | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |\n\n#### Architecture violation types\n\n| Type | Rule | Why it matters |\n|---|---|---|\n| Type 1 | Public function calls another public function directly | Public callables should own their workflow rather than chaining public entry points. |\n| Type 2 | Shared function calls a public function directly | Shared helpers should not depend on public entry points. |\n| Type 3 | Private function calls a public function directly | Private implementation details should not call public entry points. |\n| Type 4 | Shared function calls a private function from another file | Shared helpers should not reach into another file’s private implementation. |\n| Type 5 | Private function calls a private function from another file | Private helpers should stay file-local. |\n| Type 6 | Private function calls a shared function directly | Private implementation details may need boundary review if they depend outward on shared helpers. |\n\n#### Inventory suggestions\n\n| Suggestion | Calculation | Reviewer action |\n|---|---|---|\n| Inline candidate | Called by exactly one parent, not used elsewhere, not recursive, not called multiple times by the same parent | Consider absorbing the helper into its caller. |\n| Promote to shared | Private function called by more than one distinct caller | Consider moving it to a shared helper boundary. |\n\n#### Metric definitions\n\n| Metric | Definition |\n|---|---|\n| Width | Direct package-local calls from the selected public function. |\n| Depth | Deepest nested call path. |\n| Scope | Total downstream functions reached by the selected public function flow. |\n\nThe preferred public callable shape is still:\n\n```text\npublic owner file → shared.py → internal implementation details\n```\n\nThe pattern that usually needs review is:\n\n```text\npublic callable → helper → helper → helper\n```\n\nBecause these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.\n\n## 4. v2 dashboard/app ownership\n\nThe v2 dashboard/app consumes `docs/reference/_data/function-call-graph.json` and owns visual rendering, review interactions, and cleanup/export workflows elsewhere.\n\nThe reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.\n\n![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)\n\n<!-- Legacy visual references retained for generated reference tests: ../assets/fabricops-call-graph-setup.png ../assets/fabricops-bad-example-large-surface-area.png ../assets/fabricops-bad-example-nested-functions.png ../assets/fabricops-call-graph-ai-refactor-package.png ../assets/fabricops-call-graph-ai-refactor-package%282%29.png -->\n\n<div align="center" markdown>\n\n[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }\n\n</div>\n\nThe v2 dashboard/app can use the JSON contract to help reviewers:\n\n* see all public callable functions in one place\n* understand what supports each public callable\n* trace where dependencies go\n* spot architecture violations and dependency chains that deserve a closer look\n* manage cleanup and export interactions outside this generator\n\n## 5. Markdown reference pages\n\nThis generator still writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.\n'
+    return """# Function Call Graph
+
+> **First make it exist. Then make it good.**
+>
+> AI helps FabricOps move quickly from idea to working public callable function:
+>
+> * create the function quickly
+> * test whether the behaviour is useful
+> * keep it if the behaviour is worth preserving
+> * clean the architecture before the prototype becomes permanent
+>
+> The Function Call Graph is the maintainability checkpoint that helps us decide whether the implementation is clean enough to keep.
+
+The Function Call Graph helps reviewers inspect public callable functions, understand review signals, and decide the next cleanup step before refactoring.
+
+## Overview
+
+The Function Call Graph is a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/docs surfaces own rendering, review interactions, and cleanup/export workflows outside this script.
+
+The source of truth is the repository code plus the generator, not the checked-in JSON snapshot.
+
+## How it works
+
+The Function Call Graph follows a simple v2 flow:
+
+```text
+Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON
+```
+
+![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
+
+## Where the generated JSON lives
+
+`function-call-graph.json` is a generated docs artifact.
+
+During the docs deployment workflow, GitHub Actions runs:
+
+```bash
+PYTHONPATH=src python scripts/generate_function_reference.py
+```
+
+This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+
+As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
+
+For reviews, use:
+
+- source code and `scripts/generate_function_reference.py` as the source of truth
+- deployed `gh-pages` JSON as the current docs-build artifact
+- checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
+
+## 1. Repository code
+
+The repository is the source of truth.
+
+FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.
+
+## 2. Source scan and generated data contract
+
+The Function Call Graph data contract is generated from repository scans.
+
+The source scanner is:
+
+* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+
+The scanner reads the codebase and identifies:
+
+* public callable functions
+* supporting private functions
+* shared helpers
+* classes
+* internal methods
+* dependency edges between functions and modules
+
+The scanner then writes the v2 callable architecture data contract:
+
+* [function-call-graph.json](_data/function-call-graph.json)
+
+This script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
+
+## 3. Enforce architecture
+
+AI generated code can work correctly but still leave behind messy integration patterns:
+
+* duplicated helpers
+* private functions used across files
+* wide dependency surfaces
+* public callables depending on other public callables
+* too many steps across thin wrapper functions
+
+The question is not only whether the code works.
+
+The question is whether the structure is still simple enough to keep.
+
+The Function Call Graph is protected by an enforcement test that keeps the callable architecture intentional as the codebase changes.
+
+The enforcement test makes sure public callables, shared helpers, and generated reference outputs do not drift silently.
+
+The enforcement test is:
+
+* [`tests/contract/test_callable_architecture_validation.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/tests/contract/test_callable_architecture_validation.py)
+
+This helps prevent accidental architecture violations from becoming permanent.
+
+### Data contract signals
+
+The v2 JSON contract keeps deterministic architecture signals available for dashboard/docs rendering.
+
+#### Public-flow signals
+
+| Signal | Calculation | Reviewer action |
+|---|---|---|
+| Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
+| Architecture violation | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
+
+#### Architecture violation types
+
+| Type | Rule | Why it matters |
+|---|---|---|
+| Type 1 | Public function calls another public function directly | Public callables should own their workflow rather than chaining public entry points. |
+| Type 2 | Shared function calls a public function directly | Shared helpers should not depend on public entry points. |
+| Type 3 | Private function calls a public function directly | Private implementation details should not call public entry points. |
+| Type 4 | Shared function calls a private function from another file | Shared helpers should not reach into another file’s private implementation. |
+| Type 5 | Private function calls a private function from another file | Private helpers should stay file-local. |
+| Type 6 | Private function calls a shared function directly | Private implementation details may need boundary review if they depend outward on shared helpers. |
+
+#### Inventory suggestions
+
+| Suggestion | Calculation | Reviewer action |
+|---|---|---|
+| Inline candidate | Called by exactly one parent, not used elsewhere, not recursive, not called multiple times by the same parent | Consider absorbing the helper into its caller. |
+| Promote to shared | Private function called by more than one distinct caller | Consider moving it to a shared helper boundary. |
+
+#### Metric definitions
+
+| Metric | Definition |
+|---|---|
+| Width | Direct package-local calls from the selected public function. |
+| Depth | Deepest nested call path. |
+| Scope | Total downstream functions reached by the selected public function flow. |
+
+The preferred public callable shape is still:
+
+```text
+public owner file → shared.py → internal implementation details
+```
+
+The pattern that usually needs review is:
+
+```text
+public callable → helper → helper → helper
+```
+
+Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
+
+## 4. v2 dashboard/docs ownership
+
+The v2 dashboard/docs surfaces consume `docs/reference/_data/function-call-graph.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
+
+The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.
+
+![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
+
+<!-- Legacy visual references retained for generated reference tests: ../assets/fabricops-call-graph-setup.png ../assets/fabricops-bad-example-large-surface-area.png ../assets/fabricops-bad-example-nested-functions.png ../assets/fabricops-call-graph-ai-refactor-package.png ../assets/fabricops-call-graph-ai-refactor-package%282%29.png -->
+
+<div align="center" markdown>
+
+[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }
+
+</div>
+
+The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
+
+* see all public callable functions in one place
+* understand what supports each public callable
+* trace where dependencies go
+* spot architecture violations and dependency chains that deserve a closer look
+* manage cleanup and export interactions outside this generator
+
+## 5. Markdown reference pages
+
+This generator still writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.
+"""
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
     """Indent every physical Markdown line for MkDocs Material blocks."""
@@ -5408,7 +5593,6 @@ def main() -> None:
             f'    - Private helpers to review: {callable_metrics["hidden_private_helpers"]}',
             '',
             '    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.',
-            '    - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.',
             '    - [Function Call Graph](function-call-graph.md): review the v2 callable architecture JSON contract, dependency view, and nested helper summary.',
             '    - [function-call-graph.json](_data/function-call-graph.json): v2 data contract consumed by dashboard/app rendering outside this generator.',
             '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
