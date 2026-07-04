@@ -5,7 +5,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from scripts import generate_public_function_call_flows as flows
+from scripts import generate_public_function_call_flows_dashboard as dashboard
+from scripts import generate_public_function_call_flows_json as flows
 
 
 def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
@@ -140,7 +141,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     root, pkg, init_path = write_project(tmp_path)
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
-    html = flows.render_dashboard(payload)
+    html = dashboard.render_dashboard(payload)
 
     assert "Width &gt; 10 or Depth &gt; 5" in html
 
@@ -301,7 +302,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
 
 def test_dashboard_derives_signals_from_old_shape_payload() -> None:
     """Validate dashboard JavaScript derives V2 signals from old-shape JSON."""
-    html = flows.render_dashboard({
+    html = dashboard.render_dashboard({
         "public_functions": [{
             "function_name": "public_root",
             "qualified_name": "pkg.public_root",
@@ -356,7 +357,7 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     root, pkg, init_path = write_project(tmp_path)
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
-    html = flows.render_dashboard(payload)
+    html = dashboard.render_dashboard(payload)
 
     assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in html
     assert "public-function-call-flows-json" not in html
@@ -420,7 +421,7 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     root, pkg, init_path = write_project(tmp_path)
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
-    html = flows.render_dashboard(payload)
+    html = dashboard.render_dashboard(payload)
 
     assert "return {codex_prompt:buildCodexPrompt(evidence),evidence_packet:evidence}" in html
     assert "schema:'fabricops_public_function_call_flow_refactor_packet_v3'" in html
@@ -463,11 +464,75 @@ def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
     root, pkg, init_path = write_project(tmp_path)
     payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
 
-    html = flows.render_dashboard(payload, embed_json=True)
+    html = dashboard.render_dashboard(payload, embed_json=True)
 
     assert "public-function-call-flows-json" in html
     assert "fabricops_public_function_call_flows_v2" in html
 
+
+def test_json_generator_writes_only_json(tmp_path: Path) -> None:
+    """Validate the JSON writer does not create dashboard HTML."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+    data_path = tmp_path / "docs" / "reference" / "_data" / "public-function-call-flows.json"
+    dashboard_path = tmp_path / "docs" / "assets" / "public-function-call-flows-dashboard.html"
+
+    flows.write_json(payload, data_path=data_path)
+
+    assert data_path.exists()
+    assert not dashboard_path.exists()
+
+
+def test_dashboard_generator_writes_only_dashboard_html(tmp_path: Path) -> None:
+    """Validate the dashboard writer does not write JSON."""
+    data_path = tmp_path / "docs" / "reference" / "_data" / "public-function-call-flows.json"
+    dashboard_path = tmp_path / "docs" / "assets" / "public-function-call-flows-dashboard.html"
+
+    dashboard.write_dashboard(dashboard_path=dashboard_path)
+
+    assert dashboard_path.exists()
+    assert not data_path.exists()
+    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in dashboard_path.read_text(encoding="utf-8")
+
+
+def test_dashboard_generator_does_not_scan_source() -> None:
+    """Validate dashboard generation has no source-scanning dependency."""
+    assert not hasattr(dashboard, "discover_modules")
+    assert not hasattr(dashboard, "build_payload")
+    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in dashboard.render_dashboard()
+
+
+def test_generated_json_includes_source_traceability_fields(tmp_path: Path) -> None:
+    """Validate source traceability fields are present in public and flow records."""
+    root, pkg, init_path = write_project(tmp_path)
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+    public_a = next(item for item in payload["public_functions"] if item["function_name"] == "public_a")
+    flow_row = public_a["flow"][0]
+    required_public_fields = {
+        "function_name", "qualified_name", "source_path", "source_start_line", "source_end_line",
+        "width", "scope", "depth", "files_touched", "refactor_signals",
+    }
+    required_flow_fields = {
+        "function_name", "qualified_name", "source_path", "source_start_line", "source_end_line",
+        "function_type", "parent_qualified_name", "architecture_violations", "violation_types",
+        "violation_details",
+    }
+
+    assert required_public_fields <= public_a.keys()
+    assert required_flow_fields <= flow_row.keys()
+
+
+def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) -> None:
+    """Validate JSON output is byte-stable across consecutive generator writes."""
+    root, pkg, init_path = write_project(tmp_path)
+    data_path = tmp_path / "public-function-call-flows.json"
+
+    flows.write_json(flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path), data_path=data_path)
+    first = data_path.read_text(encoding="utf-8")
+    flows.write_json(flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path), data_path=data_path)
+    second = data_path.read_text(encoding="utf-8")
+
+    assert first == second
 
 def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
     """Validate callable flow docs describe the deterministic V2 signal model."""

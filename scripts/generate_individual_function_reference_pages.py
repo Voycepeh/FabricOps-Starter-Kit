@@ -1,4 +1,4 @@
-"""Generate function reference helpers."""
+"""Generate individual function reference pages and reference landing pages."""
 
 from __future__ import annotations
 
@@ -21,17 +21,12 @@ INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
 REFERENCE_DATA_DIR = ROOT / "docs" / "reference" / "_data"
-MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
-DEPENDENCY_METADATA_PATH = REFERENCE_DATA_DIR / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
-AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
-FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
-REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
 # Generated during local reference refreshes and CI docs builds.
 # The docs deploy workflow publishes the regenerated artifact to gh-pages;
@@ -39,8 +34,6 @@ FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-gra
 FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
-GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
-GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 LANDING_PAGE_PATH = ROOT / "docs" / "index.md"
 LANDING_STATS_PATH = REFERENCE_DATA_DIR / "landing-stats.json"
 
@@ -758,87 +751,6 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
 
 
 
-def parse_glossary_metadata() -> dict[str, dict[str, Any]]:
-    """Return glossary metadata keyed by normalized canonical terms and aliases."""
-    if not GLOSSARY_SOURCE_PATH.exists():
-        return {}
-    entries = json.loads(GLOSSARY_SOURCE_PATH.read_text(encoding="utf-8"))
-    glossary: dict[str, dict[str, Any]] = {}
-    required_fields = {
-        "term",
-        "aliases",
-        "category",
-        "short_definition",
-        "long_definition",
-        "preferred_usage",
-        "avoid_usage",
-    }
-    for entry in entries:
-        missing = sorted(required_fields - set(entry))
-        term = str(entry.get("term", "")).strip()
-        if not term:
-            raise RuntimeError("Glossary entries must include a term.")
-        if missing:
-            raise RuntimeError(f"Glossary entry {term!r} is missing: {', '.join(missing)}")
-        if not entry.get("short_definition") or not entry.get("long_definition"):
-            raise RuntimeError(f"Glossary entry {term!r} must include short and long definitions.")
-        aliases = entry.get("aliases")
-        if not isinstance(aliases, list):
-            raise RuntimeError(f"Glossary entry {term!r} aliases must be a list.")
-        canonical_key = term.lower()
-        if canonical_key in glossary:
-            raise RuntimeError(f"Duplicate glossary term or alias: {term}")
-        glossary[canonical_key] = entry
-        for alias in aliases:
-            alias_key = str(alias).strip().lower()
-            if not alias_key:
-                continue
-            if alias_key in glossary:
-                raise RuntimeError(f"Duplicate glossary term or alias: {alias}")
-            glossary[alias_key] = entry
-    return glossary
-
-
-def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
-    """Render the public glossary page from structured glossary metadata."""
-    lines = [
-        "# FabricOps glossary",
-        "",
-        "Searchable source of truth for FabricOps documentation wording and page-level glossary references.",
-        "",
-    ]
-    canonical_entries = list({id(entry): entry for entry in glossary.values()}.values())
-    for category in sorted({str(entry["category"]) for entry in canonical_entries}):
-        lines.extend([f"## {category}", ""])
-        category_entries = [entry for entry in canonical_entries if entry["category"] == category]
-        lines.append('<div class="glossary-definition-list">')
-        lines.append("")
-        for entry in sorted(category_entries, key=lambda row: row["term"].lower()):
-            term = str(entry["term"])
-            lines.extend(
-                [
-                    f'<section class="glossary-definition-card" id="{markdown_anchor(term)}">',
-                    f'<h2>{term}</h2>',
-                    f"<p>{entry['long_definition']}</p>",
-                ]
-            )
-            if entry.get("aliases"):
-                lines.append(
-                    f'<p class="glossary-definition-meta"><strong>Aliases:</strong> '
-                    f"{', '.join(f'`{item}`' for item in entry['aliases'])}</p>"
-                )
-            lines.extend(
-                [
-                    f'<p class="glossary-definition-meta"><strong>Preferred usage:</strong> {entry["preferred_usage"]}</p>',
-                    f'<p class="glossary-definition-meta"><strong>Avoid usage:</strong> {entry["avoid_usage"]}</p>',
-                    "</section>",
-                    "",
-                ]
-            )
-        lines.extend(["</div>", ""])
-    GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
-
-
 
 def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
     """Render conceptual documentation links for a callable page."""
@@ -858,33 +770,6 @@ def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
         seen.add(key)
         lines.append(f"- [{title}]({path})")
     lines.append("")
-    return lines
-
-def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, Any]]) -> list[str]:
-    """Render compact glossary-backed key terms for a callable page."""
-    if not glossary_terms:
-        return []
-    lines: list[str] = ['<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">']
-    seen: set[str] = set()
-    for term in glossary_terms:
-        key = term.lower()
-        entry = glossary.get(key)
-        if entry is None:
-            raise RuntimeError(f"Callable references unknown glossary term: {term}")
-        canonical_key = str(entry["term"]).lower()
-        if canonical_key in seen:
-            continue
-        seen.add(canonical_key)
-        term_text = str(entry["term"])
-        display_term = term_text if "_" in term_text else term_text.capitalize()
-        anchor = markdown_anchor(str(entry["term"]))
-        lines.append(
-            f'<span class="glossary-chip">'
-            f'<span class="glossary-chip-label">{display_term}</span>'
-            f'<span class="glossary-chip-definition">{entry["short_definition"]}</span> '
-            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></span>'
-        )
-    lines.extend(["</div>", "", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
 
 
@@ -4056,37 +3941,37 @@ The Function Call Graph helps reviewers inspect public callable functions, under
 
 ## Overview
 
-The Function Call Graph is a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/docs surfaces own rendering, review interactions, and cleanup/export workflows outside this script.
+The Function Call Graph is the explanatory page for the v2 public-function call-flow architecture contract. `scripts/generate_public_function_call_flows_json.py` owns the JSON contract, `scripts/generate_public_function_call_flows_dashboard.py` owns the dashboard frontend, and this generator owns the Markdown explanation plus individual function reference pages.
 
-The source of truth is the repository code plus the generator, not the checked-in JSON snapshot.
+The source of truth is the repository code plus the JSON-contract generator, not the checked-in JSON snapshot.
 
 ## How it works
 
 The Function Call Graph follows a simple v2 flow:
 
 ```text
-Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON
+Repository code → source scan → public-function-call-flows.json → dashboard/docs consume JSON
 ```
 
 ![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
 
 ## Where the generated JSON lives
 
-`function-call-graph.json` is a generated docs artifact.
+`docs/reference/_data/public-function-call-flows.json` is the v2 generated architecture contract.
 
 During the docs deployment workflow, GitHub Actions runs:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
+PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 ```
 
-This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+This regenerates `docs/reference/_data/public-function-call-flows.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
 
 As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
 
 For reviews, use:
 
-- source code and `scripts/generate_function_reference.py` as the source of truth
+- source code and `scripts/generate_public_function_call_flows_json.py` as the JSON-contract source of truth
 - deployed `gh-pages` JSON as the current docs-build artifact
 - checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
@@ -4100,11 +3985,11 @@ FabricOps public callable functions, shared helpers, private functions, classes,
 
 The Function Call Graph data contract is generated from repository scans.
 
-The source scanner is:
+The JSON-contract generator is:
 
-* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+* [`scripts/generate_public_function_call_flows_json.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows_json.py)
 
-The scanner reads the codebase and identifies:
+The generator reads the codebase and identifies:
 
 * public callable functions
 * supporting private functions
@@ -4113,11 +3998,11 @@ The scanner reads the codebase and identifies:
 * internal methods
 * dependency edges between functions and modules
 
-The scanner then writes the v2 callable architecture data contract:
+The generator then writes the v2 callable architecture data contract:
 
-* [function-call-graph.json](_data/function-call-graph.json)
+* [public-function-call-flows.json](_data/public-function-call-flows.json)
 
-This script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
+`scripts/generate_individual_function_reference_pages.py` separately generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
 
 ## 3. Enforce architecture
 
@@ -4196,9 +4081,9 @@ Because these outputs are generated, update the scanner and architecture rules f
 
 ## 4. v2 dashboard/docs ownership
 
-The v2 dashboard/docs surfaces consume `docs/reference/_data/function-call-graph.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
+The v2 dashboard/docs surfaces consume `docs/reference/_data/public-function-call-flows.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
 
-The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.
+`scripts/generate_public_function_call_flows_dashboard.py` owns the public-function call-flow dashboard frontend and AI cleanup packet interactions. Keep dashboard rendering out of the individual function reference page generator.
 
 ![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
@@ -4206,7 +4091,7 @@ The reference generator no longer produces the retired static dashboard HTML or 
 
 <div align="center" markdown>
 
-[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }
+[public-function-call-flows.json](_data/public-function-call-flows.json){ .md-button .md-button--primary }
 
 </div>
 
@@ -4216,7 +4101,7 @@ The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
 * understand what supports each public callable
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
-* manage cleanup and export interactions outside this generator
+* manage cleanup and export interactions in the dashboard frontend
 
 ## 5. Markdown reference pages
 
@@ -4895,10 +4780,9 @@ def main() -> None:
     docs_metadata = parse_docs_metadata()
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
-    glossary = parse_glossary_metadata()
-    _render_glossary_page(glossary)
-    metadata_table_count = generate_metadata_table_reference()
-
+    # This generator writes individual function pages and the function reference landing page.
+    # Module pages, glossary surfaces, manifests, dashboard assets, and JSON data artifacts
+    # stay outside this generator output contract.
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
@@ -4910,12 +4794,6 @@ def main() -> None:
             "__all__ exports must have PUBLIC_SYMBOL_DOCS function_type=callable or function_type=class: "
             + ", ".join(invalid_public_exports)
         )
-    unknown_glossary_terms = sorted(
-        {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
-    )
-    if unknown_glossary_terms:
-        raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
-
     # PUBLIC_SYMBOL_DOCS may retain metadata for internalized helpers so generated
     # implementation relationship details remain useful on public parent pages.
 
@@ -4990,10 +4868,7 @@ def main() -> None:
     def _module_name(qn: str) -> str:
         parts = qn.split(".")
         return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
-    MODULE_DIR.mkdir(parents=True, exist_ok=True)
-    for generated_page in MODULE_DIR.glob("*.md"):
-        if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
-            generated_page.unlink()
+    # Module pages are outside this generator's output contract.
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     if "config" not in discovered_doc_modules:
@@ -5018,7 +4893,6 @@ def main() -> None:
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]
-        module_md = MODULE_DIR / f"{module}.md"
         public_in_module = [s for s in symbol_map.values() if s.public_module == module]
         is_internal_only = not public_in_module
         title = f"# `{module}` module" if not is_internal_only else f"# `{module}` module (internal)"
@@ -5252,11 +5126,9 @@ def main() -> None:
             raise RuntimeError(f"Full module API section should not be rendered for {module}")
         if any(line.strip().startswith("::: fabricops_kit.") for line in lines):
             raise RuntimeError(f"Mkdocstrings directives should not be rendered on module page for {module}")
-        module_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+        # Module page output intentionally skipped by this generator.
         module_index_lines.append(f"- [`{module}`]({module}.md)")
 
-    for stale_module_page in MODULE_DIR.glob("*.md"):
-        stale_module_page.unlink()
     discovered_set = set(discovered_doc_modules)
     documentation_group_modules = {"metadata"}
     module_sidebar_rows = [
@@ -5287,7 +5159,7 @@ def main() -> None:
         middle, after = rest.split(end_marker, 1)
         mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
 
-    MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
+    # MkDocs navigation updates are outside this generator's output contract.
 
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
@@ -5336,7 +5208,7 @@ def main() -> None:
         })
     manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
     manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
-    MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
+    # Manifest output intentionally skipped by this generator.
     dependency_callables: dict[str, dict[str, Any]] = {}
     for qn in sorted(node_by_qn):
         node = node_by_qn[qn]
@@ -5441,14 +5313,9 @@ def main() -> None:
             "has_standalone_reference_page": in_root_exports,
             "decision": decision,
         })
-    CALLABLE_SURFACE_AUDIT_PATH.write_text(json.dumps(audit_rows, indent=2) + "\n", encoding="utf-8")
+    # Callable surface audit output intentionally skipped by this generator.
 
-    dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
-    dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
-    DEPENDENCY_METADATA_PATH.write_text(
-        json.dumps({"callables": dependency_callables_sorted, "modules": dependency_modules_sorted}, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # Dependency metadata output intentionally skipped by this generator.
 
     template_paths_in_metadata = {flow.get("template_path") for flow in template_flow_docs}
     missing_template_paths = sorted(
@@ -5592,11 +5459,9 @@ def main() -> None:
             f'    - Supporting functions: {callable_metrics["supporting_functions"]}',
             f'    - Private helpers to review: {callable_metrics["hidden_private_helpers"]}',
             '',
-            '    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.',
-            '    - [Function Call Graph](function-call-graph.md): review the v2 callable architecture JSON contract, dependency view, and nested helper summary.',
-            '    - [function-call-graph.json](_data/function-call-graph.json): v2 data contract consumed by dashboard/app rendering outside this generator.',
-            '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
-            '    - Agent metadata: `_data/automation-manifest.json`.',
+            '    - [Function Call Graph](function-call-graph.md): explanatory page for the v2 public-function call-flow architecture contract.',
+            '    - [public-function-call-flows.json](_data/public-function-call-flows.json): v2 architecture contract generated by `scripts/generate_public_function_call_flows_json.py`.',
+            '    - [Public function call-flow dashboard](../assets/public-function-call-flows-dashboard.html): frontend generated by `scripts/generate_public_function_call_flows_dashboard.py`.',
             '    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.',
             '    - Skill file: `.agents/skills/fabricops/SKILL.md`.',
             '',
@@ -5698,13 +5563,9 @@ def main() -> None:
 
     generate_internal_pages = generate_internal_reference_pages()
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    LEGACY_CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    for generated_page in [
-        *CALLABLE_REFERENCE_DIR.glob("*.md"),
-        *LEGACY_CALLABLE_REFERENCE_DIR.glob("*.md"),
-        *INTERNAL_REFERENCE_DIR.glob("*.md"),
-    ]:
+    # Legacy callable pages are outside this generator's output contract.
+    # Internal reference pages are outside this generator's output contract.
+    for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
@@ -5812,16 +5673,6 @@ def main() -> None:
                 usage_guidance_body.extend(["### Additional context", "", expanded_purpose])
             if usage_guidance_body:
                 usage_guidance_lines = ["## Usage guidance", "", *usage_guidance_body, ""]
-            key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
-            glossary_section_lines: list[str] = []
-            if key_term_lines:
-                glossary_terms = list(dict.fromkeys(metadata.get("glossary_terms", [])))
-                glossary_body = (
-                    markdown_details("Glossary terms", key_term_lines, class_name="reference-glossary-details")
-                    if len(glossary_terms) > 5
-                    else key_term_lines
-                )
-                glossary_section_lines = ["## Glossary", "", *glossary_body, ""]
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
             preferred_example = _render_preferred_example(short_name, signature, metadata)
@@ -5885,7 +5736,6 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
-                *glossary_section_lines,
                 *see_also_lines,
             ]
         else:
@@ -5957,7 +5807,7 @@ def main() -> None:
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
-            (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+            pass
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
@@ -5996,22 +5846,13 @@ def main() -> None:
             "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],
         })
-    AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
-    FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
-    landing_stats = generate_landing_stats(
-        public_exports=public,
-        function_manifest=function_manifest,
-        metadata_table_count=metadata_table_count,
-        callable_flow_data=callable_flow_data,
-    )
-    update_landing_page_counts(landing_stats)
-    REFACTOR_SIGNALS_PATH.write_text(
-        json.dumps(refactor_signals_manifest, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # AI/agent manifest output intentionally skipped by this generator.
+    # Function manifest output intentionally skipped by this generator.
+    # Landing-page count updates are outside this generator's output contract.
+    # Refactor signal JSON output intentionally skipped by this generator.
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
-    FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
-    _remove_stale_function_taxonomy_audit()
+    # Function call graph JSON output intentionally skipped by this generator.
+    # Taxonomy audit cleanup is outside this generator's output contract.
 
 
 

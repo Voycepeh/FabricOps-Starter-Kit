@@ -63,14 +63,6 @@ ValueError for blank custom widget field keys.
 
 - Required configuration values are missing or invalid.
 
-## Glossary
-
-<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Governance review</span><span class="glossary-chip-definition">Human review of profiles, enrichment, guardrails, agreements, and lifecycle decisions.</span> <a href="../../../reference/glossary/#governance-review">Full definition</a></span>
-</div>
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
 No related guides documented.

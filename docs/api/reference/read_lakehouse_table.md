@@ -112,15 +112,6 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 - Spark cannot access the table.
 - The caller lacks permission to read the lakehouse.
 
-## Glossary
-
-<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Source data</span><span class="glossary-chip-definition">Input data read from configured upstream files, tables, Lakehouses, or Warehouses before transformation.</span> <a href="../../../reference/glossary/#source-data">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Metadata lakehouse</span><span class="glossary-chip-definition">Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></span>
-</div>
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)

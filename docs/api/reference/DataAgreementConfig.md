@@ -63,15 +63,6 @@ ValueError for blank custom widget field keys.
 
 - Required configuration values are missing or invalid.
 
-## Glossary
-
-<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Data agreement</span><span class="glossary-chip-definition">FabricOps agreement record that captures ownership, steward context, usage, and expectations.</span> <a href="../../../reference/glossary/#data-agreement">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Data steward</span><span class="glossary-chip-definition">Person or role accountable for reviewing and maintaining data context and decisions.</span> <a href="../../../reference/glossary/#data-steward">Full definition</a></span>
-</div>
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
 No related guides documented.

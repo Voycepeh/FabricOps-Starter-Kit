@@ -164,36 +164,23 @@ def test_supported_public_api_imports_are_callable_and_root_exported():
         assert getattr(fabricops_kit, function_name) is function
 
 
-def test_supported_public_api_matches_generated_inventory_classification():
+def test_supported_public_api_matches_generated_call_flow_contract():
     """Verify contract entries remain generated v2 callable-flow entries."""
     root = Path(__file__).parents[2]
-    function_manifest = json.loads(
-        (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
-    )
     callable_flow = json.loads(
         (root / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8")
     )
     dashboard_path = root / "docs" / "assets" / "public-function-call-flows-dashboard.html"
 
-    manifest_public = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Callable"}
-    manifest_classes = {row["qualified_name"] for row in function_manifest if row.get("classification") == "Public class"}
     flow_public = {row["function_name"] for row in callable_flow["public_functions"]}
 
     assert dashboard_path.exists()
     assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
-    assert manifest_public == APPROVED_V1_QUALIFIED_CALLABLES | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
-    assert manifest_classes == CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES
     assert flow_public == {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES}
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
     """Verify public signatures keep the same parameter names and required flags."""
-    root = Path(__file__).parents[2]
-    function_manifest = json.loads(
-        (root / "docs" / "reference" / "_data" / "function-manifest.json").read_text(encoding="utf-8")
-    )
-    source_locations = {row["qualified_name"]: row for row in function_manifest}
-
     snapshots = {}
     for qualified_name in SUPPORTED_PUBLIC_API:
         module_name, function_name = qualified_name.rsplit(".", maxsplit=1)
@@ -480,7 +467,6 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
         },
     }
 
-    assert set(snapshots) <= set(source_locations)
 
 
 def test_root_exports_only_approved_v1_template_callables():
@@ -622,12 +608,12 @@ def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exporte
         assert not hasattr(fabricops_kit, name)
 
 
-def test_reference_generation_script_succeeds_for_reference_and_module_docs():
-    """Verify reference generation script succeeds without restoring removed pages."""
+def test_individual_reference_generation_script_succeeds_without_module_docs():
+    """Verify individual reference generation succeeds without restoring removed pages."""
     root = Path(__file__).parents[2]
     env = {**os.environ, "PYTHONPATH": str(root / "src")}
     result = subprocess.run(
-        [sys.executable, "scripts/generate_function_reference.py"],
+        [sys.executable, "scripts/generate_individual_function_reference_pages.py"],
         cwd=root,
         env=env,
         text=True,

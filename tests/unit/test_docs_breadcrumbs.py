@@ -18,7 +18,6 @@ def _section(title: str, children: list[object]):
 def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
     """Verify breadcrumbs follow configured nav hierarchy."""
     current = _page("setup_notebook", "api/reference/setup_notebook/")
-    module_page = _page("config", "api/modules/config/")
     nav = SimpleNamespace(
         items=[
             _page("Home", ""),
@@ -26,7 +25,6 @@ def test_breadcrumbs_follow_configured_nav_hierarchy() -> None:
                 "Function & DQ Rules Reference",
                 [
                     _section("List of functions", [_page("Overview", "reference/"), current]),
-                    _section("Functions by Modules", [module_page]),
                 ],
             ),
         ]

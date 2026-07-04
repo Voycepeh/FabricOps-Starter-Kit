@@ -52,4 +52,3 @@ Use these pages after confirming the v1.0.0 public API release contract:
 - [Release Management](../development/release-management.md): release process and checklist guidance.
 - [Release Traceability](../release-info.md): published release traceability and release evidence.
 - [Documentation Versioning](../development/docs-versioning.md): docs versioning expectations for release preparation.
-- [Glossary](glossary.md): canonical terms for maintainer and user-facing documentation wording.

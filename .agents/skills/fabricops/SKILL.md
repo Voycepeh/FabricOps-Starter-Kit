@@ -85,7 +85,7 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
 - Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
 - Do not manually edit generated reference files unless source inputs or generator behavior require it.
-- If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the existing reference outputs with `PYTHONPATH=src python scripts/generate_function_reference.py` and run relevant tests.
+- If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the individual function reference pages with `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` and run relevant tests.
 
 ## Workflow
 
