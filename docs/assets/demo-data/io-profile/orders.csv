@@ -1,6 +1,8 @@
 order_id,customer_id,order_date,status,amount,channel
-1001,501,2026-01-05,shipped,125.50,web
-1002,502,2026-01-06,processing,89.99,store
-1003,503,2026-01-07,shipped,42.25,partner
-1004,501,2026-01-08,cancelled,18.00,web
-1005,504,2026-01-09,shipped,310.75,store
+1001,C001,2026-07-01,OPEN,120.5,web
+1002,C002,2026-07-01,CLOSED,88.0,store
+1003,C003,2026-07-02,OPEN,0.0,partner
+1004,C004,2026-07-02,CANCELLED,,web
+1005,C002,2026-07-03,CLOSED,230.9,web
+1006,C005,2026-07-03,OPEN,15.25,store
+1007,C006,2026-07-04,CLOSED,9999.99,web
