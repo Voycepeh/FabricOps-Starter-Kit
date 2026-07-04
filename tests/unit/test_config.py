@@ -196,32 +196,18 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
         PathConfig(paths={})
 
 
-def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
-    """Verify setup metadata tables directly creates canonical metadata tables."""
+def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch):
+    """Verify setup metadata tables routes bootstrap writes through Lakehouse IO."""
     from fabricops_kit.config.metadata_schemas import (
         CANONICAL_METADATA_TABLES,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
 
-    class Writer:
-        def __init__(self, spark, table):
-            self.spark = spark
-            self.table = table
-        def format(self, _value):
-            return self
-        def mode(self, _value):
-            return self
-        def option(self, _key, _value):
-            return self
-        def saveAsTable(self, table):  # noqa: N802
-            self.spark.created_tables.append(table)
-            self.spark.tables[table] = self.spark.pending_columns
-            self.spark.created_schemas[table] = self.spark.pending_schema
-
     class DataFrame:
         def __init__(self, spark, columns):
-            self.write = Writer(spark, columns)
+            self.spark = spark
+            self.columns = columns
 
     class Table:
         def __init__(self, columns):
@@ -239,18 +225,35 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
             self.created_schemas = {}
             self.pending_schema = None
 
-        def table(self, table):
-            if table not in self.tables:
-                raise RuntimeError(f"Table {table} does not exist")
-            return Table(self.tables[table])
-
         def createDataFrame(self, rows, schema=None):  # noqa: N802
             assert rows == []
             self.pending_schema = schema
             self.pending_columns = schema.fieldNames()
             return DataFrame(self, self.pending_columns)
 
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+
+    def read_table(table_name, *, target, schema=None, spark_session=None, context=None):
+        assert target == "metadata"
+        assert schema is None
+        assert context["env"] == "dev"
+        if table_name not in spark.tables:
+            raise RuntimeError(f"Table {table_name} does not exist")
+        return Table(spark.tables[table_name])
+
+    def write_table(df, table_name, *, target, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs):
+        assert target == "metadata"
+        assert schema is None
+        assert mode == "overwrite"
+        assert options == {"overwriteSchema": "true"}
+        assert verbose is False
+        spark.created_tables.append(table_name)
+        spark.tables[table_name] = spark.pending_columns
+        spark.created_schemas[table_name] = spark.pending_schema
+
     spark = Spark()
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
     result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", require_active_steward=True)
 
     assert result["status"] == "ready"
@@ -263,7 +266,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables():
     }
 
 
-def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
+def test_setup_metadata_tables_ready_without_active_steward_when_not_required(monkeypatch):
     """Verify setup metadata tables does not require an active steward by default."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
@@ -278,10 +281,12 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
     class Spark:
         def __init__(self):
             self.schemas = {name: schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
-        def table(self, table):
-            return Table(self.schemas[table])
 
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    spark = Spark()
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: Table(spark.schemas[table_name]))
+
+    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev")
 
     assert result["status"] == "ready"
     assert result["data_agreement"]["status"] == "not_ready"
@@ -289,7 +294,7 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required():
     assert result["tables"] == CANONICAL_METADATA_TABLES
 
 
-def test_setup_metadata_tables_reports_explicit_metadata_schema():
+def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
     """Verify setup metadata tables reports explicit schema-qualified names."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
@@ -303,17 +308,19 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema():
 
     class Spark:
         def __init__(self):
-            self.schemas = {f"METADATA.{name}": schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
-        def table(self, table):
-            return Table(self.schemas[table])
+            self.schemas = {name: schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
 
-    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", metadata_schema="METADATA")
+    spark = Spark()
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]))
+
+    result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", metadata_schema="METADATA")
 
     assert result["metadata_schema"] == "METADATA"
     assert result["fully_qualified_tables"] == [f"METADATA.{name}" for name in CANONICAL_METADATA_TABLES]
 
 
-def test_setup_metadata_tables_reports_configured_metadata_schema():
+def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     """Verify setup metadata tables reports configured metadata schema."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
@@ -339,15 +346,33 @@ def test_setup_metadata_tables_reports_configured_metadata_schema():
 
     class Spark:
         def __init__(self):
-            self.schemas = {f"dbo.{name}": schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
-        def table(self, table):
-            return Table(self.schemas[table])
+            self.schemas = {name: schema.fieldNames() for name, schema in metadata_table_schema_registry().items()}
 
-    result = setup_metadata_tables(spark=Spark(), config=cfg, env="dev")
+    spark = Spark()
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]))
+
+    result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
 
     assert result["metadata_schema"] == "dbo"
     assert result["fully_qualified_tables"] == [f"dbo.{name}" for name in CANONICAL_METADATA_TABLES]
 
+
+
+def test_setup_metadata_tables_non_missing_read_error_includes_original_exception(monkeypatch):
+    """Verify corrupt metadata tables fail with the original read exception details."""
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            raise AssertionError("corrupt table reads must not create replacement tables")
+
+    def read_table(_table_name, **_kwargs):
+        raise ValueError("Delta log is corrupt")
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    with pytest.raises(RuntimeError, match="Original ValueError: Delta log is corrupt"):
+        setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
 
 def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
