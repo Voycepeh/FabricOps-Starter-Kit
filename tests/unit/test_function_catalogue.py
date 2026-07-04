@@ -138,7 +138,7 @@ def _core_template_called_public() -> set[str]:
 
 def _direct_template_call_set() -> set[str]:
     """Return public function names directly called by all template code cells."""
-    from scripts.generate_function_reference import (
+    from scripts.generate_individual_function_reference_pages import (
         _direct_public_template_symbols,
         parse_public_exports,
         parse_template_flow_docs,

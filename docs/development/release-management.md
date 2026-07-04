@@ -32,13 +32,13 @@ Fabric-specific runtime-only changes should still be evaluated by their effect o
 
 ## Refresh generated references
 
-Before tagging a release, refresh generated function references and manifests so the published API reference matches the release commit:
+Before tagging a release, refresh generated individual function references so the published API reference matches the release commit:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 ```
 
-Commit any resulting generated reference, module navigation, or manifest updates with the release-prep changes. Routine implementation-only PRs do not need this refresh unless they intentionally change the public API contract or reference catalogue.
+Commit any resulting generated individual function reference page updates with the release-prep changes. Routine implementation-only PRs do not need this refresh unless they intentionally change the public API contract or reference catalogue.
 
 ## Local validation
 

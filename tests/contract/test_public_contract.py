@@ -622,12 +622,12 @@ def test_required_v1_imports_remain_available_and_prompt_helpers_are_not_exporte
         assert not hasattr(fabricops_kit, name)
 
 
-def test_reference_generation_script_succeeds_for_reference_and_module_docs():
-    """Verify reference generation script succeeds without restoring removed pages."""
+def test_individual_reference_generation_script_succeeds_without_module_docs():
+    """Verify individual reference generation succeeds without restoring removed pages."""
     root = Path(__file__).parents[2]
     env = {**os.environ, "PYTHONPATH": str(root / "src")}
     result = subprocess.run(
-        [sys.executable, "scripts/generate_function_reference.py"],
+        [sys.executable, "scripts/generate_individual_function_reference_pages.py"],
         cwd=root,
         env=env,
         text=True,

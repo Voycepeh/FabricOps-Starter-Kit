@@ -63,7 +63,7 @@ approved. See `docs/reference/public-function-architecture.md`.
 - Run the architecture guardrail tests that validate source code directly.
 - Run dashboard snapshot tests when the PR intentionally changes dashboard behavior, generated-reference outputs, or generated-reference snapshot expectations.
 - Treat generated reference validation as optional unless the PR is explicitly a reference/docs refresh or changes generator/dashboard/reference-contract logic.
-- When changing `scripts/generate_function_reference.py`, dashboard rendering, embedded call-graph contracts, architecture classification, callable inventory/public flow generation, or tests that intentionally assert generated output, update relevant tests and verify the generator works locally or in CI.
+- When changing `scripts/generate_individual_function_reference_pages.py`, individual callable page rendering, reference landing-page rendering, or tests that intentionally assert those generated outputs, update relevant tests and verify the generator works locally or in CI.
 - Confirm no new underscore function is surfaced as an Internal function.
 - Confirm no private helper appears in Public API Surface KPIs.
 - Confirm public-to-public calls are not introduced.
@@ -87,7 +87,7 @@ approved. See `docs/reference/public-function-architecture.md`.
 - Public callable docs are sourced from `src/fabricops_kit/` docstrings plus source metadata.
 - `docs/reference/*`, `docs/api/modules/*`, and related navigation are generated artifacts.
 - Do not manually treat generated docs as source of truth; source code, docstrings, `__all__`, and reference metadata remain the source inputs.
-- Routine implementation changes to existing functions do not require running `scripts/generate_function_reference.py`.
+- Routine implementation changes to existing functions do not require running `scripts/generate_individual_function_reference_pages.py`.
 
 ## Generated reference artifacts and Codex runs
 
@@ -98,16 +98,15 @@ before MkDocs builds the site.
 - Agents must not manually edit generated reference outputs as source of truth.
 - Ordinary source PR: do not commit generated reference artifacts; the docs
   build regenerates them before deployment.
-- Generator/dashboard/reference-contract PR: when changing
-  `scripts/generate_function_reference.py`, dashboard rendering logic, embedded
-  call-graph data contracts, architecture classification, callable inventory or
-  public flow generation, or tests that intentionally assert generated
-  dashboard/reference output, update relevant tests and verify the generator
-  works locally or in CI.
+- Generator/reference-page PR: when changing
+  `scripts/generate_individual_function_reference_pages.py`, individual callable
+  page rendering, reference landing-page rendering, or tests that intentionally
+  assert those generated reference-page outputs, update relevant tests and
+  verify the generator works locally or in CI.
 - GitHub Pages/docs builds must run
-  `PYTHONPATH=src python scripts/generate_function_reference.py` before
-  `mkdocs build` so the dashboard and reference files are produced in the build
-  workspace before the site artifact is built.
+  `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` before
+  `mkdocs build` so individual callable pages and reference landing pages are produced in the
+  build workspace before the site artifact is built.
 
 Avoid these generated files and folders in normal Codex source PRs:
 
@@ -171,7 +170,7 @@ changes; do not manually edit generated outputs.
 Generator validation command:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 ```
 
 
@@ -193,7 +192,7 @@ Source inputs:
 - `src/fabricops_kit/**/*.py`
 - `src/fabricops_kit/__init__.py::__all__`
 - `src/fabricops_kit/docs_metadata.py`
-- `scripts/generate_function_reference.py`
+- `scripts/generate_individual_function_reference_pages.py`
 
 ## Interactive widget API rules
 
@@ -285,7 +284,7 @@ Applies to all `METADATA_*` tables (including future additions).
 
 - Update source metadata, tests, or generator logic first; do not manually edit
   generated markdown, JSON, dashboard HTML, or navigation as source of truth.
-- Run or validate `PYTHONPATH=src python scripts/generate_function_reference.py`
+- Run or validate `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py`
   locally or in CI.
 - Do not commit generated reference artifacts in ordinary source PRs; the
   docs/GitHub Pages workflow regenerates them before MkDocs builds the site.
@@ -332,7 +331,7 @@ Run these checks for normal source PRs:
 - `uv run python -m pytest -q`
 - `uv run ruff check .`
 
-Do not include `scripts/generate_function_reference.py` as a normal validation
+Do not include `scripts/generate_individual_function_reference_pages.py` as a normal validation
 command.
 
 ## Glossary-backed documentation wording
