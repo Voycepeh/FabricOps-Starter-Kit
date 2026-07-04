@@ -294,7 +294,7 @@ def test_function_call_graph_json_is_populated() -> None:
 def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify callable flow docs and v2 JSON contracts are generated."""
     flow_page = REFERENCE_DIR / "function-call-graph.md"
-    flow_data_path = REFERENCE_DIR / "_data" / "function-call-graph.json"
+    flow_data_path = REFERENCE_DIR / "_data" / "public-function-call-flows.json"
     dashboard_path = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
     inventory_path = ROOT / "docs" / "assets" / "function-inventory.html"
     exported_symbols = set(_exported_symbols())
@@ -319,15 +319,15 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "> **First make it exist. Then make it good.**" in flow_text
     assert "## How it works" in flow_text
     assert "## Where the generated JSON lives" in flow_text
-    assert "Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON" in flow_text
-    assert "The source of truth is the repository code plus the generator, not the checked-in JSON snapshot." in flow_text
-    assert "PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py" in flow_text
+    assert "Repository code → source scan → public-function-call-flows.json → dashboard/docs consume JSON" in flow_text
+    assert "The source of truth is the repository code plus the JSON-contract generator, not the checked-in JSON snapshot." in flow_text
+    assert "PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py" in flow_text
     assert "deployed `gh-pages` JSON as the current docs-build artifact" in flow_text
     assert "checked-in JSON in `main` only as a snapshot" in flow_text
     assert "## 4. v2 dashboard/docs ownership" in flow_text
-    assert "The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI." in flow_text
+    assert "scripts/generate_public_function_call_flows_dashboard.py" in flow_text
     assert "## 5. Markdown reference pages" in flow_text
-    assert "[function-call-graph.json](_data/function-call-graph.json)" in flow_text
+    assert "[public-function-call-flows.json](_data/public-function-call-flows.json)" in flow_text
 
     for stale_flow_phrase in [
         "Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)",

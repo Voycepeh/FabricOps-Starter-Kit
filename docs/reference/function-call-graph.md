@@ -15,37 +15,37 @@ The Function Call Graph helps reviewers inspect public callable functions, under
 
 ## Overview
 
-The Function Call Graph is a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/docs surfaces own rendering, review interactions, and cleanup/export workflows outside this script.
+The Function Call Graph is the explanatory page for the v2 public-function call-flow architecture contract. `scripts/generate_public_function_call_flows_json.py` owns the JSON contract, `scripts/generate_public_function_call_flows_dashboard.py` owns the dashboard frontend, and this generator owns the Markdown explanation plus individual function reference pages.
 
-The source of truth is the repository code plus the generator, not the checked-in JSON snapshot.
+The source of truth is the repository code plus the JSON-contract generator, not the checked-in JSON snapshot.
 
 ## How it works
 
 The Function Call Graph follows a simple v2 flow:
 
 ```text
-Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON
+Repository code → source scan → public-function-call-flows.json → dashboard/docs consume JSON
 ```
 
 ![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
 
 ## Where the generated JSON lives
 
-`function-call-graph.json` is a generated docs artifact.
+`docs/reference/_data/public-function-call-flows.json` is the v2 generated architecture contract.
 
 During the docs deployment workflow, GitHub Actions runs:
 
 ```bash
-PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 ```
 
-This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+This regenerates `docs/reference/_data/public-function-call-flows.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
 
 As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
 
 For reviews, use:
 
-- source code and `scripts/generate_individual_function_reference_pages.py` as the source of truth
+- source code and `scripts/generate_public_function_call_flows_json.py` as the JSON-contract source of truth
 - deployed `gh-pages` JSON as the current docs-build artifact
 - checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
@@ -59,11 +59,11 @@ FabricOps public callable functions, shared helpers, private functions, classes,
 
 The Function Call Graph data contract is generated from repository scans.
 
-The source scanner is:
+The JSON-contract generator is:
 
-* [`scripts/generate_individual_function_reference_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_individual_function_reference_pages.py)
+* [`scripts/generate_public_function_call_flows_json.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows_json.py)
 
-The scanner reads the codebase and identifies:
+The generator reads the codebase and identifies:
 
 * public callable functions
 * supporting private functions
@@ -72,11 +72,11 @@ The scanner reads the codebase and identifies:
 * internal methods
 * dependency edges between functions and modules
 
-The scanner then writes the v2 callable architecture data contract:
+The generator then writes the v2 callable architecture data contract:
 
-* [function-call-graph.json](_data/function-call-graph.json)
+* [public-function-call-flows.json](_data/public-function-call-flows.json)
 
-This script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
+`scripts/generate_individual_function_reference_pages.py` separately generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
 
 ## 3. Enforce architecture
 
@@ -155,9 +155,9 @@ Because these outputs are generated, update the scanner and architecture rules f
 
 ## 4. v2 dashboard/docs ownership
 
-The v2 dashboard/docs surfaces consume `docs/reference/_data/function-call-graph.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
+The v2 dashboard/docs surfaces consume `docs/reference/_data/public-function-call-flows.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
 
-The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.
+`scripts/generate_public_function_call_flows_dashboard.py` owns the public-function call-flow dashboard frontend and AI cleanup packet interactions. Keep dashboard rendering out of the individual function reference page generator.
 
 ![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
@@ -165,7 +165,7 @@ The reference generator no longer produces the retired static dashboard HTML or 
 
 <div align="center" markdown>
 
-[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }
+[public-function-call-flows.json](_data/public-function-call-flows.json){ .md-button .md-button--primary }
 
 </div>
 
@@ -175,7 +175,7 @@ The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
 * understand what supports each public callable
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
-* manage cleanup and export interactions outside this generator
+* manage cleanup and export interactions in the dashboard frontend
 
 ## 5. Markdown reference pages
 
