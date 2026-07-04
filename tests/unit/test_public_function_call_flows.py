@@ -388,27 +388,29 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Downloaded unused cleanup packet." in html
     assert "Download orphan cleanup packet" not in html
     assert "Export scope" in html
-    assert "Full selected flow" in html
-    assert "Checked functions only" in html
-    assert "Inline candidates only" in html
-    assert "Architecture violations only" in html
-    assert "Promote-to-shared candidates only" in html
+    assert "Full public-function flow" in html
+    assert "Current scoped helper flow" in html
+    assert "Visible inventory rows only" in html
+    assert "Selected inventory rows only" in html
     assert "Cleanup mode" in html
     assert "Breaking cleanup" in html
     assert "Preserve compatibility" in html
-    assert "Default:</strong> the packet includes a ready-to-paste prompt for the full selected flow plus raw evidence." in html
-    assert "All functions in this selected flow will be included." in html
-    assert "Only checked rows from this flow will be included." in html
-    assert "Only deterministic inline candidate functions from this flow will be included." in html
-    assert "Only functions with Type 1–Type 6 architecture violations from this flow will be included." in html
-    assert "Only promote-to-shared candidate functions from this flow will be included." in html
+    assert "Default:</strong> the packet includes a ready-to-paste prompt for the full public-function flow plus raw evidence." in html
+    assert "Export scope controls what goes into the Codex packet, independent of the current inventory filter." in html
+    assert "All ${exportedCount} functions in the selected public-function flow will be exported." in html
+    assert "Only the ${exportedCount} functions in the current scoped helper branch will be exported." in html
+    assert "Only the ${exportedCount} currently visible inventory rows will be exported." in html
+    assert "Only the ${exportedCount} manually selected inventory rows will be exported." in html
     assert "functions will be exported" in html
     assert "getFunctionsForExportScope" in html
     assert "buildCleanupPacketFilename" in html
-    assert "fabricops-codex-cleanup_${cleanupModeSlug(cleanupMode)}_${exportScopeSlug(exportScope)}_${functionCount}-functions_${timestamp}.json" in html
+    assert "fabricops-${cleanupModeSlug(cleanupMode)}-cleanup-${String(publicFunctionName||'selected-public-function').replace(/[^A-Za-z0-9_]+/g,'-')}-${exportScopeSlug(exportScope)}-${functionCount}-functions.json" in html
     assert "exported_function_count:exportedFunctionCount" in html
     assert "exported_functions:exportedFunctions.map(packetFields)" in html
     assert "Included by full flow" in html
+    assert "Visible in current scope: ${visibleCount} functions" in html
+    assert "Included in export flow: ${exportedFunctions.length} functions" in html
+    assert "Inventory is currently narrowed to this helper branch." in html
     assert "checkEnabled=exportScope()==='checked_functions_only'" in html
     assert "Export selected packet as YAML" not in html
     assert "Copy AI refactor prompt" not in html
@@ -444,18 +446,15 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "Run targeted tests first" in html
     assert "Acceptance criteria:" in html
     assert "clean the complete selected public callable flow" in html
-    assert "clean only the explicitly checked/exported functions" in html
-    assert "Checked/exported functions:" in html
-    assert "clean deterministic inline candidates only" in html
-    assert "Inline candidates:" in html
-    assert "move the logic beside the public callable as private local helpers" in html
-    assert "Delete obsolete helpers after cleanup" in html
-    assert "remove Type 1 to Type 6 architecture violations only" in html
-    assert "Violating parent/child edges:" in html
-    assert "Fix boundary rules with the smallest valid seam" in html
-    assert "review promote-to-shared candidates called by more than one distinct parent" in html
-    assert "Promote-to-shared candidates and caller counts:" in html
-    assert "Update imports/tests only where directly needed" in html
+    assert "clean only the current scoped helper branch" in html
+    assert "Scoped/exported functions:" in html
+    assert "clean only the currently visible inventory rows" in html
+    assert "Visible/exported functions:" in html
+    assert "clean only the manually selected inventory rows" in html
+    assert "Selected/exported functions:" in html
+    assert "Do not clean sibling helper branches unless required" in html
+    assert "Do not clean hidden filtered rows or sibling helper branches" in html
+    assert "Do not clean sibling functions, downstream helpers, or adjacent violations" in html
     assert "docs/assets/function-call-graph-dashboard.html" not in html
 
 
