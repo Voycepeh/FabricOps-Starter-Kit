@@ -26,19 +26,8 @@ CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
-MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
 FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
-# Generated during local reference refreshes and CI docs builds.
-# The docs deploy workflow publishes the regenerated artifact to gh-pages;
-# it does not commit regenerated JSON back to main.
-FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
-CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
-FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
-LANDING_PAGE_PATH = ROOT / "docs" / "index.md"
-LANDING_STATS_PATH = REFERENCE_DATA_DIR / "landing-stats.json"
 
-METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata"
-METADATA_REFERENCE_OVERVIEW = ROOT / "docs" / "reference" / "metadata.md"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
@@ -735,21 +724,6 @@ def parse_template_flow_docs() -> list[dict[str, Any]]:
         if (is_assign or is_annassign) and node.value is not None:
             return ast.literal_eval(node.value)
     raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from reference_docs_metadata.py")
-
-
-def parse_module_docs_metadata() -> list[dict[str, Any]]:
-    """Parse module docs metadata."""
-    tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
-    for node in tree.body:
-        is_assign = isinstance(node, ast.Assign) and any(
-            isinstance(t, ast.Name) and t.id == "MODULE_DOCS_METADATA" for t in node.targets
-        )
-        is_annassign = isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "MODULE_DOCS_METADATA"
-        if (is_assign or is_annassign) and node.value is not None:
-            return ast.literal_eval(node.value)
-    raise RuntimeError("Could not parse MODULE_DOCS_METADATA from reference_docs_metadata.py")
-
-
 
 
 def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
@@ -1482,12 +1456,6 @@ def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: 
     ):
         return assigned_area, name_area, purpose_area
     return None
-
-
-
-def _remove_stale_function_taxonomy_audit() -> None:
-    """Remove the retired taxonomy audit generated for the old public model."""
-    FUNCTION_TAXONOMY_AUDIT_PATH.unlink(missing_ok=True)
 
 
 
@@ -4394,378 +4362,6 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
     return "\n".join(lines) + "\n"
 
 
-def _metadata_slug(table_name: str) -> str:
-    """Return a stable markdown filename for a metadata table."""
-    return table_name.lower()
-
-
-def _default_reference_config() -> Any:
-    """Return a minimal validated config for schema registry generation."""
-    from types import SimpleNamespace
-
-    from fabricops_kit.config import FrameworkConfig, PathConfig
-
-    metadata_store = SimpleNamespace(
-        workspace_id="reference-workspace",
-        item_id="reference-metadata-lakehouse",
-        name="Reference Metadata Lakehouse",
-        kind="lakehouse",
-    )
-    return FrameworkConfig(
-        path_config=PathConfig(paths={"dev": {"metadata": metadata_store}}),
-    )
-
-
-_METADATA_TABLE_PURPOSES = {
-    "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
-    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
-    "METADATA_DATA_AGREEMENT_EVIDENCE": "Supporting agreement files and evidence metadata captured during agreement intake.",
-    "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
-    "METADATA_DATA_CATALOGUE": "Observed table and column profile evidence. This is runtime evidence, not approved guardrail intent.",
-    "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
-    "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
-    "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
-    "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage evidence written by pipeline runs.",
-    "METADATA_PIPELINE_RUNS": "Pipeline run summary evidence for execution, guardrail, lineage, and catalogue status.",
-    "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
-}
-
-_METADATA_TABLE_RELATIONSHIPS = {
-    "METADATA_DATA_STEWARD": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_data_steward"], "read_by": ["widget_render_data_agreement", "widget_pipeline_bootstrap"]},
-    "METADATA_DATA_AGREEMENT": {"templates": ["01_agreement.ipynb", "02_pipeline.ipynb"], "written_by": ["widget_render_data_agreement"], "read_by": ["widget_pipeline_bootstrap", "get_selected_agreement", "write_pipeline_run_summary"]},
-    "METADATA_DATA_AGREEMENT_EVIDENCE": {"templates": ["01_agreement.ipynb"], "written_by": ["widget_render_agreement_evidence"], "read_by": ["widget_pipeline_bootstrap"]},
-    "METADATA_NOTEBOOK_REGISTRY": {"templates": ["02_pipeline.ipynb"], "written_by": ["widget_pipeline_bootstrap"], "read_by": ["get_selected_agreement", "write_pipeline_lineage", "write_pipeline_run_summary"]},
-    "METADATA_DATA_CATALOGUE": {
-        "templates": ["02_pipeline.ipynb", "03_governance.ipynb", "99_explore.ipynb"],
-        "written_by": ["run_table_guardrails"],
-        "read_by": [
-            "widget_select_guardrail_target",
-            "widget_review_guardrail_governance",
-            "run_table_guardrails",
-        ],
-    },
-    "METADATA_ENRICHMENT_RULES": {"templates": ["02_pipeline.ipynb", "03_governance.ipynb"], "written_by": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"], "read_by": ["widget_review_guardrail_governance"]},
-    "METADATA_GUARDRAIL_RULES": {"templates": ["02_pipeline.ipynb", "03_governance.ipynb"], "written_by": ["widget_author_schema_freshness_profile_rules", "widget_author_dq_rules", "widget_review_guardrail_governance"], "read_by": ["run_table_guardrails", "widget_review_guardrail_governance"]},
-    "METADATA_GUARDRAIL_RESULTS": {"templates": ["02_pipeline.ipynb"], "written_by": ["run_table_guardrails"], "read_by": ["display_guardrail_results", "widget_review_guardrail_governance"]},
-    "METADATA_DATA_LINEAGE_TABLE": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_lineage"], "read_by": ["widget_review_guardrail_governance"]},
-    "METADATA_PIPELINE_RUNS": {"templates": ["02_pipeline.ipynb"], "written_by": ["write_pipeline_run_summary"], "read_by": ["widget_review_guardrail_governance"]},
-    "METADATA_DATA_ACCESS": {"templates": ["External access-log inventory collection, not a FabricOps notebook template."], "written_by": [], "read_by": [], "related_step": "External inventory ingestion / governance access review."},
-}
-
-
-def _function_link(symbol: str, relative_prefix: str = "../") -> str:
-    """Return a markdown link to a public page or module anchor for internal support."""
-    if symbol in public_callable_names():
-        return f"[`{symbol}`]({relative_prefix}api/reference/{symbol}.md)"
-    return f"`{symbol}`"
-
-
-def _format_symbol_list(symbols: list[str], relative_prefix: str = "../") -> str:
-    """Return linked function names or a fallback label."""
-    return ", ".join(_function_link(symbol, relative_prefix) for symbol in symbols) if symbols else "Not currently discoverable."
-
-
-def _schema_rows(schema: Any) -> list[dict[str, str]]:
-    """Return serializable rows from the canonical metadata schema helper."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_rows
-
-    return [
-        {
-            "name": str(row["name"]),
-            "type": str(row["type"]),
-            "required": "Nullable" if row["nullable"] else "Required",
-        }
-        for row in metadata_table_schema_rows(schema)
-    ]
-
-
-def _metadata_registry_without_pyspark() -> dict[str, Any]:
-    """Return schema registry with small Spark type stand-ins when PySpark is unavailable."""
-    import sys
-    import types
-
-    class _Type:
-        def __init__(self, label: str) -> None:
-            self._label = label
-
-        def simpleString(self) -> str:
-            return self._label
-
-    class StringType(_Type):
-        def __init__(self) -> None:
-            super().__init__("string")
-
-    class LongType(_Type):
-        def __init__(self) -> None:
-            super().__init__("bigint")
-
-    class DoubleType(_Type):
-        def __init__(self) -> None:
-            super().__init__("double")
-
-    class DateType(_Type):
-        def __init__(self) -> None:
-            super().__init__("date")
-
-    class IntegerType(_Type):
-        def __init__(self) -> None:
-            super().__init__("integer")
-
-    class BooleanType(_Type):
-        def __init__(self) -> None:
-            super().__init__("boolean")
-
-    class TimestampType(_Type):
-        def __init__(self) -> None:
-            super().__init__("timestamp")
-
-    class StructField:
-        def __init__(self, name: str, dataType: Any, nullable: bool = True) -> None:
-            self.name = name
-            self.dataType = dataType
-            self.nullable = nullable
-
-    class StructType:
-        def __init__(self, fields: list[Any]) -> None:
-            self.fields = fields
-
-        def fieldNames(self) -> list[str]:
-            return [field.name for field in self.fields]
-
-    pyspark = types.ModuleType("pyspark")
-    sql = types.ModuleType("pyspark.sql")
-    sql_types = types.ModuleType("pyspark.sql.types")
-    for cls in (BooleanType, DateType, DoubleType, IntegerType, LongType, StringType, StructField, StructType, TimestampType):
-        setattr(sql_types, cls.__name__, cls)
-    sql.types = sql_types
-    pyspark.sql = sql
-    sys.modules.setdefault("pyspark", pyspark)
-    sys.modules.setdefault("pyspark.sql", sql)
-    sys.modules.setdefault("pyspark.sql.types", sql_types)
-
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-
-    return metadata_table_schema_registry()
-
-
-def generate_metadata_table_reference() -> int:
-    """Generate metadata table reference pages from implemented schema definitions.
-
-    Returns
-    -------
-    int
-        Number of metadata tables in the implemented schema registry.
-
-    """
-    try:
-        from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-
-        registry = metadata_table_schema_registry()
-    except RuntimeError as exc:
-        if "pyspark.sql.types" not in str(exc):
-            raise
-        registry = _metadata_registry_without_pyspark()
-    METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    for old_page in METADATA_REFERENCE_DIR.glob("*.md"):
-        old_page.unlink()
-
-    index_lines = [
-        "# List of Metadata Tables",
-        "",
-        "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
-        "",
-        '<figure class="metadata-model-image">',
-        '  <img src="../../assets/fabricops-metadata-model.png" alt="FabricOps metadata model" />',
-        "</figure>",
-        "",
-        '<div class="grid cards" markdown>',
-        "",
-    ]
-    for table_name in sorted(registry):
-        rel = _METADATA_TABLE_RELATIONSHIPS.get(table_name, {})
-        templates = str(rel.get("related_step") or ", ".join(rel.get("templates", [])) or "Not currently discoverable.")
-        purpose = _METADATA_TABLE_PURPOSES.get(table_name, "Implemented metadata table prepared by `00_env_config`.")
-        slug = _metadata_slug(table_name)
-        index_lines.extend(
-            [
-                f"-   **[{table_name}](metadata/{slug}.md)**",
-                "",
-                f"    {purpose}",
-                "",
-                f"    `{templates}`",
-                "",
-            ]
-        )
-
-        page = [
-            f"# {table_name}",
-            "",
-            f"**Purpose:** {purpose}",
-            "",
-            "## Starter Kit usage",
-            "",
-            f"- **Written by notebook/template:** {', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
-            f"- **Written by function or widget:** {_format_symbol_list(rel.get('written_by', []), '../../')}",
-            f"- **Read by function or widget:** {_format_symbol_list(rel.get('read_by', []), '../../')}",
-            f"- **Related template step:** {rel.get('related_step') or ', '.join(rel.get('templates', [])) or 'Not currently discoverable.'}",
-            "",
-            "## Implemented schema",
-            "",
-            "| Column name | Data type | Nullable / required |",
-            "| --- | --- | --- |",
-        ]
-        for row in _schema_rows(registry[table_name]):
-            page.append(f"| `{row['name']}` | `{row['type']}` | {row['required']} |")
-        page.extend(["", "## Related function reference", ""])
-        symbols = sorted(set(rel.get("written_by", []) + rel.get("read_by", [])))
-        if symbols:
-            page.extend(f"- {_function_link(symbol, '../../')}" for symbol in symbols)
-        else:
-            page.append("- Not currently discoverable.")
-        (METADATA_REFERENCE_DIR / f"{slug}.md").write_text("\n".join(page) + "\n", encoding="utf-8")
-
-    index_lines.append("</div>")
-    METADATA_REFERENCE_OVERVIEW.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
-    return len(registry)
-
-
-def _landing_count_text(count: int, label: str) -> str:
-    """Return count text with aligned number and label markup."""
-    return f"<strong>{count}</strong><span>{label}</span>"
-
-
-def _landing_callable_support_text() -> str:
-    """Return user-focused landing-page callable support text."""
-    return (
-        "Each public callable is documented as a standalone function, with supporting "
-        "private functions, classes, and internal methods kept behind the scenes"
-    )
-
-
-def generate_landing_stats(
-    *,
-    public_exports: list[str],
-    function_manifest: list[dict[str, Any]],
-    metadata_table_count: int,
-    callable_flow_data: dict[str, Any],
-) -> dict[str, int]:
-    """Write landing-page count data derived from canonical generated sources."""
-    del function_manifest
-    metrics = _callable_inventory_metrics(callable_flow_data)
-    stats = {
-        "public_function_count": metrics["public_api_entrypoints"],
-        "total_callable_records": metrics["total_callables"],
-        "function_callable_count": metrics["function_callables"],
-        "supporting_function_count": metrics["supporting_functions"],
-        "public_class_count": metrics.get("public_classes", 0),
-        "public_root_export_count": metrics["public_api_entrypoints"] + metrics.get("public_classes", 0),
-        "module_count": metrics["module_count"],
-        "metadata_table_count": metadata_table_count,
-    }
-    LANDING_STATS_PATH.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
-    return stats
-
-
-def update_landing_page_counts(stats: dict[str, int]) -> None:
-    """Replace stable landing-page count tokens with generated count text."""
-    text = LANDING_PAGE_PATH.read_text(encoding="utf-8")
-    replacements = {
-        "FABRICOPS_PUBLIC_FUNCTION_COUNT": _landing_count_text(
-            stats["public_function_count"], " public callable functions"
-        ),
-        "FABRICOPS_CALLABLE_RECORD_COUNT": _landing_callable_support_text(),
-        "FABRICOPS_METADATA_TABLE_COUNT": _landing_count_text(stats["metadata_table_count"], "metadata tables"),
-    }
-    for token_name, value in replacements.items():
-        start = f"<!-- {token_name} -->"
-        end = f"<!-- /{token_name} -->"
-        pattern = re.compile(f"{re.escape(start)}.*?{re.escape(end)}")
-        replacement = f"{start}{value}{end}"
-        text, count = pattern.subn(replacement, text, count=1)
-        if count != 1:
-            raise RuntimeError(f"Landing page is missing generated count token block: {token_name}")
-    LANDING_PAGE_PATH.write_text(text, encoding="utf-8", newline="\n")
-
-
-def _collect_call_graph_generation_inputs() -> tuple[
-    dict[str, dict[str, Any]],
-    dict[str, dict[str, Any]],
-    dict[str, list[str]],
-    list[str],
-    list[str],
-]:
-    """Collect the minimal source-scanning inputs for call graph generation.
-
-    The full reference generator uses this same source inventory as one part of a
-    complete reference refresh. The focused call graph generator intentionally
-    stops after collecting the inputs needed for the call graph JSON/dashboard so
-    dashboard refreshes do not touch unrelated generated reference artifacts.
-    """
-    public = parse_public_exports()
-    module_data = {source_module_name(path): parse_module(path) for path in source_module_paths()}
-    if "io.shared" in module_data:
-        module_data["io"] = module_data["io.shared"]
-
-    docs_metadata = parse_docs_metadata()
-    missing_metadata = sorted(name for name in public if name not in docs_metadata)
-    if missing_metadata:
-        raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
-    invalid_public_exports = sorted(
-        name for name in public if str(docs_metadata[name].get("function_type", "")).lower() not in {"callable", "class"}
-    )
-    if invalid_public_exports:
-        raise RuntimeError(
-            "__all__ exports must have PUBLIC_SYMBOL_DOCS function_type=callable or function_type=class: "
-            + ", ".join(invalid_public_exports)
-        )
-
-    symbol_map: dict[str, Symbol] = {}
-    for name in public:
-        preferred_module = canonical_public_module(docs_metadata[name]["module"])
-        preferred_actual_module = resolve_preferred_actual_module(preferred_module)
-        modules_to_check = ([preferred_actual_module] if preferred_actual_module in module_data else []) + [
-            module for module in module_data if module != preferred_actual_module
-        ]
-        for module in modules_to_check:
-            info = module_data[module]
-            if name in info["functions"]:
-                symbol_map[name] = Symbol(name, module, preferred_module, "function", info["functions"][name])
-                break
-            if name in info["classes"]:
-                symbol_map[name] = Symbol(name, module, preferred_module, "class", info["classes"][name])
-                break
-            if name in info["constants"]:
-                symbol_map[name] = Symbol(name, module, preferred_module, "constant", info["constants"][name])
-                break
-        if name not in symbol_map:
-            raise RuntimeError(f"Could not resolve exported symbol {name} to a module-level function/class.")
-
-    for symbol in symbol_map.values():
-        meta = docs_metadata[symbol.name]
-        symbol.role = str(meta.get("function_type") or "").lower()
-        if symbol.role not in {"callable", "class", "internal"}:
-            raise RuntimeError(f"Invalid function type {symbol.role!r} for {symbol.name}; expected callable/class/internal")
-
-    nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
-    node_by_qn = {node["qualified_name"]: node for node in nodes}
-    calls_by_qn: dict[str, list[str]] = {}
-    for edge in edges:
-        caller = edge["caller_qualified_name"]
-        callee = edge.get("callee_qualified_name")
-        if callee:
-            calls_by_qn.setdefault(caller, []).append(callee)
-
-    public_flow_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "function"],
-        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
-    )
-    public_class_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "class"],
-        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
-    )
-    return module_data, node_by_qn, calls_by_qn, public_flow_qns, public_class_qns
-
-
 def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -4773,13 +4369,11 @@ def main() -> None:
     module_data = {source_module_name(p): parse_module(p) for p in source_module_paths()}
     if "io.shared" in module_data:
         module_data["io"] = module_data["io.shared"]
-
-    source_modules = set(module_data)
-    discovered_modules = [module for module in MAJOR_IMPLEMENTATION_MODULE_ORDER if module in source_modules]
+    if "config.shared" in module_data:
+        module_data["config"] = module_data["config.shared"]
 
     docs_metadata = parse_docs_metadata()
     template_flow_docs = parse_template_flow_docs()
-    module_docs_metadata = parse_module_docs_metadata()
     # This generator writes individual function pages and the function reference landing page.
     # Module pages, glossary surfaces, manifests, dashboard assets, and JSON data artifacts
     # stay outside this generator output contract.
@@ -4841,326 +4435,11 @@ def main() -> None:
 
     function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
     class_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "class"}
-    nodes, edges, _ = build_callable_graph(module_data, symbol_map, public, docs_metadata)
-    node_lookup = {n["qualified_name"]: n for n in nodes}
     core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
     template_usage_by_symbol = {
         name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
         for name in symbol_map
     }
-    def _is_callable_edge(edge: dict[str, Any]) -> bool:
-        callee = edge.get("callee_qualified_name")
-        if not callee:
-            return False
-        caller = edge["caller_qualified_name"]
-        if caller not in node_lookup or callee not in node_lookup:
-            return False
-        caller_node = node_lookup[caller]
-        callee_node = node_lookup[callee]
-        return (
-            caller_node["callable_name"] in module_data[caller_node["module_name"]]["functions"]
-            and callee_node["callable_name"] in module_data[callee_node["module_name"]]["functions"]
-        )
-
-    def _label(qn: str) -> str:
-        return qn.split(".")[-1]
-
-    def _module_name(qn: str) -> str:
-        parts = qn.split(".")
-        return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
-    # Module pages are outside this generator's output contract.
-    module_manifest = {row["module_name"]: row for row in module_docs_metadata}
-    discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
-    if "config" not in discovered_doc_modules:
-        discovered_doc_modules.append("config")
-    for row in module_docs_metadata:
-        module_name = row["module_name"]
-        if module_name in module_data and module_name not in discovered_doc_modules:
-            discovered_doc_modules.append(module_name)
-    module_index_lines = [
-        "# Implementation Module Catalogue",
-        "",
-        "Implementation Modules document only current major source boundaries for package maintainers and internal helper traceability, not every `.py` file in `src/fabricops_kit`.",
-        "",
-        "Zero-callable modules are hidden unless explicitly allowlisted as major internal plumbing. Documentation-only grouping labels, such as the metadata table reference section, are not treated as source modules. The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is surfaced through the Function Reference catalogue.",
-        "",
-    ]
-    all_doc_modules = discovered_doc_modules
-    for module in all_doc_modules:
-        actual_module = next((k for k,v in PUBLIC_MODULE_PREFERRED_NAMES.items() if v==module), module)
-        if actual_module not in module_data and module == "config":
-            actual_module = "config.shared"
-        info = module_data[actual_module]
-        module_data[module] = info
-        info = module_data[module]
-        public_in_module = [s for s in symbol_map.values() if s.public_module == module]
-        is_internal_only = not public_in_module
-        title = f"# `{module}` module" if not is_internal_only else f"# `{module}` module (internal)"
-        module_visibility = module_manifest.get(module, {}).get("visibility", "public")
-        if module_visibility == "public":
-            status_banner = '<div class="api-status-block">\n  <span class="api-chip api-chip-module">Module overview</span>\n</div>'
-        elif public_in_module:
-            status_banner = (
-                '<div class="api-status-block">\n'
-                '  <span class="api-chip api-chip-internal">Advanced supporting module</span>\n'
-                '  <div class="api-chip-subtitle">Used by reference docs but not promoted as a primary notebook module.</div>\n'
-                '</div>'
-            )
-        elif is_internal_only:
-            status_banner = (
-                '<div class="api-status-block">\n'
-                '  <span class="api-chip api-chip-internal">Internal-only module</span>\n'
-                '  <div class="api-chip-subtitle">Not intended as a primary user-facing API surface.</div>\n'
-                '</div>'
-            )
-        else:
-            status_banner = (
-                '<div class="api-status-block">\n'
-                '  <span class="api-chip api-chip-internal">Internal-only module</span>\n'
-                '</div>'
-            )
-        lines = [
-            title,
-            "",
-            status_banner,
-            "",
-            "Implementation modules document source-level behavior and internal helper relationships for maintainers. They support debugging and implementation traceability, but they are not the public v1 callable API.",
-            "",
-            "The public v1 callable API is controlled by `src/fabricops_kit/__init__.py::__all__` and is browsed from the Function Reference catalogue.",
-            "",
-        ]
-        module_nodes = [n for n in nodes if n["module_name"] == actual_module]
-        callable_count = len([n for n in module_nodes if n["role"] == "callable"])
-        internal_count = len([n for n in module_nodes if n["callable_name"].startswith("_")])
-        outbound_mods = sorted({
-            e["callee_qualified_name"].split(".")[-2]
-            for e in edges
-            if e.get("callee_qualified_name")
-            and e["caller_qualified_name"].split(".")[-2] == actual_module
-            and e["callee_qualified_name"].split(".")[-2] != actual_module
-        })
-        inbound_mods = sorted({
-            e["caller_qualified_name"].split(".")[-2]
-            for e in edges
-            if e.get("callee_qualified_name")
-            and e["callee_qualified_name"].split(".")[-2] == actual_module
-            and e["caller_qualified_name"].split(".")[-2] != actual_module
-        })
-        summary_cards = (
-            '<div class="module-summary-cards">'
-            f'<span class="reference-chip">Callable count: {callable_count}</span>'
-            f'<span class="reference-chip">Implementation helpers: {internal_count}</span>'
-            f'<span class="reference-chip">Uses {len(outbound_mods)} external {plural_word(len(outbound_mods), "module", "modules")}</span>'
-            f'<span class="reference-chip">Used by {len(inbound_mods)} external {plural_word(len(inbound_mods), "module", "modules")}</span>'
-            '</div>'
-        )
-        lines.extend(["## Module overview badges", "", summary_cards, ""])
-
-        module_purpose = module_manifest.get(module, {}).get("module_summary", "").strip()
-        if module_purpose:
-            lines.extend(["## Module purpose", "", module_purpose, ""])
-
-        recommended = sorted([s for s in public_in_module if s.role in {"callable", "class"}], key=lambda x: x.name.lower())
-        lines.extend(["## Module manifest", ""])
-        manifest_rows = [
-            ["Module name", f"<code>{module}</code>"],
-            ["Module purpose", module_purpose or "—"],
-            ["Public callable count", str(callable_count)],
-            ["Implementation helper count", str(internal_count)],
-            ["Used by external module count", str(len(inbound_mods))],
-            ["Uses external module count", str(len(outbound_mods))],
-            ["External modules using this module", ", ".join(f"<code>{m}</code>" for m in inbound_mods) or "—"],
-            ["External modules this module uses", ", ".join(f"<code>{m}</code>" for m in outbound_mods) or "—"],
-        ]
-        lines.extend(render_html_table(["Field", "Value"], manifest_rows))
-        lines.append("")
-
-        if public_in_module:
-            def _public_callable_rows(symbols: list[Symbol], tier: str) -> list[list[str]]:
-                rows: list[list[str]] = []
-                for symbol in symbols:
-                    related = sorted([c for c in info["calls"].get(symbol.name, set()) if c in info["functions"] and c.startswith("_")])
-                    callable_link = callable_docs_link(symbol.name, module, docs_metadata, source_module=actual_module)
-                    rows.append([
-                        f'<a href="{callable_link}"><code>{symbol.name}</code></a>',
-                        tier,
-                        symbol.obj_type,
-                        symbol.summary or "—",
-                        ', '.join(f'<code>{r}</code> (internal)' for r in related) or "—",
-                    ])
-                return rows
-
-            lines.extend(["## Public callables", ""])
-            public_rows = _public_callable_rows(recommended, "Callable")
-            if not public_rows:
-                public_rows.append(["—", "—", "—", "No public exports in this module.", "—"])
-            lines.extend(['<div class="module-table-scroll">'])
-            lines.extend(render_html_table(["Callable", "Tier", "Type", "Summary", "Related helpers"], public_rows))
-            lines.extend(['</div>'])
-        else:
-            lines.extend(["## Public callables", "", "No public exports in this module."])
-
-        lines.extend(["", "## Module relationships", ""])
-        lines.extend(["", "### Callable relationships", ""])
-        internal_fns = sorted([f for f in info["functions"] if f.startswith("_")])
-        module_edges = [
-            (e["caller_qualified_name"], e["callee_qualified_name"])
-            for e in edges
-            if _is_callable_edge(e) and (_module_name(e["caller_qualified_name"]) == actual_module or _module_name(e["callee_qualified_name"]) == actual_module)
-        ]
-        module_edge_pairs = sorted(set(module_edges))
-        inside_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) == actual_module]
-        used_by_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) != actual_module and _module_name(d) == actual_module and not _hide_from_public_relationships(s)]
-        uses_rows = [(s, d) for s, d in module_edge_pairs if _module_name(s) == actual_module and _module_name(d) != actual_module and not _hide_from_public_relationships(d)]
-        if module_edge_pairs:
-            lines.extend(["", "#### Inside this module", ""])
-            lines.append('<section class="callable-relationship-card">')
-            lines.append(f"<h5>{module}</h5>")
-            public_names = sorted([p.name for p in public_in_module])
-            internal_names = sorted([f for f in info["functions"] if f.startswith("_")])
-            for heading, names in [("Public callables", public_names)]:
-                lines.append(f"<h6>{heading}</h6>")
-                if not names:
-                    lines.append("<p>None.</p>")
-                    continue
-                lines.append('<ul class="callable-relationship-rows">')
-                for name in names:
-                    src_qn = f"fabricops_kit.{actual_module}.{name}"
-                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    src_link = callable_docs_link(name, actual_module, docs_metadata, source_module=actual_module)
-                    lines.append("<li>")
-                    lines.append(f'<a class="reference-chip" href="{src_link}"><code>{name}</code></a>')
-                    lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
-                    if callees:
-                        callee_links = ", ".join(
-                            (f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>' if node_lookup.get(dst_qn, {}).get("exported") else f'<span class="reference-chip"><code>{_label(dst_qn)}</code></span>')
-                            for dst_qn in callees
-                        )
-                        lines.append(callee_links)
-                    else:
-                        lines.append("<span>None.</span>")
-                    lines.append("</li>")
-                lines.append("</ul>")
-            lines.append("</section>")
-            lines.extend(["", "### Related internal helpers", ""])
-            if internal_fns:
-                lines.extend(["<details>", "<summary>Show internal helpers</summary>", ""])
-                helper_rows: list[list[str]] = []
-                for helper in internal_fns:
-                    users = sorted([u for u in info["used_by"].get(helper, set()) if u in {p.name for p in public_in_module}])
-                    users_links = ", ".join(
-                        f'<a href="{callable_docs_link(u, module, docs_metadata, source_module=actual_module)}"><code>{u}</code></a>' for u in users
-                    ) or "—"
-                    helper_rows.append([f'<code>{helper}</code>', users_links])
-                lines.extend(['<div class="module-table-scroll">'])
-                lines.extend(render_html_table(["Helper", "Related public callables"], helper_rows))
-                lines.extend(['</div>', "", "<h6>Implementation helper details</h6>"])
-                lines.append('<ul class="callable-relationship-rows">')
-                for name in internal_names:
-                    src_qn = f"fabricops_kit.{actual_module}.{name}"
-                    callees = sorted([d for s, d in inside_rows if s == src_qn], key=lambda q: _label(q))
-                    lines.append("<li>")
-                    lines.append(f'<span class="reference-chip"><code>{name}</code></span>')
-                    if callees:
-                        callee_links = ", ".join(
-                            (f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>' if node_lookup.get(dst_qn, {}).get("exported") else f'<span class="reference-chip"><code>{_label(dst_qn)}</code></span>')
-                            for dst_qn in callees
-                        )
-                        lines.append(" <span class=\"callable-relationship-uses\">uses:</span>")
-                        lines.append(callee_links)
-                    lines.append("</li>")
-                lines.append("</ul>")
-                lines.append("</details>")
-            else:
-                lines.append("No module-level internal helpers detected.")
-            lines.extend(["", "### External callers", ""])
-            if not used_by_rows:
-                lines.append("None.")
-            else:
-                callers_by_module: dict[str, list[str]] = {}
-                for src_qn, _ in used_by_rows:
-                    callers_by_module.setdefault(_module_name(src_qn), []).append(src_qn)
-                for src_module in sorted(callers_by_module):
-                    lines.append(f"**{src_module}**")
-                    chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(src_qn.split(".")[-1], _module_name(src_qn), docs_metadata, source_module=actual_module)}"><code>{_label(src_qn)}</code></a>'
-                        for src_qn in sorted(set(callers_by_module[src_module]))
-                    )
-                    lines.append(chips)
-                    lines.append("")
-            lines.extend(["### External callees", ""])
-            if not uses_rows:
-                lines.append("None.")
-            else:
-                callees_by_module: dict[str, list[str]] = {}
-                for _, dst_qn in uses_rows:
-                    callees_by_module.setdefault(_module_name(dst_qn), []).append(dst_qn)
-                for dst_module in sorted(callees_by_module):
-                    lines.append(f"**{dst_module}**")
-                    chips = ", ".join(
-                        f'<a class="reference-chip" href="{callable_docs_link(dst_qn.split(".")[-1], _module_name(dst_qn), docs_metadata, source_module=actual_module)}"><code>{_label(dst_qn)}</code></a>'
-                        for dst_qn in sorted(set(callees_by_module[dst_module]))
-                    )
-                    lines.append(chips)
-                    lines.append("")
-        else:
-            lines.append("No callable relationships detected for this module.")
-        if public_in_module:
-            for s in sorted([x for x in public_in_module if x.role == "callable"], key=lambda x: x.name.lower()):
-                expected_target = callable_docs_link(s.name, module, docs_metadata, source_module=actual_module)
-                expected_href = f'href="{expected_target}"'
-                expected_md_link = f"[`{s.name}`]({expected_target})"
-                if not any((expected_md_link in line) or (expected_href in line) for line in lines):
-                    raise RuntimeError(f"Missing callable table link for {module}.{s.name}")
-                if f"../../api/reference/{module}/{s.name}.md" in "\n".join(lines):
-                    raise RuntimeError(
-                        f"Found obsolete module-path public link for {module}.{s.name}; expected public reference slug path."
-                    )
-        for helper in internal_fns:
-            expected_helper_code = f"<code>{helper}</code>"
-            if not any(expected_helper_code in line for line in lines):
-                raise RuntimeError(f"Missing internal helper summary for {module}.{helper}")
-        if any("## Public callable details" in line for line in lines):
-            raise RuntimeError(f"Public callable details section should not be rendered for {module}")
-        if any("## Full module API" in line for line in lines):
-            raise RuntimeError(f"Full module API section should not be rendered for {module}")
-        if any(line.strip().startswith("::: fabricops_kit.") for line in lines):
-            raise RuntimeError(f"Mkdocstrings directives should not be rendered on module page for {module}")
-        # Module page output intentionally skipped by this generator.
-        module_index_lines.append(f"- [`{module}`]({module}.md)")
-
-    discovered_set = set(discovered_doc_modules)
-    documentation_group_modules = {"metadata"}
-    module_sidebar_rows = [
-        row
-        for row in module_docs_metadata
-        if row.get("sidebar_include") and row.get("module_name") not in documentation_group_modules
-    ]
-    module_sidebar_groups: dict[str, list[str]] = {}
-    for row in module_sidebar_rows:
-        module_name = row["module_name"]
-        if module_name not in discovered_set:
-            raise RuntimeError(f"Template sidebar module is missing in src/fabricops_kit: {module_name}")
-        module_sidebar_groups.setdefault(row["sidebar_group"], []).append(module_name)
-
-    mkdocs_text = MKDOCS_PATH.read_text(encoding="utf-8")
-    function_start_marker = "          # AUTO-GENERATED-FUNCTIONS-START"
-    function_end_marker = "          # AUTO-GENERATED-FUNCTIONS-END"
-    if function_start_marker in mkdocs_text and function_end_marker in mkdocs_text:
-        before, rest = mkdocs_text.split(function_start_marker, 1)
-        _middle, after = rest.split(function_end_marker, 1)
-        mkdocs_text = before + function_start_marker + "\n" + function_end_marker + after
-
-    start_marker = "          # AUTO-GENERATED-MODULES-START"
-    end_marker = "      # AUTO-GENERATED-MODULES-END"
-    if start_marker in mkdocs_text and end_marker in mkdocs_text:
-        generated = "          []"
-        before, rest = mkdocs_text.split(start_marker, 1)
-        middle, after = rest.split(end_marker, 1)
-        mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
-
-    # MkDocs navigation updates are outside this generator's output contract.
-
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
     calls_by_qn: dict[str, list[str]] = {}
@@ -5172,150 +4451,6 @@ def main() -> None:
             continue
         calls_by_qn.setdefault(caller, []).append(callee)
         used_by_qn.setdefault(callee, []).append(caller)
-    manifest_rows = []
-    known_modules = set(discovered_doc_modules)
-    for s in sorted(function_symbol_map.values(), key=lambda x: x.name.lower()):
-        canonical_module = canonical_public_module(s.public_module)
-        if canonical_module not in known_modules:
-            raise RuntimeError(f"Callable {s.name} resolved to module_name without generated page: {canonical_module!r}.")
-        module_meta = module_manifest.get(canonical_module, {"visibility": "public", "sidebar_include": True, "module_summary": "", "sidebar_group": "Modules"})
-        callable_role = s.role
-        manifest_rows.append(
-            {
-                "module_name": canonical_module,
-                "visibility": module_meta["visibility"],
-                "module_summary": module_meta["module_summary"],
-                "sidebar_group": module_meta["sidebar_group"],
-                "sidebar_include": module_meta["sidebar_include"],
-                "callable_name": s.name,
-                "callable_visibility": module_meta["visibility"],
-                "callable_type": callable_role,
-                "callable_role": callable_role,
-                "template_notebook": docs_metadata[s.name].get("template_notebook"),
-                "template_segment": docs_metadata[s.name].get("template_segment"),
-                "used_in_templates": template_usage_by_symbol.get(s.name, []),
-            }
-        )
-    manifest_modules = []
-    for module in discovered_doc_modules:
-        meta = module_manifest.get(module, {})
-        manifest_modules.append({
-            "module_name": module,
-            "visibility": meta.get("visibility", "public"),
-            "module_summary": meta.get("module_summary", ""),
-            "sidebar_group": meta.get("sidebar_group", "Modules"),
-            "sidebar_include": meta.get("sidebar_include", True),
-        })
-    manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
-    manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
-    # Manifest output intentionally skipped by this generator.
-    dependency_callables: dict[str, dict[str, Any]] = {}
-    for qn in sorted(node_by_qn):
-        node = node_by_qn[qn]
-        deps = sorted(set(calls_by_qn.get(qn, [])))
-        internal_helpers = [d for d in deps if d.startswith(f"{PACKAGE_NAME}.{node['module_name']}._")]
-        used_by = sorted(set(used_by_qn.get(qn, [])))
-        used_in_templates = template_usage_by_symbol.get(node["callable_name"], []) if node["exported"] else []
-        dependency_callables[qn] = {
-            "qualified_name": qn,
-            "short_name": node["callable_name"],
-            "module": node["module_name"],
-            "callable": node["callable_name"],
-            "docs_url": (
-                f"/FabricOps-Starter-Kit/reference/{node['callable_name']}/"
-                if node["exported"]
-                else (
-                    f"/FabricOps-Starter-Kit/reference/internal/{node['module_name']}_{node['callable_name']}/"
-                    if generate_internal_reference_pages()
-                    else None
-                )
-            ),
-            "classification": node["role"],
-            "calls": deps,
-            "calls_count": len(deps),
-            "used_by": used_by,
-            "used_by_count": len(used_by),
-            "used_in_templates": used_in_templates,
-            "internal_helpers_used": internal_helpers,
-            "internal_helper_count": len(internal_helpers),
-        }
-    dependency_modules: dict[str, dict[str, Any]] = {}
-    for module in sorted({n["module_name"] for n in nodes}):
-        module_nodes = [n for n in nodes if n["module_name"] == module]
-        callable_count = sum(1 for n in module_nodes if n["role"] == "callable")
-        internal = sum(1 for n in module_nodes if n["callable_name"].startswith("_"))
-        out_mods, in_mods = set(), set()
-        for e in edges:
-            callee = e.get("callee_qualified_name")
-            if not callee:
-                continue
-            src_mod = e["caller_qualified_name"].split(".")[-2]
-            dst_mod = callee.split(".")[-2]
-            if src_mod == module and dst_mod != module:
-                out_mods.add(dst_mod)
-            if dst_mod == module and src_mod != module:
-                in_mods.add(src_mod)
-        dependency_modules[module] = {
-            "callable_count": callable_count,
-            "internal_count": internal,
-            "outbound_modules": sorted(out_mods),
-            "inbound_modules": sorted(in_mods),
-            "outbound_count": len(out_mods),
-            "inbound_count": len(in_mods),
-        }
-    public_qn_by_name = {name: f"{PACKAGE_NAME}.{(symbol.public_module if symbol.public_module in {'data_profiling', 'pipeline'} else symbol.actual_module)}.{name}" for name, symbol in symbol_map.items()}
-    internalized_public_helpers = {
-        "read_lakehouse_csv",
-        "read_lakehouse_excel",
-        "read_lakehouse_parquet",
-        "read_lakehouse_table",
-        "read_warehouse_table",
-        "write_lakehouse_table",
-        "write_warehouse_table",
-        "stop_if_failed",
-        "enforce_freshness",
-        "enforce_freshness_rule",
-        "enforce_profile_behavior",
-        "write_catalogue_evidence",
-    }
-    audit_names = set(docs_metadata) | set(public) | internalized_public_helpers
-    audit_rows = []
-    for name in sorted(audit_names, key=str.lower):
-        symbol = symbol_map.get(name)
-        if symbol is not None:
-            qn = public_qn_by_name[name]
-        else:
-            module_name = str(docs_metadata.get(name, {}).get("module", ""))
-            qn = f"{PACKAGE_NAME}.{resolve_preferred_actual_module(module_name)}.{name}" if module_name else ""
-        internal_public_callers = sorted({
-            node_by_qn[caller]["callable_name"]
-            for caller in used_by_qn.get(qn, [])
-            if node_by_qn.get(caller, {}).get("exported")
-        }) if qn else []
-        in_root_exports = name in public
-        if core_template_usage_by_symbol.get(name):
-            decision = "template_called_public"
-        elif in_root_exports and example_template_usage_by_symbol.get(name):
-            decision = "advanced_public_helper"
-        elif in_root_exports:
-            decision = "advanced_public_helper"
-        elif name in internalized_public_helpers:
-            decision = "convert_to_internal"
-        else:
-            decision = "remove_export"
-        audit_rows.append({
-            "function": name,
-            "in_root_exports": in_root_exports,
-            "directly_called_in_core_templates": core_template_usage_by_symbol.get(name, []),
-            "directly_called_in_example_templates": example_template_usage_by_symbol.get(name, []),
-            "imported_only_in_templates": bool(imported_only_by_symbol.get(name)),
-            "called_only_internally_by_public_helper": internal_public_callers,
-            "has_standalone_reference_page": in_root_exports,
-            "decision": decision,
-        })
-    # Callable surface audit output intentionally skipped by this generator.
-
-    # Dependency metadata output intentionally skipped by this generator.
 
     template_paths_in_metadata = {flow.get("template_path") for flow in template_flow_docs}
     missing_template_paths = sorted(
@@ -5385,10 +4520,6 @@ def main() -> None:
     def _anchor(href: str, text: str, *, code: bool = False) -> str:
         content = f"<code>{_esc(text)}</code>" if code else _esc(text)
         return f'<a href="{_esc(href)}">{content}</a>'
-
-    def _module_label(module: str) -> str:
-        return f'<span class="reference-module-label">{_esc(module)}</span>'
-
 
     public_flow_qns = sorted(
         [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "function"],
@@ -5472,8 +4603,6 @@ def main() -> None:
         ]
     )
     all_items: list[str] = []
-    function_category_by_name = {name: "public_starter_kit" for name in function_symbol_map}
-
     catalogue_nodes = sorted(
         [
             n
@@ -5567,9 +4696,6 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
-    agent_manifest: list[dict[str, Any]] = []
-    function_manifest: list[dict[str, Any]] = []
-    refactor_signals_manifest: dict[str, dict[str, Any]] = {}
     for qn, node in sorted(node_by_qn.items()):
         short_name = node["callable_name"]
         module_name = node["module_name"]
@@ -5582,33 +4708,18 @@ def main() -> None:
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
-        docs_path = f"api/reference/{short_name}.md" if node["exported"] else (
-            f"reference/internal/{module_name}_{short_name}.md" if generate_internal_pages else None
-        )
         source_path = module_info.get("source_path") or f"src/fabricops_kit/{module_name.replace('.', '/')}.py"
         source_location = module_info.get("source_locations", {}).get(short_name, {})
         source_start_line = source_location.get("start_line")
         source_end_line = source_location.get("end_line")
         source_ref = github_source_url(source_path, source_start_line, source_end_line)
         parameter_rows = module_info.get("parameters", {}).get(short_name, [])
-        classification = "Callable" if node.get("role") == "callable" else "Public class" if node.get("role") == "class" else "Internal"
         purpose = summary or module_info["functions"].get(short_name) or module_info["classes"].get(short_name) or "No summary available."
-        rel_module = canonical_public_module(module_name)
-        metadata_related = list(metadata.get("related_functions", []))
-        relationship_related = [*used_by, *deps]
-        rendered_parameters = _documented_text(metadata.get("parameters"), doc_sections.get("parameters"))
         rendered_returns = _documented_text(metadata.get("returns"), doc_sections.get("returns"))
         rendered_return_interpretation = _documented_text(metadata.get("return_interpretation"))
         rendered_raises = _documented_text(metadata.get("raises"), doc_sections.get("raises"))
         rendered_common_failure_causes = _documented_text(metadata.get("common_failure_causes"))
         rendered_side_effects = _documented_text(metadata.get("side_effects"))
-        rendered_fabric_context = _documented_text(
-            metadata.get("fabric_context"),
-            f"Starter template: `{metadata.get('template_notebook')}`; segment: `{metadata.get('template_segment')}`."
-            if metadata.get("template_notebook")
-            else None,
-        )
-        rendered_ai_verification = _documented_text(metadata.get("ai_verification"))
         def _fmt_links(items: list[str]) -> list[str]:
             out = []
             for item in items:
@@ -5629,14 +4740,6 @@ def main() -> None:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
             public_flow = public_flow_by_qn.get(qn, {})
-            refactor_signals = _collect_refactor_signals(
-                qn,
-                calls_by_qn,
-                node_by_qn,
-                module_data,
-                excluded_helpers=INTERNAL_HELPER_EXCLUSIONS.get(short_name, set()),
-            )
-            refactor_signals_manifest[short_name] = refactor_signals
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             downstream_count = int(public_flow.get("downstream_count") or 0)
             is_public_class_page = node.get("role") == "class"
@@ -5783,17 +4886,6 @@ def main() -> None:
                 "",
                 _documented_text(metadata.get("ai_verification"), "Use internal pages only for package maintenance. Prefer public callable pages when authoring notebooks."),
                 "",
-                "## Function manifest",
-                "",
-                f"- Fully qualified function name: `{qn}`",
-                f"- Short name: `{short_name}`",
-                f"- Module: `{module_name}`",
-                "- Layer: Internal",
-                f"- Related module: `{rel_module}`",
-                f"- Source file path: `{source_path}`",
-                f'- Source reference: <a href="{source_ref}">View source on GitHub</a>',
-                f"- Used by references count: {len(used_by)}",
-                f"- Calls references count: {len(deps)}",
             ])
 
         if not node["exported"]:
@@ -5809,50 +4901,7 @@ def main() -> None:
         elif generate_internal_pages:
             pass
 
-        record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
-        record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
-        manifest_category = function_category_by_name.get(short_name, "internal-private" if short_name.startswith("_") else "utility")
-        function_manifest.append({"id": qn, "name": short_name, "qualified_name": qn, "module": module_name, "classification": classification, "function_category": manifest_category, "usage_sources": record_used_in_templates, "inbound": used_by, "outbound": deps, "used_in_templates": record_used_in_templates, "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [], "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None, "when_to_use": record_when_to_use, "return_interpretation": metadata.get("return_interpretation") if node["exported"] else None, "common_failure_causes": metadata.get("common_failure_causes", []) if node["exported"] else [], "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [], "source_path": source_path, "source_start_line": source_start_line, "source_end_line": source_end_line, "source_url": source_ref, "docs_path": docs_path, "summary": purpose})
-        agent_manifest.append({
-            "name": short_name,
-            "qualified_name": qn,
-            "module": module_name,
-            "type": "callable" if node["exported"] else "internal",
-            "role": node.get("role", "internal"),
-            "function_category": manifest_category,
-            "inbound": used_by,
-            "outbound": deps,
-            "used_in_templates": record_used_in_templates,
-            "glossary_terms": list(metadata.get("glossary_terms", [])) if node["exported"] else [],
-            "expanded_purpose": metadata.get("expanded_purpose") if node["exported"] else None,
-            "when_to_use": record_when_to_use,
-            "source_file": source_path,
-            "source_start_line": source_start_line,
-            "source_end_line": source_end_line,
-            "source_url": source_ref,
-            "docs_path": docs_path,
-            "summary": purpose,
-            "use_when": _documented_text(metadata.get("when_to_use"), metadata.get("use_when"), metadata.get("purpose"), purpose) if node["exported"] else PLACEHOLDER,
-            "do_not_use_when": _documented_text(metadata.get("do_not_use_when")),
-            "required_context": rendered_fabric_context,
-            "inputs": rendered_parameters,
-            "output": rendered_returns,
-            "return_interpretation": rendered_return_interpretation,
-            "side_effects": rendered_side_effects,
-            "failure_modes": rendered_raises,
-            "common_failure_causes": rendered_common_failure_causes,
-            "related_guides": list(metadata.get("related_guides", [])) if node["exported"] else [],
-            "preferred_example": _documented_text(metadata.get("preferred_example")),
-            "verification": rendered_ai_verification,
-            "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],
-        })
-    # AI/agent manifest output intentionally skipped by this generator.
-    # Function manifest output intentionally skipped by this generator.
-    # Landing-page count updates are outside this generator's output contract.
-    # Refactor signal JSON output intentionally skipped by this generator.
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
-    # Function call graph JSON output intentionally skipped by this generator.
-    # Taxonomy audit cleanup is outside this generator's output contract.
 
 
 

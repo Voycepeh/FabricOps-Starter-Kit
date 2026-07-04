@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import html
 import json
 import os
 import subprocess
@@ -83,58 +82,6 @@ def _exported_symbols() -> list[str]:
     return list(fabricops_kit.__all__)
 
 
-def _landing_token_text(page_text: str, token_name: str) -> str:
-    """Return generated landing page text wrapped by a count token."""
-    start = f"<!-- {token_name} -->"
-    end = f"<!-- /{token_name} -->"
-    assert start in page_text
-    assert end in page_text
-    token_html = page_text.split(start, 1)[1].split(end, 1)[0]
-    return html.unescape(re.sub(r"<[^>]+>", " ", token_html)).split()
-
-
-def test_landing_page_counts_match_generated_stats() -> None:
-    """Verify landing-page count text cannot drift from generated data."""
-    stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
-    index_text = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
-
-    assert "<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>" in index_text
-    assert "</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->" in index_text
-    assert "FABRICOPS_CALLABLE_RECORD_COUNT" in index_text
-    assert "Function metrics are generated from the selected callable inventory data." in index_text
-    assert "283 supporting internal functions" not in index_text
-    assert "supporting internal functions" not in index_text
-
-    expected = {
-        "FABRICOPS_PUBLIC_FUNCTION_COUNT": f"{stats['public_function_count']} public callable functions",
-        "FABRICOPS_CALLABLE_RECORD_COUNT": (
-            "Helper functions support the notebook templates and demo workflows, with supporting "
-            "private functions, classes, and internal methods kept behind the scenes"
-        ),
-        "FABRICOPS_METADATA_TABLE_COUNT": f"{stats['metadata_table_count']} metadata tables",
-    }
-
-    for token_name, expected_text in expected.items():
-        assert " ".join(_landing_token_text(index_text, token_name)) == expected_text
-
-
-def test_landing_stats_match_reference_sources() -> None:
-    """Verify generated landing stats are derived from canonical reference sources."""
-    pytest.skip("landing stats are no longer owned by the individual function page generator")
-    stats = json.loads((REFERENCE_DIR / "_data" / "landing-stats.json").read_text(encoding="utf-8"))
-    callable_flow = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
-    metadata_pages = sorted((REFERENCE_DIR / "metadata").glob("*.md"))
-
-    summary_counts = callable_flow["summary_counts"]
-    metrics = summary_counts["callable_inventory_metrics"]
-    assert stats["public_function_count"] == summary_counts["public_api_surface"]["public_api_entrypoints"]
-    assert summary_counts["total_callables"] == metrics["inventory_row_count"]
-    assert stats["total_callable_records"] >= summary_counts["total_callables"]
-    assert stats["function_callable_count"] >= summary_counts["callable_kind"].get("function", 0)
-    assert stats["supporting_function_count"] >= metrics["supporting_functions"]
-    assert stats["metadata_table_count"] == len(metadata_pages)
-
-
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
     from scripts.generate_individual_function_reference_pages import _collect_refactor_signals, _render_refactor_signals
@@ -191,38 +138,6 @@ def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
     assert three_way_signal == ("Metadata loading", "Validation", "Rule evaluation")
 
 
-def test_function_call_graph_json_is_populated() -> None:
-    """Verify generated callable flow JSON is valid and populated with real public flows."""
-    pytest.skip("call-graph JSON is no longer owned by the individual function page generator")
-    path = ROOT / "docs" / "reference" / "_data" / "function-call-graph.json"
-    text = path.read_text(encoding="utf-8").strip()
-
-    assert text, "function-call-graph.json must not be empty"
-
-    data = json.loads(text)
-
-    assert data.get("metadata"), "metadata must not be empty"
-    assert data.get("function_inventory"), "function_inventory must not be empty"
-    assert data.get("public_entrypoint_flow"), "public_entrypoint_flow must not be empty"
-    assert "public_flows" not in data, "public_flows must not be generated"
-    assert data.get("summary_counts"), "summary_counts must not be empty"
-    assert data.get("architecture_thresholds"), "architecture_thresholds must not be empty"
-
-    flows = data["public_entrypoint_flow"]
-    names = {
-        flow.get("function_name") or flow.get("public_callable")
-        for flow in flows
-    }
-
-    assert "read_lakehouse_table" in names
-    assert "display_guardrail_results" in names
-
-    assert any(
-        flow.get("transitive_callees")
-        for flow in flows
-    ), "at least one public flow must include transitive callees"
-
-
 def test_callable_flow_page_and_json_cover_public_surface() -> None:
     """Verify callable flow docs and v2 JSON contracts are generated."""
     flow_page = REFERENCE_DIR / "function-call-graph.md"
@@ -272,10 +187,26 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
         assert stale_flow_phrase not in flow_text
 
     data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    assert data["function_inventory"]
-    assert data["public_entrypoint_flow"]
-    assert "public_flows" not in data
-    assert all("selected_flow_tree_html" not in flow for flow in data["public_entrypoint_flow"])
+    if "schema" in data.get("metadata", {}):
+        assert data["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
+    assert data["public_functions"]
+    assert data["defined_functions"]
+    assert "defined_but_not_used" in data
+    assert data["summary"]["public_function_count"] > 0
+
+    source_traceability_fields = {
+        "function_name",
+        "qualified_name",
+        "source_path",
+        "source_start_line",
+        "source_end_line",
+    }
+    public_functions_with_flow = [row for row in data["public_functions"] if row.get("flow")]
+    assert public_functions_with_flow, "at least one public function must include callable flow rows"
+    for public_function in data["public_functions"]:
+        assert source_traceability_fields <= set(public_function), public_function
+    for flow_row in public_functions_with_flow[0]["flow"]:
+        assert source_traceability_fields <= set(flow_row), flow_row
 
     generator_source = (ROOT / "scripts" / "generate_individual_function_reference_pages.py").read_text(encoding="utf-8")
     assert "FUNCTION_CALL_GRAPH_DASHBOARD_PATH" not in generator_source
@@ -284,7 +215,30 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "_render_combined_refactor_dashboard_html" not in generator_source
     assert "_runtime_inventory_script" not in generator_source
     assert "selected_flow_tree_html" not in generator_source
-    assert "FUNCTION_CALL_GRAPH_DATA_PATH.write_text" in generator_source
+    removed_generator_structures = [
+        "FUNCTION_CALL_GRAPH_DATA_PATH",
+        "MANIFEST_PATH",
+        "CALLABLE_SURFACE_AUDIT_PATH",
+        "FUNCTION_TAXONOMY_AUDIT_PATH",
+        "LANDING_STATS_PATH",
+        "METADATA_REFERENCE_DIR",
+        "parse_module_docs_metadata",
+        "module_manifest",
+        "module_index_lines",
+        "manifest_rows",
+        "manifest_modules",
+        "dependency_callables",
+        "dependency_modules",
+        "audit_rows",
+        "agent_manifest",
+        "function_manifest",
+        "refactor_signals_manifest",
+        "generate_metadata_table_reference",
+        "generate_landing_stats",
+        "update_landing_page_counts",
+    ]
+    for removed_structure in removed_generator_structures:
+        assert removed_structure not in generator_source
 
     for function_name in function_exported_symbols:
         assert (ROOT / "docs" / "api" / "reference" / f"{function_name}.md").exists()
