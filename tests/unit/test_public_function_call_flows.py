@@ -397,11 +397,16 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "Preserve compatibility" in html
     assert "Default:</strong> the packet includes a ready-to-paste prompt for the full selected flow plus raw evidence." in html
     assert "All functions in this selected flow will be included." in html
-    assert "Only checked rows will be included." in html
-    assert "Only deterministic inline candidates will be included." in html
-    assert "Only rows with Type 1–Type 6 architecture violations will be included." in html
-    assert "Only private helpers called by more than one distinct caller will be included." in html
+    assert "Only checked rows from this flow will be included." in html
+    assert "Only deterministic inline candidate functions from this flow will be included." in html
+    assert "Only functions with Type 1–Type 6 architecture violations from this flow will be included." in html
+    assert "Only promote-to-shared candidate functions from this flow will be included." in html
     assert "functions will be exported" in html
+    assert "getFunctionsForExportScope" in html
+    assert "buildCleanupPacketFilename" in html
+    assert "fabricops-codex-cleanup_${cleanupModeSlug(cleanupMode)}_${exportScopeSlug(exportScope)}_${functionCount}-functions_${timestamp}.json" in html
+    assert "exported_function_count:exportedFunctionCount" in html
+    assert "exported_functions:exportedFunctions.map(packetFields)" in html
     assert "Included by full flow" in html
     assert "checkEnabled=exportScope()==='checked_functions_only'" in html
     assert "Export selected packet as YAML" not in html
