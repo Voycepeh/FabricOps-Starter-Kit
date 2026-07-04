@@ -1,15 +1,13 @@
 # widget_review_guardrail_governance
 
-??? info "Downstream callables: 3"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 85
+- Shared helpers: 41
+- Private helpers: 44
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[widgets/widget_review_guardrail_governance.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>widget_review_guardrail_governance(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[widgets/widget_review_guardrail_governance.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L42-L143" class="reference-call-tree-callable"><code>_guardrail_governance_review_widget_workflow(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L88-L108" class="reference-call-tree-callable"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L26-L83" class="reference-call-tree-callable"><code>get_default_fabric_context(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_review_guardrail_governance">Open focused call flow in dashboard</a>
+
 
 Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
@@ -29,19 +27,11 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 **Used in notebooks:** `02_pipeline`, `03_governance`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-- Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.
-
-### Do not use when
-
-- Do not use for automatic pipeline enforcement or profiles generation; it is an interactive governance review widget.
-
-### Additional context
-
-Renders governance review controls for reviewing proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or supersede actions.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

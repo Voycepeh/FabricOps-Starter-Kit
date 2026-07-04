@@ -21,6 +21,7 @@ INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
 REFERENCE_DATA_DIR = ROOT / "docs" / "reference" / "_data"
+PUBLIC_CALL_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "public-function-call-flows.json"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
@@ -115,6 +116,26 @@ INTERNAL_HELPER_AUDIT_DECISIONS = {
     "fabricops_kit.io.shared._resolve_lakehouse_schema": "keep_internal",
     "fabricops_kit.io.shared._resolve_lakehouse_table_path": "keep_internal",
     "fabricops_kit.io.shared.get_spark_session": "keep_internal",
+}
+
+
+PARAMETER_DISPLAY_TYPES = {
+    "prepare_pipeline_table_configs": {
+        "table_configs": "list[PipelineTableConfig]",
+        "default_settings": "Mapping[str, Any] | PipelineTableConfig",
+    },
+    "run_table_guardrails": {
+        "source_definitions": "list[PipelineTableConfig]",
+        "target_definitions": "list[PipelineTableConfig]",
+    },
+    "write_pipeline_lineage": {
+        "source_definitions": "list[PipelineTableConfig]",
+        "target_definitions": "list[PipelineTableConfig]",
+    },
+    "write_pipeline_run_summary": {
+        "source_definitions": "list[PipelineTableConfig]",
+        "target_definitions": "list[PipelineTableConfig]",
+    },
 }
 
 INTERNAL_HELPER_AUDIT_RATIONALE = {
@@ -713,6 +734,60 @@ def parse_docs_metadata() -> dict[str, dict[str, Any]]:
     return out
 
 
+def parse_usage_note_metadata() -> tuple[dict[str, str], dict[str, str]]:
+    """Parse curated usage-note mappings from reference docs metadata."""
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    path_notes = namespace.get("USAGE_NOTE_BY_PATH_PREFIX", {})
+    function_notes = namespace.get("USAGE_NOTE_BY_FUNCTION", {})
+    if not isinstance(path_notes, dict) or not isinstance(function_notes, dict):
+        raise RuntimeError("Usage-note metadata must be dictionaries")
+    return (
+        {str(key): str(value).strip() for key, value in path_notes.items()},
+        {str(key): str(value).strip() for key, value in function_notes.items()},
+    )
+
+
+def _source_usage_path(source_path: str) -> str:
+    """Return package-relative source path used for usage-note prefix matching."""
+    return source_path.removeprefix("src/")
+
+
+def _usage_notes_from_docstring(metadata: dict[str, Any]) -> str:
+    """Return fallback usage notes from existing docstring-style metadata."""
+    human_use_when = _documented_text(metadata.get("when_to_use"))
+    human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+    expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
+    usage_guidance_body: list[str] = []
+    if human_use_when != PLACEHOLDER:
+        usage_guidance_body.extend([human_use_when, ""])
+    if human_do_not_use != PLACEHOLDER:
+        usage_guidance_body.extend([human_do_not_use, ""])
+    if expanded_purpose != PLACEHOLDER:
+        usage_guidance_body.extend([expanded_purpose])
+    return "\n".join(line for line in usage_guidance_body).strip()
+
+
+def _usage_notes_for_public_function(
+    *,
+    function_name: str,
+    source_path: str,
+    metadata: dict[str, Any],
+    usage_note_by_path_prefix: dict[str, str],
+    usage_note_by_function: dict[str, str],
+) -> str:
+    """Return intent-focused Usage notes for a public function page."""
+    explicit = _documented_text(metadata.get("usage_notes"))
+    if explicit != PLACEHOLDER:
+        return explicit
+    if function_name in usage_note_by_function:
+        return usage_note_by_function[function_name]
+    source_usage_path = _source_usage_path(source_path)
+    for prefix, note in sorted(usage_note_by_path_prefix.items(), key=lambda item: len(item[0]), reverse=True):
+        if source_usage_path.startswith(prefix):
+            return note
+    return _usage_notes_from_docstring(metadata)
+
+
 def parse_template_flow_docs() -> list[dict[str, Any]]:
     """Parse template flow docs."""
     tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
@@ -759,15 +834,16 @@ def _markdown_table_cell(text: str) -> str:
     return text.replace("|", r"\|").replace("\n", "<br>")
 
 
-def _render_parameter_definitions(parameter_rows: list[dict[str, str]], parameter_overrides: dict[str, str]) -> list[str]:
+def _render_parameter_definitions(parameter_rows: list[dict[str, str]], parameter_overrides: dict[str, str], type_overrides: dict[str, str] | None = None) -> list[str]:
     """Render parameters as a compact API-reference Markdown table."""
+    type_overrides = type_overrides or {}
     if not parameter_rows:
         return ["No parameters."]
     lines = ["| Parameter | Type | Required | Description |", "| --- | --- | --- | --- |"]
     for row in parameter_rows:
         name = row["name"]
         required_label = "Yes" if row.get("required") == "Yes" else "No"
-        type_text = _markdown_table_cell(row.get("type", "").strip() or "—")
+        type_text = _markdown_table_cell(type_overrides.get(name, row.get("type", "")).strip() or "—")
         meaning = _markdown_table_cell(parameter_overrides.get(name, row.get("description", PLACEHOLDER)))
         lines.append(f"| `{name}` | `{type_text}` | {required_label} | {meaning} |")
     return lines
@@ -1106,6 +1182,30 @@ def _source_card_lines(
 
 
 PLACEHOLDER = "Not documented yet"
+
+
+def _load_public_call_flow_inventory() -> dict[str, Any]:
+    """Load the generated public callable inventory used by the dashboard."""
+    if not PUBLIC_CALL_FLOW_DATA_PATH.exists():
+        raise RuntimeError(
+            "Missing generated public callable inventory: "
+            f"{PUBLIC_CALL_FLOW_DATA_PATH.relative_to(ROOT).as_posix()}"
+        )
+    data = json.loads(PUBLIC_CALL_FLOW_DATA_PATH.read_text(encoding="utf-8"))
+    public_functions = data.get("public_functions")
+    if not isinstance(public_functions, list):
+        raise RuntimeError("public-function-call-flows.json must contain a public_functions list")
+    return data
+
+
+def _dashboard_focus_url(function_name: str) -> str:
+    """Return the focused dashboard URL for a public function."""
+    return f"../../assets/public-function-call-flows-dashboard.html?function={function_name}"
+
+
+def _public_callable_docs_url(function_name: str) -> str:
+    """Return the docs URL for a public function reference page."""
+    return f"../api/reference/{function_name}/"
 
 
 def _metadata_text(value: Any) -> str:
@@ -4377,6 +4477,7 @@ def main() -> None:
         module_data["config"] = module_data["config.shared"]
 
     docs_metadata = parse_docs_metadata()
+    usage_note_by_path_prefix, usage_note_by_function = parse_usage_note_metadata()
     template_flow_docs = parse_template_flow_docs()
     # This generator writes individual function pages and the function reference landing page.
     # Module pages, glossary surfaces, manifests, dashboard assets, and JSON data artifacts
@@ -4396,7 +4497,6 @@ def main() -> None:
     # implementation relationship details remain useful on public parent pages.
 
     symbol_map: dict[str, Symbol] = {}
-    function_symbol_map: dict[str, Symbol] = {}
     for name in public:
         preferred_module = canonical_public_module(docs_metadata[name]["module"])
         preferred_actual_module = resolve_preferred_actual_module(preferred_module)
@@ -4437,8 +4537,6 @@ def main() -> None:
         if symbol.role == "callable" and symbol.name.startswith("_"):
             raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
-    function_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "function"}
-    class_symbol_map = {name: symbol for name, symbol in symbol_map.items() if symbol.obj_type == "class"}
     core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
     template_usage_by_symbol = {
         name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
@@ -4525,43 +4623,41 @@ def main() -> None:
         content = f"<code>{_esc(text)}</code>" if code else _esc(text)
         return f'<a href="{_esc(href)}">{content}</a>'
 
-    public_flow_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "function"],
-        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
+    dashboard_inventory_data = _load_public_call_flow_inventory()
+    dashboard_public_functions = sorted(
+        dashboard_inventory_data["public_functions"],
+        key=lambda row: str(row.get("function_name", "")).lower(),
     )
-    public_class_qns = sorted(
-        [qn for qn, node in node_by_qn.items() if node.get("exported") and node.get("callable_kind") == "class"],
-        key=lambda qn: node_by_qn[qn]["callable_name"].lower(),
-    )
-    generated_at_utc = datetime.now(UTC)
-    callable_flow_data = _build_callable_flow_data(
-        public_flow_qns,
-        public_class_qns,
-        calls_by_qn,
-        node_by_qn,
-        module_data,
-        generated_at_utc=generated_at_utc,
-    )
-    public_flow_by_qn = _flow_by_public_qualified_name(callable_flow_data)
-
-    callable_metrics = _callable_inventory_metrics(callable_flow_data)
-    public_function_count = callable_metrics["public_api_entrypoints"] or len(function_symbol_map)
-    public_class_count = callable_metrics.get("public_classes", len(class_symbol_map))
+    public_flow_by_qn = {str(row["qualified_name"]): row for row in dashboard_public_functions}
+    public_flow_by_name = {str(row["function_name"]): row for row in dashboard_public_functions}
+    node_by_public_function_name = {
+        node["callable_name"]: node
+        for node in node_by_qn.values()
+        if node.get("exported") and node.get("callable_kind") == "function"
+    }
+    public_function_count = len(dashboard_public_functions)
+    callable_metrics = {
+        "public_api_entrypoints": public_function_count,
+        "module_count": len([m for m in module_data if m != "docs_metadata"]),
+        "total_callables": len(node_by_qn),
+        "supporting_functions": len([n for n in node_by_qn.values() if not n.get("exported") and not str(n.get("callable_name", "")).startswith("_")]),
+        "hidden_private_helpers": len([n for n in node_by_qn.values() if str(n.get("callable_name", "")).startswith("_")]),
+    }
+    callable_flow_data = {
+        "metadata": dashboard_inventory_data.get("metadata", {}),
+        "public_entrypoint_flow": dashboard_public_functions,
+        "public_functions": dashboard_public_functions,
+    }
     ref = [
         "# Function Reference",
         "",
-        "Use this page to look up Starter Kit functions and public config classes used by the template notebooks.",
+        "Use this page to look up public notebook-facing Starter Kit functions used by the template notebooks.",
         "",
         '<div class="reference-kpi-grid" aria-label="Function reference summary">',
         '  <section class="reference-kpi-card surface-card">',
         f'    <strong class="reference-kpi-value">{callable_metrics["public_api_entrypoints"]}</strong>',
         '    <span class="reference-kpi-title">Public functions</span>',
         '    <p class="reference-kpi-note">Notebook-facing Starter Kit functions.</p>',
-        '  </section>',
-        '  <section class="reference-kpi-card surface-card">',
-        f'    <strong class="reference-kpi-value">{public_class_count}</strong>',
-        '    <span class="reference-kpi-title">Public classes</span>',
-        '    <p class="reference-kpi-note">Public config classes.</p>',
         '  </section>',
         '</div>',
         "",
@@ -4573,15 +4669,15 @@ def main() -> None:
         [
             "## Find a function",
             "",
-            f"Use the finder below to search {public_function_count} public functions and {public_class_count} public classes. Implementation helper records stay out of the standalone public catalogue. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.",
+            f"Use the finder below to search {public_function_count} public functions. Config classes stay out of the Function Reference and can be documented later in a separate schema/config reference. “Used in” means direct starter notebook code-cell invocation, not import-only, markdown-only, generated metadata, example usage, or implementation helper usage.",
             "",
             '<div class="callable-finder" data-callable-finder>',
-            '  <label class="callable-finder-label" for="callable-finder-input">Search public functions and classes</label>',
-            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions and classes" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
-            '  <p id="callable-finder-help" class="callable-finder-help">Search by function or class name, module, starter path, usage source, or description.</p>',
+            '  <label class="callable-finder-label" for="callable-finder-input">Search public functions</label>',
+            '  <input id="callable-finder-input" class="callable-finder-input" type="search" placeholder="Search public functions" aria-describedby="callable-finder-help callable-finder-status callable-finder-examples" autocomplete="off">',
+            '  <p id="callable-finder-help" class="callable-finder-help">Search by function name, module, starter path, usage source, or description.</p>',
             '  <p id="callable-finder-examples" class="callable-finder-examples">Try: <span class="callable-finder-chip">dq_rules</span> <span class="callable-finder-chip">lineage</span> <span class="callable-finder-chip">guardrail</span></p>',
-            f'  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing {public_function_count} public functions and {public_class_count} public classes.</p>',
-            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions or classes match your search.</p>',
+            f'  <p id="callable-finder-status" class="callable-finder-status" aria-live="polite">Showing {public_function_count} public functions.</p>',
+            '  <p class="callable-finder-empty" data-callable-finder-empty hidden>No public functions match your search.</p>',
             "</div>",
             "",
             '??? info "Maintainer tools"',
@@ -4602,24 +4698,16 @@ def main() -> None:
             '',
             "## Function catalogue",
             "",
-            "## Public functions and classes",
+            "## Public functions",
             "",
         ]
     )
     all_items: list[str] = []
-    catalogue_nodes = sorted(
-        [
-            n
-            for n in node_by_qn.values()
-            if n["exported"] and (n["callable_name"] in module_data[n["module_name"]]["functions"] or n["callable_name"] in module_data[n["module_name"]]["classes"])
-        ],
-        key=lambda n: (n["callable_name"].lower(), n["module_name"]),
-    )
+    catalogue_nodes = [node_by_public_function_name[row["function_name"]] for row in dashboard_public_functions if row["function_name"] in node_by_public_function_name]
     for node in catalogue_nodes:
         name = node["callable_name"]
         module_name = node["module_name"]
-        is_class_symbol = name in module_data[module_name]["classes"]
-        function_type = "public-class" if is_class_symbol else "public-starter-kit"
+        function_type = "public-starter-kit"
         symbol = symbol_map[name]
         symbol_link = public_reference_link(name, docs_metadata, context="reference")
         starter_path = ", ".join(core_template_usage_by_symbol.get(name, [])) or "—"
@@ -4630,7 +4718,7 @@ def main() -> None:
         usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
         public_flow = public_flow_by_qn.get(qn, {})
-        downstream_callables = [] if is_class_symbol else [row["qualified_name"] for row in public_flow.get("transitive_callees", []) if row.get("qualified_name")]
+        downstream_callables = [row["qualified_name"] for row in public_flow.get("flow", [])[1:] if row.get("qualified_name")]
 
         def _catalogue_relationship_list(items: list[str]) -> str:
             rows = []
@@ -4672,7 +4760,7 @@ def main() -> None:
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
-                    f'<span class="reference-chip">{_esc("Public config class" if is_class_symbol else "Public Starter Kit function")}</span>'
+                    f'<span class="reference-chip">{_esc("Public Starter Kit function")}</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
                 ),
@@ -4681,7 +4769,7 @@ def main() -> None:
                     if usage_source != "—"
                     else ""
                 ),
-                ('  <p class="reference-catalogue-item-provenance">Public class metadata is generated from the reference inventory.</p>' if is_class_symbol else '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>'),
+                '  <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>',
                 '  <div class="reference-catalogue-item-counts">',
                 _catalogue_count_details("Downstream callables: {count}", "Downstream callables: {count}", downstream_callables),
                 "  </div>",
@@ -4700,8 +4788,12 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
-    for qn, node in sorted(node_by_qn.items()):
-        short_name = node["callable_name"]
+    for public_flow in dashboard_public_functions:
+        short_name = str(public_flow["function_name"])
+        node = node_by_public_function_name.get(short_name)
+        if not node:
+            continue
+        qn = str(public_flow["qualified_name"])
         module_name = node["module_name"]
         raw_deps = sorted(set(calls_by_qn.get(qn, [])))
         raw_used_by = sorted(set(used_by_qn.get(qn, [])))
@@ -4742,44 +4834,40 @@ def main() -> None:
 
         if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
-            input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides)
-            public_flow = public_flow_by_qn.get(qn, {})
+            input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides, PARAMETER_DISPLAY_TYPES.get(short_name, {}))
+            public_flow = public_flow_by_name.get(short_name, public_flow_by_qn.get(qn, {}))
             used_in_templates = template_usage_by_symbol.get(short_name, [])
-            downstream_count = int(public_flow.get("downstream_count") or 0)
-            is_public_class_page = node.get("role") == "class"
-            call_flow_lines = (
-                [
-                    f'??? info "Downstream callables: {downstream_count}"',
-                    "",
-                    "    Dependency data is generated from the callable architecture inventory.",
-                    "",
-                    *_indent_markdown(_render_callable_architecture_flow_tree(public_flow, node_by_qn, module_data)),
-                ]
-                if downstream_count and not is_public_class_page
-                else []
-            )
+            downstream_count = len(public_flow.get("flow", [])) - 1
+            shared_helper_count = sum(1 for row in public_flow.get("flow", [])[1:] if row.get("function_type") == "shared_function")
+            private_helper_count = sum(1 for row in public_flow.get("flow", [])[1:] if row.get("function_type") == "private_function")
+            dashboard_url = _dashboard_focus_url(short_name)
+            call_flow_lines = [
+                "## Call-flow summary",
+                "",
+                f"- Downstream callables: {downstream_count}",
+                f"- Shared helpers: {shared_helper_count}",
+                f"- Private helpers: {private_helper_count}",
+                "",
+                f'<a class="reference-source-link" href="{dashboard_url}">Open focused call flow in dashboard</a>',
+                "",
+            ]
             notebook_usage_chips = [
                 f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
             ] or ['<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>']
             page_chip_lines = [
                 '<p class="reference-catalogue-item-meta reference-catalogue-item-badges">',
-                '<span class="reference-chip">' + ('Public config class' if is_public_class_page else 'Public Starter Kit function') + '</span>',
+                '<span class="reference-chip">Public Starter Kit function</span>',
                 *notebook_usage_chips,
                 '</p>',
             ]
-            human_use_when = _documented_text(metadata.get("when_to_use"))
-            human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
-            expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
-            usage_guidance_lines: list[str] = []
-            usage_guidance_body: list[str] = []
-            if human_use_when != PLACEHOLDER:
-                usage_guidance_body.extend(["### Use when", "", *_bullet_lines(human_use_when), ""])
-            if human_do_not_use != PLACEHOLDER:
-                usage_guidance_body.extend(["### Do not use when", "", *_bullet_lines(human_do_not_use), ""])
-            if expanded_purpose != PLACEHOLDER:
-                usage_guidance_body.extend(["### Additional context", "", expanded_purpose])
-            if usage_guidance_body:
-                usage_guidance_lines = ["## Usage guidance", "", *usage_guidance_body, ""]
+            usage_notes = _usage_notes_for_public_function(
+                function_name=short_name,
+                source_path=source_path,
+                metadata=metadata,
+                usage_note_by_path_prefix=usage_note_by_path_prefix,
+                usage_note_by_function=usage_note_by_function,
+            )
+            usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes else []
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
             preferred_example = _render_preferred_example(short_name, signature, metadata)

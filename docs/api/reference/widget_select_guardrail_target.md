@@ -1,15 +1,13 @@
 # widget_select_guardrail_target
 
-??? info "Downstream callables: 3"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 30
+- Shared helpers: 14
+- Private helpers: 16
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[widgets/widget_select_guardrail_target.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>widget_select_guardrail_target(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[widgets/widget_select_guardrail_target.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_select_guardrail_target.py#L35-L116" class="reference-call-tree-callable"><code>_guardrail_target_selection_widget_workflow(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L88-L108" class="reference-call-tree-callable"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L26-L83" class="reference-call-tree-callable"><code>get_default_fabric_context(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_select_guardrail_target">Open focused call flow in dashboard</a>
+
 
 Render an interactive target selector for guardrail authoring and governance review.
 
@@ -29,19 +27,11 @@ Render an interactive target selector for guardrail authoring and governance rev
 
 **Used in notebooks:** `02_pipeline`, `03_governance`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-- Use at the start of 02_pipeline authoring or 03_governance review when a user must choose which profiled table to work on.
-
-### Do not use when
-
-- Do not use for automatic pipeline enforcement or to write metadata; this selector reads metadata and prepares widget state only.
-
-### Additional context
-
-Renders an interactive selector that reads catalogue profiles, existing guardrail rules, and table governance policy to create the handover state for guardrail authoring or review.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

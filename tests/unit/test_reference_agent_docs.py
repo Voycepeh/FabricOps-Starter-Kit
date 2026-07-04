@@ -468,8 +468,9 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Downstream callables: 14"') == 1
-    assert "Dependency data is generated from the callable architecture inventory." in implementation_section
+    assert "## Call-flow summary" in implementation_section
+    assert "- Downstream callables:" in implementation_section
+    assert "Open focused call flow in dashboard" in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Implementation helper count: 11" not in text
@@ -479,13 +480,8 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
         implementation_section,
     )
 
-    assert "[shared helper]" in implementation_section
-    assert "[private helper]" in implementation_section
-    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code>' in implementation_section
-    assert "[pipeline/display_guardrail_results.py]" in implementation_section
-    assert "[public callable]" in implementation_section
+    assert "View on GitHub" in implementation_section
+    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
@@ -493,25 +489,18 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Downstream callables: 14"') == 1
+    assert "## Call-flow summary" in implementation_section
+    assert "- Shared helpers:" in implementation_section
+    assert "- Private helpers:" in implementation_section
     assert '??? info "Implementation helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
-    assert (
-        "Unique internal/private helpers: 11. Repeated calls may appear in multiple branches."
-        not in implementation_section
-    )
-    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' in implementation_section
+    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' not in implementation_section
     assert "### Refactor signals" not in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
-    assert "[shared helper]" in implementation_section
-    assert "[private helper]" in implementation_section
-    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code>' in implementation_section
-    assert "[pipeline/display_guardrail_results.py]" in implementation_section
-    assert "[public callable]" in implementation_section
+    assert "View on GitHub" in implementation_section
+    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -611,7 +600,8 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < description_index < source_index < usage_index
-    assert '??? info "Downstream callables:' in text
+    assert "## Call-flow summary" in text
+    assert "Open focused call flow in dashboard" in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -668,13 +658,34 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
         assert marker in text
     assert "## AI / machine-readable metadata" not in text
     assert "Machine-readable metadata / metadata details" not in text
-    assert "- Starting a FabricOps notebook from 00_env_config" in text
-    assert "- Validating configured environment targets before downstream helpers run" in text
-    assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
+    assert "Use this in the setup notebook to capture and render the key runtime information" in text
+    assert "This helps confirm the active environment, configured stores, notebook context, and runtime values" in text
     assert "## Parameters" in text
     assert "| `config` |" in text
     assert "| Yes |" in text or "| No |" in text
     assert "## Source link" not in text
+
+
+def test_public_callable_usage_notes_are_family_standardized() -> None:
+    """Verify generated Usage notes come from path-first family defaults and overrides."""
+    io_text = (API_REFERENCE_DIR / "read_lakehouse_table.md").read_text(encoding="utf-8")
+    widget_text = (API_REFERENCE_DIR / "widget_author_dq_rules.md").read_text(encoding="utf-8")
+    pipeline_text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
+    setup_text = (API_REFERENCE_DIR / "setup_metadata_tables.md").read_text(encoding="utf-8")
+    config_text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
+
+    for text in (io_text, widget_text, pipeline_text, setup_text, config_text):
+        assert "## Usage notes" in text
+        assert "### Use when" not in text
+        assert "### Do not use when" not in text
+        assert "### Additional context" not in text
+
+    assert "Fabric notebooks can only attach to one lakehouse or warehouse at a time" in io_text
+    assert "front-end notebook interface so users can enter metadata in a guided way" in widget_text
+    assert "standard Starter Kit pipeline flow" in pipeline_text
+    assert "profile of the data so downstream users can review the dataset consistently" in pipeline_text
+    assert "configured metadata lakehouse using predefined Starter Kit schemas" in setup_text
+    assert "standard pipeline table-config pattern, not for ad hoc reads or writes" in config_text
 
 
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
@@ -827,7 +838,11 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
     assert not re.search(r"^  - Function & DQ Rules Reference:$", mkdocs_text, re.MULTILINE)
     assert "api/reference/" not in mkdocs_text
 
-    missing = [name for name in _exported_symbols() if not (API_REFERENCE_DIR / f"{name}.md").exists()]
+    public_functions = [
+        str(row["function_name"])
+        for row in json.loads((REFERENCE_DIR / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))["public_functions"]
+    ]
+    missing = [name for name in public_functions if not (API_REFERENCE_DIR / f"{name}.md").exists()]
     assert missing == []
 
 

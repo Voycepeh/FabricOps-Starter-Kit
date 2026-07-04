@@ -20,6 +20,8 @@ class PublicSymbolDocMetadata(TypedDict):
     use_when: NotRequired[str]
     when_to_use: NotRequired[list[str] | str]
     do_not_use_when: NotRequired[str]
+    usage_family: NotRequired[str]
+    usage_notes: NotRequired[str]
     glossary_terms: NotRequired[list[str]]
     parameters: NotRequired[str | dict[str, str] | list[str]]
     returns: NotRequired[str]
@@ -60,6 +62,53 @@ class TemplateFlowDocMetadata(TypedDict):
     template_path: str
     segment_intro: str
     segments: list[TemplateFlowSegmentMetadata]
+
+
+IO_USAGE_NOTE = """These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
+
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic."""
+
+WIDGET_USAGE_NOTE = """Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+
+They help users write values into the correct underlying metadata tables without manually editing those tables directly."""
+
+SETUP_NOTEBOOK_USAGE_NOTE = """Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
+
+This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
+
+SETUP_METADATA_USAGE_NOTE = """Use this during setup to create the required metadata tables in the configured metadata lakehouse using predefined Starter Kit schemas.
+
+This prepares the metadata store so downstream notebooks, widgets, lineage logging, evidence capture, and governance steps can write to the expected tables."""
+
+CONFIG_USAGE_NOTE = """Use config helpers when notebook setup or downstream helpers need consistent runtime configuration, configured stores, paths, or audit context.
+
+This keeps Starter Kit notebooks aligned on the same environment and config contract instead of each notebook calculating those values differently."""
+
+PIPELINE_USAGE_NOTE = """Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
+
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries."""
+
+CONFIG_PREPARATION_USAGE_NOTE = """Use this to normalize source or target table configurations before guardrails, writes, lineage, and evidence helpers use them.
+
+This is intended for the standard pipeline table-config pattern, not for ad hoc reads or writes."""
+
+USAGE_NOTE_BY_PATH_PREFIX = {
+    "fabricops_kit/io/": IO_USAGE_NOTE,
+    "fabricops_kit/widgets/": WIDGET_USAGE_NOTE,
+    "fabricops_kit/setup/": SETUP_NOTEBOOK_USAGE_NOTE,
+    "fabricops_kit/pipeline/": PIPELINE_USAGE_NOTE,
+    "fabricops_kit/lineage/": PIPELINE_USAGE_NOTE,
+    "fabricops_kit/evidence/": PIPELINE_USAGE_NOTE,
+    "fabricops_kit/guardrails/": PIPELINE_USAGE_NOTE,
+    "fabricops_kit/dq/": PIPELINE_USAGE_NOTE,
+    "fabricops_kit/config/": CONFIG_USAGE_NOTE,
+}
+
+USAGE_NOTE_BY_FUNCTION = {
+    "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
+    "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,
+    "prepare_pipeline_table_configs": CONFIG_PREPARATION_USAGE_NOTE,
+}
 
 
 MODULE_DOCS_METADATA = [{'module_name': 'config',

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 import re
 from pathlib import Path
 
@@ -20,13 +21,13 @@ def _finder_js() -> str:
 
 
 def test_function_catalogue_uses_public_starter_kit_finder() -> None:
-    """Verify function catalogue searches public functions and classes."""
+    """Verify function catalogue searches public functions."""
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 25 public functions and 7 public classes." in page
-    assert "Search public functions and classes" in page
-    assert 'placeholder="Search public functions and classes"' in page
+    assert "Use the finder below to search 25 public functions." in page
+    assert "Search public functions" in page
+    assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
     assert 'data-function-type-filter=' not in page
     assert "Workflow" not in page
@@ -161,6 +162,12 @@ def _expected_direct_public_template_calls() -> set[str]:
     }
 
 
+def _public_inventory_function_names() -> set[str]:
+    """Return dashboard public function names used by generated references."""
+    data = json.loads((ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
+    return {str(row["function_name"]) for row in data["public_functions"]}
+
+
 def _catalogue_row_names() -> set[str]:
     """Return function names rendered as Function Reference catalogue rows."""
     return set(re.findall(r'data-callable-name="([^"]+)"', _reference_index()))
@@ -182,21 +189,18 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "write_warehouse_table" not in called
 
 
-def test_reference_catalogue_rows_include_only_public_root_exports() -> None:
-    """Verify catalogue rows expose only the public root export functions."""
-    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
-
+def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:
+    """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig"}) <= _catalogue_row_names()
-    assert _catalogue_row_names() == exported_names
-    assert len(_catalogue_row_names()) == 32
+    assert _catalogue_row_names() == _public_inventory_function_names()
+    assert len(_catalogue_row_names()) == 25
 
 
-def test_root_exported_catalogue_functions_have_standalone_pages() -> None:
-    """Verify root-exported catalogue functions have standalone pages."""
+def test_public_inventory_functions_have_standalone_pages() -> None:
+    """Verify public inventory functions have standalone pages."""
     api_reference_dir = ROOT / "docs" / "api" / "reference"
-    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
 
-    for name in sorted(exported_names):
+    for name in sorted(_public_inventory_function_names()):
         assert (api_reference_dir / f"{name}.md").exists(), name
 
 
@@ -204,9 +208,7 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
     """Verify audited advanced public helpers keep standalone function pages."""
     api_reference_dir = ROOT / "docs" / "api" / "reference"
     page_names = {path.stem for path in api_reference_dir.glob("*.md")}
-    exported_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
-
-    assert page_names == exported_names
+    assert page_names == _public_inventory_function_names()
     assert "read_lakehouse_table" in page_names
     assert "write_lakehouse_table" in page_names
     assert "read_lakehouse_csv" in page_names

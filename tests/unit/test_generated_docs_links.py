@@ -106,7 +106,11 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
     env = {**os.environ, "PYTHONPATH": "src"}
     subprocess.run(["python", "scripts/generate_individual_function_reference_pages.py"], cwd=ROOT, env=env, check=True)
 
-    missing = [name for name in _exported_symbols() if not (DOCS / "api" / "reference" / f"{name}.md").exists()]
+    import json
+
+    inventory = json.loads((DOCS / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
+    public_functions = [str(row["function_name"]) for row in inventory["public_functions"]]
+    missing = [name for name in public_functions if not (DOCS / "api" / "reference" / f"{name}.md").exists()]
     assert missing == []
 
     reference_index = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
