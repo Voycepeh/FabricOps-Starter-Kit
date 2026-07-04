@@ -15,7 +15,7 @@ Use this page to look up Starter Kit functions and public config classes used by
   </section>
 </div>
 
-<p><small>Function metrics are generated from the selected callable inventory data.</small></p>
+<p><small>Function metrics are generated from the runtime inventory data.</small></p>
 
 ## Find a function
 
@@ -41,9 +41,8 @@ Use the finder below to search 25 public functions and 7 public classes. Impleme
     - Private helpers to review: 232
 
     - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.
-    - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.
-    - [Function Call Graph](../assets/public-function-call-flows-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.
-    - [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel): search/filter callable-flow functions, select rows, and export AI refactor packets.
+    - [Function Call Graph](function-call-graph.md): review the v2 callable architecture JSON contract, dependency view, and nested helper summary.
+    - [function-call-graph.json](_data/function-call-graph.json): v2 data contract consumed by dashboard/app rendering outside this generator.
     - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.
     - Agent metadata: `_data/automation-manifest.json`.
     - Implementation contracts: expectations maintainers must satisfy before using or changing a function.

@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from zoneinfo import ZoneInfo
 import html
 import json
 import os
@@ -34,8 +33,10 @@ AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
 FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
 REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
+# Generated during local reference refreshes and CI docs builds.
+# The docs deploy workflow publishes the regenerated artifact to gh-pages;
+# it does not commit regenerated JSON back to main.
 FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
-FUNCTION_CALL_GRAPH_DASHBOARD_PATH = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
 GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
@@ -1712,51 +1713,6 @@ def _render_callable_architecture_flow_tree(
 
 
 
-def _render_dashboard_callable_flow_tree(
-    flow: dict[str, Any],
-    node_by_qn: dict[str, dict[str, Any]],
-) -> str:
-    """Render a dashboard call tree as one escaped preformatted text block."""
-    root_qn = flow["qualified_name"]
-    by_parent: dict[str, list[dict[str, Any]]] = {}
-    for row in flow.get("transitive_callees", []):
-        parent_qn = row.get("parent_qualified_name") or root_qn
-        by_parent.setdefault(parent_qn, []).append(row)
-
-    def sort_key(row: dict[str, Any]) -> tuple[int, str, str, str]:
-        return (
-            int(row.get("depth") or 0),
-            str(row.get("module") or ""),
-            str(row.get("callable") or "").lower(),
-            str(row.get("qualified_name") or ""),
-        )
-
-    def line_text(qn: str, prefix: str, context: dict[str, Any] | None = None) -> str:
-        context = context or {}
-        node = node_by_qn.get(qn) or {}
-        name = context.get("function_name") or context.get("callable") or node.get("callable_name") or qn.split(".")[-1]
-        source_prefix = _call_tree_source_prefix(qn, node_by_qn, context)
-        callable_type = _call_tree_callable_type(qn, node_by_qn, context)
-        return f"{prefix}[{source_prefix}] [{callable_type}] {name}(...)"
-
-    lines = [line_text(root_qn, "", flow)]
-
-    def visit(parent_qn: str, prefix: str, ancestors: set[str]) -> None:
-        child_rows = sorted(by_parent.get(parent_qn, []), key=sort_key)
-        for index, child_row in enumerate(child_rows):
-            child_qn = child_row.get("qualified_name")
-            if not child_qn:
-                continue
-            connector = "└── " if index == len(child_rows) - 1 else "├── "
-            recursive = child_qn in ancestors
-            lines.append(line_text(str(child_qn), prefix + connector, child_row))
-            if not recursive:
-                extension = "    " if index == len(child_rows) - 1 else "│   "
-                visit(str(child_qn), prefix + extension, ancestors | {str(child_qn)})
-
-    visit(root_qn, "", {root_qn})
-    tree_text = html_escape("\n".join(lines))
-    return f'<pre id="callableFlowTree" class="reference-call-tree flow-tree" role="tree" data-callable-architecture-flow="true">{tree_text}</pre>'
 
 def _collect_refactor_signals(
     root_qn: str,
@@ -3730,7 +3686,6 @@ PUBLIC_ENTRYPOINT_FLOW_DASHBOARD_KEYS = (
     "direct_callees",
     "transitive_callees",
     "private_helper_review_items",
-    "selected_flow_tree_html",
 )
 
 PUBLIC_FLOW_CALLEE_DASHBOARD_KEYS = (
@@ -3800,60 +3755,12 @@ def _callable_flow_metadata(generated_at_utc: datetime) -> dict[str, Any]:
     return metadata
 
 
-def _format_generated_at_sgt(value: str | None) -> str:
-    """Return the visible Singapore timestamp label for callable dashboard metadata."""
-    if not value:
-        return "Unknown"
-    normalized = value.replace("Z", "+00:00")
-    try:
-        generated_at = datetime.fromisoformat(normalized).astimezone(ZoneInfo("Asia/Singapore"))
-    except ValueError:
-        return value
-    return generated_at.strftime("%d %b %Y, %I:%M %p SGT")
 
 
-def _function_call_graph_generated_at_utc(flow_data: dict[str, Any]) -> str | None:
-    """Return the canonical generation timestamp from function-call-graph data."""
-    metadata = flow_data.get("metadata", {}) if isinstance(flow_data, dict) else {}
-    return metadata.get("generated_at_utc") or flow_data.get("generated_at_utc")
 
 
-def _render_callable_generation_banner(flow_data: dict[str, Any]) -> str:
-    """Render shared generation metadata for callable dashboard HTML pages."""
-    metadata = flow_data.get("metadata", {})
-    data_source_generated_at = _format_generated_at_sgt(_function_call_graph_generated_at_utc(flow_data))
-    dashboard_html_rendered_at = _format_generated_at_sgt(metadata.get("dashboard_ui_generated_at_utc"))
-    parts = [
-        f"<strong>Data source generated at:</strong> {html.escape(data_source_generated_at)}",
-    ]
-    if dashboard_html_rendered_at != "Unknown":
-        parts.append(
-            f"<span><strong>Dashboard HTML rendered at:</strong> {html.escape(dashboard_html_rendered_at)}</span>"
-        )
-    if metadata.get("branch"):
-        parts.append(f"<span><strong>Branch:</strong> {html.escape(metadata['branch'])}</span>")
-    if metadata.get("commit"):
-        parts.append(f"<span><strong>Commit:</strong> {html.escape(metadata['commit'])}</span>")
-    return f'<p class="generation-banner">{"".join(parts)}</p>'
 
 
-def _format_generated_html_for_review(markup: str) -> str:
-    """Return generated HTML formatted for stable human review."""
-    parts = re.split(r"(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)", markup, flags=re.IGNORECASE | re.DOTALL)
-    formatted_parts: list[str] = []
-    for part in parts:
-        if re.match(r"<(?:script|style)\b", part, flags=re.IGNORECASE):
-            if part.lower().startswith("<style"):
-                open_tag, body, close_tag = re.match(r"(<style\b[^>]*>)(.*?)(</style>)", part, flags=re.IGNORECASE | re.DOTALL).groups()
-                body = body.replace("}", "}\n").strip()
-                formatted_parts.append(f"{open_tag}\n{body}\n{close_tag}")
-            else:
-                formatted_parts.append(part)
-            continue
-        formatted = re.sub(r">\s*<", ">\n<", part.strip())
-        formatted = re.sub(r"(</th>)\n(<th)", r"\1\2", formatted)
-        formatted_parts.append(formatted)
-    return "\n".join(piece for piece in formatted_parts if piece) + "\n"
 
 def _dashboard_contract_row(row: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
     """Return ``row`` trimmed to the public dashboard data contract."""
@@ -3900,8 +3807,6 @@ def _trim_callable_flow_dashboard_contract(
             _dashboard_contract_row(item, FUNCTION_INVENTORY_DASHBOARD_KEYS)
             for item in flow.get("private_helper_review_items", [])
         ]
-        if node_by_qn is not None and module_data is not None and flow.get("qualified_name"):
-            trimmed_flow["selected_flow_tree_html"] = _render_dashboard_callable_flow_tree(flow, node_by_qn)
         trimmed_flow["direct_callees"] = [
             _dashboard_contract_row({**callee, "function_name": callee.get("function_name", callee.get("callable"))}, PUBLIC_FLOW_CALLEE_DASHBOARD_KEYS)
             for callee in flow.get("direct_callees", [])
@@ -4088,505 +3993,53 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
 
 
-def _render_refactor_inventory_items(items: list[dict[str, Any]]) -> str:
-    """Render compact linked callable names for refactor inventory table cells."""
-    return ", ".join(
-        _render_link(item.get("function") or item.get("callable", "—"), item.get("source_url") or item.get("docs_url"))
-        for item in items
-    ) or "—"
-
-
-def _render_refactor_inventory_table(
-    rows: list[dict[str, Any]],
-    *,
-    include_counts: bool = True,
-) -> list[str]:
-    """Render refactor inventory rows for dashboard and collapsible sections."""
-    table_rows: list[list[tuple[str, str]]] = []
-    for row in rows:
-        cells = [
-            (_render_link(row["function"], row.get("source_url")), "flow-cell-name"),
-            (_render_link(row["module"], code=True), "flow-cell-module"),
-            (_render_link(row["qualified_name"], code=True), "flow-cell-qualified"),
-            (
-                ", ".join(html.escape(REFACTOR_REASON_LABELS.get(signal, signal)) for signal in row["signals"]) or "—",
-                "flow-cell-wide",
-            ),
-            (_render_refactor_inventory_items(row["used_by"]), "flow-cell-wide"),
-            (_render_refactor_inventory_items(row["calls"]), "flow-cell-wide"),
-        ]
-        if include_counts:
-            cells.extend(
-                [
-                    (str(row["inbound_count"]), "flow-cell-number"),
-                    (str(row["outbound_project_call_count"]), "flow-cell-number"),
-                    ("—" if row.get("nesting_level") is None else str(row["nesting_level"]), "flow-cell-number"),
-                ]
-            )
-        cells.extend(
-            [
-                (_render_refactor_inventory_items(row.get("public_entrypoint_lineage", [])), "flow-cell-wide"),
-                (html.escape(row["next_step"]), "flow-cell-wide"),
-            ]
-        )
-        table_rows.append(cells)
-
-    headers = [
-        ("Shared helper", "flow-cell-name"),
-        ("Module", "flow-cell-module"),
-        ("Qualified name", "flow-cell-qualified"),
-        ("Recommended action / priority", "flow-cell-wide"),
-        ("Called by", "flow-cell-wide"),
-        ("Calls", "flow-cell-wide"),
-    ]
-    if include_counts:
-        headers.extend(
-            [
-                ("Inbound", "flow-cell-number"),
-                ("Outbound", "flow-cell-number"),
-                ("Depth", "flow-cell-number"),
-            ]
-        )
-    headers.extend(
-        [
-            ("Public entrypoint lineage", "flow-cell-wide"),
-            ("Recommended action", "flow-cell-wide"),
-        ]
-    )
-    return _render_flow_table(headers, table_rows)
-
-
-def _render_flow_table(headers: list[tuple[str, str]], rows: list[list[tuple[str, str]]]) -> list[str]:
-    """Render a horizontally scrollable callable-flow table."""
-    lines = [
-        '<div class="callable-flow-table-wrap" markdown="0">',
-        '<table class="callable-flow-table">',
-        '<thead>',
-        '<tr>',
-    ]
-    for label, class_name in headers:
-        lines.append(f'<th class="{class_name}">{html.escape(label)}</th>')
-    lines.extend(['</tr>', '</thead>', '<tbody>'])
-    for row in rows:
-        lines.append('<tr>')
-        for value, class_name in row:
-            lines.append(f'<td class="{class_name}">{value}</td>')
-        lines.extend(['</tr>'])
-    lines.extend(['</tbody>', '</table>', '</div>'])
-    return lines
-
-
-def _callable_page_nav_css() -> str:
-    """Return shared navigation CSS for standalone callable HTML pages."""
-    return (
-        ".callable-page-nav{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;"
-        "justify-content:space-between;margin:.75rem 0 0;padding:.45rem;border:1px solid #dbe3ef;"
-        "border-radius:.75rem;background:#f8fafc}"
-        ".callable-page-tabs,.callable-page-actions{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}"
-        ".callable-page-tabs{padding:.2rem;border:1px solid #cbd5e1;border-radius:.55rem;background:#fff}"
-        ".callable-page-tab,.callable-page-action{display:inline-flex;align-items:center;justify-content:center;"
-        "min-height:2rem;padding:.36rem .7rem;border-radius:.38rem;font-size:.84rem;font-weight:800;"
-        "line-height:1.2;text-decoration:none}"
-        ".callable-page-tab{border:1px solid transparent;color:#1d4ed8}"
-        ".callable-page-tab.is-active{border-color:#1d4ed8;background:#1d4ed8;color:#fff}"
-        ".callable-page-action{border:1px solid #cbd5e1;background:#fff;color:#475569}"
-        ".callable-page-action:hover,.callable-page-tab:hover{border-color:#93c5fd;background:#eff6ff;color:#1e40af}"
-        ".callable-page-tab.is-active:hover{border-color:#1d4ed8;background:#1d4ed8;color:#fff}"
-        "@media(max-width:720px){.callable-page-nav{align-items:stretch;flex-direction:column}"
-        ".callable-page-tabs,.callable-page-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}"
-        ".callable-page-tab,.callable-page-action{width:100%;box-sizing:border-box}}"
-    )
-
-def _callable_page_shell_css() -> str:
-    """Return shared page shell CSS for standalone callable HTML pages."""
-    return (
-        "body{margin:0;font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a}"
-        "header,main{box-sizing:border-box;max-width:1480px;margin:0 auto;padding:1rem}"
-        "header{background:#fff;border-bottom:1px solid #dbe3ef}"
-        "header h1{margin:.1rem 0 .35rem}"
-        "header p{margin:.25rem 0;color:#475569}"
-        ".generation-banner{display:flex;flex-wrap:wrap;gap:.35rem .75rem;align-items:center;"
-        "width:fit-content;max-width:100%;margin:.5rem 0;padding:.35rem .6rem;border:1px solid #cbd5e1;"
-        "border-radius:999px;background:#f1f5f9;color:#475569;font-size:.78rem;line-height:1.35}"
-        ".generation-banner span{display:inline-flex}"
-        f"{_callable_page_nav_css()}"
-        "@media(max-width:720px){main,header{padding:.75rem}.generation-banner{width:auto;border-radius:.75rem}}"
-    )
-
-
-def _render_callable_page_nav(active_page: str) -> str:
-    """Render shared callable architecture/inventory page navigation."""
-    def tab(page: str, label: str, href: str) -> str:
-        active = page == active_page
-        active_class = " is-active" if active else ""
-        current = ' aria-current="page"' if active else ""
-        return f'<a class="callable-page-tab{active_class}" href="{href}"{current}>{label}</a>'
-
-    return (
-        '<nav class="callable-page-nav" aria-label="Function reference navigation">'
-        '<div class="callable-page-tabs" role="list">'
-        f'{tab("architecture", "Function Call Graph", "function-call-graph-dashboard.html")}'
-        f'{tab("inventory", "Runtime inventory", "function-call-graph-dashboard.html#runtime-inventory")}'
-        '</div>'
-        '<div class="callable-page-actions">'
-        '<a id="openFunctionCallGraphJson" class="callable-page-action" href="../reference/_data/function-call-graph.json">Open JSON data</a>'
-        '<a id="downloadFunctionCallGraphJson" class="callable-page-action" href="../reference/_data/function-call-graph.json" download="function-call-graph.json">Download JSON data</a>'
-        '<a class="callable-page-action" href="../">Back to Docs</a>'
-        '</div>'
-        '</nav>'
-    )
 
 
 
-def _flow_data_public_flows_for_dashboard(flow_data: dict[str, Any]) -> tuple[list[dict[str, Any]], bool]:
-    """Return dashboard public flows, falling back to public inventory rows."""
-    public_flows = flow_data.get("public_entrypoint_flow") or []
-    inventory_rows = flow_data.get("function_inventory") or []
-    if public_flows:
-        return list(public_flows), False
-    rows = []
-    for row in inventory_rows:
-        classification = str(row.get("simple_classification") or row.get("function_type") or "")
-        callable_kind = str(row.get("callable_kind") or "")
-        if (
-            classification == "Public function"
-            or (callable_kind != "class" and row.get("reachability") == "public_entrypoint")
-        ):
-            rows.append({
-                "qualified_name": row.get("qualified_name", ""),
-                "function_name": row.get("function_name") or str(row.get("qualified_name", "")).split(".")[-1],
-                "module": row.get("module", ""),
-                "source_path": row.get("source_path") or row.get("owner_file", ""),
-                "source_url": row.get("source_url"),
-                "docs_url": row.get("docs_url"),
-                "width": 0,
-                "scope": 1,
-                "max_depth": 0,
-                "architecture_violation_count": 0,
-                "external_dependents_count": 0,
-                "helper_cleanup_candidates": 0,
-                "direct_callees": [],
-                "transitive_callees": [],
-                "flow_source": "function_inventory",
-            })
-    return rows, True
-
-
-def _dashboard_public_flow_signals(flow: dict[str, Any]) -> list[str]:
-    """Return public-function scoped signal labels for a public flow."""
-    signals: list[str] = []
-    has_violation = int(flow.get("architecture_violation_count") or 0) > 0 or any(
-        row.get("architecture_result") == "Violation" for row in flow.get("transitive_callees", [])
-    )
-    if has_violation:
-        signals.append("Contains architecture violation")
-    if int(flow.get("max_depth") or 0) > 4 or int(flow.get("width") or 0) > 10:
-        signals.append("Large depth / width")
-    return signals
 
 
 
-def _dashboard_architecture_summary_counts(flow_data: dict[str, Any]) -> dict[str, int]:
-    """Return initial public-function scoped architecture summary counts."""
-    rows = flow_data.get("function_inventory") or []
-    public_flows, _ = _flow_data_public_flows_for_dashboard(flow_data)
-    public_count = len(public_flows)
-    shared_count = sum(1 for row in rows if str(row.get("function_type") or row.get("simple_classification") or "") == "Shared helper")
-    private_count = sum(1 for row in rows if "private" in str(row.get("function_type") or row.get("simple_classification") or row.get("layer") or "").lower())
-    issues = sum(1 for flow in public_flows if "Contains architecture violation" in _dashboard_public_flow_signals(flow))
-    review = sum(1 for flow in public_flows if "Large depth / width" in _dashboard_public_flow_signals(flow))
-    healthy = sum(1 for flow in public_flows if not _dashboard_public_flow_signals(flow))
-    return {"public": public_count, "shared": shared_count, "private": private_count, "review": review, "issues": issues, "healthy": healthy}
-
-def _render_dashboard_badges(labels: list[str], css_class: str = "info") -> str:
-    """Render static dashboard badges."""
-    return "".join(f'<span class="badge {("issue" if str(label) == "Contains architecture violation" else "warn" if str(label) == "Large depth / width" else css_class)}">{html.escape(str(label))}</span>' for label in labels[:3])
-
-
-def _render_dashboard_architecture_scope_rows(flow_data: dict[str, Any]) -> str:
-    """Render initial architecture scope rows into the static dashboard HTML."""
-    inventory = flow_data.get("function_inventory") or []
-    public_flows, from_inventory = _flow_data_public_flows_for_dashboard(flow_data)
-    all_runtime_count = len(inventory)
-    unreachable_count = sum(1 for row in inventory if row.get("reachability") == "unreachable_runtime_asset")
-    rows = [
-        '<tr data-architecture-scope-special="all" tabindex="0"><td><button type="button" class="callable-button">All runtime assets</button></td><td></td><td class="num">—</td>'
-        f'<td class="num">{all_runtime_count}</td><td class="num">—</td><td></td></tr>',
-        '<tr data-architecture-scope-special="unreachable" tabindex="0"><td><button type="button" class="callable-button">Others / Cannot trace back to a public callable</button></td><td class="num">—</td>'
-        f'<td class="num">{unreachable_count}</td><td class="num">—</td><td><span class="badge warn">Verify possible orphan</span></td><td></td></tr>',
-    ]
-    if not public_flows:
-        rows.append('<tr data-public-flow-empty="true"><td colspan="6">No public callable flows found in function-call-graph.json.</td></tr>')
-        return "".join(rows)
-    for index, flow in enumerate(public_flows):
-        qn = html.escape(str(flow.get("qualified_name") or ""), quote=True)
-        name = html.escape(str(flow.get("function_name") or str(flow.get("qualified_name") or "").split(".")[-1]))
-        href = flow.get("source_url") or flow.get("docs_url") or ""
-        link = (
-            f'<button type="button" class="callable-button" data-public-flow-select="{qn}" onclick="return window.fabricOpsSelectPublicFlowFromClickDirect &amp;&amp; window.fabricOpsSelectPublicFlowFromClickDirect(event, \'{qn}\')"><code>{name}</code></button> '
-            f'<a class="source-link" href="{html.escape(str(href), quote=True)}" aria-label="Open docs or source for {name}">↗</a>'
-            if href
-            else f'<button type="button" class="callable-button" data-public-flow-select="{qn}" onclick="return window.fabricOpsSelectPublicFlowFromClickDirect &amp;&amp; window.fabricOpsSelectPublicFlowFromClickDirect(event, \'{qn}\')"><code>{name}</code></button>'
-        )
-        signals = _dashboard_public_flow_signals(flow)
-        signal_class = "issue" if "Contains architecture violation" in signals else "warn" if "Large depth / width" in signals else "muted"
-        severity = "architecture" if "Contains architecture violation" in signals else "review" if "Large depth / width" in signals else "neutral"
-        active = ""
-        source_note = " Inventory row fallback." if from_inventory else ""
-        summary = html.escape(("Detailed call flow was not available for this public callable." if flow.get("flow_source") == "function_inventory" else "Public callable architecture scope rendered at generation time.") + source_note)
-        rows.append(
-            f'<tr data-public-flow-row="{qn}" onclick="return window.fabricOpsSelectPublicFlowFromClickDirect ? window.fabricOpsSelectPublicFlowFromClickDirect(event, this.dataset.publicFlowRow) : false" data-public-flow-summary="{summary}" data-public-flow-search="{html.escape(" ".join([str(flow.get("function_name") or ""), str(flow.get("qualified_name") or ""), " ".join(signals)]).lower(), quote=True)}" class="{active} severity-{severity}-row" tabindex="0" aria-selected="false">'
-            f'<td>{link}</td><td>{_render_dashboard_badges(signals, signal_class)}</td><td class="num">{html.escape(str(flow.get("width", 0)))}</td><td class="num">{html.escape(str(flow.get("scope", flow.get("scope_asset_count", 0))))}</td><td class="num">{html.escape(str(flow.get("max_depth", 0)))}</td><td>{html.escape(str(flow.get("source_path") or flow.get("owner_file") or ""))}</td></tr>'
-        )
-    return "".join(rows)
-
-
-def _static_flow_row_label(row: dict[str, Any]) -> str:
-    """Return an escaped static dashboard label for a call graph row."""
-    function_name = row.get("function_name") or row.get("callable") or str(row.get("qualified_name", "")).split(".")[-1]
-    qualified_name = row.get("qualified_name") or function_name or "Unknown callable"
-    classification = row.get("simple_classification") or row.get("function_type") or row.get("layer_group") or row.get("layer") or "Callable"
-    return (
-        f'<span class="flow-tree-main"><span>[{html.escape(str(classification))}]</span>'
-        f'<code>{html.escape(str(function_name))}(...)</code>'
-        f'<small>{html.escape(str(qualified_name))}</small></span>'
-    )
-
-
-def _render_minimal_static_flow_tree(flow: dict[str, Any]) -> str:
-    """Render a static call tree preview from transitive callee parent links."""
-    root_qn = str(flow.get("qualified_name") or "")
-    root = {
-        "qualified_name": root_qn,
-        "function_name": flow.get("function_name") or flow.get("public_callable") or root_qn.split(".")[-1],
-        "simple_classification": "Public function",
-    }
-    children_by_parent: dict[str, list[dict[str, Any]]] = {}
-    for row in flow.get("transitive_callees") or []:
-        if not isinstance(row, dict):
-            continue
-        parent_qn = str(row.get("parent_qualified_name") or root_qn)
-        children_by_parent.setdefault(parent_qn, []).append(row)
-
-    def render_node(row: dict[str, Any], seen: set[str]) -> str:
-        qn = str(row.get("qualified_name") or row.get("function_name") or "")
-        child_rows = [] if qn in seen else children_by_parent.get(qn, [])
-        children = ""
-        if child_rows:
-            rendered_children = "".join(render_node(child, seen | {qn}) for child in child_rows)
-            children = f"<ul>{rendered_children}</ul>"
-        return f"<li><details open><summary>{_static_flow_row_label(row)}</summary></details>{children}</li>"
-
-    return f'<div id="callableFlowTree" class="flow-tree"><ul>{render_node(root, set())}</ul></div>'
-
-
-def _render_static_selected_flow_preview(flow_data: dict[str, Any]) -> str:
-    """Render initial selected public flow details without requiring JavaScript."""
-    flows = flow_data.get("public_entrypoint_flow") if isinstance(flow_data, dict) else []
-    public_entrypoint_flow = [flow for flow in flows or [] if isinstance(flow, dict)]
-    preferred_qn = "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table"
-    selected_flow = next(
-        (flow for flow in public_entrypoint_flow if flow.get("qualified_name") == preferred_qn),
-        public_entrypoint_flow[0] if public_entrypoint_flow else None,
-    )
-    if not selected_flow:
-        return (
-            '<section id="publicFlowDetails" class="flow-details"><h2>Selected public callable flow</h2>'
-            '<p>Select a public callable to inspect its direct calls and transitive support callables/helpers.</p></section>'
-        )
-
-    function_name = html.escape(str(selected_flow.get("function_name") or selected_flow.get("public_callable") or "Selected callable"))
-    qualified_name = html.escape(str(selected_flow.get("qualified_name") or ""))
-    width = html.escape(str(selected_flow.get("width", selected_flow.get("direct_call_count", 0))))
-    scope = html.escape(str(selected_flow.get("scope", selected_flow.get("scope_asset_count", selected_flow.get("downstream_count", 0)))))
-    depth = html.escape(str(selected_flow.get("max_depth", selected_flow.get("depth", 0))))
-    violations = html.escape(str(selected_flow.get("architecture_violation_count", 0)))
-    selected_flow_tree_html = str(selected_flow.get("selected_flow_tree_html") or "").strip()
-    tree_html = selected_flow_tree_html or _render_minimal_static_flow_tree(selected_flow)
-    return (
-        '<section id="publicFlowDetails" class="flow-details"><h2>Selected public callable flow</h2>'
-        '<span class="badge info">Static preview</span>'
-        '<section class="flow-summary-card"><div class="flow-summary-heading"><div>'
-        f'<strong><code>{function_name}(...)</code></strong><small>{qualified_name}</small>'
-        '</div></div></section>'
-        '<div class="flow-meta">'
-        f'<div><strong>{width}</strong><br><span>Width (direct calls)</span></div>'
-        f'<div><strong>{scope}</strong><br><span>Scope (runtime assets)</span></div>'
-        f'<div><strong>{depth}</strong><br><span>Max depth</span></div>'
-        f'<div><strong>{violations}</strong><br><span>Broken rules</span></div>'
-        '</div><section class="rule-callouts" aria-label="Call tree architecture rules"><article class="rule-callout info"><h3>Architecture edge rule</h3><p>Call tree nodes show function type and file basename. Red Type 1–Type 6 chips appear only when a deterministic architecture edge is present.</p></article></section><h3>Function call graph tree</h3>'
-        f'{tree_html}</section>'
-    )
-
-def _render_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
-    """Render the standalone static callable architecture decision dashboard HTML page."""
-    generation_banner = _render_callable_generation_banner(flow_data)
-    architecture_scope_rows = _render_dashboard_architecture_scope_rows(flow_data)
-    architecture_summary_counts = _dashboard_architecture_summary_counts(flow_data)
-    embedded_graph_data = json.dumps(flow_data, separators=(",", ":")).replace("</", "<\\/")
-    static_selected_flow_preview = _render_static_selected_flow_preview(flow_data)
-    return r"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Function Call Graph Dashboard</title><link rel="stylesheet" href="../stylesheets/table-controls.css"><style><!--CALLABLE_PAGE_SHELL_CSS-->.surface-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin:.5rem 0 .35rem;overflow-x:auto;-webkit-overflow-scrolling:touch}.surface-card{min-width:0}@media(max-width:650px){.surface-cards{grid-template-columns:repeat(3,minmax(13rem,1fr));padding-bottom:.2rem}}.surface-card,.flow-details{background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;padding:.7rem}.surface-card{position:relative;overflow:hidden}.surface-card strong{display:block;margin-bottom:.2rem;line-height:1;font-size:1.35rem}.surface-card span{display:block;line-height:1.2;color:#475569}.surface-card small{display:block;margin-top:.32rem;line-height:1.25;color:#64748b}.surface-card.info{border-color:#bfdbfe;background:#eff6ff}.surface-card.muted{background:#f8fafc}.surface-card.good{border-color:#bfdbfe;background:#eff6ff}.surface-card.review{border-color:#fde68a;background:#fffbeb}.surface-card.risk{border-color:#fecaca;background:#fef2f2}.surface-card.risk strong{color:#991b1b}.surface-card.review strong{color:#92400e}.surface-card.good strong{color:#1e40af}.architecture-summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.5rem;margin:.65rem 0}.architecture-summary-card{padding:.6rem .65rem;border:1px solid #dbe3ef;border-radius:.7rem;background:#fff}.architecture-summary-card strong{display:block;margin:.12rem 0;font-size:1.55rem;line-height:1;color:#0f172a}.architecture-summary-card span{display:block;color:#475569;font-size:.82rem;font-weight:800}.architecture-summary-card small{display:block;margin-top:.28rem;color:#64748b;line-height:1.25}.architecture-summary-card.review{border-color:#fde68a;background:#fffbeb}.architecture-summary-card.risk{border-color:#fecaca;background:#fef2f2}.architecture-summary-card.info{border-color:#bfdbfe;background:#eff6ff}.architecture-summary-card.risk strong{color:#991b1b}.architecture-summary-card.review strong{color:#92400e}@media(max-width:560px){.architecture-summary-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.architecture-summary-card{padding:.55rem}}.overview-help{margin:.2rem 0 .7rem;color:#475569}.rule-callouts{display:grid;gap:.55rem;margin:.65rem 0}.rule-callout{padding:.7rem .8rem;border:1px solid #bfdbfe;border-radius:.75rem;background:#eff6ff}.rule-callout h3{margin:.05rem 0 .3rem;color:#1e40af}.rule-callout p{margin:0;color:#334155;line-height:1.45}.rule-callout.review{border-color:#fde68a;background:#fffbeb}.rule-callout.review h3{color:#92400e}.rule-callout.risk{border-color:#fecaca;background:#fef2f2}.rule-callout.risk h3{color:#991b1b}.filter-panel{display:grid;grid-template-columns:minmax(16rem,1fr) auto;gap:.55rem;margin:.65rem 0;align-items:end;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#fff}.search-field{font-size:.9rem}.search-field input{margin-top:.3rem;font-size:.9rem}.architecture-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}.filter-field{display:flex;flex-direction:column;font-weight:700;font-size:.82rem}input,select,button{padding:.42rem .5rem;border:1px solid #dbe3ef;border-radius:.45rem;background:#fff}.table-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.55rem 0;color:#64748b;font-size:.82rem}.callable-flow-filter-banner{display:flex;align-items:center;justify-content:space-between;gap:.75rem}.callable-flow-filter-banner strong{min-width:0}.callable-flow-reset-button{background:#15803d;color:#fff;border:1px solid #166534;border-radius:.375rem;padding:.4rem .75rem;font-weight:700;text-decoration:none;cursor:pointer}.callable-flow-reset-button:hover{background:#166534}.table-wrap{overflow:auto;background:#fff;border:1px solid #dbe3ef;border-radius:.75rem}table{width:100%;min-width:820px;border-collapse:collapse}th,td{padding:.3rem .36rem;border-bottom:1px solid #dbe3ef;text-align:left;vertical-align:middle;font-size:.82rem}th{background:#eef2f7;font-size:.72rem}.sort-button{display:inline-flex;gap:.25rem;align-items:center;border:0;background:transparent;color:#1d4ed8;font:inherit;font-weight:800;padding:0;cursor:pointer}.sort-button::after{content:"↕";color:#64748b;font-size:.7rem}.sort-button[aria-sort="ascending"]::after{content:"↑"}.sort-button[aria-sort="descending"]::after{content:"↓"}.num{text-align:right;width:4.5rem;white-space:nowrap}tr[data-public-flow-row]{cursor:pointer}tr[data-public-flow-row]:focus{outline:3px solid #2563eb;outline-offset:-3px}tr.active{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}.callable-button{border:0;background:transparent;color:#1d4ed8;font-weight:800;padding:0;text-align:left;cursor:pointer}.source-link{color:#1d4ed8;text-decoration:underline;text-underline-offset:.12em}.source-link:hover{color:#1e40af}.compact-list,.compact-badges{display:block;max-width:14rem;line-height:1.35}.review-note summary{display:flex;gap:.25rem;align-items:center;cursor:pointer;list-style:none}.review-note summary::-webkit-details-marker{display:none}.review-note-toggle{border:1px solid #cbd5e1;background:#f8fafc;color:#1d4ed8;font-size:.72rem;font-weight:800}.review-note-panel{margin-top:.35rem;padding:.5rem;border:1px solid #bfdbfe;border-radius:.55rem;background:#eff6ff;color:#334155;line-height:1.4;max-width:28rem;white-space:normal}.inline-more{display:inline-block;position:relative;margin-left:.15rem}.inline-more summary{display:inline-flex;cursor:pointer;list-style:none}.inline-more summary::-webkit-details-marker{display:none}.inline-more[open] .inline-more-panel{display:block}.inline-more-panel{display:none;position:absolute;z-index:5;min-width:13rem;max-width:min(22rem,80vw);max-height:14rem;overflow:auto;margin-top:.2rem;padding:.35rem;border:1px solid #cbd5e1;border-radius:.55rem;background:#fff;box-shadow:0 .75rem 1.5rem #0f172a1f;white-space:normal}.inline-more-panel .tag,.inline-more-panel .badge{margin:.08rem}.tag,.badge{display:inline-flex;margin:.06rem;padding:.1rem .34rem;border-radius:999px;font-size:.69rem;font-weight:700;background:#e0e7ff;color:#3730a3;white-space:nowrap}.warn{background:#fef3c7;color:#92400e}.issue{background:#fee2e2;color:#b91c1c}.keep{background:#dcfce7;color:#166534}.muted{background:#f1f5f9;color:#475569}.priority{font-weight:800}.priority-critical{background:#991b1b;color:#fff}.priority-high{background:#fee2e2;color:#991b1b}.priority-medium{background:#fef3c7;color:#92400e}.priority-low{background:#e2e8f0;color:#475569}tr.priority-critical-row:not(.active){box-shadow:inset .25rem 0 #991b1b}tr.priority-high-row:not(.active){box-shadow:inset .25rem 0 #f59e0b}tr.severity-architecture-row:not(.active){box-shadow:inset .25rem 0 #991b1b}tr.severity-review-row:not(.active){box-shadow:inset .25rem 0 #f59e0b}.summary-toggle{border:1px solid #cbd5e1;background:#f8fafc;color:#1d4ed8;font-size:.72rem;font-weight:800}.summary-row{display:none}.summary-row.is-open{display:table-row}.summary-panel{padding:.7rem;border-left:.25rem solid #cbd5e1;background:#fff;line-height:1.45}.summary-panel.issue{border-left-color:#991b1b}.summary-panel.warn{border-left-color:#f59e0b}.summary-panel h3{margin:.1rem 0 .35rem}.summary-panel h4{margin:.55rem 0 .2rem}.summary-panel p{margin:.15rem 0;color:#334155}.summary-panel ul{margin:.2rem 0 .1rem 1.1rem;padding:0}.recommendation-chip.issue{background:#fee2e2;color:#991b1b}.recommendation-chip.warn{background:#fef3c7;color:#92400e}.export-toolbar{display:flex;flex-direction:column;gap:.5rem;align-items:stretch;box-sizing:border-box;max-width:100%;margin:.65rem 0;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#f8fafc}.toolbar-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.5rem}.toolbar-card{box-sizing:border-box;min-width:0;padding:.5rem .6rem;border:1px solid #e2e8f0;border-radius:.6rem;background:#fff}.toolbar-card--selection,.toolbar-card--prompt{display:flex;flex-direction:column;gap:.55rem}.toolbar-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;max-width:100%;min-width:0}.toolbar-field{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;max-width:100%;min-width:0;font-weight:700}.toolbar-field select{max-width:100%;min-width:0}.toolbar-help,.group-help{color:#475569;font-weight:400}.compat-mode-subtitle{margin-top:.35rem;font-size:.85rem;line-height:1.35}.compat-mode-safe{color:#1d4ed8}.compat-mode-review{color:#b45309}.compat-mode-breaking{color:#b91c1c}.toolbar-group{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;max-width:100%;min-width:0}.toolbar-group>div{min-width:0}.toolbar-group .toolbar-row{flex:1 1 16rem}.toolbar-row button{white-space:normal}.primary-action,.danger-action:not(:disabled){background:#1d4ed8;color:#fff;border-color:#1d4ed8}.danger-action:not(:disabled){background:#b91c1c;border-color:#b91c1c}button:disabled,.danger-action:disabled{background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed}.flow-details{margin-top:1rem}.flow-summary-card{display:flex;flex-direction:column;gap:.5rem;margin:.55rem 0 .75rem;padding:.75rem;border:1px solid #bfdbfe;border-radius:.75rem;background:#eff6ff}.flow-summary-heading{display:flex;flex-wrap:wrap;gap:.5rem;align-items:flex-start;justify-content:space-between}.flow-summary-heading strong{display:block;font-size:1rem}.flow-summary-heading small{display:block;margin-top:.12rem;color:#475569;overflow-wrap:anywhere}.flow-summary-recommendation{display:flex;flex-wrap:wrap;gap:.35rem .5rem;align-items:center}.flow-summary-recommendation span{color:#64748b;font-weight:800}.flow-summary-card p{margin:.1rem 0 0;color:#334155}.flow-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.5rem}.flow-meta div{padding:.45rem;border:1px solid #e2e8f0;border-radius:.5rem;background:#f8fafc}.flow-key-signals,.flow-next-step{margin:.75rem 0;padding:.65rem;border:1px solid #dbe3ef;border-radius:.75rem;background:#fff}.flow-key-signals h3,.flow-next-step h3{margin:.05rem 0 .45rem}.flow-key-signals div{display:flex;flex-wrap:wrap;gap:.25rem}.flow-key-signals p,.flow-next-step p{margin:.45rem 0 0;color:#475569}.flow-tree{max-height:60vh;overflow:auto;border:1px solid #dbe3ef;border-radius:.5rem;padding:.65rem;background:#fff}.reference-call-tree{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;line-height:1.55;white-space:pre;overflow-x:auto}.badge.critical{background:#fee2e2;color:#991b1b}.badge.info{background:#dbeafe;color:#1e40af}@media(max-width:720px){main,header{padding:.75rem}.generation-banner{width:auto;border-radius:.75rem}.filter-panel{grid-template-columns:1fr}table{min-width:760px}th,td{font-size:.78rem;padding:.26rem}.compact-list,.compact-badges{max-width:10rem}.surface-card strong{font-size:1.35rem}.toolbar-card-grid{grid-template-columns:1fr}.toolbar-row,.toolbar-group{align-items:stretch}.toolbar-field,.toolbar-group{flex-direction:column}.toolbar-field select{width:100%}.toolbar-help{display:block}.toolbar-group .toolbar-row{flex:1 1 auto;flex-direction:row}.toolbar-group .toolbar-row button{flex:1 1 9rem}.callable-flow-filter-banner{align-items:flex-start;flex-direction:column}.callable-flow-reset-button{width:100%;box-sizing:border-box;text-align:center}}</style></head><body><header><h1>Function Call Graph Dashboard</h1><p>The Function Call Graph Dashboard shows how public functions, shared helpers, and private helpers connect across the package. Review architecture scopes, search for risks, and inspect the selected function call graph when available. Width is direct calls; scope is total runtime assets in the selected scope.</p><!--CALLABLE_GENERATION_BANNER--><!--CALLABLE_PAGE_NAV--></header><main><section id="architectureViolationSection" class="flow-details"></section><section class="architecture-status-intro" aria-labelledby="architectureStatusSummaryHeading"><h2 id="architectureStatusSummaryHeading">Public callables summary</h2><p>Public callables with signals are summarized by architecture status.</p></section><section class="architecture-summary-cards" aria-label="Selected architecture scope summary"><article class="architecture-summary-card info"><span>Public callables</span><strong id="architectureSummaryPublic"><!--ARCHITECTURE_SUMMARY_PUBLIC--></strong><small>Public callables in scope.</small></article><article class="architecture-summary-card risk"><span>Contains architecture violation</span><strong id="architectureSummaryIssues"><!--ARCHITECTURE_SUMMARY_ISSUES--></strong><small>Call graph contains an architecture violation</small></article><article class="architecture-summary-card review"><span>Large depth / width</span><strong id="architectureSummaryReview"><!--ARCHITECTURE_SUMMARY_REVIEW--></strong><small>Depth &gt; 4 or width &gt; 10</small></article><article class="architecture-summary-card good"><span>Healthy public callables</span><strong id="architectureSummarySignals"><!--ARCHITECTURE_SUMMARY_SIGNALS--></strong><small>No architecture violation or large depth / width</small></article></section><p id="architectureHelperSupport" class="overview-help"><small>Supported by <span id="architectureSummaryShared"><!--ARCHITECTURE_SUMMARY_SHARED--></span> shared helpers and <span id="architectureSummaryPrivate"><!--ARCHITECTURE_SUMMARY_PRIVATE--></span> nested private helpers</small></p><section class="table-actions"><button id="showAllPublicCallables" type="button" hidden>Back to all public callables</button><button id="collapsePublicList" type="button" hidden>Collapse list</button><small id="publicListStatus"></small><small id="dataLoadStatus" class="load-status" aria-live="polite"></small></section><section id="selectedPublicFlowSummary"></section><section class="rule-callouts" aria-label="Public callable architecture rules"><article class="rule-callout review"><h3>Large width / depth rule</h3><p>Width &gt; 10 or Depth &gt; 5. Width means number of direct package-local calls from the selected public callable. Depth means the deepest nested call path. Scope means total downstream functions reached by the public callable flow.</p></article><article class="rule-callout risk"><h3>Architecture violation rule</h3><p>Public callable flows should not call another public callable function. A violation is raised when a deterministic public-to-public architecture edge is found.</p></article></section><section class="table-wrap" id="publicCallableTableWrap"><table id="architectureScopeTable"><thead><tr><th><button type="button" class="sort-button" data-sort-key="callable">Function</button></th><th><button type="button" class="sort-button" data-sort-key="signals">Signal</button></th><th><button type="button" class="sort-button" data-sort-key="width">Width</button></th><th><button type="button" class="sort-button" data-sort-key="scope">Scope</button></th><th><button type="button" class="sort-button" data-sort-key="depth">Depth</button></th><th><button type="button" class="sort-button" data-sort-key="file">File</button></th></tr></thead><tbody id="architectureScopeTableBody"><!--ARCHITECTURE_SCOPE_ROWS--></tbody></table></section><!--STATIC_SELECTED_FLOW_PREVIEW--><section class="export-toolbar" aria-label="Advanced cleanup and export actions"><h2>Cleanup package</h2><p class="toolbar-help">Use this after reviewing the function call graph when you want Codex or another AI tool to plan a focused refactor.</p><div class="toolbar-card-grid"><div class="toolbar-card toolbar-card--compatibility"><label class="toolbar-field">Compatibility mode <select id="compatibilityMode"><option value="preserve_backwards_compatibility" selected>Preserve backwards compatibility</option><option value="allow_breaking_changes">Allow breaking changes</option></select></label><small id="compatibilityModeSubtitle" class="compat-mode-subtitle compat-mode-safe">Selected cleanup should preserve existing public callable behavior and avoid breaking current users.</small></div><div class="toolbar-card toolbar-card--prompt"><div class="toolbar-group"><div><strong>Export function call graph cleanup packet</strong><br><small class="group-help">Download the selected public function call graph for AI-assisted cleanup planning.</small></div><div class="toolbar-row"><button id="downloadJson" type="button" disabled>Download JSON</button><button id="downloadYaml" type="button" disabled>Download YAML</button></div></div><small id="exportStatus"></small></div></div></section></main><script>
-const EMBEDDED_FUNCTION_CALL_GRAPH_DATA=<!--EMBEDDED_FUNCTION_CALL_GRAPH_DATA-->;
-const FLOW_LAYER_LABELS=['Public function','Shared helper','Private helper','Class','Method','Unknown'];const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};const INTERNAL_LAYERING_SUGGESTED_FIX='Move single-use helpers into the owning public callable file. Keep only helpers reused across multiple public callables in shared internal modules. Flatten nested helper chains where they do not provide reusable shared behavior.';const DISPLAY_LABEL_MAP={'Broken rule':'Broken rule','Too many steps':'Too many steps','Too many helpers':'Too many helpers','Maybe combine':'Maybe combine','Used by one function':'Used by one function','Used several times in one function':'Used several times in one function','Recursive helper':'Recursive helper','Heavily used helper':'Heavily used helper','Shared utility':'Shared utility','None':'Healthy'};let inventory=[],publicEntryFlows=[],visibleFlows=[],summaryCounts={},inventoryByQn=new Map(),publicFlowBySelectionKey=new Map(),publicFlowsFromInventory=false,embeddedGraphDataPresent=Boolean(EMBEDDED_FUNCTION_CALL_GRAPH_DATA),loadedFunctionCallGraphGeneratedAtUtc='',lastFunctionCallGraphLoadError='';const state={selectedFlow:'',activePublicFlow:'',openSummaryFlow:'',collapsedPublicList:false,publicSearch:'',sortKey:'callable',sortDirection:'asc'};let architectureThresholds={long_call_chain_depth:null,large_dependency_surface:null};function positiveThreshold(value){const numeric=Number(value);return Number.isFinite(numeric)&&numeric>0?numeric:null}function longCallChainThreshold(){return positiveThreshold(architectureThresholds.long_call_chain_depth)}function largeDependencySurfaceThreshold(){return positiveThreshold(architectureThresholds.large_dependency_surface)}const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function unique(v){return[...new Set(v.filter(Boolean))]}function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function label(v){return displayLabel(text(v).replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase()))}function option(s,v,l){const o=document.createElement('option');o.value=v;o.textContent=l||v;s.appendChild(o)}function compactList(items,limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-list" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="tag">${esc(i)}</span>`).join('')}</span>`}function compactBadges(items,cls='warn',limit=3){const list=items||[],shown=list.slice(0,limit);return `<span class="compact-badges" title="${esc(list.join(', '))}">${shown.map(i=>`<span class="badge ${cls}">${esc(i)}</span>`).join('')}</span>`}const GITHUB_SOURCE_BASE='https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/';function docsHref(docsPath){const clean=String(docsPath||'').replace(/^docs\//,'').replace(/\.md$/,'/').replace(/^\//,'');const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+1)+clean;if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+clean;return new URL(clean,document.baseURI).href}function sourceHref(i){const row=inventoryByQn.get(i.qualified_name)||i;if(row.docs_path)return docsHref(row.docs_path);if(row.source_url)return row.source_url;const path=row.source_path||row.path;if(!path)return '';const start=row.source_start_line||row.start_line||row.line_number;const end=row.source_end_line||row.end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return `${GITHUB_SOURCE_BASE}${path}${anchor}`}function sourceCallableLink(i){const href=sourceHref(i);const label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}"><code>${label}</code></a>`:`<code>${label}</code>`}function moduleHref(module){return ''}function moduleLink(module){const href=moduleHref(module);return href?`<a class="source-link" href="${esc(href)}"><code>${esc(module)}</code></a>`:`<code>${esc(module||'')}</code>`}function linkMetadata(i){const row=inventoryByQn.get(i.qualified_name)||i;return{source_url:row.source_url||null,docs_url:row.docs_url||null,file_path:row.source_path||null,line_start:row.source_start_line||null,line_end:row.source_end_line||null}}function markdownLink(i,label){const href=sourceHref(i);return href?`[${label||i.function_name}](${href})`:(label||i.function_name)}function hasArchitectureViolation(flow){return architectureFindingCount(flow)>0}function isGraphReviewCandidate(flow){const deep=(flow.max_depth||0)>4,wide=(flow.width||0)>10;return deep||wide}function publicCallableSeverity(flow){if(hasArchitectureViolation(flow))return 'architecture';if(isGraphReviewCandidate(flow))return 'review';return 'neutral'}function architecturePriority(f){const severity=publicCallableSeverity(f);if(severity==='architecture')return 'Critical';if(severity==='review')return 'Medium';return 'Low'}function priorityClass(p){return text(p).toLowerCase()}function riskBadgeClass(warning,priority){if(priority==='Critical')return 'issue';return 'muted'}function mergeCandidateCount(flow){return Number(flow.helper_cleanup_candidates??flow.single_use_helper_candidate_count??0)}function mergeCandidateLabel(count){return count===1?'Maybe combine':`${count} maybe combine`}function reviewMergeCandidateLabel(count){return count===1?'Review helper':'Review helpers'}function architectureFindingCount(flow){return architectureFindingRows(flow).length||(flow.architecture_violation_count??0)}function flowSignals(flow){const signals=[];if(architectureFindingCount(flow)>0)signals.push('Contains architecture violation');if((flow.max_depth||0)>4||(flow.width||0)>10)signals.push('Large depth / width');return signals}function isHealthyPublicFlow(flow){return !hasArchitectureViolation(flow)&&(flow.max_depth||0)<=4&&(flow.width||0)<=10}function signalBadges(flow){const signals=flowSignals(flow);if(!signals.length)return '';return signals.map(signal=>`<span class="badge ${signal==='Contains architecture violation'?'issue':'warn'}">${esc(signal)}</span>`).join('')}function summaryText(flow){const signals=flowSignals(flow);if(hasArchitectureViolation(flow))return 'This public function call graph contains at least one architecture violation.';if(isGraphReviewCandidate(flow))return 'This public function exceeds the large depth or width threshold.';return 'No meaningful signals detected.'}function recommendedCheck(flow){if(hasArchitectureViolation(flow))return 'Inspect the exact architecture violation details in the selected public function call graph.';if(isGraphReviewCandidate(flow))return 'Review whether the public function call graph should be simplified.';return 'No follow-up needed.'}function summaryButton(flow){const open=state.openSummaryFlow===flow.qualified_name;return `<button class="summary-toggle" type="button" aria-expanded="${open?'true':'false'}" data-summary-toggle="${esc(flow.qualified_name)}">View summary</button>`}function summaryRow(flow){const open=state.openSummaryFlow===flow.qualified_name,severity=hasArchitectureViolation(flow)?'issue':isGraphReviewCandidate(flow)?'warn':'';return `<tr class="summary-row ${open?'is-open':''}" data-summary-row="${esc(flow.qualified_name)}"><td colspan="6"><div class="summary-panel ${severity}"><h3>Summary</h3><p>${esc(summaryText(flow))}</p><h4>Recommended check</h4><p>${esc(recommendedCheck(flow))}</p><h4>Evidence</h4><ul><li>Width: ${esc(flow.width??0)} direct call(s)</li><li>Scope: ${esc(flow.scope??flow.scope_asset_count??0)} runtime asset(s)</li><li>Depth: ${esc(flow.max_depth||0)}</li><li>Architecture violations: ${esc(architectureFindingCount(flow))}</li></ul>${flowSignals(flow).length?`<p><strong>All signals:</strong> ${esc(flowSignals(flow).join(', '))}</p>`:'<p><strong>All signals:</strong> Healthy</p>'}</div></td></tr>`}function setArchitectureSummaryValue(id,value){const el=$(id);if(el)el.textContent=String(value)}function renderCards(){const rows=inventory||[],flows=publicEntryFlows||[],publicCallableCount=flows.length||rows.filter(isPublicCallableInventoryRow).length||((summaryCounts.public_api_surface||{}).public_api_entrypoints)||0,architectureViolationFlows=flows.filter(hasArchitectureViolation).length,reviewCandidateFlows=flows.filter(isGraphReviewCandidate).length,healthyFlows=flows.filter(isHealthyPublicFlow).length;setArchitectureSummaryValue('architectureSummaryPublic',publicCallableCount);setArchitectureSummaryValue('architectureSummaryShared',rows.filter(r=>!isPublicCallableInventoryRow(r)&&text(r.simple_classification||r.function_type||r.layer||r.callable_role_group).toLowerCase().includes('shared')).length);setArchitectureSummaryValue('architectureSummaryPrivate',rows.filter(r=>text(r.simple_classification||r.function_type||r.layer||r.callable_role_group).toLowerCase().includes('private')).length);setArchitectureSummaryValue('architectureSummaryReview',reviewCandidateFlows);setArchitectureSummaryValue('architectureSummaryIssues',architectureViolationFlows);setArchitectureSummaryValue('architectureSummarySignals',healthyFlows);const cardsEl=$('publicSurfaceCards');if(!cardsEl)return;const cards=[{label:'Public functions',value:publicCallableCount,subtitle:'Public callables in scope.',cls:'info'},{label:'Contains architecture violation',value:architectureViolationFlows,subtitle:'Call graph contains an architecture violation',cls:architectureViolationFlows?'risk':'info'},{label:'Large depth / width',value:reviewCandidateFlows,subtitle:'Depth > 4 or width > 10',cls:reviewCandidateFlows?'review':'info'},{label:'Healthy public callables',value:healthyFlows,subtitle:'No architecture violation or large depth / width',cls:'info'}];cardsEl.innerHTML=cards.map(c=>`<article class="surface-card ${esc(c.cls)}"><strong>${esc(c.value??0)}</strong><span>${esc(c.label)}</span><small>${esc(c.subtitle)}</small></article>`).join('');const support=$('architectureHelperSupport');if(support)support.innerHTML=`<small>Supported by <span id="architectureSummaryShared">${rows.filter(r=>!isPublicCallableInventoryRow(r)&&text(r.simple_classification||r.function_type||r.layer||r.callable_role_group).toLowerCase().includes('shared')).length}</span> shared helpers and <span id="architectureSummaryPrivate">${rows.filter(r=>text(r.simple_classification||r.function_type||r.layer||r.callable_role_group).toLowerCase().includes('private')).length}</span> nested private helpers</small>`}function findingLabel(v){return displayLabel(v)}function architectureViolationBreakdown(flows=publicEntryFlows){const counts={'Public function calls public function':0,'Shared helper calls public function':0,'Cross-file private dependency':0};flows.forEach(f=>(f.transitive_callees||[]).forEach(c=>{if(c.architecture_result==='Violation'&&counts[c.violation_type]!==undefined)counts[c.violation_type]++}));return counts}function renderArchitectureViolationSection(){const meanings={'Public function calls public function':'A notebook-facing public callable depends on another public callable instead of shared implementation details.','Shared helper calls public function':'A reusable shared/internal helper calls back into a notebook-facing public callable.','Cross-file private dependency':'A helper directly calls a private helper from another source file.'};const rows=Object.entries(architectureViolationBreakdown()).filter(([,count])=>count>0);$('architectureViolationSection').innerHTML=`<h2>Broken rules</h2><p>Broken rules show dependency edges that break the intended public-callable/shared-helper model.</p><div class="table-wrap"><table><thead><tr><th>Violation type</th><th class="num">Count</th><th>Meaning</th></tr></thead><tbody>${(rows.length?rows:Object.entries(meanings).map(([k])=>[k,0])).map(([type,count])=>`<tr><td>${esc(type)}</td><td class="num">${esc(count)}</td><td>${esc(meanings[type])}</td></tr>`).join('')}</tbody></table></div><details><summary><strong>How architecture violations are calculated</strong></summary><p>Public functions are notebook-facing entrypoints and must not be called by public callables or shared helpers. Shared helpers are reusable implementation details. Private helpers stay owner-local, and Unknown marks uncertain helper placement.</p><table><thead><tr><th>Caller type</th><th>Callee type</th><th>Result</th></tr></thead><tbody>${[['Public function','Shared helper','Allowed'],['Public function','Private helper in same file','Warning only'],['Shared helper','Public function','Broken rule'],['Shared helper','Private helper in same file','Warning only'],['Shared helper','Private helper in another file','Broken rule'],['Private helper','Shared helper','Allowed']].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table></details>`}function architectureViolationCount(flow){const numeric=Number(flow.architecture_violation_count??0);return Number.isFinite(numeric)?numeric:0}function architectureFindingRows(flow){return (flow.transitive_callees||[]).filter(c=>c.architecture_result==='Violation'||c.recommended_action==='Broken rule')}function architectureFindingCount(flow){return architectureFindingRows(flow).length}function updatePublicFilterControls(){}function isPublicCallableInventoryRow(row){const kind=text(row.callable_kind).toLowerCase(),classification=text(row.simple_classification||row.function_type).toLowerCase();if(kind==='class'||classification==='public config class'||classification==='class')return false;const markers=[row.function_type,row.item_type,row.itemType,row.layer,row.callable_role_group,row.reachability,row.reachability_kind,row.recommended_action,...(row.callable_role||[]),...(row.signals||[])].map(v=>text(v).toLowerCase());return markers.includes('public function')||markers.includes('public callable')||markers.includes('public')||markers.includes('public_entrypoint')||markers.includes('public api entrypoint')||markers.includes('public_api_entrypoint')}function inventoryRowToPublicFlow(row){return deriveScopedPublicFlowFromInventory(row)||{...row,qualified_name:row.qualified_name,function_name:row.function_name,module:row.module,source_path:row.source_path,docs_path:row.docs_path,docs_url:row.docs_url,source_url:row.source_url,width:row.calls_count??(row.callees||[]).length??0,scope:1,scope_asset_count:1,max_depth:0,direct_callees:row.callees||[],transitive_callees:[],architecture_findings:[],architecture_violation_count:0,review_for_merge_count:0,flow_source:'function_inventory'}}function inventoryCalleeQn(callee){return text(callee?.qualified_name||callee?.target_qualified_name||callee?.callee_qualified_name||callee).trim()}function inventoryRowAsFlowNode(row,parent,depth,edge={}){return{...row,...edge,qualified_name:row.qualified_name,function_name:row.function_name||text(row.qualified_name).split('.').pop(),module:row.module,source_path:row.source_path||row.owner_file,docs_path:row.docs_path,docs_url:row.docs_url,source_url:row.source_url,parent_qualified_name:parent,depth:depth,simple_classification:row.simple_classification||row.function_type||row.layer||'Shared helper',layer:row.layer||row.function_type||'internal',calls_inside_flow:(row.callees||[]).length,called_inside_flow_by:1}}function deriveScopedPublicFlowFromInventory(row){if(!row||!row.qualified_name)return null;const seen=new Set([row.qualified_name]),transitive=[];let maxDepth=0;function visit(parentRow,depth){(parentRow.callees||[]).forEach(edge=>{const qn=inventoryCalleeQn(edge);if(!qn||seen.has(qn))return;const child=inventoryByQn.get(qn)||{qualified_name:qn,function_name:text(edge.function||qn).split('.').pop(),module:edge.module||'',source_url:edge.source_url,layer:edge.layer,review_status:edge.review_status,callable_kind:edge.callable_kind};seen.add(qn);maxDepth=Math.max(maxDepth,depth);transitive.push(inventoryRowAsFlowNode(child,parentRow.qualified_name,depth,edge));if(inventoryByQn.has(qn))visit(child,depth+1)})}visit(row,1);const direct=(row.callees||[]).map(inventoryCalleeQn).filter(Boolean);return{...row,qualified_name:row.qualified_name,function_name:row.function_name||text(row.qualified_name).split('.').pop(),module:row.module,source_path:row.source_path||row.owner_file,docs_path:row.docs_path,docs_url:row.docs_url,source_url:row.source_url,width:row.width??row.calls_count??direct.length,scope:row.scope??row.scope_asset_count??seen.size,scope_asset_count:row.scope_asset_count??row.scope??seen.size,max_depth:row.max_depth??maxDepth,direct_callees:direct,transitive_callees:transitive,architecture_findings:[],architecture_violation_count:0,review_for_merge_count:0,flow_source:'function_inventory_scope'}}function derivePublicFlowsFromInventory(rows){return(rows||[]).filter(isPublicCallableInventoryRow).map(inventoryRowToPublicFlow)}function mergeMissingInventoryPublicFlows(flows,rows){const merged=[...(flows||[])],keys=new Set();merged.forEach(flow=>publicFlowSelectionKeys(flow).forEach(key=>keys.add(key)));(rows||[]).filter(isPublicCallableInventoryRow).forEach(row=>{const fallback=inventoryRowToPublicFlow(row);if(fallback&&!publicFlowSelectionKeys(fallback).some(key=>keys.has(key))){merged.push(fallback);publicFlowSelectionKeys(fallback).forEach(key=>keys.add(key))}});return merged}function publicSearchHaystack(f){return[f.function_name,f.qualified_name,f.module,f.source_path,f.owner_file,f.recommended_action,...(f.signals||[]),...(f.architecture_signals||[]),...(f.review_signals||[])].map(text).join(' ').toLowerCase()}function filteredPublicFlows(){const q=state.publicSearch.toLowerCase();return publicEntryFlows.filter(f=>(!q||publicSearchHaystack(f).includes(q)))}function sortValue(flow,key){if(key==='callable')return text(flow.function_name).toLowerCase();if(key==='width')return Number(flow.width??0);if(key==='scope')return Number(flow.scope??flow.scope_asset_count??0);if(key==='depth')return Number(flow.max_depth??0);if(key==='signals')return flowSignals(flow).join(' ').toLowerCase();return text(flow.function_name).toLowerCase()}function stableSortRows(rows){const dir=state.sortDirection==='desc'?-1:1,key=state.sortKey;return rows.map((row,index)=>({row,index})).sort((a,b)=>{const av=sortValue(a.row,key),bv=sortValue(b.row,key);if(av<bv)return -1*dir;if(av>bv)return 1*dir;return a.index-b.index}).map(item=>item.row)}function updateSortButtons(){document.querySelectorAll('[data-sort-key]').forEach(button=>{const active=button.dataset.sortKey===state.sortKey;button.setAttribute('aria-sort',active?(state.sortDirection==='asc'?'ascending':'descending'):'none')})}function rowsForDisplay(){if(!state.collapsedPublicList)return visibleFlows;const active=selectedPublicFlow(state.activePublicFlow||state.selectedFlow);const activeKey=active?active.qualified_name:state.activePublicFlow;return visibleFlows.filter(f=>f.qualified_name===activeKey)}function setPublicListControls(){const active=selectedPublicFlow(state.activePublicFlow||state.selectedFlow);$('showAllPublicCallables').hidden=!state.collapsedPublicList;$('collapsePublicList').hidden=state.collapsedPublicList||!active;$('publicListStatus').textContent=state.collapsedPublicList&&active?`Showing graph for selected public callable from ${visibleFlows.length} matching public callables.`:`Showing ${visibleFlows.length} matching public callables.`;const showSelectedBanner=Boolean(state.collapsedPublicList&&active);$('selectedPublicFlowSummary').classList.toggle('is-visible',showSelectedBanner);$('selectedPublicFlowSummary').innerHTML=showSelectedBanner?`<div class="callable-flow-filter-banner"><strong>Showing graph for <code>${esc(active.function_name)}</code></strong><button type="button" id="backToAllPublicCallables" class="callable-flow-reset-button">Back to all public callables</button></div>`:'';const reset=$('backToAllPublicCallables');if(reset)reset.onclick=showAllPublicCallables}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');if(!el)return;el.textContent=message;el.className=isError?'load-status issue':'load-status'}function dashboardCacheBust(url){const u=new URL(url,document.baseURI);u.searchParams.set('v','boot-dashboard-v1');return u.href}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';let url;if(path.includes(referenceMarker)){url=origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json'}else if(path.includes(assetsMarker)){url=origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json'}else{url=new URL('reference/_data/function-call-graph.json',document.baseURI).href}return dashboardCacheBust(url)}function updateFunctionCallGraphDataLink(url){const openLink=$('openFunctionCallGraphJson'),downloadLink=$('downloadFunctionCallGraphJson');if(openLink)openLink.href=url;if(downloadLink){downloadLink.href=url;downloadLink.download='function-call-graph.json'}}function renderLoadedCount(){const warning=publicFlowsFromInventory&&publicEntryFlows.length?' Public flow details were not found, so this table is using public callable inventory rows.':'';renderLoadStatus(`Loaded ${inventory.length} total functions; ${publicEntryFlows.length} public callables available; ${visibleFlows.length} rows after filters.${warning}`)}function syncPreRenderedPublicCallableRows(){const visible=new Set(rowsForDisplay().map(f=>f.qualified_name));document.querySelectorAll('[data-public-flow-row]').forEach(row=>{const qn=row.dataset.publicFlowRow,shown=visible.has(qn);row.hidden=!shown;row.style.display=shown?'':'none';row.setAttribute('aria-hidden',shown?'false':'true');const selected=Boolean(state.selectedFlow)&&qn===state.selectedFlow;row.classList.toggle('active',selected);row.setAttribute('aria-selected',selected?'true':'false')});document.querySelectorAll('[data-summary-row]').forEach(row=>{const qn=row.dataset.summaryRow,shown=visible.has(qn);row.hidden=!shown;row.style.display=shown?'':'none';row.setAttribute('aria-hidden',shown?'false':'true');row.classList.toggle('is-open',state.openSummaryFlow===qn)})}function renderPublicCallableList(){rebuildPublicFlowSelectionIndex();visibleFlows=stableSortRows(filteredPublicFlows());updatePublicFilterControls();const activeFlow=state.activePublicFlow?selectedPublicFlow():null;if(activeFlow&&state.selectedFlow)state.activePublicFlow=activeFlow.qualified_name;if(state.activePublicFlow&&!visibleFlows.some(f=>f.qualified_name===state.activePublicFlow))state.collapsedPublicList=false;renderLoadedCount();syncPreRenderedPublicCallableRows();setPublicListControls();updateSortButtons();renderFlowDetails();updateExportControls()}function showAllPublicCallables(){state.collapsedPublicList=false;state.activePublicFlow='';state.selectedFlow='';if(window.setArchitectureScope)window.setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''},{scroll:false});renderPublicCallableList();$('publicCallableTableWrap').scrollIntoView({behavior:'smooth',block:'start'})}function collapsePublicList(){state.collapsedPublicList=true;renderPublicCallableList();$('publicFlowDetails').scrollIntoView({behavior:'smooth',block:'start'})}function buildFlowTree(flow){const root={qualified_name:flow.qualified_name,function_name:flow.function_name,module:flow.module,function_type:'Public function',layer_group:'Public function',simple_classification:'Public function',source_path:flow.source_path,calls_inside_flow:(flow.direct_callees||[]).length,called_inside_flow_by:0,used_outside_flow:0,is_end_node:!(flow.direct_callees||[]).length,docs_url:flow.docs_url,docs_path:flow.docs_path,source_url:flow.source_url,children:[]},byParent=new Map();(flow.transitive_callees||[]).forEach(r=>{const p=r.parent_qualified_name||flow.qualified_name;if(!byParent.has(p))byParent.set(p,[]);byParent.get(p).push({...r,children:[]})});function attach(n){n.children=(byParent.get(n.qualified_name)||[]).sort((a,b)=>a.depth-b.depth);n.children.forEach(attach);return n}return attach(root)}function flowTreeNodeType(n){const raw=text(n.simple_classification||n.function_type||n.layer_group||n.layer||'unknown').toLowerCase();if(raw.includes('public'))return 'public callable';if(raw.includes('private'))return 'private helper';if(raw.includes('class'))return 'class';if(raw.includes('method'))return 'method';if(raw.includes('shared')||raw.includes('internal'))return 'shared helper';return 'unknown'}function flowTreeNodeFile(n){const path=text(n.source_path||n.owner_file).replace(/^src\/fabricops_kit\//,'');if(path)return path;const moduleName=text(n.module).replace(/^fabricops_kit\./,'');return moduleName?`${moduleName.replace(/\./g,'/')}.py`:'unknown'}function flowTreeCallableLink(n){const href=sourceHref(n),name=`${esc(n.function_name||n.callable||text(n.qualified_name).split('.').pop()||'unknown')}(...)`;return href?`<a class="reference-call-tree-callable" href="${esc(href)}"><code>${name}</code></a>`:`<code>${name}</code>`}function flowTreeLine(n,prefix=''){return `${prefix}[${flowTreeNodeFile(n)}] [${flowTreeNodeType(n)}] ${text(n.function_name||n.callable||text(n.qualified_name).split('.').pop()||'unknown')}(...)`}function renderTreeRows(n,prefix=''){const children=Array.isArray(n.children)?n.children:[],rows=[flowTreeLine(n,prefix)];children.forEach((child,index)=>{const last=index===children.length-1,connector=last?'└── ':'├── ',extension=last?'    ':'│   ';rows.push(...renderTreeRows(child,prefix+connector).map((row,rowIndex)=>rowIndex===0?row:row.replace(prefix+connector,prefix+extension)))});return rows}function renderFlowTree(tree){return `<pre id="callableFlowTree" class="reference-call-tree flow-tree" role="tree" data-callable-architecture-flow="true">${esc(renderTreeRows(tree).join('\n'))}</pre>`}function flowHealth(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return 'Needs architecture review';if(isGraphReviewCandidate(flow))return 'Graph review candidate';if((flow.external_dependents_count||0)>0||mergeCandidateCount(flow)>0)return 'Informational signals';return 'Healthy'}function flowReason(flow,architectureFindings,mergeCandidates){if(hasArchitectureViolation(flow))return `${architectureFindings.length} architecture finding(s) need review; open the flow tree for exact nodes.`;if(isGraphReviewCandidate(flow))return 'This public callable exceeds a width or depth review threshold.';if((flow.external_dependents_count||0)>0||mergeCandidates.length)return 'Informational signals are present, but this public callable is not a graph review candidate.';return 'No architecture violations found in this graph.'}function flowNextStepLabel(flow,architectureFindings=[],mergeCandidates=[]){const explicit=text(flow?.recommended_simplification_action??flow?.recommended_action??flow?.next_step).trim();if(explicit&&explicit!=='Next step')return displayLabel(explicit);if(hasArchitectureViolation(flow||{}))return 'Contains architecture violation';if(isGraphReviewCandidate(flow||{}))return 'Large depth / width';return explicit?displayLabel(explicit):''}function flowNextStep(flow,architectureFindings,mergeCandidates){const label=flowNextStepLabel(flow,architectureFindings,mergeCandidates);if(label==='Contains architecture violation')return 'Contains architecture violations before refactoring this callable.';if(label==='Large depth / width')return 'Large depth / width because this public callable exceeds a width or depth threshold.';return label}function flowSignalChips(flow,architectureFindings,mergeCandidates){const chips=[];const longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold();chips.push(architectureFindings.length?`<span class="badge critical">${architectureFindings.length} architecture finding${architectureFindings.length===1?'':'s'}</span>`:'<span class="badge keep">No architecture violations</span>');if(longThreshold!==null&&(flow.max_depth||0)>=longThreshold)chips.push('<span class="badge warn">Too many steps</span>');if(largeThreshold!==null&&(flow.width||0)>largeThreshold)chips.push('<span class="badge warn">Too many helpers</span>');if(mergeCandidates.length)chips.push(`<span class="badge muted">${mergeCandidates.length} maybe combine</span>`);if((flow.external_dependents_count||0)>0)chips.push('<span class="badge info">Shared helper</span>');return chips.slice(0,5).join('')}function callableIdentityKeys(value){const raw=text(value).trim();if(!raw)return[];const keys=[raw],withoutPrefix=raw.replace(/^fabricops_kit\./,'');keys.push(withoutPrefix);const add=value=>{if(value){keys.push(value);keys.push(`fabricops_kit.${value.replace(/^fabricops_kit\./,'')}`)}};const parts=withoutPrefix.split('.').filter(Boolean),last=parts[parts.length-1]||'';keys.push(last);if(parts.length>=2){const owner=parts.slice(0,-1).join('.');keys.push(owner);add(owner);if(parts[parts.length-1]===parts[parts.length-2]){const dedupedOwner=parts.slice(0,-1).join('.');keys.push(dedupedOwner);add(dedupedOwner)}}if(parts.length>=3){const moduleOwner=parts.slice(0,2).join('.'),moduleFunction=parts.slice(0,2).concat(last).join('.');keys.push(moduleOwner,moduleFunction);add(moduleOwner);add(moduleFunction)}return unique(keys)}function publicFlowSelectionKeys(flow){const moduleName=text(flow?.module).replace(/^fabricops_kit\./,''),functionName=text(flow?.function_name),qualifiedName=text(flow?.qualified_name),publicCallable=text(flow?.public_callable),keys=[...callableIdentityKeys(qualifiedName),...callableIdentityKeys(functionName),...callableIdentityKeys(publicCallable),...callableIdentityKeys(moduleName),...callableIdentityKeys(moduleName&&functionName?`${moduleName}.${functionName}`:''),...callableIdentityKeys(moduleName&&functionName?`fabricops_kit.${moduleName}.${functionName}`:''),...(Array.isArray(flow?.selection_keys)?flow.selection_keys.flatMap(callableIdentityKeys):[])];return unique(keys)}function canonicalPublicFlowKey(flow){return text(flow?.qualified_name)||publicFlowSelectionKeys(flow)[0]||text(flow?.function_name)}function embeddedPublicEntryFlows(){const data=typeof EMBEDDED_FUNCTION_CALL_GRAPH_DATA==='undefined'?{}:EMBEDDED_FUNCTION_CALL_GRAPH_DATA;return Array.isArray(data.public_entrypoint_flow)&&data.public_entrypoint_flow.length?data.public_entrypoint_flow:[]}function ensurePublicEntryFlows(){const embeddedFlows=embeddedPublicEntryFlows();if(embeddedFlows.length&&publicEntryFlows!==embeddedFlows&&(!publicEntryFlows.length||publicEntryFlows.every(flow=>flow.flow_source==='function_inventory_scope'))){publicEntryFlows=embeddedFlows;publicFlowsFromInventory=false}if(publicFlowBySelectionKey.size===0&&publicEntryFlows.length)rebuildPublicFlowSelectionIndex()}function selectedPublicFlow(key=state.activePublicFlow){ensurePublicEntryFlows();const selectedKey=text(key).trim();if(!selectedKey)return null;if(publicFlowBySelectionKey.size===0&&publicEntryFlows.length)rebuildPublicFlowSelectionIndex();const lookupKeys=callableIdentityKeys(selectedKey);for(const lookupKey of lookupKeys){const indexed=publicFlowBySelectionKey.get(lookupKey);if(indexed)return indexed}return publicEntryFlows.find(flow=>publicFlowSelectionKeys(flow).some(flowKey=>lookupKeys.includes(flowKey)||callableIdentityKeys(flowKey).some(key=>lookupKeys.includes(key))))||null}function rebuildPublicFlowSelectionIndex(){publicFlowBySelectionKey=new Map();(publicEntryFlows||[]).forEach(flow=>publicFlowSelectionKeys(flow).forEach(key=>{if(!publicFlowBySelectionKey.has(key)||publicFlowBySelectionKey.get(key)?.flow_source==='function_inventory')publicFlowBySelectionKey.set(key,flow)}))}function publicFlowHydrationDebug(clickedKey=state.activePublicFlow){ensurePublicEntryFlows();const clicked=text(clickedKey).trim();return{embedded_graph_data_present:embeddedGraphDataPresent,embedded_graph_generated_at_utc:loadedFunctionCallGraphGeneratedAtUtc||'',embedded_selected_flow_records_count:(publicEntryFlows||[]).length,dashboard_ui_generated_at:'',boot_code_version:'boot-dashboard-v2-static',public_entry_flows_length:(publicEntryFlows||[]).length,public_flow_by_selection_key_size:publicFlowBySelectionKey.size,clicked_key:clicked,has_clicked_key:publicFlowBySelectionKey.has(clicked),first_10_public_flow_qualified_names:(publicEntryFlows||[]).slice(0,10).map(flow=>flow.qualified_name).filter(Boolean),last_load_error:lastFunctionCallGraphLoadError||''}}function unresolvedPublicFlowDebugHtml(clickedKey=state.activePublicFlow){const debug=publicFlowHydrationDebug(clickedKey),clicked=debug.clicked_key,candidates=unique([clicked,state.activePublicFlow,state.selectedFlow,clicked.replace(/^fabricops_kit\./,''),...publicEntryFlows.flatMap(flow=>publicFlowSelectionKeys(flow)).filter(key=>key&&key.includes(clicked))].filter(Boolean)).slice(0,12),firstFlowNames=debug.first_10_public_flow_qualified_names,hasClickedKey=debug.has_clicked_key;return `<h2>Selected public callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${esc(clicked||'No public callable selected')}</strong></div><span class="badge warn">Flow lookup unresolved</span></div><p>No public flow resolved for the clicked key. Static generator debug details are shown below.</p><ul><li><strong>Embedded graph data present:</strong> <code>${esc(debug.embedded_graph_data_present)}</code></li><li><strong>Embedded graph generated_at_utc:</strong> <code>${esc(debug.embedded_graph_generated_at_utc||'Not provided')}</code></li><li><strong>Embedded selected-flow records count:</strong> <code>${esc(debug.embedded_selected_flow_records_count)}</code></li><li><strong>Dashboard HTML rendered at:</strong> <code>${esc(debug.dashboard_ui_generated_at||'Not provided')}</code></li><li><strong>Boot code version:</strong> <code>${esc(debug.boot_code_version)}</code></li><li><strong>publicEntryFlows.length:</strong> <code>${esc(debug.public_entry_flows_length)}</code></li><li><strong>publicFlowBySelectionKey.size:</strong> <code>${esc(debug.public_flow_by_selection_key_size)}</code></li><li><strong>Clicked key:</strong> <code>${esc(clicked)}</code></li><li><strong>publicFlowBySelectionKey.has(clickedKey):</strong> <code>${esc(hasClickedKey)}</code></li>${debug.last_load_error?`<li><strong>Last load error:</strong> <code>${esc(debug.last_load_error)}</code></li>`:''}</ul><p><strong>Candidate lookup keys:</strong> ${candidates.length?candidates.map(key=>`<code>${esc(key)}</code>`).join(' '):'<span class="badge warn">None</span>'}</p><p><strong>First 10 public flow qualified_name values:</strong> ${firstFlowNames.length?firstFlowNames.map(key=>`<code>${esc(key)}</code>`).join(' '):'<span class="badge warn">None</span>'}</p>${lastFunctionCallGraphLoadError?`<p>Embedded graph data could not initialize. Error: <code>${esc(lastFunctionCallGraphLoadError)}</code>.</p>`:`<p>No call graph is available for the selected public callable in the embedded generator data.</p>`}</section>`}function renderUnresolvedPublicFlowDebug(clickedKey){const detail=$('publicFlowDetails');if(detail)detail.innerHTML=unresolvedPublicFlowDebugHtml(clickedKey)}function renderFlowDetails(){const f=state.activePublicFlow?selectedPublicFlow():null;const detail=$('publicFlowDetails');if(!detail)return;if(!f){detail.innerHTML='<h2>Selected public callable flow</h2><p>All runtime assets selected. No single public callable flow is shown for this scope.</p>';return}if(f.flow_source==='function_inventory'){$('publicFlowDetails').innerHTML=`<h2>Selected public callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge info">Inventory row</span></div><p>Source file: ${esc(f.source_path||f.owner_file||f.module||'Unknown')}</p><p>Detailed call flow was not available for this public callable.</p></section>`;return}const tree=buildFlowTree(f),architectureFindings=architectureFindingRows(f),mergeCandidates=(f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate),longThreshold=longCallChainThreshold(),health=flowHealth(f,architectureFindings,mergeCandidates),reason=flowReason(f,architectureFindings,mergeCandidates),nextStep=flowNextStep(f,architectureFindings,mergeCandidates),nextStepLabel=flowNextStepLabel(f,architectureFindings,mergeCandidates),signals=flowSignalChips(f,architectureFindings,mergeCandidates);$('publicFlowDetails').innerHTML=`<h2>Selected public callable flow</h2><section class="flow-summary-card"><div class="flow-summary-heading"><div><strong>${sourceCallableLink(f)}</strong><small>${esc(f.qualified_name)}</small></div><span class="badge ${publicCallableSeverity(f)==='architecture'?'critical':publicCallableSeverity(f)==='review'?'warn':'keep'}">${esc(health)}</span></div>${nextStep?`<div class="flow-summary-recommendation"><span>Recommendation</span><strong>${esc(nextStepLabel)}</strong></div>`:''}<p>${esc(reason)}</p></section><div class="flow-meta"><div><strong>${f.width??f.direct_call_count??0}</strong><br><span>Width (direct calls)</span></div><div><strong>${f.scope??f.scope_asset_count??f.downstream_count??0}</strong><br><span>Scope (runtime assets)</span></div><div><strong>${f.max_depth}</strong><br><span>${longThreshold===null?'Max depth':'Too many steps threshold >= '+longThreshold}</span></div><div><strong>${f.architecture_violation_count}</strong><br><span>Broken rules</span></div><div><strong>${mergeCandidateCount(f)}</strong><br><span>Maybe combine</span></div><div title="Number of \`.py\` source files included in the generated documentation scope."><strong>${(f.source_python_files||f.modules_touched||[]).length}</strong><br><span>Source Python files</span></div><div><strong>${f.external_dependents_count||0}</strong><br><span>External/shared impact</span></div></div><section class="flow-key-signals"><h3>Key signals</h3><div>${signals}</div><p>${isGraphReviewCandidate(f)?esc('This callable exceeds a graph width or depth threshold. Review whether nested helpers should stay separate, be shared, or be simplified.'):flowSignals(f).length?'Informational signals only.':'No review flags detected.'}</p></section>${nextStep?`<section class="flow-next-step"><h3>Next step</h3><p>${esc(nextStep)}</p></section>`:''}<h3>Function call graph tree</h3>${f.selected_flow_tree_html||renderFlowTree(tree)}`}function selectedItem(){const byQn=new Map(publicEntryFlows.map(r=>[r.qualified_name,r]));return state.selectedFlow?byQn.get(state.selectedFlow):null}function selectedItems(){const item=selectedItem();return item?[item]:[]}function selectedFlowName(){const item=selectedItem();return item?item.function_name:'none'}function publicCallableFindingRows(flow){const findings=architectureFindingRows(flow),longThreshold=longCallChainThreshold(),largeThreshold=largeDependencySurfaceThreshold(),rows=[...(flow.architecture_violation_count?[{finding:'Broken rules found',evidence:`${flow.architecture_violation_count} call edge(s) go in the wrong direction.`,next_step:'Inspect the exact edges below.'}]:[]),...((longThreshold!==null&&(flow.max_depth||0)>=longThreshold)?[{finding:'Too many steps',evidence:`Depth ${flow.max_depth}, threshold >= ${longThreshold}`,next_step:'Inspect whether the flow can be simplified.'}]:[]),...((largeThreshold!==null&&(flow.width||0)>largeThreshold)?[{finding:'Too many helpers',evidence:`Width ${flow.width??flow.direct_call_count??0} direct call(s), threshold > ${largeThreshold}`,next_step:'This public callable has many direct calls. Refactor carefully.'}]:[]),...((flow.external_dependents_count||0)>0?[{finding:'Shared helper',evidence:`${flow.external_dependents_count} function(s) in this graph are used outside this graph.`,next_step:'Inspect outside dependents before refactoring shared helpers.'}]:[]),...((flow.helper_cleanup_candidates||0)>0?[{finding:'Maybe combine inside flow',evidence:mergeCandidateCount(flow)===1?'1 helper function is marked Maybe combine.':`${mergeCandidateCount(flow)} helper functions are marked Maybe combine.`,next_step:'Review helper readability without changing the public API.'}]:[])];return rows.length?rows:[{finding:'Healthy',evidence:'Clear',next_step:''}]}function findingRows(f){return architectureFindingRows(f).map(v=>({source_function:(inventoryByQn.get(v.parent_qualified_name)||{}).function_name||v.parent_qualified_name,source_type:(inventoryByQn.get(v.parent_qualified_name)||{}).simple_classification||v.caller_type||'Unknown',target_function:v.function_name,target_type:v.simple_classification||'Unknown',finding_type:v.violation_type||findingLabel(v.recommended_action||'Broken rule'),suggested_fix:v.violation_type==='Cross-file private dependency'?'Move the private helper into the caller file or expose an architecture-visible helper.':INTERNAL_LAYERING_SUGGESTED_FIX,source_link:linkMetadata(inventoryByQn.get(v.parent_qualified_name)||{qualified_name:v.parent_qualified_name}),target_link:linkMetadata(v)}))}function cleanupRows(f){return (f.transitive_callees||[]).filter(c=>c.helper_cleanup_candidate).map(c=>({function:c.function_name,function_type:c.simple_classification||c.layer_group,called_by:(inventoryByQn.get(c.parent_qualified_name)||{}).function_name||c.parent_qualified_name,finding:findingLabel(c.recommended_action||'Maybe combine'),next_step:(c.recommended_action||'').includes('Shared')?'Keep as shared internal helper.':(c.recommended_action||'').includes('Used several')?'Keep when repeated use improves readability.':(c.recommended_action||'').includes('Recursive')?'Keep recursive helpers separate unless a careful redesign is planned.':'Review whether merging this helper into its only caller improves readability.',link:linkMetadata(c),called_by_link:linkMetadata(inventoryByQn.get(c.parent_qualified_name)||{qualified_name:c.parent_qualified_name})}))}function serializeTree(n){return {...linkMetadata(n),qualified_name:n.qualified_name,function_name:n.function_name,module:n.module,function_type:n.function_type||n.layer_group||'Public function',classification:n.simple_classification||'Unknown',source_path:n.source_path||null,called_inside_flow_by:n.called_inside_flow_by||0,calls_inside_flow:n.calls_inside_flow||0,used_outside_flow:n.used_outside_flow||0,is_end_node:Boolean(n.is_end_node),review_for_merge:Boolean(n.helper_cleanup_candidate),layer:n.layer||null,layer_group:n.layer_group||n.function_type||'Public function',helper_tags:[...(n.architecture_result==='Violation'&&n.violation_type?[`Broken rule: ${n.violation_type}`]:[])],children:(n.children||[]).map(serializeTree)}}function exportItem(f){const tree=buildFlowTree(f),row=inventoryByQn.get(f.qualified_name)||f,architectureFindings=findingRows(f);return{function_name:f.function_name,item_name:f.function_name,qualified_name:f.qualified_name,width:f.width||0,scope:f.scope||f.scope_asset_count||0,depth:f.max_depth||0,signals:flowSignals(f),architecture_violation_details:architectureFindings,called_helper_details:f.transitive_callees||[],review_for_merge_helpers:[],source_file:row.source_path||null,source_url:row.source_url||null,flow_tree:serializeTree(tree),...linkMetadata(f)}}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function call graph cleanup packet.
-
-Use the selected public function and its function call graph context to plan a safe cleanup. Group items by cleanup type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet.
-
-Compatibility mode:
-${meta.label}
-
-Compatibility instruction:
-${meta.promptInstruction}
-
-If compatibility mode is “Preserve backwards compatibility”, preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.
-
-If compatibility mode is “Allow breaking changes”, propose cleaner breaking changes where they improve the architecture. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.
-
-Always call out tests required before changes.`}function refactorPacket(){const item=selectedItem(),selected=item?exportItem(item):null;return{schema:'fabricops_public_callable_flow_cleanup_packet',export_type:'Public callable cleanup packet',ai_prompt:cleanupPrompt(),selected_public_callable:selected,selected_flow:selected?selected.flow_tree:null,flow_context:selected?{...selected.flow_context,...cleanupMode()}:cleanupMode(),health:selected?selected.overall_health:null,key_signals:selected?selected.key_signals:[],next_step:selected?selected.next_step:null,architecture_findings:selected?selected.architecture_findings:[],merge_candidates:selected?selected.merge_candidates:[],public_callable_findings:selected?selected.public_callable_findings:[],direct_callees:selected?selected.direct_callees:[],transitive_callees:selected?selected.transitive_callees:[],requested_work:['Inspect the selected public function and its function call graph.','Identify whether the recommended action is safe.','Resolve true cross-file private dependency violations first.','For same-file private dependencies, treat as warning only.','Merge or inline helpers only when readability improves.','Preserve notebook-facing behavior.','Update tests where behavior could be affected.','Return summary, changed functions, tests, risks, and skipped items.'],safety_constraints:['Preserve public callable behavior and external API compatibility.','Do not casually change public function signatures.','Same-file private dependency is warning only.','Cross-file private dependency is an architecture violation.'],expected_output:'Return summary, changed functions, tests, risks, and skipped items.'}}function yamlScalar(v){if(v===null||v===undefined)return 'null';if(typeof v==='number'||typeof v==='boolean')return String(v);const value=String(v);return /^[A-Za-z0-9_./:@ -]+$/.test(value)&&value.trim()===value&&value!==''?value:JSON.stringify(value)}function yamlValue(value,indent=0){const pad='  '.repeat(indent);if(Array.isArray(value)){if(!value.length)return '[]';return value.map(item=>{if(item&&typeof item==='object')return `${pad}-\n${yamlValue(item,indent+1)}`;return `${pad}- ${yamlScalar(item)}`}).join('\n')}if(value&&typeof value==='object'){const entries=Object.entries(value);if(!entries.length)return '{}';return entries.map(([key,item])=>{if(item&&typeof item==='object'){const rendered=yamlValue(item,indent+1);return `${pad}${key}:\n${rendered}`}return `${pad}${key}: ${yamlScalar(item)}`}).join('\n')}return `${pad}${yamlScalar(value)}`}function yamlPacket(packet){return yamlValue(packet)+'\n'}function cleanupPacketTimestamp(){const now=new Date(),pad=value=>String(value).padStart(2,'0');return `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`}function buildCleanupPacketFilename(selectedFunctionName,extension){const safeName=text(selectedFunctionName||'none').replace(/[^A-Za-z0-9_.-]/g,'_');return `fabricops-function-call-graph-cleanup-packet__${safeName}__${cleanupPacketTimestamp()}.${extension}`}function downloadPacket(format){const isYaml=format==='yaml';const blob=new Blob([isYaml?yamlPacket(refactorPacket()):JSON.stringify(refactorPacket(),null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=buildCleanupPacketFilename(selectedFlowName(),isYaml?'yaml':'json');a.click()}function updateExportControls(){const item=selectedItem();['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=!item)}$('showAllPublicCallables').onclick=showAllPublicCallables;$('collapsePublicList').onclick=collapsePublicList;$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');function publicFlowClickKeyFromEvent(event){const target=event&&event.target;if(!target||!target.closest)return'';const select=target.closest('[data-public-flow-select]');if(select)return select.dataset.publicFlowSelect||'';const row=target.closest('[data-public-flow-row]');return row?row.dataset.publicFlowRow||'':''}function publicFlowDetailTarget(){return document.getElementById('publicFlowDetails')}function scrollToPublicFlowDetails(){const detail=publicFlowDetailTarget();if(detail)detail.scrollIntoView({behavior:'smooth',block:'start'})}function selectPublicCallableScope(flow,options={}){state.activePublicFlow=flow.qualified_name;state.selectedFlow=flow.qualified_name;state.collapsedPublicList=true;renderPublicCallableList();renderFlowDetails();if(window.setArchitectureScope)window.setArchitectureScope({kind:'public_callable',label:flow.function_name||flow.qualified_name,qualified_name:flow.qualified_name},{scroll:false});renderPublicCallableList();renderFlowDetails();updateExportControls();if(options.scroll)scrollToPublicFlowDetails()}function selectPublicFlowFromClick(key){if(!key)return false;const flow=selectedPublicFlow(key);if(flow){selectPublicCallableScope(flow);return true}state.activePublicFlow=key;state.selectedFlow=key;state.collapsedPublicList=true;syncPreRenderedPublicCallableRows();renderUnresolvedPublicFlowDebug(key);setPublicListControls();updateExportControls();return false}function handlePublicFlowSelectionEvent(event){if(!event||!event.target||!event.target.closest)return false;if(event.target.closest('a.source-link'))return false;const clickedKey=publicFlowClickKeyFromEvent(event);if(!clickedKey)return false;event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();selectPublicFlowFromClick(clickedKey);scrollToPublicFlowDetails();return true}function handlePublicFlowSelectionKeydown(event){if(!event||!event.target||!event.target.closest)return false;if(event.key!=='Enter'&&event.key!==' ')return false;const row=event.target.closest('[data-public-flow-row]');if(!row)return false;event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation();selectPublicFlowFromClick(row.dataset.publicFlowRow||'');scrollToPublicFlowDetails();return true}window.fabricOpsSelectPublicFlowFromClick=selectPublicFlowFromClick;window.fabricOpsRenderPublicFlowDetails=renderFlowDetails;window.fabricOpsSelectedPublicFlow=selectedPublicFlow;window.fabricOpsSelectPublicFlowFromClickDirect=function(event,key){if(event&&event.target&&event.target.closest&&event.target.closest('a.source-link'))return true;if(event){event.preventDefault();event.stopPropagation();if(event.stopImmediatePropagation)event.stopImmediatePropagation()}selectPublicFlowFromClick(key);const detail=document.getElementById('publicFlowDetails');if(detail)detail.scrollIntoView({behavior:'smooth',block:'start'});return false};document.addEventListener('click',handlePublicFlowSelectionEvent,true);document.addEventListener('keydown',handlePublicFlowSelectionKeydown,true);document.addEventListener('click',e=>{const summaryToggle=e.target.closest('[data-summary-toggle]');if(summaryToggle){state.openSummaryFlow=state.openSummaryFlow===summaryToggle.dataset.summaryToggle?'':summaryToggle.dataset.summaryToggle;renderPublicCallableList();return}if(e.target.closest('a,button,input,select,textarea,label,summary,.review-note'))return;});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-public-flow-row]');if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selectPublicFlowFromClick(row.dataset.publicFlowRow);scrollToPublicFlowDetails()}});const publicSearchBox=$('publicSearchBox');if(publicSearchBox)publicSearchBox.addEventListener('input',e=>{state.publicSearch=e.target.value;state.collapsedPublicList=false;renderPublicCallableList()});$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);updateCompatibilityModeMeta();function loadData(){lastFunctionCallGraphLoadError='';renderLoadStatus('Loading embedded function call graph data...');try{const data=EMBEDDED_FUNCTION_CALL_GRAPH_DATA||{};embeddedGraphDataPresent=Boolean(data&&Object.keys(data).length);loadedFunctionCallGraphGeneratedAtUtc=(data.metadata&&data.metadata.generated_at_utc)||data.generated_at_utc||'';inventory=data.function_inventory||[];inventoryByQn=new Map(inventory.map(row=>[row.qualified_name,row]));publicEntryFlows=embeddedPublicEntryFlows();publicFlowsFromInventory=false;if(publicEntryFlows.length){publicEntryFlows=[...publicEntryFlows]}else{publicEntryFlows=derivePublicFlowsFromInventory(inventory);publicFlowsFromInventory=publicEntryFlows.length>0}summaryCounts=data.summary_counts||{};architectureThresholds=data.architecture_thresholds||architectureThresholds;rebuildPublicFlowSelectionIndex();renderCards();const defaultFlow=selectedPublicFlow('fabricops_kit.io.read_lakehouse_table.read_lakehouse_table')||publicEntryFlows[0]||null;if(defaultFlow&&!state.activePublicFlow&&!state.selectedFlow){state.activePublicFlow=defaultFlow.qualified_name;state.selectedFlow=defaultFlow.qualified_name;renderFlowDetails()}renderPublicCallableList();renderLoadStatus(`Embedded graph data present: ${embeddedGraphDataPresent}. Embedded selected-flow records count: ${publicEntryFlows.length} · Boot code version: boot-dashboard-v2-static · Embedded graph generated_at_utc: ${loadedFunctionCallGraphGeneratedAtUtc||'unknown'}`)}catch(error){lastFunctionCallGraphLoadError=error&&error.message?error.message:String(error);const body=$('architectureScopeTableBody');if(body)body.innerHTML=`<tr><td colspan="5"><span class="badge issue">Failed to initialize embedded function call graph data: ${esc(lastFunctionCallGraphLoadError)}</span></td></tr>`;renderCards();renderLoadStatus(`Failed to initialize embedded function call graph data: ${lastFunctionCallGraphLoadError}`,true)}}async function bootDashboard(){renderLoadStatus('Booting dashboard...');loadData()}let dashboardBootStarted=false;function startDashboardBoot(){if(dashboardBootStarted)return;dashboardBootStarted=true;bootDashboard()}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',startDashboardBoot,{once:true})}else{startDashboardBoot()};
-</script><script src="../javascripts/table-controls.js"></script></body></html>
-""".replace("public functions", "public callables").replace("Public functions", "Public callables").replace("public function", "public callable").replace("Public function", "Public callable").replace("<!--CALLABLE_GENERATION_BANNER-->", generation_banner).replace("<!--CALLABLE_PAGE_SHELL_CSS-->", _callable_page_shell_css()).replace("<!--CALLABLE_PAGE_NAV-->", _render_callable_page_nav("architecture")).replace("<!--ARCHITECTURE_SCOPE_ROWS-->", architecture_scope_rows).replace("<!--ARCHITECTURE_SUMMARY_PUBLIC-->", str(architecture_summary_counts["public"])).replace("<!--ARCHITECTURE_SUMMARY_SHARED-->", str(architecture_summary_counts["shared"])).replace("<!--ARCHITECTURE_SUMMARY_PRIVATE-->", str(architecture_summary_counts["private"])).replace("<!--ARCHITECTURE_SUMMARY_REVIEW-->", str(architecture_summary_counts["review"])).replace("<!--ARCHITECTURE_SUMMARY_ISSUES-->", str(architecture_summary_counts["issues"])).replace("<!--ARCHITECTURE_SUMMARY_SIGNALS-->", str(architecture_summary_counts["healthy"])).replace("<!--EMBEDDED_FUNCTION_CALL_GRAPH_DATA-->", embedded_graph_data).replace("<!--STATIC_SELECTED_FLOW_PREVIEW-->", static_selected_flow_preview).replace("Public callable calls public callable", "Public function calls public function").replace("Shared helper calls public " + "callable", "Shared helper calls public function")
-
-def _render_runtime_inventory_source_html(flow_data: dict[str, Any]) -> str:
-    """Render runtime inventory markup used by the combined dashboard."""
-    generation_banner = _render_callable_generation_banner(flow_data)
-    return r"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Function Inventory</title><link rel="stylesheet" href="../stylesheets/table-controls.css"><style><!--CALLABLE_PAGE_SHELL_CSS-->.surface-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.55rem;margin:.75rem 0}.surface-card,.toolbar-card,.inventory-status-bar{background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;padding:.65rem}.surface-card strong{display:block;margin-bottom:.25rem;line-height:1;font-size:1.45rem}.surface-card span{display:block;line-height:1.2;font-weight:700}.surface-card small{display:block;margin-top:.3rem;line-height:1.25;color:#64748b}.surface-card.info{border-color:#bfdbfe;background:#eff6ff}.surface-card.primary{border-color:#c7d2fe;background:#eef2ff}.surface-card.review{border-color:#fde68a;background:#fffbeb}.surface-card.risk{border-color:#fecaca;background:#fef2f2}.surface-card.muted{background:#f1f5f9;color:#475569}.surface-card.info strong,.surface-card.primary strong{color:#1d4ed8}.surface-card.review strong{color:#92400e}.surface-card.risk strong{color:#991b1b}.inventory-filter-grid{display:grid;grid-template-columns:minmax(16rem,1fr) auto;gap:.55rem;margin:.75rem 0;align-items:end}.scope-banner-row{display:flex;justify-content:space-between;gap:.75rem;align-items:center}.scope-banner-row p{margin:.25rem 0 0}.inventory-search-grid .inventory-clear-all{align-self:end}.inventory-status-bar{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;margin:.75rem 0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a}.inventory-status-bar strong,.inventory-status-bar span{font-weight:800}.inventory-status-help{margin:.25rem 0 .75rem;color:#475569}.info-icon{display:inline-flex;align-items:center;justify-content:center;color:#1d4ed8}.inventory-note{background:#eff6ff;border-color:#bfdbfe}.scope-banner{margin:.75rem 0}.inventory-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}.filter-field{display:flex;flex-direction:column;font-weight:700;font-size:.82rem}input,select,button{padding:.42rem .5rem;border:1px solid #dbe3ef;border-radius:.45rem;background:#fff}.export-toolbar{display:flex;flex-direction:column;gap:.65rem;align-items:stretch;box-sizing:border-box;max-width:100%;margin:.75rem 0}.export-header{display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-start;justify-content:space-between}.export-header h2{margin:.1rem 0}.export-header p{margin:.2rem 0 0}.export-mode-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.18rem;box-sizing:border-box;min-width:min(100%,20rem);padding:.18rem;border:1px solid #cbd5e1;border-radius:999px;background:#fff}.export-mode-option{display:flex;min-width:0}.export-mode-option input{position:absolute;opacity:0;pointer-events:none}.export-mode-option span{display:flex;align-items:center;justify-content:center;width:100%;min-height:2rem;padding:.34rem .65rem;border-radius:999px;color:#475569;font-size:.82rem;font-weight:850;line-height:1.15;text-align:center;cursor:pointer}.export-mode-option input:checked+span{background:#1d4ed8;color:#fff;box-shadow:0 .15rem .45rem #1d4ed826}.export-mode-option input:focus-visible+span{outline:3px solid #93c5fd;outline-offset:2px}.toolbar-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:.65rem}.toolbar-card{box-sizing:border-box;min-width:0;background:#f1f5f9}.toolbar-card--selection,.toolbar-card--prompt{display:flex;flex-direction:column;gap:.55rem}.toolbar-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;max-width:100%;min-width:0}.toolbar-field{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;max-width:100%;min-width:0;font-weight:700}.toolbar-field select{max-width:100%;min-width:0}.toolbar-help,.group-help{color:#475569;font-weight:400}.compat-mode-subtitle{margin-top:.35rem;font-size:.85rem;line-height:1.35}.compat-mode-safe{color:#1d4ed8}.compat-mode-review{color:#b45309}.compat-mode-breaking{color:#b91c1c}.toolbar-group{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;max-width:100%;min-width:0}.toolbar-group>div{min-width:0}.toolbar-group .toolbar-row{flex:1 1 16rem}.toolbar-row button{white-space:normal}.primary-action,.danger-action:not(:disabled){background:#1d4ed8;color:#fff;border-color:#1d4ed8}.danger-action:not(:disabled){background:#b91c1c;border-color:#b91c1c}button:disabled,.danger-action:disabled{background:#e5e7eb;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed}.table-wrap{max-width:100%;overflow-x:auto;overflow-y:visible;background:#fff;border:1px solid #dbe3ef;border-radius:.75rem;-webkit-overflow-scrolling:touch}.callable-review-table-wrap{max-width:100%;overflow-x:auto}.callable-review-table{width:100%;table-layout:auto;border-collapse:collapse}.callable-review-table th,.callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}.callable-review-table tr[data-inventory-row]{cursor:pointer}.callable-review-table tr.selected{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}.callable-review-table tr[data-inventory-row]:focus{outline:3px solid #2563eb;outline-offset:-3px}.callable-review-table .col-callable{min-width:18rem;white-space:nowrap}.callable-review-table .col-file-area{min-width:18rem;white-space:nowrap}.callable-review-table .col-item-type,.callable-review-table .col-flow,.callable-review-table .col-health{white-space:nowrap}.callable-review-table .col-usage-scope{min-width:11rem;white-space:nowrap}.callable-review-table .col-recommended-action{min-width:13rem;white-space:nowrap}.callable-review-table .col-details{width:90px;min-width:90px;white-space:nowrap}.callable-review-table .col-details .details-toggle{white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.inventory-row.is-expanded td{border-bottom:0}.details-row{display:none}.details-row.is-open{display:table-row}.details-row td{padding:.75rem 1rem 1rem;background:#f8fbff;border-top:0;border-bottom:1px solid #d8e4f5}.details-panel{max-width:100%;padding:.85rem 1rem;border:1px solid #d8e4f5;border-radius:.5rem;background:#fff;line-height:1.45;white-space:normal;overflow-wrap:anywhere}.details-panel p{margin:.35rem 0}.details-panel a{overflow-wrap:anywhere;word-break:break-word}.details-toggle{font-weight:800;color:#1d4ed8;white-space:nowrap;word-break:keep-all;overflow-wrap:normal}.tag,.badge{display:inline-flex;align-items:center;margin:.06rem;padding:.12rem .42rem;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:.69rem;font-weight:800;line-height:1.2}.badge.issue{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.keep{background:#dcfce7;color:#166534}.badge.muted{background:#e2e8f0;color:#475569}.badge.info{background:#dbeafe;color:#1e40af}@media(max-width:720px){.inventory-filter-grid,.toolbar-card-grid{grid-template-columns:1fr}.export-header{align-items:stretch;flex-direction:column}.export-mode-toggle{width:100%;min-width:0;border-radius:.75rem}.export-mode-option span{border-radius:.55rem}.scope-banner-row{align-items:stretch;flex-direction:column}.toolbar-row,.toolbar-group{align-items:stretch}.toolbar-field,.toolbar-group{flex-direction:column}.toolbar-field select{width:100%}.toolbar-help{display:block}.toolbar-group .toolbar-row{flex:1 1 auto;flex-direction:row}.toolbar-group .toolbar-row button{flex:1 1 9rem}.callable-review-table{min-width:760px}}</style></head><body><header><h1>Function Inventory</h1><p>The Function Inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.</p><!--CALLABLE_GENERATION_BANNER--><!--CALLABLE_PAGE_NAV--></header><main><section id="inventoryStatusBar" class="inventory-status-bar" aria-label="Runtime inventory summary"><strong>Selected <span id="selectedStatusCount">0</span></strong><span>Showing <span id="showingStatusCount">0</span> <span class="info-icon" title="Showing is affected by the current architecture scope, search text, and table column filters." aria-label="Showing is affected by the current architecture scope, search text, and table column filters.">ⓘ</span></span><span>Total <span id="totalStatusCount">0</span></span><span>Public callables <span id="publicCallableStatusCount">0</span></span></section><p class="inventory-status-help"><small>Showing is affected by the current architecture scope, search text, and table column filters.</small></p><section id="scopeBanner" class="toolbar-card inventory-note scope-banner" aria-label="Selected runtime inventory scope"><div class="scope-banner-row"><div><strong>Current scope: <span id="scopeBannerName">All runtime assets</span></strong><p id="scopeBannerHelp">Showing all runtime inventory assets.</p></div><button id="showAllRuntimeAssets" class="inventory-clear-all" type="button">Show all runtime assets</button></div></section><section class="inventory-filter-grid inventory-search-grid" aria-label="Runtime inventory search"><label class="filter-field search-field">Search function inventory <input id="searchBox" type="search"></label><button id="resetFilters" class="inventory-clear-all" type="button" hidden>Clear search</button></section><section id="runtimeExportToolbar" class="export-toolbar runtime-export-toolbar" aria-label="AI refactor export"><div class="export-header"><div><h2>Export runtime inventory cleanup packet</h2><p class="toolbar-help">Quick export exports all currently visible runtime inventory rows. Manual selection exports only rows selected by the user.</p></div><div class="export-mode-toggle" role="radiogroup" aria-label="Export mode"><label class="export-mode-option"><input id="quickExportMode" name="exportMode" type="radio" value="quick" checked><span>Quick export</span></label><label class="export-mode-option"><input id="manualExportMode" name="exportMode" type="radio" value="manual"><span>Manual selection</span></label></div></div><div class="toolbar-card-grid"><div class="toolbar-card toolbar-card--compatibility"><label class="toolbar-field">Compatibility mode <select id="compatibilityMode"><option value="preserve_backwards_compatibility" selected>Preserve backwards compatibility</option><option value="allow_breaking_changes">Allow breaking changes</option></select></label><small id="compatibilityModeSubtitle" class="compat-mode-subtitle compat-mode-safe">Selected cleanup should preserve existing public callable behavior and avoid breaking current users.</small></div><div class="toolbar-card toolbar-card--prompt"><div class="toolbar-group"><div><strong id="exportActionLabel">Export selected public callable flow</strong><br><small id="exportModeHelp" class="group-help">Exports the selected public callable plus all runtime assets in that public callable scope.</small></div><div class="toolbar-row"><button id="downloadJson" type="button">Download JSON</button><button id="downloadYaml" type="button">Download YAML</button></div></div><small id="exportStatus"></small></div><div class="toolbar-card toolbar-card--selection" aria-label="Manual selection"><strong id="selectedCount">Manually selected rows: 0</strong><div class="toolbar-row"><button id="selectVisible" class="primary-action" type="button" disabled>Select visible</button><button id="clearSelected" class="danger-action" type="button" disabled>Clear selection</button></div></div></div></section><p id="resultCount"></p><p id="dataLoadStatus" class="load-status" aria-live="polite">Loading function call graph data...</p><section class="table-wrap callable-review-table-wrap"><table class="callable-review-table" data-table-controls="excel"><thead><tr><th class="col-callable">Item name</th><th class="col-item-type">Item type</th><th class="col-health">Health</th><th class="col-recommended-action">Recommended action</th><th class="col-usage-scope">Usage scope</th><th class="col-details">Details</th><th class="col-file-area">Source file</th></tr></thead><tbody id="inventoryBody"></tbody></table></section></main><script>
-const CANNOT_TRACE_HELP='The scanner could not trace this asset back to a public FabricOps function. This is not proof that the asset is unused or safe to '+'delete.';const DISPLAY_LABEL_MAP={'None':'Healthy','Broken rule':'Broken rule','Too many steps':'Too many steps','Too many helpers':'Too many helpers','Maybe combine':'Maybe combine','Used by one function':'Used by one function','Used several times in one function':'Used several times in one function','Recursive helper':'Recursive helper','Heavily used helper':'Heavily used helper','Shared utility':'Shared utility','Same-file private dependency':'Same-file private dependency'};const COMPATIBILITY_MODES={preserve_backwards_compatibility:{label:'Preserve backwards compatibility',subtitle:'Selected cleanup should preserve existing public callable behavior and avoid breaking current users.',promptInstruction:'Preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.',className:'compat-mode-safe'},allow_breaking_changes:{label:'Allow breaking changes',subtitle:'Selected cleanup may propose cleaner breaking changes when they improve the callable architecture.',promptInstruction:'Propose cleaner breaking changes where they improve architecture, naming, boundaries, maintainability, or long-term usability. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.',className:'compat-mode-breaking'}};let baseRows=[],inventory=[],selectedRows=[],visibleRows=[],summaryCounts={},publicCallableCount=0,publicFlowQns=new Set(),flowSignalsByQn=new Map(),flowAssetsByQn=new Map(),flowByQn=new Map(),inventoryDataMissing=false,currentScope={kind:'all',label:'All runtime assets',qualified_name:''},lastExportMode='quick';const state={search:'',selected:new Set(),expanded:new Set()};const $=id=>document.getElementById(id),text=v=>String(v??''),esc=v=>text(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));function displayLabel(v){return DISPLAY_LABEL_MAP[text(v)]||text(v)}function isPublicCallable(r){return r.layer==='public'||r.function_type==='Public function'}function inCallableFlow(r){return publicFlowQns.has(r.qualified_name)}function rowReachability(r){return r.reachability||((publicFlowQns.has(r.qualified_name)||r.layer==='public')?'reachable_from_public_runtime':'unreachable_runtime_asset')}function reachabilityLabel(r){return rowReachability(r)==='unreachable_runtime_asset'?'Cannot trace back to a public callable':'Reachable from public runtime'}function rowInSelectedScope(r){if(currentScope.kind==='all')return true;if(currentScope.kind==='unreachable')return rowReachability(r)==='unreachable_runtime_asset';if(currentScope.kind==='public_callable'){const flow=selectedPublicFlow(currentScope.qualified_name),clickedQn=flow?text(flow.qualified_name):text(currentScope.qualified_name),flowAssets=flowAssetsByQn.get(clickedQn);if(flowAssets&&flowAssets.size)return flowAssets.has(r.qualified_name);return r.qualified_name===clickedQn}return true}function fileArea(r){return r.owner_file||r.source_path||r.docs_path||r.module||''}const ITEM_TYPE_LABELS={public:'Public callable',class:'Classes',internal:'Shared helper',private_helper:'Private helper'};function itemTypeKey(r){if((r.callable_kind==='class'||r.function_type==='Public config class'||r.simple_classification==='Public config class')&&isPublicCallable(r))return 'class';if(r.layer&&ITEM_TYPE_LABELS[r.layer])return r.layer;if(isPublicCallable(r))return 'public';if(r.function_type==='Private helper')return 'private_helper';if(r.function_type==='Shared helper')return 'internal';return 'unknown'}function itemType(r){return ITEM_TYPE_LABELS[itemTypeKey(r)]||'Private helper'}function flowSignal(r){return flowSignalsByQn.get(r.qualified_name)||{violation:false,warning:false,types:[]}}function duplicateHelperEvidence(r){const values=[r.recommended_action,r.review_status,r.priority,r.violation_type,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase());return values.some(v=>/(duplicate|similar helper|repeated helper|promote|extract|shared utility|shared helper)/.test(v))}function usageScope(r){return reachabilityLabel(r)}function timesUsedLabel(count){const value=Number(count);if(value===1)return 'Used once';if(value>1)return 'Used several times';return 'unknown'}const ACTIONABLE_ACTIONS=new Set(['Fix architecture boundary','Promote to shared utility','Maybe combine','Refactor helper','Rename shared helper','Next step','Verify possible orphan','Warning']);function actionDetails(r){const signal=flowSignal(r),type=itemType(r),scope=usageScope(r),raw=displayLabel(r.recommended_action||''),rawText=[raw,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase()).join(' ');let finding='None',reason='No cleanup action is needed.',evidence='',notes='',cleanup='No action';if(signal.violation){finding='Architecture boundary violation';reason='Private implementation crosses a callable file or module boundary.';evidence=`${sourceHref(r)||fileArea(r)} is referenced outside its owning callable boundary.`;cleanup='Fix architecture boundary'}else if(duplicateHelperEvidence(r)){finding='Duplicate helper logic across callable files';reason='Similar helper logic appears in multiple callable files and may deserve extraction into an intentional shared utility.';evidence=raw||text((r.signals||[]).join('; '))||'Duplicate or promotion-oriented helper signal found.';cleanup='Promote to shared utility'}else if(raw==='Maybe combine'){finding='Maybe combine';reason='This helper is used by one function, and that function uses it once. Review whether keeping it separate makes the code easier to read.';evidence=`Times used: ${timesUsedLabel(r.call_site_count)}.`;cleanup='Maybe combine'}else if(raw==='Used several times in one function'){finding='Used several times in one function';reason='This helper is used by one function, but that function uses it more than once. This is usually a reason to keep it, or at least review carefully.';evidence=`Times used: ${timesUsedLabel(r.call_site_count)}.`;cleanup='Next step'}else if(raw==='Recursive helper'){finding='Recursive helper';reason='Helper calls itself and should not be treated as a simple merge or inline case.';cleanup='Next step'}else if(raw==='Used by one function'){finding='Used by one function';reason='This helper is used by one function. This is a review hint, not an automatic cleanup judgment.';evidence=`Times used: ${timesUsedLabel(r.call_site_count)}.`;cleanup='Next step'}else if(raw==='Heavily used helper'){finding='Heavily used helper';reason='Helper has many distinct callers; protect it and change carefully.';cleanup='No action'}else if(signal.warning){finding=signal.types.map(displayLabel).join(', ')||'Warning';reason='This record needs manual review before cleanup.';cleanup='Warning'}else if(/refactor|large|unclear|split|responsibility/.test(rawText)&&type==='Private helper'){finding='Private helper cleanup';reason='Helper appears large, unclear, or internally mixed and may need same-file cleanup.';cleanup='Refactor helper'}else if(raw&&/Rename/.test(raw)){finding='Naming review';reason='Name may be unclear for its current responsibility.';cleanup='Rename shared helper'}else if(rowReachability(r)==='unreachable_runtime_asset'||raw&&/Remove|Orphan/.test(raw)){finding='Potential orphan';reason=CANNOT_TRACE_HELP;cleanup='Verify possible orphan'}else if(raw&&/Review/.test(raw)){finding='Manual review';reason='Explicit evidence indicates a human should review this record.';cleanup='Next step'}else if(type==='Private helper'&&scope==='Used by owning callable'){finding='Owning callable private helper';reason='Private helper is used by its owning public callable file.';cleanup='Keep private helper'}notes=(r.signals||[]).map(displayLabel).join('; ');return{finding,reason,evidence,notes,cleanup_action:cleanup}}function recommendedAction(r){const details=actionDetails(r);return details.cleanup_action||'No action'}function isActionable(r){return ACTIONABLE_ACTIONS.has(recommendedAction(r))}function healthLabel(r){const action=recommendedAction(r);if(action==='Fix architecture boundary')return 'Broken rule';if(action==='Warning'||action==='Next step')return 'Warning';return 'Healthy'}function healthClass(h){return h==='Broken rule'?'issue':h==='Warning'?'warn':h==='Out of scope'?'muted':'keep'}function healthBadge(i){const health=healthLabel(i);return `<span class="badge ${healthClass(health)}">${esc(health)}</span>`}function actionBadge(i){const action=recommendedAction(i);return `<span class="badge ${ACTIONABLE_ACTIONS.has(action)?'warn':'keep'}">${esc(action)}</span>`}function usageBadge(i){const scope=reachabilityLabel(i);return `<span class="badge ${rowReachability(i)==='unreachable_runtime_asset'?'warn':'info'}">${esc(scope)}</span>`}function evidenceMarkup(value){const evidence=text(value||'None'),match=evidence.match(/https?:\/\/\S+/);if(match){const before=evidence.slice(0,match.index),after=evidence.slice(match.index+match[0].length);return `${esc(before)}<a href="${esc(match[0])}" target="_blank" rel="noopener">${esc(match[0])}</a>${esc(after)}`}return esc(evidence)}function detailsButton(i){const open=state.expanded.has(i.qualified_name);return `<button class="details-toggle" type="button" aria-expanded="${open?'true':'false'}" data-details-toggle="${esc(i.qualified_name)}">Details</button>`}function detailsRow(i){const d=actionDetails(i),open=state.expanded.has(i.qualified_name),notes=d.notes?`<p><strong>Notes:</strong> ${esc(d.notes)}</p>`:'',cleanup=d.cleanup_action?`<p><strong>Cleanup action:</strong> ${esc(d.cleanup_action)}</p>`:'';return `<tr class="details-row ${open?'is-open':''}" data-details-row="${esc(i.qualified_name)}"><td colspan="7"><div class="details-panel"><p><strong>Finding:</strong> ${esc(d.finding)}</p><p><strong>Reason:</strong> ${esc(d.reason)}</p><p><strong>Evidence:</strong> ${evidenceMarkup(d.evidence)}</p>${notes}${cleanup}</div></td></tr>`}function docsHref(docsPath){const clean=String(docsPath||'').replace(/^docs\//,'').replace(/\.md$/,'/').replace(/^\//,'');const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';if(path.includes(referenceMarker))return origin+path.slice(0,path.indexOf(referenceMarker)+1)+clean;if(path.includes(assetsMarker))return origin+path.slice(0,path.indexOf(assetsMarker)+1)+clean;return new URL(clean,document.baseURI).href}function sourceHref(i){if(i.docs_path)return docsHref(i.docs_path);if(i.source_url)return i.source_url;const path=i.source_path;if(!path)return '';const start=i.source_start_line,end=i.source_end_line;let anchor=start?`#L${start}`:'';if(start&&end&&end!==start)anchor+=`-L${end}`;return 'https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/'+path+anchor}function sourceCallableLink(i){const href=sourceHref(i),label=esc(i.function_name);return href?`<a class="source-link" href="${esc(href)}" target="_blank" rel="noopener"><code>${label}</code></a>`:`<code>${label}</code>`}function selectedItems(){const validIds=new Set(baseRows.map(row=>row.qualified_name));state.selected.forEach(id=>{if(!validIds.has(id))state.selected.delete(id)});return baseRows.filter(row=>state.selected.has(row.qualified_name))}function computePublicCallableCount(flows=[]){const flowCount=new Set((flows||[]).map(flow=>flow.qualified_name||canonicalPublicFlowKey(flow)).filter(Boolean)).size;if(flowCount)return flowCount;return baseRows.filter(isPublicCallable).length}function runtimeTable(){const runtimeTable=$('inventoryBody')?$('inventoryBody').closest('table'):null;return runtimeTable}function syncVisibleRowsFromTable(){const table=runtimeTable();if(!table||!window.FabricOpsTableControls||!window.FabricOpsTableControls.getVisibleRowKeys){visibleRows=filteredRows();return}const keys=new Set(window.FabricOpsTableControls.getVisibleRowKeys(table));visibleRows=filteredRows().filter(row=>keys.has(row.qualified_name));renderInventoryCards();updateExportControls()}function exportMode(){const manual=$('manualExportMode');return manual&&manual.checked?'manual':'quick'}function quickExportRows(){return visibleRows.length||selectedRows.length?visibleRows:selectedRows}function selectedRowsForMode(){return exportMode()==='manual'?selectedItems():quickExportRows()}function selectedRuntimeInventoryCount(){return exportMode()==='manual'?selectedItems().length:quickExportRows().length}function visibleRuntimeInventoryCount(){return visibleRows.length}function totalRuntimeInventoryCount(){return selectedRows.length||baseRows.filter(rowInSelectedScope).length}function isRowSelectedForMode(qn){return exportMode()==='manual'?state.selected.has(qn):quickExportRows().some(row=>row.qualified_name===qn)}function isRowVisuallySelected(qn){if(currentScope.kind==='public_callable')return qn===currentScope.qualified_name;if(exportMode()==='manual')return state.selected.has(qn);return false}function exportRows(){return selectedRowsForMode()}function exportActionLabel(){if(exportMode()==='manual')return 'Export manually selected rows';if(currentScope.kind==='public_callable')return 'Export selected public callable flow';if(currentScope.kind==='unreachable')return 'Export cannot-trace review packet';return 'Export all visible runtime assets'}function exportModeHelp(){if(exportMode()==='manual')return 'Exports manually selected runtime inventory rows only.';if(currentScope.kind==='public_callable')return 'Exports the selected public callable plus all runtime assets in that public callable scope.';if(currentScope.kind==='unreachable')return 'Exports visible cannot-trace rows with architecture context for review.';return 'Exports all visible runtime inventory rows with architecture context.'}function compatibilityModeMeta(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';return COMPATIBILITY_MODES[mode]||COMPATIBILITY_MODES.preserve_backwards_compatibility}function cleanupMode(){const mode=$('compatibilityMode')?$('compatibilityMode').value:'preserve_backwards_compatibility';const meta=compatibilityModeMeta();return{compatibility_mode:mode,compatibility_mode_label:meta.label,compatibility_instruction:meta.promptInstruction}}function updateCompatibilityModeMeta(){const el=$('compatibilityModeSubtitle');if(!el)return;const meta=compatibilityModeMeta();el.textContent=meta.subtitle;el.className=`compat-mode-subtitle ${meta.className}`}function exportItem(r){const flow=selectedPublicFlow(r.qualified_name);if(flow)return{function_name:flow.function_name,item_name:flow.function_name,qualified_name:flow.qualified_name,width:flow.width||0,scope:flow.scope||flow.scope_asset_count||0,depth:flow.max_depth||0,signals:flowSignals(flow),healthy:flowSignals(flow).length===0,architecture_violation_details:(flow.transitive_callees||[]).filter(c=>c.architecture_result==='Violation'),large_depth_width:(flow.max_depth||0)>4||(flow.width||0)>10,called_helper_details:flow.transitive_callees||[],source_file:r.source_path||r.owner_file||fileArea(r)};return{function_name:r.function_name||r.qualified_name,item_name:r.function_name||r.qualified_name,qualified_name:r.qualified_name,width:r.width||0,scope:r.scope||1,depth:r.max_depth||0,signals:[],healthy:true,architecture_violation_details:[],large_depth_width:false,called_helper_details:r.callees||[],source_file:r.source_path||r.owner_file||fileArea(r)}}function cleanupPrompt(){const meta=compatibilityModeMeta();return `You are reviewing a FabricOps function inventory cleanup packet.
-
-Use the selected function-level code assets and function call graph context to plan a safe cleanup. Group items by cleanup type, explain the rationale, identify risks, and propose an ordered implementation plan. Do not write code yet.
-
-Compatibility mode:
-${meta.label}
-
-Compatibility instruction:
-${meta.promptInstruction}
-
-If compatibility mode is “Preserve backwards compatibility”, preserve existing public callable behavior, public names, public signatures, exported packet schema, and user-facing behavior. Helper boundaries, private functions, classes, and implementation details may be cleaned up only when external behavior is preserved. Clearly call out any migration risks.
-
-If compatibility mode is “Allow breaking changes”, propose cleaner breaking changes where they improve the architecture. Clearly label each breaking change, explain why it is worth doing, identify migration impact, and propose a migration path.
-
-Always call out tests required before changes.`}function relatedFlows(rows=exportRows()){if(currentScope.kind==='public_callable'){const f=selectedPublicFlow(currentScope.qualified_name)||flowByQn.get(currentScope.qualified_name);return f?[f]:[]}const selected=new Set(rows.flatMap(row=>[...flowAssetsByQn.entries()].filter(([,assets])=>assets.has(row.qualified_name)).map(([qn])=>qn)));return [...selected].map(qn=>flowByQn.get(qn)).filter(Boolean)}function refactorPacket(){const rows=exportRows().map(exportItem),flows=relatedFlows(exportRows());return{schema:'fabricops_runtime_refactor_packet',export_type:'Runtime refactor packet',ai_prompt:cleanupPrompt(),selection_context:{architecture_scope:currentScope,export_mode:exportMode(),export_action:exportActionLabel(),selected_inventory_asset_count:rows.length,...cleanupMode()},compatibility_mode:cleanupMode(),selected_inventory_assets:rows,related_public_flows:flows,related_architecture_findings:flows.flatMap(flow=>flow.architecture_findings||flow.transitive_callees||[]).filter(row=>row.architecture_result==='Violation'||row.recommended_action==='Broken rule'),requested_work:['Inspect the selected runtime inventory rows using the compact schema.','Fix architecture boundaries before cosmetic cleanup.','Keep normal owning-file private helpers private.','Promote duplicate helper logic only when duplication evidence supports a shared utility.','Keep cleanup focused on function-level code assets.'],safety_constraints:['Preserve public callable behavior.','Do not remove assets without caller and test review.','Cross-callable private helper usage is an architecture violation.'],expected_output:'Return summary, changed assets, tests, risks, and deferred items.'}}function yamlScalar(v){if(v===null||v===undefined)return 'null';if(typeof v==='number'||typeof v==='boolean')return String(v);const value=String(v);return /^[A-Za-z0-9_./:@ -]+$/.test(value)&&value.trim()===value&&value!==''?value:JSON.stringify(value)}function yamlValue(value,indent=0){const pad='  '.repeat(indent);if(Array.isArray(value)){if(!value.length)return '[]';return value.map(item=>{if(item&&typeof item==='object')return `${pad}-\n${yamlValue(item,indent+1)}`;return `${pad}- ${yamlScalar(item)}`}).join('\n')}if(value&&typeof value==='object'){const entries=Object.entries(value);if(!entries.length)return '{}';return entries.map(([key,item])=>{if(item&&typeof item==='object'){return `${pad}${key}:\n${yamlValue(item,indent+1)}`}return `${pad}${key}: ${yamlScalar(item)}`}).join('\n')}return `${pad}${yamlScalar(value)}`}function yamlPacket(packet){return yamlValue(packet)+'\n'}function cleanupPacketTimestamp(){const now=new Date(),pad=value=>String(value).padStart(2,'0');return `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`}function buildInventoryFilename(functionCount,extension){return `fabricops-runtime-refactor-packet__${functionCount}_assets__${cleanupPacketTimestamp()}.${extension}`}function downloadPacket(format){const isYaml=format==='yaml',packet=refactorPacket();const blob=new Blob([isYaml?yamlPacket(packet):JSON.stringify(packet,null,2)],{type:isYaml?'application/x-yaml':'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=buildInventoryFilename((packet.selected_inventory_assets||[]).length,isYaml?'yaml':'json');a.click()}function scopeHelpText(){if(currentScope.kind==='public_callable')return 'Showing runtime inventory assets in the selected public callable flow.';if(currentScope.kind==='unreachable')return CANNOT_TRACE_HELP;return 'Showing all runtime inventory assets.'}function renderScopeBanner(){const name=$('scopeBannerName'),help=$('scopeBannerHelp');if(name){const flow=currentScope.kind==='public_callable'?selectedPublicFlow(currentScope.qualified_name):null;name.textContent=flow?flow.qualified_name:currentScope.label}if(help)help.textContent=scopeHelpText()}function setSummaryValue(id,value){const el=$(id);if(el)el.textContent=String(value)}function architectureIssueCount(r){const signal=flowSignal(r),health=healthLabel(r),values=[r.architecture_result,r.violation_type,r.recommended_action,health,...(r.signals||[]),...(r.tags||[]),...(r.warnings||[])].map(v=>text(v).toLowerCase());return signal.violation||health==='Broken rule'||values.some(v=>/(violation|broken rule|public-to-public|internal-to-public|architecture boundary|architecture issue|fix architecture)/.test(v))}function renderArchitectureSummaryCards(scopedRows){const rows=scopedRows||inventory.filter(rowInSelectedScope);setSummaryValue('architectureSummaryPublic',rows.filter(isPublicCallable).length);setSummaryValue('architectureSummaryShared',rows.filter(r=>itemTypeKey(r)==='internal'||duplicateHelperEvidence(r)).length);setSummaryValue('architectureSummaryPrivate',rows.filter(r=>itemTypeKey(r)==='private_helper').length);setSummaryValue('architectureSummaryReview',rows.filter(isActionable).length);setSummaryValue('architectureSummaryIssues',rows.filter(architectureIssueCount).length)}function renderInventoryCards(){renderScopeBanner();const scopedRows=selectedRows.length||baseRows.length?selectedRows:baseRows.filter(rowInSelectedScope);renderArchitectureSummaryCards(scopedRows);if($('selectedStatusCount'))$('selectedStatusCount').textContent=selectedRuntimeInventoryCount();if($('showingStatusCount'))$('showingStatusCount').textContent=visibleRuntimeInventoryCount();if($('totalStatusCount'))$('totalStatusCount').textContent=totalRuntimeInventoryCount();if($('publicCallableStatusCount'))$('publicCallableStatusCount').textContent=publicCallableCount}function supportFocus(i){return isActionable(i)}function matchesFilters(i){const q=state.search.toLowerCase();if(q&&![i.function_name,i.qualified_name,fileArea(i),itemType(i),reachabilityLabel(i),healthLabel(i),recommendedAction(i)].some(v=>text(v).toLowerCase().includes(q)))return false;return true}function rank(i){return (isActionable(i)?0:1)+text(recommendedAction(i)).localeCompare('No action')}function itemTypeSortRank(row){return {class:0,public:1,internal:2,private_helper:3,unknown:4}[itemTypeKey(row)]??4}function filteredRows(){return selectedRows.filter(matchesFilters).sort((a,b)=>itemTypeSortRank(a)-itemTypeSortRank(b)||fileArea(a).localeCompare(fileArea(b))||text(a.function_name).localeCompare(text(b.function_name)))}function updateFilterControls(){$('resetFilters').hidden=state.search===''}function updateExportControls(){const manual=exportMode()==='manual',rows=exportRows(),selectedCount=selectedRuntimeInventoryCount(),showingCount=visibleRuntimeInventoryCount();if($('selectedCount'))$('selectedCount').textContent=manual?`Manually selected rows: ${selectedCount}`:`Quick export visible rows: ${showingCount}`;['downloadJson','downloadYaml'].forEach(id=>$(id).disabled=manual?selectedCount===0:showingCount===0);$('selectVisible').disabled=!manual||showingCount===0;$('clearSelected').disabled=!manual||selectedCount===0;const label=$('exportActionLabel'),help=$('exportModeHelp');if(label)label.textContent=exportActionLabel();if(help)help.textContent=exportModeHelp()}function resultCountText(){return ''}function inventoryEmptyMessage(){if(inventoryDataMissing)return 'Runtime inventory data is missing from function-call-graph.json. Regenerate the function call graph export.';return 'No function-level code assets found for the current search or column filters.'}function renderLoadStatus(message,isError=false){const el=$('dataLoadStatus');el.textContent=message;el.className=isError?'load-status issue':'load-status'}function renderTable(){selectedRows=baseRows.filter(rowInSelectedScope);visibleRows=filteredRows();renderInventoryCards();$('resultCount').textContent=resultCountText();renderLoadStatus(visibleRows.length?'Loaded function-call-graph.json · Boot code version: boot-dashboard-v1':inventoryEmptyMessage(),inventoryDataMissing);updateFilterControls();$('inventoryBody').innerHTML=visibleRows.map(i=>{const details=actionDetails(i),filterValues={source_file:fileArea(i),item_name:i.function_name,item_type:itemType(i),usage_scope:reachabilityLabel(i),health:healthLabel(i),recommended:recommendedAction(i),details:details.finding};return `<tr data-inventory-row="${esc(i.qualified_name)}" class="inventory-row ${isRowVisuallySelected(i.qualified_name)?'selected':''} ${state.expanded.has(i.qualified_name)?'is-expanded':''}" tabindex="0" aria-selected="${isRowSelectedForMode(i.qualified_name)?'true':'false'}"><td class="col-callable">${sourceCallableLink(i)}</td><td class="col-item-type" data-filter-value="${esc(filterValues.item_type)}">${esc(itemType(i))}</td><td class="col-health" data-filter-value="${esc(filterValues.health)}">${healthBadge(i)}</td><td class="col-recommended-action" data-filter-value="${esc(filterValues.recommended)}">${actionBadge(i)}</td><td class="col-usage-scope" data-filter-value="${esc(filterValues.usage_scope)}">${usageBadge(i)}</td><td class="col-details" data-filter-value="${esc(filterValues.details)}">${detailsButton(i)}</td><td class="col-file-area" data-filter-value="${esc(filterValues.source_file)}">${esc(fileArea(i))}</td></tr>${detailsRow(i)}`}).join('');updateExportControls();if(window.FabricOpsTableControls){const runtimeTable=$('inventoryBody')?$('inventoryBody').closest('table'):null;if(runtimeTable)window.FabricOpsTableControls.enhance(runtimeTable)}}function dashboardCacheBust(url){const u=new URL(url,document.baseURI);u.searchParams.set('v','boot-dashboard-v1');return u.href}function functionCallGraphDataUrl(){const path=window.location.pathname,origin=window.location.origin,referenceMarker='/reference/',assetsMarker='/assets/';let url;if(path.includes(referenceMarker))url=origin+path.slice(0,path.indexOf(referenceMarker)+referenceMarker.length)+'_data/function-call-graph.json';else if(path.includes(assetsMarker))url=origin+path.slice(0,path.indexOf(assetsMarker)+1)+'reference/_data/function-call-graph.json';else url=new URL('reference/_data/function-call-graph.json',document.baseURI).href;return dashboardCacheBust(url)}function updateFunctionCallGraphDataLink(url){const openLink=$('openFunctionCallGraphJson'),downloadLink=$('downloadFunctionCallGraphJson');if(openLink)openLink.href=url;if(downloadLink){downloadLink.href=url;downloadLink.download='function-call-graph.json'}}function buildFlowSignals(flows){publicFlowQns=new Set();flowSignalsByQn=new Map();flowAssetsByQn=new Map();flowByQn=new Map();(flows||[]).forEach(flow=>{publicFlowSelectionKeys(flow).forEach(key=>flowByQn.set(key,flow));const canonicalKey=canonicalPublicFlowKey(flow),assets=new Set([flow.qualified_name,...(flow.generated_asset_qns||[]),...(flow.asset_qns||[])].filter(Boolean));publicFlowQns.add(flow.qualified_name);publicFlowSelectionKeys(flow).forEach(key=>publicFlowQns.add(key));(flow.direct_callees||[]).forEach(row=>{const qn=typeof row==='string'?row:row&&row.qualified_name;if(qn){assets.add(qn);publicFlowQns.add(qn)}});(flow.transitive_callees||[]).forEach(row=>{assets.add(row.qualified_name);publicFlowQns.add(row.qualified_name);const signal=flowSignalsByQn.get(row.qualified_name)||{violation:false,warning:false,types:[]};if(row.architecture_result==='Violation')signal.violation=true;if(row.architecture_result==='Warning')signal.warning=true;if(row.violation_type&&!signal.types.includes(row.violation_type))signal.types.push(row.violation_type);flowSignalsByQn.set(row.qualified_name,signal)});publicFlowSelectionKeys(flow).forEach(key=>flowAssetsByQn.set(key,assets));flowAssetsByQn.set(flow.qualified_name,assets);if(canonicalKey===flow.qualified_name)flowAssetsByQn.set(canonicalKey,assets)})}function scrollToRuntimeInventory(){const target=document.getElementById('runtime-inventory');if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}function scrollToPublicFlowDetails(){const target=document.getElementById('publicFlowDetails');if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}function setArchitectureScope(scope,options={}){if(scope.kind==='public_callable'){const flow=selectedPublicFlow(scope.qualified_name||scope.label);if(flow)scope={...scope,label:flow.function_name||scope.label,qualified_name:flow.qualified_name}}else{state.activePublicFlow='';state.selectedFlow='';state.collapsedPublicList=false}currentScope=scope;state.selected.clear();renderTable();if(options.scroll!==false)scrollToRuntimeInventory()}window.setArchitectureScope=setArchitectureScope;$('searchBox').addEventListener('input',e=>{state.search=e.target.value;renderTable()});$('resetFilters').onclick=()=>{state.search='';$('searchBox').value='';renderTable()};$('showAllRuntimeAssets').onclick=()=>setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''});document.addEventListener('click',e=>{const toggle=e.target.closest('[data-details-toggle]');if(toggle){const key=toggle.dataset.detailsToggle;state.expanded.has(key)?state.expanded.delete(key):state.expanded.add(key);renderTable();return}if(e.target.closest('a,button,input,select,textarea,label'))return;const row=e.target.closest('[data-inventory-row]');if(row&&exportMode()==='manual'){state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('keydown',e=>{const row=e.target.closest('[data-inventory-row]');if(row&&(e.key==='Enter'||e.key===' ')){if(exportMode()!=='manual')return;e.preventDefault();state.selected.has(row.dataset.inventoryRow)?state.selected.delete(row.dataset.inventoryRow):state.selected.add(row.dataset.inventoryRow);renderTable()}});document.addEventListener('click',e=>{const special=e.target.closest('[data-architecture-scope-special]');if(special){const kind=special.dataset.architectureScopeSpecial;if(kind==='all')setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''});if(kind==='unreachable')setArchitectureScope({kind:'unreachable',label:'Others / Cannot trace back to a public callable',qualified_name:''});return}});const allScopeButton=document.getElementById('scopeAllRuntimeAssets'),unreachableScopeButton=document.getElementById('scopeUnreachableRuntimeAssets');if(allScopeButton)allScopeButton.onclick=()=>setArchitectureScope({kind:'all',label:'All runtime assets',qualified_name:''});if(unreachableScopeButton)unreachableScopeButton.onclick=()=>setArchitectureScope({kind:'unreachable',label:'Others / Cannot trace back to a public callable',qualified_name:''});$('selectVisible').onclick=()=>{syncVisibleRowsFromTable();visibleRows.forEach(r=>state.selected.add(r.qualified_name));renderTable()};$('clearSelected').onclick=()=>{state.selected.clear();renderTable()};$('downloadJson').onclick=()=>downloadPacket('json');$('downloadYaml').onclick=()=>downloadPacket('yaml');function runtimeTableFiltersActive(){const table=runtimeTable();return Boolean(state.search||(table&&table.previousElementSibling&&table.previousElementSibling.classList.contains('fo-table-clear-all')&&!table.previousElementSibling.hidden))}function resetRuntimeInventorySelectionState(){state.selected.clear()}function setExportMode(mode){const quick=$('quickExportMode'),manual=$('manualExportMode');if(quick)quick.checked=mode==='quick';if(manual)manual.checked=mode==='manual';lastExportMode=mode}function handleExportModeChange(e){const next=e.target.value;if(next===lastExportMode)return;resetRuntimeInventorySelectionState();setExportMode(next);renderTable()}['quickExportMode','manualExportMode'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',handleExportModeChange)});$('compatibilityMode').addEventListener('change',updateCompatibilityModeMeta);document.addEventListener('fabricops:table-controls-applied',event=>{if(event.target===runtimeTable())syncVisibleRowsFromTable()});updateCompatibilityModeMeta();function loadData(){try{renderLoadStatus('Loading embedded function call graph data...');const data=typeof EMBEDDED_FUNCTION_CALL_GRAPH_DATA!=='undefined'?EMBEDDED_FUNCTION_CALL_GRAPH_DATA:{};if(!Array.isArray(data.function_inventory)){baseRows=[];inventory=baseRows;summaryCounts=data&&data.summary_counts?data.summary_counts:{};inventoryDataMissing=true;const flows=data&&Array.isArray(data.public_entrypoint_flow)?data.public_entrypoint_flow:[];publicCallableCount=computePublicCallableCount(flows);buildFlowSignals(flows);renderInventoryCards();setArchitectureScope(currentScope,{scroll:false});return}inventoryDataMissing=false;baseRows=data.function_inventory;inventory=baseRows;summaryCounts=data.summary_counts||{};const flows=data.public_entrypoint_flow||[];publicCallableCount=computePublicCallableCount(flows);buildFlowSignals(flows);renderInventoryCards();setArchitectureScope(currentScope,{scroll:false})}catch(error){inventoryDataMissing=false;renderInventoryCards();$('inventoryBody').innerHTML='';$('resultCount').textContent='';renderLoadStatus(`Failed to initialize embedded function call graph data. Error: ${error&&error.message?error.message:String(error)}`,true)}}loadData();
-</script><script src="../javascripts/table-controls.js"></script></body></html>
-""".replace("public functions", "public callables").replace("Public functions", "Public callables").replace("public function", "public callable").replace("Public function", "Public callable").replace("<!--CALLABLE_GENERATION_BANNER-->", generation_banner).replace("<!--CALLABLE_PAGE_SHELL_CSS-->", _callable_page_shell_css()).replace("<!--CALLABLE_PAGE_NAV-->", _render_callable_page_nav("inventory"))
 
 
 
-def _extract_html_between(text: str, start: str, end: str) -> str:
-    """Return text between two HTML markers."""
-    start_index = text.index(start) + len(start)
-    end_index = text.index(end, start_index)
-    return text[start_index:end_index]
 
 
-def _prefix_runtime_inventory_ids(html_text: str, prefix: str) -> str:
-    """Prefix HTML id attributes in the embedded runtime inventory section."""
-    return re.sub(r'id="([A-Za-z][A-Za-z0-9_-]*)"', lambda match: f'id="{prefix}{match.group(1)}"', html_text)
 
 
-def _runtime_inventory_section_html(flow_data: dict[str, Any]) -> str:
-    """Return runtime inventory markup embedded in the call graph dashboard."""
-    inventory_html = _render_runtime_inventory_source_html(flow_data)
-    main_html = _extract_html_between(inventory_html, "<main>", "</main>")
-    replacements = {
-        "Function Inventory": "Runtime inventory",
-        "Function inventory": "Runtime inventory",
-        "function inventory": "runtime inventory",
-        "Search function inventory": "Search runtime inventory",
-        "The Runtime inventory focuses on function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.": "The Runtime inventory focuses on src/fabricops_kit runtime code assets that are reachable from public callables or template runtime references.",
-        "Use this inventory to inspect function-level code assets, including public callables, shared helpers, private helpers, and cleanup candidates.": "Use this runtime inventory to inspect deduplicated src/fabricops_kit code assets that support public callables and template runtime flows.",
-    }
-    for old, new in replacements.items():
-        main_html = main_html.replace(old, new)
-    main_html = _prefix_runtime_inventory_ids(main_html, "runtimeInventory_")
-    return (
-        '<section id="runtime-inventory" class="flow-details runtime-inventory-section" tabindex="-1">'
-        '<h2>Current scoped callables inventory</h2><section class="rule-callouts" aria-label="Inventory cleanup rules"><article class="rule-callout info"><h3>Orphan cleanup rule</h3><p>Inventory rows show violation type and details, plus deterministic Inline candidate and Promote to shared suggestions from the same rule table.</p></article></section>'
-        '<p class="overview-help"><small>The runtime inventory is the deduplicated function_inventory data behind this dashboard. '
-        'It only describes runtime code assets under <code>src/fabricops_kit</code> that support public callables or template runtime references.</small></p>'
-        f"{main_html}"
-        "</section>"
-    )
 
 
-def _runtime_inventory_script(flow_data: dict[str, Any]) -> str:
-    """Return isolated runtime inventory dashboard JavaScript."""
-    inventory_html = _render_runtime_inventory_source_html(flow_data)
-    script = _extract_html_between(inventory_html, "<script>", "</script>")
-    replacements = {
-        "Function Inventory": "Runtime inventory",
-        "Function inventory": "Runtime inventory",
-        "Function inventory cleanup packet": "Runtime inventory cleanup packet",
-        "Function inventory data is missing": "Runtime inventory data is missing",
-        "function inventory records": "runtime inventory records",
-        "fabricops-function-inventory__": "fabricops-runtime-inventory__",
-    }
-    for old, new in replacements.items():
-        script = script.replace(old, new)
-    script = script.replace(
-        "const $=id=>document.getElementById(id),",
-        "const $=id=>document.getElementById('runtimeInventory_'+id),",
-    )
-    script = script.replace(
-        "document.querySelector('table[data-table-controls=\"excel\"]')",
-        "document.querySelector('#runtime-inventory table[data-table-controls=\"excel\"]')",
-    )
-    return f"<script>\n(()=>{{\n{script}\n}})();\n</script>"
 
 
-def _runtime_inventory_embed_css() -> str:
-    """Return scoped CSS for the embedded runtime inventory section."""
-    return (
-        "<style>"
-        "#runtime-inventory{margin-top:1.25rem}"
-        "#runtime-inventory .inventory-filter-grid{display:grid;grid-template-columns:minmax(16rem,1fr) auto;gap:.55rem;margin:.75rem 0;align-items:end}.scope-banner-row{display:flex;justify-content:space-between;gap:.75rem;align-items:center}.scope-banner-row p{margin:.25rem 0 0}.inventory-search-grid .inventory-clear-all{align-self:end}"
-        "#runtime-inventory .inventory-status-bar{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;margin:.75rem 0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a}.inventory-status-bar strong,.inventory-status-bar span{font-weight:800}.inventory-status-help{margin:.25rem 0 .75rem;color:#475569}.info-icon{display:inline-flex;align-items:center;justify-content:center;color:#1d4ed8}.inventory-note{background:#eff6ff;border-color:#bfdbfe}.scope-banner{margin:.75rem 0}"
-        "#runtime-inventory .inventory-clear-all{border:1px solid #cbd5e1;border-radius:.45rem;background:#fff;color:#1d4ed8;font-weight:800}"
-        "#runtime-inventory .callable-review-table-wrap{max-width:100%;overflow-x:auto}"
-        "#runtime-inventory .callable-review-table{width:100%;table-layout:auto;border-collapse:collapse}"
-        "#runtime-inventory .callable-review-table th,#runtime-inventory .callable-review-table td{padding:.42rem .45rem;border-bottom:1px solid #dbe3ef;text-align:left;font-size:.84rem;vertical-align:top}"
-        "#runtime-inventory .callable-review-table .col-file-area,#runtime-inventory .callable-review-table .col-callable{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.25}"
-        "#runtime-inventory .callable-review-table .col-file-area{width:11rem;max-width:11rem}"
-        "#runtime-inventory .callable-review-table .col-callable{width:14rem;max-width:14rem}"
-        "#runtime-inventory .callable-review-table .col-item-type,#runtime-inventory .callable-review-table .col-usage-scope,#runtime-inventory .callable-review-table .col-health,#runtime-inventory .callable-review-table .col-recommended-action{white-space:nowrap}"
-        "#runtime-inventory .callable-review-table .col-details{width:7rem!important;min-width:7rem!important;white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important}"
-        "#runtime-inventory .callable-review-table .col-details .table-header-cell,#runtime-inventory .callable-review-table .col-details .table-header-label{white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important}"
-        "#runtime-inventory .callable-review-table .details-toggle{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important}"
-        "@media(max-width:720px){#runtime-inventory .callable-review-table{min-width:760px}#runtime-inventory .callable-review-table .col-file-area{width:7.5rem;max-width:7.5rem}#runtime-inventory .callable-review-table .col-callable{width:10rem;max-width:10rem}#runtime-inventory .callable-review-table .col-details{width:7rem!important;min-width:7rem!important}}"
-        "#runtime-inventory .callable-review-table tr[data-inventory-row]{cursor:pointer}"
-        "#runtime-inventory .callable-review-table tr.selected{outline:2px solid #1d4ed8;outline-offset:-2px;background:#eff6ff;box-shadow:inset .25rem 0 #1d4ed8}"
-        "#runtime-inventory .details-row{display:none}"
-        "#runtime-inventory .details-row.is-open{display:table-row}"
-        "#runtime-inventory .details-panel{max-width:100%;padding:.85rem 1rem;border:1px solid #d8e4f5;border-radius:.5rem;background:#fff;line-height:1.45;white-space:normal;overflow-wrap:anywhere}"
-        "</style>"
-    )
 
 
-def _render_combined_refactor_dashboard_html(flow_data: dict[str, Any]) -> str:
-    """Render the single maintainer dashboard with embedded runtime inventory."""
-    dashboard = _render_refactor_dashboard_html(flow_data)
-    early_export_start = dashboard.find('<section class="export-toolbar" aria-label="Advanced cleanup and export actions">')
-    if early_export_start != -1:
-        early_export_end = dashboard.find("</section>", early_export_start)
-        if early_export_end != -1:
-            dashboard = dashboard[:early_export_start] + dashboard[early_export_end + len("</section>") :]
-    dashboard = dashboard.replace("</head>", f"{_runtime_inventory_embed_css()}</head>")
-    runtime_inventory_html = _runtime_inventory_section_html(flow_data)
-    export_start = runtime_inventory_html.find('<section id="runtimeInventory_runtimeExportToolbar"')
-    export_html = ""
-    if export_start != -1:
-        export_end = runtime_inventory_html.find('<p id="runtimeInventory_resultCount"', export_start)
-        if export_end != -1:
-            export_html = runtime_inventory_html[export_start:export_end]
-            runtime_inventory_html = runtime_inventory_html[:export_start] + runtime_inventory_html[export_end:]
-    dashboard = dashboard.replace("</main><script>", f"{export_html}{runtime_inventory_html}</main><script>", 1)
-    dashboard = dashboard.replace("</body></html>", f"{_runtime_inventory_script(flow_data)}</body></html>")
-    return dashboard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _render_callable_flow_page(flow_data: dict[str, Any]) -> str:
     """Render the global function call graph Markdown page."""
     del flow_data
-    return '''# Function Call Graph
+    return """# Function Call Graph
 
 > **First make it exist. Then make it good.**
 >
@@ -4603,17 +4056,39 @@ The Function Call Graph helps reviewers inspect public callable functions, under
 
 ## Overview
 
-The Function Call Graph has one maintainer-facing dashboard: the Function Call Graph Dashboard. That dashboard combines public callable flows, architecture checks, the runtime inventory, and cleanup packet export into one review surface.
+The Function Call Graph is a v2 JSON contract boundary. The reference generator owns source scanning, architecture metadata, `function-call-graph.json`, and Markdown reference pages. The v2 dashboard/docs surfaces own rendering, review interactions, and cleanup/export workflows outside this script.
+
+The source of truth is the repository code plus the generator, not the checked-in JSON snapshot.
 
 ## How it works
 
-The Function Call Graph follows a simple flow:
+The Function Call Graph follows a simple v2 flow:
 
 ```text
-Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets
+Repository code → source scan → function-call-graph.json → v2 dashboard/docs consume JSON
 ```
 
 ![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
+
+## Where the generated JSON lives
+
+`function-call-graph.json` is a generated docs artifact.
+
+During the docs deployment workflow, GitHub Actions runs:
+
+```bash
+PYTHONPATH=src python scripts/generate_function_reference.py
+```
+
+This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+
+As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
+
+For reviews, use:
+
+- source code and `scripts/generate_function_reference.py` as the source of truth
+- deployed `gh-pages` JSON as the current docs-build artifact
+- checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
 ## 1. Repository code
 
@@ -4621,9 +4096,9 @@ The repository is the source of truth.
 
 FabricOps public callable functions, shared helpers, private functions, classes, and internal methods all live in the codebase. The Function Call Graph starts by scanning this code structure instead of relying on manually maintained documentation.
 
-## 2. Scan and analyze
+## 2. Source scan and generated data contract
 
-The Function Call Graph is generated from repository scans.
+The Function Call Graph data contract is generated from repository scans.
 
 The source scanner is:
 
@@ -4638,13 +4113,11 @@ The scanner reads the codebase and identifies:
 * internal methods
 * dependency edges between functions and modules
 
-The scanner then produces generated review artifacts that make the callable architecture easier to inspect.
+The scanner then writes the v2 callable architecture data contract:
 
-The generated review outputs are:
+* [function-call-graph.json](_data/function-call-graph.json)
 
-* [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html)
-* [Public Function Call Flows Dashboard selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel)
-* [public-function-call-flows.json](_data/public-function-call-flows.json)
+This script also generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
 
 ## 3. Enforce architecture
 
@@ -4670,16 +4143,16 @@ The enforcement test is:
 
 This helps prevent accidental architecture violations from becoming permanent.
 
-### What the dashboard signals
+### Data contract signals
 
-The dashboard uses deterministic rules. It separates public-flow signals from per-function inventory suggestions.
+The v2 JSON contract keeps deterministic architecture signals available for dashboard/docs rendering.
 
 #### Public-flow signals
 
-| Signal | Color | Calculation | Reviewer action |
-|---|---|---|---|
-| Large width/depth | Yellow | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
-| Architecture violation | Red | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
+| Signal | Calculation | Reviewer action |
+|---|---|---|
+| Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
+| Architecture violation | Any Type 1-6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
 
 #### Architecture violation types
 
@@ -4721,11 +4194,11 @@ public callable → helper → helper → helper
 
 Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
 
-## 4. Function Call Graph Dashboard
+## 4. v2 dashboard/docs ownership
 
-The Public Function Call Flows Dashboard is the review surface for deciding whether a public callable is clean enough to keep.
+The v2 dashboard/docs surfaces consume `docs/reference/_data/function-call-graph.json` and own visual rendering, review interactions, and cleanup/export workflows elsewhere.
 
-After the scanner identifies public callables, supporting private functions, shared helpers, classes, internal methods, and dependency edges, the dashboard turns that scan into something reviewers can inspect.
+The reference generator no longer produces the retired static dashboard HTML or embedded cleanup/export UI. Keep dashboard rendering and AI cleanup packet interactions in the v2 dashboard/app layer so this script remains focused on source scanning, JSON contract generation, and Markdown reference generation.
 
 ![Public Function Call Flows Dashboard](../assets/fabricops-call-graph-dashboard.png)
 
@@ -4733,63 +4206,22 @@ After the scanner identifies public callables, supporting private functions, sha
 
 <div align="center" markdown>
 
-[Open architecture dashboard](../assets/public-function-call-flows-dashboard.html){ .md-button .md-button--primary }
-
-[Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)
-[Function Call Graph Dashboard runtime inventory](../assets/function-call-graph-dashboard.html#runtime-inventory)
-[function-call-graph.json](_data/function-call-graph.json)
+[function-call-graph.json](_data/function-call-graph.json){ .md-button .md-button--primary }
 
 </div>
 
-The dashboard helps reviewers:
+The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
 
 * see all public callable functions in one place
 * understand what supports each public callable
 * trace where dependencies go
 * spot architecture violations and dependency chains that deserve a closer look
+* manage cleanup and export interactions outside this generator
 
-### Choose architecture scope
+## 5. Markdown reference pages
 
-Start with the architecture scope table. Choose a public callable flow, **All runtime assets**, or **Others / Cannot trace back to a public callable**. Public callable scopes keep the existing flow review, while the special scopes let maintainers inspect package-level runtime assets without restoring a separate inventory page.
-
-### Inspect call graph when available
-
-When the selected scope is a public callable, the dashboard shows the callable dependency tree, direct/transitive helper details, and architecture findings. The special runtime scopes show a clear no-flow message instead of inventing a fake public call graph.
-
-### Review runtime inventory
-
-The runtime inventory is an in-page section at [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel). It uses the `public_functions[].flow[]` JSON section and describes deduplicated callable-flow functions under `src/fabricops_kit`, including defined-but-not-used cleanup candidates that need verification. Test, docs, scripts, notebook, generated asset, and test-only helper noise is excluded.
-
-### Select inventory assets
-
-Use the runtime inventory filters and multi-select controls to select one function/class, multiple helpers, all visible rows, or a scoped set of possible orphan records. Helper suggestions are review hints, not automatic delete or refactor commands.
-
-### Export AI refactor packet
-
-The dashboard exports one AI refactor packet from selected inventory assets. The packet includes the selected architecture scope, related public callable flow when applicable, related architecture findings, selected inventory assets, and compatibility mode.
-
-## 5. AI refactor packets
-
-When a function is worth refactoring, the Function Call Graph Dashboard can export focused cleanup packets as JSON or YAML.
-
-The Function Call Graph Dashboard exports one `fabricops_runtime_refactor_packet` built from selected runtime inventory assets. The packet also carries the selected architecture scope, related public callable flow when applicable, architecture findings, and compatibility mode.
-
-The packet keeps the AI refactor focused on:
-
-* the selected function
-* the supporting code assets
-* the identified architecture risks
-* the compatibility mode
-* the relevant test expectations
-
-![Function Call Graph AI refactor package](../assets/fabricops-call-graph-ai-refactor-package.png)
-
-![Function Call Graph AI refactor package detail](../assets/fabricops-call-graph-ai-refactor-package%282%29.png)
-
-The cleanup packet gives AI a focused review surface so it can improve the implementation without losing the original intent.
-
-<!-- Test compatibility breadcrumbs: [Public Function Call Flows Dashboard](../assets/public-function-call-flows-dashboard.html) [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel) -->
-'''
+This generator still writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.
+"""
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
     """Indent every physical Markdown line for MkDocs Material blocks."""
@@ -6161,9 +5593,8 @@ def main() -> None:
             f'    - Private helpers to review: {callable_metrics["hidden_private_helpers"]}',
             '',
             '    - [Glossary](glossary.md): simple definitions of repeated FabricOps terms.',
-            '    - [Function Call Graph](function-call-graph.md): global public function dependency view and nested helper summary.',
-            '    - [Function Call Graph](../assets/public-function-call-flows-dashboard.html): review public function dependencies, chain depth, fan-out, source Python files, architecture boundaries, and cleanup recommendations.',
-            '    - [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel): search/filter callable-flow functions, select rows, and export AI refactor packets.',
+            '    - [Function Call Graph](function-call-graph.md): review the v2 callable architecture JSON contract, dependency view, and nested helper summary.',
+            '    - [function-call-graph.json](_data/function-call-graph.json): v2 data contract consumed by dashboard/app rendering outside this generator.',
             '    - Function manifests: `_data/manifest.json` and `_data/function-manifest.json`.',
             '    - Agent metadata: `_data/automation-manifest.json`.',
             '    - Implementation contracts: expectations maintainers must satisfy before using or changing a function.',
@@ -6580,11 +6011,6 @@ def main() -> None:
     )
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
     FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
-    FUNCTION_CALL_GRAPH_DASHBOARD_PATH.write_text(
-        _render_combined_refactor_dashboard_html(callable_flow_data),
-        encoding="utf-8",
-        newline="\n",
-    )
     _remove_stale_function_taxonomy_audit()
 
 

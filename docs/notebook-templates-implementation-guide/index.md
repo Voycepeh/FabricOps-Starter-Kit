@@ -182,7 +182,7 @@ Generates deterministic demo source tables for the guided demo.
 
     **When to use it**
 
-    Use it only for demos, training, and local validation of the starter workflow. It is not a production workflow notebook.
+    Use it only for demos, training, and local validation of the starter workflow. It is not a production delivery notebook.
 
     **What users normally edit**
 
@@ -211,7 +211,7 @@ Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a sm
 
     **When to use it**
 
-    Use it when learning supported DQ rule outcomes or validating helper behavior. It is not a production workflow notebook.
+    Use it when learning supported DQ rule outcomes or validating helper behavior. It is not a production delivery notebook.
 
     **What users normally edit**
 
