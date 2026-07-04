@@ -1,24 +1,13 @@
 # read_warehouse_query
 
-??? info "Downstream callables: 12"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 12
+- Shared helpers: 8
+- Private helpers: 4
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[io/read_warehouse_query.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>read_warehouse_query(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L116-L123" class="reference-call-tree-callable"><code>get_spark_session(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L290-L293" class="reference-call-tree-callable"><code>read_warehouse_synapsesql(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│   └── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L101-L108" class="reference-call-tree-callable"><code>_require_fabric_connector(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">├── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L160-L163" class="reference-call-tree-callable"><code>resolve_configured_warehouse_query_target(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│   └── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L126-L136" class="reference-call-tree-callable"><code>resolve_target_store(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       ├── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L595-L634" class="reference-call-tree-callable"><code>get_store(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       │   └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L547-L587" class="reference-call-tree-callable"><code>_normalize_path_config(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       ├── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L88-L108" class="reference-call-tree-callable"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       │   └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L26-L83" class="reference-call-tree-callable"><code>get_default_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       ├── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L63-L66" class="reference-call-tree-callable"><code>_validate_lakehouse_store(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">│       └── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L69-L72" class="reference-call-tree-callable"><code>_validate_warehouse_store(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[io/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/shared.py#L206-L213" class="reference-call-tree-callable"><code>validate_select_query(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open focused call flow in dashboard</a>
+
 
 Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.
 
@@ -37,17 +26,11 @@ Read warehouse rows with SQL pushdown through a configured Fabric warehouse targ
 
 **Used in notebooks:** `02_pipeline`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Use when warehouse data should be filtered or projected before Spark processing.
 
-- Use when warehouse data should be filtered or projected before Spark processing.
-
-### Do not use when
-
-- Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.
-
-### Additional context
+Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.
 
 Encourages warehouse SQL pushdown for filtered or projected reads instead of full table extracts.
 

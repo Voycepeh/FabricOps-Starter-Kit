@@ -1,15 +1,13 @@
 # widget_enrich_table_metadata
 
-??? info "Downstream callables: 3"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 82
+- Shared helpers: 28
+- Private helpers: 54
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[widgets/widget_enrich_table_metadata.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>widget_enrich_table_metadata(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[widgets/widget_enrich_table_metadata.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L53-L187" class="reference-call-tree-callable"><code>_table_metadata_enrichment_widget_workflow(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L88-L108" class="reference-call-tree-callable"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L26-L83" class="reference-call-tree-callable"><code>get_default_fabric_context(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_enrich_table_metadata">Open focused call flow in dashboard</a>
+
 
 Render a consolidated column enrichment widget.
 
@@ -29,17 +27,11 @@ Render a consolidated column enrichment widget.
 
 **Used in notebooks:** `02_pipeline`, `03_governance`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.
 
-- Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.
-
-### Do not use when
-
-- Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.
-
-### Additional context
+Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.
 
 Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.
 

@@ -1,26 +1,13 @@
 # display_guardrail_results
 
-??? info "Downstream callables: 14"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 37
+- Shared helpers: 2
+- Private helpers: 35
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[pipeline/display_guardrail_results.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>display_guardrail_results(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L700-L732" class="reference-call-tree-callable"><code>_display_guardrail_results_workflow(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L627-L672" class="reference-call-tree-callable"><code>build_guardrail_detail_rows(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L532-L546" class="reference-call-tree-callable"><code>_guardrail_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L511-L529" class="reference-call-tree-callable"><code>_dq_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L477-L481" class="reference-call-tree-callable"><code>_freshness_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L484-L508" class="reference-call-tree-callable"><code>_profile_behavior_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L436-L446" class="reference-call-tree-callable"><code>_result_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   │   └── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L463-L474" class="reference-call-tree-callable"><code>_schema_reason(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L449-L460" class="reference-call-tree-callable"><code>_next_action(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L427-L433" class="reference-call-tree-callable"><code>_result_can_continue(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L417-L424" class="reference-call-tree-callable"><code>_result_status(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   ├── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L549-L556" class="reference-call-tree-callable"><code>_table_keys(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    │   └── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L412-L414" class="reference-call-tree-callable"><code>_yes_no(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><span class="reference-call-tree-source">[pipeline/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/shared.py#L559-L624" class="reference-call-tree-callable"><code>build_guardrail_summary_rows(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=display_guardrail_results">Open focused call flow in dashboard</a>
+
 
 Return summary, detailed, or debug guardrail display output for Fabric notebooks.
 
@@ -39,17 +26,11 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 **Used in notebooks:** `02_pipeline`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.
 
-- Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.
-
-### Do not use when
-
-- Do not use to mutate guardrail results or decide active rules; it is presentation-only.
-
-### Additional context
+Do not use to mutate guardrail results or decide active rules; it is presentation-only.
 
 Returns summary, detailed, or debug guardrail display output so Fabric notebooks show readable tables by default while preserving raw result bundles for developers.
 

@@ -1,15 +1,13 @@
 # widget_author_dq_rules
 
-??? info "Downstream callables: 3"
+## Call-flow summary
 
-    Dependency data is generated from the callable architecture inventory.
+- Downstream callables: 63
+- Shared helpers: 23
+- Private helpers: 40
 
-    <div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix"></span><span class="reference-call-tree-source">[widgets/widget_author_dq_rules.py]</span> <span class="reference-call-tree-type">[public callable]</span> <code>widget_author_dq_rules(...)</code></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">└── </span><span class="reference-call-tree-source">[widgets/widget_author_dq_rules.py]</span> <span class="reference-call-tree-type">[private helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L83-L251" class="reference-call-tree-callable"><code>_dq_rule_authoring_widget_workflow(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">    └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L88-L108" class="reference-call-tree-callable"><code>resolve_fabric_context(...)</code></a></div>
-      <div class="reference-call-tree-row" role="treeitem"><span class="reference-call-tree-prefix">        └── </span><span class="reference-call-tree-source">[config/shared.py]</span> <span class="reference-call-tree-type">[shared helper]</span> <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/shared.py#L26-L83" class="reference-call-tree-callable"><code>get_default_fabric_context(...)</code></a></div>
-    </div>
+<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_author_dq_rules">Open focused call flow in dashboard</a>
+
 
 Render interactive manual DQ guardrail authoring controls.
 
@@ -29,17 +27,11 @@ Render interactive manual DQ guardrail authoring controls.
 
 **Used in notebooks:** `02_pipeline`, `03_governance`
 
-## Usage guidance
+## Usage notes
 
-### Use when
+Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.
 
-- Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.
-
-### Do not use when
-
-- Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.
-
-### Additional context
+Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.
 
 Renders manual DQ authoring controls that produce editable guardrail rule intent rows under the selected table governance policy.
 

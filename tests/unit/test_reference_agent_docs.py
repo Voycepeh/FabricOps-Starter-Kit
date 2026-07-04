@@ -468,8 +468,9 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert text.count('??? info "Downstream callables: 14"') == 1
-    assert "Dependency data is generated from the callable architecture inventory." in implementation_section
+    assert "## Call-flow summary" in implementation_section
+    assert "- Downstream callables:" in implementation_section
+    assert "Open focused call flow in dashboard" in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Implementation helper count: 11" not in text
@@ -479,13 +480,8 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
         implementation_section,
     )
 
-    assert "[shared helper]" in implementation_section
-    assert "[private helper]" in implementation_section
-    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code>' in implementation_section
-    assert "[pipeline/display_guardrail_results.py]" in implementation_section
-    assert "[public callable]" in implementation_section
+    assert "View on GitHub" in implementation_section
+    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
@@ -493,25 +489,18 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert implementation_section.count('??? info "Downstream callables: 14"') == 1
+    assert "## Call-flow summary" in implementation_section
+    assert "- Shared helpers:" in implementation_section
+    assert "- Private helpers:" in implementation_section
     assert '??? info "Implementation helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
-    assert (
-        "Unique internal/private helpers: 11. Repeated calls may appear in multiple branches."
-        not in implementation_section
-    )
-    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' in implementation_section
+    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' not in implementation_section
     assert "### Refactor signals" not in implementation_section
     assert 'class="reference-call-tree-more"' not in implementation_section
     assert "```text" not in implementation_section
 
-    assert "[shared helper]" in implementation_section
-    assert "[private helper]" in implementation_section
-    for helper_name in ["build_guardrail_detail_rows", "build_guardrail_summary_rows"]:
-        assert f'<code>{helper_name}(...)</code>' in implementation_section
-    assert '<code>_guardrail_reason(...)</code>' in implementation_section
-    assert "[pipeline/display_guardrail_results.py]" in implementation_section
-    assert "[public callable]" in implementation_section
+    assert "View on GitHub" in implementation_section
+    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -611,7 +600,8 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < description_index < source_index < usage_index
-    assert '??? info "Downstream callables:' in text
+    assert "## Call-flow summary" in text
+    assert "Open focused call flow in dashboard" in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:
@@ -827,7 +817,11 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
     assert not re.search(r"^  - Function & DQ Rules Reference:$", mkdocs_text, re.MULTILINE)
     assert "api/reference/" not in mkdocs_text
 
-    missing = [name for name in _exported_symbols() if not (API_REFERENCE_DIR / f"{name}.md").exists()]
+    public_functions = [
+        str(row["function_name"])
+        for row in json.loads((REFERENCE_DIR / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))["public_functions"]
+    ]
+    missing = [name for name in public_functions if not (API_REFERENCE_DIR / f"{name}.md").exists()]
     assert missing == []
 
 
