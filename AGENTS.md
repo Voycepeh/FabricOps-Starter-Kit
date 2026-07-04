@@ -66,7 +66,7 @@ relevant entries in `public-function-call-flows.json` to understand:
 When changing function-level source code, agents must run:
 
 ```bash
-PYTHONPATH=src python scripts/generate_public_function_call_flows.py
+PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 ```
 
 Commit the regenerated `docs/reference/_data/public-function-call-flows.json`
@@ -109,7 +109,10 @@ approved. See `docs/reference/public-function-architecture.md`.
 - Run the architecture guardrail tests that validate source code directly.
 - Run dashboard snapshot tests when the PR intentionally changes dashboard behavior, generated-reference outputs, or generated-reference snapshot expectations.
 - Treat generated reference validation as optional unless the PR is explicitly a reference/docs refresh or changes generator/dashboard/reference-contract logic.
-- When changing `scripts/generate_function_reference.py`, dashboard rendering, embedded call-graph contracts, architecture classification, callable inventory/public flow generation, or tests that intentionally assert generated output, update relevant tests and verify the generator works locally or in CI.
+- When changing split generators, dashboard rendering, embedded call-flow contracts,
+  architecture classification, callable inventory/public flow generation, or tests
+  that intentionally assert generated output, update relevant tests and verify
+  the affected generator works locally or in CI.
 - Confirm no new underscore function is surfaced as an Internal function.
 - Confirm no private helper appears in Public API Surface KPIs.
 - Confirm public-to-public calls are not introduced.
@@ -131,11 +134,11 @@ approved. See `docs/reference/public-function-architecture.md`.
 - Put callable API reference guidance in `src/README.md`.
 - Do not maintain duplicate manual callable/member lists across README/docs pages.
 - Public callable docs are sourced from `src/fabricops_kit/` docstrings plus source metadata.
-- `docs/reference/*`, `docs/api/modules/*`, and related navigation are generated artifacts.
+- `docs/reference/*`, `docs/api/reference/*`, and related navigation are generated artifacts.
 - Do not manually treat generated docs as source of truth; source code, docstrings, `__all__`, and reference metadata remain the source inputs.
 - Function-level source changes must refresh the committed public callable
   architecture contract with
-  `PYTHONPATH=src python scripts/generate_public_function_call_flows.py`;
+  `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`;
   generated individual function pages remain docs workflow outputs unless the PR
   is explicitly scoped as a docs/reference refresh.
 
@@ -160,21 +163,19 @@ It is useful for planning and review, but not authoritative over source code.
   classification, or public function flow metrics, run the public call-flow
   generator and commit the regenerated
   `docs/reference/_data/public-function-call-flows.json` contract.
-- Generator/dashboard/reference-contract PR: when changing
-  `scripts/generate_function_reference.py`, dashboard rendering logic, embedded
-  call-graph data contracts, architecture classification, callable inventory or
-  public flow generation, or tests that intentionally assert generated
-  dashboard/reference output, update relevant tests and verify the generator
-  works locally or in CI.
-- GitHub Pages/docs builds must run
-  `PYTHONPATH=src python scripts/generate_function_reference.py` before
-  `mkdocs build` so the dashboard and reference files are produced in the build
-  workspace before the site artifact is built.
+- Generator/dashboard/reference-contract PR: when changing split generators,
+  dashboard rendering logic, embedded call-flow data contracts, architecture
+  classification, callable inventory or public flow generation, or tests that
+  intentionally assert generated dashboard/reference output, update relevant
+  tests and verify the affected generator works locally or in CI.
+- GitHub Pages/docs builds must run the split generators before `mkdocs build`
+  so committed architecture data, dashboard files, and individual function
+  reference pages are produced in the build workspace before the site artifact
+  is built.
 
 Avoid these generated files and folders in normal Codex source PRs unless the
 PR is explicitly scoped as a docs/reference refresh:
 
-- `docs/assets/function-call-graph-dashboard.html`
 - `docs/reference/_data/`
   - Exception: agents should read and, when function-level source changes
     affect the public call-flow contract, regenerate and commit
@@ -182,7 +183,6 @@ PR is explicitly scoped as a docs/reference refresh:
     generated individual function pages or dashboard HTML for ordinary source
     PRs.
 - `docs/api/reference/`
-- `docs/api/modules/`
 - `docs/reference/index.md`
 - `mkdocs.yml` reference/module navigation when changed only because of
   generation
@@ -196,11 +196,12 @@ wording changes as separate PRs by default.
   scoped as a generator, reference refresh, or dashboard build refresh PR, or
   the PR changes function-level source code in a way that affects the committed
   `public-function-call-flows.json` architecture contract.
-- Backend generated artifacts include public call-flow JSON, call graph JSON,
-  export JSON, reference JSON, snapshots, generated API reference output,
-  generated navigation, and generated docs.
-- Frontend generated artifacts include dashboard HTML, built dashboard bundles,
-  static dashboard output, and other compiled frontend artifacts. Generated
+- Backend generated artifacts include the committed public call-flow JSON,
+  generated individual function reference pages, reference indexes, generated
+  navigation, and generated docs.
+- Frontend generated artifacts include the public call-flow dashboard HTML, built
+  dashboard bundles, static dashboard output, and other compiled frontend
+  artifacts. Generated
   individual function pages and dashboard HTML are docs workflow outputs; do not
   commit them in ordinary source PRs unless explicitly scoped as a docs/reference
   refresh.
@@ -247,11 +248,12 @@ Generated references are refreshed by the docs/GitHub Pages build. Run the
 generator locally or in CI when validating generator/dashboard/reference-contract
 changes; do not manually edit generated outputs.
 
-Generator validation commands:
+Official generator commands:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
-PYTHONPATH=src python scripts/generate_public_function_call_flows.py
+PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
 ```
 
 
@@ -259,25 +261,24 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows.py
 
 Do not manually edit generated reference outputs as source of truth. Update source inputs/generator first, then regenerate when a release or public API/reference change requires it.
 
-Generated artifacts:
-- `docs/assets/function-call-graph-dashboard.html`
-- `docs/assets/public-function-call-flows-dashboard.html`
-- `docs/reference/_data/function-call-graph.json`
-- `docs/reference/_data/public-function-call-flows.json`
-- `docs/reference/index.md`
-- `docs/reference/_data/dependency-metadata.json`
-- `docs/reference/call-graph.md`
-- `docs/api/reference/*.md`
-- `docs/reference/internal/*.md`
-- `docs/api/modules/*.md`
-- `mkdocs.yml` reference/module navigation
+Generated artifact groups:
 
-Source inputs:
+Committed architecture contract:
+- `docs/reference/_data/public-function-call-flows.json`
+
+Generated docs workflow outputs:
+- `docs/api/reference/*.md`
+- `docs/reference/index.md`
+- `docs/reference/function-call-graph.md` if still generated
+- `docs/assets/public-function-call-flows-dashboard.html`
+
+Source inputs and generators:
 - `src/fabricops_kit/**/*.py`
 - `src/fabricops_kit/__init__.py::__all__`
 - `scripts/reference_docs_metadata.py`
-- `scripts/generate_function_reference.py`
-- `scripts/generate_public_function_call_flows.py`
+- `scripts/generate_public_function_call_flows_json.py`
+- `scripts/generate_individual_function_reference_pages.py`
+- `scripts/generate_public_function_call_flows_dashboard.py`
 
 ## Interactive widget API rules
 
@@ -350,7 +351,7 @@ Applies to all `METADATA_*` tables (including future additions).
 ### 1) `src/` function or public API change
 
 - For function-level source changes, update tests/docs as needed and run
-  `PYTHONPATH=src python scripts/generate_public_function_call_flows.py`.
+  `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`.
 - Commit the regenerated `docs/reference/_data/public-function-call-flows.json`
   when the change affects callable structure, source locations, public exports,
   helper relationships, architecture classification, or public function flow
@@ -380,9 +381,9 @@ Applies to all `METADATA_*` tables (including future additions).
 
 - Update source metadata, tests, or generator logic first; do not manually edit
   generated markdown, JSON, dashboard HTML, or navigation as source of truth.
-- Run or validate `PYTHONPATH=src python scripts/generate_function_reference.py`
+- Run or validate `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py`
   locally or in CI for reference-contract changes. Run
-  `PYTHONPATH=src python scripts/generate_public_function_call_flows.py` for
+  `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py` for
   function-level source changes.
 - Do not commit generated individual function pages, module docs, dashboard
   HTML, or navigation in ordinary source PRs; the docs/GitHub Pages workflow
@@ -432,8 +433,8 @@ Run these checks for normal source PRs:
 - `uv run python -m pytest -q`
 - `uv run ruff check .`
 
-Do not include `scripts/generate_function_reference.py` as a normal validation
-command.
+Do not include individual function page or dashboard generators as normal
+validation commands unless the PR changes those generated docs workflow outputs.
 
 ## Glossary-backed documentation wording
 
