@@ -474,8 +474,8 @@ def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
     docs = Path("docs/reference/function-call-graph.md").read_text(encoding="utf-8")
 
     assert "#### Public-flow signals" in docs
-    assert "Large width/depth | Yellow | Width > 10 or Depth > 5" in docs
-    assert "Architecture violation | Red | Any Type 1-6 architecture violation" in docs
+    assert "Large width/depth | Width > 10 or Depth > 5" in docs
+    assert "Architecture violation | Any Type 1-6 architecture violation" in docs
     assert "#### Architecture violation types" in docs
     for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
         assert violation_type in docs
