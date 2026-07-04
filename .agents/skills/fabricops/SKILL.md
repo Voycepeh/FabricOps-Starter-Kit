@@ -13,9 +13,9 @@ This skill guides automation tools working on the FabricOps Starter Kit reposito
 
 Start with the existing generated function reference system. Do not replace it with a separate documentation or manifest system.
 
-- `docs/reference/_data/automation-manifest.json` — automation-oriented callable and helper execution metadata.
-- `docs/reference/_data/function-manifest.json` — machine-readable function inventory and dependency metadata.
-- `docs/api/reference/` — public callable pages for notebook authors.
+- `docs/reference/_data/public-function-call-flows.json` — committed public callable architecture contract for scopes, callees, helper reachability, source locations, architecture violations, cleanup/refactor signals, and defined-but-not-used functions.
+- `docs/assets/public-function-call-flows-dashboard.html` — published dashboard frontend generated from the public call-flow contract for reviewer exploration and AI cleanup packet export.
+- `docs/api/reference/` — generated individual public callable pages for notebook authors and maintainers.
 - Public callable pages under `docs/api/reference/` embed internal helper implementation details for package maintenance. Standalone `docs/reference/internal/` pages are generated only when explicitly enabled for maintainer diagnostics.
 - `docs/reference/dq-rules/` — generated DQ rule reference pages for supported rule types, parameters, and examples.
 
@@ -80,12 +80,12 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 
 ## Generated reference discipline
 
-- Use `docs/reference/_data/automation-manifest.json` for required context, inputs, outputs, side effects, failure modes, verification, and related functions.
-- Use `docs/reference/_data/function-manifest.json` for the machine-readable function inventory and dependency metadata.
+- Use `docs/reference/_data/public-function-call-flows.json` for public callable scopes, callees, helper reachability, source locations, architecture violations, cleanup/refactor signals, and defined-but-not-used functions.
+- Use `docs/assets/public-function-call-flows-dashboard.html` when reviewer exploration or an AI cleanup packet is needed.
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
 - Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
 - Do not manually edit generated reference files unless source inputs or generator behavior require it.
-- If source metadata, public API surface, callable documentation contracts, or generator behavior changes, regenerate the individual function reference pages with `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` and run relevant tests.
+- If function-level source changes affect callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics, regenerate the committed architecture contract with `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`. Regenerate individual function reference pages with `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` only for explicitly scoped generated-reference refreshes.
 
 ## Workflow
 
@@ -93,6 +93,6 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 2. Check the notebook workflow ownership above and current `How FabricOps Works` guide for the relevant starter flow.
 3. Read the matching page in `docs/api/reference/` before calling or recommending a public helper.
 4. For DQ work, read `docs/reference/dq-rules/index.md`, each relevant generated DQ rule page, and the callable page before generating notebook code.
-5. Inspect `docs/reference/_data/automation-manifest.json` and `docs/reference/_data/function-manifest.json` when you need execution metadata, dependencies, side effects, failure modes, or verification guidance.
+5. Inspect `docs/reference/_data/public-function-call-flows.json` when you need public callable scopes, dependencies, source locations, architecture violations, cleanup/refactor signals, or defined-but-not-used functions.
 6. Use the embedded Internal implementation summary on callable pages when maintaining package implementation details; only use `docs/reference/internal/` if standalone internal pages were explicitly generated for maintainer diagnostics.
 7. Preserve `00_env_config` metadata routing for reads and writes, especially governed evidence tables such as `METADATA_DQ_RULES`.

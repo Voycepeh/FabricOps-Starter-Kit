@@ -3603,7 +3603,7 @@ def _callable_flow_metadata(generated_at_utc: datetime) -> dict[str, Any]:
     """Return generation metadata shared by callable-flow JSON and HTML assets."""
     metadata: dict[str, Any] = {
         "generated_at_utc": generated_at_utc.isoformat().replace("+00:00", "Z"),
-        "data_source": "function-call-graph.json",
+        "data_source": "public-function-call-flows.json",
     }
     return metadata
 
@@ -3909,9 +3909,13 @@ The Function Call Graph helps reviewers inspect public callable functions, under
 
 ## Overview
 
-The Function Call Graph is the explanatory page for the v2 public-function call-flow architecture contract. `scripts/generate_public_function_call_flows_json.py` owns the JSON contract, `scripts/generate_public_function_call_flows_dashboard.py` owns the dashboard frontend, and this generator owns the Markdown explanation plus individual function reference pages.
+The Function Call Graph is the explanatory page for the v2 public-function call-flow architecture contract. Generator ownership is split across three focused scripts:
 
-The source of truth is the repository code plus the JSON-contract generator, not the checked-in JSON snapshot.
+- `scripts/generate_public_function_call_flows_json.py` owns the committed JSON architecture contract at `docs/reference/_data/public-function-call-flows.json`.
+- `scripts/generate_public_function_call_flows_dashboard.py` owns the published dashboard frontend at `docs/assets/public-function-call-flows-dashboard.html`.
+- `scripts/generate_individual_function_reference_pages.py` owns the generated individual function reference pages under `docs/api/reference/` plus `docs/reference/index.md` and this explanatory page.
+
+The source of truth is the repository code plus the JSON-contract generator. The committed `public-function-call-flows.json` file is the architecture contract snapshot used by agents and review tooling, but source code and generator logic remain authoritative if the snapshot drifts.
 
 ## How it works
 
@@ -3933,15 +3937,15 @@ During the docs deployment workflow, GitHub Actions runs:
 PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 ```
 
-This regenerates `docs/reference/_data/public-function-call-flows.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
+This regenerates the committed architecture contract at `docs/reference/_data/public-function-call-flows.json`. Docs builds also refresh this contract in the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
 
-As a result, the deployed `gh-pages` documentation receives the fresh generated JSON for that build. The `main` branch is not automatically committed back with this regenerated JSON unless a maintainer intentionally runs the generator locally and commits the generated files.
+As a result, the deployed `gh-pages` documentation receives fresh generated JSON for that build. The `main` branch is updated only when a maintainer intentionally runs the JSON generator locally and commits `docs/reference/_data/public-function-call-flows.json`.
 
 For reviews, use:
 
 - source code and `scripts/generate_public_function_call_flows_json.py` as the JSON-contract source of truth
 - deployed `gh-pages` JSON as the current docs-build artifact
-- checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
+- checked-in `docs/reference/_data/public-function-call-flows.json` in `main` as the committed architecture contract snapshot
 
 ## 1. Repository code
 
@@ -3970,7 +3974,7 @@ The generator then writes the v2 callable architecture data contract:
 
 * [public-function-call-flows.json](_data/public-function-call-flows.json)
 
-`scripts/generate_individual_function_reference_pages.py` separately generates the individual Markdown API reference pages under `docs/api/reference/` so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
+`scripts/generate_individual_function_reference_pages.py` separately generates the individual Markdown API reference pages under `docs/api/reference/`, `docs/reference/index.md`, and this explanatory page so notebook authors and maintainers can review public callable behavior from source docstrings and metadata.
 
 ## 3. Enforce architecture
 
@@ -4045,7 +4049,7 @@ The pattern that usually needs review is:
 public callable → helper → helper → helper
 ```
 
-Because these outputs are generated, update the scanner and architecture rules first, then regenerate the reference artifacts when intentionally refreshing this page.
+Because these outputs are generated, update the scanner and architecture rules first. For function-level source changes that affect callable structure, regenerate and commit only `docs/reference/_data/public-function-call-flows.json`; do not commit dashboard HTML or individual function pages unless the PR is explicitly scoped as a generated-reference refresh.
 
 ## 4. v2 dashboard/docs ownership
 
@@ -4073,7 +4077,7 @@ The v2 dashboard/docs surfaces can use the JSON contract to help reviewers:
 
 ## 5. Markdown reference pages
 
-This generator still writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.
+`scripts/generate_individual_function_reference_pages.py` writes individual Markdown API reference pages from source docstrings, package exports, metadata, and callable-flow analysis. Those pages remain the source-aligned reference surface for public callable behavior and implementation-helper context.
 """
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
