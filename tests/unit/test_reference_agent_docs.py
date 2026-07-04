@@ -284,7 +284,30 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert "_render_combined_refactor_dashboard_html" not in generator_source
     assert "_runtime_inventory_script" not in generator_source
     assert "selected_flow_tree_html" not in generator_source
-    assert "FUNCTION_CALL_GRAPH_DATA_PATH.write_text" in generator_source
+    removed_generator_structures = [
+        "FUNCTION_CALL_GRAPH_DATA_PATH",
+        "MANIFEST_PATH",
+        "CALLABLE_SURFACE_AUDIT_PATH",
+        "FUNCTION_TAXONOMY_AUDIT_PATH",
+        "LANDING_STATS_PATH",
+        "METADATA_REFERENCE_DIR",
+        "parse_module_docs_metadata",
+        "module_manifest",
+        "module_index_lines",
+        "manifest_rows",
+        "manifest_modules",
+        "dependency_callables",
+        "dependency_modules",
+        "audit_rows",
+        "agent_manifest",
+        "function_manifest",
+        "refactor_signals_manifest",
+        "generate_metadata_table_reference",
+        "generate_landing_stats",
+        "update_landing_page_counts",
+    ]
+    for removed_structure in removed_generator_structures:
+        assert removed_structure not in generator_source
 
     for function_name in function_exported_symbols:
         assert (ROOT / "docs" / "api" / "reference" / f"{function_name}.md").exists()
