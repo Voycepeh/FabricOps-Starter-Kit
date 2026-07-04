@@ -516,7 +516,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
 
 def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workflow():
     """Verify removed metadata workflow no longer participates in role metadata."""
-    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME
+    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME
 
     assert "_setup_metadata_tables_workflow" not in ROLE_TAGS_BY_NAME
     assert ROLE_TAGS_BY_NAME["_setup_notebook_workflow"][0] == "internal_workflow"
@@ -526,7 +526,7 @@ def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workf
 
 def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
     """Verify agreement widget orchestration is not misclassified as an adapter."""
-    from scripts.generate_function_reference import ROLE_TAGS_BY_NAME, _role_dependency_signals
+    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME, _role_dependency_signals
 
     shared_roles = ROLE_TAGS_BY_NAME["render_maintenance_widget_shared_workflow"]
 
@@ -724,7 +724,7 @@ def _metadata_doc_schema_rows(table_name: str) -> list[dict[str, str]]:
 def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
     """Verify generated metadata docs reflect setup_metadata_tables schema registry."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
-    from scripts.generate_function_reference import generate_metadata_table_reference
+    from scripts.generate_individual_function_reference_pages import generate_metadata_table_reference
 
     registry = metadata_table_schema_registry()
 
@@ -744,7 +744,7 @@ def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
 def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     """Verify metadata docs render canonical non-string types and audit order."""
     from fabricops_kit.config.metadata_schemas import audit_schema_fields, metadata_table_schema_registry, metadata_table_schema_rows
-    from scripts.generate_function_reference import _schema_rows
+    from scripts.generate_individual_function_reference_pages import _schema_rows
 
     registry = metadata_table_schema_registry()
     catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}

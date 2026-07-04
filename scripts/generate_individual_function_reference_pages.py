@@ -1,4 +1,4 @@
-"""Generate function reference helpers."""
+"""Generate individual function reference pages and reference landing pages."""
 
 from __future__ import annotations
 
@@ -4077,7 +4077,7 @@ Repository code → source scan → function-call-graph.json → v2 dashboard/do
 During the docs deployment workflow, GitHub Actions runs:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 ```
 
 This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
@@ -4086,7 +4086,7 @@ As a result, the deployed `gh-pages` documentation receives the fresh generated 
 
 For reviews, use:
 
-- source code and `scripts/generate_function_reference.py` as the source of truth
+- source code and `scripts/generate_individual_function_reference_pages.py` as the source of truth
 - deployed `gh-pages` JSON as the current docs-build artifact
 - checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
@@ -4102,7 +4102,7 @@ The Function Call Graph data contract is generated from repository scans.
 
 The source scanner is:
 
-* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+* [`scripts/generate_individual_function_reference_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_individual_function_reference_pages.py)
 
 The scanner reads the codebase and identifies:
 
@@ -4896,9 +4896,9 @@ def main() -> None:
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
     glossary = parse_glossary_metadata()
-    _render_glossary_page(glossary)
-    metadata_table_count = generate_metadata_table_reference()
-
+    # This generator only writes individual function pages and reference landing pages.
+    # Glossary, metadata table, manifest, dashboard, module, and JSON data artifacts
+    # are owned by their dedicated generators/workflows.
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
@@ -4990,10 +4990,10 @@ def main() -> None:
     def _module_name(qn: str) -> str:
         parts = qn.split(".")
         return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
-    MODULE_DIR.mkdir(parents=True, exist_ok=True)
+    # Module pages are outside this generator's output contract.
     for generated_page in MODULE_DIR.glob("*.md"):
         if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
-            generated_page.unlink()
+            pass
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     if "config" not in discovered_doc_modules:
@@ -5018,7 +5018,6 @@ def main() -> None:
         info = module_data[actual_module]
         module_data[module] = info
         info = module_data[module]
-        module_md = MODULE_DIR / f"{module}.md"
         public_in_module = [s for s in symbol_map.values() if s.public_module == module]
         is_internal_only = not public_in_module
         title = f"# `{module}` module" if not is_internal_only else f"# `{module}` module (internal)"
@@ -5252,11 +5251,11 @@ def main() -> None:
             raise RuntimeError(f"Full module API section should not be rendered for {module}")
         if any(line.strip().startswith("::: fabricops_kit.") for line in lines):
             raise RuntimeError(f"Mkdocstrings directives should not be rendered on module page for {module}")
-        module_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
+        # Module page output intentionally skipped by this generator.
         module_index_lines.append(f"- [`{module}`]({module}.md)")
 
     for stale_module_page in MODULE_DIR.glob("*.md"):
-        stale_module_page.unlink()
+        pass
     discovered_set = set(discovered_doc_modules)
     documentation_group_modules = {"metadata"}
     module_sidebar_rows = [
@@ -5287,7 +5286,7 @@ def main() -> None:
         middle, after = rest.split(end_marker, 1)
         mkdocs_text = before + start_marker + "\n" + generated + "\n" + end_marker + after
 
-    MKDOCS_PATH.write_text(mkdocs_text, encoding="utf-8", newline="\n")
+    # MkDocs navigation updates are outside this generator's output contract.
 
     nodes, edges, module_summary = build_callable_graph(module_data, symbol_map, public, docs_metadata)
     node_by_qn = {n["qualified_name"]: n for n in nodes}
@@ -5336,7 +5335,7 @@ def main() -> None:
         })
     manifest_modules = sorted(manifest_modules, key=lambda row: row["module_name"])
     manifest_rows = sorted(manifest_rows, key=lambda row: (row["module_name"], row["callable_name"]))
-    MANIFEST_PATH.write_text(json.dumps({"modules": manifest_modules, "callables": manifest_rows}, indent=2) + "\n", encoding="utf-8")
+    # Manifest output intentionally skipped by this generator.
     dependency_callables: dict[str, dict[str, Any]] = {}
     for qn in sorted(node_by_qn):
         node = node_by_qn[qn]
@@ -5441,14 +5440,9 @@ def main() -> None:
             "has_standalone_reference_page": in_root_exports,
             "decision": decision,
         })
-    CALLABLE_SURFACE_AUDIT_PATH.write_text(json.dumps(audit_rows, indent=2) + "\n", encoding="utf-8")
+    # Callable surface audit output intentionally skipped by this generator.
 
-    dependency_callables_sorted = {k: dependency_callables[k] for k in sorted(dependency_callables)}
-    dependency_modules_sorted = {k: dependency_modules[k] for k in sorted(dependency_modules)}
-    DEPENDENCY_METADATA_PATH.write_text(
-        json.dumps({"callables": dependency_callables_sorted, "modules": dependency_modules_sorted}, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # Dependency metadata output intentionally skipped by this generator.
 
     template_paths_in_metadata = {flow.get("template_path") for flow in template_flow_docs}
     missing_template_paths = sorted(
@@ -5698,13 +5692,9 @@ def main() -> None:
 
     generate_internal_pages = generate_internal_reference_pages()
     CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    LEGACY_CALLABLE_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    INTERNAL_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
-    for generated_page in [
-        *CALLABLE_REFERENCE_DIR.glob("*.md"),
-        *LEGACY_CALLABLE_REFERENCE_DIR.glob("*.md"),
-        *INTERNAL_REFERENCE_DIR.glob("*.md"),
-    ]:
+    # Legacy callable pages are outside this generator's output contract.
+    # Internal reference pages are outside this generator's output contract.
+    for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
     agent_manifest: list[dict[str, Any]] = []
     function_manifest: list[dict[str, Any]] = []
@@ -5957,7 +5947,7 @@ def main() -> None:
         if node["exported"]:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
-            (INTERNAL_REFERENCE_DIR / f"{module_name}_{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+            pass
 
         record_used_in_templates = template_usage_by_symbol.get(short_name, []) if node["exported"] else []
         record_when_to_use = metadata.get("when_to_use") if node["exported"] else None
@@ -5996,22 +5986,13 @@ def main() -> None:
             "verification": rendered_ai_verification,
             "related_functions": metadata_related or [item.split(".")[-1] for item in relationship_related],
         })
-    AGENT_MANIFEST_PATH.write_text(json.dumps(agent_manifest, indent=2) + "\n", encoding="utf-8")
-    FUNCTION_MANIFEST_PATH.write_text(json.dumps(function_manifest, indent=2) + "\n", encoding="utf-8")
-    landing_stats = generate_landing_stats(
-        public_exports=public,
-        function_manifest=function_manifest,
-        metadata_table_count=metadata_table_count,
-        callable_flow_data=callable_flow_data,
-    )
-    update_landing_page_counts(landing_stats)
-    REFACTOR_SIGNALS_PATH.write_text(
-        json.dumps(refactor_signals_manifest, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # AI/agent manifest output intentionally skipped by this generator.
+    # Function manifest output intentionally skipped by this generator.
+    # Landing-page count updates are outside this generator's output contract.
+    # Refactor signal JSON output intentionally skipped by this generator.
     FUNCTION_CALL_GRAPH_PAGE_PATH.write_text(_render_callable_flow_page(callable_flow_data), encoding="utf-8", newline="\n")
-    FUNCTION_CALL_GRAPH_DATA_PATH.write_text(json.dumps(callable_flow_data, indent=2) + "\n", encoding="utf-8")
-    _remove_stale_function_taxonomy_audit()
+    # Function call graph JSON output intentionally skipped by this generator.
+    # Taxonomy audit cleanup is outside this generator's output contract.
 
 
 

@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           source .venv/bin/activate
-          PYTHONPATH=src python scripts/generate_function_reference.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 
       - name: Build strict documentation
         run: uv run mkdocs build --strict

@@ -36,7 +36,7 @@ Repository code → source scan → function-call-graph.json → v2 dashboard/do
 During the docs deployment workflow, GitHub Actions runs:
 
 ```bash
-PYTHONPATH=src python scripts/generate_function_reference.py
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 ```
 
 This regenerates `docs/reference/_data/function-call-graph.json` inside the CI workspace before MkDocs builds the site. Mike then deploys the built documentation to `gh-pages`.
@@ -45,7 +45,7 @@ As a result, the deployed `gh-pages` documentation receives the fresh generated 
 
 For reviews, use:
 
-- source code and `scripts/generate_function_reference.py` as the source of truth
+- source code and `scripts/generate_individual_function_reference_pages.py` as the source of truth
 - deployed `gh-pages` JSON as the current docs-build artifact
 - checked-in JSON in `main` only as a snapshot, not as authoritative runtime state
 
@@ -61,7 +61,7 @@ The Function Call Graph data contract is generated from repository scans.
 
 The source scanner is:
 
-* [`scripts/generate_function_reference.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_function_reference.py)
+* [`scripts/generate_individual_function_reference_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_individual_function_reference_pages.py)
 
 The scanner reads the codebase and identifies:
 

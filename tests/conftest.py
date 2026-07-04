@@ -20,7 +20,7 @@ def generated_reference_artifacts_for_tests() -> None:
     if graph_path.exists() and dashboard_path.exists():
         return
 
-    from scripts import generate_function_reference as generator
+    from scripts import generate_individual_function_reference_pages as generator
 
     generator.main()
 
