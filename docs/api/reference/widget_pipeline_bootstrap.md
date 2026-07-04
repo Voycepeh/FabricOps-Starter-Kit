@@ -162,16 +162,6 @@ Not documented yet
 - No agreement exists when select_agreement=True.
 - The user has not selected an agreement.
 
-## Glossary
-
-<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Notebook template</span><span class="glossary-chip-definition">Reusable starter notebook workflow that shows how to run a FabricOps phase.</span> <a href="../../../reference/glossary/#notebook-template">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Data agreement</span><span class="glossary-chip-definition">FabricOps agreement record that captures ownership, steward context, usage, and expectations.</span> <a href="../../../reference/glossary/#data-agreement">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Metadata lakehouse</span><span class="glossary-chip-definition">Configured Fabric Lakehouse target where FabricOps stores metadata tables.</span> <a href="../../../reference/glossary/#metadata-lakehouse">Full definition</a></span>
-</div>
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)

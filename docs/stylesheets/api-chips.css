@@ -995,34 +995,6 @@
   margin-top: 0.25rem;
 }
 
-.md-typeset .glossary-chip {
-  display: inline-block;
-  max-width: min(100%, 28rem);
-  margin: 0;
-  min-width: 5.75rem;
-  padding: 0.28rem 0.8rem;
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.45rem;
-  background: color-mix(in srgb, var(--md-code-bg-color) 55%, var(--md-default-bg-color));
-  vertical-align: top;
-}
-
-.md-typeset .glossary-chip-label {
-  display: block;
-  padding: 0;
-  background: transparent;
-  color: var(--md-primary-fg-color--dark);
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.md-typeset .glossary-chip-definition {
-  display: block;
-  margin-top: 0.28rem;
-  color: var(--md-default-fg-color);
-  line-height: 1.45;
-}
-
 .md-typeset .page-glossary-terms {
   margin: 1.5rem 0 1rem;
   padding-top: 0.75rem;

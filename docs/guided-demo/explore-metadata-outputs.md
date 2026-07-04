@@ -12,4 +12,4 @@ Use generated reference pages, `99_explore`, or dashboard-internal pages to insp
 
 Users can trace agreement context, catalogue profiles, guardrail rules, runtime results, lineage, and pipeline summaries without relying on hidden notebook state.
 
-See also: [List of Functions](../reference/index.md) and [Glossary](../reference/glossary.md).
+See also: [List of Functions](../reference/index.md).

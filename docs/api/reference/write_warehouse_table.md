@@ -112,15 +112,6 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 - Warehouse connector support is unavailable.
 - The caller lacks write permission.
 
-## Glossary
-
-<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">
-<span class="glossary-chip"><span class="glossary-chip-label">Target table</span><span class="glossary-chip-definition">A written table produced by a pipeline output.</span> <a href="../../../reference/glossary/#target-table">Full definition</a></span>
-<span class="glossary-chip"><span class="glossary-chip-label">Guardrails</span><span class="glossary-chip-definition">Approved checks that evaluate schema, freshness, profile behavior, or DQ expectations during a pipeline run.</span> <a href="../../../reference/glossary/#guardrails">Full definition</a></span>
-</div>
-
-See the [full glossary](../../../reference/glossary/) for more FabricOps terms.
-
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)

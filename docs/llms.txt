@@ -27,13 +27,10 @@ Use this file as a concise navigation map for documentation and automation workf
 
 - [Data Quality and Governance](notebook-templates-implementation-guide/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
 - [DQ Rules Reference](reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
-- [Glossary](reference/glossary.md): Shared terminology for governed notebook delivery.
 
 ## API reference
 
 - [Function Reference](reference.md): Public callable reference generated from source docstrings and metadata.
-- [Automation Manifest](reference/_data/automation-manifest.json): Machine-readable helper metadata for automation tools.
-- [Function Manifest](reference/_data/function-manifest.json): Machine-readable function inventory and dependency metadata.
 
 ## Handover and maintenance
 
