@@ -6,7 +6,7 @@
 - Shared helpers: 8
 - Private helpers: 7
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=write_warehouse_table">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_warehouse_table">Open focused call flow in dashboard</a>
 
 
 Write a DataFrame to a configured Fabric warehouse target.

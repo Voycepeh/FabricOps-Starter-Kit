@@ -6,7 +6,7 @@
 - Shared helpers: 28
 - Private helpers: 54
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_enrich_table_metadata">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_enrich_table_metadata">Open focused call flow in dashboard</a>
 
 
 Render a consolidated column enrichment widget.

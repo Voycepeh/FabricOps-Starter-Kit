@@ -6,7 +6,7 @@
 - Shared helpers: 114
 - Private helpers: 124
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_steward">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_steward">Open focused call flow in dashboard</a>
 
 
 Render the standalone data-steward intake widget.

@@ -6,7 +6,7 @@
 - Shared helpers: 26
 - Private helpers: 29
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_lineage">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_lineage">Open focused call flow in dashboard</a>
 
 
 Write many-to-many source-to-target lineage evidence.

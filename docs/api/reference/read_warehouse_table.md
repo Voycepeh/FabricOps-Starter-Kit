@@ -6,7 +6,7 @@
 - Shared helpers: 8
 - Private helpers: 7
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_table">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_table">Open focused call flow in dashboard</a>
 
 
 Read a table from a configured Fabric warehouse target.

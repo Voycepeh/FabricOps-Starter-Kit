@@ -484,6 +484,19 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
+def test_dashboard_focus_links_escape_api_reference_route() -> None:
+    """Verify generated reference links resolve to MkDocs assets, not api assets."""
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        assert "/api/assets/public-function-call-flows-dashboard.html" not in text, page
+        assert 'href="../../assets/public-function-call-flows-dashboard.html' not in text, page
+        if "Open focused call flow in dashboard" in text:
+            assert "../../../assets/public-function-call-flows-dashboard.html?function=" in text, page
+
+
 def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     """Verify nested private helpers appear in callable helper chips."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")

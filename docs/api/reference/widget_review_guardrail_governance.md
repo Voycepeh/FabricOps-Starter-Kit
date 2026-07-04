@@ -6,7 +6,7 @@
 - Shared helpers: 41
 - Private helpers: 44
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_review_guardrail_governance">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_review_guardrail_governance">Open focused call flow in dashboard</a>
 
 
 Render interactive controls for reviewing proposed and bypassed guardrail rules.

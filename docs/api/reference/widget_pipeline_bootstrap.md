@@ -6,7 +6,7 @@
 - Shared helpers: 61
 - Private helpers: 60
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_pipeline_bootstrap">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_pipeline_bootstrap">Open focused call flow in dashboard</a>
 
 
 Bootstrap a guided pipeline notebook run and store runtime defaults.

@@ -6,7 +6,7 @@
 - Shared helpers: 10
 - Private helpers: 8
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_parquet">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_parquet">Open focused call flow in dashboard</a>
 
 
 Read a Parquet path from a configured Fabric-resolved path.

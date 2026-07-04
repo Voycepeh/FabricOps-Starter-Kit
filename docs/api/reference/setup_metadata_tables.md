@@ -6,7 +6,7 @@
 - Shared helpers: 7
 - Private helpers: 14
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open focused call flow in dashboard</a>
 
 
 Create or validate all FabricOps metadata tables through one setup action.
