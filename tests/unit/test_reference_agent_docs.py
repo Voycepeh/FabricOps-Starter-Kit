@@ -135,56 +135,6 @@ def test_landing_stats_match_reference_sources() -> None:
     assert stats["metadata_table_count"] == len(metadata_pages)
 
 
-def test_generated_callable_surface_matches_all_exports() -> None:
-    """Verify generated callable entries come from package __all__."""
-    pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
-    exported_symbols = set(_exported_symbols())
-    config_model_symbols = {
-        "FabricStore",
-        "PathConfig",
-        "GovernanceConfig",
-        "DataAgreementConfig",
-        "FrameworkConfig",
-        "ConfigSmokeCheckResult",
-        "NotebookSetupContext",
-    }
-    function_exported_symbols = exported_symbols - config_model_symbols
-    removed_symbols = {
-        "enforce_dq_rules",
-        "get_selected_agreement",
-    }
-    automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    callable_flow = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
-
-    automation_callables = {entry["name"] for entry in automation_manifest if entry.get("type") == "callable"}
-    function_callables = {
-        entry["name"]
-        for entry in function_manifest
-        if entry.get("classification") == "Callable" and entry.get("docs_path", "").startswith("api/reference/")
-    }
-    page_callables = {path.stem for path in API_REFERENCE_DIR.glob("*.md")}
-
-    assert automation_callables == exported_symbols
-    class_callables = {
-        entry["name"]
-        for entry in function_manifest
-        if entry.get("classification") == "Public class" and entry.get("docs_path", "").startswith("api/reference/")
-    }
-
-    assert function_callables == function_exported_symbols
-    assert class_callables == config_model_symbols
-    assert page_callables == exported_symbols
-    public_inventory = {row["function_name"] for row in callable_flow["function_inventory"] if row["layer"] == "public"}
-    assert public_inventory == function_exported_symbols
-    assert not (removed_symbols & automation_callables)
-    assert not (removed_symbols & function_callables)
-    assert not (removed_symbols & page_callables)
-    assert not (removed_symbols & public_inventory)
-
-
-
-
 def test_refactor_signals_do_not_treat_cross_module_helpers_as_wrong_area() -> None:
     """Verify cross-module helper usage is not itself a wrong-area refactor signal."""
     from scripts.generate_individual_function_reference_pages import _collect_refactor_signals, _render_refactor_signals
@@ -239,24 +189,6 @@ def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
 
     assert two_way_signal is None
     assert three_way_signal == ("Metadata loading", "Validation", "Rule evaluation")
-
-
-def test_reference_agent_metadata_files_exist_and_are_valid_json() -> None:
-    """Verify reference agent/automation metadata files exist and are valid json."""
-    pytest.skip("agent manifests and call-graph JSON are no longer owned by the individual function page generator")
-    automation_manifest = REFERENCE_DIR / "_data" / "automation-manifest.json"
-    function_manifest = REFERENCE_DIR / "_data" / "function-manifest.json"
-    refactor_signals = REFERENCE_DIR / "_data" / "refactor-signals.json"
-    callable_flow = REFERENCE_DIR / "_data" / "function-call-graph.json"
-
-    assert automation_manifest.exists()
-    assert function_manifest.exists()
-    assert refactor_signals.exists()
-    assert callable_flow.exists()
-    assert json.loads(automation_manifest.read_text(encoding="utf-8"))
-    assert json.loads(function_manifest.read_text(encoding="utf-8"))
-    assert json.loads(refactor_signals.read_text(encoding="utf-8"))
-    assert json.loads(callable_flow.read_text(encoding="utf-8"))
 
 
 def test_function_call_graph_json_is_populated() -> None:
@@ -360,30 +292,6 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
 
 
-def test_refactor_signals_json_includes_run_table_guardrails() -> None:
-    """Verify structured refactor signals are generated for public guardrail orchestration."""
-    pytest.skip("refactor signal JSON is no longer owned by the individual function page generator")
-    signal_path = REFERENCE_DIR / "_data" / "refactor-signals.json"
-    signals = json.loads(signal_path.read_text(encoding="utf-8"))
-    guardrail_signals = signals["run_table_guardrails"]
-
-    assert guardrail_signals["qualified_name"].endswith(".run_table_guardrails")
-    assert guardrail_signals["unique_internal_helper_count"] > 0
-    assert {
-        "qualified_name",
-        "unique_internal_helper_count",
-        "repeated_helpers",
-        "deep_call_chains",
-        "single_delegate_helpers",
-        "possible_grouping_mismatches",
-    } <= set(guardrail_signals)
-    assert guardrail_signals["repeated_helpers"]
-    assert guardrail_signals["single_delegate_helpers"]
-    assert all(
-        {"helper", "qualified_name", "branch_count"} <= set(item) for item in guardrail_signals["repeated_helpers"]
-    )
-
-
 def test_fabricops_skill_file_exists() -> None:
     """Verify fabricops skill file exists."""
     assert (ROOT / ".agents" / "skills" / "fabricops" / "SKILL.md").exists()
@@ -460,20 +368,6 @@ setup_metadata_tables(
 ```"""
         in example
     )
-
-
-def test_core_automation_manifest_entries_have_non_placeholder_agent_fields() -> None:
-    """Verify core agent/automation metadata entries have non placeholder agent/automation metadata fields."""
-    manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-    by_name = {entry["name"]: entry for entry in manifest if entry.get("type") == "callable"}
-
-    assert CORE_CALLABLES <= set(by_name)
-    for callable_name in sorted(CORE_CALLABLES):
-        entry = by_name[callable_name]
-        for field in CORE_AGENT_FIELDS:
-            value = entry[field]
-            assert value
-            assert value != PLACEHOLDER, f"{callable_name}.{field} is placeholder"
 
 
 def test_standalone_internal_pages_are_not_generated_by_default() -> None:
@@ -829,121 +723,6 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "## Source link" not in text
 
 
-def test_public_callables_have_one_canonical_full_content_page() -> None:
-    """Verify public callables have one canonical full content page."""
-    manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    public_names = sorted({entry["name"] for entry in manifest if entry.get("classification") == "Callable"})
-    public_class_names = sorted({entry["name"] for entry in manifest if entry.get("classification") == "Public class"})
-
-    assert public_names
-    assert public_class_names
-    for name in public_names:
-        canonical_page = API_REFERENCE_DIR / f"{name}.md"
-        legacy_page = REFERENCE_DIR / "callables" / f"{name}.md"
-        assert canonical_page.exists(), name
-        assert not legacy_page.exists(), f"{legacy_page} duplicates canonical full-content page"
-        text = canonical_page.read_text(encoding="utf-8")
-        assert "## Relationships" not in text, canonical_page
-        assert "## Maintainer/developer implementation details" not in text, canonical_page
-        assert "**Used in notebooks:**" in text, canonical_page
-
-    generated_pages = sorted(page.stem for page in API_REFERENCE_DIR.glob("*.md"))
-    assert generated_pages == sorted([*public_names, *public_class_names])
-
-
-def test_generated_manifests_point_public_callables_to_canonical_api_reference() -> None:
-    """Verify generated manifests point public callables to canonical api reference."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-
-    for entry in function_manifest:
-        if entry.get("classification") in {"Callable", "Public class"}:
-            assert entry["docs_path"] == f"api/reference/{entry['name']}.md"
-        elif entry.get("docs_path") is not None:
-            assert entry["docs_path"].startswith("reference/internal/")
-
-    for entry in automation_manifest:
-        if entry.get("type") == "callable":
-            assert entry["docs_path"] == f"api/reference/{entry['name']}.md"
-        elif entry.get("docs_path") is not None:
-            assert entry["docs_path"].startswith("reference/internal/")
-
-
-def test_glossary_page_exists_and_includes_required_terms() -> None:
-    """Verify glossary page exists and includes required terms."""
-    glossary_page = REFERENCE_DIR / "glossary.md"
-    glossary_source = REFERENCE_DIR / "_data" / "glossary.json"
-    required_terms = {
-        "profile",
-        "enrichment",
-        "guardrails",
-        "enforcement",
-        "metadata lakehouse",
-        "source data",
-        "pipeline output",
-        "target DataFrame",
-        "target table",
-        "profile mode",
-        "static_data",
-        "changing_data",
-        "skip",
-        "can_continue",
-    }
-
-    assert glossary_page.exists()
-    assert glossary_source.exists()
-    glossary_entries = json.loads(glossary_source.read_text(encoding="utf-8"))
-    terms = {entry["term"] for entry in glossary_entries}
-    assert required_terms <= terms
-
-    glossary_text = glossary_page.read_text(encoding="utf-8")
-    for term in required_terms:
-        assert f"<h2>{term}</h2>".lower() in glossary_text.lower()
-    assert "Searchable source of truth" in glossary_text
-
-
-def test_public_callable_records_have_real_metadata_backed_guidance() -> None:
-    """Verify public callable records have real metadata backed guidance."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    public_records = [entry for entry in function_manifest if entry.get("classification") == "Callable"]
-
-    assert public_records
-    for entry in public_records:
-        assert entry.get("expanded_purpose"), entry["name"]
-        assert entry.get("when_to_use"), entry["name"]
-        assert entry.get("return_interpretation"), entry["name"]
-        assert entry.get("common_failure_causes"), entry["name"]
-
-
-def test_callable_pages_with_glossary_terms_render_shared_key_terms() -> None:
-    """Verify callable pages with glossary terms render shared key terms."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    glossary_entries = json.loads((REFERENCE_DIR / "_data" / "glossary.json").read_text(encoding="utf-8"))
-    glossary = {entry["term"]: entry["short_definition"] for entry in glossary_entries}
-    for item in glossary_entries:
-        for alias in item.get("aliases", []):
-            glossary[alias] = item["short_definition"]
-
-    for entry in function_manifest:
-        if entry.get("classification") != "Callable" or not entry.get("glossary_terms"):
-            continue
-        text = (API_REFERENCE_DIR / f"{entry['name']}.md").read_text(encoding="utf-8")
-        key_terms = _section_text(text, "Glossary")
-        for term in entry["glossary_terms"]:
-            assert 'class="glossary-chip"' in key_terms, entry["name"]
-            assert glossary[term] in key_terms, entry["name"]
-
-
-def test_internalized_enforce_profile_behavior_keeps_manifest_metadata_without_page() -> None:
-    """Verify internalized enforce_profile_behavior remains metadata-only."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    entry = next(item for item in function_manifest if item["name"] == "enforce_profile_behavior")
-    assert entry["classification"] == "Internal"
-    assert entry["used_in_templates"] == []
-    assert entry["docs_path"] is None
-    assert not (API_REFERENCE_DIR / "enforce_profile_behavior.md").exists()
-
-
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:
     """Verify public callable pages do not repeat intro as exact purpose."""
     for page in sorted(API_REFERENCE_DIR.glob("*.md")):
@@ -968,28 +747,6 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
         text = page.read_text(encoding="utf-8")
         for phrase in forbidden:
             assert phrase not in text, page
-
-
-def test_related_guides_metadata_renders_before_template_and_call_graph_sections() -> None:
-    """Verify related guides metadata renders before template and call graph sections."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-    function_by_name = {
-        entry["name"]: entry for entry in function_manifest if entry.get("classification") == "Callable"
-    }
-    automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
-
-    related_guides = function_by_name["run_table_guardrails"]["related_guides"]
-    assert related_guides == [
-        {"title": "Pipeline Execution", "path": "../../notebook-templates-implementation-guide/pipeline-execution.md"}
-    ]
-    assert automation_by_name["run_table_guardrails"]["related_guides"] == related_guides
-
-    text = (API_REFERENCE_DIR / "run_table_guardrails.md").read_text(encoding="utf-8")
-    assert "## See also" in text
-    assert "- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)" in text
-    assert text.index("## Raises / Errors") < text.index("## See also")
-    assert "## Maintainer/developer implementation details" not in text
 
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
@@ -1033,28 +790,6 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)" in lineage_table
-
-
-def test_template_usage_metadata_renders_from_structured_reference_model() -> None:
-    """Verify template usage metadata renders from direct template calls only."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    automation_manifest = json.loads((REFERENCE_DIR / "_data" / "automation-manifest.json").read_text(encoding="utf-8"))
-    reference_index = (REFERENCE_DIR / "index.md").read_text(encoding="utf-8")
-
-    function_by_name = {entry["name"]: entry for entry in function_manifest}
-    automation_by_name = {entry["name"]: entry for entry in automation_manifest if entry.get("type") == "callable"}
-
-    for callable_name in ("run_table_guardrails", "profile_dataframe"):
-        if callable_name == "run_table_guardrails":
-            assert callable_name in function_by_name
-            continue
-        assert function_by_name[callable_name]["used_in_templates"]
-        assert automation_by_name[callable_name]["used_in_templates"]
-        assert f'data-callable-name="{callable_name}"' in reference_index
-
-    for callable_name in ("enforce_freshness", "enforce_profile_behavior"):
-        assert function_by_name[callable_name]["used_in_templates"] == []
-        assert f'data-callable-name="{callable_name}"' not in reference_index
 
 
 def test_template_function_map_page_stays_removed() -> None:
@@ -1106,35 +841,6 @@ def _direct_public_notebook_calls(path: Path, public_names: set[str]) -> set[str
     return direct_public_calls
 
 
-def test_used_in_templates_metadata_matches_direct_ast_notebook_usage() -> None:
-    """Verify used-in-template metadata derives from direct AST notebook calls."""
-    function_manifest = json.loads((REFERENCE_DIR / "_data" / "function-manifest.json").read_text(encoding="utf-8"))
-    public_names = {entry["name"] for entry in function_manifest if entry.get("classification") == "Callable"}
-    expected_by_name = {name: set() for name in public_names}
-
-    for path in sorted((ROOT / "templates" / "notebooks").glob("*.ipynb")):
-        for public_name in _direct_public_notebook_calls(path, public_names):
-            if public_name in expected_by_name:
-                expected_by_name[public_name].add(path.stem)
-
-    order = {
-        "00_env_config": 0,
-        "01_agreement": 1,
-        "02_pipeline": 2,
-        "03_governance": 3,
-        "99_explore": 4,
-        "example_pipeline_demo": 5,
-        "example_dq_rule_smoke_test": 6,
-    }
-    for entry in function_manifest:
-        if entry.get("classification") != "Callable":
-            continue
-        expected = sorted(
-            expected_by_name[entry["name"]], key=lambda notebook: (order.get(notebook, len(order)), notebook)
-        )
-        assert entry["used_in_templates"] == expected
-
-
 def test_template_called_callable_parameters_render_as_api_table() -> None:
     """Verify template-called callable parameters render as api table."""
     text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
@@ -1177,7 +883,7 @@ def test_maintainer_nav_parks_internal_reference_helpers() -> None:
 
     assert "Functions by Modules" not in mkdocs_text
     assert "  - Maintainer Guide:" in mkdocs_text
-    assert "      - Glossary: reference/glossary.md" in mkdocs_text
+    assert "reference/glossary.md" not in mkdocs_text
     assert "      - Function Call Graph: reference/function-call-graph.md" in mkdocs_text
     assert "      - Implementation Appendix:" in mkdocs_text
     assert "      # AUTO-GENERATED-MODULES-END" in mkdocs_text

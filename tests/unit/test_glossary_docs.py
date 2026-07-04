@@ -1,9 +1,8 @@
-"""Validate glossary-backed documentation wording and chips."""
+"""Validate glossary-backed documentation wording."""
 
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).parents[2]
@@ -99,12 +98,3 @@ def test_reference_usage_guidance_is_plain_readable_text() -> None:
             assert "<summary>Usage guidance</summary>" not in section, page
 
 
-def test_glossary_chips_render_outside_code_fences() -> None:
-    """Verify glossary chips are rendered and not inserted inside fenced code."""
-    pages = sorted((ROOT / "docs" / "api" / "reference").glob("*.md"))
-    chip_pages = [page for page in pages if 'class="glossary-chip"' in page.read_text(encoding="utf-8")]
-    assert chip_pages
-    for page in chip_pages:
-        text = page.read_text(encoding="utf-8")
-        code_fences = re.findall(r"```.*?```", text, flags=re.DOTALL)
-        assert all('class="glossary-chip"' not in fence for fence in code_fences), page

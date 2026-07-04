@@ -21,17 +21,12 @@ INIT_PATH = PKG_DIR / "__init__.py"
 DOCS_METADATA_PATH = ROOT / "scripts" / "reference_docs_metadata.py"
 REFERENCE_PATH = ROOT / "docs" / "reference" / "index.md"
 REFERENCE_DATA_DIR = ROOT / "docs" / "reference" / "_data"
-MODULE_DIR = ROOT / "docs" / "api" / "modules"
 MKDOCS_PATH = ROOT / "mkdocs.yml"
-DEPENDENCY_METADATA_PATH = REFERENCE_DATA_DIR / "dependency-metadata.json"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 MANIFEST_PATH = REFERENCE_DATA_DIR / "manifest.json"
-AGENT_MANIFEST_PATH = REFERENCE_DATA_DIR / "automation-manifest.json"
-FUNCTION_MANIFEST_PATH = REFERENCE_DATA_DIR / "function-manifest.json"
-REFACTOR_SIGNALS_PATH = REFERENCE_DATA_DIR / "refactor-signals.json"
 FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-graph.md"
 # Generated during local reference refreshes and CI docs builds.
 # The docs deploy workflow publishes the regenerated artifact to gh-pages;
@@ -39,8 +34,6 @@ FUNCTION_CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "function-call-gra
 FUNCTION_CALL_GRAPH_DATA_PATH = REFERENCE_DATA_DIR / "function-call-graph.json"
 CALLABLE_SURFACE_AUDIT_PATH = REFERENCE_DATA_DIR / "callable-surface-audit.json"
 FUNCTION_TAXONOMY_AUDIT_PATH = REFERENCE_DATA_DIR / "function-taxonomy-audit.json"
-GLOSSARY_SOURCE_PATH = REFERENCE_DATA_DIR / "glossary.json"
-GLOSSARY_PAGE_PATH = ROOT / "docs" / "reference" / "glossary.md"
 LANDING_PAGE_PATH = ROOT / "docs" / "index.md"
 LANDING_STATS_PATH = REFERENCE_DATA_DIR / "landing-stats.json"
 
@@ -758,87 +751,6 @@ def parse_module_docs_metadata() -> list[dict[str, Any]]:
 
 
 
-def parse_glossary_metadata() -> dict[str, dict[str, Any]]:
-    """Return glossary metadata keyed by normalized canonical terms and aliases."""
-    if not GLOSSARY_SOURCE_PATH.exists():
-        return {}
-    entries = json.loads(GLOSSARY_SOURCE_PATH.read_text(encoding="utf-8"))
-    glossary: dict[str, dict[str, Any]] = {}
-    required_fields = {
-        "term",
-        "aliases",
-        "category",
-        "short_definition",
-        "long_definition",
-        "preferred_usage",
-        "avoid_usage",
-    }
-    for entry in entries:
-        missing = sorted(required_fields - set(entry))
-        term = str(entry.get("term", "")).strip()
-        if not term:
-            raise RuntimeError("Glossary entries must include a term.")
-        if missing:
-            raise RuntimeError(f"Glossary entry {term!r} is missing: {', '.join(missing)}")
-        if not entry.get("short_definition") or not entry.get("long_definition"):
-            raise RuntimeError(f"Glossary entry {term!r} must include short and long definitions.")
-        aliases = entry.get("aliases")
-        if not isinstance(aliases, list):
-            raise RuntimeError(f"Glossary entry {term!r} aliases must be a list.")
-        canonical_key = term.lower()
-        if canonical_key in glossary:
-            raise RuntimeError(f"Duplicate glossary term or alias: {term}")
-        glossary[canonical_key] = entry
-        for alias in aliases:
-            alias_key = str(alias).strip().lower()
-            if not alias_key:
-                continue
-            if alias_key in glossary:
-                raise RuntimeError(f"Duplicate glossary term or alias: {alias}")
-            glossary[alias_key] = entry
-    return glossary
-
-
-def _render_glossary_page(glossary: dict[str, dict[str, Any]]) -> None:
-    """Render the public glossary page from structured glossary metadata."""
-    lines = [
-        "# FabricOps glossary",
-        "",
-        "Searchable source of truth for FabricOps documentation wording and page-level glossary references.",
-        "",
-    ]
-    canonical_entries = list({id(entry): entry for entry in glossary.values()}.values())
-    for category in sorted({str(entry["category"]) for entry in canonical_entries}):
-        lines.extend([f"## {category}", ""])
-        category_entries = [entry for entry in canonical_entries if entry["category"] == category]
-        lines.append('<div class="glossary-definition-list">')
-        lines.append("")
-        for entry in sorted(category_entries, key=lambda row: row["term"].lower()):
-            term = str(entry["term"])
-            lines.extend(
-                [
-                    f'<section class="glossary-definition-card" id="{markdown_anchor(term)}">',
-                    f'<h2>{term}</h2>',
-                    f"<p>{entry['long_definition']}</p>",
-                ]
-            )
-            if entry.get("aliases"):
-                lines.append(
-                    f'<p class="glossary-definition-meta"><strong>Aliases:</strong> '
-                    f"{', '.join(f'`{item}`' for item in entry['aliases'])}</p>"
-                )
-            lines.extend(
-                [
-                    f'<p class="glossary-definition-meta"><strong>Preferred usage:</strong> {entry["preferred_usage"]}</p>',
-                    f'<p class="glossary-definition-meta"><strong>Avoid usage:</strong> {entry["avoid_usage"]}</p>',
-                    "</section>",
-                    "",
-                ]
-            )
-        lines.extend(["</div>", ""])
-    GLOSSARY_PAGE_PATH.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8", newline="\n")
-
-
 
 def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
     """Render conceptual documentation links for a callable page."""
@@ -858,33 +770,6 @@ def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
         seen.add(key)
         lines.append(f"- [{title}]({path})")
     lines.append("")
-    return lines
-
-def _render_key_terms(glossary_terms: list[str], glossary: dict[str, dict[str, Any]]) -> list[str]:
-    """Render compact glossary-backed key terms for a callable page."""
-    if not glossary_terms:
-        return []
-    lines: list[str] = ['<div class="reference-glossary-term-list" aria-label="Glossary terms used on this page">']
-    seen: set[str] = set()
-    for term in glossary_terms:
-        key = term.lower()
-        entry = glossary.get(key)
-        if entry is None:
-            raise RuntimeError(f"Callable references unknown glossary term: {term}")
-        canonical_key = str(entry["term"]).lower()
-        if canonical_key in seen:
-            continue
-        seen.add(canonical_key)
-        term_text = str(entry["term"])
-        display_term = term_text if "_" in term_text else term_text.capitalize()
-        anchor = markdown_anchor(str(entry["term"]))
-        lines.append(
-            f'<span class="glossary-chip">'
-            f'<span class="glossary-chip-label">{display_term}</span>'
-            f'<span class="glossary-chip-definition">{entry["short_definition"]}</span> '
-            f'<a href="../../../reference/glossary/#{anchor}">Full definition</a></span>'
-        )
-    lines.extend(["</div>", "", "See the [full glossary](../../../reference/glossary/) for more FabricOps terms."])
     return lines
 
 
@@ -4895,11 +4780,9 @@ def main() -> None:
     docs_metadata = parse_docs_metadata()
     template_flow_docs = parse_template_flow_docs()
     module_docs_metadata = parse_module_docs_metadata()
-    glossary = parse_glossary_metadata()
-    # This generator writes individual function pages, the function reference landing
-    # page, and page-level glossary chips used inside those reference pages.
-    # Broader glossary pages, metadata table pages, manifests, dashboard assets,
-    # module pages, and JSON data artifacts stay with dedicated generators/workflows.
+    # This generator writes individual function pages and the function reference landing page.
+    # Module pages, glossary surfaces, manifests, dashboard assets, and JSON data artifacts
+    # stay outside this generator output contract.
     missing_metadata = sorted(name for name in public if name not in docs_metadata)
     if missing_metadata:
         raise RuntimeError("Missing PUBLIC_SYMBOL_DOCS entries for __all__ exports: " + ", ".join(missing_metadata))
@@ -4911,12 +4794,6 @@ def main() -> None:
             "__all__ exports must have PUBLIC_SYMBOL_DOCS function_type=callable or function_type=class: "
             + ", ".join(invalid_public_exports)
         )
-    unknown_glossary_terms = sorted(
-        {term for metadata in docs_metadata.values() for term in metadata.get("glossary_terms", []) if term.lower() not in glossary}
-    )
-    if unknown_glossary_terms:
-        raise RuntimeError("PUBLIC_SYMBOL_DOCS references unknown glossary terms: " + ", ".join(unknown_glossary_terms))
-
     # PUBLIC_SYMBOL_DOCS may retain metadata for internalized helpers so generated
     # implementation relationship details remain useful on public parent pages.
 
@@ -4992,9 +4869,6 @@ def main() -> None:
         parts = qn.split(".")
         return ".".join(parts[1:-1]) if len(parts) > 2 and parts[0] == PACKAGE_NAME else parts[-2]
     # Module pages are outside this generator's output contract.
-    for generated_page in MODULE_DIR.glob("*.md"):
-        if generated_page.name != "index.md" and generated_page.stem not in MAJOR_IMPLEMENTATION_MODULES:
-            pass
     module_manifest = {row["module_name"]: row for row in module_docs_metadata}
     discovered_doc_modules = [INTERNAL_ALIAS_MODULES.get(module, module) for module in discovered_modules]
     if "config" not in discovered_doc_modules:
@@ -5255,8 +5129,6 @@ def main() -> None:
         # Module page output intentionally skipped by this generator.
         module_index_lines.append(f"- [`{module}`]({module}.md)")
 
-    for stale_module_page in MODULE_DIR.glob("*.md"):
-        pass
     discovered_set = set(discovered_doc_modules)
     documentation_group_modules = {"metadata"}
     module_sidebar_rows = [
@@ -5801,16 +5673,6 @@ def main() -> None:
                 usage_guidance_body.extend(["### Additional context", "", expanded_purpose])
             if usage_guidance_body:
                 usage_guidance_lines = ["## Usage guidance", "", *usage_guidance_body, ""]
-            key_term_lines = _render_key_terms(list(metadata.get("glossary_terms", [])), glossary)
-            glossary_section_lines: list[str] = []
-            if key_term_lines:
-                glossary_terms = list(dict.fromkeys(metadata.get("glossary_terms", [])))
-                glossary_body = (
-                    markdown_details("Glossary terms", key_term_lines, class_name="reference-glossary-details")
-                    if len(glossary_terms) > 5
-                    else key_term_lines
-                )
-                glossary_section_lines = ["## Glossary", "", *glossary_body, ""]
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
             preferred_example = _render_preferred_example(short_name, signature, metadata)
@@ -5874,7 +5736,6 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
-                *glossary_section_lines,
                 *see_also_lines,
             ]
         else:

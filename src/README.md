@@ -7,7 +7,6 @@ This package keeps runtime logic in `src/fabricops_kit/` and publishes user-faci
 - **Public callable source of truth:** `__all__` in `src/fabricops_kit/__init__.py`.
 - **Generated docs outputs:**
   - Step-first reference: `docs/reference/index.md`
-  - Module catalogues: `docs/api/modules/*.md`
 
 ## Regenerate the function reference
 

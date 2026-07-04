@@ -71,7 +71,6 @@ nav:
       - expression_true: reference/dq-rules/expression-true.md
   - Maintainer Guide:
       - Overview: reference/maintainer-guide.md
-      - Glossary: reference/glossary.md
       - Function Call Graph: reference/function-call-graph.md
       - Public API Contract: reference/public-api-contract.md
       - Public Function Architecture: reference/public-function-architecture.md
