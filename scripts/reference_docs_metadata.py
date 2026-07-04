@@ -146,6 +146,11 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'sidebar_group': 'Internal',
   'sidebar_include': False}]
 
+# Template-flow metadata is reserved for reusable notebooks that live under
+# templates/notebooks and participate in TEMPLATE_FLOW_DOCS validation. Guided
+# demo downloadable assets, such as
+# docs/assets/demo-data/io-profile/guided_demo_io_and_profiling.ipynb, are
+# intentionally excluded from this registry.
 TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`00_env_config`',
   'segment_intro': 'Shared environment bootstrap and metadata table setup.',

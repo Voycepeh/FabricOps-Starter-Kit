@@ -724,11 +724,11 @@ def _metadata_doc_schema_rows(table_name: str) -> list[dict[str, str]]:
 def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
     """Verify generated metadata docs reflect setup_metadata_tables schema registry."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
-    from scripts.generate_individual_function_reference_pages import generate_metadata_table_reference
 
     registry = metadata_table_schema_registry()
+    generated_doc_paths = sorted(Path("docs/reference/metadata").glob("metadata_*.md"))
 
-    assert generate_metadata_table_reference() == len(registry)
+    assert len(generated_doc_paths) == len(registry)
     for table_name, schema in registry.items():
         expected = [
             {
@@ -744,13 +744,12 @@ def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
 def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     """Verify metadata docs render canonical non-string types and audit order."""
     from fabricops_kit.config.metadata_schemas import audit_schema_fields, metadata_table_schema_registry, metadata_table_schema_rows
-    from scripts.generate_individual_function_reference_pages import _schema_rows
 
     registry = metadata_table_schema_registry()
     catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}
     agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
     evidence = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT_EVIDENCE"])}
-    docs_catalogue = {row["name"]: row["type"] for row in _schema_rows(registry["METADATA_DATA_CATALOGUE"])}
+    docs_catalogue = {row["name"]: row["type"] for row in _metadata_doc_schema_rows("METADATA_DATA_CATALOGUE")}
 
     assert agreement["start_date"] == "date"
     assert agreement["approved_usage_internal"] == "boolean"

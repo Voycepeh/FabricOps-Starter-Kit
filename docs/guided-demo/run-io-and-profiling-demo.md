@@ -36,17 +36,17 @@ The starter dataset includes:
 | File | Used for |
 | --- | --- |
 | [`orders.csv`](../assets/demo-data/io-profile/orders.csv) | CSV file-read smoke test with simple order facts. |
-| `products.xlsx` | Excel file-read smoke test with product reference data. Upload this file manually. |
-| `customers.parquet` | Parquet file-read smoke test with customer attributes. Upload this file manually. |
+| [`products.xlsx`](../assets/demo-data/io-profile/products.xlsx) | Excel file-read smoke test with product reference data. |
+| [`customers.parquet`](../assets/demo-data/io-profile/customers.parquet) | Parquet file-read smoke test with customer attributes. |
 
-The repo includes the small `orders.csv` text sample, but binary Excel and Parquet samples are intentionally not committed. Upload your `products.xlsx` and `customers.parquet` files manually, or set `USE_UPLOADED_STARTER_FILES = False` so the notebook regenerates the same tiny samples in the configured Lakehouse Files path.
+The repo includes the small `orders.csv`, `products.xlsx`, and `customers.parquet` starter samples. Upload these files to the configured Lakehouse Files path, or set `USE_UPLOADED_STARTER_FILES = False` so the notebook regenerates the same tiny samples in the configured Lakehouse Files path.
 
 ## What you will do
 
-1. Open `templates/notebooks/guided_demo_io_and_profiling.ipynb` in Microsoft Fabric.
+1. Open [`guided_demo_io_and_profiling.ipynb`](../assets/demo-data/io-profile/guided_demo_io_and_profiling.ipynb) in Microsoft Fabric.
 2. Run `%run 00_env_config` first so `CONFIG`, `ENV`, and `FABRIC_CONTEXT` exist.
-3. Download or prepare the starter CSV, Excel, and Parquet files.
-4. Upload them to `Files/fabricops_demo/io_profile/` in the configured Lakehouse Files area. The Excel and Parquet samples are manual uploads, not committed binary repo assets.
+3. Download the bundled starter CSV, Excel, and Parquet files.
+4. Upload them to `Files/fabricops_demo/io_profile/` in the configured Lakehouse Files area. All three starter files are bundled with the guided demo asset.
 5. Run the notebook to read those files through the FabricOps IO helpers.
 6. Write to Lakehouse, read from Lakehouse, and profile the Lakehouse read dataframe.
 7. Write to Warehouse, read from Warehouse, and profile the Warehouse read dataframe.
