@@ -28,9 +28,9 @@ Write one pipeline runtime summary row to metadata.
 
 ## Usage notes
 
-Use at the end of 02_pipeline when downstream operators need one metadata record describing the run outcome.
+Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
-Writes a compact run-level summary that ties pipeline name, agreement context, guardrail results, lineage, and write outcomes together.
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
 
 ## Signature

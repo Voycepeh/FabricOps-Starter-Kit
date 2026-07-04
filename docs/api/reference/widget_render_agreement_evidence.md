@@ -28,9 +28,9 @@ Render the standalone agreement-evidence widget.
 
 ## Usage notes
 
-Use in 01_agreement when agreement records need supporting evidence that downstream users can audit.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Renders the supporting-evidence widget for agreement workflows so users can record links or files that justify an agreement.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

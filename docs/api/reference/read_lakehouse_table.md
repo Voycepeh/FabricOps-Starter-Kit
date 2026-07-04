@@ -29,11 +29,9 @@ Read a Delta table from a configured Fabric lakehouse target.
 
 ## Usage notes
 
-Use near the start of a notebook when Spark processing needs a full Lakehouse table DataFrame.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for lakehouse Files paths or warehouse SQL serving-engine reads.
-
-Reads a Delta table from configured Lakehouse Tables storage using explicit Lakehouse routing.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

@@ -28,9 +28,9 @@ Render the standalone data-agreement intake widget.
 
 ## Usage notes
 
-Use in 01_agreement after steward context exists and before pipeline or governance notebooks need an approved agreement selection.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Renders the data agreement intake widget used to capture agreement identity, scope, and business metadata for later notebook workflows.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

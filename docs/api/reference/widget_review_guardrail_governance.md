@@ -29,11 +29,9 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 ## Usage notes
 
-Use in 03_governance after selecting a guardrail target to perform human review of enrichment and guardrail rule intent.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use for automatic pipeline enforcement or profiles generation; it is an interactive governance review widget.
-
-Renders governance review controls for reviewing proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or supersede actions.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

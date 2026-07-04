@@ -28,11 +28,9 @@ Read an Excel file from a configured Fabric-resolved path.
 
 ## Usage notes
 
-Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.
-
-Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

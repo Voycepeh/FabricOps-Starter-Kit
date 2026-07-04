@@ -28,11 +28,9 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 ## Usage notes
 
-Use during exploration, governance review, or guardrail preparation when a table needs reproducible profiles.
+Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
-Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.
-
-Builds deterministic profiles for a DataFrame, including schema, row counts, nulls, distinct counts, and optional summary values.
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
 
 ## Signature

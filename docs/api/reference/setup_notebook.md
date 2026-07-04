@@ -28,13 +28,9 @@ Shared environment setup and runtime validation for notebook templates.
 
 ## Usage notes
 
-- Starting a FabricOps notebook from 00_env_config
-- Validating configured environment targets before downstream helpers run
-- Capturing runtime metadata for later lineage, review, or handover steps
+Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
 
-Do not use as a replacement for metadata table setup or per-table governance writes; call setup_metadata_tables for metadata storage preparation.
-
-Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.
+This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them.
 
 
 ## Signature

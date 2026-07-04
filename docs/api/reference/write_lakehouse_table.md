@@ -30,11 +30,9 @@ Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
 ## Usage notes
 
-Use after transformations and guardrail checks when the destination is a Lakehouse table.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for warehouse publishing or metadata mutation outside configured metadata routing.
-
-Writes a Spark DataFrame to configured Lakehouse Tables storage using explicit Lakehouse routing.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

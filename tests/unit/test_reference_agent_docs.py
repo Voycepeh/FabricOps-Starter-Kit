@@ -658,13 +658,34 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
         assert marker in text
     assert "## AI / machine-readable metadata" not in text
     assert "Machine-readable metadata / metadata details" not in text
-    assert "- Starting a FabricOps notebook from 00_env_config" in text
-    assert "- Validating configured environment targets before downstream helpers run" in text
-    assert "- Capturing runtime metadata for later lineage, review, or handover steps" in text
+    assert "Use this in the setup notebook to capture and render the key runtime information" in text
+    assert "This helps confirm the active environment, configured stores, notebook context, and runtime values" in text
     assert "## Parameters" in text
     assert "| `config` |" in text
     assert "| Yes |" in text or "| No |" in text
     assert "## Source link" not in text
+
+
+def test_public_callable_usage_notes_are_family_standardized() -> None:
+    """Verify generated Usage notes come from path-first family defaults and overrides."""
+    io_text = (API_REFERENCE_DIR / "read_lakehouse_table.md").read_text(encoding="utf-8")
+    widget_text = (API_REFERENCE_DIR / "widget_author_dq_rules.md").read_text(encoding="utf-8")
+    pipeline_text = (API_REFERENCE_DIR / "profile_dataframe.md").read_text(encoding="utf-8")
+    setup_text = (API_REFERENCE_DIR / "setup_metadata_tables.md").read_text(encoding="utf-8")
+    config_text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
+
+    for text in (io_text, widget_text, pipeline_text, setup_text, config_text):
+        assert "## Usage notes" in text
+        assert "### Use when" not in text
+        assert "### Do not use when" not in text
+        assert "### Additional context" not in text
+
+    assert "Fabric notebooks can only attach to one lakehouse or warehouse at a time" in io_text
+    assert "front-end notebook interface so users can enter metadata in a guided way" in widget_text
+    assert "standard Starter Kit pipeline flow" in pipeline_text
+    assert "profile of the data so downstream users can review the dataset consistently" in pipeline_text
+    assert "configured metadata lakehouse using predefined Starter Kit schemas" in setup_text
+    assert "standard pipeline table-config pattern, not for ad hoc reads or writes" in config_text
 
 
 def test_public_callable_pages_do_not_repeat_intro_as_exact_purpose() -> None:

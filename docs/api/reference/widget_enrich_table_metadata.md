@@ -29,11 +29,9 @@ Render a consolidated column enrichment widget.
 
 ## Usage notes
 
-Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.
-
-Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

@@ -28,11 +28,9 @@ Prepare source or target table configs for 02_pipeline.
 
 ## Usage notes
 
-Use before running table guardrails or writes when notebook-editable table configs need package defaults and derived keys.
+Use this to normalize source or target table configurations before guardrails, writes, lineage, and evidence helpers use them.
 
-Do not use for ad hoc reads or writes outside the pipeline table-config pattern.
-
-Normalizes source and target table configuration dictionaries so pipeline guardrail, write, lineage, and evidence helpers receive consistent fields.
+This is intended for the standard pipeline table-config pattern, not for ad hoc reads or writes.
 
 
 ## Signature

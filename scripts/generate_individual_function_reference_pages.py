@@ -734,6 +734,60 @@ def parse_docs_metadata() -> dict[str, dict[str, Any]]:
     return out
 
 
+def parse_usage_note_metadata() -> tuple[dict[str, str], dict[str, str]]:
+    """Parse curated usage-note mappings from reference docs metadata."""
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    path_notes = namespace.get("USAGE_NOTE_BY_PATH_PREFIX", {})
+    function_notes = namespace.get("USAGE_NOTE_BY_FUNCTION", {})
+    if not isinstance(path_notes, dict) or not isinstance(function_notes, dict):
+        raise RuntimeError("Usage-note metadata must be dictionaries")
+    return (
+        {str(key): str(value).strip() for key, value in path_notes.items()},
+        {str(key): str(value).strip() for key, value in function_notes.items()},
+    )
+
+
+def _source_usage_path(source_path: str) -> str:
+    """Return package-relative source path used for usage-note prefix matching."""
+    return source_path.removeprefix("src/")
+
+
+def _usage_notes_from_docstring(metadata: dict[str, Any]) -> str:
+    """Return fallback usage notes from existing docstring-style metadata."""
+    human_use_when = _documented_text(metadata.get("when_to_use"))
+    human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
+    expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
+    usage_guidance_body: list[str] = []
+    if human_use_when != PLACEHOLDER:
+        usage_guidance_body.extend([human_use_when, ""])
+    if human_do_not_use != PLACEHOLDER:
+        usage_guidance_body.extend([human_do_not_use, ""])
+    if expanded_purpose != PLACEHOLDER:
+        usage_guidance_body.extend([expanded_purpose])
+    return "\n".join(line for line in usage_guidance_body).strip()
+
+
+def _usage_notes_for_public_function(
+    *,
+    function_name: str,
+    source_path: str,
+    metadata: dict[str, Any],
+    usage_note_by_path_prefix: dict[str, str],
+    usage_note_by_function: dict[str, str],
+) -> str:
+    """Return intent-focused Usage notes for a public function page."""
+    explicit = _documented_text(metadata.get("usage_notes"))
+    if explicit != PLACEHOLDER:
+        return explicit
+    if function_name in usage_note_by_function:
+        return usage_note_by_function[function_name]
+    source_usage_path = _source_usage_path(source_path)
+    for prefix, note in sorted(usage_note_by_path_prefix.items(), key=lambda item: len(item[0]), reverse=True):
+        if source_usage_path.startswith(prefix):
+            return note
+    return _usage_notes_from_docstring(metadata)
+
+
 def parse_template_flow_docs() -> list[dict[str, Any]]:
     """Parse template flow docs."""
     tree = ast.parse(DOCS_METADATA_PATH.read_text(encoding="utf-8"))
@@ -4423,6 +4477,7 @@ def main() -> None:
         module_data["config"] = module_data["config.shared"]
 
     docs_metadata = parse_docs_metadata()
+    usage_note_by_path_prefix, usage_note_by_function = parse_usage_note_metadata()
     template_flow_docs = parse_template_flow_docs()
     # This generator writes individual function pages and the function reference landing page.
     # Module pages, glossary surfaces, manifests, dashboard assets, and JSON data artifacts
@@ -4805,19 +4860,14 @@ def main() -> None:
                 *notebook_usage_chips,
                 '</p>',
             ]
-            human_use_when = _documented_text(metadata.get("when_to_use"))
-            human_do_not_use = _documented_text(metadata.get("do_not_use_when"))
-            expanded_purpose = _documented_text(metadata.get("expanded_purpose"))
-            usage_guidance_lines: list[str] = []
-            usage_guidance_body: list[str] = []
-            if human_use_when != PLACEHOLDER:
-                usage_guidance_body.extend([human_use_when, ""])
-            if human_do_not_use != PLACEHOLDER:
-                usage_guidance_body.extend([human_do_not_use, ""])
-            if expanded_purpose != PLACEHOLDER:
-                usage_guidance_body.extend([expanded_purpose])
-            if usage_guidance_body:
-                usage_guidance_lines = ["## Usage notes", "", *usage_guidance_body, ""]
+            usage_notes = _usage_notes_for_public_function(
+                function_name=short_name,
+                source_path=source_path,
+                metadata=metadata,
+                usage_note_by_path_prefix=usage_note_by_path_prefix,
+                usage_note_by_function=usage_note_by_function,
+            )
+            usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes else []
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
             preferred_example = _render_preferred_example(short_name, signature, metadata)

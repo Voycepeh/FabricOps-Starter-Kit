@@ -28,11 +28,9 @@ Return summary, detailed, or debug guardrail display output for Fabric notebooks
 
 ## Usage notes
 
-Use in 02_pipeline immediately after run_table_guardrails and before stop_if_failed so users see guardrail outcomes before the notebook stops.
+Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
-Do not use to mutate guardrail results or decide active rules; it is presentation-only.
-
-Returns summary, detailed, or debug guardrail display output so Fabric notebooks show readable tables by default while preserving raw result bundles for developers.
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
 
 ## Signature

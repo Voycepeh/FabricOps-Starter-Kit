@@ -28,11 +28,9 @@ Create or validate all FabricOps metadata tables through one setup action.
 
 ## Usage notes
 
-Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.
+Use this during setup to create the required metadata tables in the configured metadata lakehouse using predefined Starter Kit schemas.
 
-Do not use for writing business data or pipeline target tables; use write_lakehouse_table or write_warehouse_table for data outputs.
-
-Prepares FabricOps metadata tables through configured metadata target ABFSS paths, not Spark partial namespaces or an attached default lakehouse.
+This prepares the metadata store so downstream notebooks, widgets, lineage logging, evidence capture, and governance steps can write to the expected tables.
 
 
 ## Signature

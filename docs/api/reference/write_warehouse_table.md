@@ -28,11 +28,9 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 ## Usage notes
 
-Use for target writes after guardrails pass and the configured output layer is a warehouse table.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for lakehouse table writes, lakehouse Files writes, or metadata evidence writes.
-
-Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

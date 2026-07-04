@@ -28,9 +28,9 @@ Render the standalone data-steward intake widget.
 
 ## Usage notes
 
-Use in 01_agreement when collecting or updating data steward details before creating a data agreement.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

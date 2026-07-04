@@ -28,11 +28,9 @@ Read a Parquet path from a configured Fabric-resolved path.
 
 ## Usage notes
 
-Use for file-based source ingestion when the source is Parquet rather than a managed table.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.
-
-Reads a Parquet file or folder from the configured file path resolved by the Fabric resolver into a Spark DataFrame.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

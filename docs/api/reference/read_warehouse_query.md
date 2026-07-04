@@ -28,11 +28,9 @@ Read warehouse rows with SQL pushdown through a configured Fabric warehouse targ
 
 ## Usage notes
 
-Use when warehouse data should be filtered or projected before Spark processing.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.
-
-Encourages warehouse SQL pushdown for filtered or projected reads instead of full table extracts.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

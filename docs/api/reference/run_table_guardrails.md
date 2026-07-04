@@ -29,11 +29,9 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 
 ## Usage notes
 
-Use in 02_pipeline before transformations or writes when table configs should be validated by the standard guardrail sequence.
+Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
-Do not use as a replacement for individual helper calls when debugging one specific guardrail interactively.
-
-Coordinates profiling, schema, freshness, profile behavior, DQ, and evidence checks for a group of pipeline table configs.
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
 
 ## Signature

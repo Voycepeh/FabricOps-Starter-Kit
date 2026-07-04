@@ -28,11 +28,9 @@ Read a table from a configured Fabric warehouse target.
 
 ## Usage notes
 
-Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.
-
-Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

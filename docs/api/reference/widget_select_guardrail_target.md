@@ -29,11 +29,9 @@ Render an interactive target selector for guardrail authoring and governance rev
 
 ## Usage notes
 
-Use at the start of 02_pipeline authoring or 03_governance review when a user must choose which profiled table to work on.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use for automatic pipeline enforcement or to write metadata; this selector reads metadata and prepares widget state only.
-
-Renders an interactive selector that reads catalogue profiles, existing guardrail rules, and table governance policy to create the handover state for guardrail authoring or review.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

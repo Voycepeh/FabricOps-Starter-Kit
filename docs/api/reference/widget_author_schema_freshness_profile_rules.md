@@ -29,11 +29,9 @@ Render interactive schema, freshness, and profile-behavior guardrail authoring c
 
 ## Usage notes
 
-Use in 02_pipeline after selecting a guardrail target to save active self-approved rules, submit proposed rules, or bypass approval with a required reason.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use to write evidence or runtime outcomes; it writes rule intent only to METADATA_GUARDRAIL_RULES when saving.
-
-Renders interactive controls for authoring schema, freshness, and profile-behavior guardrail rule intent while applying the selected table governance policy.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

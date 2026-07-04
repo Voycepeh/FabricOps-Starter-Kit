@@ -28,11 +28,9 @@ Read a CSV file from a configured Fabric-resolved path.
 
 ## Usage notes
 
-Use for file-based source ingestion when the source is CSV and should be resolved through configured Fabric targets.
+These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
 
-Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL tables.
-
-Reads a CSV file from the configured file path resolved by the Fabric resolver and returns it as a Spark DataFrame.
+They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
 
 
 ## Signature

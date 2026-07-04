@@ -28,9 +28,9 @@ Write many-to-many source-to-target lineage evidence.
 
 ## Usage notes
 
-Use near the end of 02_pipeline after transformations and target config resolution have produced lineage-ready records.
+Use this as part of the standard Starter Kit pipeline flow. Pipeline helpers prepare, validate, profile, write, and document pipeline data in a consistent way across notebooks.
 
-Persists lineage records for a pipeline run so source tables, target tables, and transformation steps remain traceable.
+For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries.
 
 
 ## Signature

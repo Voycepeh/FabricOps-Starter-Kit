@@ -29,11 +29,9 @@ Render interactive manual DQ guardrail authoring controls.
 
 ## Usage notes
 
-Use in 02_pipeline after target selection when engineering needs to batch-create, edit, clear, or draft DQ guardrail rules.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use for runtime DQ enforcement or catalogue profiling; use run_table_guardrails for execution and profile helpers for observed evidence.
-
-Renders manual DQ authoring controls that produce editable guardrail rule intent rows under the selected table governance policy.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature

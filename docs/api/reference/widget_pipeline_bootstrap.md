@@ -29,11 +29,9 @@ Bootstrap a guided pipeline notebook run and store runtime defaults.
 
 ## Usage notes
 
-Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.
+Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
 
-Do not use when an advanced custom notebook needs to pass every runtime parameter explicitly to lower-level helpers.
-
-Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.
+They help users write values into the correct underlying metadata tables without manually editing those tables directly.
 
 
 ## Signature
