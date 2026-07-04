@@ -6,7 +6,7 @@
 - Shared helpers: 14
 - Private helpers: 16
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_select_guardrail_target">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_select_guardrail_target">Open focused call flow in dashboard</a>
 
 
 Render an interactive target selector for guardrail authoring and governance review.

@@ -6,7 +6,7 @@
 - Shared helpers: 9
 - Private helpers: 7
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_excel">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_excel">Open focused call flow in dashboard</a>
 
 
 Read an Excel file from a configured Fabric-resolved path.

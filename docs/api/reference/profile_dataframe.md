@@ -6,7 +6,7 @@
 - Shared helpers: 7
 - Private helpers: 5
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open focused call flow in dashboard</a>
 
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.

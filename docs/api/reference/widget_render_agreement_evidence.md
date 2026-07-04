@@ -6,7 +6,7 @@
 - Shared helpers: 43
 - Private helpers: 35
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_render_agreement_evidence">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_agreement_evidence">Open focused call flow in dashboard</a>
 
 
 Render the standalone agreement-evidence widget.

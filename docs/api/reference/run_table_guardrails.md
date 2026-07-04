@@ -6,7 +6,7 @@
 - Shared helpers: 136
 - Private helpers: 313
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open focused call flow in dashboard</a>
 
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.

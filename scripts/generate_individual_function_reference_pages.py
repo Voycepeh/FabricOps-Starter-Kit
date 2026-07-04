@@ -1200,7 +1200,7 @@ def _load_public_call_flow_inventory() -> dict[str, Any]:
 
 def _dashboard_focus_url(function_name: str) -> str:
     """Return the focused dashboard URL for a public function."""
-    return f"../../assets/public-function-call-flows-dashboard.html?function={function_name}"
+    return f"../../../assets/public-function-call-flows-dashboard.html?function={function_name}"
 
 
 def _public_callable_docs_url(function_name: str) -> str:

@@ -6,7 +6,7 @@
 - Shared helpers: 9
 - Private helpers: 8
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=write_lakehouse_table">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_lakehouse_table">Open focused call flow in dashboard</a>
 
 
 Write a Spark DataFrame to a configured Fabric lakehouse Delta table.

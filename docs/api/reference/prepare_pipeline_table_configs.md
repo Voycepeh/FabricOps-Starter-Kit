@@ -6,7 +6,7 @@
 - Shared helpers: 2
 - Private helpers: 2
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=prepare_pipeline_table_configs">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=prepare_pipeline_table_configs">Open focused call flow in dashboard</a>
 
 
 Prepare source or target table configs for 02_pipeline.

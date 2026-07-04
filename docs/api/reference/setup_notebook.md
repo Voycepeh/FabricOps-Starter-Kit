@@ -6,7 +6,7 @@
 - Shared helpers: 5
 - Private helpers: 10
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=setup_notebook">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_notebook">Open focused call flow in dashboard</a>
 
 
 Shared environment setup and runtime validation for notebook templates.

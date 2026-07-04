@@ -6,7 +6,7 @@
 - Shared helpers: 8
 - Private helpers: 4
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open focused call flow in dashboard</a>
 
 
 Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.

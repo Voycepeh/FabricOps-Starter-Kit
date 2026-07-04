@@ -6,7 +6,7 @@
 - Shared helpers: 27
 - Private helpers: 28
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open focused call flow in dashboard</a>
 
 
 Write one pipeline runtime summary row to metadata.

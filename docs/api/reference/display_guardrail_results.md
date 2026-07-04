@@ -6,7 +6,7 @@
 - Shared helpers: 2
 - Private helpers: 35
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=display_guardrail_results">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=display_guardrail_results">Open focused call flow in dashboard</a>
 
 
 Return summary, detailed, or debug guardrail display output for Fabric notebooks.

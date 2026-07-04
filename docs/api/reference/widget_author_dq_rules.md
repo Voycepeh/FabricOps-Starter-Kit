@@ -6,7 +6,7 @@
 - Shared helpers: 23
 - Private helpers: 40
 
-<a class="reference-source-link" href="../../assets/public-function-call-flows-dashboard.html?function=widget_author_dq_rules">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_author_dq_rules">Open focused call flow in dashboard</a>
 
 
 Render interactive manual DQ guardrail authoring controls.
