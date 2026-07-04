@@ -2,7 +2,7 @@
 
 FabricOps Starter Kit gives data teams a guided starting point for Microsoft Fabric notebook projects. The workflow starts with environment setup, captures agreement context, runs pipelines with guardrails, writes metadata for catalogue, lineage, checks, notebook registry, and pipeline runs, then supports governance review and troubleshooting.
 
-This overview explains how the starter kit works: the workspace setup, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Notebook Templates Implementation Guide](notebook-templates-implementation-guide/).
+This overview explains how the starter kit works: the workspace setup, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Notebook Templates Implementation Guide](../notebook-templates-implementation-guide/).
 
 ## Workspace Operating Model
 
