@@ -566,6 +566,20 @@ def test_write_catalogue_evidence_writes_fabric_store_target_defaults(spark_sess
         "explicit": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": " Source "},
         "target_default": {"dataset_name": "sales", "table_name": "orders_enriched", "stage": "target", "target_layer": "Unified"},
         "source_default": {"dataset_name": "sales", "table_name": "orders_raw", "stage": "source", "layer": "Source"},
+        "explicit_none": {
+            "dataset_name": "sales",
+            "table_name": "orders_product",
+            "stage": "target",
+            "fabric_store_target": None,
+            "target_layer": "Product",
+        },
+        "target_layer_none": {
+            "dataset_name": "sales",
+            "table_name": "orders_unified",
+            "stage": "target",
+            "target_layer": None,
+            "layer": "Unified",
+        },
         "missing": {"dataset_name": "sales", "table_name": "orders_unknown", "stage": "source"},
     }
 
@@ -587,6 +601,8 @@ def test_write_catalogue_evidence_writes_fabric_store_target_defaults(spark_sess
         "orders": "source",
         "orders_enriched": "unified",
         "orders_raw": "source",
+        "orders_product": "product",
+        "orders_unified": "unified",
         "orders_unknown": "",
     }
 

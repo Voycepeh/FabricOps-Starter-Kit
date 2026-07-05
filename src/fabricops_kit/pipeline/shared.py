@@ -1243,10 +1243,10 @@ def write_catalogue_evidence(
                 }
             ]
         fabric_store_target = str(
-            definition.get(
-                "fabric_store_target",
-                definition.get("target_layer", definition.get("layer", "")),
-            )
+            definition.get("fabric_store_target")
+            or definition.get("target_layer")
+            or definition.get("layer")
+            or ""
         ).strip().lower()
         additions = {
             "metadata_table_key": metadata_table_key,
