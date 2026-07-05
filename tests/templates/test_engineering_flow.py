@@ -31,9 +31,10 @@ def test_explore_template_is_read_only_context_aware_sequence():
         "## 01 Configure environment",
         "## 02 Import functions",
         "## 03 Select agreement",
-        "## 04 Read source",
-        "## 05 Read metadata catalogue",
-        "## 06 Optional profile, no write",
+        "## 04 Read from user-defined source",
+        "### Optional write/read smoke tests",
+        "## 05 Optional standardized data profiling of your defined source",
+        "## 06 Browse metadata catalogue",
         "## 07 Self exploration",
     ]
     positions = [markdown.index(section) for section in expected_sections]
@@ -53,13 +54,20 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "read_lakehouse_table(" in code
     assert "METADATA_DATA_CATALOGUE" in code
     assert "latest_catalogue" in code
-    assert "RUN_PROFILE = True" in code
+    assert "RUN_CSV_SOURCE = False" in code
+    assert "RUN_EXCEL_SOURCE = False" in code
+    assert "RUN_PARQUET_SOURCE = False" in code
+    assert "RUN_LAKEHOUSE_TABLE_SOURCE = False" in code
+    assert "RUN_LAKEHOUSE_SMOKE_TEST = False" in code
+    assert "RUN_WAREHOUSE_SMOKE_TEST = False" in code
+    assert "RUN_PROFILE = False" in code
     assert "profile_dataframe(" in code
     assert "display(source_df.limit(100))" in code
+    assert "write_lakehouse_table(" in code
+    assert "write_warehouse_table(" in code
+    assert "read_warehouse_query(" in code
 
     forbidden = [
-        "write_lakehouse_table(",
-        "write_lakehouse_table(",
         "write_pipeline_run_summary(",
         "run_table_guardrails(",
         "_run_active_dq_guardrail(",

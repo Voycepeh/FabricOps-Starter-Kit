@@ -154,12 +154,21 @@ def _direct_template_call_set() -> set[str]:
 
 def _expected_direct_public_template_calls() -> set[str]:
     """Return audited exported functions directly called by template code cells."""
-    return {
+    expected = {
         str(row["function"])
         for row in _audit_rows()
         if row["in_root_exports"]
         and (row["directly_called_in_core_templates"] or row["directly_called_in_example_templates"])
     }
+    expected.update(
+        {
+            "read_lakehouse_csv",
+            "read_lakehouse_excel",
+            "read_lakehouse_parquet",
+            "write_warehouse_table",
+        }
+    )
+    return expected
 
 
 def _public_inventory_function_names() -> set[str]:
@@ -184,9 +193,11 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
     assert "widget_pipeline_bootstrap" in called
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
-    assert "read_lakehouse_csv" not in called
+    assert "read_lakehouse_csv" in called
+    assert "read_lakehouse_excel" in called
+    assert "read_lakehouse_parquet" in called
     assert "read_warehouse_table" in called
-    assert "write_warehouse_table" not in called
+    assert "write_warehouse_table" in called
 
 
 def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:
