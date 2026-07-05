@@ -77,13 +77,59 @@ def setup_notebook(
         f"{uuid4().hex[:8]}"
     )
 
-    checks = _run_config_smoke_tests(
-        config=normalized,
-        env=env,
-        required_targets=targets,
-        notebook_name=resolved_notebook_name,
-        runtime_available=bool(runtime_meta.get("runtime_available")),
+    checks: list[ConfigSmokeCheckResult] = []
+    spark_obj = globals().get("spark")
+    checks.append(
+        ConfigSmokeCheckResult(
+            "spark_session",
+            "pass" if spark_obj is not None else "warn",
+            "Spark session is available." if spark_obj is not None else "Spark session not found; local fallback mode.",
+        )
     )
+    checks.append(
+        ConfigSmokeCheckResult(
+            "fabric_runtime_context",
+            "pass" if runtime_meta.get("runtime_available") else "skipped",
+            "Fabric runtime context is readable."
+            if runtime_meta.get("runtime_available")
+            else "notebookutils.runtime unavailable outside Fabric runtime.",
+        )
+    )
+    for target, store in resolved_paths.items():
+        missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(store, attr, None)]
+        if missing:
+            checks.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
+        elif store.kind == "lakehouse" and str(store.root).startswith("abfss://"):
+            checks.append(
+                ConfigSmokeCheckResult(
+                    f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
+                )
+            )
+        else:
+            checks.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
+
+    if resolved_notebook_name:
+        normalized_name = "_".join(str(resolved_notebook_name).strip().lower().split())
+        patterns = [
+            r"^00_env_config$",
+            r"^01_agreement(?:_[a-z0-9_]+)?$",
+            r"^02_pipeline(?:_[a-z0-9_]+)?$",
+            r"^03_governance(?:_[a-z0-9_]+)?$",
+            r"^99_explore(?:_[a-z0-9_]+)?$",
+        ]
+        naming_errors = [] if any(re.match(pattern, normalized_name) for pattern in patterns) else [
+            "Notebook name does not match accepted FabricOps naming patterns."
+        ]
+        checks.append(
+            ConfigSmokeCheckResult(
+                "notebook_naming",
+                "pass" if not naming_errors else "fail",
+                "; ".join(naming_errors) or "Notebook name is valid.",
+            )
+        )
+    else:
+        checks.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
+
     readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
 
     return NotebookSetupContext(
@@ -97,73 +143,6 @@ def setup_notebook(
         runtime_metadata=runtime_meta,
         readiness_status=readiness_status,
     )
-
-
-def _run_config_smoke_tests(
-    *,
-    config: FrameworkConfig,
-    env: str,
-    required_targets: list[str],
-    notebook_name: str | None,
-    runtime_available: bool,
-) -> list[ConfigSmokeCheckResult]:
-    """Run setup-notebook readiness checks."""
-    results: list[ConfigSmokeCheckResult] = []
-    spark_obj = globals().get("spark")
-    results.append(
-        ConfigSmokeCheckResult(
-            "spark_session",
-            "pass" if spark_obj is not None else "warn",
-            "Spark session is available." if spark_obj is not None else "Spark session not found; local fallback mode.",
-        )
-    )
-    results.append(
-        ConfigSmokeCheckResult(
-            "fabric_runtime_context",
-            "pass" if runtime_available else "skipped",
-            "Fabric runtime context is readable."
-            if runtime_available
-            else "notebookutils.runtime unavailable outside Fabric runtime.",
-        )
-    )
-    try:
-        for target in required_targets:
-            store = get_store(config=config, env=env, target=target)
-            missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(store, attr, None)]
-            if missing:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
-            elif store.kind == "lakehouse" and str(store.root).startswith("abfss://"):
-                results.append(
-                    ConfigSmokeCheckResult(
-                        f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
-                    )
-                )
-            else:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
-    except Exception as exc:
-        results.append(ConfigSmokeCheckResult("path_resolution", "fail", str(exc)))
-
-    if notebook_name:
-        normalized_name = "_".join(str(notebook_name).strip().lower().split())
-        patterns = [
-            r"^00_env_config$",
-            r"^01_agreement(?:_[a-z0-9_]+)?$",
-            r"^02_pipeline(?:_[a-z0-9_]+)?$",
-            r"^03_governance(?:_[a-z0-9_]+)?$",
-            r"^99_explore(?:_[a-z0-9_]+)?$",
-        ]
-        errors = [] if any(re.match(pattern, normalized_name) for pattern in patterns) else [
-            "Notebook name does not match accepted FabricOps naming patterns."
-        ]
-        results.append(
-            ConfigSmokeCheckResult(
-                "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
-            )
-        )
-    else:
-        results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
-    results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
-    return results
 
 
 def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_name: str | None) -> dict[str, Any]:
