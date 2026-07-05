@@ -439,8 +439,12 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "cleanup_mode: ${mode}" in html
     assert "export_scope: ${scope}" in html
     assert "Expected touched files when available" in html
-    assert "Do not regenerate generated docs, dashboard HTML, call graph JSON, snapshots, navigation, or reference artifacts" in html
-    assert "Mention stale generated artifacts in the PR summary instead of committing generated diffs" in html
+    assert "call graph JSON" not in html
+    assert "Do not regenerate or commit generated docs, dashboard HTML, snapshots, navigation, individual function reference pages, or reference indexes unless explicitly requested" in html
+    assert "Exception: when function-level source changes affect callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics" in html
+    assert "PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py" in html
+    assert "Commit only the regenerated docs/reference/_data/public-function-call-flows.json architecture contract" in html
+    assert "Mention any other stale generated docs/dashboard artifacts in the PR summary instead of committing them" in html
     assert "do not preserve backwards compatibility" in html
     assert "Do not add wrappers, aliases, adapters, resolver layers, or transitional shims" in html
     assert "Run targeted tests first" in html
