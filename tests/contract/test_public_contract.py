@@ -290,6 +290,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table": {

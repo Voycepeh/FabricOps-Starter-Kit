@@ -581,12 +581,14 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
         target="warehouse",
         spark_session=spark,
         context=context,
+        queryTimeout="60",
     )
 
     assert result == {"synapsesql": "SELECT order_id FROM dbo.orders WHERE status = 'OPEN'"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
     assert ("option", "database_name", "wh_product_dev") in spark.read.calls
+    assert ("option", "queryTimeout", "60") in spark.read.calls
 
     with pytest.raises(ValueError, match="non-empty SQL SELECT"):
         io.read_warehouse_query("", target="warehouse", spark_session=spark, context=context)
@@ -752,11 +754,11 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     monkeypatch.setattr(
         warehouse_query_owner,
         "read_warehouse_synapsesql",
-        lambda spark, store, sql: calls.append(("warehouse_sql", store.name, sql)) or "query",
+        lambda spark, store, sql, *, options=None: calls.append(("warehouse_sql", store.name, sql, options)) or "query",
     )
     assert (
         warehouse_query_owner.read_warehouse_query(
-            "SELECT 1", target="custom", spark_session=object(), context={"sentinel": True}
+            "SELECT 1", target="custom", spark_session=object(), context={"sentinel": True}, queryTimeout="60"
         )
         == "query"
     )
@@ -818,6 +820,7 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     assert ("read_delta", "resolved://table", {"mergeSchema": True}) in calls
     assert ("write_delta", "resolved://write_table", "overwrite", None, None) in calls
     assert ("warehouse_query", "custom", {"sentinel": True}) in calls
+    assert ("warehouse_sql", "warehouse", "SELECT 1", {"queryTimeout": "60"}) in calls
     assert ("warehouse_read", "warehouse", "warehouse.dbo.orders", {"queryTimeout": "60"}) in calls
     assert ("warehouse_write", "warehouse", "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"}) in calls
 

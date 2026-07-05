@@ -810,7 +810,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when projection or filtering should run in the Fabric Warehouse SQL serving engine before Spark receives rows.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables, lakehouse Files paths, or non-SELECT warehouse mutations.',
-  'parameters': 'query, target, optional spark_session, and optional context.',
+  'parameters': 'query, target, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
   'returns': 'Spark DataFrame returned by the Fabric warehouse connector.',
   'raises': 'Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric connector is unavailable.',
   'side_effects': 'Reads warehouse rows only; it does not execute mutations or write metadata.',

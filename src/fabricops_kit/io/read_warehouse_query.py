@@ -13,7 +13,12 @@ from .shared import (
 
 
 def read_warehouse_query(
-    query: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None
+    query: str,
+    *,
+    target: str = "warehouse",
+    spark_session=None,
+    context: dict[str, Any] | None = None,
+    **options,
 ):
     """Read warehouse rows with SQL pushdown.
 
@@ -41,6 +46,9 @@ def read_warehouse_query(
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
+    **options
+        Additional Fabric Warehouse Spark connector reader options. Required
+        Fabric connector options are always set from ``00_env_config``.
 
     Returns
     -------
@@ -58,4 +66,9 @@ def read_warehouse_query(
     """
     store = resolve_configured_warehouse_query_target(target, context=context)
     sql = validate_select_query(query)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql)
+    return read_warehouse_synapsesql(
+        get_spark_session(spark_session),
+        store,
+        sql,
+        options=options,
+    )
