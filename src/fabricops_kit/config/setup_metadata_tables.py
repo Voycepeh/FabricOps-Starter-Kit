@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
+import importlib
+import importlib.util
+
 
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 
@@ -55,7 +58,11 @@ def setup_metadata_tables(
     resolved_metadata_schema = (
         str(metadata_schema).strip() or None
         if metadata_schema is not None
-        else (str(getattr(metadata_store, "schema", "") or "").strip() or None if getattr(metadata_store, "schema_enabled", False) else None)
+        else (
+            str(getattr(metadata_store, "schema", "") or "").strip() or None
+            if getattr(metadata_store, "schema_enabled", False)
+            else None
+        )
     )
     context = {"config": normalized, "env": env}
     registry = metadata_table_schema_registry()
@@ -63,7 +70,9 @@ def setup_metadata_tables(
 
     for table_name, schema in registry.items():
         try:
-            table = read_lakehouse_table_core(table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context)
+            table = read_lakehouse_table_core(
+                table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+            )
         except Exception as exc:
             message = str(exc)
             lowered = message.lower()
@@ -97,13 +106,34 @@ def setup_metadata_tables(
             )
             created_tables.append(table_name)
             try:
-                table = read_lakehouse_table_core(table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context)
+                table = read_lakehouse_table_core(
+                    table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
+                )
             except Exception:
                 table = None
         columns = list(getattr(table, "columns", []) or []) if table is not None else metadata_table_field_names(schema)
         missing = [field for field in metadata_table_field_names(schema) if field not in columns]
         if missing:
-            raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+            table = _migrate_missing_nullable_columns(
+                table,
+                schema=schema,
+                missing=missing,
+                canonical_columns=metadata_table_field_names(schema),
+            )
+            columns = list(getattr(table, "columns", []) or []) if table is not None else []
+            missing = [field for field in metadata_table_field_names(schema) if field not in columns]
+            if missing:
+                raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+            write_lakehouse_table_core(
+                table,
+                table_name,
+                target="metadata",
+                schema=resolved_metadata_schema,
+                mode="overwrite",
+                options={"overwriteSchema": "true"},
+                verbose=False,
+                context=context,
+            )
 
     try:
         steward_rows = read_lakehouse_table_core(
@@ -119,7 +149,9 @@ def setup_metadata_tables(
             active_stewards = int(steward_rows.count())
         else:
             collected = steward_rows.collect() if hasattr(steward_rows, "collect") else steward_rows
-            active_stewards = sum(1 for row in collected if bool((row.asDict() if hasattr(row, "asDict") else dict(row)).get("is_active")))
+            active_stewards = sum(
+                1 for row in collected if bool((row.asDict() if hasattr(row, "asDict") else dict(row)).get("is_active"))
+            )
     except Exception:
         active_stewards = 0
 
@@ -129,7 +161,9 @@ def setup_metadata_tables(
         "tables": data_agreement_tables,
         "created_tables": [table for table in data_agreement_tables if table in created_tables],
         "active_steward_count": active_stewards,
-        "message": "METADATA_DATA_STEWARD contains active steward rows. 01_agreement can render both intake widgets." if active_stewards else "METADATA_DATA_STEWARD has no active steward rows yet. Use the 01_agreement Data Steward widget to create one before saving an agreement.",
+        "message": "METADATA_DATA_STEWARD contains active steward rows. 01_agreement can render both intake widgets."
+        if active_stewards
+        else "METADATA_DATA_STEWARD has no active steward rows yet. Use the 01_agreement Data Steward widget to create one before saving an agreement.",
     }
     if require_active_steward and not active_stewards:
         raise ValueError(data_agreement["message"])
@@ -140,12 +174,22 @@ def setup_metadata_tables(
         "created": "METADATA_NOTEBOOK_REGISTRY" in created_tables,
         "created_tables": ["METADATA_NOTEBOOK_REGISTRY"] if "METADATA_NOTEBOOK_REGISTRY" in created_tables else [],
     }
-    governance_tables = [table for table in CANONICAL_METADATA_TABLES if table not in data_agreement_tables and table != "METADATA_NOTEBOOK_REGISTRY"]
-    governance = {"status": "ready", "tables": governance_tables, "created_tables": [table for table in governance_tables if table in created_tables]}
+    governance_tables = [
+        table
+        for table in CANONICAL_METADATA_TABLES
+        if table not in data_agreement_tables and table != "METADATA_NOTEBOOK_REGISTRY"
+    ]
+    governance = {
+        "status": "ready",
+        "tables": governance_tables,
+        "created_tables": [table for table in governance_tables if table in created_tables],
+    }
     setup_statuses = [notebook_registry["status"], governance["status"]]
     if require_active_steward:
         setup_statuses.append(data_agreement["status"])
-    fully_qualified_tables = [f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in registry]
+    fully_qualified_tables = [
+        f"{resolved_metadata_schema}.{table}" if resolved_metadata_schema else table for table in registry
+    ]
     return {
         "status": "ready" if all(status == "ready" for status in setup_statuses) else "not_ready",
         "data_agreement": data_agreement,
@@ -159,8 +203,53 @@ def setup_metadata_tables(
         "active_metadata_tables": list(registry),
         "active_metadata_table_count": len(registry),
         "created_or_checked_tables": list(registry),
-        "registration_validation": {"status": "ready", "expected_tables": list(registry), "registered_tables": list(registry), "missing_tables": [], "warnings": [], "metadata_schema": resolved_metadata_schema, "fully_qualified_tables": fully_qualified_tables},
+        "registration_validation": {
+            "status": "ready",
+            "expected_tables": list(registry),
+            "registered_tables": list(registry),
+            "missing_tables": [],
+            "warnings": [],
+            "metadata_schema": resolved_metadata_schema,
+            "fully_qualified_tables": fully_qualified_tables,
+        },
     }
+
+
+def _null_literal_for_type(data_type: Any) -> Any:
+    """Return a Spark null literal cast to the expected canonical data type."""
+    if importlib.util.find_spec("pyspark") is None:  # pragma: no cover - local fakes without PySpark
+        return None
+    functions = importlib.import_module("pyspark.sql.functions")
+    return functions.lit(None).cast(data_type)
+
+
+def _migrate_missing_nullable_columns(
+    table: Any,
+    *,
+    schema: Any,
+    missing: list[str],
+    canonical_columns: list[str],
+) -> Any:
+    """Add missing nullable canonical columns to an existing metadata table."""
+    fields_by_name = {field.name: field for field in getattr(schema, "fields", [])}
+    unsafe = [
+        name
+        for name in missing
+        if name not in fields_by_name or not bool(getattr(fields_by_name[name], "nullable", False))
+    ]
+    if unsafe:
+        return table
+    if table is None or not all(hasattr(table, method) for method in ("withColumn", "select")):
+        return table
+    migrated = table
+    for name in missing:
+        migrated = migrated.withColumn(name, _null_literal_for_type(fields_by_name[name].dataType))
+    existing_columns = list(getattr(migrated, "columns", []) or [])
+    extra_columns = [column for column in existing_columns if column not in canonical_columns]
+    ordered_columns = [column for column in canonical_columns if column in existing_columns] + extra_columns
+    if ordered_columns and set(ordered_columns) == set(existing_columns):
+        migrated = migrated.select(*ordered_columns)
+    return migrated
 
 
 __all__ = ["setup_metadata_tables"]
