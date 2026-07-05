@@ -1242,12 +1242,19 @@ def write_catalogue_evidence(
                     "row_count": stability_result.get("row_count"),
                 }
             ]
+        fabric_store_target = str(
+            definition.get(
+                "fabric_store_target",
+                definition.get("target_layer", definition.get("layer", "")),
+            )
+        ).strip().lower()
         additions = {
             "metadata_table_key": metadata_table_key,
             "environment_name": env,
             "dataset_name": dataset_name,
             "table_name": table_name,
             "layer": str(definition.get("layer", "")),
+            "fabric_store_target": fabric_store_target,
             "asset_kind": str(definition.get("kind", "lakehouse")),
             "pipeline_name": pipeline_name,
             "profile_run_id": run_id,

@@ -20,6 +20,7 @@
 | `table_name` | `string` | Nullable |
 | `column_name` | `string` | Nullable |
 | `layer` | `string` | Nullable |
+| `fabric_store_target` | `string` | Nullable |
 | `asset_kind` | `string` | Nullable |
 | `pipeline_name` | `string` | Nullable |
 | `profile_run_id` | `string` | Nullable |

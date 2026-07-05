@@ -548,6 +548,50 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
 
 
 
+def test_write_catalogue_evidence_writes_fabric_store_target_defaults(spark_session, monkeypatch):
+    """Verify catalogue evidence stores explicit and default Fabric store targets."""
+    from fabricops_kit.pipeline import profile_dataframe
+    from fabricops_kit.pipeline import shared as pipeline_shared
+
+    writes = []
+    monkeypatch.setattr(
+        pipeline_shared,
+        "write_lakehouse_table_core",
+        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
+    )
+    df = spark_session.createDataFrame([(1, "open")], "id int, status string")
+    profile_df = profile_dataframe(df, "orders")
+
+    definitions = {
+        "explicit": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": " Source "},
+        "target_default": {"dataset_name": "sales", "table_name": "orders_enriched", "stage": "target", "target_layer": "Unified"},
+        "source_default": {"dataset_name": "sales", "table_name": "orders_raw", "stage": "source", "layer": "Source"},
+        "missing": {"dataset_name": "sales", "table_name": "orders_unknown", "stage": "source"},
+    }
+
+    result = pipeline_shared.write_catalogue_evidence(
+        {name: profile_df for name in definitions},
+        definitions,
+        config={},
+        env="dev",
+        run_id="run-1",
+    )
+
+    assert result == {name: "written" for name in definitions}
+    persisted = {
+        write[0].select("table_name", "fabric_store_target").first().asDict()["table_name"]:
+        write[0].select("table_name", "fabric_store_target").first().asDict()["fabric_store_target"]
+        for write in writes
+    }
+    assert persisted == {
+        "orders": "source",
+        "orders_enriched": "unified",
+        "orders_raw": "source",
+        "orders_unknown": "",
+    }
+
+
+
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
     from fabricops_kit.pipeline import metadata_evidence

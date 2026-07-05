@@ -401,6 +401,7 @@ def test_metadata_data_catalogue_schema_is_profile_evidence_only():
     fields = set(metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames())
 
     assert "profile_mode" in fields
+    assert "fabric_store_target" in fields
     assert "load_behavior" not in fields
     for result_field in {
         "freshness_status",
@@ -779,6 +780,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert agreement["start_date"] == "date"
     assert agreement["approved_usage_internal"] == "boolean"
     assert catalogue["profiled_at"] == "timestamp"
+    assert catalogue["fabric_store_target"] == "string"
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
     assert docs_catalogue["policy_updated_at"] == "timestamp"
