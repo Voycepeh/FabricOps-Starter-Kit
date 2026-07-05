@@ -618,7 +618,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading managed Delta tables from configured Lakehouse Tables storage.',
   'do_not_use_when': 'Do not use for lakehouse Files paths or warehouse SQL serving-engine reads.',
-  'parameters': 'table_name, target, optional schema, optional spark_session, and optional context.',
+  'parameters': 'table_name, target, optional schema, optional spark_session, optional context, and Spark Delta reader options.',
   'returns': 'Spark DataFrame loaded from the configured Lakehouse Delta table path.',
   'raises': 'Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError when Spark is unavailable.',
   'side_effects': 'Reads data only; it does not write metadata, files, or tables.',
@@ -626,7 +626,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify the target, schema, and table are intended Lakehouse inputs before generating calls.',
   'preferred_example': 'df_orders = read_lakehouse_table("orders", target="source", schema=SOURCE_SCHEMA, spark_session=spark)',
   'related_functions': ['write_lakehouse_table', 'read_lakehouse_csv', 'read_warehouse_query'],
-  'expanded_purpose': 'Reads a Delta table from configured Lakehouse Tables storage using explicit Lakehouse routing.',
+  'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta reader with any supplied reader options.',
   'when_to_use': 'Use near the start of a notebook when Spark processing needs a full Lakehouse table DataFrame.',
   'glossary_terms': ['source data', 'metadata lakehouse'],
   'return_interpretation': 'The returned DataFrame represents the resolved Lakehouse table.',
@@ -650,7 +650,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify guardrails passed, target/schema/table routing is intentional, and write mode is safe before generating calls.',
   'preferred_example': 'write_lakehouse_table(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")',
   'related_functions': ['read_lakehouse_table', 'write_warehouse_table', 'run_table_guardrails'],
-  'expanded_purpose': 'Writes a Spark DataFrame to configured Lakehouse Tables storage using explicit Lakehouse routing.',
+  'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta writer with any supplied writer options.',
   'when_to_use': 'Use after transformations and guardrail checks when the destination is a Lakehouse table.',
   'glossary_terms': ['target table', 'guardrails', 'metadata lakehouse'],
   'return_interpretation': 'No value is returned; successful completion means the configured Lakehouse write was submitted.',
@@ -660,15 +660,14 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
-  'summary_override': 'Read a CSV file from a configured Fabric-resolved path.',
+  'summary_override': 'Read a CSV file from a configured Fabric-resolved path through Spark CSV.',
   'symbol_name': 'read_lakehouse_csv',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a CSV file from a configured Fabric-resolved path.',
   'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL '
                      'tables.',
-  'parameters': 'config, env, target, relative_path, CSV read options, verbose flag, and optional '
-                'spark_session.',
+  'parameters': 'relative_path, target, optional spark_session, optional context, header flag, and Spark CSV reader options.',
   'returns': 'Spark DataFrame loaded from the Fabric-resolved CSV path.',
   'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the file '
             'cannot be read.',
@@ -680,8 +679,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'df = read_lakehouse_csv('
                        'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
   'related_functions': ['read_lakehouse_table', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
-  'expanded_purpose': 'Reads a CSV file from the configured file path resolved by the Fabric '
-                      'resolver and returns it as a Spark DataFrame.',
+  'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark CSV reader with supplied CSV options.',
   'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
                  'resolved through configured Fabric targets.',
   'glossary_terms': ['source data', 'notebook template'],
@@ -696,7 +694,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
-  'summary_override': 'Read a Parquet path from a configured Fabric-resolved path.',
+  'summary_override': 'Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.',
   'symbol_name': 'read_lakehouse_parquet',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
@@ -704,7 +702,7 @@ PUBLIC_SYMBOL_DOCS = [
               'path.',
   'do_not_use_when': 'Do not use for Delta tables, CSV files, Excel files, or warehouse SQL '
                      'tables.',
-  'parameters': 'config, env, target, relative_path, verbose flag, and optional spark_session.',
+  'parameters': 'relative_path, target, verbose flag, optional spark_session, optional context, and Spark Parquet reader options.',
   'returns': 'Spark DataFrame loaded from the original Parquet path or timestamp-converted '
              'fallback path.',
   'raises': 'Raises ValueError for invalid relative paths and Spark/read errors when the Parquet '
@@ -718,8 +716,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'df = read_lakehouse_parquet('
                        'relative_path="raw/orders/orders.parquet", spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_lakehouse_table'],
-  'expanded_purpose': 'Reads a Parquet file or folder from the configured file path resolved by the '
-                      'Fabric resolver into a Spark DataFrame.',
+  'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark Parquet reader with supplied options and timestamp fallback reads.',
   'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
                  'managed table.',
   'glossary_terms': ['source data', 'notebook template'],
@@ -734,7 +731,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
-  'summary_override': 'Read an Excel file from a configured Fabric-resolved path.',
+  'summary_override': 'Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.',
   'symbol_name': 'read_lakehouse_excel',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
@@ -758,8 +755,7 @@ PUBLIC_SYMBOL_DOCS = [
                        'relative_path="reference/faculty_mapping.xlsx", sheet_name=0, '
                        'spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
-  'expanded_purpose': 'Reads an Excel file from a configured lakehouse Files path and converts it '
-                      'into a Spark DataFrame for notebook processing.',
+  'expanded_purpose': 'Resolves the configured Lakehouse Files path, reads workbook binary, parses it with pandas.read_excel options, and converts the pandas DataFrame to Spark.',
   'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow '
                  'configured Fabric lakehouse routing.',
   'glossary_terms': ['source data', 'notebook template'],
@@ -781,8 +777,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when reading a table from a configured Fabric warehouse target.',
   'do_not_use_when': 'Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or '
                      'Excel paths.',
-  'parameters': 'config, env, target, schema, table, optional verbose flag, and optional '
-                'spark_session.',
+  'parameters': 'schema, table_name, target, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
   'returns': 'Spark DataFrame loaded from the configured warehouse table.',
   'raises': 'Raises configuration, Spark SQL, or warehouse-read errors when the target/table '
             'cannot be resolved/read.',
@@ -794,8 +789,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'df = read_warehouse_table('
                        'schema="dbo", table="orders", spark_session=spark)',
   'related_functions': ['write_warehouse_table', 'read_warehouse_query'],
-  'expanded_purpose': 'Reads data from a configured Fabric Warehouse table or query target into a '
-                      'Spark DataFrame.',
+  'expanded_purpose': 'Resolves the configured Warehouse table target, then delegates full-table reads to the Fabric Warehouse Spark connector with supplied connector options.',
   'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or '
                  'Delta table.',
   'glossary_terms': ['source data', 'notebook template'],
@@ -824,7 +818,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Prefer selecting only needed columns and rows in SQL, and verify query text is public-safe and read-only.',
   "preferred_example": "df = read_warehouse_query(\"SELECT order_id, status FROM dbo.orders WHERE status = 'OPEN'\", spark_session=spark)",
   'related_functions': ['read_warehouse_table', 'write_warehouse_table'],
-  'expanded_purpose': 'Encourages warehouse SQL pushdown for filtered or projected reads instead of full table extracts.',
+  'expanded_purpose': 'Runs pass-through SELECT SQL through the Fabric Warehouse Spark connector using the configured warehouse artifact as the connector database.',
   'when_to_use': 'Use when warehouse data should be filtered or projected before Spark processing.',
   'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame contains the query result from the warehouse SQL serving engine.',
@@ -841,7 +835,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric warehouse table.',
   'do_not_use_when': 'Do not use for lakehouse table writes, lakehouse Files writes, or metadata '
                      'evidence writes.',
-  'parameters': 'df, config, env, target, schema, table, and write mode.',
+  'parameters': 'df, schema, table_name, target, write mode, optional connector writer options, and optional context.',
   'returns': 'None; the DataFrame is written to the configured warehouse table.',
   'raises': 'Raises configuration, Spark connector, or warehouse write errors when the '
             'target/table cannot be written.',
@@ -853,8 +847,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'write_warehouse_table(serving_df, '
                        'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
-  'expanded_purpose': 'Writes a DataFrame to a configured Fabric Warehouse destination for '
-                      'pipeline outputs that belong in warehouse storage.',
+  'expanded_purpose': 'Resolves the configured Warehouse table target, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
                  'warehouse table.',
   'glossary_terms': ['target table', 'guardrails'],

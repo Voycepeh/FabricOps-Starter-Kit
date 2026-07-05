@@ -7,7 +7,15 @@ from typing import Any
 from .shared import get_spark_session, read_warehouse_synapsesql, resolve_configured_warehouse_table
 
 
-def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
+def read_warehouse_table(
+    schema: str,
+    table_name: str,
+    *,
+    target: str = "warehouse",
+    spark_session=None,
+    context: dict[str, Any] | None = None,
+    **options,
+):
     """Read a full table from a Microsoft Fabric warehouse.
 
     Use this callable for intentional full extracts, such as small reference
@@ -38,12 +46,25 @@ def read_warehouse_table(schema: str, table_name: str, *, target: str = "warehou
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
+    **options
+        Additional Fabric Warehouse Spark connector reader options. Required
+        Fabric connector options are always set from ``00_env_config``.
 
     Returns
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded through the Fabric warehouse connector.
 
+    Notes
+    -----
+    FabricOps resolves the configured Warehouse target and table name, then
+    delegates to the Fabric Warehouse Spark connector. Use this full-table read
+    for small tables, lookup tables, smoke tests, or intentional full extracts;
+    prefer ``read_warehouse_query`` for large Warehouse sources so filters and
+    projections run before Spark receives rows.
+
     """
-    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(target, schema, table_name, context=context)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), store, object_name)
+    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
+        target, schema, table_name, context=context
+    )
+    return read_warehouse_synapsesql(get_spark_session(spark_session), store, object_name, options=options)

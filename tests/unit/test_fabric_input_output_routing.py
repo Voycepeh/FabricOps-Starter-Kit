@@ -26,7 +26,9 @@ PUBLIC_IO_CALLABLES = {
 }
 
 
-def _store(target: str, kind: str, name: str, *, schema_enabled: bool = False, schema: str | None = None) -> FabricStore:
+def _store(
+    target: str, kind: str, name: str, *, schema_enabled: bool = False, schema: str | None = None
+) -> FabricStore:
     return FabricStore(
         env="dev",
         workspace_id=f"dev-{target}-workspace",
@@ -73,7 +75,9 @@ def test_lakehouse_table_read_routes_every_configured_lakehouse_store():
         spark = _Spark()
         io.read_lakehouse_table("orders", target=target, schema=None, spark_session=spark, context=context)
 
-        expected_path = f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
+        expected_path = (
+            f"abfss://dev-{target}-workspace@onelake.dfs.fabric.microsoft.com/dev-{target}-item/Tables/orders"
+        )
         assert ("format", "delta") in spark.read.calls
         assert ("load", expected_path) in spark.read.calls
 
@@ -91,13 +95,48 @@ def test_lakehouse_table_write_routes_to_configured_store():
     context = {"config": config, "env": "dev"}
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, "metadata_orders", target="metadata", schema=None, mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
+    io.write_lakehouse_table(
+        frame,
+        "metadata_orders",
+        target="metadata",
+        schema=None,
+        mode="overwrite",
+        options={"overwriteSchema": "true"},
+        verbose=False,
+        context=context,
+    )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders"
+    expected_path = (
+        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/metadata_orders"
+    )
     assert ("mode", "overwrite") in frame.write.calls
     assert ("format", "delta") in frame.write.calls
+    assert ("option", "overwriteSchema", "true") in frame.write.calls
     assert ("save", expected_path) in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
+
+
+def test_read_lakehouse_table_forwards_delta_reader_options():
+    """Verify Lakehouse table reads pass options to Spark Delta reader."""
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+    spark = _Spark()
+
+    io.read_lakehouse_table(
+        "orders",
+        target="unified",
+        schema=None,
+        spark_session=spark,
+        context=context,
+        mergeSchema=True,
+        timestampAsOf="2026-01-01T00:00:00Z",
+    )
+
+    expected_path = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders"
+    assert ("format", "delta") in spark.read.calls
+    assert ("option", "mergeSchema", True) in spark.read.calls
+    assert ("option", "timestampAsOf", "2026-01-01T00:00:00Z") in spark.read.calls
+    assert ("load", expected_path) in spark.read.calls
 
 
 def test_lakehouse_file_readers_build_configured_files_paths():
@@ -107,10 +146,18 @@ def test_lakehouse_file_readers_build_configured_files_paths():
     spark = _Spark()
 
     io.read_lakehouse_csv("Files/raw/orders.csv", target="source", spark_session=spark, context=context)
-    io.read_lakehouse_parquet("curated/orders.parquet", target="unified", spark_session=spark, verbose=False, context=context)
+    io.read_lakehouse_parquet(
+        "curated/orders.parquet", target="unified", spark_session=spark, verbose=False, context=context
+    )
 
-    assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
-    assert ("parquet", "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet") in spark.read.calls
+    assert (
+        "csv",
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv",
+    ) in spark.read.calls
+    assert (
+        "parquet",
+        "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Files/curated/orders.parquet",
+    ) in spark.read.calls
 
 
 def test_read_lakehouse_csv_preserves_signature_and_reader_options():
@@ -134,11 +181,107 @@ def test_read_lakehouse_csv_preserves_signature_and_reader_options():
     )
 
     assert inspect.signature(read_lakehouse_csv) == inspect.signature(io.read_lakehouse_csv)
-    assert result == {"path": "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"}
+    assert result == {
+        "path": "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv"
+    }
     assert ("option", "header", False) in spark.read.calls
     assert ("option", "delimiter", "|") in spark.read.calls
     assert ("option", "inferSchema", True) in spark.read.calls
-    assert ("csv", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv") in spark.read.calls
+    assert (
+        "csv",
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/raw/orders.csv",
+    ) in spark.read.calls
+
+
+def test_read_lakehouse_parquet_accepts_root_and_nested_paths_with_options():
+    """Verify Parquet file reads accept root and nested paths and forward options."""
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+    root_spark = _Spark()
+    nested_spark = _Spark()
+
+    io.read_lakehouse_parquet(
+        "customers.parquet",
+        target="source",
+        spark_session=root_spark,
+        verbose=False,
+        context=context,
+        mergeSchema=True,
+        recursiveFileLookup=True,
+    )
+    io.read_lakehouse_parquet(
+        "input/customers.parquet",
+        target="source",
+        spark_session=nested_spark,
+        verbose=False,
+        context=context,
+        mergeSchema=True,
+    )
+
+    root_path = "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers.parquet"
+    nested_path = (
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/input/customers.parquet"
+    )
+    assert ("parquet", root_path) in root_spark.read.calls
+    assert ("option", "mergeSchema", True) in root_spark.read.calls
+    assert ("option", "recursiveFileLookup", True) in root_spark.read.calls
+    assert ("parquet", nested_path) in nested_spark.read.calls
+    assert ("option", "mergeSchema", True) in nested_spark.read.calls
+
+
+def test_read_lakehouse_parquet_forwards_options_to_fallback():
+    """Verify Parquet fallback reads use the same Spark reader options."""
+    config = _io_config()
+    context = {"config": config, "env": "dev"}
+
+    class FallbackFrame:
+        def limit(self, _count):
+            return self
+
+        def collect(self):
+            return []
+
+    class FallbackReader:
+        def __init__(self):
+            self.calls = []
+            self.parquet_count = 0
+
+        def option(self, key, value):
+            self.calls.append(("option", key, value))
+            return self
+
+        def parquet(self, path):
+            self.calls.append(("parquet", path))
+            self.parquet_count += 1
+            if self.parquet_count == 1:
+                raise RuntimeError("timestamp precision failure")
+            return FallbackFrame()
+
+    class FallbackSpark:
+        def __init__(self):
+            self.read = FallbackReader()
+
+    spark = FallbackSpark()
+
+    result = io.read_lakehouse_parquet(
+        "customers.parquet",
+        target="source",
+        spark_session=spark,
+        verbose=False,
+        context=context,
+        mergeSchema=True,
+    )
+
+    assert isinstance(result, FallbackFrame)
+    assert (
+        "parquet",
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers.parquet",
+    ) in spark.read.calls
+    assert (
+        "parquet",
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Files/customers_tsus.parquet",
+    ) in spark.read.calls
+    assert spark.read.calls.count(("option", "mergeSchema", True)) == 2
 
 
 def test_configured_file_path_resolution_normalizes_files_prefix():
@@ -162,7 +305,9 @@ def test_csv_path_reader_uses_spark_csv_adapter_options():
     from fabricops_kit.io.shared import read_csv_path
 
     spark = _Spark()
-    result = read_csv_path(spark, "abfss://workspace/item/Files/raw/orders.csv", header=True, options={"sep": ",", "quote": '"'})
+    result = read_csv_path(
+        spark, "abfss://workspace/item/Files/raw/orders.csv", header=True, options={"sep": ",", "quote": '"'}
+    )
 
     assert result == {"path": "abfss://workspace/item/Files/raw/orders.csv"}
     assert spark.read.calls == [
@@ -188,6 +333,7 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
     class Constants:
         WorkspaceId = "workspace_id"
         DatawarehouseId = "datawarehouse_id"
+        DatabaseName = "database_name"
 
     constants_module = types.ModuleType("com.microsoft.spark.fabric.Constants")
     constants_module.Constants = Constants
@@ -199,15 +345,33 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
 
     spark = _Spark()
     frame = _Frame()
-    read_result = io.read_warehouse_table("dbo", "orders", target="warehouse", spark_session=spark, context=context)
-    io.write_warehouse_table(frame, "dbo", "orders", target="warehouse", mode="overwrite", context=context)
+    read_result = io.read_warehouse_table(
+        "dbo",
+        "orders",
+        target="warehouse",
+        spark_session=spark,
+        context=context,
+        queryTimeout="60",
+    )
+    io.write_warehouse_table(
+        frame,
+        "dbo",
+        "orders",
+        target="warehouse",
+        mode="overwrite",
+        options={"batchsize": "5000"},
+        context=context,
+    )
 
     assert read_result == {"synapsesql": "wh_product_dev.dbo.orders"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
+    assert ("option", "database_name", "wh_product_dev") in spark.read.calls
+    assert ("option", "queryTimeout", "60") in spark.read.calls
     assert ("mode", "overwrite") in frame.write.calls
     assert ("option", "workspace_id", "dev-warehouse-workspace") in frame.write.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in frame.write.calls
+    assert ("option", "batchsize", "5000") in frame.write.calls
     assert ("synapsesql", "wh_product_dev.dbo.orders") in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
     assert spark.table_calls == []
@@ -244,7 +408,9 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
     context = {"config": config, "env": "dev"}
     spark = _Spark()
 
-    io.read_lakehouse_table("METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", spark_session=spark, context=context)
+    io.read_lakehouse_table(
+        "METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", spark_session=spark, context=context
+    )
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("load", expected_path) in spark.read.calls
@@ -257,7 +423,16 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
     context = {"config": config, "env": "dev"}
     frame = _Frame()
 
-    io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
+    io.write_lakehouse_table(
+        frame,
+        "METADATA_GUARDRAIL_RULES",
+        target="metadata",
+        schema="METADATA",
+        mode="overwrite",
+        options={"overwriteSchema": "true"},
+        verbose=False,
+        context=context,
+    )
 
     expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
     assert ("save", expected_path) in frame.write.calls
@@ -272,14 +447,32 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     frame = _Frame()
 
     io.read_lakehouse_table("orders", target="source", schema="src", spark_session=spark, context=context)
-    io.write_lakehouse_table(frame, "METADATA_GUARDRAIL_RULES", target="metadata", schema="meta", mode="overwrite", options={"overwriteSchema": "true"}, verbose=False, context=context)
+    io.write_lakehouse_table(
+        frame,
+        "METADATA_GUARDRAIL_RULES",
+        target="metadata",
+        schema="meta",
+        mode="overwrite",
+        options={"overwriteSchema": "true"},
+        verbose=False,
+        context=context,
+    )
     metadata_store = config.paths["dev"]["metadata"]
 
-    assert ("load", "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders") in spark.read.calls
-    assert ("save", "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES") in frame.write.calls
+    assert (
+        "load",
+        "abfss://dev-source-workspace@onelake.dfs.fabric.microsoft.com/dev-source-item/Tables/src/orders",
+    ) in spark.read.calls
+    assert (
+        "save",
+        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES",
+    ) in frame.write.calls
     from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
 
-    assert _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta") == "meta.METADATA_GUARDRAIL_RULES"
+    assert (
+        _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta")
+        == "meta.METADATA_GUARDRAIL_RULES"
+    )
 
 
 def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
@@ -303,14 +496,26 @@ import pytest
 def test_lakehouse_table_schema_validation_rejects_unsafe_names(schema):
     """Verify lakehouse table schema validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table("TABLE", target="metadata", schema=schema, spark_session=_Spark(), context={"config": _io_config(), "env": "dev"})
+        io.read_lakehouse_table(
+            "TABLE",
+            target="metadata",
+            schema=schema,
+            spark_session=_Spark(),
+            context={"config": _io_config(), "env": "dev"},
+        )
 
 
 @pytest.mark.parametrize("table", ["schema.table", "bad/name", "bad-name", "1TABLE", ""])
 def test_lakehouse_table_validation_rejects_unsafe_names(table):
     """Verify lakehouse table validation rejects unsafe names."""
     with pytest.raises(ValueError):
-        io.read_lakehouse_table(table, target="metadata", schema=None, spark_session=_Spark(), context={"config": _io_config(), "env": "dev"})
+        io.read_lakehouse_table(
+            table,
+            target="metadata",
+            schema=None,
+            spark_session=_Spark(),
+            context={"config": _io_config(), "env": "dev"},
+        )
 
 
 def test_read_lakehouse_table_defaults_to_active_context(monkeypatch):
@@ -335,7 +540,9 @@ def test_write_lakehouse_table_defaults_to_active_context(monkeypatch):
 
     io.write_lakehouse_table(frame, "orders_clean", mode="overwrite", verbose=False)
 
-    expected_path = "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders_clean"
+    expected_path = (
+        "abfss://dev-unified-workspace@onelake.dfs.fabric.microsoft.com/dev-unified-item/Tables/orders_clean"
+    )
     assert ("save", expected_path) in frame.write.calls
 
 
@@ -358,6 +565,7 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     class Constants:
         WorkspaceId = "workspace_id"
         DatawarehouseId = "datawarehouse_id"
+        DatabaseName = "database_name"
 
     constants_module = types.ModuleType("com.microsoft.spark.fabric.Constants")
     constants_module.Constants = Constants
@@ -368,18 +576,22 @@ def test_read_warehouse_query_validates_and_uses_connector(monkeypatch):
     monkeypatch.setitem(sys.modules, "com.microsoft.spark.fabric.Constants", constants_module)
 
     spark = _Spark()
-    result = io.read_warehouse_query("SELECT order_id FROM dbo.orders WHERE status = 'OPEN'", target="warehouse", spark_session=spark, context=context)
+    result = io.read_warehouse_query(
+        "SELECT order_id FROM dbo.orders WHERE status = 'OPEN'",
+        target="warehouse",
+        spark_session=spark,
+        context=context,
+    )
 
     assert result == {"synapsesql": "SELECT order_id FROM dbo.orders WHERE status = 'OPEN'"}
     assert ("option", "workspace_id", "dev-warehouse-workspace") in spark.read.calls
     assert ("option", "datawarehouse_id", "dev-warehouse-item") in spark.read.calls
+    assert ("option", "database_name", "wh_product_dev") in spark.read.calls
 
     with pytest.raises(ValueError, match="non-empty SQL SELECT"):
         io.read_warehouse_query("", target="warehouse", spark_session=spark, context=context)
     with pytest.raises(ValueError, match="SELECT statement"):
         io.read_warehouse_query("DELETE FROM dbo.orders", target="warehouse", spark_session=spark, context=context)
-
-
 
 
 def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypatch):
@@ -398,15 +610,55 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
 
     calls = []
     store = FabricStore(env="dev", workspace_id="workspace", item_id="item", name="warehouse", kind="warehouse")
-    lakehouse_store = FabricStore(env="dev", workspace_id="workspace", item_id="item", name="lakehouse", kind="lakehouse")
+    lakehouse_store = FabricStore(
+        env="dev", workspace_id="workspace", item_id="item", name="lakehouse", kind="lakehouse"
+    )
 
-    monkeypatch.setattr(csv_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, relative_path, "resolved://csv"))
-    monkeypatch.setattr(csv_owner, "read_csv_path", lambda spark, path, *, header, options: calls.append(("csv_reader", path, header, options)) or "csv")
-    assert csv_owner.read_lakehouse_csv("raw/orders.csv", target="custom", spark_session=object(), context={"sentinel": True}, header=False, delimiter="|") == "csv"
+    monkeypatch.setattr(
+        csv_owner,
+        "resolve_configured_file_path",
+        lambda target, relative_path, *, context=None: (
+            calls.append(("file", target, relative_path, context)) or (lakehouse_store, relative_path, "resolved://csv")
+        ),
+    )
+    monkeypatch.setattr(
+        csv_owner,
+        "read_csv_path",
+        lambda spark, path, *, header, options: calls.append(("csv_reader", path, header, options)) or "csv",
+    )
+    assert (
+        csv_owner.read_lakehouse_csv(
+            "raw/orders.csv",
+            target="custom",
+            spark_session=object(),
+            context={"sentinel": True},
+            header=False,
+            delimiter="|",
+        )
+        == "csv"
+    )
 
-    monkeypatch.setattr(excel_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, relative_path, "resolved://excel"))
-    monkeypatch.setattr(excel_owner, "read_excel_file", lambda spark, path, *, sheet_name, read_excel_kwargs: calls.append(("excel_reader", path, sheet_name, read_excel_kwargs)) or "excel")
-    assert excel_owner.read_lakehouse_excel("raw/orders.xlsx", target="custom", spark_session=object(), context={"sentinel": True}, sheet_name="S") == "excel"
+    monkeypatch.setattr(
+        excel_owner,
+        "resolve_configured_file_path",
+        lambda target, relative_path, *, context=None: (
+            calls.append(("file", target, relative_path, context))
+            or (lakehouse_store, relative_path, "resolved://excel")
+        ),
+    )
+    monkeypatch.setattr(
+        excel_owner,
+        "read_excel_file",
+        lambda spark, path, *, sheet_name, read_excel_kwargs: (
+            calls.append(("excel_reader", path, sheet_name, read_excel_kwargs)) or "excel"
+        ),
+    )
+    assert (
+        excel_owner.read_lakehouse_excel(
+            "raw/orders.xlsx", target="custom", spark_session=object(), context={"sentinel": True}, sheet_name="S"
+        )
+        == "excel"
+    )
 
     class ParquetFrame:
         def limit(self, _count):
@@ -416,6 +668,10 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
             return []
 
     class ParquetReader:
+        def option(self, key, value):
+            calls.append(("parquet_option", key, value))
+            return self
+
         def parquet(self, path):
             calls.append(("parquet_reader", path))
             return ParquetFrame()
@@ -423,38 +679,147 @@ def test_public_io_functions_delegate_to_configured_resolver_boundaries(monkeypa
     class ParquetSpark:
         read = ParquetReader()
 
-    monkeypatch.setattr(parquet_owner, "resolve_configured_file_path", lambda target, relative_path, *, context=None: calls.append(("file", target, relative_path, context)) or (lakehouse_store, "raw/orders.parquet", "resolved://parquet"))
-    assert isinstance(parquet_owner.read_lakehouse_parquet("raw/orders.parquet", target="custom", spark_session=ParquetSpark(), context={"sentinel": True}, verbose=False), ParquetFrame)
+    monkeypatch.setattr(
+        parquet_owner,
+        "resolve_configured_file_path",
+        lambda target, relative_path, *, context=None: (
+            calls.append(("file", target, relative_path, context))
+            or (lakehouse_store, "raw/orders.parquet", "resolved://parquet")
+        ),
+    )
+    assert isinstance(
+        parquet_owner.read_lakehouse_parquet(
+            "raw/orders.parquet",
+            target="custom",
+            spark_session=ParquetSpark(),
+            context={"sentinel": True},
+            verbose=False,
+            mergeSchema=True,
+        ),
+        ParquetFrame,
+    )
 
-    monkeypatch.setattr(lakehouse_read_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: calls.append(("lakehouse_table", target, table_name, schema, context)) or (lakehouse_store, table_name, schema, "resolved://table"))
-    monkeypatch.setattr(lakehouse_read_owner, "read_delta_path", lambda spark, path: calls.append(("read_delta", path)) or "lakehouse_read")
-    assert lakehouse_read_owner.read_lakehouse_table("orders", target="custom", schema="dbo", spark_session=object(), context={"sentinel": True}) == "lakehouse_read"
+    monkeypatch.setattr(
+        lakehouse_read_owner,
+        "resolve_configured_lakehouse_table",
+        lambda target, table_name, schema, *, context=None: (
+            calls.append(("lakehouse_table", target, table_name, schema, context))
+            or (lakehouse_store, table_name, schema, "resolved://table")
+        ),
+    )
+    monkeypatch.setattr(
+        lakehouse_read_owner,
+        "read_delta_path",
+        lambda spark, path, *, options=None: calls.append(("read_delta", path, options)) or "lakehouse_read",
+    )
+    assert (
+        lakehouse_read_owner.read_lakehouse_table(
+            "orders",
+            target="custom",
+            schema="dbo",
+            spark_session=object(),
+            context={"sentinel": True},
+            mergeSchema=True,
+        )
+        == "lakehouse_read"
+    )
 
     frame = _Frame()
-    monkeypatch.setattr(lakehouse_write_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: calls.append(("lakehouse_table", target, table_name, schema, context)) or (lakehouse_store, table_name, schema, "resolved://write_table"))
-    monkeypatch.setattr(lakehouse_write_owner, "write_delta_path", lambda df, path, *, mode, partition_by=None, options=None: calls.append(("write_delta", path, mode, partition_by, options)))
-    lakehouse_write_owner.write_lakehouse_table(frame, "orders", target="custom", schema="dbo", mode="overwrite", verbose=False, context={"sentinel": True})
+    monkeypatch.setattr(
+        lakehouse_write_owner,
+        "resolve_configured_lakehouse_table",
+        lambda target, table_name, schema, *, context=None: (
+            calls.append(("lakehouse_table", target, table_name, schema, context))
+            or (lakehouse_store, table_name, schema, "resolved://write_table")
+        ),
+    )
+    monkeypatch.setattr(
+        lakehouse_write_owner,
+        "write_delta_path",
+        lambda df, path, *, mode, partition_by=None, options=None: calls.append(
+            ("write_delta", path, mode, partition_by, options)
+        ),
+    )
+    lakehouse_write_owner.write_lakehouse_table(
+        frame, "orders", target="custom", schema="dbo", mode="overwrite", verbose=False, context={"sentinel": True}
+    )
 
-    monkeypatch.setattr(warehouse_query_owner, "resolve_configured_warehouse_query_target", lambda target, *, context=None: calls.append(("warehouse_query", target, context)) or store)
-    monkeypatch.setattr(warehouse_query_owner, "read_warehouse_synapsesql", lambda spark, store, sql: calls.append(("warehouse_sql", store.name, sql)) or "query")
-    assert warehouse_query_owner.read_warehouse_query("SELECT 1", target="custom", spark_session=object(), context={"sentinel": True}) == "query"
+    monkeypatch.setattr(
+        warehouse_query_owner,
+        "resolve_configured_warehouse_query_target",
+        lambda target, *, context=None: calls.append(("warehouse_query", target, context)) or store,
+    )
+    monkeypatch.setattr(
+        warehouse_query_owner,
+        "read_warehouse_synapsesql",
+        lambda spark, store, sql: calls.append(("warehouse_sql", store.name, sql)) or "query",
+    )
+    assert (
+        warehouse_query_owner.read_warehouse_query(
+            "SELECT 1", target="custom", spark_session=object(), context={"sentinel": True}
+        )
+        == "query"
+    )
 
-    monkeypatch.setattr(warehouse_read_owner, "resolve_configured_warehouse_table", lambda target, schema, table_name, *, context=None: calls.append(("warehouse_table", target, schema, table_name, context)) or (store, schema, table_name, "warehouse.dbo.orders"))
-    monkeypatch.setattr(warehouse_read_owner, "read_warehouse_synapsesql", lambda spark, store, sql: calls.append(("warehouse_read", store.name, sql)) or "warehouse_read")
-    assert warehouse_read_owner.read_warehouse_table("dbo", "orders", target="custom", spark_session=object(), context={"sentinel": True}) == "warehouse_read"
+    monkeypatch.setattr(
+        warehouse_read_owner,
+        "resolve_configured_warehouse_table",
+        lambda target, schema, table_name, *, context=None: (
+            calls.append(("warehouse_table", target, schema, table_name, context))
+            or (store, schema, table_name, "warehouse.dbo.orders")
+        ),
+    )
+    monkeypatch.setattr(
+        warehouse_read_owner,
+        "read_warehouse_synapsesql",
+        lambda spark, store, sql, *, options=None: (
+            calls.append(("warehouse_read", store.name, sql, options)) or "warehouse_read"
+        ),
+    )
+    assert (
+        warehouse_read_owner.read_warehouse_table(
+            "dbo",
+            "orders",
+            target="custom",
+            spark_session=object(),
+            context={"sentinel": True},
+            queryTimeout="60",
+        )
+        == "warehouse_read"
+    )
 
-    monkeypatch.setattr(warehouse_write_owner, "resolve_configured_warehouse_table", lambda target, schema, table_name, *, context=None: calls.append(("warehouse_table", target, schema, table_name, context)) or (store, schema, table_name, "warehouse.dbo.orders"))
-    monkeypatch.setattr(warehouse_write_owner, "write_warehouse_synapsesql", lambda df, store, sql, *, mode: calls.append(("warehouse_write", store.name, sql, mode)))
-    warehouse_write_owner.write_warehouse_table(frame, "dbo", "orders", target="custom", mode="overwrite", context={"sentinel": True})
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "resolve_configured_warehouse_table",
+        lambda target, schema, table_name, *, context=None: (
+            calls.append(("warehouse_table", target, schema, table_name, context))
+            or (store, schema, table_name, "warehouse.dbo.orders")
+        ),
+    )
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "write_warehouse_synapsesql",
+        lambda df, store, sql, *, mode, options=None: calls.append(("warehouse_write", store.name, sql, mode, options)),
+    )
+    warehouse_write_owner.write_warehouse_table(
+        frame,
+        "dbo",
+        "orders",
+        target="custom",
+        mode="overwrite",
+        options={"batchsize": "5000"},
+        context={"sentinel": True},
+    )
 
     assert ("csv_reader", "resolved://csv", False, {"delimiter": "|"}) in calls
     assert ("excel_reader", "resolved://excel", "S", {}) in calls
+    assert ("parquet_option", "mergeSchema", True) in calls
     assert ("parquet_reader", "resolved://parquet") in calls
-    assert ("read_delta", "resolved://table") in calls
+    assert ("read_delta", "resolved://table", {"mergeSchema": True}) in calls
     assert ("write_delta", "resolved://write_table", "overwrite", None, None) in calls
     assert ("warehouse_query", "custom", {"sentinel": True}) in calls
-    assert ("warehouse_read", "warehouse", "warehouse.dbo.orders") in calls
-    assert ("warehouse_write", "warehouse", "warehouse.dbo.orders", "overwrite") in calls
+    assert ("warehouse_read", "warehouse", "warehouse.dbo.orders", {"queryTimeout": "60"}) in calls
+    assert ("warehouse_write", "warehouse", "warehouse.dbo.orders", "overwrite", {"batchsize": "5000"}) in calls
 
 
 def test_public_io_owner_files_do_not_duplicate_stale_resolver_patterns():
@@ -481,10 +846,22 @@ def test_public_io_functions_allow_shared_resolvers_to_handle_configured_target(
 
     lakehouse_read_owner = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
 
-    monkeypatch.setattr(lakehouse_read_owner, "resolve_configured_lakehouse_table", lambda target, table_name, schema, *, context=None: (_store(target, "lakehouse", "lh"), table_name, schema, "resolved://table"))
-    monkeypatch.setattr(lakehouse_read_owner, "read_delta_path", lambda spark, path: path)
+    monkeypatch.setattr(
+        lakehouse_read_owner,
+        "resolve_configured_lakehouse_table",
+        lambda target, table_name, schema, *, context=None: (
+            _store(target, "lakehouse", "lh"),
+            table_name,
+            schema,
+            "resolved://table",
+        ),
+    )
+    monkeypatch.setattr(lakehouse_read_owner, "read_delta_path", lambda spark, path, *, options=None: path)
 
-    assert lakehouse_read_owner.read_lakehouse_table("orders", target="configured_alias", spark_session=object()) == "resolved://table"
+    assert (
+        lakehouse_read_owner.read_lakehouse_table("orders", target="configured_alias", spark_session=object())
+        == "resolved://table"
+    )
 
 
 def test_migrated_io_public_import_paths_remain_stable():
@@ -507,7 +884,9 @@ def test_migrated_io_owner_files_have_exactly_one_public_function():
     for helper_name in PUBLIC_IO_CALLABLES:
         path = owner_dir / f"{helper_name}.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        public_defs = [node.name for node in tree.body if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")]
+        public_defs = [
+            node.name for node in tree.body if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
+        ]
         assert public_defs == [helper_name]
 
 
