@@ -265,7 +265,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
 def test_schema_field_validation_names_table_and_duplicate_logical_columns():
     """Verify schema field validation names table and duplicate logical columns."""
     with pytest.raises(ValueError, match="METADATA_DATA_CATALOGUE.*table_name.*table_name.*TABLE_NAME"):
-        metadata_schemas._schema(
+        metadata_schemas.build_metadata_schema(
             governance.CATALOGUE_TABLE,
             [("table_name", "string"), ("TABLE_NAME", "string")],
         )

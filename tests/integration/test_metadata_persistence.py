@@ -28,18 +28,25 @@ class Table:
         return self._count
 
 
-def test_central_metadata_setup_preserves_existing_valid_tables():
+def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     """Verify central metadata setup preserves existing valid tables."""
     registry = metadata_table_schema_registry()
     reads = []
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
-        def table(self, table: str) -> Table:
-            reads.append(table)
-            return Table(registry[table].fieldNames())
-
         def sql(self, statement: str) -> None:
             raise AssertionError(f"metadata setup must not call spark.sql: {statement}")
+
+    def read_table(table_name: str, **_kwargs) -> Table:
+        reads.append(table_name)
+        return Table(registry[table_name].fieldNames())
+
+    def write_table(*_args, **_kwargs) -> None:
+        raise AssertionError("metadata setup must not write existing valid tables")
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
 
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
 
@@ -52,14 +59,19 @@ def test_central_metadata_setup_preserves_existing_valid_tables():
     assert reads == [*CANONICAL_METADATA_TABLES, "METADATA_DATA_STEWARD"]
 
 
-def test_central_metadata_setup_rejects_existing_tables_missing_columns():
+def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
     """Verify central metadata setup rejects existing tables missing columns."""
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
-        def table(self, table: str) -> Table:
-            if table == "METADATA_DATA_STEWARD":
-                return Table(["steward_id"])
-            return Table(metadata_table_schema_registry()[table].fieldNames())
+        pass
+
+    def read_table(table_name: str, **_kwargs) -> Table:
+        if table_name == "METADATA_DATA_STEWARD":
+            return Table(["steward_id"])
+        return Table(metadata_table_schema_registry()[table_name].fieldNames())
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
     with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): .*effective_from"):
         setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
