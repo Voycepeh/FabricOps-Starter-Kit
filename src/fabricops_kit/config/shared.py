@@ -587,11 +587,6 @@ def _normalize_path_config(config: Any | None, *, require_paths: bool = True) ->
     return PathConfig(paths={"__missing__": {}})
 
 
-def _validate_framework_config(config: Any | dict[str, Any]) -> Any:
-    """Backward-compatible alias for :func:`validate_framework_config`."""
-    return validate_framework_config(config)
-
-
 def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any:
     """Resolve a configured Fabric path for an environment and target.
 
@@ -635,220 +630,6 @@ def get_store(config: Any | dict[str, Any] | None, env: str, target: str) -> Any
 
 
 # ---------------------------------------------------------------------------
-# Validator layer: notebook naming
-# ---------------------------------------------------------------------------
-
-
-def _validate_notebook_name(notebook_name: str, config: Any | None = None) -> list[str]:
-    name = "_".join(str(notebook_name or "").strip().lower().split())
-    patterns = [
-        r"^00_env_config$",
-        r"^01_agreement(?:_[a-z0-9_]+)?$",
-        r"^02_pipeline(?:_[a-z0-9_]+)?$",
-        r"^03_governance(?:_[a-z0-9_]+)?$",
-        r"^99_explore(?:_[a-z0-9_]+)?$",
-    ]
-    if any(__import__("re").match(p, name) for p in patterns):
-        return []
-    return ["Notebook name does not match accepted FabricOps naming patterns."]
-
-
-# ---------------------------------------------------------------------------
-# Internal workflow layer: config smoke tests
-# ---------------------------------------------------------------------------
-
-
-def _run_config_smoke_tests(
-    config: FrameworkConfig,
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    check_io_import: bool = False,
-    notebook_name: str | None = None,
-) -> list[ConfigSmokeCheckResult]:
-    """Run 00_env_config readiness smoke checks for configuration bootstrap.
-
-    Use this during environment bootstrap to verify Spark availability, Fabric
-    runtime context access, required path mappings, notebook naming policy, and
-    optional IO import readiness before executing downstream notebook steps.
-
-    Parameters
-    ----------
-    config : FrameworkConfig
-        Validated framework configuration to evaluate.
-    env : str, default="Sandbox"
-        Environment key used when resolving required target paths.
-    required_targets : list[str] | None, optional
-        Required targets expected in ``config.path_config``. Defaults to
-        ``["Source", "Unified"]`` when not provided.
-    check_io_import : bool, default=False
-        Whether to test importability of IO helpers.
-    notebook_name : str | None, optional
-        Notebook name to validate against configured naming prefixes.
-
-    Returns
-    -------
-    list[ConfigSmokeCheckResult]
-        Ordered check results with ``pass``, ``warn``, ``fail``, or ``skipped``
-        statuses for each readiness dimension.
-
-    Raises
-    ------
-    ValueError
-        Propagated from config/path validation helpers when required targets or
-        configured environments are invalid.
-
-    Notes
-    -----
-    This helper performs validation and lightweight import/runtime checks only.
-    It does not create or mutate Fabric resources.
-
-    Examples
-    --------
-    >>> checks = _run_config_smoke_tests(config=my_config, env="Sandbox", notebook_name="00_env_config")
-    >>> any(c.status == "fail" for c in checks)
-    False
-
-    """
-    results: list[ConfigSmokeCheckResult] = []
-    required_targets = required_targets or ["Source", "Unified"]
-    spark_ready, spark_message = _check_spark_session()
-    results.append(ConfigSmokeCheckResult("spark_session", "pass" if spark_ready else "warn", spark_message))
-
-    runtime_meta = _get_fabric_runtime_metadata(notebook_name=notebook_name)
-    runtime_status = "pass" if runtime_meta.get("runtime_available") else "skipped"
-    runtime_message = (
-        "Fabric runtime context is readable."
-        if runtime_meta.get("runtime_available")
-        else "notebookutils.runtime unavailable outside Fabric runtime."
-    )
-    results.append(ConfigSmokeCheckResult("fabric_runtime_context", runtime_status, runtime_message))
-    try:
-        for target in required_targets:
-            p = get_store(config=config, env=env, target=target)
-            missing = [attr for attr in ("workspace_id", "item_id", "name", "kind") if not getattr(p, attr, None)]
-            if missing:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "fail", f"Missing required fields: {missing}"))
-            elif p.kind == "lakehouse" and str(p.root).startswith("abfss://"):
-                results.append(
-                    ConfigSmokeCheckResult(
-                        f"path:{target}", "pass", "Lakehouse store is populated and ABFSS root is derivable."
-                    )
-                )
-            else:
-                results.append(ConfigSmokeCheckResult(f"path:{target}", "pass", "Store is populated."))
-    except Exception as exc:
-        results.append(ConfigSmokeCheckResult("path_resolution", "fail", str(exc)))
-
-    if notebook_name:
-        errors = _validate_notebook_name(notebook_name, config=config)
-        results.append(
-            ConfigSmokeCheckResult(
-                "notebook_naming", "pass" if not errors else "fail", "; ".join(errors) or "Notebook name is valid."
-            )
-        )
-    else:
-        results.append(ConfigSmokeCheckResult("notebook_naming", "skipped", "Notebook name check skipped."))
-
-    if check_io_import:
-        try:
-            from .io import read_lakehouse_table  # noqa: F401
-
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "pass", "fabric_io helpers are importable."))
-        except Exception as exc:
-            results.append(ConfigSmokeCheckResult("fabric_io_import", "fail", str(exc)))
-    else:
-        results.append(ConfigSmokeCheckResult("fabric_io_import", "skipped", "IO import check disabled."))
-    return results
-
-
-# ---------------------------------------------------------------------------
-# Internal workflow layer: notebook setup
-# ---------------------------------------------------------------------------
-
-
-def _setup_notebook_workflow(
-    config: FrameworkConfig | dict[str, Any],
-    env: str = "Sandbox",
-    required_targets: list[str] | None = None,
-    notebook_name: str | None = None,
-    run_id_prefix: str = "run",
-    local_fallback_name: str | None = None,
-) -> NotebookSetupContext:
-    """Own setup_notebook orchestration behind the frozen public API."""
-    from uuid import uuid4
-    from datetime import datetime
-
-    normalized = _validate_framework_config(config)
-    required_targets = required_targets or ["Source", "Unified"]
-    resolved_paths = {target: get_store(config=normalized, env=env, target=target) for target in required_targets}
-
-    context = None
-    try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        context = getattr(nb_runtime, "context", None)
-    except Exception:
-        context = None
-
-    def ctx(key: str) -> Any:
-        if context is None:
-            return None
-        if isinstance(context, dict):
-            return context.get(key)
-        get_method = getattr(context, "get", None)
-        if callable(get_method):
-            try:
-                return get_method(key)
-            except Exception:
-                return None
-        return getattr(context, key, None)
-
-    resolved_notebook_name = notebook_name or ctx("currentNotebookName") or local_fallback_name
-    user_name = ctx("userName") or ctx("userId") or "unknown"
-    run_id = (
-        ctx("currentRunId")
-        or f"{run_id_prefix}_{datetime.fromisoformat(get_current_audit_timestamp(config=normalized)).strftime('%Y%m%dT%H%M%S')}_{uuid4().hex[:8]}"
-    )
-
-    runtime_meta = {
-        "notebook_name": resolved_notebook_name,
-        "workspace_name": ctx("currentWorkspaceName"),
-        "workspace_id": ctx("currentWorkspaceId"),
-        "user_name": user_name,
-        "user_id": ctx("userId"),
-        "current_run_id": ctx("currentRunId"),
-        "is_for_pipeline": ctx("isForPipeline"),
-        "is_for_interactive": ctx("isForInteractive"),
-        "is_reference_run": ctx("isReferenceRun"),
-        "runtime_available": context is not None,
-    }
-
-    checks = _run_config_smoke_tests(
-        config=normalized, env=env, required_targets=required_targets, notebook_name=resolved_notebook_name
-    )
-    readiness_status = "ready" if all(r.status in {"pass", "warn", "skipped"} for r in checks) else "not_ready"
-
-    return NotebookSetupContext(
-        run_id=str(run_id),
-        notebook_name=resolved_notebook_name,
-        workspace_name=runtime_meta.get("workspace_name"),
-        user_name=str(user_name),
-        environment=env,
-        paths=resolved_paths,
-        validation_results=checks,
-        runtime_metadata=runtime_meta,
-        readiness_status=readiness_status,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Public API layer
-# ---------------------------------------------------------------------------
-
-
-
-
-# ---------------------------------------------------------------------------
 # Resolver and utility layer: metadata table setup
 # ---------------------------------------------------------------------------
 
@@ -861,7 +642,7 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
     governance/pipeline tables from the governance schema registry.
     ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
-    normalized = _validate_framework_config(config)
+    normalized = validate_framework_config(config)
     from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     from fabricops_kit.widgets.notebook_registry import NOTEBOOK_REGISTRY_TABLE
@@ -938,7 +719,7 @@ def _string_metadata_schema(table_name: str, fields: list[str]):
 
 def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[str, Any]:
     """Return the canonical metadata setup registry as table names mapped to schemas."""
-    normalized = _validate_framework_config(config)
+    normalized = validate_framework_config(config)
     from fabricops_kit.widgets.shared import (
         DATA_AGREEMENT_EVIDENCE_FIELDS,
         DATA_AGREEMENT_EVIDENCE_TABLE,
@@ -1061,7 +842,7 @@ def _validate_metadata_table_registration(
     """Validate active metadata tables through configured metadata target reads."""
     from fabricops_kit.io.shared import read_lakehouse_table_core
 
-    normalized = _validate_framework_config(config)
+    normalized = validate_framework_config(config)
     expected = list(expected_tables or _get_active_metadata_tables(normalized))
     resolved_metadata_schema = _resolve_metadata_schema(normalized, env, metadata_schema)
     missing: list[str] = []
@@ -1105,58 +886,3 @@ def _validate_metadata_table_registration(
     }
 
 
-
-# ---------------------------------------------------------------------------
-# Public API layer
-# ---------------------------------------------------------------------------
-
-
-
-def _check_spark_session() -> tuple[bool, str]:
-    """Check whether a Spark session is available."""
-    spark_obj = globals().get("spark")
-    if spark_obj is not None:
-        return True, "Spark session is available."
-    return False, "Spark session not found; local fallback mode."
-
-
-def _get_fabric_runtime_metadata(notebook_name: str | None = None) -> dict[str, Any]:
-    """Best-effort retrieval of Fabric runtime metadata."""
-    metadata: dict[str, Any] = {
-        "notebook_name": notebook_name,
-        "workspace_name": None,
-        "user_name": None,
-        "runtime_available": False,
-    }
-    try:
-        import notebookutils.runtime as nb_runtime  # type: ignore
-
-        metadata["runtime_available"] = True
-        context = getattr(nb_runtime, "context", None)
-        if context is not None:
-
-            def _ctx_value(*keys: str) -> Any:
-                for key in keys:
-                    if hasattr(context, key):
-                        value = getattr(context, key, None)
-                        if value is not None:
-                            return value
-                    if isinstance(context, dict):
-                        value = context.get(key)
-                        if value is not None:
-                            return value
-                    get_method = getattr(context, "get", None)
-                    if callable(get_method):
-                        value = get_method(key)
-                        if value is not None:
-                            return value
-                return None
-
-            metadata["notebook_name"] = metadata["notebook_name"] or _ctx_value(
-                "currentNotebookName", "current_notebook_name"
-            )
-            metadata["workspace_name"] = _ctx_value("currentWorkspaceName", "workspaceName", "workspace_name")
-            metadata["user_name"] = _ctx_value("userName", "user_name")
-    except Exception:
-        pass
-    return metadata

@@ -23,7 +23,7 @@ from fabricops_kit.config.shared import (
     get_current_audit_timestamp,
     _get_active_metadata_tables,
     _validate_audit_timezone,
-    _validate_framework_config,
+    validate_framework_config,
     _validate_metadata_table_registration,
     get_default_fabric_context,
     resolve_fabric_context,
@@ -143,7 +143,7 @@ def test_framework_config_uses_simplified_config_sections():
 
 def test_dict_framework_config_defaults_simplified_sections_when_omitted():
     """Verify dict framework config defaults simplified sections when omitted."""
-    config = _validate_framework_config({
+    config = validate_framework_config({
         "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
     })
 
@@ -544,7 +544,7 @@ def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workf
     from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME
 
     assert "_setup_metadata_tables_workflow" not in ROLE_TAGS_BY_NAME
-    assert ROLE_TAGS_BY_NAME["_setup_notebook_workflow"][0] == "internal_workflow"
+    assert "_setup_notebook_workflow" not in ROLE_TAGS_BY_NAME
     assert ROLE_TAGS_BY_NAME["_setup_metadata_table_registry"][0] == "internal_adapter"
     assert ROLE_TAGS_BY_NAME["_validate_metadata_table_registration"][0] == "internal_validator"
 

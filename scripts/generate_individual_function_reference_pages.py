@@ -2309,7 +2309,6 @@ CONTEXT_MODEL_CLASSES = {"NotebookSetupContext"}
 ROLE_TAGS_BY_NAME = {
     "setup_notebook": ["public_api_entrypoint", "notebook_api_entrypoint", "public_stable"],
     "setup_metadata_tables": ["public_api_entrypoint", "metadata_setup_workflow", "public_stable"],
-    "_setup_notebook_workflow": ["internal_workflow", "setup_notebook_workflow"],
     "_get_store": ["internal_resolver", "shared_internal_service", "store_resolver", "high_fanout_shared"],
     "resolve_fabric_context": [
         "internal_resolver",
@@ -2321,10 +2320,8 @@ ROLE_TAGS_BY_NAME = {
     "get_current_audit_timestamp": ["audit_time_utility", "shared_internal_service", "high_fanout_shared"],
     "get_audit_timezone": ["internal_resolver", "audit_config_resolver"],
     "build_audit_timestamp_expr": ["audit_time_utility", "spark_audit_expression_utility"],
-    "_validate_framework_config": ["internal_validator", "config_validator"],
     "_validate_metadata_table_registration": ["internal_validator", "metadata_table_registration_validator"],
     "_validate_audit_timezone": ["utility_validator", "low_level_utility"],
-    "_validate_notebook_name": ["utility_validator", "local_leaf_helper"],
     "_normalize_path_config": ["internal_normalizer", "path_config_normalizer"],
     "_normalize_widget_config": ["internal_normalizer", "widget_config_normalizer"],
     "_get_metadata_table_schema_registry": ["registry_builder", "metadata_schema_registry_builder"],
@@ -2334,9 +2331,6 @@ ROLE_TAGS_BY_NAME = {
     "_get_active_metadata_tables": ["internal_resolver", "metadata_registry_query"],
     "_setup_metadata_table_registry": ["internal_adapter", "metadata_registry_write_adapter"],
     "_detect_nested_metadata_delta_folders": ["internal_validator", "storage_guardrail_validator"],
-    "_run_config_smoke_tests": ["internal_validator", "setup_smoke_test_validator"],
-    "_check_spark_session": ["spark_runtime_probe", "utility_function"],
-    "_get_fabric_runtime_metadata": ["fabric_runtime_probe", "internal_adapter"],
     "_list_data_stewards": ["internal_resolver", "data_steward_resolver"],
     "widget_render_agreement_evidence": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
