@@ -56,7 +56,9 @@ def _normalize_schema_name(schema: str | None) -> str | None:
     if any(separator in value for separator in ("/", "\\", ".")):
         raise ValueError("schema must be a simple schema name; do not use paths or dots.")
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
-        raise ValueError("schema must contain only letters, numbers, and underscores, and must not start with a number.")
+        raise ValueError(
+            "schema must contain only letters, numbers, and underscores, and must not start with a number."
+        )
     return value
 
 
@@ -104,7 +106,9 @@ def _require_fabric_connector() -> Any:
         import com.microsoft.spark.fabric  # noqa: F401
         from com.microsoft.spark.fabric.Constants import Constants
     except Exception as exc:
-        raise RuntimeError("This function must run inside Microsoft Fabric Spark with com.microsoft.spark.fabric available.") from exc
+        raise RuntimeError(
+            "This function must run inside Microsoft Fabric Spark with com.microsoft.spark.fabric available."
+        ) from exc
     return Constants
 
 
@@ -120,10 +124,14 @@ def get_spark_session(spark_session=None):
     try:
         return globals()["spark"]
     except KeyError as exc:
-        raise RuntimeError("Spark session was not provided and global 'spark' was not found. Run this inside Fabric/Spark or pass spark_session explicitly.") from exc
+        raise RuntimeError(
+            "Spark session was not provided and global 'spark' was not found. Run this inside Fabric/Spark or pass spark_session explicitly."
+        ) from exc
 
 
-def resolve_target_store(target: str, expected_kind: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str]:
+def resolve_target_store(
+    target: str, expected_kind: str, *, context: dict[str, Any] | None = None
+) -> tuple[FabricStore, str]:
     """Resolve and validate a configured Fabric target store."""
     config, env, _context = resolve_fabric_context(context=context)
     store = get_store(config, env, target)
@@ -136,21 +144,27 @@ def resolve_target_store(target: str, expected_kind: str, *, context: dict[str, 
     return store, env
 
 
-def resolve_configured_file_path(target: str, relative_path: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str]:
+def resolve_configured_file_path(
+    target: str, relative_path: str, *, context: dict[str, Any] | None = None
+) -> tuple[FabricStore, str, str]:
     """Resolve a logical target and relative file path through Fabric config."""
     store, _env = resolve_target_store(target, "lakehouse", context=context)
     normalized_relative_path, path = resolve_lakehouse_file_location(store, relative_path)
     return store, normalized_relative_path, path
 
 
-def resolve_configured_lakehouse_table(target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str | None, str]:
+def resolve_configured_lakehouse_table(
+    target: str, table_name: str, schema: str | None, *, context: dict[str, Any] | None = None
+) -> tuple[FabricStore, str, str | None, str]:
     """Resolve a logical target and table through configured lakehouse metadata."""
     store, _env = resolve_target_store(target, "lakehouse", context=context)
     table_value, schema_value, path = resolve_lakehouse_table_location(store, table_name, schema)
     return store, table_value, schema_value, path
 
 
-def resolve_configured_warehouse_table(target: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None) -> tuple[FabricStore, str, str, str]:
+def resolve_configured_warehouse_table(
+    target: str, schema: str, table_name: str, *, context: dict[str, Any] | None = None
+) -> tuple[FabricStore, str, str, str]:
     """Resolve a logical target and table through configured warehouse metadata."""
     store, _env = resolve_target_store(target, "warehouse", context=context)
     schema_value, table_value, object_name = resolve_warehouse_table_location(store, schema, table_name)
@@ -163,7 +177,9 @@ def resolve_configured_warehouse_query_target(target: str, *, context: dict[str,
     return store
 
 
-def resolve_lakehouse_table_location(store: FabricStore, table_name: str, schema: str | None) -> tuple[str, str | None, str]:
+def resolve_lakehouse_table_location(
+    store: FabricStore, table_name: str, schema: str | None
+) -> tuple[str, str | None, str]:
     """Resolve a Lakehouse table to normalized table, schema, and ABFSS path."""
     table_value = _normalize_table_name(table_name)
     schema_value = _resolve_lakehouse_schema(store, schema)
@@ -213,9 +229,12 @@ def validate_select_query(query: str) -> str:
     return sql
 
 
-def read_delta_path(spark_obj, path: str):
+def read_delta_path(spark_obj, path: str, *, options: dict[str, Any] | None = None):
     """Read a Delta path through Spark."""
-    return spark_obj.read.format("delta").load(path)
+    reader = spark_obj.read.format("delta")
+    for key, value in (options or {}).items():
+        reader = reader.option(key, value)
+    return reader.load(path)
 
 
 def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]):
@@ -230,7 +249,11 @@ def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: di
     """Write a DataFrame to a Delta path through Spark."""
     writer = df.write.mode(mode).format("delta")
     if partition_by is not None:
-        writer = writer.partitionBy(*partition_by) if isinstance(partition_by, (list, tuple)) else writer.partitionBy(partition_by)
+        writer = (
+            writer.partitionBy(*partition_by)
+            if isinstance(partition_by, (list, tuple))
+            else writer.partitionBy(partition_by)
+        )
     for key, value in (options or {}).items():
         writer = writer.option(key, value)
     writer.save(path)
@@ -254,10 +277,13 @@ def read_lakehouse_table_core(
     schema: str | None = None,
     spark_session=None,
     context: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
 ):
     """Read a configured Lakehouse Delta table for internal workflows."""
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
-    return read_delta_path(get_spark_session(spark_session), path)
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        target, table_name, schema, context=context
+    )
+    return read_delta_path(get_spark_session(spark_session), path, options=options)
 
 
 def write_lakehouse_table_core(
@@ -275,11 +301,17 @@ def write_lakehouse_table_core(
 ):
     """Write a configured Lakehouse Delta table for internal workflows."""
     validate_dataframe_writer(df)
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(target, table_name, schema, context=context)
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        target, table_name, schema, context=context
+    )
     normalized_mode = normalize_write_mode(mode)
     if repartition_by is not None:
         if isinstance(repartition_by, (list, tuple)):
-            df = df.repartition(*repartition_by) if not (repartition_by and isinstance(repartition_by[0], int)) else df.repartition(repartition_by[0], *repartition_by[1:])
+            df = (
+                df.repartition(*repartition_by)
+                if not (repartition_by and isinstance(repartition_by[0], int))
+                else df.repartition(repartition_by[0], *repartition_by[1:])
+            )
         else:
             df = df.repartition(repartition_by)
     if verbose:
@@ -287,16 +319,34 @@ def write_lakehouse_table_core(
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)
 
 
-def read_warehouse_synapsesql(spark_obj, store: FabricStore, synapsesql_target: str):
+def read_warehouse_synapsesql(
+    spark_obj, store: FabricStore, synapsesql_target: str, *, options: dict[str, Any] | None = None
+):
     """Read from Fabric Warehouse through the Spark connector."""
     constants = _require_fabric_connector()
-    return spark_obj.read.option(constants.WorkspaceId, store.workspace_id).option(constants.DatawarehouseId, store.item_id).synapsesql(synapsesql_target)
+    reader = (
+        spark_obj.read.option(constants.WorkspaceId, store.workspace_id)
+        .option(constants.DatawarehouseId, store.item_id)
+        .option(constants.DatabaseName, store.name)
+    )
+    for key, value in (options or {}).items():
+        reader = reader.option(key, value)
+    return reader.synapsesql(synapsesql_target)
 
 
-def write_warehouse_synapsesql(df, store: FabricStore, synapsesql_target: str, *, mode: str) -> None:
+def write_warehouse_synapsesql(
+    df, store: FabricStore, synapsesql_target: str, *, mode: str, options: dict[str, Any] | None = None
+) -> None:
     """Write to Fabric Warehouse through the Spark connector."""
     constants = _require_fabric_connector()
-    df.write.mode(mode).option(constants.WorkspaceId, store.workspace_id).option(constants.DatawarehouseId, store.item_id).synapsesql(synapsesql_target)
+    writer = (
+        df.write.mode(mode)
+        .option(constants.WorkspaceId, store.workspace_id)
+        .option(constants.DatawarehouseId, store.item_id)
+    )
+    for key, value in (options or {}).items():
+        writer = writer.option(key, value)
+    writer.synapsesql(synapsesql_target)
 
 
 def read_excel_file(spark_obj, lakehouse_path: str, *, sheet_name, read_excel_kwargs: dict[str, Any]):

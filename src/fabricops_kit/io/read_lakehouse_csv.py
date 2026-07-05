@@ -7,8 +7,16 @@ from typing import Any
 from .shared import get_spark_session, read_csv_path, resolve_configured_file_path
 
 
-def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_session=None, header: bool = True, context: dict[str, Any] | None = None, **options):
-    """Read a CSV file from a configured Fabric-resolved path.
+def read_lakehouse_csv(
+    relative_path: str,
+    *,
+    target: str = "source",
+    spark_session=None,
+    header: bool = True,
+    context: dict[str, Any] | None = None,
+    **options,
+):
+    """Read a CSV file from a configured Fabric-resolved path through Spark.
 
     Parameters
     ----------
@@ -23,12 +31,18 @@ def read_lakehouse_csv(relative_path: str, *, target: str = "source", spark_sess
     context : dict[str, Any], optional
         Active Fabric context override.
     **options
-        Additional Spark CSV reader options.
+        Additional Spark CSV reader options forwarded to Spark's CSV reader.
 
     Returns
     -------
     pyspark.sql.DataFrame
         Spark DataFrame loaded from the CSV path.
+
+    Notes
+    -----
+    FabricOps resolves the configured Lakehouse Files path from
+    ``00_env_config`` and then delegates to Spark's CSV reader with the supplied
+    options.
 
     """
     _store, _relative_path, path = resolve_configured_file_path(target, relative_path, context=context)

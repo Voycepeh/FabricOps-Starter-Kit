@@ -159,8 +159,8 @@ def test_file_readers_validate_source_paths_and_excel_uses_pandas_kwargs(monkeyp
 
     with pytest.raises(ValueError, match="relative_path"):
         io.read_lakehouse_csv("", target="source", spark_session=spark, context={"config": config, "env": "dev"})
-    with pytest.raises(ValueError, match="folder/file.parquet"):
-        io.read_lakehouse_parquet("orders.parquet", target="source", spark_session=spark, verbose=False, context={"config": config, "env": "dev"})
+    io.read_lakehouse_parquet("customers.parquet", target="source", spark_session=spark, verbose=False, context={"config": config, "env": "dev"})
+    assert any(call[0] == "parquet" and call[1].endswith("/Files/customers.parquet") for call in spark.read.calls)
 
     io.read_lakehouse_excel("Files/reference/map.xlsx", target="source", sheet_name="Sheet1", spark_session=spark, context={"config": config, "env": "dev"}, skiprows=1)
     assert captured["kwargs"] == {"skiprows": 1}

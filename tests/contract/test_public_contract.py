@@ -20,7 +20,9 @@ pytestmark = pytest.mark.contract
 
 APPROVED_V1_CALLABLES = {qualified_name.rsplit(".", maxsplit=1)[-1] for qualified_name in SUPPORTED_PUBLIC_API}
 APPROVED_V1_QUALIFIED_CALLABLES = set(SUPPORTED_PUBLIC_API)
-APPROVED_V1_QUALIFIED_FUNCTIONS = {name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()}
+APPROVED_V1_QUALIFIED_FUNCTIONS = {
+    name for name in APPROVED_V1_QUALIFIED_CALLABLES if not name.rsplit(".", maxsplit=1)[-1][0].isupper()
+}
 CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES = set()
 CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
     "fabricops_kit.config.shared.FabricStore",
@@ -176,7 +178,10 @@ def test_supported_public_api_matches_generated_call_flow_contract():
 
     assert dashboard_path.exists()
     assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
-    assert flow_public == {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES}
+    assert flow_public == {
+        name.rsplit(".", maxsplit=1)[-1]
+        for name in APPROVED_V1_QUALIFIED_FUNCTIONS | CONFIG_PUBLIC_FUNCTION_QUALIFIED_NAMES
+    }
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
@@ -266,6 +271,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "verbose", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
         "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table": {
@@ -275,6 +281,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "schema", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
         "fabricops_kit.io.read_warehouse_query.read_warehouse_query": {
@@ -283,6 +290,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
         "fabricops_kit.io.read_warehouse_table.read_warehouse_table": {
@@ -292,6 +300,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "VAR_KEYWORD", "required": True},
             ]
         },
         "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table": {
@@ -315,6 +324,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "options", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
@@ -468,10 +478,17 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
     }
 
 
-
 def test_root_exports_only_approved_v1_template_callables():
     """Verify root exports only approved v1 template callables."""
-    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "ConfigSmokeCheckResult", "NotebookSetupContext"}
+    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {
+        "FabricStore",
+        "PathConfig",
+        "GovernanceConfig",
+        "DataAgreementConfig",
+        "FrameworkConfig",
+        "ConfigSmokeCheckResult",
+        "NotebookSetupContext",
+    }
     assert len(fabricops_kit.__all__) == len(APPROVED_V1_CALLABLES) + 7
     for name in fabricops_kit.__all__:
         assert callable(getattr(fabricops_kit, name))
@@ -486,7 +503,15 @@ def test_removed_aliases_are_not_exported():
 
 def test_root_public_exports_match_approved_v1_list():
     """Verify root public exports match approved v1 list."""
-    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "ConfigSmokeCheckResult", "NotebookSetupContext"}
+    assert set(fabricops_kit.__all__) == APPROVED_V1_CALLABLES | {
+        "FabricStore",
+        "PathConfig",
+        "GovernanceConfig",
+        "DataAgreementConfig",
+        "FrameworkConfig",
+        "ConfigSmokeCheckResult",
+        "NotebookSetupContext",
+    }
     for removed in {
         "apply_governance_rule_action",
         "build_guardrail_detail_rows",
@@ -575,13 +600,15 @@ def test_generated_module_docs_are_not_public_surface():
         "data_agreement",
         "governance_review",
         "pipeline",
-            "io",
+        "io",
         "guardrails",
         "metadata",
         "pipeline",
     }
     module_dir = root / "docs" / "api" / "modules"
-    module_docs = set() if not module_dir.exists() else {path.stem for path in module_dir.glob("*.md") if path.stem != "index"}
+    module_docs = (
+        set() if not module_dir.exists() else {path.stem for path in module_dir.glob("*.md") if path.stem != "index"}
+    )
     mkdocs_text = (root / "mkdocs.yml").read_text(encoding="utf-8")
 
     assert module_docs == set()

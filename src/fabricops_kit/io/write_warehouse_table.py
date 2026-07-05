@@ -7,7 +7,16 @@ from typing import Any
 from .shared import resolve_configured_warehouse_table, validate_dataframe_writer, write_warehouse_synapsesql
 
 
-def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "warehouse", mode: str = "append", context: dict[str, Any] | None = None):
+def write_warehouse_table(
+    df,
+    schema: str,
+    table_name: str,
+    *,
+    target: str = "warehouse",
+    mode: str = "append",
+    options: dict[str, Any] | None = None,
+    context: dict[str, Any] | None = None,
+):
     """Write a Spark DataFrame to a Microsoft Fabric warehouse table.
 
     Use this callable for final serving publication when Warehouse SQL access is
@@ -29,6 +38,9 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
         Logical warehouse target from ``00_env_config``.
     mode : str, default="append"
         Spark writer mode supported by the Fabric connector.
+    options : dict, optional
+        Additional Fabric Warehouse Spark connector writer options. Required
+        Fabric connector options are always set from ``00_env_config``.
     context : dict[str, Any], optional
         Active Fabric context override.
 
@@ -37,7 +49,15 @@ def write_warehouse_table(df, schema: str, table_name: str, *, target: str = "wa
     None
         The DataFrame is written through the Fabric warehouse connector.
 
+    Notes
+    -----
+    FabricOps resolves the configured Warehouse target and table name, then
+    delegates to the Fabric Warehouse Spark connector. ``options`` are passed to
+    the underlying ``DataFrameWriter`` after required Fabric connector options.
+
     """
     validate_dataframe_writer(df)
-    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(target, schema, table_name, context=context)
-    write_warehouse_synapsesql(df, store, object_name, mode=mode)
+    store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
+        target, schema, table_name, context=context
+    )
+    write_warehouse_synapsesql(df, store, object_name, mode=mode, options=options)

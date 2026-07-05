@@ -4,10 +4,22 @@ from __future__ import annotations
 
 from typing import Any
 
-from .shared import get_spark_session, read_warehouse_synapsesql, resolve_configured_warehouse_query_target, validate_select_query
+from .shared import (
+    get_spark_session,
+    read_warehouse_synapsesql,
+    resolve_configured_warehouse_query_target,
+    validate_select_query,
+)
 
 
-def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session=None, context: dict[str, Any] | None = None):
+def read_warehouse_query(
+    query: str,
+    *,
+    target: str = "warehouse",
+    spark_session=None,
+    context: dict[str, Any] | None = None,
+    **options,
+):
     """Read warehouse rows with SQL pushdown.
 
     Use this callable when Warehouse data should be filtered or projected by the
@@ -34,13 +46,29 @@ def read_warehouse_query(query: str, *, target: str = "warehouse", spark_session
         Spark session to use instead of the notebook global ``spark``.
     context : dict[str, Any], optional
         Active Fabric context override.
+    **options
+        Additional Fabric Warehouse Spark connector reader options. Required
+        Fabric connector options are always set from ``00_env_config``.
 
     Returns
     -------
     pyspark.sql.DataFrame
         Spark DataFrame returned by the SQL serving engine.
 
+    Notes
+    -----
+    FabricOps resolves the configured Warehouse target, sets the Fabric
+    connector database to that warehouse artifact, and delegates the read-only
+    SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
+    can use two-part names such as ``dbo.orders`` when the configured target
+    identifies the warehouse database/artifact.
+
     """
     store = resolve_configured_warehouse_query_target(target, context=context)
     sql = validate_select_query(query)
-    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql)
+    return read_warehouse_synapsesql(
+        get_spark_session(spark_session),
+        store,
+        sql,
+        options=options,
+    )
