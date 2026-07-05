@@ -29,8 +29,8 @@ AUDIT_SCHEMA_FIELDS = [
 ]
 
 
-def spark_types() -> dict[str, Any]:
-    """Return Spark SQL data type instances keyed by compact names."""
+def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any:
+    """Build a typed Spark StructType for a metadata table."""
     try:
         from pyspark.sql.types import BooleanType, DateType, DoubleType, IntegerType, LongType, StringType, StructField, StructType, TimestampType
     except Exception:  # pragma: no cover - local docs/tests may run without PySpark
@@ -71,21 +71,6 @@ def spark_types() -> dict[str, Any]:
             def fieldNames(self) -> list[str]:  # noqa: N802
                 return [field.name for field in self.fields]
 
-    return {
-        "string": StringType(),
-        "boolean": BooleanType(),
-        "long": LongType(),
-        "integer": IntegerType(),
-        "double": DoubleType(),
-        "date": DateType(),
-        "timestamp": TimestampType(),
-        "StructField": StructField,
-        "StructType": StructType,
-    }
-
-
-def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any:
-    """Build a typed Spark StructType for a metadata table."""
     logical: dict[str, list[str]] = {}
     for name, _kind in fields:
         logical.setdefault(name.lower(), []).append(name)
@@ -93,10 +78,16 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any
     if duplicates:
         detail = "; ".join(f"{key}: {', '.join(values)}" for key, values in sorted(duplicates.items()))
         raise ValueError(f"{table_name} schema contains duplicate column names: {detail}.")
-    types = spark_types()
-    struct_field = types["StructField"]
-    struct_type = types["StructType"]
-    return struct_type([struct_field(name, types[kind], True) for name, kind in fields])
+    types = {
+        "string": StringType(),
+        "boolean": BooleanType(),
+        "long": LongType(),
+        "integer": IntegerType(),
+        "double": DoubleType(),
+        "date": DateType(),
+        "timestamp": TimestampType(),
+    }
+    return StructType([StructField(name, types[kind], True) for name, kind in fields])
 
 
 def audit_schema_fields() -> list[tuple[str, str]]:
