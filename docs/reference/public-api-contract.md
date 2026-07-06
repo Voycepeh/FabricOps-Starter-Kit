@@ -1,35 +1,27 @@
 # Public API contract
 
-The FabricOps Starter Kit release contract supports exactly 25 public notebook-facing functions. These functions are the stable API surface for release preparation and should remain available through the internal release refactor.
+`fabricops_kit.public_api.SUPPORTED_PUBLIC_API` is the canonical machine-readable source of truth for the FabricOps Starter Kit release-facing public API boundary. Release documentation, generated references, notebook templates, and validation checks should derive the supported callable set from that tuple instead of maintaining separate hand-written function inventories.
 
-Implementation helpers are not part of this stable contract. Shared helpers, private helpers, classes, methods, validators, resolvers, workflows, adapters, and utilities may be reorganized before release without being treated as supported public API. Public function behavior should remain stable through that refactor, and notebook templates should only use the supported public functions below.
+The supported public API contains the notebook-facing functions in `SUPPORTED_PUBLIC_API`. These functions are the stable API surface for release preparation and should remain available through the internal release refactor. When the supported boundary intentionally changes, update `src/fabricops_kit/public_api.py`, the related contract tests, and any release notes together.
 
-The canonical machine-readable list lives in `fabricops_kit.public_api.SUPPORTED_PUBLIC_API`.
+Implementation helpers are not part of this stable contract. Shared helpers, private helpers, classes, methods, validators, resolvers, workflows, adapters, and utilities may be reorganized before release without being treated as supported public API. Public function behavior should remain stable through that refactor, and notebook templates should only use functions listed in `SUPPORTED_PUBLIC_API`.
 
-| Domain | Function | Purpose |
-|---|---|---|
-| Environment setup | `fabricops_kit.config.setup_metadata_tables` | Prepare all FabricOps metadata tables for the configured environment. |
-| Environment setup | `fabricops_kit.config.setup_notebook` | Run consolidated FabricOps startup for workflow and optional support notebooks. |
-| Data agreement | `fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence` | Render standalone agreement supporting-file upload controls. |
-| Data agreement | `fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement` | Render append-only agreement create/update maintenance using active stewards. |
-| Data agreement | `fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward` | Render append-only data steward create/update maintenance. |
-| Profiling | `fabricops_kit.data_profiling.profile_dataframe` | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
-| Data access | `fabricops_kit.read_lakehouse_csv` | Read a CSV file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.read_lakehouse_excel` | Read an Excel file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.read_lakehouse_parquet` | Read a Parquet file from a Fabric lakehouse Files path. |
-| Data access | `fabricops_kit.read_lakehouse_table` | Read a Delta table from a Fabric lakehouse. |
-| Data access | `fabricops_kit.read_warehouse_query` | Read warehouse rows with SQL pushdown. |
-| Data access | `fabricops_kit.read_warehouse_table` | Read a full table from a Microsoft Fabric warehouse. |
-| Data access | `fabricops_kit.write_lakehouse_table` | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
-| Data access | `fabricops_kit.write_warehouse_table` | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
-| Governance review | `fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules` | Render interactive manual DQ rule authoring UI. |
-| Governance review | `fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules` | Render interactive schema, freshness, and profile behavior authoring UI. |
-| Governance review | `fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata` | Render one consolidated governed table metadata enrichment widget. |
-| Governance review | `fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance` | Render interactive governance policy and shared rule-review controls. |
-| Governance review | `fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target` | Render an interactive guardrail target selector and return handover state. |
-| Pipeline | `fabricops_kit.pipeline.display_guardrail_results` | Return guardrail results prepared for summary, detailed, or debug display. |
-| Pipeline | `fabricops_kit.pipeline.prepare_pipeline_table_configs` | Prepare source or target table configs for a pipeline notebook. |
-| Pipeline | `fabricops_kit.pipeline.run_table_guardrails` | Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails. |
-| Pipeline | `fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap` | Start a guided notebook run and store runtime defaults. |
-| Pipeline | `fabricops_kit.pipeline.write_pipeline_lineage` | Write many-to-many source-to-target lineage rows. |
-| Pipeline | `fabricops_kit.pipeline.write_pipeline_run_summary` | Write a pipeline runtime summary to metadata. |
+## Maintainer release checks
+
+Before release sign-off, maintainers should:
+
+1. Inspect `fabricops_kit.public_api.SUPPORTED_PUBLIC_API` for the supported callable inventory.
+2. Run the public contract tests that import and validate `SUPPORTED_PUBLIC_API`.
+3. Confirm notebook templates and public guidance depend only on supported public functions.
+4. Use generated API/reference pages for callable details without treating generated pages as the source of truth for the release boundary.
+
+## Supporting maintainer references
+
+Use these pages after confirming the public API release contract:
+
+- [Generated function catalogue](index.md): review public callable docstrings and notebook-facing usage notes generated from source inputs.
+- [Public function call-flow dashboard](../assets/public-function-call-flows-dashboard.html): review public API shape, chain depth, fan-out, source Python files, cross-layer warnings, and flattening recommendations.
+- [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel): search/filter callable-flow functions, select rows, and export AI refactor packets.
+- [Public function architecture](public-function-architecture.md): confirm public, internal, and private helper boundaries before refactoring.
+- [Function call graph](function-call-graph.md): inspect generated callable relationships when reviewing architecture changes.
+- [Release management](../development/release-management.md): follow the GitHub-only release process, validation checks, and tagging sequence.
