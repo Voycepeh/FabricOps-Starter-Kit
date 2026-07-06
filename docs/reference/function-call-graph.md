@@ -54,7 +54,7 @@ The dashboard helps reviewers:
 * select a public function and inspect its call tree
 * jump from the call tree to the callable inventory
 * scope the inventory around the selected function and its nested dependencies
-* spot architecture risks, wide flows, deep flows, and helper cleanup candidates
+* spot architecture violations, wide flows, deep flows, and helper cleanup candidates
 * export focused AI refactor packets for the selected cleanup scope
 
 The public function table is the top-level review surface. Selecting a public function scopes the rest of the dashboard around that callable flow.
