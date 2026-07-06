@@ -16,15 +16,16 @@ Read a table from a configured Fabric warehouse target.
 
 `fabricops_kit/io/read_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L49">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_table.py#L10-L70">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** `02_pipeline`, `99_explore`
 
 ## Usage notes
 
@@ -44,6 +45,7 @@ def read_warehouse_table(
     target: str='warehouse',
     spark_session=None,
     context: dict[str, Any] | None=None,
+    **options,
 ):
 ```
 
@@ -67,7 +69,7 @@ df = read_warehouse_table(schema="dbo", table="orders", spark_session=spark)
 | `table_name` | `str` | Yes | Warehouse table name. |
 | `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
 ## Returns
 
@@ -91,3 +93,8 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

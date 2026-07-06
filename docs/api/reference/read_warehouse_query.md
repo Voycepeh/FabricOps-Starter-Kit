@@ -14,17 +14,18 @@ Read warehouse rows with SQL pushdown through a configured Fabric warehouse targ
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/read_warehouse_query.py:10`
+`fabricops_kit/io/read_warehouse_query.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L10-L46">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_warehouse_query.py#L15-L74">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** `02_pipeline`, `99_explore`
 
 ## Usage notes
 
@@ -43,6 +44,7 @@ def read_warehouse_query(
     target: str='warehouse',
     spark_session=None,
     context: dict[str, Any] | None=None,
+    **options,
 ):
 ```
 
@@ -65,7 +67,7 @@ df = read_warehouse_query("SELECT order_id, status FROM dbo.orders WHERE status 
 | `query` | `str` | Yes | SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric warehouse connector. |
 | `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
 ## Returns
 
@@ -89,3 +91,8 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

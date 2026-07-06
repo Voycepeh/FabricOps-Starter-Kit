@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 import html
 import json
+import sys
 import os
 from pathlib import Path
 import re
@@ -14,7 +15,12 @@ import runpy
 import subprocess
 from typing import Any, Iterable
 
+
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.generated_artifact_metadata import read_generated_artifact_metadata, update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -33,6 +39,24 @@ GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
+
+
+def _generated_freshness_note() -> list[str]:
+    """Return markdown lines describing generated reference freshness."""
+    metadata = read_generated_artifact_metadata()
+    artifacts = metadata.get("artifacts", {})
+    if not isinstance(artifacts, dict):
+        artifacts = {}
+    reference_pages = artifacts.get("individual_function_reference_pages", {})
+    call_flow_data = artifacts.get("public_function_call_flows_json", {})
+    reference_generated = reference_pages.get("generated_at_sgt") if isinstance(reference_pages, dict) else None
+    data_generated = call_flow_data.get("generated_at_sgt") if isinstance(call_flow_data, dict) else None
+    return [
+        "",
+        "!!! info \"Generated reference freshness\"",
+        f"    Reference pages generated: {reference_generated or 'Generated timestamp unavailable'}",
+        f"    Call-flow data generated: {data_generated or 'Generated timestamp unavailable'}",
+    ]
 
 def plural_word(count: int, singular: str, plural: str) -> str:
     """Return singular or plural text for a count."""
@@ -4782,6 +4806,12 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
+    update_generated_artifact_metadata(
+        artifact_key="individual_function_reference_pages",
+        label="Individual function reference pages",
+        generator="scripts/generate_individual_function_reference_pages.py",
+        output_path="docs/api/reference",
+    )
     for public_flow in dashboard_public_functions:
         short_name = str(public_flow["function_name"])
         node = node_by_public_function_name.get(short_name)
@@ -4983,6 +5013,7 @@ def main() -> None:
                 lines.extend(["", "_No used-by or calls references detected._"])
 
         if node["exported"]:
+            lines.extend(_generated_freshness_note())
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             pass

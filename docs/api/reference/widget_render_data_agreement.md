@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 238
+- Downstream callables: 236
 - Shared helpers: 114
-- Private helpers: 124
+- Private helpers: 122
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_agreement">Open focused call flow in dashboard</a>
 
@@ -80,3 +80,8 @@ Not documented yet
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

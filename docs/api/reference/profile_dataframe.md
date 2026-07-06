@@ -21,10 +21,11 @@ Profile a source or target DataFrame for schema, quality, and catalogue evidence
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `99_explore`
+**Used in notebooks:** `02_pipeline`, `99_explore`
 
 ## Usage notes
 
@@ -102,3 +103,8 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 - [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
 - [Governance Review](../../notebook-templates-implementation-guide/governance-review.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

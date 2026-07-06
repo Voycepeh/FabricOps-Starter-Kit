@@ -107,7 +107,8 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
 
     unused_records = payload["defined_but_not_used"]
     assert {item["function_name"] for item in unused_records} == {"unused_local"}
-    assert payload["metadata"]["generated_at_sgt"].endswith(" SGT")
+    assert "generated_at_sgt" not in payload["metadata"]
+    assert "generated_at_utc" not in payload["metadata"]
     assert payload["metadata"]["source_json_url"] == flows.SOURCE_JSON_URL
 
 
@@ -360,7 +361,7 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
 
     html = dashboard.render_dashboard(payload)
 
-    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in html
+    assert "loadDashboardBundle('../reference/_data/public-function-call-flows.json', '../reference/_data/generated-artifacts.json')" in html
     assert "public-function-call-flows-json" not in html
     assert "fabricops_public_function_call_flows_v2" not in html
     assert "selected-public-function-panel" in html
@@ -500,14 +501,14 @@ def test_dashboard_generator_writes_only_dashboard_html(tmp_path: Path) -> None:
 
     assert dashboard_path.exists()
     assert not data_path.exists()
-    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in dashboard_path.read_text(encoding="utf-8")
+    assert "loadDashboardBundle('../reference/_data/public-function-call-flows.json', '../reference/_data/generated-artifacts.json')" in dashboard_path.read_text(encoding="utf-8")
 
 
 def test_dashboard_generator_does_not_scan_source() -> None:
     """Validate dashboard generation has no source-scanning dependency."""
     assert not hasattr(dashboard, "discover_modules")
     assert not hasattr(dashboard, "build_payload")
-    assert "loadDashboardData('../reference/_data/public-function-call-flows.json')" in dashboard.render_dashboard()
+    assert "loadDashboardBundle('../reference/_data/public-function-call-flows.json', '../reference/_data/generated-artifacts.json')" in dashboard.render_dashboard()
 
 
 def test_generated_json_includes_source_traceability_fields(tmp_path: Path) -> None:
@@ -564,3 +565,57 @@ def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
     assert "Too many helpers" not in docs
     assert "Shared helper | The helper is used by more than one public function" not in docs
     assert "Maybe combine" not in docs
+
+
+def test_generated_artifact_metadata_preserves_entries_and_formats_sgt(tmp_path: Path) -> None:
+    """Validate generated artifact metadata writes one key without deleting peers."""
+    from datetime import UTC, datetime
+
+    from scripts.generated_artifact_metadata import format_sgt_timestamp, update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    update_generated_artifact_metadata(
+        "first",
+        "First artifact",
+        "scripts/first.py",
+        "docs/first.json",
+        metadata_path=metadata_path,
+    )
+    payload = update_generated_artifact_metadata(
+        "second",
+        "Second artifact",
+        "scripts/second.py",
+        "docs/second.json",
+        metadata_path=metadata_path,
+    )
+
+    assert set(payload["artifacts"]) == {"first", "second"}
+    assert payload["artifacts"]["first"]["label"] == "First artifact"
+    assert format_sgt_timestamp(datetime(2026, 7, 6, 7, 26, tzinfo=UTC)) == "06 Jul 2026, 3:26 PM SGT"
+    assert payload["artifacts"]["second"]["generated_at_sgt"].endswith(" SGT")
+
+
+def test_public_call_flow_write_drops_stale_timestamps(tmp_path: Path) -> None:
+    """Confirm call-flow JSON no longer preserves stale inline generated timestamps."""
+    data_path = tmp_path / "public-function-call-flows.json"
+    data_path.write_text(
+        '{"metadata":{"generated_at_utc":"old","generated_at_sgt":"01 Jan 2000, 1:00 AM SGT"}}',
+        encoding="utf-8",
+    )
+    payload = {"metadata": {"schema": "fabricops_public_function_call_flows_v2"}, "public_functions": []}
+
+    flows.write_json(payload, data_path=data_path)
+
+    written = data_path.read_text(encoding="utf-8")
+    assert "generated_at_utc" not in written
+    assert "generated_at_sgt" not in written
+
+
+def test_dashboard_uses_shared_generated_artifact_metadata() -> None:
+    """Ensure dashboard freshness does not depend on call-flow JSON metadata timestamps."""
+    html = dashboard.render_dashboard()
+
+    assert "generated-artifacts.json" in html
+    assert "Call-flow data generated:" in html
+    assert "Dashboard generated:" in html
+    assert "DATA.metadata||{}).generated_at_sgt" not in html

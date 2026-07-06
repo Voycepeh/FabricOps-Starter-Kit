@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 449
+- Downstream callables: 446
 - Shared helpers: 136
-- Private helpers: 313
+- Private helpers: 310
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open focused call flow in dashboard</a>
 
@@ -106,3 +106,8 @@ Not documented yet
 ## See also
 
 - [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

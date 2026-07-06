@@ -2706,8 +2706,6 @@
     }
   ],
   "metadata": {
-    "generated_at_sgt": "03 Jul 2026, 6:10 PM SGT",
-    "generated_at_utc": "2026-07-03T10:10:44.645490+00:00",
     "public_function_source": "src/fabricops_kit/__init__.py::__all__",
     "schema": "fabricops_public_function_call_flows_v2",
     "source": "src/fabricops_kit",

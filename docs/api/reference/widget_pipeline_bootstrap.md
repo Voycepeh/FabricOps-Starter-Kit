@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 121
+- Downstream callables: 120
 - Shared helpers: 61
-- Private helpers: 60
+- Private helpers: 59
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_pipeline_bootstrap">Open focused call flow in dashboard</a>
 
@@ -22,10 +22,9 @@ Bootstrap a guided pipeline notebook run and store runtime defaults.
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `99_explore`
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -101,3 +100,8 @@ Not documented yet
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 - [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

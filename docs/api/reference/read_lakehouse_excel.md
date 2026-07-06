@@ -9,22 +9,22 @@
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_excel">Open focused call flow in dashboard</a>
 
 
-Read an Excel file from a configured Fabric-resolved path.
+Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/io/read_lakehouse_excel.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L35">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L52">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `99_explore`
 
 ## Usage notes
 
@@ -92,3 +92,8 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT
