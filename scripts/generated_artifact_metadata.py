@@ -43,7 +43,10 @@ def read_generated_artifact_metadata(
 
 def _preserve_generated_artifact_timestamps() -> bool:
     """Return whether metadata updates should preserve existing timestamps."""
-    return os.environ.get(PRESERVE_TIMESTAMPS_ENV) == "1"
+    value = os.environ.get(PRESERVE_TIMESTAMPS_ENV)
+    if value is None:
+        return False
+    return value.strip().lower() not in {"", "0", "false", "no", "off"}
 
 
 def _artifact_timestamps(artifact: object) -> tuple[str, str] | None:
@@ -68,7 +71,8 @@ def update_generated_artifact_metadata(
     payload = read_generated_artifact_metadata(metadata_path)
     artifacts = payload.setdefault("artifacts", {})
     assert isinstance(artifacts, dict)
-    preserved_timestamps = _artifact_timestamps(artifacts.get(artifact_key)) if _preserve_generated_artifact_timestamps() else None
+    preserve_timestamps = _preserve_generated_artifact_timestamps()
+    preserved_timestamps = _artifact_timestamps(artifacts.get(artifact_key)) if preserve_timestamps else None
     if preserved_timestamps:
         generated_at_utc, generated_at_sgt = preserved_timestamps
     else:
@@ -83,9 +87,11 @@ def update_generated_artifact_metadata(
         "generated_at_sgt": generated_at_sgt,
     }
     payload["schema"] = SCHEMA
-    if _preserve_generated_artifact_timestamps() and isinstance(payload.get("last_generated_at_utc"), str) and isinstance(payload.get("last_generated_at_sgt"), str):
-        pass
-    else:
+    if not (
+        preserve_timestamps
+        and isinstance(payload.get("last_generated_at_utc"), str)
+        and isinstance(payload.get("last_generated_at_sgt"), str)
+    ):
         payload["last_generated_at_utc"] = generated_at_utc
         payload["last_generated_at_sgt"] = generated_at_sgt
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
