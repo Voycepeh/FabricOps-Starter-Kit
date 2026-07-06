@@ -25,12 +25,22 @@ The Function Call Graph is a reviewer workflow for checking public callable func
 Use this page as the entry point for the current callable architecture review flow.
 
 ```text
-Repository code → source scan → public-function-call-flows.json → dashboard and reference pages
+Repository code
+→ agent reads AGENTS.md and public-function-call-flows.json
+→ agent edits function-level source code
+→ scanner regenerates public-function-call-flows.json
+→ dashboard and reference pages consume the refreshed JSON
 ```
 
-![Function Call Graph setup](../assets/fabricops-call-graph-setup.png)
-
 The dashboard is the main reviewer surface. The JSON contract is the generated data source behind the dashboard and reference pages.
+
+This flow is not a hard architecture enforcement gate. It is an agent and reviewer feedback loop:
+
+* agents inspect the committed call-flow JSON before editing public functions or helpers
+* agents treat source code as the source of truth if the JSON drifts
+* agents rerun the scanner after function-level source changes
+* the refreshed JSON updates the dashboard and generated reference surfaces
+* reviewers use the dashboard to decide whether cleanup is needed
 
 ## 1. Open the dashboard
 
@@ -44,7 +54,7 @@ The dashboard helps reviewers:
 * select a public function and inspect its call tree
 * jump from the call tree to the callable inventory
 * scope the inventory around the selected function and its nested dependencies
-* spot architecture violations, wide flows, deep flows, and helper cleanup candidates
+* spot architecture risks, wide flows, deep flows, and helper cleanup candidates
 * export focused AI refactor packets for the selected cleanup scope
 
 The public function table is the top-level review surface. Selecting a public function scopes the rest of the dashboard around that callable flow.
@@ -77,16 +87,16 @@ public callable → helper → helper → helper
 
 ## 3. Use architecture signals to decide cleanup
 
-The generated contract keeps deterministic architecture signals available for the dashboard and docs.
+The generated contract keeps deterministic architecture signals available for the dashboard and docs. These signals guide review and cleanup; they are not presented here as a standalone enforcement gate.
 
 ### Public flow signals
 
 | Signal | Calculation | Reviewer action |
 |---|---|---|
 | Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
-| Architecture violation | Any Type 1 to Type 6 architecture violation appears in the callable flow | Fix boundary violations before helper cleanup. |
+| Architecture risk | Any Type 1 to Type 6 architecture risk appears in the callable flow | Review boundary shape before helper cleanup. |
 
-### Architecture violation types
+### Architecture risk types
 
 | Type | Rule | Why it matters |
 |---|---|---|
@@ -116,7 +126,7 @@ The export should keep the packet focused on the selected public callable flow r
 
 Use the export packet for:
 
-* public functions with architecture violations
+* public functions with architecture risks
 * public functions with large width or depth
 * selected call flows with many helper layers
 * private helpers that can be inlined into their owner
@@ -145,7 +155,21 @@ The generator writes:
 
 The repository source code and JSON generator remain authoritative if a committed JSON snapshot drifts.
 
-## 6. Keep generator ownership separated
+## 6. Agent update contract
+
+`AGENTS.md` is the operating guide for Codex and other agent contributions. It tells agents to use the public call-flow JSON as a planning and review contract before changing function-level source code.
+
+Before changing a public callable, shared helper, private helper, callable classification, or generated reference contract, agents should check the relevant entries in `public-function-call-flows.json` to understand the current public callable scope, callees, helper reachability, source locations, architecture signals, cleanup signals, and defined-but-not-used functions.
+
+When changing function-level source code, agents must run:
+
+```bash
+PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+```
+
+Agents commit the regenerated `docs/reference/_data/public-function-call-flows.json` when the change affects callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics.
+
+## 7. Keep generator ownership separated
 
 Generator ownership is split across focused scripts:
 
@@ -161,16 +185,17 @@ For function-level source changes that affect callable structure, update the sou
 
 Do not commit generated dashboard HTML or individual function pages in ordinary source cleanup PRs unless the PR is intentionally refreshing those generated surfaces.
 
-## 7. Enforcement
+## 8. Validation and review
 
 The callable architecture validation test is:
 
 * [`tests/contract/test_callable_architecture_validation.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/tests/contract/test_callable_architecture_validation.py)
 
-The enforcement layer should protect the same callable architecture contract used by the dashboard and generated reference pages. Source-level boundary findings should prevent accidental architecture drift, while cleanup-only findings can remain review signals until a focused cleanup PR handles them.
+Validation and dashboard review are supporting controls around the same generated call-flow contract. They should help agents and reviewers notice architecture drift, stale JSON, or risky helper relationships, but this page should not describe the dashboard as a hard enforcement layer.
 
 For reviews, use:
 
 * source code and `scripts/generate_public_function_call_flows_json.py` as the contract source of truth
+* `AGENTS.md` as the agent operating contract for reading and refreshing call-flow JSON
 * deployed dashboard output as the current docs-build review surface
 * checked-in `docs/reference/_data/public-function-call-flows.json` as the committed architecture contract snapshot
