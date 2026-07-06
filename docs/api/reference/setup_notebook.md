@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 15
-- Shared helpers: 5
-- Private helpers: 10
+- Downstream callables: 8
+- Shared helpers: 4
+- Private helpers: 4
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_notebook">Open focused call flow in dashboard</a>
 
@@ -14,9 +14,9 @@ Shared environment setup and runtime validation for notebook templates.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_notebook.py:11`
+`fabricops_kit/config/setup_notebook.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L11-L65">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L145">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -94,3 +94,8 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 - [Metadata Tables](../../reference/metadata.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

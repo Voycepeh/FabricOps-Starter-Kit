@@ -16,15 +16,15 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 `fabricops_kit/io/write_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L43">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L63">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `99_explore`
 
 ## Usage notes
 
@@ -44,6 +44,7 @@ def write_warehouse_table(
     table_name: str,
     target: str='warehouse',
     mode: str='append',
+    options: dict[str, Any] | None=None,
     context: dict[str, Any] | None=None,
 ):
 ```
@@ -69,6 +70,7 @@ write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="order
 | `table_name` | `str` | Yes | Warehouse table name. |
 | `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
 | `mode` | `str` | No | Spark writer mode supported by the Fabric connector. |
+| `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. Required Fabric connector options are always set from ``00_env_config``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 
 ## Returns
@@ -93,3 +95,8 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

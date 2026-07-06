@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 import json
+import sys
 from pathlib import Path
-from zoneinfo import ZoneInfo
 from typing import Any
 
+
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.generated_artifact_metadata import update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -19,8 +23,6 @@ SOURCE_JSON_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/do
 SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/"
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
-SINGAPORE_TZ = ZoneInfo("Asia/Singapore")
-
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -28,12 +30,6 @@ SINGAPORE_TZ = ZoneInfo("Asia/Singapore")
 # TODO: Polish the dashboard mobile layout.
 # TODO: Detect unresolved calls that appear to target local/internal helpers without faking the signal.
 
-
-def format_singapore_timestamp(value: datetime) -> str:
-    """Return a dashboard-friendly Singapore timestamp."""
-    sgt_value = value.astimezone(SINGAPORE_TZ)
-    hour = sgt_value.strftime("%I").lstrip("0") or "12"
-    return f"{sgt_value:%d %b %Y}, {hour}:{sgt_value:%M %p} SGT"
 
 
 @dataclass(frozen=True)
@@ -358,12 +354,9 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
         })
     defined_functions = [function_record(info, public_qns) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
     unused = [unused_record(functions[qn]) for qn in sorted(set(functions) - used_all)]
-    generated_at = datetime.now(UTC)
     return {
         "metadata": {
             "schema": "fabricops_public_function_call_flows_v2",
-            "generated_at_utc": generated_at.isoformat(),
-            "generated_at_sgt": format_singapore_timestamp(generated_at),
             "source_json_url": SOURCE_JSON_URL,
             "source": "src/fabricops_kit",
             "public_function_source": "src/fabricops_kit/__init__.py::__all__",
@@ -457,26 +450,17 @@ def unused_record(info: FunctionInfo) -> dict[str, Any]:
     }
 
 
-
-def preserve_existing_generated_timestamps(payload: dict[str, Any], data_path: Path) -> None:
-    """Reuse existing generated timestamps so repeated writes are deterministic."""
-    if not data_path.exists():
-        return
-    try:
-        existing = json.loads(data_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return
-    existing_metadata = existing.get("metadata", {})
-    metadata = payload.setdefault("metadata", {})
-    for key in ("generated_at_utc", "generated_at_sgt"):
-        if existing_metadata.get(key):
-            metadata[key] = existing_metadata[key]
-
 def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
     """Write only the public function call-flow JSON output."""
     data_path.parent.mkdir(parents=True, exist_ok=True)
-    preserve_existing_generated_timestamps(payload, data_path)
     data_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if data_path == DATA_PATH:
+        update_generated_artifact_metadata(
+            artifact_key="public_function_call_flows_json",
+            label="Public function call-flow data",
+            generator="scripts/generate_public_function_call_flows_json.py",
+            output_path="docs/reference/_data/public-function-call-flows.json",
+        )
 
 
 def main() -> None:

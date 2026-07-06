@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 55
+- Downstream callables: 54
 - Shared helpers: 27
-- Private helpers: 28
+- Private helpers: 27
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open focused call flow in dashboard</a>
 
@@ -138,3 +138,8 @@ Not documented yet
 
 - [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
 - [Metadata Tables](../../reference/metadata.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

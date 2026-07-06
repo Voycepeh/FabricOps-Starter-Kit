@@ -9,22 +9,22 @@
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_csv">Open focused call flow in dashboard</a>
 
 
-Read a CSV file from a configured Fabric-resolved path.
+Read a CSV file from a configured Fabric-resolved path through Spark CSV.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/io/read_lakehouse_csv.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L35">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L49">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `99_explore`
 
 ## Usage notes
 
@@ -68,7 +68,7 @@ df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spar
 | `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
 | `header` | `bool` | No | Whether the first row contains column names. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options forwarded to Spark's CSV reader. |
 
 ## Returns
 
@@ -92,3 +92,8 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

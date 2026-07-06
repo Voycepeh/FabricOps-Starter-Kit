@@ -92,3 +92,8 @@ Not documented yet
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 - [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

@@ -16,7 +16,7 @@ Read a Delta table from a configured Fabric lakehouse target.
 
 `fabricops_kit/io/read_lakehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L38">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_table.py#L10-L56">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,6 +45,7 @@ def read_lakehouse_table(
     schema: str | None=None,
     spark_session=None,
     context: dict[str, Any] | None=None,
+    **options,
 ):
 ```
 
@@ -68,7 +69,7 @@ df_orders = read_lakehouse_table("orders", target="source", schema=SOURCE_SCHEMA
 | `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
 | `schema` | `str \| None` | No | Optional schema override for schema-enabled lakehouses. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Delta reader options forwarded to ``DataFrameReader``. |
 
 ## Returns
 
@@ -92,3 +93,8 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

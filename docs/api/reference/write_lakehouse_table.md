@@ -14,19 +14,20 @@ Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/write_lakehouse_table.py:10`
+`fabricops_kit/io/write_lakehouse_table.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L10-L57">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L15-L87">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">99_explore</span>
 <span class="reference-chip">example_pipeline_demo</span>
 <span class="reference-chip">example_dq_rule_smoke_test</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `example_pipeline_demo`, `example_dq_rule_smoke_test`
+**Used in notebooks:** `02_pipeline`, `99_explore`, `example_pipeline_demo`, `example_dq_rule_smoke_test`
 
 ## Usage notes
 
@@ -77,7 +78,7 @@ write_lakehouse_table(df_orders, "orders_clean", target="unified", schema=UNIFIE
 | `mode` | `str, default="append"` | No | Spark write mode: ``append``, ``overwrite``, ``errorifexists``, or ``ignore``. |
 | `partition_by` | `str or list[str]` | No | Column or columns used to physically partition the Delta table. |
 | `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning before write. |
-| `options` | `dict` | No | Additional Spark DataFrameWriter options. |
+| `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options forwarded before saving the configured Lakehouse Tables path. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
 
@@ -103,3 +104,8 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 ## See also
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT

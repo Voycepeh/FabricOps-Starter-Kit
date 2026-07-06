@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 21
-- Shared helpers: 7
-- Private helpers: 14
+- Downstream callables: 45
+- Shared helpers: 25
+- Private helpers: 20
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open focused call flow in dashboard</a>
 
@@ -14,9 +14,9 @@ Create or validate all FabricOps metadata tables through one setup action.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:98`
+`fabricops_kit/config/setup_metadata_tables.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L98-L177">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L16-L215">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -96,3 +96,8 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 - [Metadata Tables](../../reference/metadata.md)
+
+
+!!! info "Generated reference freshness"
+    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
+    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT
