@@ -1,17 +1,48 @@
 # Run Environment Setup
 
-Run `00_env_config` after editing the demo settings.
+After uploading the template files in your workspace 
+
+Open`00_env_config` 
 
 ## What to do
 
 1. Open the copied `00_env_config` notebook.
-2. Confirm the selected environment and item names are correct.
-3. Run the setup cells that create the shared `CONFIG` and `ENV` values.
-4. Run metadata setup so the configured metadata target has the required `METADATA_*` tables.
-5. Leave the notebook available so later notebooks can reuse the same settings.
+2. Attach the Environment to notebooks
+   - Select the Fabric Environment that contains the uploaded FabricOps wheel.
+   - Save the notebook after selecting the Environment.
+   - You need to do this for all the template notebooks , unless someone has already set the default environment to be one that already have our FabricOps custom library setup.
 
-## Expected evidence
+A notebook must be attached to the Environment before it can import the custom library. Restart the session after attachment or library changes so the runtime loads the published Environment.
 
-The configured metadata lakehouse contains the implemented `METADATA_*` tables, and downstream notebooks can use the same `CONFIG` and `ENV` values.
+![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
 
-For all editable and advanced `00_env_config` settings, see [Template Notebooks](../notebook-templates-implementation-guide/index.md#00_env_config).
+3. Setup Runtime config
+- Things like the timezone all the functions and widgets will write in 
+- The default schema that the fuctions will read from / write to in your lakehouse 
+
+![Runtime config](../assets/fabric-example-00_config_runtime_config.png)
+
+4. Setup Path config
+- This is where you pre-define all the path to the respective lakehouse/warehouses that you will use within this environment, you get this from the url of the lakehouse/warehouses which is essentially the ABFS (Azure Blob Filesystem) path
+
+![Path config](../assets/fabric-example-00_config_paths.png)
+
+5. Widget Specific config
+- If you are utilizing our widgets that we have created you may customize the values in certain dropdown columns or get it to store extra columns via custom Json column
+
+![Widget config](../assets/fabric-example-00_config_widgets_config_setup.png)
+
+6. One time setup of metadata tables 
+- We have a funciton to help you pre define the schema and create all the metatda tables you will need to use for the widgets 
+- Just run it once and then freeze this code block
+
+![Setup Metadata Tables](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
+
+- Completed creation of the tables 
+![Metadata Tables Done](../assets/docs/assets/fabric-example-00_config_metadata_tables_setup.png)
+
+## Expected result
+
+You have a FabricOps `00_env_config` file that you will call and run within every other notebook tempaltes.
+
+Next, continue to [your first hands on notebook](run-io-and-profiling-demo.md).

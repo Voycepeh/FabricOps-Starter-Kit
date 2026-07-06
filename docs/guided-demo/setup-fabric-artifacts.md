@@ -61,57 +61,11 @@ Download or copy editable notebook templates from the GitHub [`templates/noteboo
 | ----------------- | ----------------------- |
 | `00_env_config` | Defines shared environment, workspace, lakehouse, warehouse, metadata target, and audit settings. |
 | `01_agreement` | Captures steward, agreement, and agreement evidence metadata. |
-| `example_pipeline_demo` | Generates deterministic demo source scenarios and demo-scoped DQ rules. |
 | `02_pipeline` | Runs governed source-to-target processing, profiles data, evaluates guardrails, writes outputs, and records run evidence. |
 | `03_governance` | Reviews observed metadata, enrichment intent, and guardrail intent. |
 | `99_explore` | Supports optional read-only discovery or troubleshooting. |
-| `example_dq_rule_smoke_test` | Optional smoke-test notebook for DQ rule behavior. |
-
-For notebook responsibilities and editable settings, see [Template Notebooks](../notebook-templates-implementation-guide/index.md).
-
-## 6. Attach the Environment to notebooks
-
-1. Open each copied notebook template in Fabric.
-2. Select the Fabric Environment that contains the uploaded FabricOps wheel.
-3. Save the notebook after selecting the Environment.
-4. Restart the notebook session if the session was already running.
-
-A notebook must be attached to the Environment before it can import the custom library. Restart the session after attachment or library changes so the runtime loads the published Environment.
-
-![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
-
-## 7. Confirm notebook import works
-
-Run this import smoke test in at least one copied notebook after attaching the Environment:
-
-```python
-import fabricops_kit as fsk
-
-print(f"FabricOps Starter Kit version: {fsk.__version__}")
-print(f"Available helper count: {len(fsk.__all__)}")
-```
-
-Use the module name `fabricops_kit`, not the package distribution name `fabricops-kit`.
-
-If the import fails, check the Fabric setup in this order:
-
-1. The uploaded file is the generated `.whl` from `dist/`.
-2. The Environment has been saved or published after the upload.
-3. The notebook is attached to that Environment.
-4. The notebook session was restarted after attaching or updating the Environment.
-5. The notebook import uses `fabricops_kit`.
-
-## 8. Confirm first runtime readiness
-
-Before you run [Run Environment Setup](run-environment-setup.md), confirm the workspace is ready for the first runtime configuration pass:
 
 ![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
-
-1. The copied notebooks are saved in the intended workspace.
-2. The Fabric Environment is saved or published with the uploaded wheel.
-3. At least one copied notebook can run `import fabricops_kit as fsk` successfully.
-4. The `metadata_lakehouse`, `source_lakehouse`, `unified_lakehouse`, and optional `product_warehouse` names are recorded for `00_env_config`.
-5. The metadata target is planned for configured `metadata` routing rather than default-lakehouse reads or writes.
 
 ## Expected result
 
