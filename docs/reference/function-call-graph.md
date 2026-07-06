@@ -156,4 +156,4 @@ The generated artifacts have separate owners:
 | `scripts/generate_public_function_call_flows_dashboard.py` | `docs/assets/public-function-call-flows-dashboard.html` |
 | `scripts/generate_individual_function_reference_pages.py` | Individual pages under `docs/api/reference/` and `docs/reference/index.md` |
 
-`docs/reference/function-call-graph.md` is a standalone, manually maintained explanatory page. The CI, development-docs, and release workflows restore this file after legacy reference generation so the generated copy is never built or deployed.
+`docs/reference/function-call-graph.md` is a standalone, manually maintained explanatory page. The CI, development-docs, and release workflows preserve this file after legacy reference generation so the generated copy is never built or deployed.
