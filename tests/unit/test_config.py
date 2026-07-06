@@ -33,7 +33,6 @@ from tests.helpers import framework_config, store
 pytestmark = pytest.mark.unit
 
 
-
 def test_config_setup_public_api_signatures_match_frozen_contract():
     """Verify config setup public API signatures match the frozen contract."""
     assert str(inspect.signature(setup_notebook)) == (
@@ -47,6 +46,7 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
+
 
 def test_get_fabric_context_uses_env_as_primary_key():
     """Verify explicit Fabric contexts expose env as the primary environment key."""
@@ -113,6 +113,7 @@ def test_data_agreement_widgets_reject_blank_custom_field_keys():
     with pytest.raises(ValueError, match="Governance custom fields require a key"):
         DataAgreementConfig(data_steward_widget={"custom_fields": [{"key": " "}]})
 
+
 def test_env_config_template_does_not_expose_prompt_boilerplate_or_unused_defaults():
     """Verify env config template does not expose prompt boilerplate or unused defaults."""
     notebook = json.loads(Path("templates/notebooks/00_env_config.ipynb").read_text(encoding="utf-8"))
@@ -143,9 +144,11 @@ def test_framework_config_uses_simplified_config_sections():
 
 def test_dict_framework_config_defaults_simplified_sections_when_omitted():
     """Verify dict framework config defaults simplified sections when omitted."""
-    config = validate_framework_config({
-        "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
-    })
+    config = validate_framework_config(
+        {
+            "path_config": PathConfig(paths={"dev": {"source": store(), "unified": store(name="unified")}}),
+        }
+    )
 
     assert isinstance(config.governance_config, GovernanceConfig)
     assert isinstance(config.data_agreement_config, DataAgreementConfig)
@@ -212,8 +215,10 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
     class Table:
         def __init__(self, columns):
             self.columns = columns
+
         def where(self, _expr):
             return self
+
         def count(self):
             return 1
 
@@ -241,7 +246,9 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
             raise RuntimeError(f"Table {table_name} does not exist")
         return Table(spark.tables[table_name])
 
-    def write_table(df, table_name, *, target, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs):
+    def write_table(
+        df, table_name, *, target, schema=None, mode="append", options=None, verbose=True, context=None, **_kwargs
+    ):
         assert target == "metadata"
         assert schema is None
         assert mode == "overwrite"
@@ -273,8 +280,10 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
     class Table:
         def __init__(self, columns):
             self.columns = columns
+
         def where(self, _expr):
             return self
+
         def count(self):
             return 0
 
@@ -284,7 +293,9 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
 
     spark = Spark()
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: Table(spark.schemas[table_name]))
+    monkeypatch.setattr(
+        setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: Table(spark.schemas[table_name])
+    )
 
     result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev")
 
@@ -301,8 +312,10 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
     class Table:
         def __init__(self, columns):
             self.columns = columns
+
         def where(self, _expr):
             return self
+
         def count(self):
             return 1
 
@@ -312,7 +325,11 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
 
     spark = Spark()
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]))
+    monkeypatch.setattr(
+        setup_module,
+        "read_lakehouse_table_core",
+        lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]),
+    )
 
     result = setup_metadata_tables(spark=spark, config=framework_config(), env="dev", metadata_schema="METADATA")
 
@@ -339,8 +356,10 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
     class Table:
         def __init__(self, columns):
             self.columns = columns
+
         def where(self, _expr):
             return self
+
         def count(self):
             return 1
 
@@ -350,13 +369,169 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
 
     spark = Spark()
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]))
+    monkeypatch.setattr(
+        setup_module,
+        "read_lakehouse_table_core",
+        lambda table_name, *, schema=None, **_kwargs: Table(spark.schemas[table_name]),
+    )
 
     result = setup_metadata_tables(spark=spark, config=cfg, env="dev")
 
     assert result["metadata_schema"] == "dbo"
     assert result["fully_qualified_tables"] == [f"dbo.{name}" for name in CANONICAL_METADATA_TABLES]
 
+
+def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):
+    """Verify setup metadata tables does not rewrite schema-compliant existing tables."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    def read_table(table_name, **_kwargs):
+        return Table(registry[table_name].fieldNames())
+
+    def write_table(*_args, **_kwargs):
+        raise AssertionError("schema-compliant tables must not be rewritten")
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+    assert result["status"] == "ready"
+    assert result["created_tables"] == []
+
+
+def test_setup_metadata_tables_migrates_catalogue_missing_nullable_fabric_store_target(monkeypatch):
+    """Verify setup metadata tables adds nullable fabric_store_target without data loss."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    catalogue_columns = [
+        name for name in registry["METADATA_DATA_CATALOGUE"].fieldNames() if name != "fabric_store_target"
+    ]
+    rows = [{"metadata_table_key": "orders", "table_name": "orders"}]
+    writes = []
+
+    class Table:
+        def __init__(self, columns, rows=None):
+            self.columns = list(columns)
+            self.rows = list(rows or [])
+
+        def withColumn(self, name, _value):  # noqa: N802
+            return Table([*self.columns, name], [{**row, name: None} for row in self.rows])
+
+        def select(self, *columns):
+            return Table(list(columns), [{column: row.get(column) for column in columns} for row in self.rows])
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
+    tables["METADATA_DATA_CATALOGUE"] = Table(catalogue_columns, rows)
+
+    def read_table(table_name, **_kwargs):
+        return tables[table_name]
+
+    def write_table(df, table_name, **kwargs):
+        writes.append((table_name, df, kwargs))
+        tables[table_name] = df
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+    migrated = tables["METADATA_DATA_CATALOGUE"]
+    assert result["status"] == "ready"
+    assert [write[0] for write in writes] == ["METADATA_DATA_CATALOGUE"]
+    assert migrated.columns == registry["METADATA_DATA_CATALOGUE"].fieldNames()
+    assert migrated.rows[0]["metadata_table_key"] == "orders"
+    assert migrated.rows[0]["table_name"] == "orders"
+    assert migrated.rows[0]["fabric_store_target"] is None
+    assert writes[0][2]["mode"] == "overwrite"
+    assert writes[0][2]["options"] == {"overwriteSchema": "true"}
+
+
+def test_setup_metadata_tables_migrates_multiple_nullable_columns(monkeypatch):
+    """Verify setup metadata tables adds multiple missing nullable columns."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    missing = {"fabric_store_target", "asset_kind"}
+    catalogue_columns = [name for name in registry["METADATA_DATA_CATALOGUE"].fieldNames() if name not in missing]
+    writes = []
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def withColumn(self, name, _value):  # noqa: N802
+            return Table([*self.columns, name])
+
+        def select(self, *columns):
+            return Table(list(columns))
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
+    tables["METADATA_DATA_CATALOGUE"] = Table(catalogue_columns)
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
+
+    def write_table(df, table_name, **_kwargs):
+        writes.append(table_name)
+        tables[table_name] = df
+
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+
+    setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+    assert writes == ["METADATA_DATA_CATALOGUE"]
+    assert tables["METADATA_DATA_CATALOGUE"].columns == registry["METADATA_DATA_CATALOGUE"].fieldNames()
+
+
+def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
+    """Verify setup metadata tables raises when missing columns cannot be safely added."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+    def read_table(table_name, **_kwargs):
+        if table_name == "METADATA_DATA_CATALOGUE":
+            return Table([name for name in registry[table_name].fieldNames() if name != "fabric_store_target"])
+        return Table(registry[table_name].fieldNames())
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+
+    with pytest.raises(
+        ValueError, match=r"METADATA_DATA_CATALOGUE is missing required column\(s\): fabric_store_target"
+    ):
+        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
 
 
 def test_setup_metadata_tables_non_missing_read_error_includes_original_exception(monkeypatch):
@@ -373,6 +548,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
     with pytest.raises(RuntimeError, match="Original ValueError: Delta log is corrupt"):
         setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+
 
 def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
@@ -416,6 +592,7 @@ def test_metadata_data_catalogue_schema_is_profile_evidence_only():
         "profile_baseline_mode",
     }:
         assert result_field not in fields
+
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
@@ -486,9 +663,7 @@ def test_audit_timezone_defaults_validates_and_fails_clearly():
 
 def test_framework_config_and_get_current_audit_timestamp_use_configured_timezone():
     """Verify framework config and get current audit timestamp use configured timezone."""
-    config = FrameworkConfig(
-        **{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"}
-    )
+    config = FrameworkConfig(**{**framework_config().__dict__, "audit_timezone": "Asia/Singapore"})
 
     assert config.audit_timezone == "Asia/Singapore"
     assert get_current_audit_timestamp(config=config).endswith("+08:00")
@@ -562,10 +737,7 @@ def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
     assert "_render_maintenance_widget_workflow" not in ROLE_TAGS_BY_NAME
     assert "_render_data_steward_widget_workflow" not in ROLE_TAGS_BY_NAME
     assert "_render_data_agreement_widget_workflow" not in ROLE_TAGS_BY_NAME
-    assert (
-        _role_dependency_signals("public_api_entrypoint", shared_roles[0])
-        == ["allowed_internal_role_call"]
-    )
+    assert _role_dependency_signals("public_api_entrypoint", shared_roles[0]) == ["allowed_internal_role_call"]
 
 
 def test_data_agreement_widget_callable_inventory_roles_are_current():
@@ -574,12 +746,30 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
 
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
-    assert rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"] == "shared_function"
-    assert rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"]["function_type"] == "private_function"
+    assert (
+        rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"]
+        == "shared_function"
+    )
+    assert (
+        rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"][
+            "function_type"
+        ]
+        == "private_function"
+    )
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
     public_functions = {row["qualified_name"]: row for row in flow_data["public_functions"]}
-    assert public_functions["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["flow"][0]["function_type"] == "public_function"
-    assert public_functions["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["flow"][0]["function_type"] == "public_function"
+    assert (
+        public_functions["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["flow"][0][
+            "function_type"
+        ]
+        == "public_function"
+    )
+    assert (
+        public_functions["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["flow"][0][
+            "function_type"
+        ]
+        == "public_function"
+    )
 
 
 def test_config_public_import_contract_and_package_shape():
@@ -633,9 +823,15 @@ def test_env_config_template_imports_config_from_root_only():
 
 def test_internal_modules_import_config_shared_helpers_not_old_module():
     """Verify internals use config.shared for internal helper imports."""
-    assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path("src/fabricops_kit/io/shared.py").read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path("src/fabricops_kit/pipeline/metadata_evidence.py").read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path(
+        "src/fabricops_kit/io/shared.py"
+    ).read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path(
+        "src/fabricops_kit/pipeline/metadata_evidence.py"
+    ).read_text(encoding="utf-8")
+    assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path(
+        "src/fabricops_kit/pipeline/shared.py"
+    ).read_text(encoding="utf-8")
 
 
 def test_setup_metadata_tables_uses_public_config_validation_helper_only():
@@ -644,14 +840,21 @@ def test_setup_metadata_tables_uses_public_config_validation_helper_only():
 
     assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
     assert "_validate_framework_config" not in source
-    assert "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry" in source
+    assert (
+        "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry"
+        in source
+    )
 
 
 def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     """Verify canonical metadata schemas and row coercion align with runtime writer types."""
     from datetime import date, datetime
 
-    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+    from fabricops_kit.config.metadata_schemas import (
+        AUDIT_SCHEMA_FIELDS,
+        CANONICAL_METADATA_TABLES,
+        metadata_table_schema_registry,
+    )
     from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 
     audit_columns = {name for name, _kind in AUDIT_SCHEMA_FIELDS}
@@ -680,7 +883,9 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
             if type_name == "TimestampType":
                 assert isinstance(row[field_name], datetime), f"{table_name}.{field_name} must be datetime"
             elif type_name == "DateType":
-                assert isinstance(row[field_name], date) and not isinstance(row[field_name], datetime), f"{table_name}.{field_name} must be date"
+                assert isinstance(row[field_name], date) and not isinstance(row[field_name], datetime), (
+                    f"{table_name}.{field_name} must be date"
+                )
             elif type_name == "BooleanType":
                 assert isinstance(row[field_name], bool), f"{table_name}.{field_name} must be bool"
             elif type_name == "LongType":
@@ -694,7 +899,6 @@ def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     writer_paths = [
         Path("src/fabricops_kit/pipeline/metadata_evidence.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
-
         Path("src/fabricops_kit/pipeline/shared.py"),
     ]
 
@@ -769,12 +973,18 @@ def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
 
 def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     """Verify metadata docs render canonical non-string types and audit order."""
-    from fabricops_kit.config.metadata_schemas import audit_schema_fields, metadata_table_schema_registry, metadata_table_schema_rows
+    from fabricops_kit.config.metadata_schemas import (
+        audit_schema_fields,
+        metadata_table_schema_registry,
+        metadata_table_schema_rows,
+    )
 
     registry = metadata_table_schema_registry()
     catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}
     agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
-    evidence = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT_EVIDENCE"])}
+    evidence = {
+        row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT_EVIDENCE"])
+    }
     docs_catalogue = {row["name"]: row["type"] for row in _metadata_doc_schema_rows("METADATA_DATA_CATALOGUE")}
 
     assert agreement["start_date"] == "date"
@@ -786,6 +996,6 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert docs_catalogue["policy_updated_at"] == "timestamp"
 
     for table_name, schema in registry.items():
-        assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()):] == [
+        assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()) :] == [
             name for name, _kind in audit_schema_fields()
         ], table_name

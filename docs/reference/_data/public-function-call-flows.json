@@ -529,12 +529,28 @@
       "source_start_line": 183
     },
     {
+      "function_name": "_migrate_missing_nullable_columns",
+      "function_type": "private_function",
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._migrate_missing_nullable_columns",
+      "source_end_line": 252,
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_start_line": 226
+    },
+    {
+      "function_name": "_null_literal_for_type",
+      "function_type": "private_function",
+      "qualified_name": "fabricops_kit.config.setup_metadata_tables._null_literal_for_type",
+      "source_end_line": 223,
+      "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+      "source_start_line": 218
+    },
+    {
       "function_name": "setup_metadata_tables",
       "function_type": "public_function",
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-      "source_end_line": 163,
+      "source_end_line": 215,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 13
+      "source_start_line": 16
     },
     {
       "function_name": "_get_fabric_runtime_metadata",
@@ -15573,7 +15589,7 @@
     {
       "architecture_violation_count": 0,
       "depth": 5,
-      "direct_call_count": 6,
+      "direct_call_count": 7,
       "files_touched": [
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/setup_metadata_tables.py",
@@ -15594,9 +15610,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
           "recursive": false,
-          "source_end_line": 163,
+          "source_end_line": 215,
           "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-          "source_start_line": 13,
+          "source_start_line": 16,
           "violation_details": [],
           "violation_types": []
         },
@@ -15673,6 +15689,44 @@
           "source_end_line": 90,
           "source_path": "src/fabricops_kit/config/metadata_schemas.py",
           "source_start_line": 32,
+          "violation_details": [],
+          "violation_types": []
+        },
+        {
+          "architecture_violations": [],
+          "call_count_from_parent": 1,
+          "depth": 1,
+          "distinct_caller_count": 1,
+          "edge_type": "direct",
+          "function_name": "_migrate_missing_nullable_columns",
+          "function_type": "private_function",
+          "inline_candidate": true,
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._migrate_missing_nullable_columns",
+          "recursive": false,
+          "source_end_line": 252,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_start_line": 226,
+          "violation_details": [],
+          "violation_types": []
+        },
+        {
+          "architecture_violations": [],
+          "call_count_from_parent": 1,
+          "depth": 2,
+          "distinct_caller_count": 1,
+          "edge_type": "direct",
+          "function_name": "_null_literal_for_type",
+          "function_type": "private_function",
+          "inline_candidate": true,
+          "parent_qualified_name": "fabricops_kit.config.setup_metadata_tables._migrate_missing_nullable_columns",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.setup_metadata_tables._null_literal_for_type",
+          "recursive": false,
+          "source_end_line": 223,
+          "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
+          "source_start_line": 218,
           "violation_details": [],
           "violation_types": []
         },
@@ -16426,13 +16480,13 @@
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
-      "scope": 27,
+      "scope": 29,
       "signals": [],
-      "source_end_line": 163,
+      "source_end_line": 215,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
-      "source_start_line": 13,
-      "transitive_function_count": 27,
-      "width": 6
+      "source_start_line": 16,
+      "transitive_function_count": 29,
+      "width": 7
     },
     {
       "architecture_violation_count": 0,
@@ -43133,9 +43187,9 @@
   ],
   "summary": {
     "defined_but_not_used_count": 38,
-    "defined_function_count": 293,
+    "defined_function_count": 295,
     "public_function_count": 25,
-    "used_function_count": 255
+    "used_function_count": 257
   },
   "used_functions": [
     "fabricops_kit.config.audit._audit_timestamp_value",
@@ -43154,6 +43208,8 @@
     "fabricops_kit.config.metadata_schemas.coerce_metadata_row_types",
     "fabricops_kit.config.metadata_schemas.metadata_table_field_names",
     "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",
+    "fabricops_kit.config.setup_metadata_tables._migrate_missing_nullable_columns",
+    "fabricops_kit.config.setup_metadata_tables._null_literal_for_type",
     "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
     "fabricops_kit.config.setup_notebook._get_fabric_runtime_metadata",
     "fabricops_kit.config.setup_notebook.setup_notebook",
