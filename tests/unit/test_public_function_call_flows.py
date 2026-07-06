@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+import time
 
 from scripts import generate_public_function_call_flows_dashboard as dashboard
 from scripts import generate_public_function_call_flows_json as flows
@@ -593,6 +594,93 @@ def test_generated_artifact_metadata_preserves_entries_and_formats_sgt(tmp_path:
     assert payload["artifacts"]["first"]["label"] == "First artifact"
     assert format_sgt_timestamp(datetime(2026, 7, 6, 7, 26, tzinfo=UTC)) == "06 Jul 2026, 3:26 PM SGT"
     assert payload["artifacts"]["second"]["generated_at_sgt"].endswith(" SGT")
+
+
+def test_generated_artifact_metadata_updates_existing_timestamp_in_normal_mode(tmp_path: Path) -> None:
+    """Validate normal metadata mode refreshes the artifact timestamp."""
+    from scripts.generated_artifact_metadata import update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    first = update_generated_artifact_metadata(
+        "artifact",
+        "Artifact",
+        "scripts/generator.py",
+        "docs/artifact.json",
+        metadata_path=metadata_path,
+    )
+    first_timestamp = first["artifacts"]["artifact"]["generated_at_utc"]
+    time.sleep(0.001)
+
+    second = update_generated_artifact_metadata(
+        "artifact",
+        "Artifact",
+        "scripts/generator.py",
+        "docs/artifact.json",
+        metadata_path=metadata_path,
+    )
+
+    assert second["artifacts"]["artifact"]["generated_at_utc"] != first_timestamp
+
+
+def test_generated_artifact_metadata_preserve_mode_keeps_same_key_timestamp(tmp_path: Path, monkeypatch) -> None:
+    """Validate preserve mode keeps existing timestamps for the updated artifact key."""
+    from scripts.generated_artifact_metadata import PRESERVE_TIMESTAMPS_ENV, update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    first = update_generated_artifact_metadata(
+        "artifact",
+        "Artifact",
+        "scripts/generator.py",
+        "docs/artifact.json",
+        metadata_path=metadata_path,
+    )
+    first_artifact = dict(first["artifacts"]["artifact"])
+    monkeypatch.setenv(PRESERVE_TIMESTAMPS_ENV, "1")
+    time.sleep(0.001)
+
+    second = update_generated_artifact_metadata(
+        "artifact",
+        "Renamed artifact",
+        "scripts/generator.py",
+        "docs/artifact.json",
+        metadata_path=metadata_path,
+    )
+
+    assert second["artifacts"]["artifact"]["generated_at_utc"] == first_artifact["generated_at_utc"]
+    assert second["artifacts"]["artifact"]["generated_at_sgt"] == first_artifact["generated_at_sgt"]
+    assert second["artifacts"]["artifact"]["label"] == "Renamed artifact"
+
+
+def test_generated_artifact_metadata_preserve_mode_preserves_other_entries(tmp_path: Path, monkeypatch) -> None:
+    """Validate preserve mode keeps unrelated artifact entries intact."""
+    from scripts.generated_artifact_metadata import PRESERVE_TIMESTAMPS_ENV, update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    payload = update_generated_artifact_metadata("first", "First", "scripts/first.py", "docs/first.json", metadata_path=metadata_path)
+    first_artifact = dict(payload["artifacts"]["first"])
+    monkeypatch.setenv(PRESERVE_TIMESTAMPS_ENV, "1")
+
+    updated = update_generated_artifact_metadata("second", "Second", "scripts/second.py", "docs/second.json", metadata_path=metadata_path)
+
+    assert updated["artifacts"]["first"] == first_artifact
+    assert set(updated["artifacts"]) == {"first", "second"}
+
+
+def test_generated_artifact_metadata_preserve_mode_is_deterministic(tmp_path: Path, monkeypatch) -> None:
+    """Validate CI preserve mode leaves metadata output stable for existing keys."""
+    from scripts.generated_artifact_metadata import PRESERVE_TIMESTAMPS_ENV, update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    update_generated_artifact_metadata("artifact", "Artifact", "scripts/generator.py", "docs/artifact.json", metadata_path=metadata_path)
+    monkeypatch.setenv(PRESERVE_TIMESTAMPS_ENV, "1")
+
+    update_generated_artifact_metadata("artifact", "Artifact", "scripts/generator.py", "docs/artifact.json", metadata_path=metadata_path)
+    first = metadata_path.read_text(encoding="utf-8")
+    time.sleep(0.001)
+    update_generated_artifact_metadata("artifact", "Artifact", "scripts/generator.py", "docs/artifact.json", metadata_path=metadata_path)
+    second = metadata_path.read_text(encoding="utf-8")
+
+    assert second == first
 
 
 def test_public_call_flow_write_drops_stale_timestamps(tmp_path: Path) -> None:

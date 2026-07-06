@@ -42,6 +42,8 @@ jobs:
       # Restore this as a dedicated public-function-call-flows.json validator.
 
       - name: Regenerate generated reference artifacts
+        env:
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
         shell: bash
         run: |
           set -euo pipefail
