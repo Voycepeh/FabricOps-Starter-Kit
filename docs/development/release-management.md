@@ -125,3 +125,9 @@ For a hotfix, branch from the released tag or the commit that contains the produ
 GitHub Releases and tags are immutable release evidence. Prefer deprecating a bad release with a clear GitHub Release note and a follow-up patch release instead of deleting or rewriting history. Move `stable` back to the recommended documentation version only when maintainers explicitly decide that the newest release should not be the production recommendation.
 
 Runtime traceability should continue to record FabricOps package version, notebook or repository commit SHA where available, agreement version, and pipeline version as separate concepts. Do not introduce metadata migrations as part of release administration; add schema migrations in focused follow-up PRs when persistent metadata columns are required.
+
+## Supporting release references
+
+- [Public API contract](../reference/public-api-contract.md): canonical release boundary guidance for the supported notebook-facing functions in `fabricops_kit.public_api.SUPPORTED_PUBLIC_API`.
+- [Release traceability](../release-info.md): published release traceability and release evidence.
+- [Documentation versioning](docs-versioning.md): docs versioning expectations for release preparation.

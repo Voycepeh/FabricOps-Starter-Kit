@@ -860,11 +860,12 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
 
 
 def test_maintainer_nav_parks_internal_reference_helpers() -> None:
-    """Verify maintainer-facing helper docs are parked under Maintainer Guide."""
+    """Verify maintainer-facing helper docs are parked under maintainer references."""
     mkdocs_text = (ROOT / "mkdocs.yml").read_text(encoding="utf-8")
 
     assert "Functions by Modules" not in mkdocs_text
-    assert "  - Maintainer Guide:" in mkdocs_text
+    assert "  - Maintainer References:" in mkdocs_text
+    assert "reference/maintainer-guide.md" not in mkdocs_text
     assert "reference/glossary.md" not in mkdocs_text
     assert "      - Function Call Graph: reference/function-call-graph.md" in mkdocs_text
     assert "      - Implementation Appendix:" in mkdocs_text
