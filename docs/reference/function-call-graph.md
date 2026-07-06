@@ -132,7 +132,8 @@ Use the export packet for:
 * private helpers that can be inlined into their owner
 * private helpers that should become shared helpers
 
-## 5. Understand the generated data contract
+## 5. How is all these set up? 
+![Public Function Call Flows Dashboard Setup](../assets/fabricops-call-graph-setup.png)
 
 `docs/reference/_data/public-function-call-flows.json` is the generated architecture contract consumed by the dashboard and generated reference pages.
 
@@ -155,7 +156,7 @@ The generator writes:
 
 The repository source code and JSON generator remain authoritative if a committed JSON snapshot drifts.
 
-## 6. Agent update contract
+## 6. Agent runs the generator upon function change
 
 `AGENTS.md` is the operating guide for Codex and other agent contributions. It tells agents to use the public call-flow JSON as a planning and review contract before changing function-level source code.
 
@@ -169,7 +170,7 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 
 Agents commit the regenerated `docs/reference/_data/public-function-call-flows.json` when the change affects callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics.
 
-## 7. Keep generator ownership separated
+## 7. The generators are separated , json, dashboard , individual function pages
 
 Generator ownership is split across focused scripts:
 
@@ -184,18 +185,3 @@ The dashboard should consume the generated JSON instead of recalculating archite
 For function-level source changes that affect callable structure, update the source and scanner rules first, then regenerate and commit only `docs/reference/_data/public-function-call-flows.json` unless the PR is explicitly scoped as a generated-reference refresh.
 
 Do not commit generated dashboard HTML or individual function pages in ordinary source cleanup PRs unless the PR is intentionally refreshing those generated surfaces.
-
-## 8. Validation and review
-
-The callable architecture validation test is:
-
-* [`tests/contract/test_callable_architecture_validation.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/tests/contract/test_callable_architecture_validation.py)
-
-Validation and dashboard review are supporting controls around the same generated call-flow contract. They should help agents and reviewers notice architecture drift, stale JSON, or risky helper relationships, but this page should not describe the dashboard as a hard enforcement layer.
-
-For reviews, use:
-
-* source code and `scripts/generate_public_function_call_flows_json.py` as the contract source of truth
-* `AGENTS.md` as the agent operating contract for reading and refreshing call-flow JSON
-* deployed dashboard output as the current docs-build review surface
-* checked-in `docs/reference/_data/public-function-call-flows.json` as the committed architecture contract snapshot
