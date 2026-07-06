@@ -39,7 +39,7 @@ A notebook must be attached to the Environment before it can import the custom l
 ![Setup Metadata Tables](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
 
 - Completed creation of the tables 
-![Metadata Tables Done](../assets/docs/assets/fabric-example-00_config_metadata_tables_setup.png)
+![Metadata Tables Done](../assets/fabric-example-00_config_metadata_tables_setup.png)
 
 ## Expected result
 
