@@ -54,6 +54,8 @@ jobs:
           git diff --exit-code \
             docs/reference/_data/public-function-call-flows.json \
             docs/reference/_data/generated-artifacts.json \
+            docs/reference/index.md \
+            docs/reference/function-call-graph.md \
             docs/assets/public-function-call-flows-dashboard.html \
             docs/api/reference
 

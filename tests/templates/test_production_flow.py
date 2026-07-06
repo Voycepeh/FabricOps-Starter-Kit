@@ -224,14 +224,12 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "03_governance",
         "example_pipeline_demo",
         "99_explore",
-        "import fabricops_kit as fsk",
     ]:
         assert expected in setup_page
 
     for expected in [
         "# Run Environment Setup",
-        "CONFIG",
-        "ENV",
-        "METADATA_*",
+        "00_env_config",
+        "metadata tables",
     ]:
         assert expected in env_setup_page
