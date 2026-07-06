@@ -30,12 +30,11 @@ def test_explore_template_is_read_only_context_aware_sequence():
     expected_sections = [
         "## 01 Configure environment",
         "## 02 Import functions",
-        "## 03 Select agreement",
-        "## 04 Read from user-defined source",
+        "## 03 Read from user-defined source",
         "### Optional write/read smoke tests",
-        "## 05 Optional standardized data profiling of your defined source",
-        "## 06 Browse metadata catalogue",
-        "## 07 Self exploration",
+        "## 04 Optional standardized data profiling of your defined source",
+        "## 05 Browse metadata catalogue",
+        "## 06 Self exploration",
     ]
     positions = [markdown.index(section) for section in expected_sections]
     assert positions == sorted(positions)
@@ -44,13 +43,8 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "read-only" in markdown
     assert "does **not** approve" in markdown
     assert "%run 00_env_config" in code
-    assert "PIPELINE = widget_pipeline_bootstrap(" in code
-    assert "select_agreement=True" in code
-    assert "register_notebook=False" in code
-    assert "read_only=True" in code
-    assert 'notebook_type="99_explore"' in code
-    assert "AGREEMENT = PIPELINE.agreement" in code
     assert "get_latest_metadata_catalogue(" not in code
+    assert "widget_pipeline_bootstrap" not in code
     assert "read_lakehouse_table(" in code
     assert "METADATA_DATA_CATALOGUE" in code
     assert "latest_catalogue" in code
