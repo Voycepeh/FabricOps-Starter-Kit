@@ -94,9 +94,9 @@ The generated contract keeps deterministic architecture signals available for th
 | Signal | Calculation | Reviewer action |
 |---|---|---|
 | Large width/depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or too deeply nested. |
-| Architecture risk | Any Type 1 to Type 6 architecture risk appears in the callable flow | Review boundary shape before helper cleanup. |
+| Architecture violation | Any Type 1 to Type 6 architecture violation appears in the callable flow | Review boundary shape before helper cleanup. |
 
-### Architecture risk types
+### Architecture violation types
 
 | Type | Rule | Why it matters |
 |---|---|---|
@@ -126,7 +126,7 @@ The export should keep the packet focused on the selected public callable flow r
 
 Use the export packet for:
 
-* public functions with architecture risks
+* public functions with architecture violations
 * public functions with large width or depth
 * selected call flows with many helper layers
 * private helpers that can be inlined into their owner
