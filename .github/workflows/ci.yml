@@ -52,6 +52,11 @@ jobs:
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
           PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
 
+          # function-call-graph.md is a standalone, manually maintained page.
+          # The legacy generator still writes it, so discard that transient output
+          # until the obsolete renderer is removed from the large generator module.
+          git restore --source=HEAD -- docs/reference/function-call-graph.md
+
           # Freshness timestamps are informational and must not make deterministic
           # generated-artifact validation fail. Restore the committed metadata and
           # its displayed timestamps while leaving all substantive generated output
@@ -90,7 +95,6 @@ jobs:
             docs/reference/_data/public-function-call-flows.json \
             docs/reference/_data/generated-artifacts.json \
             docs/reference/index.md \
-            docs/reference/function-call-graph.md \
             docs/assets/public-function-call-flows-dashboard.html \
             docs/api/reference
 
