@@ -330,6 +330,7 @@ def test_dashboard_derives_signals_from_old_shape_payload() -> None:
 
     assert "normalizeDashboardData(data)" in html
     assert "derived_width:width||f.direct_call_count||f.width||0" in html
+    assert "new Set(flow.filter(n=>n.parent_qualified_name===root).map(n=>n.qualified_name).filter(Boolean)).size" in html
     assert "derived_scope:scope||f.transitive_function_count||f.scope||0" in html
     assert "derived_depth:depths.length?Math.max(...depths):f.max_depth||f.depth||0" in html
     assert "pt==='public_function'||pt==='public_dependency'" in html
@@ -365,6 +366,10 @@ def test_dashboard_fetches_json_without_embedding_payload_by_default(tmp_path: P
     assert "selected-public-function-panel" in html
     assert "selected-call-tree" in html
     assert "function treeNode(root,node)" in html
+    assert "seenEdges.has(edgeKey)" in html
+    assert "function markAlreadyShownRows(rows)" in html
+    assert "function dashboardTreeRows(flow)" in html
+    assert "already shown above" in html
     assert "selectedCallableInventoryTable" in html
     assert "definedButNotUsedTable" in html
     assert "<th>Select</th><th>Function</th><th>File</th>" in html
