@@ -20,16 +20,20 @@ CANONICAL_METADATA_TABLES = [
 ]
 
 AUDIT_SCHEMA_FIELDS = [
-    ("_committed_by", "string"),
-    ("_committed_at", "timestamp"),
-    ("_workspace_name", "string"),
-    ("_notebook_name", "string"),
-    ("_metadata_lakehouse_name", "string"),
-    ("_activity_id", "string"),
+    ("_committed_by", "string", False),
+    ("_committed_at", "timestamp", False),
+    ("_workspace_id", "string", False),
+    ("_workspace_name", "string", False),
+    ("_notebook_id", "string", False),
+    ("_notebook_name", "string", False),
+    ("_metadata_lakehouse_name", "string", False),
+    ("_activity_id", "string", False),
 ]
 
+DATA_ACCESS_AUDIT_SCHEMA_FIELDS = [(name, kind, True) for name, kind, _nullable in AUDIT_SCHEMA_FIELDS]
 
-def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any:
+
+def build_metadata_schema(table_name: str, fields: list[tuple[str, str] | tuple[str, str, bool]]) -> Any:
     """Build a typed Spark StructType for a metadata table."""
     try:
         from pyspark.sql.types import BooleanType, DateType, DoubleType, IntegerType, LongType, StringType, StructField, StructType, TimestampType
@@ -72,7 +76,8 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any
                 return [field.name for field in self.fields]
 
     logical: dict[str, list[str]] = {}
-    for name, _kind in fields:
+    for field in fields:
+        name = field[0]
         logical.setdefault(name.lower(), []).append(name)
     duplicates = {key: values for key, values in logical.items() if len(values) > 1}
     if duplicates:
@@ -87,10 +92,15 @@ def build_metadata_schema(table_name: str, fields: list[tuple[str, str]]) -> Any
         "date": DateType(),
         "timestamp": TimestampType(),
     }
-    return StructType([StructField(name, types[kind], True) for name, kind in fields])
+    struct_fields = []
+    for field in fields:
+        name, kind = field[0], field[1]
+        nullable = bool(field[2]) if len(field) >= 3 else True
+        struct_fields.append(StructField(name, types[kind], nullable))
+    return StructType(struct_fields)
 
 
-def audit_schema_fields() -> list[tuple[str, str]]:
+def audit_schema_fields() -> list[tuple[str, str, bool]]:
     """Return the central runtime audit schema contract."""
     return list(AUDIT_SCHEMA_FIELDS)
 
@@ -98,8 +108,9 @@ def audit_schema_fields() -> list[tuple[str, str]]:
 def metadata_table_schema_registry() -> dict[str, Any]:
     """Return canonical metadata table names mapped to typed Spark schemas."""
     audit = audit_schema_fields()
+    data_access_audit = list(DATA_ACCESS_AUDIT_SCHEMA_FIELDS)
     return {
-        "METADATA_DATA_ACCESS": build_metadata_schema("METADATA_DATA_ACCESS", [("user_principal", "string"), ("role_name", "string"), ("permission", "string"), ("access_purpose", "string"), ("approval_status", "string"), ("access_scope", "string"), ("table_id", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("granted_date", "date"), ("expires_at", "timestamp"), ("approved_by", "string"), ("approved_at", "timestamp"), ("notes", "string"), *audit]),
+        "METADATA_DATA_ACCESS": build_metadata_schema("METADATA_DATA_ACCESS", [("user_principal", "string"), ("role_name", "string"), ("permission", "string"), ("access_purpose", "string"), ("approval_status", "string"), ("access_scope", "string"), ("table_id", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("granted_date", "date"), ("expires_at", "timestamp"), ("approved_by", "string"), ("approved_at", "timestamp"), ("notes", "string"), *data_access_audit]),
         "METADATA_DATA_AGREEMENT": build_metadata_schema("METADATA_DATA_AGREEMENT", [("agreement_id", "string"), ("contract_version", "string"), ("agreement_name", "string"), ("domain", "string"), ("steward_id", "string"), ("recipient", "string"), ("start_date", "date"), ("expiry_date", "date"), ("business_purpose", "string"), ("approved_usage_internal", "boolean"), ("approved_usage_external", "boolean"), ("approved_usage_research", "boolean"), ("custom_fields_json", "string"), *audit]),
         "METADATA_DATA_AGREEMENT_EVIDENCE": build_metadata_schema("METADATA_DATA_AGREEMENT_EVIDENCE", [("agreement_id", "string"), ("contract_version", "string"), ("evidence_type", "string"), ("file_name", "string"), ("file_path", "string"), ("mime_type", "string"), ("file_size", "long"), ("uploaded_at", "timestamp"), ("uploaded_by", "string"), *audit]),
         "METADATA_DATA_CATALOGUE": build_metadata_schema("METADATA_DATA_CATALOGUE", [("metadata_table_key", "string"), ("metadata_column_key", "string"), ("environment_name", "string"), ("dataset_name", "string"), ("table_name", "string"), ("column_name", "string"), ("layer", "string"), ("fabric_store_target", "string"), ("asset_kind", "string"), ("pipeline_name", "string"), ("profile_run_id", "string"), ("profile_stage", "string"), ("profile_status", "string"), ("profiled_at", "timestamp"), ("run_timestamp", "timestamp"), ("evidence_role", "string"), ("data_type", "string"), ("row_count", "long"), ("null_count", "long"), ("null_percent", "double"), ("distinct_count", "long"), ("distinct_percent", "double"), ("min_value", "string"), ("max_value", "string"), ("distribution_type", "string"), ("distribution_json", "string"), ("profile_mode", "string"), ("watermark_column", "string"), ("watermark_value", "string"), ("profile_hash", "string"), ("profile_payload_json", "string"), ("governance_mode", "string"), ("approval_policy", "string"), ("bypass_allowed", "boolean"), ("policy_reason", "string"), ("policy_updated_by", "string"), ("policy_updated_at", "timestamp"), ("agreement_id", "string"), ("contract_version", "string"), ("notebook_registry_id", "string"), ("notebook_id", "string"), *audit]),
@@ -199,6 +210,7 @@ def metadata_table_field_names(schema: Any) -> list[str]:
 
 __all__ = [
     "AUDIT_SCHEMA_FIELDS",
+    "DATA_ACCESS_AUDIT_SCHEMA_FIELDS",
     "CANONICAL_METADATA_TABLES",
     "audit_schema_fields",
     "canonical_metadata_tables",

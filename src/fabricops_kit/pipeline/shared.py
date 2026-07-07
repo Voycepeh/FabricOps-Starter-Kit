@@ -342,18 +342,11 @@ def _summary_status(results: Mapping[str, Mapping[str, Any]]) -> str:
     return ",".join(sorted(concrete))
 
 
-def _runtime_audit_fields(config: Any, env: str) -> dict[str, str]:
-    try:
-        return build_runtime_audit_fields(config=config, env=env)
-    except Exception:
-        return {
-            "_committed_at": _timestamp_value(config=config),
-            "_committed_by": "unknown",
-            "_workspace_name": "",
-            "_notebook_name": "",
-            "_metadata_lakehouse_name": "",
-            "_activity_id": "",
-        }
+def _runtime_audit_fields(config: Any, env: str, context: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    runtime_context = None
+    if isinstance(context, Mapping):
+        runtime_context = context.get("runtime_context") or context.get("audit_runtime_context")
+    return build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
 
 
 def _canonical_catalogue_profile_df(profile_df: Any):
@@ -1228,7 +1221,7 @@ def write_catalogue_evidence(
     from pyspark.sql import functions as F
 
     del schema_results, freshness_results, dq_results
-    audit = _runtime_audit_fields(config, env)
+    audit = _runtime_audit_fields(config, env, resolved_context)
     statuses: dict[str, str] = {}
     for name, profile_df in profiles.items():
         definition = dataset_definitions[name]
@@ -1356,7 +1349,7 @@ def _write_pipeline_lineage_workflow(
 
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = _runtime_audit_fields(config, env)
+    audit = _runtime_audit_fields(config, env, resolved_context)
     created_at = _timestamp_value(config=config)
     if relationships is None:
         relationships = [
@@ -1557,7 +1550,7 @@ def _write_pipeline_run_summary_workflow(
         message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
 
     config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = _runtime_audit_fields(config, env)
+    audit = _runtime_audit_fields(config, env, resolved_context)
     completed = _timestamp_value(completed_at, config=config)
     started = _timestamp_value(started_at, config=config) if started_at else completed
     sources = source_definitions or {}

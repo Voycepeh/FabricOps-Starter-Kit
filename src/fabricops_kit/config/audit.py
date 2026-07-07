@@ -71,77 +71,106 @@ def _resolve_action_by(action_by: str | None = None) -> str:
     return str(_context_get(context, "userName", "userId") or "unknown")
 
 
+def _valid_audit_value(value: Any) -> bool:
+    """Return whether a required audit value is concrete and non-placeholder."""
+    if value is None:
+        return False
+    text = str(value).strip()
+    return bool(text) and text.lower() not in {"none", "unknown", "unknown_notebook"}
+
+
+def _require_audit_values(values: dict[str, Any]) -> None:
+    """Raise one error listing every missing runtime audit field."""
+    missing = [key for key, value in values.items() if not _valid_audit_value(value)]
+    if missing:
+        raise ValueError(
+            "Cannot build metadata audit fields. Missing required values:\n"
+            f"{', '.join(missing)}.\n\n"
+            "Run inside Fabric or provide deterministic runtime_context and\n"
+            "metadata_lakehouse_name values."
+        )
+
+
 def build_runtime_audit_fields(
     *,
     config: Any = None,
     env: str | None = None,
     timestamp_field: str = "_committed_at",
     user_field: str = "_committed_by",
+    workspace_id_field: str = "_workspace_id",
     workspace_field: str = "_workspace_name",
+    notebook_id_field: str = "_notebook_id",
     notebook_field: str = "_notebook_name",
     metadata_lakehouse_field: str = "_metadata_lakehouse_name",
     activity_field: str = "_activity_id",
     committed_by: str | None = None,
-    committed_at: str | None = None,
+    committed_at: str | datetime | None = None,
+    metadata_lakehouse_name: str | None = None,
     runtime_context: dict[str, Any] | None = None,
-) -> dict[str, str]:
-    """Build reusable framework-managed audit fields for metadata-table rows.
+) -> dict[str, Any]:
+    """Build canonical runtime audit fields for metadata-table rows.
 
     Parameters
     ----------
     config : FrameworkConfig | dict, optional
         Framework config containing ``path_config.paths[env]["metadata"]``.
     env : str, optional
-        Environment key paired with ``config``.
-    timestamp_field, user_field, workspace_field, notebook_field : str
+        Environment key paired with ``config`` when resolving the metadata
+        Lakehouse name.
+    timestamp_field, user_field, workspace_id_field, workspace_field, notebook_id_field, notebook_field : str
         Output keys for timestamp, user, workspace, and notebook audit values.
     metadata_lakehouse_field, activity_field : str
-        Output keys for metadata lakehouse and Fabric activity audit values.
-    committed_by, committed_at : str, optional
-        Deterministic audit overrides. When omitted, values resolve from Fabric
-        runtime context and the configured audit timezone timestamp.
+        Output keys for metadata Lakehouse and Fabric activity audit values.
+    committed_by, committed_at, metadata_lakehouse_name : str, optional
+        Deterministic audit overrides for local tests and controlled writers.
     runtime_context : dict[str, Any], optional
-        Values merged over :func:`_runtime_context`, primarily for tests or
+        Values merged over Fabric runtime context, primarily for tests or
         controlled notebook overrides.
 
     Returns
     -------
-    dict[str, str]
-        Framework-managed metadata audit values keyed by the supplied field
-        names.
-
-    Notes
-    -----
-    DataFrame runtime audit columns and metadata-table audit fields both use
-    underscore-prefixed names. This helper centralizes the metadata-table
-    convention so notebooks can reuse runtime context when adding dataframe
-    audit columns inline.
+    dict[str, Any]
+        Canonical metadata audit values including committed user, timestamp,
+        workspace ID/name, notebook ID/name, metadata Lakehouse name, and
+        activity ID.
 
     """
     context = {**_runtime_context(), **(runtime_context or {})}
 
-    def _first_non_blank(*keys: str) -> Any:
+    def _first_valid(*keys: str) -> Any:
         for key in keys:
             value = _context_get(context, key)
-            if value is not None and str(value).strip():
+            if _valid_audit_value(value):
                 return value
         return None
 
-    metadata_lakehouse_name = ""
-    if config is not None and env is not None:
-        try:
-            metadata_lakehouse_name = _safe_str(get_store(config=config, env=env, target="metadata").name)
-        except ValueError:
-            metadata_lakehouse_name = ""
-    return {
-        user_field: _safe_str(committed_by).strip()
-        if committed_by and _safe_str(committed_by).strip()
-        else _safe_str(_first_non_blank("userName", "userId") or "unknown"),
-        timestamp_field: datetime.fromisoformat(str(committed_at))
-        if committed_at
-        else datetime.fromisoformat(get_current_audit_timestamp(config=config)),
-        workspace_field: _safe_str(_first_non_blank("currentWorkspaceName", "workspaceName") or ""),
-        notebook_field: _safe_str(_first_non_blank("currentNotebookName", "notebookName") or ""),
-        metadata_lakehouse_field: metadata_lakehouse_name,
-        activity_field: _safe_str(_first_non_blank("activityId") or ""),
+    if committed_at is None:
+        timestamp_value = datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
+    elif isinstance(committed_at, datetime):
+        timestamp_value = committed_at
+    else:
+        timestamp_value = datetime.fromisoformat(str(committed_at))
+
+    resolved_metadata_lakehouse = metadata_lakehouse_name
+    if not _valid_audit_value(resolved_metadata_lakehouse) and config is not None and env is not None:
+        resolved_metadata_lakehouse = get_store(config=config, env=env, target="metadata").name
+
+    values = {
+        user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("userName", "userId"),
+        timestamp_field: timestamp_value,
+        workspace_id_field: _first_valid("currentWorkspaceId", "workspaceId"),
+        workspace_field: _first_valid("currentWorkspaceName", "workspaceName"),
+        notebook_id_field: _first_valid("currentNotebookId", "notebookId"),
+        notebook_field: _first_valid("currentNotebookName", "notebookName"),
+        metadata_lakehouse_field: resolved_metadata_lakehouse,
+        activity_field: _first_valid("activityId"),
     }
+    _require_audit_values(values)
+    values[user_field] = str(values[user_field]).strip()
+    values[workspace_id_field] = str(values[workspace_id_field]).strip()
+    values[workspace_field] = str(values[workspace_field]).strip()
+    values[notebook_id_field] = str(values[notebook_id_field]).strip()
+    values[notebook_field] = str(values[notebook_field]).strip()
+    values[metadata_lakehouse_field] = str(values[metadata_lakehouse_field]).strip()
+    values[activity_field] = str(values[activity_field]).strip()
+    return values
