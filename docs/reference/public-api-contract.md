@@ -23,5 +23,5 @@ Use these pages after confirming the public API release contract:
 - [Public function call-flow dashboard](../assets/public-function-call-flows-dashboard.html): review public API shape, chain depth, fan-out, source Python files, cross-layer warnings, and flattening recommendations.
 - [Selected callable inventory](../assets/public-function-call-flows-dashboard.html#selected-public-function-panel): search/filter callable-flow functions, select rows, and export AI refactor packets.
 - [Public function architecture](public-function-architecture.md): confirm public, internal, and private helper boundaries before refactoring.
-- [Function call graph](function-call-graph.md): inspect generated callable relationships when reviewing architecture changes.
+- [Function call graph](../function-call-graph.md): inspect generated callable relationships when reviewing architecture changes.
 - [Release management](../development/release-management.md): follow the GitHub-only release process, validation checks, and tagging sequence.

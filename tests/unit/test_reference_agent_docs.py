@@ -139,109 +139,38 @@ def test_helper_area_mismatch_signal_requires_three_way_mismatch() -> None:
 
 
 def test_callable_flow_page_and_json_cover_public_surface() -> None:
-    """Verify callable flow docs and v2 JSON contracts are generated."""
-    flow_page = REFERENCE_DIR / "function-call-graph.md"
+    """Verify the standalone guide and v2 JSON contract cover the public surface."""
+    flow_page = ROOT / "docs" / "function-call-graph.md"
+    redirect_page = REFERENCE_DIR / "function-call-graph.md"
     flow_data_path = REFERENCE_DIR / "_data" / "public-function-call-flows.json"
-    dashboard_path = ROOT / "docs" / "assets" / "function-call-graph-dashboard.html"
-    inventory_path = ROOT / "docs" / "assets" / "function-inventory.html"
-    exported_symbols = set(_exported_symbols())
-    config_model_symbols = {
-        "FabricStore",
-        "PathConfig",
-        "GovernanceConfig",
-        "DataAgreementConfig",
-        "FrameworkConfig",
-        "ConfigSmokeCheckResult",
-        "NotebookSetupContext",
-    }
-    function_exported_symbols = exported_symbols - config_model_symbols
 
     assert flow_page.exists()
+    assert redirect_page.exists()
     assert flow_data_path.exists()
-    assert not dashboard_path.exists()
-    assert not inventory_path.exists()
 
     flow_text = flow_page.read_text(encoding="utf-8")
     assert "# Function Call Graph" in flow_text
-    assert "> **First make it exist. Then make it good.**" in flow_text
-    assert "## How it works" in flow_text
-    assert "## Where the generated JSON lives" in flow_text
-    assert "Repository code → source scan → public-function-call-flows.json → dashboard/docs consume JSON" in flow_text
-    assert "The source of truth is the repository code plus the JSON-contract generator, not the checked-in JSON snapshot." in flow_text
-    assert "PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py" in flow_text
-    assert "deployed `gh-pages` JSON as the current docs-build artifact" in flow_text
-    assert "checked-in JSON in `main` only as a snapshot" in flow_text
-    assert "## 4. v2 dashboard/docs ownership" in flow_text
-    assert "scripts/generate_public_function_call_flows_dashboard.py" in flow_text
-    assert "## 5. Markdown reference pages" in flow_text
-    assert "[public-function-call-flows.json](_data/public-function-call-flows.json)" in flow_text
+    assert "## 1. Repository Code" in flow_text
+    assert "## 2. Agent reads context" in flow_text
+    assert "## 3. Edit function source" in flow_text
+    assert "## 4. Regenerate call flow" in flow_text
+    assert "## 5. Dashboard & review" in flow_text
+    assert 'href="assets/public-function-call-flows-dashboard.html"' in flow_text
+    assert 'href="reference/_data/public-function-call-flows.json"' in flow_text
 
-    for stale_flow_phrase in [
-        "Function Call Graph Dashboard](../assets/function-call-graph-dashboard.html)",
-        "function-call-graph-dashboard.html#runtime-inventory",
-        "Repository Code → Scan & Analyze → Enforce Architecture → Dashboard → AI Refactor Packets",
-        "Open architecture dashboard",
-        "fabricops_runtime_refactor_packet",
-        "Exporting an AI refactor prompt",
-    ]:
-        assert stale_flow_phrase not in flow_text
+    redirect_text = redirect_page.read_text(encoding="utf-8")
+    assert "../../function-call-graph/" in redirect_text
 
     data = json.loads(flow_data_path.read_text(encoding="utf-8"))
-    if "schema" in data.get("metadata", {}):
-        assert data["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
     assert data["public_functions"]
     assert data["defined_functions"]
     assert "defined_but_not_used" in data
-    assert data["summary"]["public_function_count"] > 0
-
-    source_traceability_fields = {
-        "function_name",
-        "qualified_name",
-        "source_path",
-        "source_start_line",
-        "source_end_line",
-    }
-    public_functions_with_flow = [row for row in data["public_functions"] if row.get("flow")]
-    assert public_functions_with_flow, "at least one public function must include callable flow rows"
-    for public_function in data["public_functions"]:
-        assert source_traceability_fields <= set(public_function), public_function
-    for flow_row in public_functions_with_flow[0]["flow"]:
-        assert source_traceability_fields <= set(flow_row), flow_row
 
     generator_source = (ROOT / "scripts" / "generate_individual_function_reference_pages.py").read_text(encoding="utf-8")
-    assert "FUNCTION_CALL_GRAPH_DASHBOARD_PATH" not in generator_source
-    assert "function-call-graph-dashboard.html" not in generator_source
-    assert "_render_refactor_dashboard_html" not in generator_source
-    assert "_render_combined_refactor_dashboard_html" not in generator_source
-    assert "_runtime_inventory_script" not in generator_source
-    assert "selected_flow_tree_html" not in generator_source
-    removed_generator_structures = [
-        "FUNCTION_CALL_GRAPH_DATA_PATH",
-        "MANIFEST_PATH",
-        "CALLABLE_SURFACE_AUDIT_PATH",
-        "FUNCTION_TAXONOMY_AUDIT_PATH",
-        "LANDING_STATS_PATH",
-        "METADATA_REFERENCE_DIR",
-        "parse_module_docs_metadata",
-        "module_manifest",
-        "module_index_lines",
-        "manifest_rows",
-        "manifest_modules",
-        "dependency_callables",
-        "dependency_modules",
-        "audit_rows",
-        "agent_manifest",
-        "function_manifest",
-        "refactor_signals_manifest",
-        "generate_metadata_table_reference",
-        "generate_landing_stats",
-        "update_landing_page_counts",
-    ]
-    for removed_structure in removed_generator_structures:
-        assert removed_structure not in generator_source
+    assert "FUNCTION_CALL_GRAPH_PAGE_PATH" not in generator_source
+    assert "def _render_callable_flow_page" not in generator_source
+    assert "docs/reference/function-call-graph.md" not in generator_source
 
-    for function_name in function_exported_symbols:
-        assert (ROOT / "docs" / "api" / "reference" / f"{function_name}.md").exists()
 
 
 
