@@ -4661,11 +4661,7 @@ def main() -> None:
         "supporting_functions": len([n for n in node_by_qn.values() if not n.get("exported") and not str(n.get("callable_name", "")).startswith("_")]),
         "hidden_private_helpers": len([n for n in node_by_qn.values() if str(n.get("callable_name", "")).startswith("_")]),
     }
-    callable_flow_data = {
-        "metadata": dashboard_inventory_data.get("metadata", {}),
-        "public_entrypoint_flow": dashboard_public_functions,
-        "public_functions": dashboard_public_functions,
-    }
+    
     ref = [
         "# Function Reference",
         "",
