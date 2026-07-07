@@ -8,10 +8,12 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+
 from fabricops_kit.config import PathConfig
 from fabricops_kit.config import FabricStore
 import fabricops_kit.io as io
-from tests.integration.test_storage_io import _Frame, _Spark
+from tests.integration.test_storage_io import _Frame, _Spark, _Writer
 
 
 PUBLIC_IO_CALLABLES = {
@@ -377,6 +379,104 @@ def test_warehouse_helpers_build_configured_query(monkeypatch):
     assert spark.table_calls == []
 
 
+class _WarehouseRepartitionFrame:
+    """Track Warehouse write repartition behavior."""
+
+    def __init__(self, name: str = "original", repartitioned=None):
+        self.name = name
+        self.repartitioned = repartitioned
+        self.repartition_calls = []
+        self.write = _Writer()
+
+    def repartition(self, partitions):
+        """Return the configured repartitioned frame."""
+        self.repartition_calls.append(partitions)
+        return self.repartitioned
+
+
+def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeypatch):
+    """Verify Warehouse writes skip repartitioning when repartition is None."""
+    import importlib
+
+    warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
+    original = _WarehouseRepartitionFrame()
+    written = []
+    store = _store("warehouse", "warehouse", "wh_product_dev")
+
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "resolve_configured_warehouse_table",
+        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "wh_product_dev.dbo.orders"),
+    )
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "write_warehouse_synapsesql",
+        lambda df, store, sql, *, mode, options=None: written.append((df, store, sql, mode, options)),
+    )
+
+    warehouse_write_owner.write_warehouse_table(
+        original,
+        "dbo",
+        "orders",
+        target="warehouse",
+        mode="overwrite",
+        options={"batchsize": "5000"},
+        context={"sentinel": True},
+    )
+
+    assert original.repartition_calls == []
+    assert written == [(original, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
+
+
+def test_write_warehouse_table_positive_repartition_writes_repartitioned_frame(monkeypatch):
+    """Verify Warehouse writes use the DataFrame returned by Spark repartition."""
+    import importlib
+
+    warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
+    repartitioned = _WarehouseRepartitionFrame("repartitioned")
+    original = _WarehouseRepartitionFrame(repartitioned=repartitioned)
+    written = []
+    store = _store("warehouse", "warehouse", "wh_product_dev")
+
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "resolve_configured_warehouse_table",
+        lambda target, schema, table_name, *, context=None: (store, schema, table_name, "wh_product_dev.dbo.orders"),
+    )
+    monkeypatch.setattr(
+        warehouse_write_owner,
+        "write_warehouse_synapsesql",
+        lambda df, store, sql, *, mode, options=None: written.append((df, store, sql, mode, options)),
+    )
+
+    warehouse_write_owner.write_warehouse_table(
+        original,
+        "dbo",
+        "orders",
+        target="product",
+        mode="overwrite",
+        repartition=8,
+        options={"batchsize": "5000"},
+        context={"sentinel": True},
+    )
+
+    assert original.repartition_calls == [8]
+    assert written == [(repartitioned, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
+
+
+@pytest.mark.parametrize("repartition", [0, -1, True, False, "8", 8.0])
+def test_write_warehouse_table_repartition_rejects_invalid_values(repartition):
+    """Verify Warehouse writes reject invalid Spark repartition values."""
+    with pytest.raises(ValueError, match="repartition must be a positive integer or None"):
+        io.write_warehouse_table(
+            _WarehouseRepartitionFrame(),
+            "dbo",
+            "orders",
+            repartition=repartition,
+            context={"config": _io_config(), "env": "dev"},
+        )
+
+
 def test_legacy_io_facade_module_is_deleted():
     """Verify the legacy IO facade file is deleted."""
     assert not (Path("src/fabricops_kit") / ("fabric_input_" + "output.py")).exists()
@@ -487,9 +587,6 @@ def test_lakehouse_schema_disabled_target_routes_legacy_paths_and_identifiers():
     from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
 
     assert _resolve_lakehouse_table_identifier(metadata_store, "orders") == "orders"
-
-
-import pytest
 
 
 @pytest.mark.parametrize("schema", ["", "bad-name", "METADATA.TABLE", "META/DATA", "1META"])

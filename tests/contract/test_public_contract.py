@@ -324,6 +324,7 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "table_name", "kind": "POSITIONAL_OR_KEYWORD", "required": True},
                 {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "repartition", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "options", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]

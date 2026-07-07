@@ -14,6 +14,7 @@ def write_warehouse_table(
     *,
     target: str = "warehouse",
     mode: str = "append",
+    repartition: int | None = None,
     options: dict[str, Any] | None = None,
     context: dict[str, Any] | None = None,
 ):
@@ -38,6 +39,10 @@ def write_warehouse_table(
         Logical warehouse target from ``00_env_config``.
     mode : str, default="append"
         Spark writer mode supported by the Fabric connector.
+    repartition : int, optional
+        Optional positive number of Spark partitions to apply before writing.
+        This controls Spark write parallelism and does not create a physically
+        partitioned Warehouse table.
     options : dict, optional
         Additional Fabric Warehouse Spark connector writer options. Required
         Fabric connector options are always set from ``00_env_config``.
@@ -57,6 +62,13 @@ def write_warehouse_table(
 
     """
     validate_dataframe_writer(df)
+    if repartition is not None:
+        if isinstance(repartition, bool) or not isinstance(repartition, int):
+            raise ValueError("repartition must be a positive integer or None")
+        if repartition <= 0:
+            raise ValueError("repartition must be a positive integer or None")
+        df = df.repartition(repartition)
+
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
         target, schema, table_name, context=context
     )
