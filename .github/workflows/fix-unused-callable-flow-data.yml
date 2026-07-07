@@ -1,16 +1,15 @@
 name: Fix unused callable flow data
 
 on:
-  pull_request:
-    branches: [main]
-    types: [synchronize]
+  push:
+    branches: [fix/function-call-graph-root-v2]
 
 permissions:
   contents: write
 
 jobs:
   fix:
-    if: github.head_ref == 'fix/function-call-graph-root-v2' && github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
