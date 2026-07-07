@@ -77,6 +77,12 @@ def widget_browse_metadata_catalogue(
     status = widgets.HTML()
     state: dict[str, Any] = {"dataframe": metadata_catalogue.limit(0), "fabric_store_target": "", "table_name": ""}
 
+    def get_dataframe():
+        """Return the currently selected filtered catalogue DataFrame."""
+        return state["dataframe"]
+
+    state["get_dataframe"] = get_dataframe
+
     resolved_agreement_id = str(agreement_id if agreement_id is not None else (agreement or {}).get("agreement_id", "")).strip()
     resolved_contract_version = str(
         contract_version

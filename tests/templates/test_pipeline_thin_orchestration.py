@@ -169,8 +169,8 @@ def test_source_loading_uses_read_lakehouse_table():
     assert 'schema="DemoTest"' in load_block
 
 
-def test_source_and_target_registration_are_key_and_dataframe_only():
-    """Verify registration cells no longer contain guardrail authoring knobs."""
+def test_source_and_target_registration_include_required_identity_only():
+    """Verify registration cells include identity/routing but no guardrail authoring knobs."""
     _markdown, code, _cells = _notebook_sources()
 
     source_block = code[code.index("SOURCE_TABLES = [") : code.index("source_profile_results = run_table_guardrails(")]
@@ -180,6 +180,8 @@ def test_source_and_target_registration_are_key_and_dataframe_only():
         for key in keys:
             assert f'"key": "{key}"' in block
         assert '"df":' in block
+        assert '"table_name":' in block
+        assert '"fabric_store_target":' in block
         for field in [
             '"schema_preset"',
             '"profile_mode"',

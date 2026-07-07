@@ -78,3 +78,20 @@ def test_widget_is_publicly_importable():
     """Verify metadata catalogue browser is exported at package root."""
     assert public_widget is not None
     assert fabricops_kit.widget_browse_metadata_catalogue is public_widget
+
+
+def test_widget_state_get_dataframe_returns_current_dataframe(spark_session):
+    """Verify widget state exposes a callable for the current filtered DataFrame."""
+    from fabricops_kit.widgets import widget_browse_metadata_catalogue as widget_module
+
+    catalogue = spark_session.createDataFrame([("orders", "product")], "table_name string, fabric_store_target string")
+    state = {"dataframe": catalogue.limit(0)}
+
+    def get_dataframe():
+        return state["dataframe"]
+
+    state["get_dataframe"] = get_dataframe
+    state["dataframe"] = _filter_metadata_catalogue(catalogue, fabric_store_target="product", table_name="orders")
+
+    assert widget_module is public_widget
+    assert state["get_dataframe"]().count() == 1

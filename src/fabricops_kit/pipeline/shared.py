@@ -801,7 +801,10 @@ def _prepare_pipeline_table_configs_workflow(
                     "read_lakehouse_parquet, read_lakehouse_excel, read_warehouse_table, "
                     "or spark.read.table before calling prepare_pipeline_table_configs."
                 )
-            fabric_store_target = str(merged_config.get("fabric_store_target", merged_config.get("layer", ""))).strip().lower()
+            fabric_store_target = str(merged_config.get("fabric_store_target") or "").strip().lower()
+            if not fabric_store_target:
+                table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
+                raise ValueError(f"Table config '{table_key}' must define a non-empty fabric_store_target.")
             enriched_table = {
                 **merged_config,
                 "dataset_name": dataset_name,
@@ -823,7 +826,10 @@ def _prepare_pipeline_table_configs_workflow(
                 .withColumn("_fabricops_pipeline_name", F.lit(pipeline_name))
                 .withColumn("_fabricops_created_at", F.lit(audit_created_at))
             )
-            fabric_store_target = str(merged_config.get("fabric_store_target", target_layer)).strip().lower()
+            fabric_store_target = str(merged_config.get("fabric_store_target") or "").strip().lower()
+            if not fabric_store_target:
+                table_key = merged_config.get("key", merged_config.get("table_name", "<unknown>"))
+                raise ValueError(f"Table config '{table_key}' must define a non-empty fabric_store_target.")
             enriched_table = {
                 **merged_config,
                 "df": audited_df,

@@ -1544,9 +1544,9 @@
       "function_name": "_build_guardrail_evidence_definitions",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._build_guardrail_evidence_definitions",
-      "source_end_line": 884,
+      "source_end_line": 890,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 850
+      "source_start_line": 856
     },
     {
       "function_name": "_build_numeric_distribution",
@@ -1640,7 +1640,7 @@
       "function_name": "_prepare_pipeline_table_configs_workflow",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._prepare_pipeline_table_configs_workflow",
-      "source_end_line": 839,
+      "source_end_line": 845,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
       "source_start_line": 735
     },
@@ -1680,9 +1680,9 @@
       "function_name": "_run_table_guardrails_workflow",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._run_table_guardrails_workflow",
-      "source_end_line": 1171,
+      "source_end_line": 1177,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 887
+      "source_start_line": 893
     },
     {
       "function_name": "_runtime_audit_fields",
@@ -1712,9 +1712,9 @@
       "function_name": "_table_key",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._table_key",
-      "source_end_line": 843,
+      "source_end_line": 849,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 842
+      "source_start_line": 848
     },
     {
       "function_name": "_table_keys",
@@ -1728,9 +1728,9 @@
       "function_name": "_table_name",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._table_name",
-      "source_end_line": 847,
+      "source_end_line": 853,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 846
+      "source_start_line": 852
     },
     {
       "function_name": "_timestamp_value",
@@ -1744,17 +1744,17 @@
       "function_name": "_write_pipeline_lineage_workflow",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._write_pipeline_lineage_workflow",
-      "source_end_line": 1416,
+      "source_end_line": 1422,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 1304
+      "source_start_line": 1310
     },
     {
       "function_name": "_write_pipeline_run_summary_workflow",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.pipeline.shared._write_pipeline_run_summary_workflow",
-      "source_end_line": 1612,
+      "source_end_line": 1618,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 1419
+      "source_start_line": 1425
     },
     {
       "function_name": "_yes_no",
@@ -1816,9 +1816,9 @@
       "function_name": "write_catalogue_evidence",
       "function_type": "shared_function",
       "qualified_name": "fabricops_kit.pipeline.shared.write_catalogue_evidence",
-      "source_end_line": 1301,
+      "source_end_line": 1307,
       "source_path": "src/fabricops_kit/pipeline/shared.py",
-      "source_start_line": 1174
+      "source_start_line": 1180
     },
     {
       "function_name": "write_pipeline_lineage",
@@ -2552,31 +2552,31 @@
       "function_name": "_catalogue_table_names_for_target",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._catalogue_table_names_for_target",
-      "source_end_line": 143,
+      "source_end_line": 149,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-      "source_start_line": 130
+      "source_start_line": 136
     },
     {
       "function_name": "_configured_fabric_store_targets",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._configured_fabric_store_targets",
-      "source_end_line": 127,
+      "source_end_line": 133,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-      "source_start_line": 120
+      "source_start_line": 126
     },
     {
       "function_name": "_filter_metadata_catalogue",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._filter_metadata_catalogue",
-      "source_end_line": 163,
+      "source_end_line": 169,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-      "source_start_line": 146
+      "source_start_line": 152
     },
     {
       "function_name": "widget_browse_metadata_catalogue",
       "function_type": "public_function",
       "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
-      "source_end_line": 117,
+      "source_end_line": 123,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
       "source_start_line": 12
     },
@@ -3662,7 +3662,7 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared._prepare_pipeline_table_configs_workflow",
           "recursive": false,
-          "source_end_line": 839,
+          "source_end_line": 845,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
           "source_start_line": 735,
           "violation_details": [],
@@ -6125,9 +6125,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared._run_table_guardrails_workflow",
           "recursive": false,
-          "source_end_line": 1171,
+          "source_end_line": 1177,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 887,
+          "source_start_line": 893,
           "violation_details": [],
           "violation_types": []
         },
@@ -12967,9 +12967,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared._build_guardrail_evidence_definitions",
           "recursive": false,
-          "source_end_line": 884,
+          "source_end_line": 890,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 850,
+          "source_start_line": 856,
           "violation_details": [],
           "violation_types": []
         },
@@ -12986,9 +12986,9 @@
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.pipeline.shared._table_key",
           "recursive": false,
-          "source_end_line": 843,
+          "source_end_line": 849,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 842,
+          "source_start_line": 848,
           "violation_details": [],
           "violation_types": []
         },
@@ -13005,9 +13005,9 @@
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.pipeline.shared._table_name",
           "recursive": false,
-          "source_end_line": 847,
+          "source_end_line": 853,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 846,
+          "source_start_line": 852,
           "violation_details": [],
           "violation_types": []
         },
@@ -13024,9 +13024,9 @@
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.pipeline.shared._table_key",
           "recursive": false,
-          "source_end_line": 843,
+          "source_end_line": 849,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 842,
+          "source_start_line": 848,
           "violation_details": [],
           "violation_types": []
         },
@@ -13043,9 +13043,9 @@
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.pipeline.shared._table_name",
           "recursive": false,
-          "source_end_line": 847,
+          "source_end_line": 853,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 846,
+          "source_start_line": 852,
           "violation_details": [],
           "violation_types": []
         },
@@ -14006,9 +14006,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared.write_catalogue_evidence",
           "recursive": false,
-          "source_end_line": 1301,
+          "source_end_line": 1307,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 1174,
+          "source_start_line": 1180,
           "violation_details": [
             "Private function calls shared function directly."
           ],
@@ -15566,9 +15566,9 @@
               "function_name": "write_catalogue_evidence",
               "function_type": "shared_function",
               "qualified_name": "fabricops_kit.pipeline.shared.write_catalogue_evidence",
-              "source_end_line": 1301,
+              "source_end_line": 1307,
               "source_path": "src/fabricops_kit/pipeline/shared.py",
-              "source_start_line": 1174,
+              "source_start_line": 1180,
               "violation_details": [
                 "Private function calls shared function directly."
               ],
@@ -20177,7 +20177,7 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
           "recursive": false,
-          "source_end_line": 117,
+          "source_end_line": 123,
           "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
           "source_start_line": 12,
           "violation_details": [],
@@ -20652,9 +20652,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._catalogue_table_names_for_target",
           "recursive": false,
-          "source_end_line": 143,
+          "source_end_line": 149,
           "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-          "source_start_line": 130,
+          "source_start_line": 136,
           "violation_details": [],
           "violation_types": []
         },
@@ -20671,9 +20671,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._configured_fabric_store_targets",
           "recursive": false,
-          "source_end_line": 127,
+          "source_end_line": 133,
           "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-          "source_start_line": 120,
+          "source_start_line": 126,
           "violation_details": [],
           "violation_types": []
         },
@@ -20737,9 +20737,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue._filter_metadata_catalogue",
           "recursive": false,
-          "source_end_line": 163,
+          "source_end_line": 169,
           "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
-          "source_start_line": 146,
+          "source_start_line": 152,
           "violation_details": [],
           "violation_types": []
         }
@@ -20781,7 +20781,7 @@
       "signals": [
         "architecture_violation"
       ],
-      "source_end_line": 117,
+      "source_end_line": 123,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
       "source_start_line": 12,
       "transitive_function_count": 24,
@@ -36859,9 +36859,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared._write_pipeline_lineage_workflow",
           "recursive": false,
-          "source_end_line": 1416,
+          "source_end_line": 1422,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 1304,
+          "source_start_line": 1310,
           "violation_details": [],
           "violation_types": []
         },
@@ -38200,9 +38200,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.pipeline.shared._write_pipeline_run_summary_workflow",
           "recursive": false,
-          "source_end_line": 1612,
+          "source_end_line": 1618,
           "source_path": "src/fabricops_kit/pipeline/shared.py",
-          "source_start_line": 1419,
+          "source_start_line": 1425,
           "violation_details": [],
           "violation_types": []
         },

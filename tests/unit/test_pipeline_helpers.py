@@ -98,6 +98,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
                 "df": source_df,
                 "layer": "source",
                 "table_name": "orders_raw",
+                "fabric_store_target": "source",
                 "watermark_column": "business_date",
             }
         ],
@@ -135,6 +136,25 @@ def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe
         )
 
 
+def test_prepare_pipeline_table_configs_requires_explicit_fabric_store_target(monkeypatch):
+    """Verify prepare pipeline table configs does not infer FabricStore target from layer fields."""
+    _install_fake_pyspark_functions(monkeypatch)
+    with pytest.raises(ValueError, match="Table config 'source_01' must define a non-empty fabric_store_target"):
+        pipeline.prepare_pipeline_table_configs(
+            [{"key": "source_01", "df": FakeDataFrame("source"), "layer": "source", "table_name": "orders_raw"}],
+            {},
+            table_role="source",
+        )
+    with pytest.raises(ValueError, match="Table config 'target_01' must define a non-empty fabric_store_target"):
+        pipeline.prepare_pipeline_table_configs(
+            [{"key": "target_01", "df": FakeDataFrame("target"), "layer": "product", "table_name": "orders"}],
+            {},
+            table_role="target",
+            run_id="run-1",
+            pipeline_name="pipeline-1",
+        )
+
+
 def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     """Verify pipeline module does not expose source read routing wrappers."""
     assert not hasattr(pipeline, "_load_source_dataframe")
@@ -156,6 +176,7 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
                 "df": df,
                 "layer": "unified",
                 "table_name": "orders_curated",
+                "fabric_store_target": "unified",
             }
         ],
         {
@@ -200,6 +221,7 @@ def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezo
                 "df": df,
                 "layer": "unified",
                 "table_name": "orders_curated",
+                "fabric_store_target": "unified",
                 "config": config,
             }
         ],
