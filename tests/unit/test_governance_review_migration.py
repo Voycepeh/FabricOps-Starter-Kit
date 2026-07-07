@@ -57,6 +57,7 @@ EXPECTED_V1_CALLABLES = [
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_schema_freshness_profile_rules',
+    'widget_browse_metadata_catalogue',
     'widget_author_dq_rules',
     'widget_review_guardrail_governance',
 ]
@@ -75,6 +76,7 @@ def test_widget_public_callables_live_under_widgets_package():
     widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
+        'widget_browse_metadata_catalogue',
         'widget_enrich_table_metadata',
         'widget_render_agreement_evidence',
         'widget_render_data_agreement',
@@ -83,8 +85,12 @@ def test_widget_public_callables_live_under_widgets_package():
         'widget_select_guardrail_target',
     }
     for name in widget_names:
-        assert hasattr(widgets, name)
-        assert getattr(widgets, name).__module__.startswith(f"fabricops_kit.widgets.{name}")
+        value = getattr(widgets, name)
+        if not hasattr(value, "__module__"):
+            import importlib
+
+            value = getattr(importlib.import_module(f"fabricops_kit.widgets.{name}"), name)
+        assert value.__module__.startswith(f"fabricops_kit.widgets.{name}")
 
 
 def test_widget_modules_do_not_call_public_widget_functions():
@@ -96,6 +102,7 @@ def test_widget_modules_do_not_call_public_widget_functions():
     public_widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
+        'widget_browse_metadata_catalogue',
         'widget_enrich_table_metadata',
         'widget_render_agreement_evidence',
         'widget_render_data_agreement',
@@ -514,17 +521,17 @@ def test_pipeline_and_config_use_new_governance_owners():
 
 
 
-def test_99_explore_reads_metadata_catalogue_directly():
-    """Verify 99_explore reads catalogue metadata directly instead of using a wrapper."""
+def test_99_explore_uses_metadata_catalogue_widget():
+    """Verify 99_explore uses the public catalogue browser widget."""
     root = Path(__file__).parents[2]
 
     notebook = json.loads((root / "templates" / "notebooks" / "99_explore.ipynb").read_text(encoding="utf-8"))
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
     assert "get_latest_metadata_catalogue" not in code
-    assert "read_lakehouse_table" in code
-    assert "METADATA_DATA_CATALOGUE" in code
-    assert 'F.col("table_name") == source_table_name' in code
+    assert "widget_browse_metadata_catalogue" in code
+    assert "METADATA_DATA_CATALOGUE" not in code
+    assert 'F.col("table_name") == source_table_name' not in code
 
 
 def test_root_public_governance_and_widget_imports_still_work():

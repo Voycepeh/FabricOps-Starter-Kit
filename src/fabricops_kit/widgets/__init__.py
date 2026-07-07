@@ -1,6 +1,7 @@
 """Public widget entrypoints for FabricOps notebook workflows."""
 
 __all__ = [
+    "widget_browse_metadata_catalogue",
     "widget_author_dq_rules",
     "widget_author_schema_freshness_profile_rules",
     "widget_enrich_table_metadata",

@@ -119,6 +119,7 @@ def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloa
             "watermark_column": "business_date",
             "dataset_name": "orders_raw",
             "stage": "source",
+            "fabric_store_target": "source",
         }
     ]
     assert by_key["source_01"] is enriched[0]
@@ -173,6 +174,7 @@ def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_deriv
     assert target["target_layer"] == "unified"
     assert target["target_name"] == "orders_curated"
     assert target["target_kind"] == "lakehouse"
+    assert target["fabric_store_target"] == "unified"
     assert by_key["target_01"] is target
     assert [name for name, _value in df.with_columns] == [
         "_fabricops_run_id",
@@ -322,6 +324,7 @@ def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves
                 "target_layer": "product",
                 "target_kind": "warehouse",
                 "write_mode": "overwrite",
+                "fabric_store_target": "product",
             }
         ]
     )
@@ -334,11 +337,18 @@ def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves
             "target_layer": "product",
             "target_kind": "warehouse",
             "write_mode": "overwrite",
+            "fabric_store_target": "product",
             "layer": "product",
             "kind": "warehouse",
             "mode": "overwrite",
         }
     }
+
+
+def test_private_guardrail_evidence_definitions_requires_fabric_store_target():
+    """Verify missing canonical FabricStore target fails clearly."""
+    with pytest.raises(ValueError, match="Table config 'source_01' must define a non-empty fabric_store_target"):
+        pipeline_shared._build_guardrail_evidence_definitions([{"key": "source_01", "table_name": "orders"}])
 
 
 def test_run_table_guardrails_collects_results_and_returns_summary_before_reporting_failures(monkeypatch):

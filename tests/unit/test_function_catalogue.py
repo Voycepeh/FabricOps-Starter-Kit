@@ -25,7 +25,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 25 public functions." in page
+    assert "Use the finder below to search 26 public functions." in page
     assert "Search public functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -166,6 +166,7 @@ def _expected_direct_public_template_calls() -> set[str]:
             "read_lakehouse_excel",
             "read_lakehouse_parquet",
             "write_warehouse_table",
+            "widget_browse_metadata_catalogue",
         }
     )
     return expected
@@ -204,7 +205,7 @@ def test_reference_catalogue_rows_include_only_public_inventory_functions() -> N
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 25
+    assert len(_catalogue_row_names()) == 26
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -256,6 +257,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     import fabricops_kit
 
     audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    audit_names.add("widget_browse_metadata_catalogue")
     assert set(fabricops_kit.__all__) == audit_names
 
 

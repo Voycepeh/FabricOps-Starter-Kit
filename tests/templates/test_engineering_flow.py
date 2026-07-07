@@ -45,8 +45,9 @@ def test_explore_template_is_read_only_context_aware_sequence():
     assert "%run 00_env_config" in code
     assert "get_latest_metadata_catalogue(" not in code
     assert "widget_pipeline_bootstrap" not in code
-    assert "read_lakehouse_table(" in code
-    assert "METADATA_DATA_CATALOGUE" in code
+    assert "widget_browse_metadata_catalogue(" in code
+    assert "METADATA_DATA_CATALOGUE" not in code
+    assert 'F.col("table_name") == source_table_name' not in code
     assert "latest_catalogue" in code
     assert "RUN_CSV_SOURCE = False" in code
     assert "RUN_EXCEL_SOURCE = False" in code
