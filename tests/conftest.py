@@ -177,7 +177,7 @@ def spark_session():
     spark.stop()
 
 
-STALE_REFERENCE_GENERATED_PAGE_TESTS = {
+STALE_REFERENCE_TESTS = {
     "test_callable_inventory_non_functions_filter_works_outside_selected_focus",
     "test_callable_flow_page_and_json_cover_public_surface",
     "test_callable_flow_docs_page_uses_deterministic_signal_rules",
@@ -191,5 +191,5 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         reason="Reference assertion predates the standalone Function Call Graph documentation structure."
     )
     for item in items:
-        if item.name in STALE_REFERENCE_GENERATED_PAGE_TESTS:
+        if item.name in STALE_REFERENCE_TESTS:
             item.add_marker(skip_stale_reference_expectation)
