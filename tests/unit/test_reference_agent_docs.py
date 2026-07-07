@@ -176,6 +176,7 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
 
 
 
+
 def test_fabricops_skill_file_exists() -> None:
     """Verify fabricops skill file exists."""
     assert (ROOT / ".agents" / "skills" / "fabricops" / "SKILL.md").exists()

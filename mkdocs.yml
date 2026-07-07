@@ -22,6 +22,7 @@ nav:
   - How FabricOps Works: how-fabricops-works.md
   - Function Call Graph: function-call-graph.md
   - Function Call Graph: function-call-graph.md
+  - Function Call Graph: function-call-graph.md
   - Guided Demo:
       - Overview: guided-demo.md
       - Create Wheel: guided-demo/create-wheel.md
