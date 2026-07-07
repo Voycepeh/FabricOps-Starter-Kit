@@ -97,5 +97,5 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
-    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT
+    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
+    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT

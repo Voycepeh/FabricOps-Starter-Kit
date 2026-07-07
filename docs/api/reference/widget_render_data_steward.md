@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 236
-- Shared helpers: 114
-- Private helpers: 122
+- Downstream callables: 97
+- Shared helpers: 63
+- Private helpers: 34
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_steward">Open focused call flow in dashboard</a>
 
@@ -14,9 +14,9 @@ Render the standalone data-steward intake widget.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_steward.py:11`
+`fabricops_kit/widgets/widget_render_data_steward.py:33`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L11-L29">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_steward.py#L33-L156">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,5 +83,5 @@ Not documented yet
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 06 Jul 2026, 4:12 PM SGT
-    Call-flow data generated: 06 Jul 2026, 4:08 PM SGT
+    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
+    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
