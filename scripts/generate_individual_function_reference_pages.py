@@ -2360,7 +2360,6 @@ ROLE_TAGS_BY_NAME = {
     "_dq_rule_authoring_widget_workflow": ["internal_workflow", "widget_workflow"],
     "_guardrail_target_selection_widget_workflow": ["internal_workflow", "widget_workflow"],
     "_guardrail_governance_review_widget_workflow": ["internal_workflow", "widget_workflow"],
-    "render_maintenance_widget_shared_workflow": ["internal_workflow", "shared_widget_rendering_workflow"],
     "write_widget_metadata_row": ["internal_adapter", "metadata_write_adapter"],
     "_save_agreement_evidence_records": ["internal_adapter", "metadata_write_adapter"],
     "_write_table_metadata_enrichment_records": ["internal_adapter", "metadata_write_adapter"],
