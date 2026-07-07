@@ -74,8 +74,6 @@ nav:
   - Maintainer References:
       - Public API Contract: reference/public-api-contract.md
       - Public Function Architecture: reference/public-function-architecture.md
-      # Legacy navigation contract retained for automated compatibility checks:
-      #      - Function Call Graph: reference/function-call-graph.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
       - Documentation Versioning: development/docs-versioning.md
