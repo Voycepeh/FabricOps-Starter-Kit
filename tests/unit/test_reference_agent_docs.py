@@ -166,15 +166,11 @@ def test_callable_flow_page_and_json_cover_public_surface() -> None:
     assert data["defined_functions"]
     assert "defined_but_not_used" in data
 
-    generator_source = (ROOT / "scripts" / "generate_individual_function_reference_pages.py").read_text(encoding="utf-8")
+    generator_path = ROOT / "scripts/generate_individual_function_reference_pages.py"
+    generator_source = generator_path.read_text(encoding="utf-8")
     assert "FUNCTION_CALL_GRAPH_PAGE_PATH" not in generator_source
     assert "def _render_callable_flow_page" not in generator_source
     assert "docs/reference/function-call-graph.md" not in generator_source
-
-
-
-
-
 
 
 def test_fabricops_skill_file_exists() -> None:
@@ -941,7 +937,6 @@ def test_callable_architecture_validation_allows_private_helper_review_rows(monk
     assert validator._failures(flow) == []
 
 
-
 def test_callable_architecture_validation_allows_public_config_classes(monkeypatch, tmp_path) -> None:
     """Verify public config classes are visible inventory items but not functions."""
     import scripts.validate_callable_architecture as validator
@@ -1174,7 +1169,6 @@ def test_callable_architecture_validation_rejects_supporting_objects_in_public_f
     assert any("Non callable-layer callee type" in failure for failure in failures)
 
 
-
 def test_callable_architecture_validation_accepts_new_violation_types(monkeypatch, tmp_path) -> None:
     """Verify generated validation accepts only the PR 723 architecture violation model."""
     import scripts.validate_callable_architecture as validator
@@ -1390,31 +1384,6 @@ def test_public_api_surface_records_owner_file_and_private_helper_items() -> Non
     assert {row["violation_type"] for row in flow["transitive_callees"]} == {"Same-file private dependency"}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     """Verify item type filter keys match generated function-level inventory records."""
     pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
@@ -1435,7 +1404,6 @@ def test_callable_inventory_item_type_counts_match_filter_keys() -> None:
     assert all(row.get("source_path", "").startswith("src/fabricops_kit/") for row in inventory)
     assert "supporting_object" not in {row["layer"] for row in inventory}
     assert all(row["function_type"] != "Non functions" for row in inventory)
-
 
 
 def test_table_controls_are_opt_in_and_safe_for_dynamic_rows() -> None:
@@ -1803,7 +1771,6 @@ def test_callable_flow_ignores_call_graph_self_edges() -> None:
     assert flow["transitive_callees"][0]["parent_qualified_name"] == public_qn
 
 
-
 def test_callable_flow_simple_classification_detects_shared_internal_reuse() -> None:
     """Verify shared internal helpers are identified from reuse across public callables."""
     import scripts.generate_individual_function_reference_pages as generator
@@ -1869,8 +1836,6 @@ def test_callable_flow_private_helper_containment_uses_owner_file() -> None:
     assert rows_by_flow[1][private_a]["simple_classification"] == "Private helper"
     assert rows_by_flow[1][private_a]["architecture_result"] == "Violation"
     assert rows_by_flow[1][private_a]["violation_type"] == "Cross-file private dependency"
-
-
 
 
 def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> None:
@@ -1970,7 +1935,6 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
     assert flows_by_name["run_table_guardrails"]["qualified_name"] not in profile_assets
 
 
-
 def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> None:
     """Verify selected public callable helper data matches exact public flow assets."""
     pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
@@ -2012,12 +1976,6 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
         flow = flows_by_qn[qn]
         flow_assets = {flow["qualified_name"], *(row["qualified_name"] for row in flow["transitive_callees"])}
         assert flow_assets.isdisjoint(siblings)
-
-
-
-
-
-
 
 
 def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags() -> None:
@@ -2096,8 +2054,6 @@ def test_shared_call_graph_renderer_includes_source_type_and_architecture_flags(
     assert "[private helper]" in rendered
     assert "[violation]" not in flow_rendered
     assert "[architecture violation]" not in flow_rendered
-
-
 
 
 def test_read_lakehouse_table_public_flow_uses_reference_dependency_tree_source() -> None:
