@@ -6,12 +6,12 @@
 
 The workflow follows the same five steps shown below: repository code, agent context, source editing, call-flow regeneration, then dashboard review.
 
+![Function Call Graph workflow](assets/fabricops-call-graph-setup.png)
+
 <div align="center">
   <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open Dashboard</a>
   <a class="md-button" href="reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
-
-![Function Call Graph workflow](assets/fabricops-call-graph-setup.png)
 
 ## 1. Repository Code
 
