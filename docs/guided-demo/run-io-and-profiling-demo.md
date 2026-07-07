@@ -1,12 +1,12 @@
-# Run IO and Profiling Demo
-
-This step proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
+# Run exploration notebook template 
 
 ## Why this exists
 
-Fabric notebooks make it easy to attach a Lakehouse or Warehouse and quickly read files or tables through the native UI. That is great for exploration and simple demos.
+Fabric notebooks allow you to attach a Lakehouse or Warehouse and kind of drag and drop the table or files you want to read quickly through the native UI.
 
-The problem starts when a pipeline needs to work across more than one Lakehouse or Warehouse, or when users do not have broad item-level access but are expected to work through approved table, schema, or configured target access.
+However there is a technical limitation as per writing 2026 July a notebook can only attach a single warehouse/lakehouse to it.
+
+The problem surfaces when you needs to work across more than one Lakehouse or Warehouse, or when users do not have broad item-level access but are expected to work through approved table, schema, or configured target access.
 
 FabricOps standardizes that access pattern. Instead of relying on whichever item is attached to the notebook, the IO helpers resolve the configured Lakehouse or Warehouse target from `00_env_config`. Users call the same functions every time, and the notebook can read or write through the approved target without hardcoding paths, switching attachments, or rethinking the access pattern.
 
@@ -14,7 +14,7 @@ FabricOps standardizes that access pattern. Instead of relying on whichever item
 
 Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Warehouse target from `CONFIG` and `FABRIC_CONTEXT`. Users call the same helper functions every time, using the configured targets prepared in `00_env_config`.
 
-## Conceptual mapping
+## Key functions that support this notebook flow
 
 | Helper | What it demonstrates |
 | --- | --- |
@@ -23,15 +23,7 @@ Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Wareh
 | `write_warehouse_table`, `read_warehouse_table`, `read_warehouse_query` | Write and read Warehouse tables through configured Warehouse targets. |
 | `profile_dataframe` | Profile a Spark dataframe returned from either Lakehouse or Warehouse reads. |
 
-## Starter dataset
-
-Prepare the starter files and upload them into this configured Lakehouse Files folder before running the notebook:
-
-```text
-Files/fabricops_demo/io_profile/
-```
-
-The starter dataset includes:
+## 1. Download the demo dataset which consist of 
 
 | File | Used for |
 | --- | --- |
@@ -39,18 +31,17 @@ The starter dataset includes:
 | [`products.xlsx`](../assets/demo-data/io-profile/products.xlsx) | Excel file-read smoke test with product reference data. |
 | [`customers.parquet`](../assets/demo-data/io-profile/customers.parquet) | Parquet file-read smoke test with customer attributes. |
 
-The repo includes the small `orders.csv`, `products.xlsx`, and `customers.parquet` starter samples. Upload these files to the configured Lakehouse Files path, or set `USE_UPLOADED_STARTER_FILES = False` so the notebook regenerates the same tiny samples in the configured Lakehouse Files path.
+## 2. Upload these files into your source lakehouse root files section
+![Upload](../assets/fabric-example-99_upload_files.png)
+![Upload 2](../assets/fabric-example-99_upload_files(2).png)
 
-## What you will do
+## 3. Open`99_explore` remember to attach the environment if not done yet
 
-1. Open [`guided_demo_io_and_profiling.ipynb`](../assets/demo-data/io-profile/guided_demo_io_and_profiling.ipynb) in Microsoft Fabric.
-2. Run `%run 00_env_config` first so `CONFIG`, `ENV`, and `FABRIC_CONTEXT` exist.
-3. Download the bundled starter CSV, Excel, and Parquet files.
-4. Upload them to `Files/fabricops_demo/io_profile/` in the configured Lakehouse Files area. All three starter files are bundled with the guided demo asset.
-5. Run the notebook to read those files through the FabricOps IO helpers.
-6. Write to Lakehouse, read from Lakehouse, and profile the Lakehouse read dataframe.
-7. Write to Warehouse, read from Warehouse, and profile the Warehouse read dataframe.
-8. Run the larger Spark test to see parallel processing.
+This notebook will proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
+
+![Start](../assets/fabric-example-99_start.png)
+
+## 4.  
 
 ## Why Spark
 
