@@ -99,11 +99,12 @@ Use it to:
 * identify inline or shared-helper candidates
 * export a focused AI refactor packet
 
+![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)
+
 <div align="center">
   <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open the dashboard</a>
 </div>
 
-![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)
 
 Selecting a public function should scope the call tree, inventory, signals, and export workflow around that callable.
 
