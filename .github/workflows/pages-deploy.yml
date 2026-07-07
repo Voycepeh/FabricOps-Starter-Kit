@@ -41,6 +41,10 @@ jobs:
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 
+          # Keep the manually maintained explanatory page unchanged. The legacy
+          # generator still writes this path, but it is not part of its output contract.
+          git restore --source=HEAD -- docs/reference/function-call-graph.md
+
       - name: Build strict documentation
         env:
           FABRICOPS_GIT_SHA: ${{ github.sha }}

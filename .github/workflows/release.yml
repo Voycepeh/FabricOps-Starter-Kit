@@ -61,6 +61,10 @@ jobs:
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 
+          # Keep the manually maintained explanatory page unchanged. The legacy
+          # generator still writes this path, but it is not part of its output contract.
+          git restore --source=HEAD -- docs/reference/function-call-graph.md
+
       - name: Build strict documentation
         run: uv run mkdocs build --strict
 
@@ -106,7 +110,7 @@ jobs:
 
           version = os.environ["FABRICOPS_PACKAGE_VERSION"]
           changelog = Path("CHANGELOG.md").read_text(encoding="utf-8")
-          pattern = re.compile(rf"^## \\[(?:v)?{re.escape(version)}\\].*?$", re.MULTILINE)
+          pattern = re.compile(rf"^## \[(?:v)?{re.escape(version)}\].*?$", re.MULTILINE)
           match = pattern.search(changelog)
           if not match:
               raise SystemExit(f"CHANGELOG.md has no release section for {version}")
