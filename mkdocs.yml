@@ -20,6 +20,7 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
+  - Function Call Graph: function-call-graph.md
   - Guided Demo:
       - Overview: guided-demo.md
       - Create Wheel: guided-demo/create-wheel.md
@@ -72,7 +73,6 @@ nav:
       - expression_true: reference/dq-rules/expression-true.md
   - Maintainer References:
       - Public API Contract: reference/public-api-contract.md
-      - Function Call Graph: reference/function-call-graph.md
       - Public Function Architecture: reference/public-function-architecture.md
       - Release Management: development/release-management.md
       - Release Traceability: release-info.md
