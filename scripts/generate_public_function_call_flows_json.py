@@ -23,6 +23,13 @@ SOURCE_JSON_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/do
 SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/"
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
+ARCHITECTURE_VIOLATION_RULES = {
+    "Type 1": "Public function calls another public function directly.",
+    "Type 2": "Shared function calls a public function directly.",
+    "Type 3": "Private function calls a public function directly.",
+    "Type 4": "Shared function calls a private function from another file.",
+    "Type 5": "Private function calls a private function from another file.",
+}
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -236,17 +243,15 @@ def classify_architecture_violation(caller: FunctionInfo | None, callee: Functio
     callee_public = callee_type in {"public_function", "public_dependency"}
     different_file = caller.source_path != callee.source_path
     if caller_public and callee_public:
-        return {"type": "Type 1", "detail": "Public function calls another public function directly."}
+        return {"type": "Type 1", "detail": ARCHITECTURE_VIOLATION_RULES["Type 1"]}
     if caller_type == "shared_function" and callee_public:
-        return {"type": "Type 2", "detail": "Shared function calls public function directly."}
+        return {"type": "Type 2", "detail": ARCHITECTURE_VIOLATION_RULES["Type 2"]}
     if caller_type == "private_function" and callee_public:
-        return {"type": "Type 3", "detail": "Private function calls public function directly."}
+        return {"type": "Type 3", "detail": ARCHITECTURE_VIOLATION_RULES["Type 3"]}
     if caller_type == "shared_function" and callee_type == "private_function" and different_file:
-        return {"type": "Type 4", "detail": "Shared function calls private function from another file."}
+        return {"type": "Type 4", "detail": ARCHITECTURE_VIOLATION_RULES["Type 4"]}
     if caller_type == "private_function" and callee_type == "private_function" and different_file:
-        return {"type": "Type 5", "detail": "Private function calls private function from another file."}
-    if caller_type == "private_function" and callee_type == "shared_function":
-        return {"type": "Type 6", "detail": "Private function calls shared function directly."}
+        return {"type": "Type 5", "detail": ARCHITECTURE_VIOLATION_RULES["Type 5"]}
     return None
 
 
@@ -360,6 +365,8 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_json_url": SOURCE_JSON_URL,
             "source": "src/fabricops_kit",
             "public_function_source": "src/fabricops_kit/__init__.py::__all__",
+            "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
+            "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
         },
         "public_functions": public_functions,
         "defined_functions": defined_functions,
