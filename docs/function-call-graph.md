@@ -9,8 +9,8 @@ The workflow follows the same five steps shown below: repository code, agent con
 ![Function Call Graph workflow](assets/fabricops-call-graph-setup.png)
 
 <div align="center">
-  <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open Dashboard</a>
-  <a class="md-button" href="reference/_data/public-function-call-flows.json">View JSON Contract</a>
+  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open Dashboard</a>
+  <a class="md-button" href="../reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
 
 ## 1. Repository Code
@@ -102,7 +102,7 @@ Use it to:
 ![Public Function Call Flows Dashboard](assets/fabricops-call-graph-dashboard.png)
 
 <div align="center">
-  <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open the dashboard</a>
+  <a class="md-button md-button--primary" href="../assets/public-function-call-flows-dashboard.html">Open the dashboard</a>
 </div>
 
 
