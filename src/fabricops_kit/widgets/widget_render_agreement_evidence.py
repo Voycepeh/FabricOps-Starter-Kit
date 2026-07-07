@@ -120,7 +120,7 @@ def _save_agreement_evidence_records(
     config: Any,
     env: str,
     agreement_id: str,
-    contract_version: str,
+    agreement_version: str,
     evidence_type: str,
     evidence_file_paths: Any,
     committed_by: str | None = None,
@@ -129,34 +129,27 @@ def _save_agreement_evidence_records(
 ) -> list[dict[str, Any]]:
     """Append manually uploaded evidence file-reference metadata rows."""
     agreement_id = str(agreement_id or "").strip()
-    contract_version = str(contract_version or "").strip()
+    agreement_version = str(agreement_version or "").strip()
     if not agreement_id:
         raise ValueError("agreement_id is required before saving agreement evidence.")
-    if not contract_version:
-        raise ValueError("contract_version is required before saving agreement evidence.")
+    if not agreement_version:
+        raise ValueError("agreement_version is required before saving agreement evidence.")
     evidence_type = str(evidence_type or "Other").strip() or "Other"
     file_references = _prepare_evidence_file_references(evidence_file_paths)
     audit = build_runtime_audit_fields(
         config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context
     )
-    uploaded_at = audit.get("_committed_at") or datetime.fromisoformat(
-        get_current_audit_timestamp(config=config, drop_microseconds=False)
-    )
-    uploaded_by = audit.get("_committed_by") or ""
-
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     rows: list[dict[str, Any]] = []
     for reference in file_references:
         row = {
             "agreement_id": agreement_id,
-            "contract_version": contract_version,
+            "agreement_version": agreement_version,
             "evidence_type": evidence_type,
             "file_name": reference["file_name"],
             "file_path": reference["file_path"],
             "mime_type": reference["mime_type"],
             "file_size": reference["file_size"],
-            "uploaded_at": uploaded_at,
-            "uploaded_by": uploaded_by,
             **audit,
         }
         write_widget_metadata_row(
@@ -184,13 +177,13 @@ def _render_agreement_evidence_widget_workflow(
 
     def _version_key(row: dict[str, Any]) -> str:
         agreement_id = str(row.get("agreement_id") or "").strip()
-        contract_version = str(row.get("contract_version") or "").strip()
-        return f"{agreement_id}||{contract_version}" if agreement_id and contract_version else ""
+        agreement_version = str(row.get("agreement_version") or "").strip()
+        return f"{agreement_id}||{agreement_version}" if agreement_id and agreement_version else ""
 
     def _version_label(row: dict[str, Any]) -> str:
         key = _version_key(row)
         return (
-            f"{row.get('agreement_name', '') or row.get('agreement_id', '')} ({row.get('agreement_id', '')} / v{row.get('contract_version', '')})"
+            f"{row.get('agreement_name', '') or row.get('agreement_id', '')} ({row.get('agreement_id', '')} / v{row.get('agreement_version', '')})"
             if key
             else ""
         )
@@ -209,11 +202,11 @@ def _render_agreement_evidence_widget_workflow(
         label_fn=_version_label,
         value_fn=_version_key,
         placeholder="Search agreement versions...",
-        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain", "recipient"],
         context_fields=[
             ("agreement_name", "Agreement name"),
             ("agreement_id", "Agreement ID"),
-            ("contract_version", "Contract version"),
+            ("agreement_version", "Contract version"),
             ("recipient", "Recipient"),
         ],
         empty_label="Select an agreement version...",
@@ -224,8 +217,8 @@ def _render_agreement_evidence_widget_workflow(
     )
     evidence_file_paths = widgets.Textarea(
         placeholder=(
-            "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/signed_agreement.pdf\n"
-            "Files/fabricops/agreement_evidence/<agreement_id>/<contract_version>/email_approval.pdf"
+            "Files/fabricops/agreement_evidence/<agreement_id>/<agreement_version>/signed_agreement.pdf\n"
+            "Files/fabricops/agreement_evidence/<agreement_id>/<agreement_version>/email_approval.pdf"
         ),
         **widget_common(widgets, "Evidence File Paths"),
     )
@@ -273,7 +266,7 @@ def _render_agreement_evidence_widget_workflow(
                     config=config,
                     env=env,
                     agreement_id=str(selected_row.get("agreement_id") or ""),
-                    contract_version=str(selected_row.get("contract_version") or ""),
+                    agreement_version=str(selected_row.get("agreement_version") or ""),
                     evidence_type=str(evidence_type.value or "Other"),
                     evidence_file_paths=evidence_file_paths.value,
                 )

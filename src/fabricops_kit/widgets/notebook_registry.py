@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 from typing import Any
 
 from fabricops_kit.io.shared import (
@@ -16,34 +15,22 @@ from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_me
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 NOTEBOOK_REGISTRY_BASE_FIELDS = [
     "agreement_id",
+    "agreement_version",
     "environment_name",
     "dataset_name",
     "table_name",
     "topic",
-    "pipeline_name",
     "notebook_type",
-    "workspace_id",
-    "workspace_name",
-    "notebook_id",
-    "notebook_name",
     "notebook_url",
-    "user_name",
-    "user_id",
-    "registered_at",
 ]
 
 NOTEBOOK_REGISTRY_STATE_FIELDS = [
-    "registration_id",
-    "agreement_contract_version",
     "registration_role",
     "registration_status",
-    "superseded_at",
-    "superseded_by_registration_id",
 ]
 
 NOTEBOOK_REGISTRY_AUDIT_FIELDS = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
 NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS, *NOTEBOOK_REGISTRY_AUDIT_FIELDS]
-
 
 def _coerce_row_dicts(rows):
     if rows is None:
@@ -51,18 +38,6 @@ def _coerce_row_dicts(rows):
     if hasattr(rows, "collect"):
         rows = rows.collect()
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in rows]
-
-
-def _notebook_registration_key(row: dict[str, Any]) -> str:
-    parts = [
-        str(row.get("workspace_id") or ""),
-        str(row.get("notebook_id") or ""),
-        str(row.get("notebook_name") or ""),
-        str(row.get("agreement_id") or ""),
-        str(row.get("agreement_contract_version") or ""),
-        str(row.get("registration_role") or ""),
-    ]
-    return hashlib.sha256("||".join(parts).encode("utf-8")).hexdigest()[:24]
 
 
 def register_current_notebook(
@@ -73,13 +48,9 @@ def register_current_notebook(
     dataset_name=None,
     table_name=None,
     topic=None,
-    pipeline_name=None,
-    contract_version=None,
+    agreement_version=None,
     registration_role="primary",
     registration_status="active",
-    registration_id=None,
-    superseded_at=None,
-    superseded_by_registration_id=None,
     metadata_table=NOTEBOOK_REGISTRY_TABLE,
     metadata_schema: str | None = None,
     *,
@@ -103,21 +74,16 @@ def register_current_notebook(
     notebook_type : str
         Notebook family or workflow phase. When blank, the value is inferred
         from the current notebook name prefix.
-    environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
+    environment_name, dataset_name, table_name, topic : str, optional
         Optional workflow context recorded with the notebook registration.
-    contract_version : str, optional
-        Agreement contract version selected when the notebook was registered.
+    agreement_version : str, optional
+        Agreement version selected when the notebook was registered.
     registration_role : {"primary", "additional"}, default="primary"
         Whether the row represents the notebook's user-facing active agreement
         or an additional audit link.
     registration_status : {"active", "superseded"}, default="active"
         Current registration event state. Superseded rows are retained for audit
         and ignored by active-registration helpers.
-    registration_id : str, optional
-        Stable registration identifier. When omitted, a deterministic identifier
-        is generated from the notebook and agreement identity.
-    superseded_at, superseded_by_registration_id : str, optional
-        Audit values populated when a prior registration is superseded.
     metadata_table : str, default=NOTEBOOK_REGISTRY_TABLE
         Physical notebook registry table name.
     metadata_schema : str, optional
@@ -149,11 +115,8 @@ def register_current_notebook(
     ctx = _runtime_context()
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=ctx)
     workspace_id = audit["_workspace_id"]
-    workspace_name = audit["_workspace_name"]
     notebook_id = audit["_notebook_id"]
     notebook_name = audit["_notebook_name"]
-    user_id = _context_get(ctx, "userId")
-    user_name = _context_get(ctx, "userName")
     inferred_type = notebook_type or str(notebook_name).split("_", 1)[0]
     row = {
         "agreement_id": _safe_str(agreement_id),
@@ -161,28 +124,17 @@ def register_current_notebook(
         "dataset_name": _safe_str(dataset_name),
         "table_name": _safe_str(table_name),
         "topic": _safe_str(topic),
-        "pipeline_name": _safe_str(pipeline_name),
         "notebook_type": _safe_str(inferred_type),
-        "workspace_id": _safe_str(workspace_id),
-        "workspace_name": _safe_str(workspace_name),
-        "notebook_id": _safe_str(notebook_id),
-        "notebook_name": _safe_str(notebook_name),
         "notebook_url": _safe_str(
             f"https://app.fabric.microsoft.com/groups/{workspace_id}/notebooks/{notebook_id}"
             if workspace_id and notebook_id
             else ""
         ),
-        "user_name": _safe_str(user_name),
-        "user_id": _safe_str(user_id),
-        "registered_at": _audit_timestamp_value(config),
-        "agreement_contract_version": _safe_str(contract_version),
+        "agreement_version": _safe_str(agreement_version),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),
-        "superseded_at": _safe_str(superseded_at),
-        "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
         **audit,
     }
-    row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
     df = spark.createDataFrame([coerce_metadata_row_types(metadata_table, row)])
     write_lakehouse_table_core(
@@ -230,9 +182,9 @@ def _load_notebook_registry(
     if active_only:
         latest: dict[str, dict[str, Any]] = {}
         for row in rows:
-            key = row.get("registration_id") or _notebook_registration_key(row)
+            key = "||".join(str(row.get(field) or "") for field in ("_workspace_id", "_notebook_id", "agreement_id", "agreement_version", "registration_role"))
             previous = latest.get(key)
-            if previous is None or str(row.get("registered_at") or "") >= str(previous.get("registered_at") or ""):
+            if previous is None or str(row.get("_committed_at") or "") >= str(previous.get("_committed_at") or ""):
                 latest[key] = row
         rows = list(latest.values())
     out = []
@@ -243,9 +195,9 @@ def _load_notebook_registry(
             continue
         if environment_name and str(row.get("environment_name") or "") != str(environment_name):
             continue
-        if notebook_id and str(row.get("notebook_id") or "") != str(notebook_id):
+        if notebook_id and str(row.get("_notebook_id") or "") != str(notebook_id):
             continue
-        if notebook_name and str(row.get("notebook_name") or "") != str(notebook_name):
+        if notebook_name and str(row.get("_notebook_name") or "") != str(notebook_name):
             continue
         if registration_role and str(row.get("registration_role") or "") != str(registration_role):
             continue

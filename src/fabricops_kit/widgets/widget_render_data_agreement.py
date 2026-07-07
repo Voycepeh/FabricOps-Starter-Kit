@@ -74,8 +74,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         label_fn=_agreement_label,
         value_fn=_row_id,
         placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
-        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
+        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain", "recipient"],
+        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("agreement_version", "Current version"), ("recipient", "Recipient")],
         empty_label="Create new agreement",
     )
     selected = selected_selector["selector"]
@@ -162,7 +162,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 if row.get("_fabricops_no_change"):
                     print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
                 else:
-                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
+                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['agreement_version']})")
                     for callback in after_save_callbacks:
                         callback(row)
                 _refresh_existing_options(row["agreement_id"])
@@ -182,7 +182,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": identity_context, "fields": form, "custom_fields": custom, "refresh_stewards_button": refresh_stewards, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": _refresh_steward_dropdown, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
 
 
-def _parse_contract_version(version: Any) -> tuple[int, int, int]:
+def _parse_agreement_version(version: Any) -> tuple[int, int, int]:
     try:
         parts = str(version or "").strip().split(".")
         return tuple(int(parts[index]) if index < len(parts) else 0 for index in range(3))  # type: ignore[return-value]
@@ -191,7 +191,7 @@ def _parse_contract_version(version: Any) -> tuple[int, int, int]:
 
 
 def _next_minor_version(version: Any) -> str:
-    major, minor, _ = _parse_contract_version(version)
+    major, minor, _ = _parse_agreement_version(version)
     return "1.0.0" if major == 0 else f"{major}.{minor + 1}.0"
 
 
@@ -209,7 +209,7 @@ def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
 def _agreement_identity_text(row: dict[str, Any] | None) -> str:
     if not row:
         return "Agreement ID and version are generated when saved."
-    current_version = str(row.get("contract_version") or "")
+    current_version = str(row.get("agreement_version") or "")
     return (
         f"Agreement ID: {row.get('agreement_id', '')}<br>"
         f"Current version: {current_version}<br>"
@@ -226,7 +226,7 @@ def _steward_label(row: dict[str, Any]) -> str:
 def _agreement_label(row: dict[str, Any]) -> str:
     row_id = str(row.get("agreement_id") or "").strip()
     name = str(row.get("agreement_name") or row_id)
-    version = str(row.get("contract_version") or "")
+    version = str(row.get("agreement_version") or "")
     return f"{name} ({row_id} / v{version})"
 
 
@@ -236,20 +236,17 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
     if selected_id:
         same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
-        latest = max(same_agreement, key=lambda item: _parse_contract_version(item.get("contract_version")), default=selected_agreement)
+        latest = max(same_agreement, key=lambda item: _parse_agreement_version(item.get("agreement_version")), default=selected_agreement)
         row["agreement_id"] = selected_id
-        row["contract_version"] = _next_minor_version(latest.get("contract_version"))
+        row["agreement_version"] = _next_minor_version(latest.get("agreement_version"))
     else:
         latest = None
         row["agreement_id"] = str(row.get("agreement_id") or "").strip() or _generate_agreement_id(config)
-        row["contract_version"] = str(row.get("contract_version") or "1.0.0").strip()
-    required = ["agreement_id", "contract_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
+        row["agreement_version"] = str(row.get("agreement_version") or "1.0.0").strip()
+    required = ["agreement_id", "agreement_version", "agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required agreement field(s): " + ", ".join(missing))
-    usage_fields = ["approved_usage_internal", "approved_usage_external", "approved_usage_research"]
-    if not any(str(row.get(field) or "").strip() for field in usage_fields):
-        raise ValueError("At least one approved usage field is required: internal, external, or research.")
     row["start_date"] = parse_iso_date(row.get("start_date"), "start_date", required=True)
     row["expiry_date"] = parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
     if row["expiry_date"] < row["start_date"]:
@@ -261,8 +258,8 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     if latest is not None:
         if _business_agreement_snapshot(row) == _business_agreement_snapshot(latest):
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
-    if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("contract_version") or "").strip() == row["contract_version"] for item in existing_rows):
-        raise ValueError(f"Agreement {row['agreement_id']} version {row['contract_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
+    if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("agreement_version") or "").strip() == row["agreement_version"] for item in existing_rows):
+        raise ValueError(f"Agreement {row['agreement_id']} version {row['agreement_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
     row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)

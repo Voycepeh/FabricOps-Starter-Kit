@@ -192,9 +192,8 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
     assert config.data_steward_widget["custom_fields"][0]["options"] == ["A"]
     assert "data_agreement_evidence" in config.metadata_tables
-    assert {"recipient", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}.issubset(
-        set(config.data_agreement_widget["visible_columns"])
-    )
+    assert {"recipient", "business_purpose"}.issubset(set(config.data_agreement_widget["visible_columns"]))
+    assert not any(field.startswith("approved_usage_") for field in config.data_agreement_widget["visible_columns"])
     with pytest.raises(ValueError, match="paths must be a non-empty mapping"):
         PathConfig(paths={})
 
@@ -753,7 +752,7 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path(
         "src/fabricops_kit/io/shared.py"
     ).read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path(
+    assert "from fabricops_kit.config.audit import build_runtime_audit_fields" in Path(
         "src/fabricops_kit/pipeline/metadata_evidence.py"
     ).read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path(
@@ -916,12 +915,13 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     docs_catalogue = {row["name"]: row["type"] for row in _metadata_doc_schema_rows("METADATA_DATA_CATALOGUE")}
 
     assert agreement["start_date"] == "date"
-    assert agreement["approved_usage_internal"] == "boolean"
+    assert "approved_usage_internal" not in agreement
+    assert agreement["agreement_version"] == "string"
     assert catalogue["profiled_at"] == "timestamp"
     assert catalogue["fabric_store_target"] == "string"
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
-    assert docs_catalogue["policy_updated_at"] == "timestamp"
+    assert docs_catalogue["policy_updated_at"] == "timestamp"  # generated docs are not refreshed in source PRs
 
     for table_name, schema in registry.items():
         assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()) :] == [

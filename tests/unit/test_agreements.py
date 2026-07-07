@@ -26,9 +26,9 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     steward_fields = agreement.get_widget_visible_fields(config, "data_steward_widget")
     agreement_fields = agreement.get_widget_visible_fields(config, "data_agreement_widget")
 
-    assert set(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS).issuperset({"agreement_id", "contract_version", "file_path"})
-    assert {"recipient", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}.issubset(agreement_fields)
-    assert "approved_usage" not in agreement_fields
+    assert set(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS).issuperset({"agreement_id", "agreement_version", "file_path"})
+    assert "recipient" in agreement_fields
+    assert not any(field.startswith("approved_usage_") for field in agreement_fields)
     assert "custom_fields_json" not in steward_fields + agreement_fields
     assert "agreement_id" not in agreement_fields
 
@@ -58,7 +58,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
     assert steward["custom_fields_json"]
     assert created["agreement_id"] == updated["agreement_id"] == "DA-GENERATED"
-    assert (created["contract_version"], updated["contract_version"]) == ("1.0.0", "1.1.0")
+    assert (created["agreement_version"], updated["agreement_version"]) == ("1.0.0", "1.1.0")
     assert [write["table"] for write in writes] == ["CUSTOM_STEWARD", "CUSTOM_AGREEMENT", "CUSTOM_AGREEMENT"]
     assert all(write["env"] == "dev" for write in writes)
 
@@ -171,7 +171,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
-    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [agreement_row(agreement_id="DA-1", contract_version="1.0.0", custom_fields_json='{"consumer_group":"ODI"}')])
+    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [agreement_row(agreement_id="DA-1", agreement_version="1.0.0", custom_fields_json='{"consumer_group":"ODI"}')])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
 

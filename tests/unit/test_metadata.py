@@ -77,10 +77,10 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     rows = [
         {
             "agreement_id": "DA-1",
-            "registration_id": "r1",
-            "registered_at": "2026-01-02T00:00:00Z",
-            "notebook_id": "notebook-id",
-            "notebook_name": "02_pipeline_orders",
+            "agreement_version": "1.0.0",
+            "_committed_at": "2026-01-02T00:00:00Z",
+            "_notebook_id": "notebook-id",
+            "_notebook_name": "02_pipeline_orders",
             "registration_status": "active",
             "notebook_type": "02_pipeline",
             "environment_name": "dev",
@@ -88,10 +88,10 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
         },
         {
             "agreement_id": "DA-2",
-            "registration_id": "r2",
-            "registered_at": "2026-01-01T00:00:00Z",
-            "notebook_id": "notebook-id",
-            "notebook_name": "02_pipeline_orders",
+            "agreement_version": "1.0.0",
+            "_committed_at": "2026-01-01T00:00:00Z",
+            "_notebook_id": "notebook-id",
+            "_notebook_name": "02_pipeline_orders",
             "registration_status": "superseded",
             "notebook_type": "02_pipeline",
             "environment_name": "dev",
@@ -99,10 +99,10 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
         },
         {
             "agreement_id": "DA-3",
-            "registration_id": "r3",
-            "registered_at": "2026-01-03T00:00:00Z",
-            "notebook_id": "other",
-            "notebook_name": "02_pipeline_other",
+            "agreement_version": "1.0.0",
+            "_committed_at": "2026-01-03T00:00:00Z",
+            "_notebook_id": "other",
+            "_notebook_name": "02_pipeline_other",
             "registration_status": "active",
             "notebook_type": "02_pipeline",
             "environment_name": "dev",
@@ -117,7 +117,7 @@ def test_current_notebook_active_registrations_filters_current_runtime_rows(monk
     )
 
     assert len(active) == 1
-    assert active[0]["notebook_id"] == "notebook-id"
+    assert active[0]["_notebook_id"] == "notebook-id"
 
 
 def test_notebook_registry_read_requires_configured_metadata_route():

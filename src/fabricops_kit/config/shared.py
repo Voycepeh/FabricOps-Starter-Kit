@@ -373,9 +373,6 @@ class DataAgreementConfig:
                 "start_date",
                 "expiry_date",
                 "business_purpose",
-                "approved_usage_internal",
-                "approved_usage_external",
-                "approved_usage_research",
             ],
             "custom_fields": [],
         }

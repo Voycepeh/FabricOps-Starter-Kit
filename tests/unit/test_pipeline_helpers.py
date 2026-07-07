@@ -20,6 +20,23 @@ from tests.helpers import framework_config
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture(autouse=True)
+def _canonical_audit(monkeypatch):
+    """Provide deterministic canonical audit fields for pipeline helper tests."""
+    audit = {
+        "_workspace_id": "workspace-id",
+        "_workspace_name": "workspace",
+        "_notebook_id": "notebook-id",
+        "_notebook_name": "02_pipeline",
+        "_activity_id": "activity-id",
+        "_committed_by": "user",
+        "_committed_at": "2026-01-01T00:00:00+00:00",
+        "_metadata_lakehouse_name": "lh_metadata_dev",
+    }
+    monkeypatch.setattr(pipeline_shared, "_runtime_audit_fields", lambda *args, **kwargs: dict(audit))
+
+
+
 class FakeSpark:
     """Fakespark test double."""
 
@@ -255,7 +272,6 @@ def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch)
     result = pipeline.write_pipeline_lineage(
         spark=FakeSpark(),
         context={"config": {}, "env": "dev"},
-        run_id="run-1",
         source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
         target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
         relationships=[{"sources": ["s1", "s2"], "targets": ["t1", "t2"], "operation": "join"}],
@@ -283,13 +299,13 @@ def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
     row = pipeline.write_pipeline_run_summary(
         spark=fake_spark,
         context={"config": {}, "env": "dev"},
-        run_id="run-1",
         source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
         target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
         source_schema_results={"s1": {"status": "passed"}},
         target_schema_results={"t1": {"status": "passed"}},
         source_dq_results={"s1": {"status": "passed"}},
         target_dq_results={"t1": {"status": "warning"}},
+        started_at="2026-01-01T00:00:00+00:00",
     )
 
     assert row["source_count"] == 2
@@ -367,10 +383,10 @@ def test_private_guardrail_evidence_definitions_excludes_dataframes_and_resolves
     }
 
 
-def test_private_guardrail_evidence_definitions_requires_fabric_store_target():
-    """Verify missing canonical FabricStore target fails clearly."""
-    with pytest.raises(ValueError, match="Table config 'source_01' must define a non-empty fabric_store_target"):
-        pipeline_shared._build_guardrail_evidence_definitions([{"key": "source_01", "table_name": "orders"}])
+def test_private_guardrail_evidence_definitions_defaults_fabric_store_target():
+    """Verify missing FabricStore target defaults to source for evidence."""
+    definitions = pipeline_shared._build_guardrail_evidence_definitions([{"key": "source_01", "table_name": "orders"}])
+    assert definitions["source_01"]["fabric_store_target"] == "source"
 
 
 def test_run_table_guardrails_collects_results_and_returns_summary_before_reporting_failures(monkeypatch):
@@ -439,7 +455,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         run_id="run-1",
         spark_session="spark",
         agreement_id="agreement-1",
-        agreement_contract_version="v1",
+        agreement_version="v1",
         notebook_registry_id="notebook-registry-1",
         notebook_id="notebook-1",
         pipeline_name="pipeline-1",
@@ -501,12 +517,11 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             "dq_preset": "active_rules",
         }],
         context={"config": {}, "env": "dev"},
-        run_id="run-1",
         spark_session=Spark(),
     )
 
     assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "dq"]
-    assert {write["run_id"] for write in result_writes} == {"run-1"}
+    assert all("run_id" not in write for write in result_writes)
 
 def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypatch):
     """Verify profile behavior config uses clean profile_mode values only."""
@@ -556,7 +571,6 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     pipeline.run_table_guardrails(
         table_configs,
         context={"config": {}, "env": "dev"},
-        run_id="run-1",
         spark_session="spark",
     )
 
@@ -590,7 +604,6 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
             }
         ],
         context={"config": {}, "env": "dev"},
-        run_id="run-1",
         spark_session="spark",
         stop_on_failure=True,
     )
@@ -800,7 +813,7 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
     monkeypatch.setattr(
         pipeline_bootstrap_module,
         "get_selected_agreement",
-        lambda: {"agreement_id": "agreement-1", "contract_version": "2", "registration_id": "registry-1"},
+        lambda: {"agreement_id": "agreement-1", "agreement_version": "2", "registration_id": "registry-1"},
     )
 
     result = fabricops_kit.widget_pipeline_bootstrap(
@@ -816,15 +829,13 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
     assert result.pipeline_name == "02_pipeline"
     assert result.notebook_id == "notebook-1"
     assert result.agreement_id == "agreement-1"
-    assert result.agreement_contract_version == "2"
-    assert result.notebook_registry_id == "registry-1"
+    assert result.agreement_version == "2"
     assert widget_calls == [
         {
             "spark_session": spark,
             "metadata_schema": "metadata_schema",
             "register_notebook": True,
             "notebook_type": "02_pipeline",
-            "pipeline_name": "02_pipeline",
             "context": None,
         }
     ]
@@ -841,7 +852,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
         notebook_id="notebook-1",
         notebook_registry_id="registry-1",
         agreement_id="agreement-1",
-        agreement_contract_version="2",
+        agreement_version="2",
         context={"config": "config", "env": "dev"},
     )
     monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
@@ -855,7 +866,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
         "enforce_profile_behavior",
         lambda spark_session, dataframe, catalogue_table, dataset_name, table_name, **kwargs: captured.setdefault(
             "profile_behavior",
-            {"spark_session": spark_session, "run_id": kwargs["run_id"]},
+            {"spark_session": spark_session, "activity_id": "activity-id"},
         ) or {"status": "passed", "can_continue": True},
     )
     monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -871,14 +882,14 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     result = pipeline.run_table_guardrails(table_configs, table_role="source", mode="profile")
 
     assert result["can_continue"] is True
-    assert captured["profile_behavior"] == {"spark_session": spark, "run_id": "run-123"}
-    assert captured["catalogue"]["run_id"] == "run-123"
-    assert captured["catalogue"]["pipeline_name"] == "demo_pipeline"
-    assert captured["catalogue"]["notebook_id"] == "notebook-1"
-    assert captured["catalogue"]["notebook_registry_id"] == "registry-1"
+    assert captured["profile_behavior"] == {"spark_session": spark, "activity_id": "activity-id"}
+    assert "run_id" not in captured["catalogue"]
+    assert "pipeline_name" not in captured["catalogue"]
+    assert "notebook_id" not in captured["catalogue"]
+    assert "notebook_registry_id" not in captured["catalogue"]
     assert captured["catalogue"]["agreement_id"] == "agreement-1"
-    assert captured["catalogue"]["agreement_contract_version"] == "2"
-    assert active.source_definitions == {"orders": {"key": "orders", "expected_schema": {}, "table_name": "orders", "stage": "target", "layer": "unified", "kind": "lakehouse", "mode": "overwrite"}}
+    assert captured["catalogue"]["agreement_version"] == "2"
+    assert active.source_definitions["orders"]["fabric_store_target"] == "source"
 
 
 def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_context(monkeypatch):
@@ -892,7 +903,7 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
         notebook_id="notebook-1",
         notebook_registry_id="registry-1",
         agreement_id="agreement-1",
-        agreement_contract_version="2",
+        agreement_version="2",
         source_definitions={"orders": {"table_name": "orders"}},
         target_definitions={"curated": {"table_name": "curated"}},
     )
@@ -910,9 +921,10 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
         lineage_result={"status": "written"},
     )
 
-    assert row["run_id"] == "run-123"
+    assert row["_activity_id"] == "activity-id"
+    assert "run_id" not in row
     assert row["status"] == "failed"
-    assert row["pipeline_name"] == "demo_pipeline"
+    assert "pipeline_name" not in row
     assert row["lineage_status"] == "written"
     assert row["catalogue_status"] == "written"
     assert writes

@@ -166,7 +166,7 @@ def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = 
         return widgets.Dropdown(options=options, value=default_value, **widget_common(widgets, description))
     if field.endswith("_date") or field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
         return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **widget_common(widgets, description))
-    if field.startswith("approved_usage_") or field == "is_active":
+    if field == "is_active":
         return widgets.Checkbox(value=True if value == "" else str(value).strip().lower() in {"1", "true", "yes", "y"}, **widget_common(widgets, description))
     if field in {"business_purpose"}:
         return widgets.Textarea(value=str(value or ""), **widget_common(widgets, description, textarea=True))
@@ -181,16 +181,16 @@ DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 STANDARD_RUNTIME_AUDIT_COLUMNS = ["_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]
 DATA_STEWARD_VISIBLE_FIELDS = ["steward_name", "steward_role", "contact", "effective_from", "effective_to"]
 DATA_STEWARD_BACKEND_FIELDS = ["steward_id", *DATA_STEWARD_VISIBLE_FIELDS, "is_active"]
-DATA_AGREEMENT_VISIBLE_FIELDS = ["agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research"]
-DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "contract_version"]
+DATA_AGREEMENT_VISIBLE_FIELDS = ["agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
+DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "agreement_version"]
 DATA_STEWARD_FIELDS = DATA_STEWARD_BACKEND_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 DATA_AGREEMENT_FIELDS = DATA_AGREEMENT_GENERATED_FIELDS + DATA_AGREEMENT_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
-DATA_AGREEMENT_EVIDENCE_FIELDS = ["agreement_id", "contract_version", "evidence_type", "file_name", "file_path", "mime_type", "file_size", "uploaded_at", "uploaded_by", *STANDARD_RUNTIME_AUDIT_COLUMNS]
+DATA_AGREEMENT_EVIDENCE_FIELDS = ["agreement_id", "agreement_version", "evidence_type", "file_name", "file_path", "mime_type", "file_size", *STANDARD_RUNTIME_AUDIT_COLUMNS]
 AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
 AGREEMENT_EVIDENCE_MIME_TYPES = {".pdf": "application/pdf", ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 AGREEMENT_EVIDENCE_TYPES = ["Signed Agreement", "Email Approval", "Policy Document", "Supporting Screenshot", "Other"]
 WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
-FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "approved_usage_internal": "Approved Usage - Internal", "approved_usage_external": "Approved Usage - External", "approved_usage_research": "Approved Usage - Research", "evidence_type": "Evidence Type"}
+FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "evidence_type": "Evidence Type"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
 GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
@@ -222,7 +222,7 @@ class PipelineRunContext:
     notebook_id: str = ""
     notebook_registry_id: str = ""
     agreement_id: str = ""
-    agreement_contract_version: str = ""
+    agreement_version: str = ""
     agreement: dict[str, Any] = dataclass_field(default_factory=dict)
     context: dict[str, Any] | None = None
     read_only: bool = False
@@ -458,7 +458,7 @@ def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> da
     except ValueError as exc:
         raise ValueError(f"{field_name} must be a valid ISO date (YYYY-MM-DD).") from exc
 
-def _parse_contract_version(version: Any) -> tuple[int, int, int]:
+def _parse_agreement_version(version: Any) -> tuple[int, int, int]:
     """Parse a semantic contract version into a comparable tuple."""
     try:
         parts = str(version or "").strip().split(".")
@@ -468,7 +468,7 @@ def _parse_contract_version(version: Any) -> tuple[int, int, int]:
 
 def _next_minor_version(version: Any) -> str:
     """Return the next minor contract version, defaulting to ``1.0.0``."""
-    major, minor, _ = _parse_contract_version(version)
+    major, minor, _ = _parse_agreement_version(version)
     return "1.0.0" if major == 0 else f"{major}.{minor + 1}.0"
 
 def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
@@ -476,8 +476,8 @@ def latest_agreement_versions(rows: Any) -> list[dict[str, Any]]:
 
     def _agreement_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
         return (
-            _parse_contract_version(row.get("contract_version")),
-            str(row.get("_committed_at") or row.get("updated_at") or row.get("uploaded_at") or ""),
+            _parse_agreement_version(row.get("agreement_version")),
+            str(row.get("_committed_at") or ""),
             str(row.get("agreement_name") or ""),
             str(row.get("agreement_id") or ""),
         )
@@ -741,15 +741,14 @@ def build_enrichment_rule_records(
             "is_active": lifecycle["is_active"],
             "created_by_role": lifecycle.get("created_by_role", "engineering"),
             "source_notebook_type": lifecycle.get("source_notebook_type", "02_pipeline"),
-            "source_notebook_id": str(review.get("source_notebook_id") or (state or {}).get("notebook_id") or ""),
             "activation_reason": lifecycle.get("activation_reason", ""),
             "activated_by": lifecycle.get("activated_by", ""),
             "activated_at": lifecycle.get("activated_at", ""),
             "requires_governance_review": bool(lifecycle.get("requires_governance_review", False)),
             "approval_policy": lifecycle["approval_policy"],
             "governance_mode": lifecycle["governance_mode"],
-            "submitted_by": resolved_actor,
-            "submitted_at": now,
+            "submitted_by": resolved_actor if lifecycle.get("review_state") == "pending_governance_review" else "",
+            "submitted_at": now if lifecycle.get("review_state") == "pending_governance_review" else "",
             "reviewed_by": resolved_actor if lifecycle["review_status"] in {"self_approved", "governance_approved"} else "",
             "reviewed_at": now if lifecycle["review_status"] in {"self_approved", "governance_approved"} else "",
             "review_decision": lifecycle["review_status"],
@@ -759,13 +758,6 @@ def build_enrichment_rule_records(
             "supersedes_enrichment_rule_id": str(review.get("supersedes_enrichment_rule_id") or ""),
             "effective_from": now if lifecycle["is_active"] else "",
             "effective_to": "",
-            "created_at": now,
-            "created_by": resolved_actor,
-            "updated_at": now,
-            "updated_by": resolved_actor,
-            "run_id": str(review.get("run_id") or (state or {}).get("run_id") or ""),
-            "notebook_id": str(review.get("notebook_id") or (state or {}).get("notebook_id") or ""),
-            "notebook_registry_id": str(review.get("notebook_registry_id") or (state or {}).get("notebook_registry_id") or ""),
             **audit,
         }
         rows.append(row)
@@ -1039,13 +1031,13 @@ def load_rule_review_history(rows: Iterable[Mapping[str, Any]], *, metadata_tabl
             continue
         history.append({
             "rule_id": str(row.get("enrichment_rule_id") or row.get("rule_id") or ""),
-            "rule_version": str(row.get("enrichment_rule_version") or row.get("rule_version") or row.get("created_at") or ""),
+            "rule_version": str(row.get("enrichment_rule_version") or row.get("rule_version") or row.get("_committed_at") or ""),
             "record_type": "enrichment" if row.get("enrichment_rule_id") or row.get("enrichment_type") else "guardrail",
             "rule_type": str(row.get("enrichment_type") or row.get("guardrail_type") or row.get("rule_type") or ""),
             "review_status": str(row.get("review_status") or ""),
             "is_active": bool(row.get("is_active")),
-            "submitted_by": str(row.get("submitted_by") or row.get("created_by") or ""),
-            "submitted_at": str(row.get("submitted_at") or row.get("created_at") or ""),
+            "submitted_by": str(row.get("submitted_by") or row.get("_committed_by") or ""),
+            "submitted_at": str(row.get("submitted_at") or row.get("_committed_at") or ""),
             "reviewed_by": str(row.get("reviewed_by") or row.get("approved_by") or ""),
             "reviewed_at": str(row.get("reviewed_at") or row.get("approved_at") or ""),
             "decision": str(row.get("review_decision") or row.get("review_status") or ""),
@@ -1076,9 +1068,10 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
         source_notebook_type=source_notebook_type,
         created_by_role=created_by_role,
     )
-    created_at = _audit_timestamp_value(config)
-    created_by = _resolve_action_by(actor)
-    return {"rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "created_by": created_by, "created_at": created_at, "submitted_by": created_by, "submitted_at": created_at, "reviewed_by": created_by if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": created_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": created_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, "source_notebook_id": str(state.get("notebook_id") or ""), **lifecycle}
+    committed_at = _audit_timestamp_value(config)
+    actor_value = _resolve_action_by(actor)
+    pending = lifecycle.get("review_state") == "pending_governance_review"
+    return {"rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""
@@ -1124,7 +1117,7 @@ def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: st
         if column_name is not None and str(item.get("column_name") or "") != column_name:
             continue
         matches.append(item)
-    matches.sort(key=lambda row: str(row.get("created_at") or row.get("approved_at") or row.get("_committed_at") or ""), reverse=True)
+    matches.sort(key=lambda row: str(row.get("_committed_at") or ""), reverse=True)
     return matches[0] if matches else {}
 
 def _rule_params(rule: Mapping[str, Any]) -> dict[str, Any]:
@@ -1371,7 +1364,7 @@ def _evaluate_governance_readiness(
     profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
     profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
     agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
-    agreement_contract_version = str(_value(first_profile, "contract_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
+    agreement_version = str(_value(first_profile, "agreement_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
 
     all_pipeline_rows = [
         row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
@@ -1390,12 +1383,12 @@ def _evaluate_governance_readiness(
     agreement_rows = [
         row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
         if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
+        and (not agreement_version or str(_value(row, "agreement_version")) == agreement_version)
     ]
     attachment_rows = [
         row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
         if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_contract_version or str(_value(row, "contract_version")) == agreement_contract_version)
+        and (not agreement_version or str(_value(row, "agreement_version")) == agreement_version)
     ]
 
     blockers: list[dict[str, str]] = []
@@ -1459,7 +1452,7 @@ def _evaluate_governance_readiness(
         "profile_stage": profile_stage,
         "pipeline_run_id": str(_value(latest_pipeline or {}, "run_id")),
         "agreement_id": agreement_id,
-        "agreement_contract_version": agreement_contract_version,
+        "agreement_version": agreement_version,
         "outcome": outcome,
         "blocker_count": len(blockers),
         "warning_count": len(warnings),
@@ -1549,8 +1542,6 @@ def record_table_governance(
             "effective_from": record.get("effective_from") or reviewed_at,
             "source_notebook_type": "03_governance",
             "created_by_role": record.get("created_by_role") or "governance",
-            "updated_by": actor,
-            "updated_at": reviewed_at,
         })
     guardrail_records = _build_dq_rule_records(
         profile_rows,
@@ -1733,9 +1724,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "is_active": is_active,
             "review_status": str(rule.get("target_review_status") or "governance_approved"),
             "author_role": str(rule.get("author_role") or "governance_reviewer"),
-            "created_by": str(rule.get("created_by") or actor),
-            "created_at": str(rule.get("created_at") or now),
-            "approved_by": str(rule.get("approved_by") or actor),
+                                    "approved_by": str(rule.get("approved_by") or actor),
             "approved_at": str(rule.get("approved_at") or now),
             "suggestion_json": _json(rule.get("suggestion_json") or rule.get("suggestion")),
             "action_type": action_type,
