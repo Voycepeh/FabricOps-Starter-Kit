@@ -11,23 +11,23 @@ from fabricops_kit.widgets.shared import (
     DATA_AGREEMENT_TABLE,
     DATA_AGREEMENT_VISIBLE_FIELDS,
     FIELD_LABELS,
-    _WIDGET_CONFIG_DEFAULTS,
-    _collect_custom_fields,
-    _deserialize_custom_fields,
-    _get_widget_visible_fields,
-    _list_data_stewards,
-    _parse_iso_date,
-    _serialize_custom_fields,
-    _standard_widget,
-    _to_bool,
-    _to_iso_date,
+    WIDGET_CONFIG_DEFAULTS,
+    collect_custom_fields,
+    deserialize_custom_fields,
+    get_widget_visible_fields,
+    list_data_stewards,
+    parse_iso_date,
+    serialize_custom_fields,
+    standard_widget,
+    to_bool,
+    to_iso_date,
     config_value,
     list_all_data_agreement_rows,
     list_data_agreements,
     render_searchable_selector,
     require_ipywidgets,
     write_widget_metadata_row,
-    _render_custom_fields,
+    render_custom_fields,
 )
 
 
@@ -49,7 +49,137 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     """
     config, env, _context = resolve_fabric_context(context=context)
-    return _render_data_agreement_widget(spark=spark, config=config, env=env)
+    widgets = require_ipywidgets()
+    from IPython import display as ip
+
+    kind = "data_agreement_widget"
+    widget_config = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
+    fields = get_widget_visible_fields(config, kind)
+    after_save_callbacks: list[Any] = []
+    row_lookup: dict[str, dict[str, Any]] = {}
+
+    def _row_id(row: dict[str, Any]) -> str:
+        return str(row.get("agreement_id") or "").strip()
+
+    def _refresh_lookup(rows: list[dict[str, Any]]) -> None:
+        row_lookup.clear()
+        row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
+
+    existing_rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
+    _refresh_lookup(existing_rows)
+    selected_selector = render_searchable_selector(
+        widgets=widgets,
+        label="Create / update",
+        rows=existing_rows,
+        label_fn=_agreement_label,
+        value_fn=_row_id,
+        placeholder="Search agreements...",
+        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
+        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
+        empty_label="Create new agreement",
+    )
+    selected = selected_selector["selector"]
+    identity_context = widgets.HTML(value=_agreement_identity_text(None))
+    form: dict[str, Any] = {}
+    steward_field_selector = None
+    for field in fields:
+        if field == "steward_id":
+            steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+            steward_field_selector = render_searchable_selector(
+                widgets=widgets,
+                label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
+                rows=steward_rows,
+                label_fn=_steward_label,
+                value_fn=lambda row: str(row.get("steward_id") or "").strip(),
+                placeholder="Search stewards...",
+                search_fields=["steward_name", "steward_role", "contact", "steward_id"],
+                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
+            )
+            form[field] = steward_field_selector["selector"]
+        else:
+            form[field] = standard_widget(field)
+    custom = render_custom_fields(widget_config)
+
+    def _refresh_existing_options(selected_id: str | None = None) -> None:
+        rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
+        _refresh_lookup(rows)
+        selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
+
+    def _refresh_steward_dropdown(selected_id: str | None = None) -> None:
+        current = selected_id or form["steward_id"].value
+        rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+        form["steward_id"].refresh_rows(rows, str(current or ""))
+
+    refresh_stewards = widgets.Button(description="Refresh active stewards")
+    refresh_stewards.on_click(lambda _: _refresh_steward_dropdown())
+    save = widgets.Button(description="Save")
+    output = widgets.Output()
+
+    def _apply_widget_value(widget: Any, value: Any) -> None:
+        select_value = getattr(widget, "select_value", None)
+        if callable(select_value):
+            select_value(str(value or ""))
+            return
+        current = getattr(widget, "value", None)
+        if isinstance(current, tuple):
+            widget.value = tuple(value or ())
+        elif isinstance(current, bool):
+            widget.value = to_bool(value)
+        else:
+            options = list(getattr(widget, "options", []) or [])
+            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+            widget.value = value if not option_values or value in option_values else option_values[0]
+
+    def _populate(change: dict[str, Any]) -> None:
+        row_id = change.get("new")
+        row = row_lookup.get(row_id, {}) if row_id else {}
+        for field, widget in form.items():
+            value = row.get(field, "")
+            if field in {"start_date", "expiry_date"}:
+                value = date.fromisoformat(str(value)[:10]) if value else None
+            _apply_widget_value(widget, value)
+        stored = deserialize_custom_fields(row.get("custom_fields_json", ""))
+        for key, widget in custom.items():
+            _apply_widget_value(widget, stored.get(key, widget.value))
+        identity_context.value = _agreement_identity_text(row if row else None)
+
+    selected.observe(_populate, names="value")
+    callbacks = getattr(selected, "callbacks", None)
+    if isinstance(callbacks, list) and callbacks:
+        callbacks.insert(0, callbacks.pop())
+
+    def _save(_: Any) -> None:
+        save.disabled = True
+        clear = getattr(output, "clear_output", None)
+        if clear is not None:
+            clear(wait=True)
+        with output:
+            try:
+                values = {key: to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value for key, widget in form.items()}
+                extras = collect_custom_fields(widget_config, custom)
+                selected_row = row_lookup.get(selected.value) if selected.value else None
+                row = _create_or_update_data_agreement(spark=spark, config=config, env=env, values=values, selected_agreement=selected_row, custom_fields=extras)
+                if row.get("_fabricops_no_change"):
+                    print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
+                else:
+                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
+                    for callback in after_save_callbacks:
+                        callback(row)
+                _refresh_existing_options(row["agreement_id"])
+                identity_context.value = _agreement_identity_text(row)
+            except Exception as exc:
+                print(f"Error: {exc}")
+            finally:
+                save.disabled = False
+
+    save.on_click(_save)
+    controls = [selected_selector["container"], identity_context]
+    for field in fields:
+        controls.append(steward_field_selector["container"] if field == "steward_id" and steward_field_selector is not None else form[field])
+    controls.extend([*custom.values(), refresh_stewards])
+    container = widgets.VBox([*controls, save, output])
+    ip.display(container)
+    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": identity_context, "fields": form, "custom_fields": custom, "refresh_stewards_button": refresh_stewards, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": _refresh_steward_dropdown, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
 
 
 def _parse_contract_version(version: Any) -> tuple[int, int, int]:
@@ -72,7 +202,7 @@ def _generate_agreement_id(config: Any = None) -> str:
 
 def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
     snapshot = {field: row.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
-    snapshot["custom_fields_json"] = _serialize_custom_fields(_deserialize_custom_fields(row.get("custom_fields_json", "")))
+    snapshot["custom_fields_json"] = serialize_custom_fields(deserialize_custom_fields(row.get("custom_fields_json", "")))
     return snapshot
 
 
@@ -120,14 +250,14 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     usage_fields = ["approved_usage_internal", "approved_usage_external", "approved_usage_research"]
     if not any(str(row.get(field) or "").strip() for field in usage_fields):
         raise ValueError("At least one approved usage field is required: internal, external, or research.")
-    row["start_date"] = _parse_iso_date(row.get("start_date"), "start_date", required=True)
-    row["expiry_date"] = _parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
+    row["start_date"] = parse_iso_date(row.get("start_date"), "start_date", required=True)
+    row["expiry_date"] = parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
     if row["expiry_date"] < row["start_date"]:
         raise ValueError("expiry_date must be on or after start_date.")
-    active_steward_ids = {str(item["steward_id"]) for item in _list_data_stewards(config, env, spark_session=spark, active_only=True)}
+    active_steward_ids = {str(item["steward_id"]) for item in list_data_stewards(config, env, spark_session=spark, active_only=True)}
     if str(row["steward_id"]) not in active_steward_ids:
         raise ValueError("steward_id must reference an active data steward.")
-    row["custom_fields_json"] = _serialize_custom_fields(custom_fields)
+    row["custom_fields_json"] = serialize_custom_fields(custom_fields)
     if latest is not None:
         if _business_agreement_snapshot(row) == _business_agreement_snapshot(latest):
             return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
@@ -137,138 +267,3 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
     return row
-
-
-def _render_data_agreement_widget(*, spark: Any, config: Any, env: str, display_widget: bool = True) -> dict[str, Any]:
-    widgets = require_ipywidgets()
-    from IPython import display as ip
-
-    kind = "data_agreement_widget"
-    widget_config = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
-    fields = _get_widget_visible_fields(config, kind)
-    after_save_callbacks: list[Any] = []
-    row_lookup: dict[str, dict[str, Any]] = {}
-
-    def _row_id(row: dict[str, Any]) -> str:
-        return str(row.get("agreement_id") or "").strip()
-
-    def _refresh_lookup(rows: list[dict[str, Any]]) -> None:
-        row_lookup.clear()
-        row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
-
-    existing_rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
-    _refresh_lookup(existing_rows)
-    selected_selector = render_searchable_selector(
-        widgets=widgets,
-        label="Create / update",
-        rows=existing_rows,
-        label_fn=_agreement_label,
-        value_fn=_row_id,
-        placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
-        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
-        empty_label="Create new agreement",
-    )
-    selected = selected_selector["selector"]
-    identity_context = widgets.HTML(value=_agreement_identity_text(None))
-    form: dict[str, Any] = {}
-    steward_field_selector = None
-    for field in fields:
-        if field == "steward_id":
-            steward_rows = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-            steward_field_selector = render_searchable_selector(
-                widgets=widgets,
-                label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
-                rows=steward_rows,
-                label_fn=_steward_label,
-                value_fn=lambda row: str(row.get("steward_id") or "").strip(),
-                placeholder="Search stewards...",
-                search_fields=["steward_name", "steward_role", "contact", "steward_id"],
-                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
-            )
-            form[field] = steward_field_selector["selector"]
-        else:
-            form[field] = _standard_widget(field)
-    custom = _render_custom_fields(widget_config)
-
-    def _refresh_existing_options(selected_id: str | None = None) -> None:
-        rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
-        _refresh_lookup(rows)
-        selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
-
-    def _refresh_steward_dropdown(selected_id: str | None = None) -> None:
-        current = selected_id or form["steward_id"].value
-        rows = _list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-        form["steward_id"].refresh_rows(rows, str(current or ""))
-
-    refresh_stewards = widgets.Button(description="Refresh active stewards")
-    refresh_stewards.on_click(lambda _: _refresh_steward_dropdown())
-    save = widgets.Button(description="Save")
-    output = widgets.Output()
-
-    def _apply_widget_value(widget: Any, value: Any) -> None:
-        select_value = getattr(widget, "select_value", None)
-        if callable(select_value):
-            select_value(str(value or ""))
-            return
-        current = getattr(widget, "value", None)
-        if isinstance(current, tuple):
-            widget.value = tuple(value or ())
-        elif isinstance(current, bool):
-            widget.value = _to_bool(value)
-        else:
-            options = list(getattr(widget, "options", []) or [])
-            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
-            widget.value = value if not option_values or value in option_values else option_values[0]
-
-    def _populate(change: dict[str, Any]) -> None:
-        row_id = change.get("new")
-        row = row_lookup.get(row_id, {}) if row_id else {}
-        for field, widget in form.items():
-            value = row.get(field, "")
-            if field in {"start_date", "expiry_date"}:
-                value = date.fromisoformat(str(value)[:10]) if value else None
-            _apply_widget_value(widget, value)
-        stored = _deserialize_custom_fields(row.get("custom_fields_json", ""))
-        for key, widget in custom.items():
-            _apply_widget_value(widget, stored.get(key, widget.value))
-        identity_context.value = _agreement_identity_text(row if row else None)
-
-    selected.observe(_populate, names="value")
-    callbacks = getattr(selected, "callbacks", None)
-    if isinstance(callbacks, list) and callbacks:
-        callbacks.insert(0, callbacks.pop())
-
-    def _save(_: Any) -> None:
-        save.disabled = True
-        clear = getattr(output, "clear_output", None)
-        if clear is not None:
-            clear(wait=True)
-        with output:
-            try:
-                values = {key: _to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value for key, widget in form.items()}
-                extras = _collect_custom_fields(widget_config, custom)
-                selected_row = row_lookup.get(selected.value) if selected.value else None
-                row = _create_or_update_data_agreement(spark=spark, config=config, env=env, values=values, selected_agreement=selected_row, custom_fields=extras)
-                if row.get("_fabricops_no_change"):
-                    print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
-                else:
-                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['contract_version']})")
-                    for callback in after_save_callbacks:
-                        callback(row)
-                _refresh_existing_options(row["agreement_id"])
-                identity_context.value = _agreement_identity_text(row)
-            except Exception as exc:
-                print(f"Error: {exc}")
-            finally:
-                save.disabled = False
-
-    save.on_click(_save)
-    controls = [selected_selector["container"], identity_context]
-    for field in fields:
-        controls.append(steward_field_selector["container"] if field == "steward_id" and steward_field_selector is not None else form[field])
-    controls.extend([*custom.values(), refresh_stewards])
-    container = widgets.VBox([*controls, save, output])
-    if display_widget:
-        ip.display(container)
-    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": identity_context, "fields": form, "custom_fields": custom, "refresh_stewards_button": refresh_stewards, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": _refresh_steward_dropdown, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}

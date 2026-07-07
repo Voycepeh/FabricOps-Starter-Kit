@@ -178,7 +178,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
         committed_at="2026-01-02T00:00:00+00:00",
     )
 
-    read_back = agreement._list_data_stewards(framework_config(), "dev", spark_session=FakeSpark())
+    read_back = agreement.list_data_stewards(framework_config(), "dev", spark_session=FakeSpark())
 
     assert steward["steward_id"]
     assert read_back == [steward]

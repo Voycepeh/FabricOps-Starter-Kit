@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import ast
 import sys
 
 import pytest
@@ -22,8 +23,8 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     """Verify agreement metadata schemas and widget fields keep only supported business columns."""
     config = agreement_config()
 
-    steward_fields = agreement._get_widget_visible_fields(config, "data_steward_widget")
-    agreement_fields = agreement._get_widget_visible_fields(config, "data_agreement_widget")
+    steward_fields = agreement.get_widget_visible_fields(config, "data_steward_widget")
+    agreement_fields = agreement.get_widget_visible_fields(config, "data_agreement_widget")
 
     assert set(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS).issuperset({"agreement_id", "contract_version", "file_path"})
     assert {"recipient", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}.issubset(agreement_fields)
@@ -39,7 +40,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
     monkeypatch.setattr(agreement_widget, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
     monkeypatch.setattr(steward_widget, "build_runtime_audit_fields", lambda **kwargs: {field: f"audit:{field}" for field in audit_columns})
-    monkeypatch.setattr(agreement_widget, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement_widget, "_generate_agreement_id", lambda *args, **kwargs: "DA-GENERATED")
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: writes.append(kwargs))
     monkeypatch.setattr(steward_widget, "write_widget_metadata_row", lambda **kwargs: writes.append(kwargs))
@@ -64,7 +65,7 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
 
 def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
     """Verify agreement validation and evidence path parsing fail before writes."""
-    monkeypatch.setattr(agreement_widget, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
     monkeypatch.setattr(steward_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
 
@@ -171,8 +172,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [agreement_row(agreement_id="DA-1", contract_version="1.0.0", custom_fields_json='{"consumer_group":"ODI"}')])
-    monkeypatch.setattr(agreement_widget, "_list_data_stewards", lambda *args, **kwargs: [steward_row()])
-    monkeypatch.setattr(steward_widget, "_list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
 
     agreement_controls = agreement_widget.widget_render_data_agreement(spark=spark)
     steward_controls = steward_widget.widget_render_data_steward(spark=spark)
@@ -184,7 +185,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
 
 
 def test_widget_architecture_cleanup_contracts_hold():
-    """Verify deleted generic workflow and cross-owned create/update helpers stay removed."""
+    """Verify deleted workflow containers and private shared imports stay removed."""
     from pathlib import Path
 
     root = Path(__file__).parents[2]
@@ -193,6 +194,22 @@ def test_widget_architecture_cleanup_contracts_hold():
     shared_source = (root / "src" / "fabricops_kit" / "widgets" / "shared.py").read_text(encoding="utf-8")
 
     assert "render_maintenance_widget_shared_workflow" not in agreement_source + steward_source + shared_source
+    assert "def _render_data_agreement_widget" not in agreement_source
+    assert "def _render_data_steward_widget" not in steward_source
     assert "_create_or_update_data_steward" not in agreement_source
     assert "_create_or_update_data_agreement" not in steward_source
     assert "%" not in steward_source
+
+    for source in (agreement_source, steward_source):
+        tree = ast.parse(source)
+        public_functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_render_data_")]
+        assert len(public_functions) == 1
+        public_names = {node.name for node in ast.walk(public_functions[0]) if isinstance(node, ast.FunctionDef)}
+        assert "_save" in public_names
+        assert "_populate" in public_names
+
+        private_shared_imports = []
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom) and node.module == "fabricops_kit.widgets.shared":
+                private_shared_imports.extend(alias.name for alias in node.names if alias.name.startswith("_"))
+        assert private_shared_imports == []

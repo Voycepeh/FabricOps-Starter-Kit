@@ -131,7 +131,7 @@ def render_searchable_selector(
     return {"container": container, "search": search, "selector": selector, "context": context, "rows_by_value": lookup}
 
 
-def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
+def render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render organization-specific custom fields from normalized config."""
     widgets = require_ipywidgets()
     fields = config.get("custom_fields", []) if isinstance(config, dict) else config
@@ -157,7 +157,7 @@ def _render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, valu
     return rendered
 
 
-def _standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
+def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = None) -> Any:
     """Render a standard widget control for a configured field name."""
     widgets = require_ipywidgets()
     description = field.replace("_", " ").title()
@@ -189,7 +189,7 @@ DATA_AGREEMENT_EVIDENCE_FIELDS = ["agreement_id", "contract_version", "evidence_
 AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
 AGREEMENT_EVIDENCE_MIME_TYPES = {".pdf": "application/pdf", ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 AGREEMENT_EVIDENCE_TYPES = ["Signed Agreement", "Email Approval", "Policy Document", "Supporting Screenshot", "Other"]
-_WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
+WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
 FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "approved_usage_internal": "Approved Usage - Internal", "approved_usage_external": "Approved Usage - External", "approved_usage_research": "Approved Usage - Research", "evidence_type": "Evidence Type"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
@@ -266,7 +266,7 @@ def get_selected_agreement() -> dict[str, Any]:
     return selected
 
 
-def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
+def serialize_custom_fields(values: dict[str, Any] | None) -> str:
     """Serialize organization-specific intake values to deterministic JSON.
 
     Parameters
@@ -280,9 +280,9 @@ def _serialize_custom_fields(values: dict[str, Any] | None) -> str:
         JSON object text suitable for ``custom_fields_json``.
 
     """
-    return json.dumps(values or {}, sort_keys=True, default=_to_iso_date)
+    return json.dumps(values or {}, sort_keys=True, default=to_iso_date)
 
-def _deserialize_custom_fields(custom_fields_json: Any) -> dict[str, Any]:
+def deserialize_custom_fields(custom_fields_json: Any) -> dict[str, Any]:
     """Deserialize stored custom-field JSON for widget display.
 
     Parameters
@@ -320,7 +320,7 @@ def config_value(config: Any, name: str, default: Any) -> Any:
         return agreement_config.get(name, default)
     return getattr(agreement_config, name, default)
 
-def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
+def get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     """Return configured editable columns without backend audit fields.
 
     Parameters
@@ -336,7 +336,7 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
         Safe editable fields. Technical audit fields are always excluded.
 
     """
-    configured = {**_WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}.get("visible_columns", [])
+    configured = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}.get("visible_columns", [])
     hidden = set(STANDARD_RUNTIME_AUDIT_COLUMNS) | {"custom_fields_json"}
     if kind == "data_steward_widget":
         hidden.update({"steward_id", "is_active"})
@@ -344,7 +344,7 @@ def _get_widget_visible_fields(config: Any, kind: str) -> list[str]:
         hidden.update(DATA_AGREEMENT_GENERATED_FIELDS)
     return [field for field in configured if field not in hidden]
 
-def _collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widgets_by_key: dict[str, Any]) -> dict[str, Any]:
+def collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widgets_by_key: dict[str, Any]) -> dict[str, Any]:
     """Collect and validate configured custom-field widget values.
 
     Parameters
@@ -373,7 +373,7 @@ def _collect_custom_fields(config: list[dict[str, Any]] | dict[str, Any], widget
         if isinstance(value, tuple):
             value = list(value)
         if isinstance(value, (date, datetime)):
-            value = _to_iso_date(value)
+            value = to_iso_date(value)
         if definition.get("required") and value in (None, "", []):
             raise ValueError(f"{definition.get('label', key)} is required.")
         values[key] = value
@@ -394,7 +394,7 @@ def _latest_by_key(rows: Any, key: str) -> list[dict[str, Any]]:
             latest[value] = row
     return sorted(latest.values(), key=lambda row: str(row.get(key) or "").lower())
 
-def _to_bool(value: Any) -> bool:
+def to_bool(value: Any) -> bool:
     """Normalize common notebook and metadata boolean representations.
 
     Blank values are treated as false. Any non-blank value outside the
@@ -416,9 +416,10 @@ def _audit_date(config: Any = None) -> date:
     """Return today in the configured FabricOps audit timezone."""
     return datetime.fromisoformat(get_current_audit_timestamp(config=config)).date()
 
-def _active_steward(row: dict[str, Any], config: Any = None) -> bool:
+def active_steward(row: dict[str, Any], config: Any = None) -> bool:
+    """Return whether a steward metadata row is active on the audit date."""
     is_active = row.get("is_active")
-    if is_active not in (None, "") and not _to_bool(is_active):
+    if is_active not in (None, "") and not to_bool(is_active):
         return False
     today = _audit_date(config)
     try:
@@ -429,7 +430,7 @@ def _active_steward(row: dict[str, Any], config: Any = None) -> bool:
         raise ValueError(f"{DATA_STEWARD_TABLE} row '{row.get('steward_id', '')}' has an invalid effective date. Use ISO dates.") from exc
 
 
-def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
+def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
     """List latest append-only steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
@@ -439,13 +440,13 @@ def _list_data_stewards(config: Any, env: str, *, spark_session: Any = None, act
             return []
         raise
     latest = _latest_by_key(rows, "steward_id")
-    return [row for row in latest if _active_steward(row, config)] if active_only else latest
+    return [row for row in latest if active_steward(row, config)] if active_only else latest
 
 def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
     """Append one widget metadata row to the configured metadata target."""
     write_lakehouse_table_core(spark.createDataFrame([coerce_metadata_row_types(table, row)]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
-def _parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
+def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""
     text = str(value or "").strip()
     if not text:
@@ -508,7 +509,8 @@ def list_data_agreements(config: Any, env: str, *, spark_session: Any = None, ac
     today = _audit_date(config)
     return [row for row in agreements if (not row.get("start_date") or date.fromisoformat(str(row["start_date"])[:10]) <= today) and (not row.get("expiry_date") or date.fromisoformat(str(row["expiry_date"])[:10]) >= today)]
 
-def _to_iso_date(value: Any) -> str:
+def to_iso_date(value: Any) -> str:
+    """Return a date-like widget value as an ISO string."""
     if value is None:
         return ""
     return value.date().isoformat() if isinstance(value, datetime) else value.isoformat() if isinstance(value, date) else str(value)
