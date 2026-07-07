@@ -725,19 +725,14 @@ def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workf
     assert ROLE_TAGS_BY_NAME["_validate_metadata_table_registration"][0] == "internal_validator"
 
 
-def test_data_agreement_widget_role_hints_keep_orchestration_as_workflow():
-    """Verify agreement widget orchestration is not misclassified as an adapter."""
-    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME, _role_dependency_signals
+def test_data_agreement_widget_role_hints_do_not_restore_generic_workflow():
+    """Verify agreement widgets do not reintroduce generic shared orchestration."""
+    from scripts.generate_individual_function_reference_pages import ROLE_TAGS_BY_NAME
 
-    shared_roles = ROLE_TAGS_BY_NAME["render_maintenance_widget_shared_workflow"]
-
-    assert shared_roles[:2] == ["internal_workflow", "shared_widget_rendering_workflow"]
-    assert "internal_adapter" not in shared_roles
-    assert "widget_rendering_adapter" not in shared_roles
+    assert "render_maintenance_widget_shared_workflow" not in ROLE_TAGS_BY_NAME
     assert "_render_maintenance_widget_workflow" not in ROLE_TAGS_BY_NAME
     assert "_render_data_steward_widget_workflow" not in ROLE_TAGS_BY_NAME
     assert "_render_data_agreement_widget_workflow" not in ROLE_TAGS_BY_NAME
-    assert _role_dependency_signals("public_api_entrypoint", shared_roles[0]) == ["allowed_internal_role_call"]
 
 
 def test_data_agreement_widget_callable_inventory_roles_are_current():
@@ -746,10 +741,7 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
 
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
-    assert (
-        rows["fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow"]["function_type"]
-        == "shared_function"
-    )
+    assert "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow" not in rows
     assert (
         rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"][
             "function_type"

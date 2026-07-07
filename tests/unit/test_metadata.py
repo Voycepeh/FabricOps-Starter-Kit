@@ -8,6 +8,7 @@ import pytest
 
 import fabricops_kit
 import fabricops_kit.widgets.shared as agreement
+import fabricops_kit.widgets.widget_render_data_steward as steward_widget
 from fabricops_kit.config import audit as audit_helpers
 from fabricops_kit.config import metadata_keys
 from fabricops_kit.widgets import notebook_registry
@@ -162,7 +163,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
     monkeypatch.setattr(agreement, "write_lakehouse_table_core", write_table)
     monkeypatch.setattr(agreement, "read_lakehouse_table_core", read_table)
 
-    steward = agreement._create_or_update_data_steward(
+    steward = steward_widget._create_or_update_data_steward(
         spark=FakeSpark(),
         config=framework_config(),
         env="dev",
@@ -177,7 +178,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
         committed_at="2026-01-02T00:00:00+00:00",
     )
 
-    read_back = agreement._list_data_stewards(framework_config(), "dev", spark_session=FakeSpark())
+    read_back = agreement.list_data_stewards(framework_config(), "dev", spark_session=FakeSpark())
 
     assert steward["steward_id"]
     assert read_back == [steward]
