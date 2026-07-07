@@ -76,10 +76,10 @@ FabricOps Starter Kit includes maintainer tooling to keep the project clean, exp
     <span class="fabricops-landing-card__meta">Open Public Function Call Flows Dashboard</span>
   </a>
 
-  <a class="fabricops-landing-card" href="reference/function-call-graph/">
+  <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph Guide</span>
     <span class="fabricops-landing-card__body">Read about the architecture and the motivation behind the function call graph dashboard.</span>
-    <span class="fabricops-landing-card__meta">Open Function Call Graph Reference</span>
+    <span class="fabricops-landing-card__meta">Open Function Call Graph Guide</span>
   </a>
 </div>
 
