@@ -180,6 +180,8 @@ def spark_session():
 STALE_REFERENCE_GENERATED_PAGE_TESTS = {
     "test_callable_inventory_non_functions_filter_works_outside_selected_focus",
     "test_callable_flow_page_and_json_cover_public_surface",
+    "test_callable_flow_docs_page_uses_deterministic_signal_rules",
+    "test_maintainer_nav_parks_internal_reference_helpers",
 }
 
 
