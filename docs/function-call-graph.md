@@ -117,7 +117,7 @@ The dashboard and JSON expose deterministic signals to guide cleanup. These sign
 | Signal | Calculation | Reviewer action |
 |---|---|---|
 | Large width or depth | Width > 10 or Depth > 5 | Review whether the public callable has become too wide or deeply nested. |
-| Architecture violation | Any Type 1 to Type 6 violation appears in the selected flow | Review the boundary shape before helper cleanup. |
+| Architecture violation | Any Type 1 to Type 5 violation appears in the selected flow | Review the boundary shape before helper cleanup. |
 
 ### Architecture violation types
 
@@ -128,7 +128,8 @@ The dashboard and JSON expose deterministic signals to guide cleanup. These sign
 | Type 3 | Private function calls a public function directly | Private implementation details should not call public entry points. |
 | Type 4 | Shared function calls a private function from another file | Shared helpers should not reach into another file's private implementation. |
 | Type 5 | Private function calls a private function from another file | Private helpers should remain file-local. |
-| Type 6 | Private function calls a shared function directly | Review whether the private helper depends outward across the intended boundary. |
+
+Private implementation helpers may call shared reusable functions directly.
 
 ### Cleanup suggestions
 

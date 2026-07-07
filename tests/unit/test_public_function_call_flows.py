@@ -111,6 +111,15 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     assert "generated_at_sgt" not in payload["metadata"]
     assert "generated_at_utc" not in payload["metadata"]
     assert payload["metadata"]["source_json_url"] == flows.SOURCE_JSON_URL
+    assert set(payload["metadata"]["architecture_violation_rules"]) == {
+        "Type 1",
+        "Type 2",
+        "Type 3",
+        "Type 4",
+        "Type 5",
+    }
+    assert "Type 6" not in payload["metadata"]["architecture_violation_rules"]
+    assert payload["metadata"]["architecture_violation_signal"] == "Any Type 1 to Type 5 edge appears in the public function flow."
 
 
 def test_large_width_or_depth_thresholds_are_strict() -> None:
@@ -134,8 +143,39 @@ def test_architecture_violation_type_classification() -> None:
     assert flows.classify_architecture_violation(private, public, "private_function", "public_dependency")["type"] == "Type 3"
     assert flows.classify_architecture_violation(shared, other_private, "shared_function", "private_function")["type"] == "Type 4"
     assert flows.classify_architecture_violation(private, other_private, "private_function", "private_function")["type"] == "Type 5"
-    assert flows.classify_architecture_violation(private, shared, "private_function", "shared_function")["type"] == "Type 6"
+    assert flows.classify_architecture_violation(private, shared, "private_function", "shared_function") is None
     assert flows.classify_architecture_violation(shared, info("_same", "src/fabricops_kit/shared.py"), "shared_function", "private_function") is None
+
+
+def test_private_function_calling_shared_function_is_allowed(tmp_path: Path) -> None:
+    """Validate private-to-shared edges do not create architecture violations."""
+    root = tmp_path
+    pkg = root / "src" / "fabricops_kit"
+    pkg.mkdir(parents=True)
+    init_path = pkg / "__init__.py"
+    init_path.write_text("from .public_root import public_root\n__all__ = ['public_root']\n", encoding="utf-8")
+    (pkg / "public_root.py").write_text(
+        "from .shared import reusable_helper\n\n"
+        "def public_root():\n"
+        "    _private_impl()\n\n"
+        "def _private_impl():\n"
+        "    reusable_helper()\n",
+        encoding="utf-8",
+    )
+    (pkg / "shared.py").write_text("def reusable_helper():\n    return None\n", encoding="utf-8")
+
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    public_root = payload["public_functions"][0]
+    shared_row = next(item for item in public_root["flow"] if item["function_name"] == "reusable_helper")
+    assert shared_row["architecture_violations"] == []
+    assert shared_row["violation_types"] == []
+    assert shared_row["violation_details"] == []
+    assert public_root["architecture_violation_count"] == 0
+    assert public_root["has_architecture_violation"] is False
+    assert "architecture_violation" not in public_root["signals"]
+    assert "architecture_violation" not in public_root["public_signals"]
+    assert all(signal["signal"] != "architecture_violation" for signal in public_root["refactor_signals"])
 
 
 def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
@@ -150,14 +190,15 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert "Signals highlight public callable flows that may need cleanup" not in html
     assert '<section class="flow-details signal-rules">' not in html
     assert "Signal rules and calculations" not in html
-    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
+    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
         assert violation_type in html
+    assert "Type 6" not in html
     assert "Public function calls another public function directly." in html
     assert "Shared function calls a public function directly." in html
     assert "Private function calls a public function directly." in html
     assert "Shared function calls a private function from another file." in html
     assert "Private function calls a private function from another file." in html
-    assert "Private function calls a shared function directly." in html
+    assert "Private function calls a shared function directly." not in html
     assert "Called by exactly one parent, not recursive" in html
     assert "Private function called by more than one distinct caller" in html
     assert "<th>Chip</th>" not in html
@@ -168,8 +209,9 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="badge danger">Architecture violation</span>' in html
     assert '<span class="badge muted">Inline candidate</span>' in html
     assert '<span class="badge muted">Promote to shared</span>' in html
-    for violation_type in range(1, 7):
+    for violation_type in range(1, 6):
         assert f'<span class="badge danger">Type {violation_type}</span>' in html
+    assert '<span class="badge danger">Type 6</span>' not in html
     assert "Public function summary card signals" not in html
     assert "Public function table signals" in html
     assert "Call tree violation rules" in html
@@ -341,7 +383,7 @@ def test_dashboard_derives_signals_from_old_shape_payload() -> None:
     assert "return 'Type 3'" in html
     assert "return 'Type 4'" in html
     assert "return 'Type 5'" in html
-    assert "return 'Type 6'" in html
+    assert "return 'Type 6'" not in html
     assert "row.promote_to_shared_candidate=row.function_type==='private_function'&&row.distinct_caller_count>1" in html
     assert "row.inline_candidate=row.depth!==0&&row.incoming_edge_count===1" in html
     assert "!row.called_multiple_times_by_same_parent" in html
@@ -546,14 +588,16 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
 
 def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
     """Validate callable flow docs describe the deterministic V2 signal model."""
-    docs = Path("docs/reference/function-call-graph.md").read_text(encoding="utf-8")
+    docs = Path("docs/function-call-graph.md").read_text(encoding="utf-8")
 
     assert "#### Public-flow signals" in docs
     assert "Large width/depth | Width > 10 or Depth > 5" in docs
-    assert "Architecture violation | Any Type 1-6 architecture violation" in docs
+    assert "Architecture violation | Any Type 1 to Type 5 violation" in docs
     assert "#### Architecture violation types" in docs
-    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5", "Type 6"]:
+    for violation_type in ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"]:
         assert violation_type in docs
+    assert "Type 6" not in docs
+    assert "Private implementation helpers may call shared reusable functions directly." in docs
     assert "#### Inventory suggestions" in docs
     assert "Inline candidate | Called by exactly one parent" in docs
     assert "Promote to shared | Private function called by more than one distinct caller" in docs
