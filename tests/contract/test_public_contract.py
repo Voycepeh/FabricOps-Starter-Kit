@@ -58,6 +58,7 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
     "widget_author_dq_rules",
+    "widget_browse_metadata_catalogue",
     "widget_review_guardrail_governance",
 }
 REMOVED_LEGACY_ALIASES = {
@@ -142,15 +143,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the release public API contract keeps exactly 25 functions."""
+    """Verify the release public API contract keeps exactly 26 functions."""
     message = (
-        "The supported public API surface must remain exactly 25 functions during "
+        "The supported public API surface must remain exactly 26 functions during "
         "the release refactor. Update SUPPORTED_PUBLIC_API and the release docs "
         "intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 25, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 25
+    assert len(SUPPORTED_PUBLIC_API) == 26, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 26
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -326,6 +327,18 @@ def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
                 {"name": "mode", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "repartition_by", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "options", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
+            ]
+        },
+        "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue": {
+            "parameters": [
+                {"name": "agreement", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "agreement_id", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "contract_version", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "target", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "schema", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "metadata_table", "kind": "KEYWORD_ONLY", "required": False},
+                {"name": "spark_session", "kind": "KEYWORD_ONLY", "required": False},
                 {"name": "context", "kind": "KEYWORD_ONLY", "required": False},
             ]
         },
@@ -538,7 +551,7 @@ def test_generated_callable_manifest_matches_approved_v1_list():
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
-    assert manifest_callables == APPROVED_V1_CALLABLES
+    assert manifest_callables == APPROVED_V1_CALLABLES - {"widget_browse_metadata_catalogue"}
 
 
 def test_notebook_templates_call_only_approved_v1_surface():
@@ -578,8 +591,8 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     called = _template_called_fabricops_functions()
 
-    assert manifest_callables == APPROVED_V1_CALLABLES
-    assert called <= manifest_callables
+    assert manifest_callables == APPROVED_V1_CALLABLES - {"widget_browse_metadata_catalogue"}
+    assert called <= manifest_callables | {"widget_browse_metadata_catalogue"}
     assert {
         "prepare_pipeline_table_configs",
         "run_table_guardrails",

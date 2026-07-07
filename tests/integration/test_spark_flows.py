@@ -548,8 +548,8 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
 
 
 
-def test_write_catalogue_evidence_writes_fabric_store_target_defaults(spark_session, monkeypatch):
-    """Verify catalogue evidence stores explicit and default Fabric store targets."""
+def test_write_catalogue_evidence_writes_explicit_fabric_store_target(spark_session, monkeypatch):
+    """Verify catalogue evidence writes only the canonical FabricStore target."""
     from fabricops_kit.pipeline import profile_dataframe
     from fabricops_kit.pipeline import shared as pipeline_shared
 
@@ -561,51 +561,46 @@ def test_write_catalogue_evidence_writes_fabric_store_target_defaults(spark_sess
     )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
     profile_df = profile_dataframe(df, "orders")
-
     definitions = {
-        "explicit": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": " Source "},
-        "target_default": {"dataset_name": "sales", "table_name": "orders_enriched", "stage": "target", "target_layer": "Unified"},
-        "source_default": {"dataset_name": "sales", "table_name": "orders_raw", "stage": "source", "layer": "Source"},
-        "explicit_none": {
+        "explicit": {
             "dataset_name": "sales",
-            "table_name": "orders_product",
-            "stage": "target",
-            "fabric_store_target": None,
-            "target_layer": "Product",
-        },
-        "target_layer_none": {
-            "dataset_name": "sales",
-            "table_name": "orders_unified",
-            "stage": "target",
-            "target_layer": None,
-            "layer": "Unified",
-        },
-        "missing": {"dataset_name": "sales", "table_name": "orders_unknown", "stage": "source"},
+            "table_name": "orders",
+            "stage": "source",
+            "fabric_store_target": " Product ",
+            "target_layer": "Unified",
+            "layer": "raw",
+        }
     }
 
     result = pipeline_shared.write_catalogue_evidence(
-        {name: profile_df for name in definitions},
+        {"explicit": profile_df},
         definitions,
         config={},
         env="dev",
         run_id="run-1",
     )
 
-    assert result == {name: "written" for name in definitions}
-    persisted = {
-        write[0].select("table_name", "fabric_store_target").first().asDict()["table_name"]:
-        write[0].select("table_name", "fabric_store_target").first().asDict()["fabric_store_target"]
-        for write in writes
-    }
-    assert persisted == {
-        "orders": "source",
-        "orders_enriched": "unified",
-        "orders_raw": "source",
-        "orders_product": "product",
-        "orders_unified": "unified",
-        "orders_unknown": "",
-    }
+    assert result == {"explicit": "written"}
+    row = writes[0][0].select("table_name", "fabric_store_target").first().asDict()
+    assert row == {"table_name": "orders", "fabric_store_target": "product"}
 
+
+def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_session, monkeypatch):
+    """Verify writer requires fabric_store_target instead of target_layer/layer fallbacks."""
+    from fabricops_kit.pipeline import profile_dataframe
+    from fabricops_kit.pipeline import shared as pipeline_shared
+
+    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: None)
+    df = spark_session.createDataFrame([(1,)], "id int")
+    profile_df = profile_dataframe(df, "orders")
+
+    with pytest.raises(KeyError):
+        pipeline_shared.write_catalogue_evidence(
+            {"target_layer_only": profile_df},
+            {"target_layer_only": {"table_name": "orders", "target_layer": "product", "layer": "raw"}},
+            config={},
+            env="dev",
+        )
 
 
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
