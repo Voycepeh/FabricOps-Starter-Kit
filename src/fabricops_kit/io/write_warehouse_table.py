@@ -14,7 +14,7 @@ def write_warehouse_table(
     *,
     target: str = "warehouse",
     mode: str = "append",
-    repartition: int | None = None,
+    repartition_by=None,
     options: dict[str, Any] | None = None,
     context: dict[str, Any] | None = None,
 ):
@@ -39,10 +39,10 @@ def write_warehouse_table(
         Logical warehouse target from ``00_env_config``.
     mode : str, default="append"
         Spark writer mode supported by the Fabric connector.
-    repartition : int, optional
-        Optional positive number of Spark partitions to apply before writing.
-        This controls Spark write parallelism and does not create a physically
-        partitioned Warehouse table.
+    repartition_by : int, str, list, or tuple, optional
+        Optional repartitioning before write. This controls Spark write
+        parallelism and does not create a physically partitioned Warehouse
+        table.
     options : dict, optional
         Additional Fabric Warehouse Spark connector writer options. Required
         Fabric connector options are always set from ``00_env_config``.
@@ -62,12 +62,15 @@ def write_warehouse_table(
 
     """
     validate_dataframe_writer(df)
-    if repartition is not None:
-        if isinstance(repartition, bool) or not isinstance(repartition, int):
-            raise ValueError("repartition must be a positive integer or None")
-        if repartition <= 0:
-            raise ValueError("repartition must be a positive integer or None")
-        df = df.repartition(repartition)
+    if repartition_by is not None:
+        if isinstance(repartition_by, (list, tuple)):
+            df = (
+                df.repartition(*repartition_by)
+                if not (repartition_by and isinstance(repartition_by[0], int))
+                else df.repartition(repartition_by[0], *repartition_by[1:])
+            )
+        else:
+            df = df.repartition(repartition_by)
 
     store, _schema_value, _table_value, object_name = resolve_configured_warehouse_table(
         target, schema, table_name, context=context

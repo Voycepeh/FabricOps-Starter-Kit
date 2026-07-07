@@ -388,7 +388,7 @@ class _WarehouseRepartitionFrame:
         self.repartition_calls = []
         self.write = _Writer()
 
-    def repartition(self, partitions):
+    def repartition(self, *partitions):
         """Return the configured repartitioned frame."""
         self.repartition_calls.append(partitions)
         return self.repartitioned
@@ -428,8 +428,19 @@ def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeyp
     assert written == [(original, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
 
 
-def test_write_warehouse_table_positive_repartition_writes_repartitioned_frame(monkeypatch):
-    """Verify Warehouse writes use the DataFrame returned by Spark repartition."""
+@pytest.mark.parametrize(
+    ("repartition_by", "expected_repartition_call"),
+    [
+        (8, (8,)),
+        ("academic_year", ("academic_year",)),
+        (["academic_year", "faculty"], ("academic_year", "faculty")),
+        ((8, "academic_year"), (8, "academic_year")),
+    ],
+)
+def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
+    monkeypatch, repartition_by, expected_repartition_call
+):
+    """Verify Warehouse writes mirror Lakehouse repartition_by handling."""
     import importlib
 
     warehouse_write_owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
@@ -455,26 +466,13 @@ def test_write_warehouse_table_positive_repartition_writes_repartitioned_frame(m
         "orders",
         target="product",
         mode="overwrite",
-        repartition=8,
+        repartition_by=repartition_by,
         options={"batchsize": "5000"},
         context={"sentinel": True},
     )
 
-    assert original.repartition_calls == [8]
+    assert original.repartition_calls == [expected_repartition_call]
     assert written == [(repartitioned, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
-
-
-@pytest.mark.parametrize("repartition", [0, -1, True, False, "8", 8.0])
-def test_write_warehouse_table_repartition_rejects_invalid_values(repartition):
-    """Verify Warehouse writes reject invalid Spark repartition values."""
-    with pytest.raises(ValueError, match="repartition must be a positive integer or None"):
-        io.write_warehouse_table(
-            _WarehouseRepartitionFrame(),
-            "dbo",
-            "orders",
-            repartition=repartition,
-            context={"config": _io_config(), "env": "dev"},
-        )
 
 
 def test_legacy_io_facade_module_is_deleted():
