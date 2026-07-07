@@ -7,7 +7,7 @@
 The workflow follows the same five steps shown below: repository code, agent context, source editing, call-flow regeneration, then dashboard review.
 
 <div align="center">
-  <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open Public Function Call Flows Dashboard</a>
+  <a class="md-button md-button--primary" href="assets/public-function-call-flows-dashboard.html">Open Dashboard</a>
   <a class="md-button" href="reference/_data/public-function-call-flows.json">View JSON Contract</a>
 </div>
 
