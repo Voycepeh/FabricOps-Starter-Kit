@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -37,61 +39,12 @@ jobs:
       - name: Run full test suite
         run: uv run pytest
 
-      # Callable architecture validation is temporarily disabled while the contract
-      # moves from function-call-graph.json to public-function-call-flows.json.
-      # Restore this as a dedicated public-function-call-flows.json validator.
-
-      - name: Regenerate generated reference artifacts
-        env:
-          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
+      - name: Validate owned generated artifacts
         shell: bash
         run: |
           set -euo pipefail
           source .venv/bin/activate
-          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
-
-          # Freshness timestamps are informational and must not make deterministic
-          # generated-artifact validation fail. Restore the committed metadata and
-          # its displayed timestamps while leaving all substantive generated output
-          # available for the stale-artifact diff below.
-          git show HEAD:docs/reference/_data/generated-artifacts.json > /tmp/generated-artifacts.json
-          python - <<'PY'
-          import json
-          import re
-          from pathlib import Path
-
-          committed_path = Path('/tmp/generated-artifacts.json')
-          committed = json.loads(committed_path.read_text(encoding='utf-8'))
-          artifacts = committed.get('artifacts', {})
-          reference_timestamp = artifacts.get('individual_function_reference_pages', {}).get(
-              'generated_at_sgt', 'Generated timestamp unavailable'
-          )
-          call_flow_timestamp = artifacts.get('public_function_call_flows_json', {}).get(
-              'generated_at_sgt', 'Generated timestamp unavailable'
-          )
-
-          reference_pattern = re.compile(r'^(\s*Reference pages generated: ).*$', re.MULTILINE)
-          call_flow_pattern = re.compile(r'^(\s*Call-flow data generated: ).*$', re.MULTILINE)
-          for page in Path('docs/api/reference').glob('*.md'):
-              text = page.read_text(encoding='utf-8')
-              text = reference_pattern.sub(rf'\g<1>{reference_timestamp}', text)
-              text = call_flow_pattern.sub(rf'\g<1>{call_flow_timestamp}', text)
-              page.write_text(text, encoding='utf-8')
-
-          Path('docs/reference/_data/generated-artifacts.json').write_text(
-              committed_path.read_text(encoding='utf-8'),
-              encoding='utf-8',
-          )
-          PY
-
-          git diff --exit-code \
-            docs/reference/_data/public-function-call-flows.json \
-            docs/reference/_data/generated-artifacts.json \
-            docs/reference/index.md \
-            docs/assets/public-function-call-flows-dashboard.html \
-            docs/api/reference
+          python scripts/validate_generated_artifact_ownership.py
 
       - name: Build strict documentation
         env:
