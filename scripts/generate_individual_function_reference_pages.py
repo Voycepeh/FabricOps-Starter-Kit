@@ -68,7 +68,6 @@ def markdown_anchor(value: str) -> str:
     return re.sub(r"[ -]+", "-", anchor).strip("-")
 
 
-
 PUBLIC_MODULE_PREFERRED_NAMES = {
     "config.shared": "config",
     "config.get_fabric_context": "config",
@@ -229,7 +228,6 @@ def _docstring_sections(doc: str | None) -> dict[str, str]:
     return {key: "\n".join(value).strip() for key, value in sections.items() if "\n".join(value).strip()}
 
 
-
 def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]]:
     """Return first-paragraph NumPy-style parameter docs keyed by parameter name."""
     docs: dict[str, dict[str, Any]] = {}
@@ -311,7 +309,6 @@ def _is_property_method(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
         or (isinstance(decorator, ast.Attribute) and decorator.attr == "property")
         for decorator in node.decorator_list
     )
-
 
 
 def source_module_name(path: Path) -> str:
@@ -734,7 +731,6 @@ def parse_public_exports() -> list[str]:
     raise RuntimeError("Could not parse __all__ from __init__.py")
 
 
-
 def public_callable_names() -> set[str]:
     """Return notebook-facing public callables from canonical __all__ exports."""
     return set(parse_public_exports())
@@ -1113,8 +1109,6 @@ def canonical_public_module(module_name: str) -> str:
     return PUBLIC_MODULE_PREFERRED_NAMES.get(module_name, module_name)
 
 
-
-
 def render_html_table(headers: list[str], rows: list[list[str]], *, table_class: str = "") -> list[str]:
     """Render html table."""
     class_attr = f' class="{table_class}"' if table_class else ""
@@ -1392,7 +1386,6 @@ def _related_function_links(
     return rows
 
 
-
 def _is_internal_helper_qn(qn: str, node_by_qn: dict[str, dict[str, Any]]) -> bool:
     """Return whether a qualified name identifies an internal helper node."""
     node = node_by_qn.get(qn, {})
@@ -1581,7 +1574,6 @@ def _helper_area_mismatch_signal(helper_name: str, purpose: str, assigned_area: 
     return None
 
 
-
 def _callable_identity_keys(value: str | None) -> list[str]:
     """Return dashboard lookup keys for a callable identity."""
     raw = str(value or "").strip()
@@ -1686,8 +1678,6 @@ def _render_callable_architecture_flow_tree(
     visit(root_qn, "", {root_qn})
     lines.append("</div>")
     return lines
-
-
 
 
 def _collect_refactor_signals(
@@ -3198,8 +3188,6 @@ def _decision_layer_group(row: dict[str, Any]) -> str:
     return "Shared helper"
 
 
-
-
 def _architecture_layer(row: dict[str, Any]) -> str:
     """Return the callable architecture label for a flow row."""
     if row.get("layer") == HIDDEN_PRIVATE_LAYER or row.get("function_type") == PRIVATE_HELPER_LABEL:
@@ -3553,7 +3541,6 @@ def _build_public_entrypoint_flow(
     return flows
 
 
-
 CALLABLE_FLOW_TOP_LEVEL_KEYS = (
     "metadata",
     "architecture_thresholds",
@@ -3723,13 +3710,6 @@ def _callable_flow_metadata(generated_at_utc: datetime) -> dict[str, Any]:
         "data_source": "public-function-call-flows.json",
     }
     return metadata
-
-
-
-
-
-
-
 
 
 def _dashboard_contract_row(row: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
@@ -3961,50 +3941,6 @@ def _render_link(label: str, url: str | None = None, *, code: bool = True) -> st
     if not url:
         return inner
     return f'<a href="{html.escape(url, quote=True)}">{inner}</a>'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def _indent_markdown(lines: list[str], spaces: int = 4) -> list[str]:
@@ -4826,8 +4762,6 @@ def main() -> None:
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             pass
-
-
 
 
 if __name__ == "__main__":
