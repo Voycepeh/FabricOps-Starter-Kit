@@ -11,18 +11,11 @@ def _selected_names(*paths: str) -> set[str]:
     return {check.name for check in validation.select_checks(paths)}
 
 
-def test_source_public_callable_change_requires_call_flow_json_check() -> None:
-    """Source package changes require the public call-flow JSON freshness check."""
+def test_source_public_callable_change_selects_call_flow_and_reference_checks() -> None:
+    """Source package changes require call-flow and reference freshness checks."""
     names = _selected_names("src/fabricops_kit/io/read_lakehouse_table.py")
 
-    assert names == {"public call-flow architecture contract"}
-
-
-def test_source_public_callable_change_skips_individual_reference_pages() -> None:
-    """Source package changes do not require individual reference page freshness."""
-    names = _selected_names("src/fabricops_kit/io/read_lakehouse_table.py")
-
-    assert "individual function reference pages" not in names
+    assert names == {"public call-flow architecture contract", "individual function reference pages"}
 
 
 def test_source_public_callable_change_skips_dashboard_html() -> None:
@@ -37,6 +30,15 @@ def test_reference_generator_change_requires_reference_generation() -> None:
     names = _selected_names("scripts/generate_individual_function_reference_pages.py")
 
     assert names == {"individual function reference pages"}
+
+
+def test_reference_check_includes_all_generator_owned_surfaces() -> None:
+    """Reference freshness checks include every generator-owned output surface."""
+    assert validation.REFERENCE_CHECK.diff_paths == (
+        "docs/api/reference",
+        "docs/reference/index.md",
+        "docs/reference/function-call-graph.md",
+    )
 
 
 def test_dashboard_generator_or_frontend_change_requires_dashboard_generation() -> None:

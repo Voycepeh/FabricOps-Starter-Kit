@@ -35,6 +35,7 @@ REFERENCE_CHECK = ArtifactCheck(
     diff_paths=(
         "docs/api/reference",
         "docs/reference/index.md",
+        "docs/reference/function-call-graph.md",
     ),
 )
 DASHBOARD_CHECK = ArtifactCheck(
@@ -48,11 +49,14 @@ def _is_under(path: str, prefix: str) -> bool:
     return path == prefix or path.startswith(f"{prefix}/")
 
 
+def is_public_callable_source(path: str) -> bool:
+    """Return whether a path is a FabricOps package Python source file."""
+    return _is_under(path, "src/fabricops_kit") and path.endswith(".py")
+
+
 def owns_call_flow_contract(path: str) -> bool:
     """Return whether a path owns the committed call-flow architecture contract."""
-    return (
-        _is_under(path, "src/fabricops_kit") and path.endswith(".py")
-    ) or path in {
+    return is_public_callable_source(path) or path in {
         "scripts/generate_public_function_call_flows_json.py",
         "scripts/reference_docs_metadata.py",
         "docs/reference/_data/public-function-call-flows.json",
@@ -62,10 +66,11 @@ def owns_call_flow_contract(path: str) -> bool:
 
 def owns_individual_reference_pages(path: str) -> bool:
     """Return whether a path owns individual generated reference page freshness."""
-    return _is_under(path, "docs/api/reference") or path in {
+    return is_public_callable_source(path) or _is_under(path, "docs/api/reference") or path in {
         "scripts/generate_individual_function_reference_pages.py",
         "scripts/reference_docs_metadata.py",
         "docs/reference/index.md",
+        "docs/reference/function-call-graph.md",
     }
 
 
