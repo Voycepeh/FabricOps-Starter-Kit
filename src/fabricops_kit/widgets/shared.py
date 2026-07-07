@@ -178,7 +178,7 @@ def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
-STANDARD_RUNTIME_AUDIT_COLUMNS = ["_committed_by", "_committed_at", "_notebook_name", "_workspace_name", "_metadata_lakehouse_name", "_activity_id"]
+STANDARD_RUNTIME_AUDIT_COLUMNS = ["_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]
 DATA_STEWARD_VISIBLE_FIELDS = ["steward_name", "steward_role", "contact", "effective_from", "effective_to"]
 DATA_STEWARD_BACKEND_FIELDS = ["steward_id", *DATA_STEWARD_VISIBLE_FIELDS, "is_active"]
 DATA_AGREEMENT_VISIBLE_FIELDS = ["agreement_name", "domain", "steward_id", "recipient", "start_date", "expiry_date", "business_purpose", "approved_usage_internal", "approved_usage_external", "approved_usage_research"]
@@ -1667,8 +1667,8 @@ def _dq_rule_parameter_payload(rule: dict[str, Any], columns: list[str]) -> dict
         "rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name",
         "table_name", "column_name", "rule_type", "rule_parameters", "rule_parameters_json", "severity",
         "description", "is_active", "review_status", "approved_by", "approved_at", "suggestion_json",
-        "suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_name",
-        "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
+        "suggestion", "action_type", "commit", "_committed_at", "_committed_by", "_workspace_id", "_workspace_name",
+        "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id",
     }
     payload: dict[str, Any] = {"columns": columns}
     raw = rule.get("rule_parameters") or rule.get("rule_parameters_json") or {}

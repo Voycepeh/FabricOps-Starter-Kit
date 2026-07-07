@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 from typing import Any
-import importlib
-import importlib.util
-
-
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 
 from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry
@@ -100,7 +96,6 @@ def setup_metadata_tables(
                 target="metadata",
                 schema=resolved_metadata_schema,
                 mode="overwrite",
-                options={"overwriteSchema": "true"},
                 verbose=False,
                 context=context,
             )
@@ -114,25 +109,9 @@ def setup_metadata_tables(
         columns = list(getattr(table, "columns", []) or []) if table is not None else metadata_table_field_names(schema)
         missing = [field for field in metadata_table_field_names(schema) if field not in columns]
         if missing:
-            table = _migrate_missing_nullable_columns(
-                table,
-                schema=schema,
-                missing=missing,
-                canonical_columns=metadata_table_field_names(schema),
-            )
-            columns = list(getattr(table, "columns", []) or []) if table is not None else []
-            missing = [field for field in metadata_table_field_names(schema) if field not in columns]
-            if missing:
-                raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
-            write_lakehouse_table_core(
-                table,
-                table_name,
-                target="metadata",
-                schema=resolved_metadata_schema,
-                mode="overwrite",
-                options={"overwriteSchema": "true"},
-                verbose=False,
-                context=context,
+            raise ValueError(
+                f"{table_name} is missing required column(s): {', '.join(missing)}. "
+                "Recreate existing development metadata tables to receive the current physical schema."
             )
 
     try:
@@ -213,43 +192,6 @@ def setup_metadata_tables(
             "fully_qualified_tables": fully_qualified_tables,
         },
     }
-
-
-def _null_literal_for_type(data_type: Any) -> Any:
-    """Return a Spark null literal cast to the expected canonical data type."""
-    if importlib.util.find_spec("pyspark") is None:  # pragma: no cover - local fakes without PySpark
-        return None
-    functions = importlib.import_module("pyspark.sql.functions")
-    return functions.lit(None).cast(data_type)
-
-
-def _migrate_missing_nullable_columns(
-    table: Any,
-    *,
-    schema: Any,
-    missing: list[str],
-    canonical_columns: list[str],
-) -> Any:
-    """Add missing nullable canonical columns to an existing metadata table."""
-    fields_by_name = {field.name: field for field in getattr(schema, "fields", [])}
-    unsafe = [
-        name
-        for name in missing
-        if name not in fields_by_name or not bool(getattr(fields_by_name[name], "nullable", False))
-    ]
-    if unsafe:
-        return table
-    if table is None or not all(hasattr(table, method) for method in ("withColumn", "select")):
-        return table
-    migrated = table
-    for name in missing:
-        migrated = migrated.withColumn(name, _null_literal_for_type(fields_by_name[name].dataType))
-    existing_columns = list(getattr(migrated, "columns", []) or [])
-    extra_columns = [column for column in existing_columns if column not in canonical_columns]
-    ordered_columns = [column for column in canonical_columns if column in existing_columns] + extra_columns
-    if ordered_columns and set(ordered_columns) == set(existing_columns):
-        migrated = migrated.select(*ordered_columns)
-    return migrated
 
 
 __all__ = ["setup_metadata_tables"]

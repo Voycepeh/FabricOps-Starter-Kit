@@ -50,6 +50,7 @@ def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
             "currentNotebookName": "02_pipeline_orders_pipeline",
             "userName": "user@example.com",
             "userId": "user-id",
+            "activityId": "activity-id",
         },
     )
 
@@ -176,6 +177,13 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
         },
         committed_by="reviewer@example.com",
         committed_at="2026-01-02T00:00:00+00:00",
+        runtime_context={
+            "currentWorkspaceId": "workspace-id",
+            "currentWorkspaceName": "Workspace",
+            "currentNotebookId": "notebook-id",
+            "currentNotebookName": "01_agreement",
+            "activityId": "activity-id",
+        },
     )
 
     read_back = agreement.list_data_stewards(framework_config(), "dev", spark_session=FakeSpark())
@@ -245,6 +253,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'widget_select_guardrail_target',
         'widget_enrich_table_metadata',
         'widget_author_schema_freshness_profile_rules',
+        'widget_browse_metadata_catalogue',
         'widget_author_dq_rules',
         'widget_review_guardrail_governance',
     ]
@@ -252,3 +261,99 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
     assert len(fabricops_kit.__all__) == len(expected_public_callables)
     assert "widget_pipeline_bootstrap" in fabricops_kit.__all__
     assert "get_selected_agreement" not in fabricops_kit.__all__
+
+
+def test_runtime_audit_fields_support_explicit_non_fabric_context():
+    """Verify injected runtime context supports local audit resolution."""
+    audit = audit_helpers.build_runtime_audit_fields(
+        committed_by="test.user@example.com",
+        committed_at="2026-07-08T12:00:00+08:00",
+        metadata_lakehouse_name="test_metadata",
+        runtime_context={
+            "currentWorkspaceId": "workspace-id",
+            "currentWorkspaceName": "test-workspace",
+            "currentNotebookId": "notebook-id",
+            "currentNotebookName": "02_pipeline_test",
+            "activityId": "activity-id",
+        },
+    )
+
+    assert list(audit) == [
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    ]
+    assert audit["_committed_at"].isoformat() == "2026-07-08T12:00:00+08:00"
+    assert audit["_metadata_lakehouse_name"] == "test_metadata"
+
+
+def test_runtime_audit_fields_support_legacy_runtime_aliases():
+    """Verify runtime alias fields resolve workspace and notebook identity."""
+    audit = audit_helpers.build_runtime_audit_fields(
+        committed_by="user@example.com",
+        committed_at="2026-07-08T12:00:00+00:00",
+        metadata_lakehouse_name="metadata",
+        runtime_context={
+            "workspaceId": "workspace-id",
+            "workspaceName": "workspace-name",
+            "notebookId": "notebook-id",
+            "notebookName": "notebook-name",
+            "activityId": "activity-id",
+        },
+    )
+
+    assert audit["_workspace_id"] == "workspace-id"
+    assert audit["_workspace_name"] == "workspace-name"
+    assert audit["_notebook_id"] == "notebook-id"
+    assert audit["_notebook_name"] == "notebook-name"
+
+
+def test_runtime_audit_fields_report_all_missing_and_reject_unknown():
+    """Verify invalid audit placeholders fail with one complete error."""
+    with pytest.raises(ValueError) as exc:
+        audit_helpers.build_runtime_audit_fields(
+            committed_by="unknown",
+            metadata_lakehouse_name=" ",
+            runtime_context={"currentWorkspaceId": "None", "currentNotebookName": "unknown_notebook"},
+        )
+
+    message = str(exc.value)
+    for field in [
+        "_committed_by",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    ]:
+        assert field in message
+
+
+def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monkeypatch):
+    """Verify metadata result writes fail before persistence when audit cannot resolve."""
+    from fabricops_kit.pipeline import metadata_evidence
+
+    monkeypatch.setattr(
+        metadata_evidence,
+        "write_lakehouse_table_core",
+        lambda *_args, **_kwargs: pytest.fail("metadata write should not run without audit fields"),
+    )
+
+    with pytest.raises(ValueError, match="Cannot build metadata audit fields"):
+        metadata_evidence._write_guardrail_result_row(
+            spark_session=FakeSpark(),
+            config=framework_config(),
+            env="dev",
+            run_id="run-1",
+            dataset_name="sales",
+            table_name="orders",
+            guardrail_type="schema",
+            rule_type="schema",
+            result={"status": "failed"},
+        )

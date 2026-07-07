@@ -809,7 +809,6 @@ def _setup_metadata_table_registry(
                 schema=metadata_schema,
                 context={"config": config, "env": env},
                 mode="overwrite",
-                options={"overwriteSchema": "true"},
             )
             read_kwargs = {"spark_session": spark}
             if metadata_schema is not None:

@@ -10,8 +10,8 @@ from fabricops_kit.io.shared import (
     read_lakehouse_table_core,
     write_lakehouse_table_core,
 )
-from fabricops_kit.config.audit import _audit_timestamp_value, _context_get, _runtime_context, _safe_str
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+from fabricops_kit.config.audit import _audit_timestamp_value, _context_get, _runtime_context, _safe_str, build_runtime_audit_fields
+from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
 NOTEBOOK_REGISTRY_BASE_FIELDS = [
@@ -41,7 +41,8 @@ NOTEBOOK_REGISTRY_STATE_FIELDS = [
     "superseded_by_registration_id",
 ]
 
-NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS]
+NOTEBOOK_REGISTRY_AUDIT_FIELDS = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
+NOTEBOOK_REGISTRY_FIELDS = [*NOTEBOOK_REGISTRY_BASE_FIELDS, *NOTEBOOK_REGISTRY_STATE_FIELDS, *NOTEBOOK_REGISTRY_AUDIT_FIELDS]
 
 
 def _coerce_row_dicts(rows):
@@ -146,10 +147,11 @@ def register_current_notebook(
         raise ValueError("register_current_notebook requires config and env for metadata routing.")
 
     ctx = _runtime_context()
-    workspace_id = _context_get(ctx, "currentWorkspaceId", "workspaceId")
-    workspace_name = _context_get(ctx, "currentWorkspaceName", "workspaceName")
-    notebook_id = _context_get(ctx, "currentNotebookId", "notebookId")
-    notebook_name = _context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook"
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=ctx)
+    workspace_id = audit["_workspace_id"]
+    workspace_name = audit["_workspace_name"]
+    notebook_id = audit["_notebook_id"]
+    notebook_name = audit["_notebook_name"]
     user_id = _context_get(ctx, "userId")
     user_name = _context_get(ctx, "userName")
     inferred_type = notebook_type or str(notebook_name).split("_", 1)[0]
@@ -178,6 +180,7 @@ def register_current_notebook(
         "registration_status": _safe_str(registration_status or "active"),
         "superseded_at": _safe_str(superseded_at),
         "superseded_by_registration_id": _safe_str(superseded_by_registration_id),
+        **audit,
     }
     row["registration_id"] = _safe_str(registration_id or _notebook_registration_key(row))
     row = {field: row.get(field, "") for field in NOTEBOOK_REGISTRY_FIELDS}
