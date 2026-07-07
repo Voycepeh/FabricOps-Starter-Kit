@@ -842,7 +842,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric warehouse table.',
   'do_not_use_when': 'Do not use for lakehouse table writes, lakehouse Files writes, or metadata '
                      'evidence writes.',
-  'parameters': 'df, schema, table_name, target, write mode, optional connector writer options, and optional context.',
+  'parameters': 'df, schema, table_name, target, write mode, optional Spark repartition_by value, optional connector writer options, and optional context.',
   'returns': 'None; the DataFrame is written to the configured warehouse table.',
   'raises': 'Raises configuration, Spark connector, or warehouse write errors when the '
             'target/table cannot be written.',
@@ -854,7 +854,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'write_warehouse_table(serving_df, '
                        'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
-  'expanded_purpose': 'Resolves the configured Warehouse table target, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
+  'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
                  'warehouse table.',
   'glossary_terms': ['target table', 'guardrails'],
