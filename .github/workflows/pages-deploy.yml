@@ -1,4 +1,4 @@
-name: Deploy FabricOps dev docs
+name: Deploy FabricOps documentation
 
 on:
   push:
@@ -10,13 +10,15 @@ permissions:
   contents: read
 
 jobs:
-  deploy-dev-docs:
+  deploy-docs:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-    env:
-      DISABLE_MKDOCS_2_WARNING: "true"
-      FABRICOPS_DOC_VERSION: dev
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -46,14 +48,14 @@ jobs:
           FABRICOPS_GIT_SHA: ${{ github.sha }}
         run: uv run mkdocs build --strict
 
-      - name: Deploy dev documentation with Mike
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FABRICOPS_GIT_SHA: ${{ github.sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin gh-pages --depth=1 || true
-          uv run --with mike==2.1.3 mike deploy --push --update-aliases dev
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy documentation to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

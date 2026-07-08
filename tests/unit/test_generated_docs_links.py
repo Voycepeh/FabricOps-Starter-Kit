@@ -48,10 +48,7 @@ def _local_link_target_exists(markdown_path: Path, href: str) -> bool:
         candidates.append(candidate.with_suffix(".md"))
     if any(path.exists() for path in candidates):
         return True
-    generated_pages = {
-        DOCS / "release-info.md",
-    }
-    return any(path in generated_pages for path in candidates)
+    return False
 
 
 def test_generated_docs_local_links_resolve() -> None:
