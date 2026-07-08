@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import tomllib
 
 import pytest
 
@@ -11,7 +12,8 @@ import scripts.release_inventory as ri
 
 def test_release_inventory_reads_version_from_pyproject():
     """Verify release inventory version comes from pyproject.toml."""
-    assert ri.read_package_version() == "0.2.0"
+    expected = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    assert ri.read_package_version() == expected
 
 
 def test_release_inventory_discovers_supported_public_api():
@@ -93,7 +95,7 @@ def test_release_inventory_output_order_is_deterministic():
 
 def test_release_contract_pages_separate_lifecycle_tables():
     """Verify rendered release contract pages separate statuses and avoid fake URLs."""
-    content = Path("docs/releases/0.2.0/index.md").read_text(encoding="utf-8")
+    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
     assert "### Live functions" in content
     assert "### Preview functions" in content
     assert "### Discontinued functions" in content
@@ -102,4 +104,4 @@ def test_release_contract_pages_separate_lifecycle_tables():
 
 def test_release_notes_are_sourced_from_changelog():
     """Verify missing release notes are reported rather than invented."""
-    assert ri.extract_changelog_notes("0.2.0") == "Release notes have not yet been prepared."
+    assert ri.extract_changelog_notes(ri.read_package_version()) == "Release notes have not yet been prepared."

@@ -1,4 +1,4 @@
-release_version: 0.2.0
+release_version: 0.1.0
 functions:
   - name: display_guardrail_results
     qualified_name: fabricops_kit.pipeline.display_guardrail_results

@@ -1,6 +1,6 @@
-# FabricOps Starter Kit 0.2.0 release contract
+# FabricOps Starter Kit 0.1.0 release contract
 
-Package version: `0.2.0`
+Package version: `0.1.0`
 
 ## Release notes
 
@@ -10,8 +10,8 @@ Release notes have not yet been prepared.
 
 These filenames are derived from `pyproject.toml`; verify actual files after `uv build`.
 
-- `fabricops_kit-0.2.0-py3-none-any.whl`
-- `fabricops-kit-0.2.0.tar.gz`
+- `fabricops_kit-0.1.0-py3-none-any.whl`
+- `fabricops_kit-0.1.0.tar.gz`
 
 ## Functions
 

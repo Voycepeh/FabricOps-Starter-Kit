@@ -1,6 +1,6 @@
-# Templates release contract for 0.2.0
+# Templates release contract for 0.1.0
 
-Package version: `0.2.0`
+Package version: `0.1.0`
 
 ## Live templates
 

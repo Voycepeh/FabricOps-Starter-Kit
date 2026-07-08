@@ -265,7 +265,7 @@ def project_distribution_names(version: str) -> tuple[str, str]:
     """Return deterministic wheel and source distribution filenames for the project."""
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["name"]
     wheel_name = project.replace("-", "_")
-    return (f"{wheel_name}-{version}-py3-none-any.whl", f"{project}-{version}.tar.gz")
+    return (f"{wheel_name}-{version}-py3-none-any.whl", f"{wheel_name}-{version}.tar.gz")
 
 
 def render_release_pages() -> list[Path]:
@@ -349,7 +349,7 @@ def render_release_pages() -> list[Path]:
         split_pages.append(split_path)
 
     releases_index = ROOT / "docs" / "releases" / "index.md"
-    releases_index.write_text(f"# Releases\n\n- [{version}]({version}/)\n", encoding="utf-8")
+    releases_index.write_text(f"# Releases\n\n## Current release candidate\n\n- [Proposed initial release {version}]({version}/)\n", encoding="utf-8")
     return [releases_index, index, *split_pages]
 
 
