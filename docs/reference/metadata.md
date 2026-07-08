@@ -2,6 +2,10 @@
 
 FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
 
+The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
+
+![FabricOps metadata model](../assets/fabricops-metadata-model.png)
+
 <div class="grid cards" markdown>
 
 -   **[METADATA_DATA_ACCESS](metadata/metadata_data_access.md)**

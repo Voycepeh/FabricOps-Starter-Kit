@@ -104,6 +104,18 @@ USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/config/": CONFIG_USAGE_NOTE,
 }
 
+METADATA_REFERENCE_OVERVIEW_INTRO = (
+    "FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. "
+    "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`."
+)
+
+METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
+
+METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
+    "The diagram below shows how the FabricOps metadata tables relate to one another across agreement, "
+    "profiling, guardrail, lineage, and pipeline-run evidence."
+)
+
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,

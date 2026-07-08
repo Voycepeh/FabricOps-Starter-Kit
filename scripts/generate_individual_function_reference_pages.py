@@ -816,6 +816,17 @@ def parse_usage_note_metadata() -> tuple[dict[str, str], dict[str, str]]:
     )
 
 
+def parse_metadata_reference_overview() -> list[str]:
+    """Parse curated Metadata Table Overview content from reference docs metadata."""
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
+    caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
+    diagram = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM", "")).strip()
+    if not intro or not caption or not diagram:
+        raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
+    return [intro, "", caption, "", diagram]
+
+
 def _source_usage_path(source_path: str) -> str:
     """Return package-relative source path used for usage-note prefix matching."""
     return source_path.removeprefix("src/")
@@ -3831,7 +3842,7 @@ def generate_metadata_reference_pages() -> None:
     index_lines = [
         "# List of Metadata Tables",
         "",
-        "FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
+        *parse_metadata_reference_overview(),
         "",
         "<div class=\"grid cards\" markdown>",
         "",

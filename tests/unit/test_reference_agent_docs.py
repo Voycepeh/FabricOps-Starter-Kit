@@ -668,7 +668,8 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     governance_review = (ROOT / "docs" / "notebook-templates-implementation-guide" / "governance-review.md").read_text(
         encoding="utf-8"
     )
-    metadata_tables = (ROOT / "docs" / "reference" / "metadata.md").read_text(encoding="utf-8")
+    metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
+    metadata_tables = metadata_tables_path.read_text(encoding="utf-8")
     lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md").read_text(
         encoding="utf-8"
     )
@@ -696,6 +697,20 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)" in lineage_table
 
+
+def test_metadata_reference_overview_renders_model_diagram() -> None:
+    """Verify the metadata overview keeps the model diagram near the top."""
+    metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
+    asset_path = ROOT / "docs" / "assets" / "fabricops-metadata-model.png"
+    text = metadata_tables_path.read_text(encoding="utf-8")
+    image_reference = "../assets/fabricops-metadata-model.png"
+
+    assert asset_path.exists()
+    assert "The diagram below shows how the FabricOps metadata tables relate to one another" in text
+    assert f"![FabricOps metadata model]({image_reference})" in text
+    assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
+    assert text.index("FabricOps metadata tables describe") < text.index(image_reference)
+    assert text.index(image_reference) < text.index("<div class=\"grid cards\" markdown>")
 
 def test_template_function_map_page_stays_removed() -> None:
     """Verify the intentionally deleted template function map page stays removed."""
