@@ -53,8 +53,6 @@ def widget_pipeline_bootstrap(
         Spark session. Defaults to the active notebook variable named ``spark``.
     metadata_schema : str, optional
         ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
-    pipeline_name : str, optional
-        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
     context : dict, optional
         Advanced FabricOps context override.
 
@@ -123,8 +121,6 @@ def _widget_pipeline_bootstrap_workflow(
         Spark session. Defaults to the active notebook variable named ``spark``.
     metadata_schema : str, optional
         ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
-    pipeline_name : str, optional
-        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
     context : dict, optional
         Advanced FabricOps context override.
 
@@ -165,7 +161,6 @@ def _widget_pipeline_bootstrap_workflow(
         spark_session=spark_session,
         metadata_schema=str(schema or ""),
         notebook_type=str(notebook_type or "02_pipeline"),
-        notebook_id=str(runtime_metadata.get("currentNotebookId") or ""),
         context=context,
         read_only=bool(read_only),
     )
@@ -182,11 +177,7 @@ def _widget_pipeline_bootstrap_workflow(
         agreement = get_selected_agreement()
         active.agreement = dict(agreement)
         active.agreement_id = str(agreement.get("agreement_id", ""))
-        active.agreement_version = str(
-            agreement.get("agreement_version", agreement.get("agreement_version", ""))
-        )
-        active.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
-        active.notebook_id = str(agreement.get("notebook_id", active.notebook_id))
+        active.agreement_version = str(agreement.get("agreement_version", ""))
 
     return active
 

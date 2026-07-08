@@ -889,9 +889,6 @@ def _run_table_guardrails_workflow(
     spark_session: Any | None = None,
     agreement_id: str = "",
     agreement_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
     table_role: str = "",
     mode: str = "profile",
     stop_on_failure: bool | None = None,
@@ -916,9 +913,9 @@ def _run_table_guardrails_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    agreement_id, agreement_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Governance context written with catalogue evidence. Omitted values are
-        resolved from the active context when available.
+    agreement_id, agreement_version : str, optional
+        Governance agreement context written with catalogue evidence. Omitted
+        values are resolved from the active pipeline context when available.
     table_role : {"source", "target"}, optional
         Template-facing table role used to retain source and target definitions
         in the active context for summary defaults.
@@ -953,10 +950,13 @@ def _run_table_guardrails_workflow(
     if active is not None:
         context = context if context is not None else active.context
         spark_session = spark_session if spark_session is not None else active.spark_session
+        run_id = run_id or active.run_id
         agreement_id = agreement_id or active.agreement_id
         agreement_version = agreement_version or active.agreement_version
     if spark_session is None:
         raise ValueError("spark_session is required unless widget_pipeline_bootstrap has established an active context.")
+    if not run_id:
+        raise ValueError("run_id is required for in-memory profile grouping; use the active pipeline context or pass a real run_id.")
     normalized_mode = str(mode or "profile").lower().strip()
     if normalized_mode not in {"profile", "enforce"}:
         raise ValueError("mode must be one of: profile, enforce.")
@@ -1034,7 +1034,7 @@ def _run_table_guardrails_workflow(
             dataset_name,
             table_name,
             stage=stage,
-                profile_mode=table_config.get("profile_mode"),
+            profile_mode=table_config.get("profile_mode"),
             watermark_column=table_config.get("watermark_column"),
             severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
             rule_key=table_config.get("profile_behavior_rule_key", "profile_behavior_default"),
@@ -1063,7 +1063,7 @@ def _run_table_guardrails_workflow(
                 dataset_name,
                 table_name,
                 spark_session=spark_session,
-                        write_results=False,
+                write_results=False,
             )
 
         if "dataframe" in dq_results[table_key]:
@@ -1079,7 +1079,7 @@ def _run_table_guardrails_workflow(
                     spark_session=spark_session,
                     config=config,
                     env=env,
-                                dataset_name=dataset_name,
+                    dataset_name=dataset_name,
                     table_name=table_name,
                     guardrail_type=guardrail_type,
                     rule_type=str(rule_type or guardrail_type),
@@ -1103,6 +1103,8 @@ def _run_table_guardrails_workflow(
         evidence_definitions,
         config=config,
         env=env,
+        run_id=run_id,
+        context=resolved_context,
         agreement_id=agreement_id,
         agreement_version=agreement_version,
         schema_results=schema_results,
@@ -1162,6 +1164,7 @@ def write_catalogue_evidence(
     config: Any,
     env: str,
     run_id: str,
+    context: Mapping[str, Any] | None = None,
     agreement_id: str = "",
     agreement_version: str = "",
     schema_results: Mapping[str, Mapping[str, Any]] | None = None,
@@ -1181,13 +1184,13 @@ def write_catalogue_evidence(
         Source or target definitions containing table, stage, and layer context.
     config, env : object, str
         Metadata lakehouse route from ``00_env_config``.
-    run_id : str, optional
-        In-process profile grouping identifier; catalogue rows persist execution
-        identity through the canonical ``_activity_id`` audit field.
+    run_id : str
+        Required in-process profile grouping identifier. Catalogue rows persist
+        execution identity through the canonical ``_activity_id`` audit field.
+    context : mapping, optional
+        Resolved FabricOps runtime context used to build canonical audit fields.
     agreement_id, agreement_version : str, optional
         Governance context added to each catalogue row.
-    notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Ignored legacy in-process parameters; not persisted in catalogue rows.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Runtime guardrail results are accepted by this writer but are not
         written to ``METADATA_DATA_CATALOGUE``.
@@ -1205,7 +1208,7 @@ def write_catalogue_evidence(
     from pyspark.sql import functions as F
 
     del schema_results, freshness_results, dq_results
-    audit = _runtime_audit_fields(config, env, resolved_context)
+    audit = _runtime_audit_fields(config, env, context)
     statuses: dict[str, str] = {}
     for name, profile_df in profiles.items():
         definition = dataset_definitions[name]
@@ -1283,7 +1286,6 @@ def write_catalogue_evidence(
 def _write_pipeline_lineage_workflow(
     *,
     spark: Any,
-    run_id: str,
     context: dict[str, Any] | None = None,
     source_definitions: Mapping[str, Mapping[str, Any]],
     target_definitions: Mapping[str, Mapping[str, Any]],
@@ -1303,9 +1305,6 @@ def _write_pipeline_lineage_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    run_id : str, optional
-        In-process relationship seed retained for callers; lineage rows persist
-        execution identity through canonical ``_activity_id``.
     source_definitions, target_definitions : mapping
         Source and target definitions keyed by alias.
     relationships : list of mapping, optional

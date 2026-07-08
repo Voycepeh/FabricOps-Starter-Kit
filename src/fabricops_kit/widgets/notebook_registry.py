@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
 
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     read_lakehouse_table_core,
     write_lakehouse_table_core,
 )
-from fabricops_kit.config.audit import _audit_timestamp_value, _context_get, _runtime_context, _safe_str, build_runtime_audit_fields
+from fabricops_kit.config.audit import _runtime_context, _safe_str, build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, coerce_metadata_row_types
 
 NOTEBOOK_REGISTRY_TABLE = "METADATA_NOTEBOOK_REGISTRY"
@@ -25,6 +26,7 @@ NOTEBOOK_REGISTRY_BASE_FIELDS = [
 ]
 
 NOTEBOOK_REGISTRY_STATE_FIELDS = [
+    "registration_id",
     "registration_role",
     "registration_status",
 ]
@@ -51,6 +53,7 @@ def register_current_notebook(
     agreement_version=None,
     registration_role="primary",
     registration_status="active",
+    registration_id=None,
     metadata_table=NOTEBOOK_REGISTRY_TABLE,
     metadata_schema: str | None = None,
     *,
@@ -81,6 +84,9 @@ def register_current_notebook(
     registration_role : {"primary", "additional"}, default="primary"
         Whether the row represents the notebook's user-facing active agreement
         or an additional audit link.
+    registration_id : str, optional
+        Stable identifier for this registration event. When omitted, a new event
+        identifier is generated.
     registration_status : {"active", "superseded"}, default="active"
         Current registration event state. Superseded rows are retained for audit
         and ignored by active-registration helpers.
@@ -131,6 +137,7 @@ def register_current_notebook(
             else ""
         ),
         "agreement_version": _safe_str(agreement_version),
+        "registration_id": _safe_str(registration_id or f"NR-{uuid4().hex}"),
         "registration_role": _safe_str(registration_role or "primary"),
         "registration_status": _safe_str(registration_status or "active"),
         **audit,
@@ -247,8 +254,8 @@ def current_notebook_active_registrations(
 
     """
     ctx = _runtime_context()
-    notebook_id = _safe_str(_context_get(ctx, "currentNotebookId", "notebookId"))
-    notebook_name = _safe_str(_context_get(ctx, "currentNotebookName", "notebookName") or "unknown_notebook")
+    notebook_id = _safe_str(ctx.get("currentNotebookId"))
+    notebook_name = _safe_str(ctx.get("currentNotebookName") or "unknown_notebook")
     rows = _load_notebook_registry(
         spark,
         metadata_table=metadata_table,

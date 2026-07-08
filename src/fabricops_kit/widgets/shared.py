@@ -219,8 +219,6 @@ class PipelineRunContext:
     spark_session: Any = None
     metadata_schema: str = ""
     notebook_type: str = "02_pipeline"
-    notebook_id: str = ""
-    notebook_registry_id: str = ""
     agreement_id: str = ""
     agreement_version: str = ""
     agreement: dict[str, Any] = dataclass_field(default_factory=dict)

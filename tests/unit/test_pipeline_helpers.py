@@ -456,9 +456,6 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         spark_session="spark",
         agreement_id="agreement-1",
         agreement_version="v1",
-        notebook_registry_id="notebook-registry-1",
-        notebook_id="notebook-1",
-        pipeline_name="pipeline-1",
     )
 
     assert result["can_continue"] is False
@@ -517,6 +514,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             "dq_preset": "active_rules",
         }],
         context={"config": {}, "env": "dev"},
+        run_id="run-1",
         spark_session=Spark(),
     )
 
@@ -571,6 +569,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     pipeline.run_table_guardrails(
         table_configs,
         context={"config": {}, "env": "dev"},
+        run_id="run-1",
         spark_session="spark",
     )
 
@@ -604,6 +603,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
             }
         ],
         context={"config": {}, "env": "dev"},
+        run_id="run-1",
         spark_session="spark",
         stop_on_failure=True,
     )
@@ -827,7 +827,6 @@ def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
 
     assert result.run_id == "run-123"
     assert result.pipeline_name == "02_pipeline"
-    assert result.notebook_id == "notebook-1"
     assert result.agreement_id == "agreement-1"
     assert result.agreement_version == "2"
     assert widget_calls == [
@@ -849,8 +848,6 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
         pipeline_started_at="2026-01-01T00:00:00Z",
         pipeline_name="demo_pipeline",
         spark_session=spark,
-        notebook_id="notebook-1",
-        notebook_registry_id="registry-1",
         agreement_id="agreement-1",
         agreement_version="2",
         context={"config": "config", "env": "dev"},
@@ -883,7 +880,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
 
     assert result["can_continue"] is True
     assert captured["profile_behavior"] == {"spark_session": spark, "activity_id": "activity-id"}
-    assert "run_id" not in captured["catalogue"]
+    assert captured["catalogue"]["run_id"] == "run-123"
     assert "pipeline_name" not in captured["catalogue"]
     assert "notebook_id" not in captured["catalogue"]
     assert "notebook_registry_id" not in captured["catalogue"]
@@ -900,8 +897,6 @@ def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_contex
         pipeline_started_at="2026-01-01T00:00:00Z",
         pipeline_name="demo_pipeline",
         spark_session=spark,
-        notebook_id="notebook-1",
-        notebook_registry_id="registry-1",
         agreement_id="agreement-1",
         agreement_version="2",
         source_definitions={"orders": {"table_name": "orders"}},

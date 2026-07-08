@@ -23,7 +23,6 @@ def write_pipeline_lineage(
     """Write many-to-many source-to-target lineage evidence."""
     return _write_pipeline_lineage_workflow(
         spark=spark,
-        run_id="",
         context=context,
         source_definitions=source_definitions,
         target_definitions=target_definitions,
