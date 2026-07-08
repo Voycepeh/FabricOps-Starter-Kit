@@ -67,7 +67,6 @@ No assets.
 | `METADATA_DATA_AGREEMENT_EVIDENCE` | [docs/reference/metadata/metadata_data_agreement_evidence.md](../../reference/metadata/metadata_data_agreement_evidence.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 | `METADATA_DATA_CATALOGUE` | [docs/reference/metadata/metadata_data_catalogue.md](../../reference/metadata/metadata_data_catalogue.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 | `METADATA_DATA_STEWARD` | [docs/reference/metadata/metadata_data_steward.md](../../reference/metadata/metadata_data_steward.md) | `src/fabricops_kit/config/metadata_schemas.py` |
-| `METADATA_NOTEBOOK_REGISTRY` | [docs/reference/metadata/metadata_notebook_registry.md](../../reference/metadata/metadata_notebook_registry.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 
 ### Preview metadata tables
 
@@ -78,6 +77,7 @@ No assets.
 | `METADATA_ENRICHMENT_RULES` | [docs/reference/metadata/metadata_enrichment_rules.md](../../reference/metadata/metadata_enrichment_rules.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 | `METADATA_GUARDRAIL_RESULTS` | [docs/reference/metadata/metadata_guardrail_results.md](../../reference/metadata/metadata_guardrail_results.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 | `METADATA_GUARDRAIL_RULES` | [docs/reference/metadata/metadata_guardrail_rules.md](../../reference/metadata/metadata_guardrail_rules.md) | `src/fabricops_kit/config/metadata_schemas.py` |
+| `METADATA_NOTEBOOK_REGISTRY` | [docs/reference/metadata/metadata_notebook_registry.md](../../reference/metadata/metadata_notebook_registry.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 | `METADATA_PIPELINE_RUNS` | [docs/reference/metadata/metadata_pipeline_runs.md](../../reference/metadata/metadata_pipeline_runs.md) | `src/fabricops_kit/config/metadata_schemas.py` |
 
 ### Discontinued metadata tables

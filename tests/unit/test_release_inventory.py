@@ -113,5 +113,5 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     assert manifest is not None
     assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
     assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 3
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 5
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])

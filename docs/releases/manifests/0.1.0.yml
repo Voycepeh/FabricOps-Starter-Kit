@@ -170,7 +170,7 @@ metadata_tables:
   - name: METADATA_NOTEBOOK_REGISTRY
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_notebook_registry.md
-    status: live
+    status: preview
   - name: METADATA_PIPELINE_RUNS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_pipeline_runs.md
