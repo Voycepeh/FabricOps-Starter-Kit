@@ -35,7 +35,6 @@ Use this file as a concise navigation map for documentation and automation workf
 ## Handover and maintenance
 
 - [Release Management](development/release-management.md): Maintainer workflow for releases, versioning, and generated references.
-- [Documentation Versioning](development/docs-versioning.md): Documentation versioning and traceability guidance.
 - [Contributing](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/CONTRIBUTING.md): Contribution workflow and expectations.
 - [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Repository-level overview and navigation.
 

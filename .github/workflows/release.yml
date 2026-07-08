@@ -38,14 +38,7 @@ jobs:
           set -euo pipefail
           uv run python scripts/check_release_ready.py "${GITHUB_REF_NAME}"
           version="${GITHUB_REF_NAME#v}"
-          doc_version="$(uv run python - <<'PY'
-          import os
-          version = os.environ["GITHUB_REF_NAME"].removeprefix("v")
-          print(version)
-          PY
-          )"
           echo "FABRICOPS_PACKAGE_VERSION=${version}" >> "${GITHUB_ENV}"
-          echo "FABRICOPS_DOC_VERSION=${doc_version}" >> "${GITHUB_ENV}"
           echo "FABRICOPS_GIT_SHA=${GITHUB_SHA}" >> "${GITHUB_ENV}"
 
       - name: Ruff lint
@@ -60,6 +53,8 @@ jobs:
           set -euo pipefail
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src python scripts/generate_release_inventory.py --check
+          PYTHONPATH=src python scripts/generate_release_contract_pages.py
 
           # Keep the manually maintained explanatory page unchanged. The legacy
           # generator still writes this path, but it is not part of its output contract.
@@ -130,21 +125,3 @@ jobs:
             dist/*.whl
             dist/*.tar.gz
             dist/SHA256SUMS.txt
-
-      - name: Deploy released documentation with Mike
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin gh-pages --depth=1 || true
-          uvx --from mike==2.1.3 mike deploy \
-            --push \
-            --update-aliases \
-            --title "${FABRICOPS_PACKAGE_VERSION}" \
-            "${FABRICOPS_DOC_VERSION}" \
-            latest \
-            stable
-          uvx --from mike==2.1.3 mike set-default --push latest

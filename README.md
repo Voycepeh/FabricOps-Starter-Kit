@@ -6,35 +6,35 @@ It provides reusable notebook templates, helper functions, metadata tables, guar
 
 <div align="center">
 
-[![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
-[![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
-[![Create Wheel](https://img.shields.io/badge/Create-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/create-wheel/)
+[![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+[![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+[![Create Wheel](https://img.shields.io/badge/Create-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/create-wheel/)
 
 </div>
 
 
 ## Documentation map
 
-- [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/)
-- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
-- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/)
-  - [Notebook Templates Implementation Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/notebook-templates-implementation-guide/)
-  - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/metadata/)
-  - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/how-fabricops-works/schema-and-data-drift/)
-  - [Governance Review](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/notebook-templates-implementation-guide/governance-review/)
-  - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/notebook-templates-implementation-guide/metadata-dashboard/)
-- [Create Wheel](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/create-wheel/)
-- [Setup Fabric Artifacts](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/setup-fabric-artifacts/)
-- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/reference/)
+- [Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+- [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
+  - [Notebook Templates Implementation Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
+  - [Metadata Tables](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/)
+  - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/schema-and-data-drift/)
+  - [Governance Review](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/governance-review/)
+  - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/metadata-dashboard/)
+- [Create Wheel](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/create-wheel/)
+- [Setup Fabric Artifacts](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/setup-fabric-artifacts/)
+- [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
 
 ## Documentation navigation
 
-FabricOps publishes a [documentation navigation map](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/llms.txt) for documentation and automation tooling.
+FabricOps publishes a [documentation navigation map](https://voycepeh.github.io/FabricOps-Starter-Kit/llms.txt) for documentation and automation tooling.
 
 Most documentation pages also have raw Markdown variants by adding `.md` to the page URL, for example:
 
-- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo/)
-- [Guided Demo Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/dev/guided-demo.md)
+- [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+- [Guided Demo Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo.md)
 
 These files are published with the documentation build so agents can navigate FabricOps without scraping rendered HTML.
 
