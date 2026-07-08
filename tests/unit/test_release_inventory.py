@@ -105,3 +105,13 @@ def test_release_contract_pages_separate_lifecycle_tables():
 def test_release_notes_are_sourced_from_changelog():
     """Verify missing release notes are reported rather than invented."""
     assert ri.extract_changelog_notes(ri.read_package_version()) == "Release notes have not yet been prepared."
+
+
+def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
+    """Verify maintainer-owned lifecycle classifications match the initial release baseline."""
+    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    assert manifest is not None
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
+    assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 3
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 5
+    assert all(item["status"] == "preview" for item in manifest["dq_rules"])

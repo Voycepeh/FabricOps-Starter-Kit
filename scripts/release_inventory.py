@@ -16,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
+GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml and regenerate. -->"
 MAINTAINER_FIELDS = {"status", "notes", "rationale", "introduced_in", "discontinued_in"}
 TEMPLATE_DOCS = {
     "00_env_config": "docs/notebook-templates-implementation-guide/environment-config.md",
@@ -280,6 +281,7 @@ def render_release_pages() -> list[Path]:
     release_dir.mkdir(parents=True, exist_ok=True)
     notes = extract_changelog_notes(version)
     wheel, sdist = project_distribution_names(version)
+    notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
 
     def table(group: str, status: str) -> str:
         rows = [item for item in manifest[group] if item["status"] == status]
@@ -301,6 +303,8 @@ def render_release_pages() -> list[Path]:
             sections.append(f"### {status.title()} {labels[group].lower()}\n\n{table(group, status)}")
 
     content = "\n".join([
+        notice,
+        "",
         f"# FabricOps Starter Kit {version} release contract",
         "",
         f"Package version: `{version}`",
@@ -330,6 +334,8 @@ def render_release_pages() -> list[Path]:
     }
     for group, filename in split_names.items():
         split_content = "\n".join([
+            notice,
+            "",
             f"# {labels[group]} release contract for {version}",
             "",
             f"Package version: `{version}`",
@@ -349,7 +355,7 @@ def render_release_pages() -> list[Path]:
         split_pages.append(split_path)
 
     releases_index = ROOT / "docs" / "releases" / "index.md"
-    releases_index.write_text(f"# Releases\n\n## Current release candidate\n\n- [Proposed initial release {version}]({version}/)\n", encoding="utf-8")
+    releases_index.write_text(f"{notice}\n\n# Releases\n\n## Current release candidate\n\n- [Proposed initial release {version}]({version}/)\n", encoding="utf-8")
     return [releases_index, index, *split_pages]
 
 

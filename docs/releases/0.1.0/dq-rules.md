@@ -1,3 +1,5 @@
+<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml and regenerate. -->
+
 # DQ rules release contract for 0.1.0
 
 Package version: `0.1.0`
