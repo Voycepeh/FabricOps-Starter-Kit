@@ -59,6 +59,11 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__body">Suggested by AI and enforced in pipeline guardrails.</span>
   </a>
 
+  <a class="fabricops-landing-card" href="releases/">
+    <span class="fabricops-landing-card__title">Release contracts</span>
+    <span class="fabricops-landing-card__body">Review version-specific function, metadata, template, and DQ rule lifecycle inventories.</span>
+  </a>
+
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>11</strong><span>metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
     <span class="fabricops-landing-card__body">Stores data about agreements, catalogue entries, lineage, guardrail results, notebook registry entries, and pipeline runs.</span>

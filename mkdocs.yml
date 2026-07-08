@@ -32,6 +32,9 @@ nav:
       - Review Governance: guided-demo/review-guardrails.md
       - Explore Metadata: guided-demo/explore-metadata-outputs.md
   - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md
+  - Releases:
+      - Overview: releases/index.md
+      - 0.2.0: releases/0.2.0/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
       - Data Access: reference/metadata/metadata_data_access.md
