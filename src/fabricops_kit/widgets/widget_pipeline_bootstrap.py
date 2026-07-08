@@ -28,7 +28,6 @@ def widget_pipeline_bootstrap(
     run_context: Any = None,
     spark_session: Any = None,
     metadata_schema: str | None = None,
-    pipeline_name: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> Any:
     """Bootstrap a guided pipeline notebook run and store runtime defaults.
@@ -54,8 +53,6 @@ def widget_pipeline_bootstrap(
         Spark session. Defaults to the active notebook variable named ``spark``.
     metadata_schema : str, optional
         ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
-    pipeline_name : str, optional
-        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
     context : dict, optional
         Advanced FabricOps context override.
 
@@ -63,7 +60,7 @@ def widget_pipeline_bootstrap(
     -------
     Any
         Pipeline runtime context object with resolved runtime defaults. Most notebooks
-        use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
+        use it only as ``PIPELINE`` for runtime context when
         preparing target configs or lineage. The concrete context class is
         intentionally internal and not part of the primary public API.
 
@@ -81,7 +78,6 @@ def widget_pipeline_bootstrap(
         run_context=run_context,
         spark_session=spark_session,
         metadata_schema=metadata_schema,
-        pipeline_name=pipeline_name,
         context=context,
     )
 
@@ -100,7 +96,6 @@ def _widget_pipeline_bootstrap_workflow(
     run_context: Any = None,
     spark_session: Any = None,
     metadata_schema: str | None = None,
-    pipeline_name: str | None = None,
     context: dict[str, Any] | None = None,
 ) -> Any:
     """Start a guided notebook run and store runtime defaults.
@@ -126,8 +121,6 @@ def _widget_pipeline_bootstrap_workflow(
         Spark session. Defaults to the active notebook variable named ``spark``.
     metadata_schema : str, optional
         ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.
-    pipeline_name : str, optional
-        Friendly pipeline name. Defaults to Fabric runtime notebook metadata.
     context : dict, optional
         Advanced FabricOps context override.
 
@@ -135,7 +128,7 @@ def _widget_pipeline_bootstrap_workflow(
     -------
     Any
         Internal context object with resolved runtime defaults. Most notebooks
-        use it only as ``PIPELINE`` for ``run_id`` and ``pipeline_name`` when
+        use it only as ``PIPELINE`` for runtime context when
         preparing target configs or lineage. The concrete context class is
         intentionally internal and not part of the primary public API.
 
@@ -160,7 +153,7 @@ def _widget_pipeline_bootstrap_workflow(
     runtime_metadata = getattr(run_context, "runtime_metadata", {}) or {}
     if not isinstance(runtime_metadata, Mapping):
         runtime_metadata = {}
-    resolved_pipeline_name = str(pipeline_name or runtime_metadata.get("currentNotebookName") or notebook_type)
+    resolved_pipeline_name = str(runtime_metadata.get("currentNotebookName") or notebook_type)
     active = PipelineRunContext(
         run_id=str(getattr(run_context, "run_id", "") or uuid4()),
         pipeline_started_at=get_current_audit_timestamp(),
@@ -168,7 +161,6 @@ def _widget_pipeline_bootstrap_workflow(
         spark_session=spark_session,
         metadata_schema=str(schema or ""),
         notebook_type=str(notebook_type or "02_pipeline"),
-        notebook_id=str(runtime_metadata.get("currentNotebookId") or ""),
         context=context,
         read_only=bool(read_only),
     )
@@ -180,17 +172,12 @@ def _widget_pipeline_bootstrap_workflow(
             metadata_schema=active.metadata_schema or None,
             register_notebook=register_notebook,
             notebook_type=active.notebook_type,
-            pipeline_name=active.pipeline_name,
             context=active.context,
         )
         agreement = get_selected_agreement()
         active.agreement = dict(agreement)
         active.agreement_id = str(agreement.get("agreement_id", ""))
-        active.agreement_contract_version = str(
-            agreement.get("agreement_contract_version", agreement.get("contract_version", ""))
-        )
-        active.notebook_registry_id = str(agreement.get("notebook_registry_id", agreement.get("registration_id", "")))
-        active.notebook_id = str(agreement.get("notebook_id", active.notebook_id))
+        active.agreement_version = str(agreement.get("agreement_version", ""))
 
     return active
 
@@ -205,7 +192,7 @@ def _html_escape(value: Any) -> str:
 
 
 
-def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None, pipeline_name: str | None = None) -> Any:
+def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context: dict[str, Any] | None = None, spark_session: Any = None, metadata_schema: str | None = None, register_notebook: bool = False, notebook_type: str | None = None, environment_name: str | None = None, dataset_name: str | None = None, table_name: str | None = None, topic: str | None = None,) -> Any:
     """Render the bootstrap-owned agreement selector workflow and retain the selected row.
 
     Parameters
@@ -224,7 +211,7 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
     register_notebook : bool, default=False
         When True, render registration status and a button that links the
         current notebook to the selected agreement.
-    notebook_type, environment_name, dataset_name, table_name, topic, pipeline_name : str, optional
+    notebook_type, environment_name, dataset_name, table_name, topic : str, optional
         Workflow metadata passed to ``register_current_notebook`` when
         ``register_notebook`` is enabled.
 
@@ -259,7 +246,7 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
 
     def _agreement_label(row: dict[str, Any]) -> str:
         agreement_id = str(row.get("agreement_id") or "").strip()
-        return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('contract_version', '')})"
+        return f"{row.get('agreement_name', '') or agreement_id} ({agreement_id} / v{row.get('agreement_version', '')})"
 
     selector_parts = render_searchable_selector(
         widgets=widgets,
@@ -268,8 +255,8 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
         label_fn=_agreement_label,
         value_fn=lambda row: str(row.get("agreement_id") or "").strip(),
         placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "contract_version", "domain", "recipient"],
-        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("contract_version", "Current version"), ("recipient", "Recipient")],
+        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain", "recipient"],
+        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("agreement_version", "Current version"), ("recipient", "Recipient")],
     )
     selector = selector_parts["selector"]
 
@@ -300,8 +287,8 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
         if not selected:
             return "Select an agreement before registering this notebook."
         selected_id = str(selected.get("agreement_id") or "")
-        selected_version = str(selected.get("contract_version") or "")
-        same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
+        selected_version = str(selected.get("agreement_version") or "")
+        same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_version") or "") == selected_version]
         same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
         other = [row for row in active_primary_rows if row not in same_primary]
         if same_primary:
@@ -311,7 +298,7 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
             return f"Registration status: already registered to {selected_id} version {selected_version} as an active {role} agreement link."
         if other:
             current = other[0]
-            current_version = str(current.get("agreement_contract_version") or "unknown version")
+            current_version = str(current.get("agreement_version") or "unknown version")
             return f"Registration status: this notebook is already registered to {current.get('agreement_id', '')} version {current_version}. Choose how to handle the selected agreement."
         return "Registration status: not registered to an active agreement."
 
@@ -350,8 +337,8 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
                     registration_status.value = "Select an agreement before registering this notebook."
                 return
             selected_id = str(selected.get("agreement_id") or "")
-            selected_version = str(selected.get("contract_version") or "")
-            same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_contract_version") or "") == selected_version]
+            selected_version = str(selected.get("agreement_version") or "")
+            same_active = [row for row in active_rows if str(row.get("agreement_id") or "") == selected_id and str(row.get("agreement_version") or "") == selected_version]
             same_primary = [row for row in same_active if str(row.get("registration_role") or "primary") == "primary"]
             other = [row for row in active_primary_rows if row not in same_primary]
             if same_active:
@@ -379,7 +366,7 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
                 config=config,
                 env=env,
                 agreement_id=selected_id,
-                contract_version=selected_version,
+                agreement_version=selected_version,
                 registration_role=role,
                 registration_status="active",
                 metadata_schema=metadata_schema,
@@ -388,29 +375,23 @@ def _render_bootstrap_agreement_selector(agreement_rows: Any = None, *, context:
                 dataset_name=dataset_name,
                 table_name=table_name,
                 topic=topic,
-                pipeline_name=pipeline_name,
             )
             if other and role == "primary":
-                superseded_at = get_current_audit_timestamp(config=config, drop_microseconds=False)
                 for previous in other:
                     register_current_notebook(
                         spark_session,
                         config=config,
                         env=env,
                         agreement_id=previous.get("agreement_id"),
-                        contract_version=previous.get("agreement_contract_version"),
+                        agreement_version=previous.get("agreement_version"),
                         registration_role=previous.get("registration_role") or "primary",
                         registration_status="superseded",
                         metadata_schema=metadata_schema,
-                        registration_id=previous.get("registration_id"),
-                        superseded_at=superseded_at,
-                        superseded_by_registration_id=new_row.get("registration_id"),
                         notebook_type=previous.get("notebook_type") or notebook_type,
                         environment_name=previous.get("environment_name") or environment_name or env,
                         dataset_name=previous.get("dataset_name") or dataset_name,
                         table_name=previous.get("table_name") or table_name,
                         topic=previous.get("topic") or topic,
-                        pipeline_name=previous.get("pipeline_name") or pipeline_name,
                     )
                 for previous in other:
                     if previous in active_rows:

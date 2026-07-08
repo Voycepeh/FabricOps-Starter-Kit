@@ -192,9 +192,8 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
     assert config.data_steward_widget["custom_fields"][0]["options"] == ["A"]
     assert "data_agreement_evidence" in config.metadata_tables
-    assert {"recipient", "approved_usage_internal", "approved_usage_external", "approved_usage_research"}.issubset(
-        set(config.data_agreement_widget["visible_columns"])
-    )
+    assert {"recipient", "business_purpose"}.issubset(set(config.data_agreement_widget["visible_columns"]))
+    assert not any(field.startswith("approved_usage_") for field in config.data_agreement_widget["visible_columns"])
     with pytest.raises(ValueError, match="paths must be a non-empty mapping"):
         PathConfig(paths={})
 
@@ -441,7 +440,7 @@ def test_setup_metadata_tables_rejects_existing_tables_missing_canonical_columns
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be schema-replaced"),
     )
 
-    with pytest.raises(ValueError, match="Recreate existing development metadata tables"):
+    with pytest.raises(ValueError, match="Recreate the development metadata table"):
         setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
 
 
@@ -467,6 +466,127 @@ def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
         ValueError, match=r"METADATA_DATA_CATALOGUE is missing required column\(s\): fabric_store_target"
     ):
         setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+
+def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullability(monkeypatch):
+    """Verify setup validates physical audit nullability on existing tables."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, schema):
+            self.schema = schema
+            self.columns = schema.fieldNames()
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    def wrong_nullability(schema):
+        field_type = type(schema.fields[0])
+        schema_type = type(schema)
+        fields = []
+        for field in schema.fields:
+            nullable = True if field.name == "_activity_id" else field.nullable
+            fields.append(field_type(field.name, field.dataType, nullable))
+        return schema_type(fields)
+
+    tables = {name: Table(schema) for name, schema in registry.items()}
+    tables["METADATA_PIPELINE_RUNS"] = Table(wrong_nullability(registry["METADATA_PIPELINE_RUNS"]))
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
+
+    with pytest.raises(ValueError, match=r"_activity_id nullability expected non-nullable but found nullable"):
+        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+
+def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type(monkeypatch):
+    """Verify setup validates physical data types on existing tables."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, schema):
+            self.schema = schema
+            self.columns = schema.fieldNames()
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    def wrong_type(schema):
+        class StringType:
+            pass
+
+        field_type = type(schema.fields[0])
+        schema_type = type(schema)
+        fields = []
+        for field in schema.fields:
+            data_type = StringType() if field.name == "source_count" else field.dataType
+            fields.append(field_type(field.name, data_type, field.nullable))
+        return schema_type(fields)
+
+    tables = {name: Table(schema) for name, schema in registry.items()}
+    tables["METADATA_PIPELINE_RUNS"] = Table(wrong_type(registry["METADATA_PIPELINE_RUNS"]))
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
+
+    with pytest.raises(ValueError, match=r"source_count type expected long but found string"):
+        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+
+
+def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
+    """Verify newly created metadata tables use the canonical schema registry."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    created = {}
+    existing = {}
+
+    class Frame:
+        def __init__(self, schema):
+            self.schema = schema
+            self.columns = schema.fieldNames()
+
+        def where(self, _expr):
+            return self
+
+        def count(self):
+            return 1
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            assert rows == []
+            return Frame(schema)
+
+    def read_table(table_name, **_kwargs):
+        if table_name not in existing:
+            raise RuntimeError("table not found")
+        return existing[table_name]
+
+    def write_table(frame, table_name, **kwargs):
+        assert kwargs.get("mode") == "overwrite"
+        created[table_name] = frame.schema
+        existing[table_name] = frame
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+
+    assert result["created_tables"] == list(registry)
+    assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
+    access_fields = {field.name: field for field in created["METADATA_DATA_ACCESS"].fields}
+    assert all(not access_fields[field].nullable for field in {"_activity_id", "_committed_at", "_workspace_id"})
 
 
 def test_setup_metadata_tables_non_missing_read_error_includes_original_exception(monkeypatch):
@@ -753,7 +873,7 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path(
         "src/fabricops_kit/io/shared.py"
     ).read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields" in Path(
+    assert "from fabricops_kit.config.audit import build_runtime_audit_fields" in Path(
         "src/fabricops_kit/pipeline/metadata_evidence.py"
     ).read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path(
@@ -768,7 +888,7 @@ def test_setup_metadata_tables_uses_public_config_validation_helper_only():
     assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
     assert "_validate_framework_config" not in source
     assert (
-        "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry"
+        "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_schema_type_name, metadata_table_field_names, metadata_table_schema_registry"
         in source
     )
 
@@ -879,24 +999,18 @@ def _metadata_doc_schema_rows(table_name: str) -> list[dict[str, str]]:
 
 
 def test_generated_metadata_docs_match_setup_metadata_table_schema_registry():
-    """Verify generated metadata docs reflect setup_metadata_tables schema registry."""
-    pytest.skip("Generated metadata docs are intentionally not refreshed in backend source PRs.")
+    """Verify metadata docs generation uses the canonical setup schema registry."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
 
     registry = metadata_table_schema_registry()
-    generated_doc_paths = sorted(Path("docs/reference/metadata").glob("metadata_*.md"))
+    generated_source = Path("scripts/generate_individual_function_reference_pages.py").read_text(encoding="utf-8")
 
-    assert len(generated_doc_paths) == len(registry)
-    for table_name, schema in registry.items():
-        expected = [
-            {
-                "name": row["name"],
-                "type": row["type"],
-                "required": "Nullable" if row["nullable"] else "Required",
-            }
-            for row in metadata_table_schema_rows(schema)
-        ]
-        assert _metadata_doc_schema_rows(table_name) == expected
+    assert "metadata_table_schema_registry" in generated_source
+    assert registry
+    for schema in registry.values():
+        rows = metadata_table_schema_rows(schema)
+        assert rows
+        assert all({"name", "type", "nullable"} <= set(row) for row in rows)
 
 
 def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
@@ -916,12 +1030,13 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     docs_catalogue = {row["name"]: row["type"] for row in _metadata_doc_schema_rows("METADATA_DATA_CATALOGUE")}
 
     assert agreement["start_date"] == "date"
-    assert agreement["approved_usage_internal"] == "boolean"
+    assert "approved_usage_internal" not in agreement
+    assert agreement["agreement_version"] == "string"
     assert catalogue["profiled_at"] == "timestamp"
     assert catalogue["fabric_store_target"] == "string"
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
-    assert docs_catalogue["policy_updated_at"] == "timestamp"
+    assert docs_catalogue["policy_updated_at"] == "timestamp"  # generated docs are not refreshed in source PRs
 
     for table_name, schema in registry.items():
         assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()) :] == [
@@ -937,9 +1052,8 @@ def test_metadata_audit_schema_nullability_contract():
     registry = metadata_table_schema_registry()
     for table_name, schema in registry.items():
         fields = {field.name: field for field in schema.fields}
-        expected_nullable = table_name == "METADATA_DATA_ACCESS"
         for name in audit_names:
-            assert fields[name].nullable is expected_nullable, table_name
+            assert fields[name].nullable is False, table_name
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
     assert access_fields[:14] == [

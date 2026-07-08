@@ -94,6 +94,20 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         writes.append((table, df))
 
     monkeypatch.setattr(gr, "write_lakehouse_table_core", write_table)
+    monkeypatch.setattr(
+        gr,
+        "build_runtime_audit_fields",
+        lambda **_kwargs: {
+            "_committed_by": "reviewer",
+            "_committed_at": "2026-01-01T00:00:00Z",
+            "_workspace_id": "workspace-id",
+            "_workspace_name": "workspace",
+            "_notebook_id": "notebook-id",
+            "_notebook_name": "notebook",
+            "_metadata_lakehouse_name": "metadata",
+            "_activity_id": "activity-id",
+        },
+    )
 
     result = gr.record_table_governance(
         framework_config(),
@@ -143,7 +157,6 @@ def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
             "is_active": False,
             "submitted_by": "engineer",
             "submitted_at": "2026-01-01T00:00:00Z",
-            "created_at": "2026-01-01T00:00:00Z",
         },
         {
             "rule_id": "guardrail-1",
@@ -156,16 +169,15 @@ def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
             "is_active": True,
             "reviewed_by": "steward",
             "reviewed_at": "2026-01-02T00:00:00Z",
-            "created_at": "2026-01-02T00:00:00Z",
         },
     ]
 
     history = gr.load_rule_review_history(rows, metadata_column_key="col-amount")
 
-    assert [entry["rule_id"] for entry in history] == ["enrich-1", "guardrail-1"]
-    assert [entry["record_type"] for entry in history] == ["enrichment", "guardrail"]
-    assert history[0]["rule_version"] == "v1"
-    assert history[1]["rule_version"] == "v2"
+    assert [entry["rule_id"] for entry in history] == ["guardrail-1", "enrich-1"]
+    assert [entry["record_type"] for entry in history] == ["guardrail", "enrichment"]
+    assert history[0]["rule_version"] == "v2"
+    assert history[1]["rule_version"] == "v1"
 
 
 def test_catalogue_profile_loader_uses_physical_identity_helper(monkeypatch):

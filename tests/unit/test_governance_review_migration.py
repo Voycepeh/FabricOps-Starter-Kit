@@ -15,6 +15,13 @@ from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
 
+@pytest.fixture(autouse=True)
+def _canonical_audit(monkeypatch):
+    """Provide deterministic canonical audit fields for governance tests."""
+    audit = {"_workspace_id": "workspace-id", "_workspace_name": "workspace", "_notebook_id": "notebook-id", "_notebook_name": "notebook", "_activity_id": "activity-id", "_committed_by": "user", "_committed_at": "2026-01-01T00:00:00+00:00", "_metadata_lakehouse_name": "metadata"}
+    monkeypatch.setattr(governance, "build_runtime_audit_fields", lambda **kwargs: dict(audit))
+
+
 DELETED_MODULE_SUFFIXES = (
     "business_context",
     "data_governance",
@@ -219,12 +226,9 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "column_name",
         "layer",
         "asset_kind",
-        "pipeline_name",
-        "profile_run_id",
         "profile_stage",
         "profile_status",
         "profiled_at",
-        "run_timestamp",
         "evidence_role",
         "data_type",
         "row_count",
@@ -242,9 +246,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "profile_hash",
         "profile_payload_json",
         "agreement_id",
-        "contract_version",
-        "notebook_registry_id",
-        "notebook_id",
+        "agreement_version",
         "_committed_at",
         "_committed_by",
         "_workspace_name",
@@ -303,14 +305,14 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
     }
     tables = {
         governance.CATALOGUE_TABLE: [
-            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "contract_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
+            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "agreement_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
         ],
         governance.PIPELINE_RUNS_TABLE: [
             {"environment_name": "dev", "run_id": "run-001", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-01T00:00:00+00:00"},
             {"environment_name": "dev", "run_id": "run-002", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-02T00:00:00+00:00"},
         ],
-        governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "agreement_name": "Orders"}],
-        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "contract_version": "1.0", "evidence_type": "Email Approval"}],
+        governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "agreement_name": "Orders"}],
+        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
     def read_table(table, *, target, context, **kwargs):
@@ -348,7 +350,7 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
     }
     tables = {
         governance.CATALOGUE_TABLE: [
-            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "contract_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
+            {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "agreement_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
         ],
         governance.PIPELINE_RUNS_TABLE: [
             {"environment_name": "dev", "run_id": "run-003", "agreement_id": "missing", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "warning", "dq_status": "failed", "completed_at": "2026-01-03T00:00:00+00:00"},
@@ -397,7 +399,7 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
                 "profile_status": "success",
                 "column_name": "order_id",
                 "agreement_id": "agr-dq",
-                "contract_version": "1.0",
+                "agreement_version": "1.0",
                 "DQ_STATUS": catalogue_dq_status,
                 "DQ_FAILED_RULE_COUNT": 0,
                 "DQ_ERROR_RULE_COUNT": 0,
@@ -415,8 +417,8 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
                 "completed_at": "2026-01-04T00:00:00+00:00",
             },
         ],
-        governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-dq", "contract_version": "1.0", "agreement_name": "Orders"}],
-        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "contract_version": "1.0", "evidence_type": "Email Approval"}],
+        governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "agreement_name": "Orders"}],
+        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
     def read_table(table, *, target, context, **kwargs):

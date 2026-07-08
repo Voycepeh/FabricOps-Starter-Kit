@@ -5,8 +5,46 @@ from __future__ import annotations
 from typing import Any
 from fabricops_kit.io.shared import read_lakehouse_table_core, write_lakehouse_table_core
 
-from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_field_names, metadata_table_schema_registry
+from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_schema_type_name, metadata_table_field_names, metadata_table_schema_registry
 from .shared import FrameworkConfig, get_store, validate_framework_config
+
+
+def _schema_fields_by_name(schema: Any) -> dict[str, Any]:
+    """Return schema fields keyed by name for Spark-like schemas."""
+    return {field.name: field for field in getattr(schema, "fields", [])}
+
+
+def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, expected_schema: Any) -> None:
+    """Validate existing metadata table fields, types, and nullability."""
+    existing = _schema_fields_by_name(existing_schema)
+    expected = _schema_fields_by_name(expected_schema)
+    if not existing:
+        existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
+    missing = [name for name in expected if name not in existing]
+    if missing:
+        raise ValueError(
+            f"{table_name} is missing required column(s): {', '.join(missing)}. "
+            "Recreate the development metadata table to receive the current physical schema."
+        )
+    mismatches: list[str] = []
+    for name, expected_field in expected.items():
+        existing_field = existing.get(name)
+        if existing_field is None:
+            continue
+        expected_type = metadata_schema_type_name(expected_field.dataType)
+        existing_type = metadata_schema_type_name(existing_field.dataType)
+        if existing_type != expected_type:
+            mismatches.append(f"{name} type expected {expected_type} but found {existing_type}")
+        if bool(existing_field.nullable) != bool(expected_field.nullable):
+            expected_nullable = "nullable" if expected_field.nullable else "non-nullable"
+            found_nullable = "nullable" if existing_field.nullable else "non-nullable"
+            mismatches.append(f"{name} nullability expected {expected_nullable} but found {found_nullable}")
+    if mismatches:
+        raise ValueError(
+            f"{table_name} physical schema does not match the canonical FabricOps metadata schema: "
+            + "; ".join(mismatches)
+            + ". Recreate the development metadata table to receive the current physical schema."
+        )
 
 
 def setup_metadata_tables(
@@ -106,13 +144,16 @@ def setup_metadata_tables(
                 )
             except Exception:
                 table = None
-        columns = list(getattr(table, "columns", []) or []) if table is not None else metadata_table_field_names(schema)
-        missing = [field for field in metadata_table_field_names(schema) if field not in columns]
-        if missing:
-            raise ValueError(
-                f"{table_name} is missing required column(s): {', '.join(missing)}. "
-                "Recreate existing development metadata tables to receive the current physical schema."
-            )
+        if table is not None and hasattr(table, "schema"):
+            _validate_existing_metadata_schema(table_name, table.schema, schema)
+        else:
+            columns = list(getattr(table, "columns", []) or []) if table is not None else metadata_table_field_names(schema)
+            missing = [field for field in metadata_table_field_names(schema) if field not in columns]
+            if missing:
+                raise ValueError(
+                    f"{table_name} is missing required column(s): {', '.join(missing)}. "
+                    "Recreate the development metadata table to receive the current physical schema."
+                )
 
     try:
         steward_rows = read_lakehouse_table_core(

@@ -33,6 +33,8 @@ def active_fabric_context(monkeypatch):
         "env": "dev",
     }
     monkeypatch.setattr(builtins, "FABRIC_CONTEXT", context, raising=False)
+    audit = {"_workspace_id": "workspace-id", "_workspace_name": "workspace", "_notebook_id": "notebook-id", "_notebook_name": "notebook", "_activity_id": "activity-id", "_committed_by": "user", "_committed_at": "2026-01-01T00:00:00+00:00", "_metadata_lakehouse_name": "metadata"}
+    monkeypatch.setattr(governance_review, "build_runtime_audit_fields", lambda **kwargs: dict(audit))
     return context
 
 
@@ -122,7 +124,8 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     assert not removed_catalogue_fields & catalogue_fields
     assert {"approval_required", "approval_bypassed", "requires_post_review", "governance_mode", "approval_policy"}.issubset(rule_fields)
     assert {"result_id", "result_payload_json", "actual_value_json"}.issubset(result_fields)
-    assert {"governance_mode", "approval_policy", "bypass_allowed", "policy_reason", "policy_updated_by", "policy_updated_at"}.issubset(catalogue_fields)
+    assert {"governance_mode", "approval_policy", "bypass_allowed", "policy_reason"}.issubset(catalogue_fields)
+    assert {"policy_updated_by", "policy_updated_at"}.isdisjoint(catalogue_fields)
     assert governance_review.DATA_ACCESS_TABLE in schemas
 
 

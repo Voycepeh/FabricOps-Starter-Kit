@@ -870,9 +870,7 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
         table_key = _table_key(table_config)
         definition = {key: value for key, value in table_config.items() if key != "df"}
         definition["table_name"] = _table_name(table_config)
-        fabric_store_target = str(table_config.get("fabric_store_target") or "").strip().lower()
-        if not fabric_store_target:
-            raise ValueError(f"Table config '{table_key}' must define a non-empty fabric_store_target.")
+        fabric_store_target = str(table_config.get("fabric_store_target") or table_config.get("stage") or table_config.get("layer") or "source").strip().lower()
         definition["fabric_store_target"] = fabric_store_target
         definition["stage"] = table_config.get("stage", "target")
         if definition["stage"] == "target":
@@ -890,10 +888,7 @@ def _run_table_guardrails_workflow(
     context: dict[str, Any] | None = None,
     spark_session: Any | None = None,
     agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
+    agreement_version: str = "",
     table_role: str = "",
     mode: str = "profile",
     stop_on_failure: bool | None = None,
@@ -918,9 +913,9 @@ def _run_table_guardrails_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
-        Governance context written with catalogue evidence. Omitted values are
-        resolved from the active context when available.
+    agreement_id, agreement_version : str, optional
+        Governance agreement context written with catalogue evidence. Omitted
+        values are resolved from the active pipeline context when available.
     table_role : {"source", "target"}, optional
         Template-facing table role used to retain source and target definitions
         in the active context for summary defaults.
@@ -954,17 +949,14 @@ def _run_table_guardrails_workflow(
     active = pipeline_active_context()
     if active is not None:
         context = context if context is not None else active.context
-        run_id = run_id or active.run_id
         spark_session = spark_session if spark_session is not None else active.spark_session
-        pipeline_name = pipeline_name or active.pipeline_name
-        notebook_id = notebook_id or active.notebook_id
-        notebook_registry_id = notebook_registry_id or active.notebook_registry_id
+        run_id = run_id or active.run_id
         agreement_id = agreement_id or active.agreement_id
-        agreement_contract_version = agreement_contract_version or active.agreement_contract_version
-    if not run_id:
-        raise ValueError("run_id is required unless widget_pipeline_bootstrap has established an active context.")
+        agreement_version = agreement_version or active.agreement_version
     if spark_session is None:
         raise ValueError("spark_session is required unless widget_pipeline_bootstrap has established an active context.")
+    if not run_id:
+        raise ValueError("run_id is required for in-memory profile grouping; use the active pipeline context or pass a real run_id.")
     normalized_mode = str(mode or "profile").lower().strip()
     if normalized_mode not in {"profile", "enforce"}:
         raise ValueError("mode must be one of: profile, enforce.")
@@ -1042,7 +1034,6 @@ def _run_table_guardrails_workflow(
             dataset_name,
             table_name,
             stage=stage,
-            run_id=run_id,
             profile_mode=table_config.get("profile_mode"),
             watermark_column=table_config.get("watermark_column"),
             severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
@@ -1072,7 +1063,6 @@ def _run_table_guardrails_workflow(
                 dataset_name,
                 table_name,
                 spark_session=spark_session,
-                run_id=run_id,
                 write_results=False,
             )
 
@@ -1089,7 +1079,6 @@ def _run_table_guardrails_workflow(
                     spark_session=spark_session,
                     config=config,
                     env=env,
-                    run_id=run_id,
                     dataset_name=dataset_name,
                     table_name=table_name,
                     guardrail_type=guardrail_type,
@@ -1115,11 +1104,9 @@ def _run_table_guardrails_workflow(
         config=config,
         env=env,
         run_id=run_id,
+        context=resolved_context,
         agreement_id=agreement_id,
-        agreement_contract_version=agreement_contract_version,
-        notebook_registry_id=notebook_registry_id,
-        notebook_id=notebook_id,
-        pipeline_name=pipeline_name,
+        agreement_version=agreement_version,
         schema_results=schema_results,
         freshness_results=freshness_results,
         stability_results=stability_results,
@@ -1177,11 +1164,9 @@ def write_catalogue_evidence(
     config: Any,
     env: str,
     run_id: str,
+    context: Mapping[str, Any] | None = None,
     agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
+    agreement_version: str = "",
     schema_results: Mapping[str, Mapping[str, Any]] | None = None,
     freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     stability_results: Mapping[str, Mapping[str, Any]] | None = None,
@@ -1199,10 +1184,12 @@ def write_catalogue_evidence(
         Source or target definitions containing table, stage, and layer context.
     config, env : object, str
         Metadata lakehouse route from ``00_env_config``.
-    run_id : str, optional
-        Pipeline run identifier. When omitted, the active context from
-        :func:`widget_pipeline_bootstrap` is used.
-    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
+    run_id : str
+        Required in-process profile grouping identifier. Catalogue rows persist
+        execution identity through the canonical ``_activity_id`` audit field.
+    context : mapping, optional
+        Resolved FabricOps runtime context used to build canonical audit fields.
+    agreement_id, agreement_version : str, optional
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Runtime guardrail results are accepted by this writer but are not
@@ -1221,7 +1208,7 @@ def write_catalogue_evidence(
     from pyspark.sql import functions as F
 
     del schema_results, freshness_results, dq_results
-    audit = _runtime_audit_fields(config, env, resolved_context)
+    audit = _runtime_audit_fields(config, env, context)
     statuses: dict[str, str] = {}
     for name, profile_df in profiles.items():
         definition = dataset_definitions[name]
@@ -1258,15 +1245,11 @@ def write_catalogue_evidence(
             "layer": str(definition.get("layer", "")),
             "fabric_store_target": fabric_store_target,
             "asset_kind": str(definition.get("kind", "lakehouse")),
-            "pipeline_name": pipeline_name,
-            "profile_run_id": run_id,
             "profile_stage": stage,
             "profile_status": "success",
             "profiled_at": _now_iso(config),
             "agreement_id": agreement_id,
-            "contract_version": agreement_contract_version,
-            "notebook_registry_id": notebook_registry_id,
-            "notebook_id": notebook_id,
+            "agreement_version": agreement_version,
             "evidence_role": str(definition.get("evidence_role", f"{stage}_profile")),
             "profile_mode": str(stability_result.get("profile_mode", definition.get("profile_mode", ""))),
             **audit,
@@ -1303,17 +1286,13 @@ def write_catalogue_evidence(
 def _write_pipeline_lineage_workflow(
     *,
     spark: Any,
-    run_id: str,
     context: dict[str, Any] | None = None,
     source_definitions: Mapping[str, Mapping[str, Any]],
     target_definitions: Mapping[str, Mapping[str, Any]],
     relationships: list[Mapping[str, Any]] | None = None,
     dataset_name: str = "",
     agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
-    pipeline_name: str = "",
+    agreement_version: str = "",
     metadata_table: str = LINEAGE_TABLE,
     mode: str = "append",
 ) -> dict[str, Any]:
@@ -1326,16 +1305,13 @@ def _write_pipeline_lineage_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    run_id : str, optional
-        Pipeline run identifier. When omitted, the active context from
-        :func:`widget_pipeline_bootstrap` is used.
     source_definitions, target_definitions : mapping
         Source and target definitions keyed by alias.
     relationships : list of mapping, optional
         Many-to-many lineage relationships. Each item may contain ``sources``,
         ``targets``, ``operation``, and ``description``. When omitted, every
         source is linked to every target.
-    dataset_name, agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, pipeline_name : str, optional
+    dataset_name, agreement_id, agreement_version : str, optional
         Governance context embedded in lineage payloads.
     metadata_table : str, default="METADATA_DATA_LINEAGE_TABLE"
         Metadata lineage table.
@@ -1350,7 +1326,6 @@ def _write_pipeline_lineage_workflow(
     """
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env, resolved_context)
-    created_at = _timestamp_value(config=config)
     if relationships is None:
         relationships = [
             {
@@ -1369,24 +1344,19 @@ def _write_pipeline_lineage_workflow(
                 source_table = _definition_name(str(source_alias), source_definitions[str(source_alias)])
                 target_table = _definition_name(str(target_alias), target_definitions[str(target_alias)])
                 payload = {
-                    "run_id": run_id,
                     "agreement_id": agreement_id,
-                    "agreement_contract_version": agreement_contract_version,
-                    "notebook_registry_id": notebook_registry_id,
-                    "notebook_id": notebook_id,
-                    "pipeline_name": pipeline_name,
-                    "source_alias": source_alias,
+                    "agreement_version": agreement_version,
+                                                "source_alias": source_alias,
                     "target_alias": target_alias,
                     "operation": relationship.get("operation", "pipeline_transform"),
                     "description": relationship.get("description", ""),
                 }
                 rows.append(
                     {
-                        "lineage_id": f"{run_id}_{sequence}",
+                        "lineage_id": f"{audit['_activity_id']}_{sequence}",
                         "dataset_name": dataset_name
                         or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
-                        "run_id": run_id,
-                        "source_table": source_table,
+                            "source_table": source_table,
                         "target_table": target_table,
                         "source_table_key": _build_metadata_table_key(
                             env,
@@ -1399,7 +1369,6 @@ def _write_pipeline_lineage_workflow(
                             target_table,
                         ),
                         "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
-                        "created_at": created_at,
                         **audit,
                     }
                 )
@@ -1418,14 +1387,10 @@ def _write_pipeline_lineage_workflow(
 def _write_pipeline_run_summary_workflow(
     *,
     spark: Any | None = None,
-    run_id: str | None = None,
     context: dict[str, Any] | None = None,
     agreement_id: str = "",
-    agreement_contract_version: str = "",
-    notebook_registry_id: str = "",
-    notebook_id: str = "",
+    agreement_version: str = "",
     notebook_type: str = "02_pipeline",
-    pipeline_name: str = "",
     started_at: str | None = None,
     completed_at: str | None = None,
     status: str = "completed",
@@ -1459,10 +1424,7 @@ def _write_pipeline_run_summary_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    run_id : str, optional
-        Pipeline run identifier. When omitted, the active context from
-        :func:`widget_pipeline_bootstrap` is used.
-    agreement_id, agreement_contract_version, notebook_registry_id, notebook_id, notebook_type, pipeline_name : str, optional
+    agreement_id, agreement_version, notebook_type : str, optional
         Agreement and notebook registry context.
     started_at, completed_at : str, optional
         Runtime timestamps. Defaults to current UTC time when omitted.
@@ -1503,20 +1465,14 @@ def _write_pipeline_run_summary_workflow(
     if active is not None:
         context = context if context is not None else active.context
         spark = spark if spark is not None else active.spark_session
-        run_id = run_id or active.run_id
         agreement_id = agreement_id or active.agreement_id
-        agreement_contract_version = agreement_contract_version or active.agreement_contract_version
-        notebook_registry_id = notebook_registry_id or active.notebook_registry_id
-        notebook_id = notebook_id or active.notebook_id
+        agreement_version = agreement_version or active.agreement_version
         notebook_type = notebook_type or active.notebook_type
-        pipeline_name = pipeline_name or active.pipeline_name
         started_at = started_at or active.pipeline_started_at
         source_definitions = source_definitions or active.source_definitions
         target_definitions = target_definitions or active.target_definitions
     if spark is None:
         raise ValueError("spark is required unless widget_pipeline_bootstrap has established an active context.")
-    if not run_id:
-        raise ValueError("run_id is required unless widget_pipeline_bootstrap has established an active context.")
 
     source_guardrail_results = source_guardrail_results or {}
     target_guardrail_results = target_guardrail_results or {}
@@ -1552,7 +1508,9 @@ def _write_pipeline_run_summary_workflow(
     config, env, resolved_context = resolve_fabric_context(context=context)
     audit = _runtime_audit_fields(config, env, resolved_context)
     completed = _timestamp_value(completed_at, config=config)
-    started = _timestamp_value(started_at, config=config) if started_at else completed
+    if not started_at:
+        raise ValueError("started_at is required for pipeline run summaries; pass the pipeline bootstrap start time or an explicit runtime start timestamp.")
+    started = _timestamp_value(started_at, config=config)
     sources = source_definitions or {}
     targets = target_definitions or {}
     source_guardrail_status = _summary_status(
@@ -1577,13 +1535,9 @@ def _write_pipeline_run_summary_workflow(
         "lineage_result": dict(lineage_result or {}),
     }
     row = {
-        "run_id": run_id or str(uuid4()),
         "agreement_id": agreement_id,
-        "agreement_contract_version": agreement_contract_version,
-        "notebook_registry_id": notebook_registry_id,
-        "notebook_id": notebook_id,
+        "agreement_version": agreement_version,
         "notebook_type": notebook_type,
-        "pipeline_name": pipeline_name,
         "environment_name": env,
         "started_at": started,
         "completed_at": completed,
@@ -1597,7 +1551,6 @@ def _write_pipeline_run_summary_workflow(
         "catalogue_status": catalogue_status,
         "message": message,
         "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        "created_at": _timestamp_value(config=config),
         **audit,
     }
     write_lakehouse_table_core(

@@ -59,7 +59,7 @@ def test_filter_metadata_catalogue_honors_table_agreement_precedence_and_missing
             ("orders", "product", "a2", "v1"),
             ("orders", "raw", "a1", "v1"),
         ],
-        "table_name string, fabric_store_target string, agreement_id string, contract_version string",
+        "table_name string, fabric_store_target string, agreement_id string, agreement_version string",
     )
 
     rows = _filter_metadata_catalogue(
@@ -67,7 +67,7 @@ def test_filter_metadata_catalogue_honors_table_agreement_precedence_and_missing
         fabric_store_target="product",
         table_name="orders",
         agreement_id="a2",
-        contract_version="v1",
+        agreement_version="v1",
     ).collect()
 
     assert [row.agreement_id for row in rows] == ["a2"]

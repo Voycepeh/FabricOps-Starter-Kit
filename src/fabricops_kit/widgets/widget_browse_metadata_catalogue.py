@@ -13,7 +13,7 @@ def widget_browse_metadata_catalogue(
     *,
     agreement: dict | None = None,
     agreement_id: str | None = None,
-    contract_version: str | None = None,
+    agreement_version: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
     metadata_table: str = "METADATA_DATA_CATALOGUE",
@@ -28,7 +28,7 @@ def widget_browse_metadata_catalogue(
         Agreement context used as a fallback for agreement and contract filters.
     agreement_id : str, optional
         Explicit agreement identifier. Takes precedence over ``agreement``.
-    contract_version : str, optional
+    agreement_version : str, optional
         Explicit contract version. Takes precedence over ``agreement``.
     target : str, default="metadata"
         Logical FabricStore target used to read the catalogue table.
@@ -84,10 +84,10 @@ def widget_browse_metadata_catalogue(
     state["get_dataframe"] = get_dataframe
 
     resolved_agreement_id = str(agreement_id if agreement_id is not None else (agreement or {}).get("agreement_id", "")).strip()
-    resolved_contract_version = str(
-        contract_version
-        if contract_version is not None
-        else (agreement or {}).get("agreement_contract_version") or (agreement or {}).get("contract_version") or ""
+    resolved_agreement_version = str(
+        agreement_version
+        if agreement_version is not None
+        else (agreement or {}).get("agreement_version") or (agreement or {}).get("agreement_version") or ""
     ).strip()
 
     def refresh_tables(*_: Any) -> None:
@@ -111,7 +111,7 @@ def widget_browse_metadata_catalogue(
             fabric_store_target=selected_store,
             table_name=selected_table,
             agreement_id=resolved_agreement_id,
-            contract_version=resolved_contract_version,
+            agreement_version=resolved_agreement_version,
         )
         status.value = f"Selected {selected_store} / {selected_table}."
 
@@ -155,7 +155,7 @@ def _filter_metadata_catalogue(
     fabric_store_target: str,
     table_name: str,
     agreement_id: str = "",
-    contract_version: str = "",
+    agreement_version: str = "",
 ):
     """Filter catalogue rows by store, table, and optional agreement context."""
     from pyspark.sql import functions as F
@@ -164,6 +164,6 @@ def _filter_metadata_catalogue(
     filtered = filtered.filter(F.col("table_name") == str(table_name).strip())
     if str(agreement_id or "").strip() and "agreement_id" in filtered.columns:
         filtered = filtered.filter(F.col("agreement_id") == str(agreement_id).strip())
-    if str(contract_version or "").strip() and "contract_version" in filtered.columns:
-        filtered = filtered.filter(F.col("contract_version") == str(contract_version).strip())
+    if str(agreement_version or "").strip() and "agreement_version" in filtered.columns:
+        filtered = filtered.filter(F.col("agreement_version") == str(agreement_version).strip())
     return filtered

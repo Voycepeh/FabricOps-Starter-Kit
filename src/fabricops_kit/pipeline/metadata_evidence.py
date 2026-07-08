@@ -6,7 +6,7 @@ import json
 import uuid
 from typing import Any
 
-from fabricops_kit.config.audit import _audit_timestamp_value, build_runtime_audit_fields
+from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 
@@ -32,7 +32,6 @@ def _write_guardrail_result_row(
     audit = build_runtime_audit_fields(config=config, env=env)
     row = {
         "result_id": str(uuid.uuid4()),
-        "run_id": str(run_id or ""),
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "environment_name": env,
         "dataset_name": dataset_name,
@@ -47,7 +46,6 @@ def _write_guardrail_result_row(
         "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
         "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
         "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
-        "created_at": _audit_timestamp_value(config),
         **audit,
     }
     context = {"config": config, "env": env}
