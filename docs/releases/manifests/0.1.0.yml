@@ -1,0 +1,299 @@
+release_version: 0.1.0
+functions:
+  - name: display_guardrail_results
+    qualified_name: fabricops_kit.pipeline.display_guardrail_results
+    source_path: src/fabricops_kit/pipeline/display_guardrail_results.py
+    documentation_path: docs/api/reference/display_guardrail_results.md
+    status: preview
+  - name: prepare_pipeline_table_configs
+    qualified_name: fabricops_kit.pipeline.prepare_pipeline_table_configs
+    source_path: src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py
+    documentation_path: docs/api/reference/prepare_pipeline_table_configs.md
+    status: preview
+  - name: profile_dataframe
+    qualified_name: fabricops_kit.pipeline.profile_dataframe
+    source_path: src/fabricops_kit/pipeline/profile_dataframe.py
+    documentation_path: docs/api/reference/profile_dataframe.md
+    status: live
+  - name: read_lakehouse_csv
+    qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv
+    source_path: src/fabricops_kit/io/read_lakehouse_csv.py
+    documentation_path: docs/api/reference/read_lakehouse_csv.md
+    status: live
+  - name: read_lakehouse_excel
+    qualified_name: fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel
+    source_path: src/fabricops_kit/io/read_lakehouse_excel.py
+    documentation_path: docs/api/reference/read_lakehouse_excel.md
+    status: live
+  - name: read_lakehouse_parquet
+    qualified_name: fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet
+    source_path: src/fabricops_kit/io/read_lakehouse_parquet.py
+    documentation_path: docs/api/reference/read_lakehouse_parquet.md
+    status: live
+  - name: read_lakehouse_table
+    qualified_name: fabricops_kit.io.read_lakehouse_table.read_lakehouse_table
+    source_path: src/fabricops_kit/io/read_lakehouse_table.py
+    documentation_path: docs/api/reference/read_lakehouse_table.md
+    status: live
+  - name: read_warehouse_query
+    qualified_name: fabricops_kit.io.read_warehouse_query.read_warehouse_query
+    source_path: src/fabricops_kit/io/read_warehouse_query.py
+    documentation_path: docs/api/reference/read_warehouse_query.md
+    status: live
+  - name: read_warehouse_table
+    qualified_name: fabricops_kit.io.read_warehouse_table.read_warehouse_table
+    source_path: src/fabricops_kit/io/read_warehouse_table.py
+    documentation_path: docs/api/reference/read_warehouse_table.md
+    status: live
+  - name: run_table_guardrails
+    qualified_name: fabricops_kit.pipeline.run_table_guardrails
+    source_path: src/fabricops_kit/pipeline/run_table_guardrails.py
+    documentation_path: docs/api/reference/run_table_guardrails.md
+    status: preview
+  - name: setup_metadata_tables
+    qualified_name: fabricops_kit.config.setup_metadata_tables.setup_metadata_tables
+    source_path: src/fabricops_kit/config/setup_metadata_tables.py
+    documentation_path: docs/api/reference/setup_metadata_tables.md
+    status: preview
+  - name: setup_notebook
+    qualified_name: fabricops_kit.config.setup_notebook.setup_notebook
+    source_path: src/fabricops_kit/config/setup_notebook.py
+    documentation_path: docs/api/reference/setup_notebook.md
+    status: preview
+  - name: widget_author_dq_rules
+    qualified_name: fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules
+    source_path: src/fabricops_kit/widgets/widget_author_dq_rules.py
+    documentation_path: docs/api/reference/widget_author_dq_rules.md
+    status: preview
+  - name: widget_author_schema_freshness_profile_rules
+    qualified_name: fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules
+    source_path: src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py
+    documentation_path: docs/api/reference/widget_author_schema_freshness_profile_rules.md
+    status: preview
+  - name: widget_browse_metadata_catalogue
+    qualified_name: fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue
+    source_path: src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py
+    documentation_path: docs/api/reference/widget_browse_metadata_catalogue.md
+    status: preview
+  - name: widget_enrich_table_metadata
+    qualified_name: fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata
+    source_path: src/fabricops_kit/widgets/widget_enrich_table_metadata.py
+    documentation_path: docs/api/reference/widget_enrich_table_metadata.md
+    status: preview
+  - name: widget_pipeline_bootstrap
+    qualified_name: fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap
+    source_path: src/fabricops_kit/widgets/widget_pipeline_bootstrap.py
+    documentation_path: docs/api/reference/widget_pipeline_bootstrap.md
+    status: preview
+  - name: widget_render_agreement_evidence
+    qualified_name: fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence
+    source_path: src/fabricops_kit/widgets/widget_render_agreement_evidence.py
+    documentation_path: docs/api/reference/widget_render_agreement_evidence.md
+    status: preview
+  - name: widget_render_data_agreement
+    qualified_name: fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement
+    source_path: src/fabricops_kit/widgets/widget_render_data_agreement.py
+    documentation_path: docs/api/reference/widget_render_data_agreement.md
+    status: preview
+  - name: widget_render_data_steward
+    qualified_name: fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward
+    source_path: src/fabricops_kit/widgets/widget_render_data_steward.py
+    documentation_path: docs/api/reference/widget_render_data_steward.md
+    status: preview
+  - name: widget_review_guardrail_governance
+    qualified_name: fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance
+    source_path: src/fabricops_kit/widgets/widget_review_guardrail_governance.py
+    documentation_path: docs/api/reference/widget_review_guardrail_governance.md
+    status: preview
+  - name: widget_select_guardrail_target
+    qualified_name: fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target
+    source_path: src/fabricops_kit/widgets/widget_select_guardrail_target.py
+    documentation_path: docs/api/reference/widget_select_guardrail_target.md
+    status: preview
+  - name: write_lakehouse_table
+    qualified_name: fabricops_kit.io.write_lakehouse_table.write_lakehouse_table
+    source_path: src/fabricops_kit/io/write_lakehouse_table.py
+    documentation_path: docs/api/reference/write_lakehouse_table.md
+    status: live
+  - name: write_pipeline_lineage
+    qualified_name: fabricops_kit.pipeline.write_pipeline_lineage
+    source_path: src/fabricops_kit/pipeline/write_pipeline_lineage.py
+    documentation_path: docs/api/reference/write_pipeline_lineage.md
+    status: preview
+  - name: write_pipeline_run_summary
+    qualified_name: fabricops_kit.pipeline.write_pipeline_run_summary
+    source_path: src/fabricops_kit/pipeline/write_pipeline_run_summary.py
+    documentation_path: docs/api/reference/write_pipeline_run_summary.md
+    status: preview
+  - name: write_warehouse_table
+    qualified_name: fabricops_kit.io.write_warehouse_table.write_warehouse_table
+    source_path: src/fabricops_kit/io/write_warehouse_table.py
+    documentation_path: docs/api/reference/write_warehouse_table.md
+    status: live
+metadata_tables:
+  - name: METADATA_DATA_ACCESS
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_access.md
+    status: preview
+  - name: METADATA_DATA_AGREEMENT
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_agreement.md
+    status: live
+  - name: METADATA_DATA_AGREEMENT_EVIDENCE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_agreement_evidence.md
+    status: live
+  - name: METADATA_DATA_CATALOGUE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_catalogue.md
+    status: live
+  - name: METADATA_DATA_LINEAGE_TABLE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_lineage_table.md
+    status: preview
+  - name: METADATA_DATA_STEWARD
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_steward.md
+    status: live
+  - name: METADATA_ENRICHMENT_RULES
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_enrichment_rules.md
+    status: preview
+  - name: METADATA_GUARDRAIL_RESULTS
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_guardrail_results.md
+    status: preview
+  - name: METADATA_GUARDRAIL_RULES
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_guardrail_rules.md
+    status: preview
+  - name: METADATA_NOTEBOOK_REGISTRY
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_notebook_registry.md
+    status: preview
+  - name: METADATA_PIPELINE_RUNS
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_pipeline_runs.md
+    status: preview
+templates:
+  - name: 00_env_config
+    source_path: templates/notebooks/00_env_config.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/environment-config.md
+    status: live
+  - name: 01_agreement
+    source_path: templates/notebooks/01_agreement.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/agreement-setup.md
+    status: live
+  - name: 02_pipeline
+    source_path: templates/notebooks/02_pipeline.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/pipeline-execution.md
+    status: preview
+  - name: 03_governance
+    source_path: templates/notebooks/03_governance.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/governance-review.md
+    status: preview
+  - name: 99_explore
+    source_path: templates/notebooks/99_explore.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/index.md
+    status: live
+  - name: example_dq_rule_smoke_test
+    source_path: templates/notebooks/example_dq_rule_smoke_test.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/index.md
+    status: preview
+  - name: example_pipeline_demo
+    source_path: templates/notebooks/example_pipeline_demo.ipynb
+    documentation_path: docs/notebook-templates-implementation-guide/index.md
+    status: preview
+dq_rules:
+  - name: accepted_values
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/accepted-values.md
+    status: preview
+  - name: between
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/between.md
+    status: preview
+  - name: column_a_gt_column_b
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/column-a-gt-column-b.md
+    status: preview
+  - name: column_a_gte_column_b
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/column-a-gte-column-b.md
+    status: preview
+  - name: column_pair_equal
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/column-pair-equal.md
+    status: preview
+  - name: date_between
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/date-between.md
+    status: preview
+  - name: date_not_future
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/date-not-future.md
+    status: preview
+  - name: expression_true
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/expression-true.md
+    status: preview
+  - name: freshness
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/freshness.md
+    status: preview
+  - name: greater_than
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/greater-than.md
+    status: preview
+  - name: greater_than_or_equal
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/greater-than-or-equal.md
+    status: preview
+  - name: less_than
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/less-than.md
+    status: preview
+  - name: less_than_or_equal
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/less-than-or-equal.md
+    status: preview
+  - name: max_age_days
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/max-age-days.md
+    status: preview
+  - name: non_empty_string
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/non-empty-string.md
+    status: preview
+  - name: not_in_values
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/not-in-values.md
+    status: preview
+  - name: not_null
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/not-null.md
+    status: preview
+  - name: null_rate_below
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/null-rate-below.md
+    status: preview
+  - name: regex_match
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/regex-match.md
+    status: preview
+  - name: required_when
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/required-when.md
+    status: preview
+  - name: unique
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/unique.md
+    status: preview
+  - name: unique_combination
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/unique-combination.md
+    status: preview
+  - name: value_when
+    source_path: src/fabricops_kit/pipeline/guardrails_shared.py
+    documentation_path: docs/reference/dq-rules/value-when.md
+    status: preview

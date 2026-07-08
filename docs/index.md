@@ -39,9 +39,15 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
     <span class="fabricops-landing-card__body">Understand the operating model and metadata flow.</span>
   </a>
+  <a class="fabricops-landing-card" href="releases/">
+    <span class="fabricops-landing-card__title">Releases</span>
+    <span class="fabricops-landing-card__body">See current and past releases and download plug-and-play assets.</span>
+  </a>
 </div>
 
-## What is included
+## Features and assets
+
+Explore the current FabricOps product surface, including Live and Preview capabilities. See [Releases](releases/) for version-specific supported functions and downloadable assets.
 
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
