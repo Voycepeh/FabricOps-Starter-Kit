@@ -22,10 +22,9 @@ Read a Delta table from a configured Fabric lakehouse target.
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `99_explore`
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -96,5 +95,5 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

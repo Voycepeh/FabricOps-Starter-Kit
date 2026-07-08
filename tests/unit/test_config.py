@@ -1036,7 +1036,8 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert catalogue["fabric_store_target"] == "string"
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
-    assert docs_catalogue["policy_updated_at"] == "timestamp"  # generated docs are not refreshed in source PRs
+    assert docs_catalogue["profiled_at"] == "timestamp"
+    assert "policy_updated_at" not in docs_catalogue
 
     for table_name, schema in registry.items():
         assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()) :] == [

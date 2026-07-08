@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 54
-- Shared helpers: 26
-- Private helpers: 28
+- Downstream callables: 46
+- Shared helpers: 22
+- Private helpers: 24
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_lineage">Open focused call flow in dashboard</a>
 
@@ -16,7 +16,7 @@ Write many-to-many source-to-target lineage evidence.
 
 `fabricops_kit/pipeline/write_pipeline_lineage.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_lineage.py#L10-L43">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_lineage.py#L10-L35">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,17 +40,13 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def write_pipeline_lineage(
     spark: Any,
-    run_id: str,
     context: dict[str, Any] | None=None,
     source_definitions: Mapping[str, Mapping[str, Any]],
     target_definitions: Mapping[str, Mapping[str, Any]],
     relationships: list[Mapping[str, Any]] | None=None,
     dataset_name: str='',
     agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
-    pipeline_name: str='',
+    agreement_version: str='',
     metadata_table: str=LINEAGE_TABLE,
     mode: str='append',
 ) -> dict[str, Any]:
@@ -67,17 +63,13 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spark` | `Any` | Yes | Not documented yet |
-| `run_id` | `str` | Yes | Not documented yet |
 | `context` | `dict[str, Any] \| None` | No | Not documented yet |
 | `source_definitions` | `list[PipelineTableConfig]` | Yes | Not documented yet |
 | `target_definitions` | `list[PipelineTableConfig]` | Yes | Not documented yet |
 | `relationships` | `list[Mapping[str, Any]] \| None` | No | Not documented yet |
 | `dataset_name` | `str` | No | Not documented yet |
 | `agreement_id` | `str` | No | Not documented yet |
-| `agreement_contract_version` | `str` | No | Not documented yet |
-| `notebook_registry_id` | `str` | No | Not documented yet |
-| `notebook_id` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
+| `agreement_version` | `str` | No | Not documented yet |
 | `metadata_table` | `str` | No | Not documented yet |
 | `mode` | `str` | No | Not documented yet |
 
@@ -107,5 +99,5 @@ Not documented yet
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

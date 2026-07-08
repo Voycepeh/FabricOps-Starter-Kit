@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 120
+- Downstream callables: 121
 - Shared helpers: 61
-- Private helpers: 59
+- Private helpers: 60
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_pipeline_bootstrap">Open focused call flow in dashboard</a>
 
@@ -16,7 +16,7 @@ Bootstrap a guided pipeline notebook run and store runtime defaults.
 
 `fabricops_kit/widgets/widget_pipeline_bootstrap.py:22`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_pipeline_bootstrap.py#L22-L86">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_pipeline_bootstrap.py#L22-L82">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -46,7 +46,6 @@ def widget_pipeline_bootstrap(
     run_context: Any=None,
     spark_session: Any=None,
     metadata_schema: str | None=None,
-    pipeline_name: str | None=None,
     context: dict[str, Any] | None=None,
 ) -> Any:
 ```
@@ -74,7 +73,6 @@ PIPELINE = widget_pipeline_bootstrap(notebook_type="02_pipeline", select_agreeme
 | `run_context` | `Any` | No | ``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook variable named ``RUN_CONTEXT``. |
 | `spark_session` | `Any` | No | Spark session. Defaults to the active notebook variable named ``spark``. |
 | `metadata_schema` | `str \| None` | No | ``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used. |
-| `pipeline_name` | `str \| None` | No | Friendly pipeline name. Defaults to Fabric runtime notebook metadata. |
 | `context` | `dict[str, Any] \| None` | No | Advanced FabricOps context override. |
 
 ## Returns
@@ -103,5 +101,5 @@ Not documented yet
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

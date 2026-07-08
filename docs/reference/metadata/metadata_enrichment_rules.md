@@ -2,79 +2,64 @@
 
 **Purpose:** Append-only enrichment and business metadata intent authored and reviewed through governance workflows.
 
-## Starter Kit usage
-
-- **Written by notebook/template:** 02_pipeline.ipynb, 03_governance.ipynb
-- **Written by function or widget:** [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
-- **Read by function or widget:** [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
-- **Related template step:** 02_pipeline.ipynb, 03_governance.ipynb
-
 ## Implemented schema
 
-| Column name | Data type | Nullable / required |
-| --- | --- | --- |
-| `enrichment_rule_id` | `string` | Nullable |
-| `enrichment_rule_version` | `string` | Nullable |
-| `enrichment_rule_key` | `string` | Nullable |
-| `metadata_table_key` | `string` | Nullable |
-| `metadata_column_key` | `string` | Nullable |
-| `table_name` | `string` | Nullable |
-| `column_name` | `string` | Nullable |
-| `enrichment_scope` | `string` | Nullable |
-| `enrichment_type` | `string` | Nullable |
-| `enrichment_payload_json` | `string` | Nullable |
-| `business_name` | `string` | Nullable |
-| `business_description` | `string` | Nullable |
-| `business_meaning` | `string` | Nullable |
-| `column_description` | `string` | Nullable |
-| `classification` | `string` | Nullable |
-| `sensitivity_label` | `string` | Nullable |
-| `pii_flag` | `boolean` | Nullable |
-| `pii_type` | `string` | Nullable |
-| `data_domain` | `string` | Nullable |
-| `data_owner` | `string` | Nullable |
-| `data_steward` | `string` | Nullable |
-| `usage_notes` | `string` | Nullable |
-| `quality_notes` | `string` | Nullable |
-| `review_status` | `string` | Nullable |
-| `review_state` | `string` | Nullable |
-| `activation_state` | `string` | Nullable |
-| `is_active` | `boolean` | Nullable |
-| `created_by_role` | `string` | Nullable |
-| `source_notebook_type` | `string` | Nullable |
-| `source_notebook_id` | `string` | Nullable |
-| `activation_reason` | `string` | Nullable |
-| `activated_by` | `string` | Nullable |
-| `activated_at` | `timestamp` | Nullable |
-| `requires_governance_review` | `boolean` | Nullable |
-| `approval_policy` | `string` | Nullable |
-| `governance_mode` | `string` | Nullable |
-| `submitted_by` | `string` | Nullable |
-| `submitted_at` | `timestamp` | Nullable |
-| `reviewed_by` | `string` | Nullable |
-| `reviewed_at` | `timestamp` | Nullable |
-| `review_decision` | `string` | Nullable |
-| `review_comment` | `string` | Nullable |
-| `bypass_reason` | `string` | Nullable |
-| `requires_post_review` | `boolean` | Nullable |
-| `supersedes_enrichment_rule_id` | `string` | Nullable |
-| `supersedes_record_id` | `string` | Nullable |
-| `superseded_by_record_id` | `string` | Nullable |
-| `effective_from` | `date` | Nullable |
-| `effective_to` | `date` | Nullable |
-| `created_at` | `timestamp` | Nullable |
-| `created_by` | `string` | Nullable |
-| `updated_at` | `timestamp` | Nullable |
-| `updated_by` | `string` | Nullable |
-| `run_id` | `string` | Nullable |
-| `notebook_id` | `string` | Nullable |
-| `notebook_registry_id` | `string` | Nullable |
-| `_committed_by` | `string` | Nullable |
-| `_committed_at` | `timestamp` | Nullable |
-| `_workspace_name` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
-| `_metadata_lakehouse_name` | `string` | Nullable |
-| `_activity_id` | `string` | Nullable |
+| Column | Data type | Nullable | Managed by | Description |
+| --- | --- | --- | --- | --- |
+| `enrichment_rule_id` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_rule_id`. |
+| `enrichment_rule_version` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_rule_version`. |
+| `enrichment_rule_key` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_rule_key`. |
+| `metadata_table_key` | `string` | Yes | Enrichment and governance widgets | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_column_key` | `string` | Yes | Enrichment and governance widgets | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `table_name` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `table_name`. |
+| `column_name` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `column_name`. |
+| `enrichment_scope` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_scope`. |
+| `enrichment_type` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_type`. |
+| `enrichment_payload_json` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `enrichment_payload_json`. |
+| `business_name` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `business_name`. |
+| `business_description` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `business_description`. |
+| `business_meaning` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `business_meaning`. |
+| `column_description` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `column_description`. |
+| `classification` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `classification`. |
+| `sensitivity_label` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `sensitivity_label`. |
+| `pii_flag` | `boolean` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `pii_flag`. |
+| `pii_type` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `pii_type`. |
+| `data_domain` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `data_domain`. |
+| `data_owner` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `data_owner`. |
+| `data_steward` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `data_steward`. |
+| `usage_notes` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `usage_notes`. |
+| `quality_notes` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `quality_notes`. |
+| `review_status` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `review_status`. |
+| `review_state` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `review_state`. |
+| `activation_state` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `activation_state`. |
+| `is_active` | `boolean` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `is_active`. |
+| `created_by_role` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `created_by_role`. |
+| `source_notebook_type` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `source_notebook_type`. |
+| `activation_reason` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `activation_reason`. |
+| `activated_by` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `activated_by`. |
+| `activated_at` | `timestamp` | Yes | Enrichment and governance widgets | Timestamp captured when a rule or enrichment record becomes active. |
+| `requires_governance_review` | `boolean` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `requires_governance_review`. |
+| `approval_policy` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `approval_policy`. |
+| `governance_mode` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `governance_mode`. |
+| `submitted_by` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `submitted_by`. |
+| `submitted_at` | `timestamp` | Yes | Enrichment and governance widgets | Timestamp populated during a real submission into pending governance review. |
+| `reviewed_by` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `reviewed_by`. |
+| `reviewed_at` | `timestamp` | Yes | Enrichment and governance widgets | Timestamp captured when a governance reviewer records a review decision. |
+| `review_decision` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `review_decision`. |
+| `review_comment` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `review_comment`. |
+| `bypass_reason` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `bypass_reason`. |
+| `requires_post_review` | `boolean` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `requires_post_review`. |
+| `supersedes_enrichment_rule_id` | `string` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `supersedes_enrichment_rule_id`. |
+| `effective_from` | `date` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `effective_from`. |
+| `effective_to` | `date` | Yes | Enrichment and governance widgets | Metadata Enrichment Rules field `effective_to`. |
+| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |
 
 ## Related function reference
 

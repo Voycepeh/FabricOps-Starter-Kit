@@ -31,6 +31,8 @@ PUBLIC_CALL_FLOW_DATA_PATH = REFERENCE_DATA_DIR / "public-function-call-flows.js
 MKDOCS_PATH = ROOT / "mkdocs.yml"
 CALL_GRAPH_PAGE_PATH = ROOT / "docs" / "reference" / "call-graph.md"
 CALLABLE_REFERENCE_DIR = ROOT / "docs" / "api" / "reference"
+METADATA_REFERENCE_INDEX_PATH = ROOT / "docs" / "reference" / "metadata.md"
+METADATA_REFERENCE_DIR = ROOT / "docs" / "reference" / "metadata"
 LEGACY_CALLABLE_REFERENCE_DIR = ROOT / "docs" / "reference" / "callables"
 INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 
@@ -38,6 +40,54 @@ GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
 CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_governance", "99_explore"}
+AUDIT_FIELD_DESCRIPTIONS = {
+    "_committed_by": "User principal or runtime identity that committed the metadata row.",
+    "_committed_at": "Timestamp when the metadata row was committed.",
+    "_workspace_id": "Fabric workspace identifier captured from runtime audit context.",
+    "_workspace_name": "Fabric workspace name captured from runtime audit context.",
+    "_notebook_id": "Fabric notebook identifier captured from runtime audit context.",
+    "_notebook_name": "Fabric notebook name captured from runtime audit context.",
+    "_metadata_lakehouse_name": "Configured metadata lakehouse name used for the write.",
+    "_activity_id": "Fabric execution activity identifier for the current notebook or pipeline run.",
+}
+
+METADATA_FIELD_DESCRIPTIONS = {
+    "agreement_version": "Canonical agreement version associated with the row.",
+    "metadata_table_key": (
+        "Stable governed data asset key that identifies a table across environment, dataset, "
+        "and table context."
+    ),
+    "metadata_column_key": (
+        "Stable governed data asset key that identifies a column across environment, dataset, "
+        "table, and column context."
+    ),
+    "started_at": "Pipeline bootstrap timestamp captured when the pipeline context is initialized.",
+    "completed_at": (
+        "Timestamp captured when the pipeline run summary is written. Pipeline duration is derived "
+        "from the difference between `started_at` and `completed_at`."
+    ),
+    "status": "Pipeline run status recorded with the run summary.",
+    "submitted_at": "Timestamp populated during a real submission into pending governance review.",
+    "reviewed_at": "Timestamp captured when a governance reviewer records a review decision.",
+    "activated_at": "Timestamp captured when a rule or enrichment record becomes active.",
+    "bypassed_at": "Timestamp captured when governance review is intentionally bypassed.",
+}
+METADATA_RELATED_FUNCTIONS = {
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement", "widget_pipeline_bootstrap", "write_pipeline_run_summary"],
+    "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
+    "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
+    "METADATA_DATA_LINEAGE_TABLE": ["write_pipeline_lineage"],
+    "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
+    "METADATA_ENRICHMENT_RULES": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
+    "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
+    "METADATA_GUARDRAIL_RULES": [
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+        "widget_review_guardrail_governance",
+    ],
+    "METADATA_NOTEBOOK_REGISTRY": ["widget_pipeline_bootstrap"],
+    "METADATA_PIPELINE_RUNS": ["widget_pipeline_bootstrap", "write_pipeline_run_summary"],
+}
 
 
 def _generated_freshness_note() -> list[str]:
@@ -3716,6 +3766,124 @@ def _dashboard_contract_row(row: dict[str, Any], keys: tuple[str, ...]) -> dict[
     return {key: row[key] for key in keys if key in row}
 
 
+def _metadata_table_title(table_name: str) -> str:
+    """Return a human-readable metadata table title."""
+    return table_name.replace("_", " ").title()
+
+
+def _metadata_managed_by(table_name: str, column_name: str) -> str:
+    """Return the workflow owner label for a generated metadata column row."""
+    if column_name in AUDIT_FIELD_DESCRIPTIONS:
+        if table_name == "METADATA_DATA_ACCESS":
+            return "Future access widget"
+        return "Runtime audit context"
+    table_owners = {
+        "METADATA_DATA_ACCESS": "External access inventory",
+        "METADATA_DATA_AGREEMENT": "Agreement widget",
+        "METADATA_DATA_AGREEMENT_EVIDENCE": "Agreement evidence widget",
+        "METADATA_DATA_CATALOGUE": "Catalogue evidence writers",
+        "METADATA_DATA_LINEAGE_TABLE": "Pipeline lineage writer",
+        "METADATA_DATA_STEWARD": "Data steward widget",
+        "METADATA_ENRICHMENT_RULES": "Enrichment and governance widgets",
+        "METADATA_GUARDRAIL_RESULTS": "Pipeline guardrail writers",
+        "METADATA_GUARDRAIL_RULES": "Guardrail authoring and governance widgets",
+        "METADATA_NOTEBOOK_REGISTRY": "Notebook registration workflow",
+        "METADATA_PIPELINE_RUNS": "Pipeline run summary writer",
+    }
+    return table_owners.get(table_name, "FabricOps workflow")
+
+
+def _metadata_field_description(table_name: str, column_name: str) -> str:
+    """Return generated metadata column guidance."""
+    if column_name in AUDIT_FIELD_DESCRIPTIONS:
+        return AUDIT_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_PIPELINE_RUNS" and column_name == "_activity_id":
+        return "Canonical execution identity for the pipeline run."
+    if column_name in METADATA_FIELD_DESCRIPTIONS:
+        return METADATA_FIELD_DESCRIPTIONS[column_name]
+    return f"{_metadata_table_title(table_name)} field `{column_name}`."
+
+
+def _metadata_table_purpose(table_name: str) -> str:
+    """Return generated metadata table purpose text."""
+    purposes = {
+        "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
+        "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
+        "METADATA_DATA_AGREEMENT_EVIDENCE": "Supporting agreement files and related metadata captured during agreement intake.",
+        "METADATA_DATA_CATALOGUE": "Observed table and column profiles used for catalogue review and runtime comparisons.",
+        "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage rows written by pipeline runs.",
+        "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
+        "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
+        "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
+        "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
+        "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
+        "METADATA_PIPELINE_RUNS": "Pipeline run summaries for execution, guardrail, lineage, and catalogue status.",
+    }
+    return purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
+
+
+def generate_metadata_reference_pages() -> None:
+    """Generate metadata table reference pages from the canonical schema registry."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
+
+    METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+    registry = metadata_table_schema_registry()
+    index_lines = [
+        "# List of Metadata Tables",
+        "",
+        "FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.",
+        "",
+        "<div class=\"grid cards\" markdown>",
+        "",
+    ]
+    for table_name in registry:
+        slug = table_name.lower()
+        purpose = _metadata_table_purpose(table_name)
+        index_lines.extend([
+            f"-   **[{table_name}](metadata/{slug}.md)**",
+            "",
+            f"    {purpose}",
+            "",
+        ])
+        rows = metadata_table_schema_rows(registry[table_name])
+        lines = [
+            f"# {table_name}",
+            "",
+            f"**Purpose:** {purpose}",
+            "",
+            "## Implemented schema",
+            "",
+            "| Column | Data type | Nullable | Managed by | Description |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for row in rows:
+            column = str(row["name"])
+            nullable = "Yes" if bool(row["nullable"]) else "No"
+            if table_name == "METADATA_DATA_ACCESS" and column in AUDIT_FIELD_DESCRIPTIONS:
+                nullable = "Yes"
+            lines.append(
+                f"| `{column}` | `{row['type']}` | {nullable} | "
+                f"{_metadata_managed_by(table_name, column)} | {_metadata_field_description(table_name, column)} |"
+            )
+        if table_name == "METADATA_PIPELINE_RUNS":
+            lines.extend([
+                "",
+                "## Execution identity",
+                "",
+                "`_activity_id` is the canonical execution identity. `started_at` comes from pipeline bootstrap, `completed_at` is captured when the run summary is written, and duration is derived from their difference.",
+            ])
+        related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
+        if related_functions:
+            lines.extend(["", "## Related function reference", ""])
+            lines.extend(
+                f"- [`{function_name}`](../../api/reference/{function_name}.md)"
+                for function_name in related_functions
+            )
+        (METADATA_REFERENCE_DIR / f"{slug}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    index_lines.extend(["</div>", ""])
+    METADATA_REFERENCE_INDEX_PATH.write_text("\n".join(index_lines), encoding="utf-8")
+
+
 def _trim_callable_flow_dashboard_contract(
     callable_flow_data: dict[str, Any],
     node_by_qn: dict[str, dict[str, Any]] | None = None,
@@ -4231,6 +4399,7 @@ def render_callable_map_page(nodes: list[dict[str, Any]], edges: list[dict[str, 
 def main() -> None:
     """Run the command-line workflow."""
     REFERENCE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    generate_metadata_reference_pages()
     public = parse_public_exports()
     module_data = {source_module_name(p): parse_module(p) for p in source_module_paths()}
     if "io.shared" in module_data:
