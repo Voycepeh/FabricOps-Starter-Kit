@@ -508,6 +508,11 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
     """Verify setup validates physical data types on existing tables."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
+    try:
+        from pyspark.sql.types import StringType
+    except ModuleNotFoundError:
+        pytest.skip("pyspark is required to construct a real Spark StringType")
+
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
     registry = metadata_table_schema_registry()
 
@@ -523,9 +528,6 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
             return 1
 
     def wrong_type(schema):
-        class StringType:
-            pass
-
         field_type = type(schema.fields[0])
         schema_type = type(schema)
         fields = []
