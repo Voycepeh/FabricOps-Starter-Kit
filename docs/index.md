@@ -39,6 +39,10 @@ They abstract the important but tedious work into a simplified plug and play wor
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
     <span class="fabricops-landing-card__body">Understand the operating model and metadata flow.</span>
   </a>
+  <a class="fabricops-landing-card" href="releases/">
+    <span class="fabricops-landing-card__title">Releases</span>
+    <span class="fabricops-landing-card__body">See current and past releases and download plug-and-play assets.</span>
+  </a>
 </div>
 
 ## What is included
@@ -57,11 +61,6 @@ They abstract the important but tedious work into a simplified plug and play wor
   <a class="fabricops-landing-card" href="reference/dq-rules/">
     <span class="fabricops-landing-card__title">23 Data quality rule types</span>
     <span class="fabricops-landing-card__body">Suggested by AI and enforced in pipeline guardrails.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="releases/">
-    <span class="fabricops-landing-card__title">Release contracts</span>
-    <span class="fabricops-landing-card__body">Review version-specific function, metadata, template, and DQ rule lifecycle inventories.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
