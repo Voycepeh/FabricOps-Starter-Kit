@@ -135,3 +135,17 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 3
     assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])
+
+
+def test_release_overview_links_to_split_version_pages():
+    """Verify release overview links to generated split contract pages."""
+    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
+    assert "- [Functions](functions.md)" in content
+    assert "- [Metadata tables](metadata-tables.md)" in content
+    assert "- [Templates](templates.md)" in content
+    assert "- [DQ rules](dq-rules.md)" in content
+
+
+def test_release_renderer_creates_version_directory():
+    """Verify release renderer creates the version directory automatically."""
+    assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).is_dir()

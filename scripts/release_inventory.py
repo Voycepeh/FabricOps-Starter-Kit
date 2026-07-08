@@ -314,12 +314,23 @@ def render_release_pages() -> list[Path]:
     for group in GROUPS:
         sections.append(f"## {labels[group]}\n\n{table(group)}")
 
+    release_links = [
+        "- [Functions](functions.md)",
+        "- [Metadata tables](metadata-tables.md)",
+        "- [Templates](templates.md)",
+        "- [DQ rules](dq-rules.md)",
+    ]
+
     content = "\n".join([
         notice,
         "",
         f"# FabricOps Starter Kit {version} release contract",
         "",
         f"Package version: `{version}`",
+        "",
+        "## Release sections",
+        "",
+        *release_links,
         "",
         "## Release notes",
         "",

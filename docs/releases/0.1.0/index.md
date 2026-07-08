@@ -4,6 +4,13 @@
 
 Package version: `0.1.0`
 
+## Release sections
+
+- [Functions](functions.md)
+- [Metadata tables](metadata-tables.md)
+- [Templates](templates.md)
+- [DQ rules](dq-rules.md)
+
 ## Release notes
 
 Release notes have not yet been prepared.
