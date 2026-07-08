@@ -93,13 +93,33 @@ def test_release_inventory_output_order_is_deterministic():
     assert [item["name"] for item in manifest["functions"]] == ["a", "b"]
 
 
-def test_release_contract_pages_separate_lifecycle_tables():
-    """Verify rendered release contract pages separate statuses and avoid fake URLs."""
-    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
-    assert "### Live functions" in content
-    assert "### Preview functions" in content
-    assert "### Discontinued functions" in content
+def test_release_contract_pages_render_status_chips_and_links():
+    """Verify rendered release contract tables include status chips and stable links."""
+    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "functions.md").read_text(encoding="utf-8")
+    assert "| Status | Name | Documentation | Source |" in content
+    assert 'fabricops-release-status fabricops-release-status--live">Live</span>' in content
+    assert 'fabricops-release-status fabricops-release-status--preview">Preview</span>' in content
+    assert "[docs/api/reference/read_lakehouse_table.md](../../api/reference/read_lakehouse_table.md)" in content
+    assert "`src/fabricops_kit/io/read_lakehouse_table.py`" in content
     assert "https://" not in content
+
+
+def test_release_status_chip_supports_all_lifecycle_values():
+    """Verify release status chips render all supported lifecycle classes."""
+    assert ri.release_status_chip("live") == '<span class="fabricops-release-status fabricops-release-status--live">Live</span>'
+    assert ri.release_status_chip("preview") == '<span class="fabricops-release-status fabricops-release-status--preview">Preview</span>'
+    assert ri.release_status_chip("discontinued") == '<span class="fabricops-release-status fabricops-release-status--discontinued">Discontinued</span>'
+
+
+def test_release_status_ordering_is_deterministic():
+    """Verify release contract rows sort by lifecycle status before name."""
+    rows = [
+        {"name": "z_old", "status": "discontinued"},
+        {"name": "b_preview", "status": "preview"},
+        {"name": "a_live", "status": "live"},
+        {"name": "a_preview", "status": "preview"},
+    ]
+    assert [item["name"] for item in ri.sort_release_items(rows)] == ["a_live", "a_preview", "b_preview", "z_old"]
 
 
 def test_release_notes_are_sourced_from_changelog():

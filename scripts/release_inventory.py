@@ -269,6 +269,20 @@ def project_distribution_names(version: str) -> tuple[str, str]:
     return (f"{wheel_name}-{version}-py3-none-any.whl", f"{wheel_name}-{version}.tar.gz")
 
 
+def release_status_chip(status: str) -> str:
+    """Return the rendered release lifecycle status chip for a manifest status."""
+    if status not in VALID_STATUSES:
+        raise ValueError(f"Invalid lifecycle status: {status!r}.")
+    label = status.replace("_", " ").title()
+    return f'<span class="fabricops-release-status fabricops-release-status--{status}">{label}</span>'
+
+
+def sort_release_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return release manifest items in deterministic status and name order."""
+    status_order = {"live": 0, "preview": 1, "discontinued": 2}
+    return sorted(items, key=lambda item: (status_order[item["status"]], item["name"]))
+
+
 def render_release_pages() -> list[Path]:
     """Render release contract documentation pages from the current manifest."""
     version = read_package_version()
@@ -283,24 +297,22 @@ def render_release_pages() -> list[Path]:
     wheel, sdist = project_distribution_names(version)
     notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
 
-    def table(group: str, status: str) -> str:
-        rows = [item for item in manifest[group] if item["status"] == status]
+    def table(group: str) -> str:
+        rows = sort_release_items(manifest[group])
         if not rows:
             return "No assets.\n"
-        lines = ["| Name | Documentation | Source |", "| --- | --- | --- |"]
+        lines = ["| Status | Name | Documentation | Source |", "| --- | --- | --- | --- |"]
         for item in rows:
             doc = item.get("documentation_path")
             doc_link = f"[{doc}](../../{doc.removeprefix('docs/')})" if doc else "Not documented yet"
             source = item.get("source_path", "")
-            lines.append(f"| `{item['name']}` | {doc_link} | `{source}` |")
+            lines.append(f"| {release_status_chip(item['status'])} | `{item['name']}` | {doc_link} | `{source}` |")
         return "\n".join(lines) + "\n"
 
     sections = []
     labels = {"functions": "Functions", "metadata_tables": "Metadata tables", "templates": "Templates", "dq_rules": "DQ rules"}
     for group in GROUPS:
-        sections.append(f"## {labels[group]}\n")
-        for status in ("live", "preview", "discontinued"):
-            sections.append(f"### {status.title()} {labels[group].lower()}\n\n{table(group, status)}")
+        sections.append(f"## {labels[group]}\n\n{table(group)}")
 
     content = "\n".join([
         notice,
@@ -340,15 +352,9 @@ def render_release_pages() -> list[Path]:
             "",
             f"Package version: `{version}`",
             "",
-            f"## Live {labels[group].lower()}",
+            f"## {labels[group]}",
             "",
-            table(group, "live"),
-            f"## Preview {labels[group].lower()}",
-            "",
-            table(group, "preview"),
-            f"## Discontinued {labels[group].lower()}",
-            "",
-            table(group, "discontinued"),
+            table(group),
         ])
         split_path = release_dir / filename
         split_path.write_text(split_content, encoding="utf-8")

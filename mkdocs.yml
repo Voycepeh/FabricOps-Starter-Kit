@@ -142,6 +142,7 @@ extra_javascript:
 extra_css:
   - stylesheets/breadcrumbs.css
   - stylesheets/api-chips.css
+  - stylesheets/release-status.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
   - stylesheets/table-controls.css
