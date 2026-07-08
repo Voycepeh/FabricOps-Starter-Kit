@@ -13,6 +13,25 @@ from tests.helpers import framework_config
 pytestmark = pytest.mark.spark
 
 
+def runtime_context(**overrides):
+    """Return deterministic Fabric runtime audit context for metadata writes."""
+    context = {
+        "currentWorkspaceId": "test-workspace-id",
+        "currentWorkspaceName": "test-workspace",
+        "currentNotebookId": "test-notebook-id",
+        "currentNotebookName": "02_pipeline_test",
+        "activityId": "test-activity-id",
+        "userId": "test-user-id",
+        "userName": "test.user@example.com",
+    }
+    for key, value in overrides.items():
+        if key == "activity_id":
+            context["activityId"] = value
+        else:
+            context[key] = value
+    return context
+
+
 def test_prepare_dq_profile_input_rows_uses_configured_audit_timezone(spark_session):
     """Verify prepare dq profile input rows uses configured audit timezone."""
     config = framework_config()
@@ -176,8 +195,11 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         }
     ]
 
+    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context())
+    config = framework_config()
+
     governance_authoring.record_table_governance(
-        framework_config(),
+        config,
         "dev",
         profile_rows,
         spark_session=spark_session,
@@ -254,15 +276,19 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
     monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
-    _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-1", write_results=False)
+    config = framework_config()
+    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-dq-001"))
+
+    _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-001", write_results=False)
     assert writes == []
 
-    _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, run_id="run-2", write_results=True)
+    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-dq-002"))
+    _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-002", write_results=True)
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     row = writes[0][0].collect()[0].asDict()
     assert row["guardrail_type"] == "dq"
-    assert row["run_id"] == "run-2"
+    assert row["_activity_id"] == "activity-dq-002"
     assert row["status"] == "passed"
 
 def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
@@ -530,10 +556,11 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
-        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "profile_mode": "static_data"}},
-        config={},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": "source", "profile_mode": "static_data"}},
+        config=framework_config(),
         env="dev",
         run_id="run-1",
+        context={"runtime_context": runtime_context(activity_id="activity-profile-001")},
         stability_results={"orders": {"status": "baseline_created", "can_continue": True, "stability_check_enabled": True, "profile_mode": "static_data", "stability_status": "baseline_created", "stability_can_continue": True}},
     )
 
@@ -575,9 +602,10 @@ def test_write_catalogue_evidence_writes_explicit_fabric_store_target(spark_sess
     result = pipeline_shared.write_catalogue_evidence(
         {"explicit": profile_df},
         definitions,
-        config={},
+        config=framework_config(),
         env="dev",
         run_id="run-1",
+        context={"runtime_context": runtime_context(activity_id="activity-profile-002")},
     )
 
     assert result == {"explicit": "written"}
@@ -598,8 +626,10 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
         pipeline_shared.write_catalogue_evidence(
             {"target_layer_only": profile_df},
             {"target_layer_only": {"table_name": "orders", "target_layer": "product", "layer": "raw"}},
-            config={},
+            config=framework_config(),
             env="dev",
+            run_id="run-1",
+            context={"runtime_context": runtime_context(activity_id="activity-profile-003")},
         )
 
 
@@ -610,9 +640,11 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     writes = []
     monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
+    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-result-001"))
+
     metadata_evidence._write_guardrail_result_row(
         spark_session=spark_session,
-        config={},
+        config=framework_config(),
         env="dev",
         run_id="run-1",
         dataset_name="sales",
@@ -645,10 +677,11 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
-        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "profile_mode": "changing_data"}},
-        config={},
+        {"orders": {"dataset_name": "sales", "table_name": "orders", "stage": "source", "fabric_store_target": "source", "profile_mode": "changing_data"}},
+        config=framework_config(),
         env="dev",
         run_id="run-1",
+        context={"runtime_context": runtime_context(activity_id="activity-profile-004")},
         stability_results={
             "orders": {
                 "status": "baseline_created",
