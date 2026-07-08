@@ -1855,33 +1855,33 @@
       "function_name": "_coerce_row_dicts",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.widgets.notebook_registry._coerce_row_dicts",
-      "source_end_line": 43,
+      "source_end_line": 42,
       "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-      "source_start_line": 38
+      "source_start_line": 37
     },
     {
       "function_name": "_load_notebook_registry",
       "function_type": "private_function",
       "qualified_name": "fabricops_kit.widgets.notebook_registry._load_notebook_registry",
-      "source_end_line": 215,
+      "source_end_line": 214,
       "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-      "source_start_line": 159
+      "source_start_line": 158
     },
     {
       "function_name": "current_notebook_active_registrations",
       "function_type": "shared_function",
       "qualified_name": "fabricops_kit.widgets.notebook_registry.current_notebook_active_registrations",
-      "source_end_line": 274,
+      "source_end_line": 273,
       "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-      "source_start_line": 218
+      "source_start_line": 217
     },
     {
       "function_name": "register_current_notebook",
       "function_type": "shared_function",
       "qualified_name": "fabricops_kit.widgets.notebook_registry.register_current_notebook",
-      "source_end_line": 156,
+      "source_end_line": 155,
       "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-      "source_start_line": 46
+      "source_start_line": 45
     },
     {
       "function_name": "_approved_column_identity",
@@ -21510,9 +21510,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.notebook_registry.current_notebook_active_registrations",
           "recursive": false,
-          "source_end_line": 274,
+          "source_end_line": 273,
           "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-          "source_start_line": 218,
+          "source_start_line": 217,
           "violation_details": [],
           "violation_types": []
         },
@@ -21604,9 +21604,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.notebook_registry._load_notebook_registry",
           "recursive": false,
-          "source_end_line": 215,
+          "source_end_line": 214,
           "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-          "source_start_line": 159,
+          "source_start_line": 158,
           "violation_details": [],
           "violation_types": []
         },
@@ -22022,9 +22022,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.notebook_registry._coerce_row_dicts",
           "recursive": false,
-          "source_end_line": 43,
+          "source_end_line": 42,
           "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-          "source_start_line": 38,
+          "source_start_line": 37,
           "violation_details": [],
           "violation_types": []
         },
@@ -22041,9 +22041,9 @@
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.widgets.notebook_registry.register_current_notebook",
           "recursive": false,
-          "source_end_line": 156,
+          "source_end_line": 155,
           "source_path": "src/fabricops_kit/widgets/notebook_registry.py",
-          "source_start_line": 46,
+          "source_start_line": 45,
           "violation_details": [],
           "violation_types": []
         },

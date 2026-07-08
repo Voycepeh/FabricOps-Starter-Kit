@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 446
-- Shared helpers: 136
-- Private helpers: 310
+- Downstream callables: 437
+- Shared helpers: 128
+- Private helpers: 309
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open focused call flow in dashboard</a>
 
@@ -16,7 +16,7 @@ Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails
 
 `fabricops_kit/pipeline/run_table_guardrails.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/run_table_guardrails.py#L10-L44">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/run_table_guardrails.py#L10-L38">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,10 +45,7 @@ def run_table_guardrails(
     context: dict[str, Any] | None=None,
     spark_session: Any | None=None,
     agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
-    pipeline_name: str='',
+    agreement_version: str='',
     table_role: str='',
     mode: str='profile',
     stop_on_failure: bool | None=None,
@@ -76,10 +73,7 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 | `context` | `dict[str, Any] \| None` | No | Not documented yet |
 | `spark_session` | `Any \| None` | No | Not documented yet |
 | `agreement_id` | `str` | No | Not documented yet |
-| `agreement_contract_version` | `str` | No | Not documented yet |
-| `notebook_registry_id` | `str` | No | Not documented yet |
-| `notebook_id` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
+| `agreement_version` | `str` | No | Not documented yet |
 | `table_role` | `str` | No | Not documented yet |
 | `mode` | `str` | No | Not documented yet |
 | `stop_on_failure` | `bool \| None` | No | Not documented yet |
@@ -109,5 +103,5 @@ Not documented yet
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

@@ -94,5 +94,5 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

@@ -16,7 +16,7 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 `fabricops_kit/io/write_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L63">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L78">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -44,6 +44,7 @@ def write_warehouse_table(
     table_name: str,
     target: str='warehouse',
     mode: str='append',
+    repartition_by=None,
     options: dict[str, Any] | None=None,
     context: dict[str, Any] | None=None,
 ):
@@ -70,6 +71,7 @@ write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="order
 | `table_name` | `str` | Yes | Warehouse table name. |
 | `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
 | `mode` | `str` | No | Spark writer mode supported by the Fabric connector. |
+| `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning before write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table. |
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. Required Fabric connector options are always set from ``00_env_config``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 
@@ -98,5 +100,5 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

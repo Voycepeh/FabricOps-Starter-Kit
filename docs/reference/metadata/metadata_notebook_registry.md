@@ -2,48 +2,30 @@
 
 **Purpose:** Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.
 
-## Starter Kit usage
-
-- **Written by notebook/template:** 02_pipeline.ipynb
-- **Written by function or widget:** [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
-- **Read by function or widget:** `get_selected_agreement`, [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md), [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)
-- **Related template step:** 02_pipeline.ipynb
-
 ## Implemented schema
 
-| Column name | Data type | Nullable / required |
-| --- | --- | --- |
-| `agreement_id` | `string` | Nullable |
-| `environment_name` | `string` | Nullable |
-| `dataset_name` | `string` | Nullable |
-| `table_name` | `string` | Nullable |
-| `topic` | `string` | Nullable |
-| `pipeline_name` | `string` | Nullable |
-| `notebook_type` | `string` | Nullable |
-| `workspace_id` | `string` | Nullable |
-| `workspace_name` | `string` | Nullable |
-| `notebook_id` | `string` | Nullable |
-| `notebook_name` | `string` | Nullable |
-| `notebook_url` | `string` | Nullable |
-| `user_name` | `string` | Nullable |
-| `user_id` | `string` | Nullable |
-| `registered_at` | `timestamp` | Nullable |
-| `registration_id` | `string` | Nullable |
-| `agreement_contract_version` | `string` | Nullable |
-| `registration_role` | `string` | Nullable |
-| `registration_status` | `string` | Nullable |
-| `superseded_at` | `timestamp` | Nullable |
-| `superseded_by_registration_id` | `string` | Nullable |
-| `_committed_by` | `string` | Nullable |
-| `_committed_at` | `timestamp` | Nullable |
-| `_workspace_name` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
-| `_metadata_lakehouse_name` | `string` | Nullable |
-| `_activity_id` | `string` | Nullable |
+| Column | Data type | Nullable | Managed by | Description |
+| --- | --- | --- | --- | --- |
+| `agreement_id` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `agreement_id`. |
+| `agreement_version` | `string` | No | Notebook registration workflow | Canonical agreement version associated with the row. |
+| `environment_name` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `environment_name`. |
+| `dataset_name` | `string` | Yes | Notebook registration workflow | Metadata Notebook Registry field `dataset_name`. |
+| `table_name` | `string` | Yes | Notebook registration workflow | Metadata Notebook Registry field `table_name`. |
+| `topic` | `string` | Yes | Notebook registration workflow | Metadata Notebook Registry field `topic`. |
+| `notebook_type` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `notebook_type`. |
+| `notebook_url` | `string` | Yes | Notebook registration workflow | Metadata Notebook Registry field `notebook_url`. |
+| `registration_id` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `registration_id`. |
+| `registration_role` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `registration_role`. |
+| `registration_status` | `string` | No | Notebook registration workflow | Metadata Notebook Registry field `registration_status`. |
+| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |
 
 ## Related function reference
 
-- `get_selected_agreement`
 - [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
-- [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)
-- [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

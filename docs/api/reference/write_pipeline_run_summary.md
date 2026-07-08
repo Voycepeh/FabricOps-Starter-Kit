@@ -2,9 +2,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 54
-- Shared helpers: 27
-- Private helpers: 27
+- Downstream callables: 51
+- Shared helpers: 25
+- Private helpers: 26
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open focused call flow in dashboard</a>
 
@@ -16,7 +16,7 @@ Write one pipeline runtime summary row to metadata.
 
 `fabricops_kit/pipeline/write_pipeline_run_summary.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_run_summary.py#L10-L77">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/write_pipeline_run_summary.py#L10-L69">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,14 +40,10 @@ For profiling-related pipeline functions, the output captures the important deta
 ```python
 def write_pipeline_run_summary(
     spark: Any | None=None,
-    run_id: str | None=None,
     context: dict[str, Any] | None=None,
     agreement_id: str='',
-    agreement_contract_version: str='',
-    notebook_registry_id: str='',
-    notebook_id: str='',
+    agreement_version: str='',
     notebook_type: str='02_pipeline',
-    pipeline_name: str='',
     started_at: str | None=None,
     completed_at: str | None=None,
     status: str='completed',
@@ -84,14 +80,10 @@ Example usage not documented yet.
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spark` | `Any \| None` | No | Not documented yet |
-| `run_id` | `str \| None` | No | Not documented yet |
 | `context` | `dict[str, Any] \| None` | No | Not documented yet |
 | `agreement_id` | `str` | No | Not documented yet |
-| `agreement_contract_version` | `str` | No | Not documented yet |
-| `notebook_registry_id` | `str` | No | Not documented yet |
-| `notebook_id` | `str` | No | Not documented yet |
+| `agreement_version` | `str` | No | Not documented yet |
 | `notebook_type` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
 | `started_at` | `str \| None` | No | Not documented yet |
 | `completed_at` | `str \| None` | No | Not documented yet |
 | `status` | `str` | No | Not documented yet |
@@ -141,5 +133,5 @@ Not documented yet
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 07 Jul 2026, 10:14 PM SGT
-    Call-flow data generated: 07 Jul 2026, 10:14 PM SGT
+    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT

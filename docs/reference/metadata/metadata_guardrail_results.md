@@ -2,43 +2,35 @@
 
 **Purpose:** Runtime guardrail outcomes written by pipeline enforcement.
 
-## Starter Kit usage
-
-- **Written by notebook/template:** 02_pipeline.ipynb
-- **Written by function or widget:** [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
-- **Read by function or widget:** [`display_guardrail_results`](../../api/reference/display_guardrail_results.md), [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
-- **Related template step:** 02_pipeline.ipynb
-
 ## Implemented schema
 
-| Column name | Data type | Nullable / required |
-| --- | --- | --- |
-| `result_id` | `string` | Nullable |
-| `run_id` | `string` | Nullable |
-| `rule_key` | `string` | Nullable |
-| `environment_name` | `string` | Nullable |
-| `dataset_name` | `string` | Nullable |
-| `table_name` | `string` | Nullable |
-| `column_name` | `string` | Nullable |
-| `guardrail_type` | `string` | Nullable |
-| `rule_type` | `string` | Nullable |
-| `status` | `string` | Nullable |
-| `can_continue` | `boolean` | Nullable |
-| `severity` | `string` | Nullable |
-| `reason` | `string` | Nullable |
-| `expected_value_json` | `string` | Nullable |
-| `actual_value_json` | `string` | Nullable |
-| `result_payload_json` | `string` | Nullable |
-| `created_at` | `timestamp` | Nullable |
-| `_committed_by` | `string` | Nullable |
-| `_committed_at` | `timestamp` | Nullable |
-| `_workspace_name` | `string` | Nullable |
-| `_notebook_name` | `string` | Nullable |
-| `_metadata_lakehouse_name` | `string` | Nullable |
-| `_activity_id` | `string` | Nullable |
+| Column | Data type | Nullable | Managed by | Description |
+| --- | --- | --- | --- | --- |
+| `result_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `result_id`. |
+| `rule_key` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `rule_key`. |
+| `environment_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `environment_name`. |
+| `dataset_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `dataset_name`. |
+| `table_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `table_name`. |
+| `column_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `column_name`. |
+| `guardrail_type` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_type`. |
+| `rule_type` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `rule_type`. |
+| `status` | `string` | Yes | Pipeline guardrail writers | Pipeline run status recorded with the run summary. |
+| `can_continue` | `boolean` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `can_continue`. |
+| `severity` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `severity`. |
+| `reason` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `reason`. |
+| `expected_value_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `expected_value_json`. |
+| `actual_value_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `actual_value_json`. |
+| `result_payload_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `result_payload_json`. |
+| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |
 
 ## Related function reference
 
-- [`display_guardrail_results`](../../api/reference/display_guardrail_results.md)
 - [`run_table_guardrails`](../../api/reference/run_table_guardrails.md)
-- [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
+- [`display_guardrail_results`](../../api/reference/display_guardrail_results.md)
