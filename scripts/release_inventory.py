@@ -12,6 +12,7 @@ import re
 import shutil
 import tomllib
 import zipfile
+from datetime import date, datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -460,6 +461,73 @@ Source notebook path: `{source}`
 """
 
 
+def _parse_release_date(value: Any) -> str:
+    """Return a release date as ``YYYY-MM-DD`` text or an empty fallback."""
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.date().isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    text = str(value).strip()
+    if not text or text.lower() in {"null", "none", "not specified"}:
+        return ""
+    return text[:10]
+
+
+def _semantic_version_key(version: Any) -> tuple[int, ...]:
+    """Return a deterministic numeric semantic-version sort key."""
+    text = str(version or "")
+    numbers = [int(part) for part in re.findall(r"\d+", text)]
+    return tuple(numbers or [0])
+
+
+def _release_description(manifest: dict[str, Any]) -> str:
+    """Return concise release overview text sourced from release_motivation."""
+    motivation = str(manifest.get("release_motivation") or "").strip()
+    if not motivation:
+        return "Release details are documented in the frozen release page."
+    first_sentence = re.split(r"(?<=[.!?])\s+", motivation, maxsplit=1)[0].strip()
+    return first_sentence or motivation
+
+
+def release_manifest_paths() -> list[Path]:
+    """Return all available release manifest paths in the repository."""
+    return sorted((ROOT / "docs" / "releases" / "manifests").glob("*.yml"))
+
+
+def load_release_manifests() -> list[dict[str, Any]]:
+    """Load every available release manifest."""
+    manifests = []
+    for path in release_manifest_paths():
+        manifest = _load_manifest(path)
+        if manifest is not None:
+            manifests.append(manifest)
+    return manifests
+
+
+def sort_release_manifests(manifests: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sort release manifests newest first by date, then semantic version."""
+    return sorted(
+        manifests,
+        key=lambda manifest: (
+            _parse_release_date(manifest.get("release_date")),
+            _semantic_version_key(manifest.get("release_version")),
+        ),
+        reverse=True,
+    )
+
+
+def render_releases_index(manifests: list[dict[str, Any]], notice: str) -> str:
+    """Render the top-level release history page from release manifests."""
+    lines = [notice, "", "# Releases", "", "## Release history", "", "| Release | Release date | Description |", "| --- | --- | --- |"]
+    for manifest in sort_release_manifests(manifests):
+        version = str(manifest["release_version"])
+        release_date = _parse_release_date(manifest.get("release_date")) or "Not specified"
+        lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
+    return "\n".join(lines) + "\n"
+
+
 def _release_url(manifest: dict[str, Any], version: str, asset: str = "") -> str:
     owner = manifest.get("github_owner") or "Voycepeh"
     repo = manifest.get("github_repo") or "FabricOps-Starter-Kit"
@@ -526,7 +594,7 @@ def render_release_pages() -> list[Path]:
             paths.append(page)
 
     releases_index = ROOT / "docs" / "releases" / "index.md"
-    releases_index.write_text(f"{notice}\n\n# Releases\n\n## Current release\n\n- [FabricOps Starter Kit {version}]({version}/)\n", encoding="utf-8")
+    releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
     return [releases_index, *paths]
 
 
