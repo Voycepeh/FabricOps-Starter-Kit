@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass, field
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.generated_artifact_metadata import update_generated_artifact_metadata
+from scripts.release_inventory import GROUPS as RELEASE_GROUPS
+from scripts.release_inventory import _load_manifest as load_release_manifest
+
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -23,6 +27,8 @@ SOURCE_JSON_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/do
 SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/"
 LARGE_WIDTH_THRESHOLD = 10
 LARGE_DEPTH_THRESHOLD = 5
+METADATA_TABLE_PATTERN = re.compile(r"METADATA_[A-Z0-9_]+")
+
 ARCHITECTURE_VIOLATION_RULES = {
     "Type 1": "Public function calls another public function directly.",
     "Type 2": "Shared function calls a public function directly.",
@@ -310,18 +316,242 @@ def enrich_flow_candidates(flow: list[dict[str, Any]]) -> None:
         item["inline_candidate"] = bool(len(distinct_callers) == 1 and len(calls) == 1 and not repeated_by_parent and not recursive)
         item["promote_to_shared_candidate"] = bool(item["function_type"] == "private_function" and len(distinct_callers) > 1)
 
+
+def release_manifest_paths(root: Path = ROOT) -> list[Path]:
+    """Return release manifest paths in deterministic version order."""
+    manifest_dir = root / "docs" / "releases" / "manifests"
+    return sorted(manifest_dir.glob("*.yml")) if manifest_dir.exists() else []
+
+
+def build_lifecycle_contract(root: Path = ROOT) -> dict[str, Any]:
+    """Build lifecycle lookup data from release manifests."""
+    functions: dict[str, dict[str, Any]] = {}
+    metadata_tables: dict[str, dict[str, Any]] = {}
+    release_versions: list[str] = []
+    for path in release_manifest_paths(root):
+        manifest = load_release_manifest(path)
+        if manifest is None:
+            continue
+        version = str(manifest["release_version"])
+        release_versions.append(version)
+        for item in manifest.get("functions", []):
+            qn = item.get("qualified_name")
+            if not qn:
+                continue
+            record = functions.setdefault(qn, {"function_name": item["name"], "qualified_name": qn, "release_history": []})
+            status = str(item["status"])
+            record["release_history"].append({"version": version, "status": status})
+            if status == "live" and not record.get("live_since"):
+                record["live_since"] = str(item.get("introduced_in") or version)
+            if status == "discontinued":
+                record["discontinued_in"] = str(item.get("discontinued_in") or version)
+            record["lifecycle_status"] = status
+        for item in manifest.get("metadata_tables", []):
+            record = metadata_tables.setdefault(item["name"], {"table_name": item["name"], "release_history": []})
+            status = str(item["status"])
+            record["release_history"].append({"version": version, "status": status})
+            if status == "live" and not record.get("live_since"):
+                record["live_since"] = str(item.get("introduced_in") or version)
+            if status == "discontinued":
+                record["discontinued_in"] = str(item.get("discontinued_in") or version)
+            record["lifecycle_status"] = status
+    functions_by_name = {item["function_name"]: item for item in functions.values()}
+    return {"release_versions": release_versions, "functions": functions, "functions_by_name": functions_by_name, "metadata_tables": metadata_tables}
+
+
+def lifecycle_for_qn(qn: str, lifecycle_contract: dict[str, Any]) -> dict[str, Any]:
+    """Return lifecycle fields for a qualified function name."""
+    record = lifecycle_contract.get("functions", {}).get(qn) or lifecycle_contract.get("functions_by_name", {}).get(qn.rsplit(".", 1)[-1], {})
+    status = record.get("lifecycle_status", "internal")
+    return {
+        "lifecycle_status": status,
+        "live_since": record.get("live_since"),
+        "discontinued_in": record.get("discontinued_in"),
+        "release_history": record.get("release_history", []),
+    }
+
+
+def metadata_tables_in_node(node: ast.AST) -> set[str]:
+    """Return metadata table names mentioned directly in an AST node."""
+    tables: set[str] = set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Constant) and isinstance(child.value, str):
+            tables.update(METADATA_TABLE_PATTERN.findall(child.value))
+    return tables
+
+
+def module_metadata_constants(module: ModuleInfo) -> dict[str, str]:
+    """Return module-level constants whose values are metadata table names."""
+    constants: dict[str, str] = {}
+    for node in module.tree.body:
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            matches = METADATA_TABLE_PATTERN.findall(node.value.value)
+            if not matches:
+                continue
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    constants[target.id] = matches[0]
+    return constants
+
+
+def metadata_tables_in_function(info: FunctionInfo, module: ModuleInfo, constants: dict[str, str]) -> set[str]:
+    """Return metadata tables referenced by a function body."""
+    tables = metadata_tables_in_node(info.node)
+    for child in ast.walk(info.node):
+        if isinstance(child, ast.Name) and child.id in constants:
+            tables.add(constants[child.id])
+    if info.function_name == "setup_metadata_tables":
+        tables.update(constants.values())
+    return tables
+
+
+
+def build_notebook_dependents(function_names: set[str], lifecycle_contract: dict[str, Any], root: Path = ROOT) -> dict[str, list[dict[str, str]]]:
+    """Return notebook templates that mention each function name."""
+    dependents: dict[str, list[dict[str, str]]] = {name: [] for name in function_names}
+    template_status: dict[str, str] = {}
+    for path in release_manifest_paths(root):
+        manifest = load_release_manifest(path)
+        if manifest is None:
+            continue
+        for item in manifest.get("templates", []):
+            template_status[item["name"]] = str(item["status"])
+    for notebook_path in sorted((root / "templates" / "notebooks").glob("*.ipynb")):
+        text = notebook_path.read_text(encoding="utf-8")
+        status = template_status.get(notebook_path.stem, "unknown")
+        for name in sorted(function_names):
+            if re.search(rf"\b{re.escape(name)}\b", text):
+                dependents[name].append({"notebook": notebook_path.stem, "lifecycle_status": status, "source_path": repo_relative(notebook_path, root)})
+    return dependents
+
+def relationship_for_function(info: FunctionInfo, table: str) -> str:
+    """Classify the relationship between a function and a metadata table."""
+    name = info.function_name.lower()
+    if name == "setup_metadata_tables":
+        return "creates_or_validates"
+    if any(token in name for token in ("write", "save", "append", "setup", "render", "author", "enrich", "bootstrap")):
+        return "writes_or_manages"
+    if any(token in name for token in ("read", "browse", "select", "display")):
+        return "reads_or_displays"
+    return "references"
+
+
+def build_metadata_contract_relationships(
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+    lifecycle_contract: dict[str, Any],
+) -> dict[str, list[dict[str, Any]]]:
+    """Build function-to-metadata contract relationships from source and release manifests."""
+    live_tables = {name for name, item in lifecycle_contract.get("metadata_tables", {}).items() if item.get("lifecycle_status") == "live"}
+    relationships: dict[str, list[dict[str, Any]]] = {}
+    constants_by_module = {name: module_metadata_constants(module) for name, module in modules.items()}
+    for qn, info in functions.items():
+        module_name = ".".join(qn.split(".")[:-1])
+        module = modules[module_name]
+        tables = metadata_tables_in_function(info, module, constants_by_module[module_name])
+        rows = []
+        for table in sorted(tables):
+            metadata_record = lifecycle_contract.get("metadata_tables", {}).get(table, {})
+            status = metadata_record.get("lifecycle_status", "unknown")
+            rows.append({
+                "table_name": table,
+                "relationship": relationship_for_function(info, table),
+                "metadata_lifecycle_status": status,
+                "metadata_live_since": metadata_record.get("live_since"),
+                "is_live_metadata_contract": table in live_tables,
+                "contract": f"{table} schema v1" if table in lifecycle_contract.get("metadata_tables", {}) else table,
+            })
+        relationships[qn] = rows
+    return relationships
+
+
+def merge_metadata_relationships(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return deterministic unique metadata relationship rows."""
+    merged: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        merged[(row["table_name"], row["relationship"])] = row
+    return [merged[key] for key in sorted(merged)]
+
+
+def contract_classification(
+    function_type_name: str,
+    lifecycle_status: str,
+    live_dependents: list[str],
+    metadata_relationships: list[dict[str, Any]],
+) -> str:
+    """Return the release-contract classification for a callable."""
+    supports_live_metadata = any(row.get("is_live_metadata_contract") for row in metadata_relationships)
+    writes_live_metadata = any(row.get("is_live_metadata_contract") and row.get("relationship") in {"creates_or_validates", "writes_or_manages"} for row in metadata_relationships)
+    if lifecycle_status == "discontinued":
+        return "discontinued_function"
+    if function_type_name in {"private_function", "shared_function"} and live_dependents:
+        return "live_critical_internal"
+    if lifecycle_status == "live" and writes_live_metadata:
+        return "live_function_writing_live_metadata"
+    if lifecycle_status == "preview" and supports_live_metadata:
+        return "preview_function_supporting_live_contracts"
+    if lifecycle_status == "live":
+        return "live_public_function"
+    if lifecycle_status == "preview":
+        return "preview_public_function"
+    return "internal_function"
+
+
+def contract_display(classification: str, lifecycle: dict[str, Any]) -> str:
+    """Return compact human-facing contract display text."""
+    if classification == "live_public_function":
+        return f"Live · Live since {lifecycle.get('live_since')}" if lifecycle.get("live_since") else "Live"
+    if classification == "preview_public_function":
+        return "Preview"
+    if classification == "preview_function_supporting_live_contracts":
+        return "Preview · Supports Live contracts"
+    if classification == "live_function_writing_live_metadata":
+        return "Live · Writes Live metadata"
+    if classification == "live_critical_internal":
+        return "Live-critical internal"
+    if classification == "discontinued_function":
+        return f"Discontinued · Last available in {lifecycle.get('discontinued_in')}" if lifecycle.get("discontinued_in") else "Discontinued"
+    return "Internal"
+
 def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH) -> dict[str, Any]:
     """Build the v2 JSON payload."""
     modules = discover_modules(pkg_dir)
     functions = discover_functions(modules, root)
     public_names = set(read_public_export_names(init_path))
     public_qns = {qn for qn, info in functions.items() if info.function_name in public_names}
+    lifecycle_contract = build_lifecycle_contract(root)
+    metadata_relationships_by_qn = build_metadata_contract_relationships(modules, functions, lifecycle_contract)
+    notebook_dependents_by_name = build_notebook_dependents({info.function_name for info in functions.values()}, lifecycle_contract, root)
     used_all: set[str] = set()
     public_functions = []
+    live_dependents_by_qn: dict[str, set[str]] = {qn: set() for qn in functions}
+    pending_flows: list[tuple[str, list[dict[str, Any]], set[str]]] = []
     for root_qn in sorted(public_qns, key=lambda q: (functions[q].function_name, q)):
         flow, used = build_flow(root_qn, modules, functions, public_qns)
+        pending_flows.append((root_qn, flow, used))
+        root_lifecycle = lifecycle_for_qn(root_qn, lifecycle_contract)
+        if root_lifecycle["lifecycle_status"] == "live":
+            for item in flow:
+                live_dependents_by_qn.setdefault(item["qualified_name"], set()).add(root_qn)
+
+    for root_qn, flow, used in pending_flows:
         used_all.update(used)
         root_info = functions[root_qn]
+        for item in flow:
+            item_lifecycle = lifecycle_for_qn(item["qualified_name"], lifecycle_contract)
+            item_relationships = metadata_relationships_by_qn.get(item["qualified_name"], [])
+            item_live_dependents = sorted(live_dependents_by_qn.get(item["qualified_name"], set()))
+            item_classification = contract_classification(item["function_type"], item_lifecycle["lifecycle_status"], item_live_dependents, item_relationships)
+            item.update(item_lifecycle)
+            item["live_dependents"] = item_live_dependents
+            item["live_dependent_count"] = len(item_live_dependents)
+            item["metadata_contract_relationships"] = item_relationships
+            item["notebook_dependents"] = notebook_dependents_by_name.get(item["function_name"], [])
+            item["live_notebook_dependents"] = [row for row in item["notebook_dependents"] if row["lifecycle_status"] == "live"]
+            item["supports_live_metadata_contracts"] = any(row.get("is_live_metadata_contract") for row in item_relationships)
+            item["writes_live_metadata"] = any(row.get("is_live_metadata_contract") and row.get("relationship") in {"creates_or_validates", "writes_or_manages"} for row in item_relationships)
+            item["contract_classification"] = item_classification
+            item["contract_display"] = contract_display(item_classification, item_lifecycle)
         direct = [item for item in flow if item["parent_qualified_name"] == root_qn]
         direct_call_count = len({item["qualified_name"] for item in direct})
         max_depth = max(item["depth"] for item in flow)
@@ -335,6 +565,12 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             public_signals.append("architecture_violation")
         refactor_signals = calculate_refactor_signals(root_info, flow, direct_call_count, max_depth)
         signals = public_signals
+        lifecycle = lifecycle_for_qn(root_qn, lifecycle_contract)
+        live_dependents = sorted(live_dependents_by_qn.get(root_qn, set()))
+        own_relationships = metadata_relationships_by_qn.get(root_qn, [])
+        flow_relationships = merge_metadata_relationships([row for item in flow for row in item.get("metadata_contract_relationships", [])])
+        classification = contract_classification("public_function", lifecycle["lifecycle_status"], live_dependents, flow_relationships)
+        live_critical_dependencies = sorted({item["qualified_name"] for item in flow if item["qualified_name"] != root_qn and item.get("contract_classification") == "live_critical_internal"})
         public_functions.append({
             "function_name": root_info.function_name,
             "qualified_name": root_qn,
@@ -356,8 +592,38 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "signals": signals,
             "refactor_signals": refactor_signals,
             "refactor_summary": summarize_refactor_signals(refactor_signals),
+            **lifecycle,
+            "live_dependents": live_dependents,
+            "live_dependent_count": len(live_dependents),
+            "contract_classification": classification,
+            "contract_display": contract_display(classification, lifecycle),
+            "metadata_contract_relationships": own_relationships,
+            "transitive_metadata_contract_relationships": flow_relationships,
+            "notebook_dependents": notebook_dependents_by_name.get(root_info.function_name, []),
+            "live_notebook_dependents": [row for row in notebook_dependents_by_name.get(root_info.function_name, []) if row["lifecycle_status"] == "live"],
+            "supports_live_metadata_contracts": any(row.get("is_live_metadata_contract") for row in flow_relationships),
+            "writes_live_metadata": any(row.get("is_live_metadata_contract") and row.get("relationship") in {"creates_or_validates", "writes_or_manages"} for row in flow_relationships),
+            "live_critical_dependencies": live_critical_dependencies,
+            "live_critical_dependency_count": len(live_critical_dependencies),
         })
-    defined_functions = [function_record(info, public_qns) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
+    defined_functions = [
+        function_record(info, public_qns)
+        | lifecycle_for_qn(info.qualified_name, lifecycle_contract)
+        | {
+            "live_dependents": sorted(live_dependents_by_qn.get(info.qualified_name, set())),
+            "live_dependent_count": len(live_dependents_by_qn.get(info.qualified_name, set())),
+            "metadata_contract_relationships": metadata_relationships_by_qn.get(info.qualified_name, []),
+            "notebook_dependents": notebook_dependents_by_name.get(info.function_name, []),
+            "live_notebook_dependents": [row for row in notebook_dependents_by_name.get(info.function_name, []) if row["lifecycle_status"] == "live"],
+        }
+        for info in sorted(functions.values(), key=lambda item: item.qualified_name)
+    ]
+    for item in defined_functions:
+        item_classification = contract_classification(item["function_type"], item["lifecycle_status"], item["live_dependents"], item["metadata_contract_relationships"])
+        item["contract_classification"] = item_classification
+        item["contract_display"] = contract_display(item_classification, item)
+        item["supports_live_metadata_contracts"] = any(row.get("is_live_metadata_contract") for row in item["metadata_contract_relationships"])
+        item["writes_live_metadata"] = any(row.get("is_live_metadata_contract") and row.get("relationship") in {"creates_or_validates", "writes_or_manages"} for row in item["metadata_contract_relationships"])
     unused = [unused_record(functions[qn]) for qn in sorted(set(functions) - used_all)]
     return {
         "metadata": {
@@ -365,6 +631,9 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_json_url": SOURCE_JSON_URL,
             "source": "src/fabricops_kit",
             "public_function_source": "src/fabricops_kit/__init__.py::__all__",
+            "lifecycle_source": "docs/releases/manifests/*.yml",
+            "metadata_contract_source": "release manifests plus source metadata table references",
+            "release_versions": lifecycle_contract["release_versions"],
             "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
         },
@@ -377,6 +646,9 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "defined_function_count": len(functions),
             "used_function_count": len(used_all),
             "defined_but_not_used_count": len(unused),
+            "live_public_function_count": sum(1 for item in public_functions if item["lifecycle_status"] == "live"),
+            "preview_public_function_count": sum(1 for item in public_functions if item["lifecycle_status"] == "preview"),
+            "public_functions_supporting_live_metadata_count": sum(1 for item in public_functions if item["supports_live_metadata_contracts"]),
         },
     }
 

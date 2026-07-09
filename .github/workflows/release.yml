@@ -89,10 +89,21 @@ jobs:
           print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
           PY
 
+      - name: Build Live notebook pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${FABRICOPS_PACKAGE_VERSION}"
+          mkdir -p "${RUNNER_TEMP}/fabricops-notebooks"
+          cp templates/notebooks/00_env_config.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
+          cp templates/notebooks/01_agreement.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
+          cp templates/notebooks/99_explore.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
+          (cd "${RUNNER_TEMP}/fabricops-notebooks" && zip -r "${GITHUB_WORKSPACE}/dist/fabricops-kit-${version}-notebooks.zip" .)
+
       - name: Generate SHA256 checksums
         run: |
           cd dist
-          sha256sum *.whl *.tar.gz > SHA256SUMS.txt
+          sha256sum *.whl *.tar.gz *.zip > SHA256SUMS.txt
 
       - name: Extract changelog release notes
         shell: bash
@@ -124,4 +135,5 @@ jobs:
           files: |
             dist/*.whl
             dist/*.tar.gz
+            dist/*.zip
             dist/SHA256SUMS.txt

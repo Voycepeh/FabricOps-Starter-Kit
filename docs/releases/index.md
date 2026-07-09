@@ -1,7 +1,7 @@
-<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml and regenerate. -->
+<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->
 
 # Releases
 
-## Current release candidate
+## Current release
 
-- [Proposed initial release 0.1.0](0.1.0/)
+- [FabricOps Starter Kit 0.1.0](0.1.0/)
