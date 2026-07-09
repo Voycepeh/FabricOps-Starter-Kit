@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from scripts.generated_artifact_metadata import update_generated_artifact_metadata
 from scripts.release_inventory import load_release_manifests
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
@@ -117,6 +118,24 @@ def read_function_lifecycle(manifests_dir: Path = MANIFESTS_DIR) -> tuple[dict[s
             if qn in lifecycle and name:
                 lifecycle.setdefault(str(name), lifecycle[str(qn)])
     return lifecycle, versions
+
+
+def validate_public_lifecycle_entries(
+    functions: dict[str, FunctionInfo],
+    public_qns: set[str],
+    lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle],
+    release_versions: list[str],
+) -> None:
+    """Fail clearly when release manifests omit a discovered public callable."""
+    if not release_versions:
+        return
+    missing = [
+        qn
+        for qn in sorted(public_qns, key=lambda item: (functions[item].function_name, item))
+        if qn not in lifecycle_by_qn and functions[qn].function_name not in lifecycle_by_qn
+    ]
+    if missing:
+        raise ValueError("Public callable missing from release manifests:\n" + "\n".join(missing))
 
 
 def module_name_for_path(path: Path, pkg_dir: Path = PKG_DIR) -> str:
@@ -420,8 +439,10 @@ def calculate_live_impact(
                 record[target].add(root_qn)  # type: ignore[union-attr]
     normalized: dict[str, dict[str, Any]] = {}
     for qn, record in impact.items():
-        direct = sorted(record["direct"])  # type: ignore[arg-type]
-        transitive = sorted(record["transitive"])  # type: ignore[arg-type]
+        direct_set = record["direct"]  # type: ignore[assignment]
+        transitive_set = record["transitive"] - direct_set  # type: ignore[operator]
+        direct = sorted(direct_set)  # type: ignore[arg-type]
+        transitive = sorted(transitive_set)  # type: ignore[arg-type]
         supports_live = bool(direct or transitive)
         if qn in live_public_qns:
             level = "direct_public_contract"
@@ -494,13 +515,15 @@ def enrich_rows_with_contract(
             row["contract_classification"] = internal_contract_classification(row)
             row["contract_display"] = internal_contract_display(row["contract_classification"])
 
-def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH, manifests_dir: Path = MANIFESTS_DIR) -> dict[str, Any]:
+def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH, manifests_dir: Path | None = None) -> dict[str, Any]:
     """Build the v2 JSON payload."""
+    manifests_dir = manifests_dir or root / "docs" / "releases" / "manifests"
     modules = discover_modules(pkg_dir)
     functions = discover_functions(modules, root)
     public_names = set(read_public_export_names(init_path))
     public_qns = {qn for qn, info in functions.items() if info.function_name in public_names}
     lifecycle_by_qn, release_versions = read_function_lifecycle(manifests_dir)
+    validate_public_lifecycle_entries(functions, public_qns, lifecycle_by_qn, release_versions)
     used_all: set[str] = set()
     public_functions = []
     for root_qn in sorted(public_qns, key=lambda q: (functions[q].function_name, q)):
@@ -692,6 +715,13 @@ def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
     """Write only the public function call-flow JSON output."""
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if data_path == DATA_PATH:
+        update_generated_artifact_metadata(
+            artifact_key="public_function_call_flows_json",
+            label="Public function call-flow data",
+            generator="scripts/generate_public_function_call_flows_json.py",
+            output_path="docs/reference/_data/public-function-call-flows.json",
+        )
 
 
 def main() -> None:

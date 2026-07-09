@@ -2300,11 +2300,10 @@
       "source_path": "src/fabricops_kit/io/shared.py",
       "source_start_line": 195,
       "supports_live_contract": true,
-      "transitive_live_dependent_count": 3,
+      "transitive_live_dependent_count": 2,
       "transitive_live_dependents": [
         "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
-        "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
-        "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+        "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
       ]
     },
     {
@@ -9374,11 +9373,10 @@
           "source_path": "src/fabricops_kit/io/shared.py",
           "source_start_line": 195,
           "supports_live_contract": true,
-          "transitive_live_dependent_count": 3,
+          "transitive_live_dependent_count": 2,
           "transitive_live_dependents": [
             "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
-            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
-            "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
           ],
           "violation_details": [],
           "violation_types": []
@@ -10086,11 +10084,10 @@
           "source_path": "src/fabricops_kit/io/shared.py",
           "source_start_line": 195,
           "supports_live_contract": true,
-          "transitive_live_dependent_count": 3,
+          "transitive_live_dependent_count": 2,
           "transitive_live_dependents": [
             "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
-            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
-            "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
           ],
           "violation_details": [],
           "violation_types": []
@@ -10765,11 +10762,10 @@
           "source_path": "src/fabricops_kit/io/shared.py",
           "source_start_line": 195,
           "supports_live_contract": true,
-          "transitive_live_dependent_count": 3,
+          "transitive_live_dependent_count": 2,
           "transitive_live_dependents": [
             "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
-            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
-            "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
           ],
           "violation_details": [],
           "violation_types": []
@@ -11164,11 +11160,10 @@
           "source_path": "src/fabricops_kit/io/shared.py",
           "source_start_line": 195,
           "supports_live_contract": true,
-          "transitive_live_dependent_count": 3,
+          "transitive_live_dependent_count": 2,
           "transitive_live_dependents": [
             "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
-            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
-            "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet"
+            "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"
           ],
           "violation_details": [],
           "violation_types": []

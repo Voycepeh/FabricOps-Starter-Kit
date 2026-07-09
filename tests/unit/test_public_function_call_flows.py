@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 import time
 
+import pytest
+
 from scripts import generate_public_function_call_flows_dashboard as dashboard
 from scripts import generate_public_function_call_flows_json as flows
 
@@ -91,6 +93,25 @@ def write_manifest(root: Path) -> Path:
         encoding="utf-8",
     )
     return manifests
+
+
+def write_versioned_manifest(manifests: Path, version: str, status: str = "preview") -> None:
+    """Write one minimal release manifest for semantic version tests."""
+    manifests.mkdir(parents=True, exist_ok=True)
+    (manifests / f"{version}.yml").write_text(
+        f"release_version: {version}\n"
+        "functions:\n"
+        "  - name: public_a\n"
+        "    qualified_name: fabricops_kit.public_a.public_a\n"
+        f"    status: {status}\n"
+        "  - name: public_b\n"
+        "    qualified_name: fabricops_kit.public_b.public_b\n"
+        "    status: preview\n"
+        "metadata_tables:\n"
+        "templates:\n"
+        "dq_rules:\n",
+        encoding="utf-8",
+    )
 
 
 def info(name: str, path: str) -> flows.FunctionInfo:
@@ -181,7 +202,7 @@ def test_release_lifecycle_and_live_impact_contract(tmp_path: Path) -> None:
 
     private_shared = next(item for item in public_a["flow"] if item["function_name"] == "_private_shared")
     assert private_shared["direct_live_dependents"] == ["fabricops_kit.public_a.public_a"]
-    assert private_shared["transitive_live_dependents"] == ["fabricops_kit.public_a.public_a"]
+    assert private_shared["transitive_live_dependents"] == []
     assert private_shared["direct_live_dependents"] == sorted(set(private_shared["direct_live_dependents"]))
     assert private_shared["transitive_live_dependents"] == sorted(set(private_shared["transitive_live_dependents"]))
     assert private_shared["contract_classification"] == "live_critical_internal"
@@ -192,8 +213,8 @@ def test_release_lifecycle_and_live_impact_contract(tmp_path: Path) -> None:
     assert public_b_root["lifecycle_status"] == "preview"
 
 
-def test_public_lifecycle_is_not_inferred_from_all(tmp_path: Path) -> None:
-    """Validate exported public callables default to Preview without manifest authority."""
+def test_isolated_fixture_without_manifests_allows_preview_fallback(tmp_path: Path) -> None:
+    """Validate isolated fixtures with no manifests can still build as Preview."""
     root, pkg, init_path = write_project(tmp_path)
     manifests = root / "docs" / "releases" / "manifests"
     manifests.mkdir(parents=True)
@@ -202,6 +223,49 @@ def test_public_lifecycle_is_not_inferred_from_all(tmp_path: Path) -> None:
 
     assert {item["lifecycle_status"] for item in payload["public_functions"]} == {"preview"}
     assert all(item["live_since"] is None for item in payload["public_functions"])
+
+
+def test_missing_manifest_entry_fails_when_manifests_exist(tmp_path: Path) -> None:
+    """Validate manifest-backed generation fails when a public callable is omitted."""
+    root, pkg, init_path = write_project(tmp_path)
+    manifests = root / "docs" / "releases" / "manifests"
+    manifests.mkdir(parents=True)
+    (manifests / "0.1.0.yml").write_text(
+        "release_version: 0.1.0\n"
+        "functions:\n"
+        "  - name: public_a\n"
+        "    qualified_name: fabricops_kit.public_a.public_a\n"
+        "    status: live\n"
+        "    live_since: 0.1.0\n"
+        "metadata_tables:\n"
+        "templates:\n"
+        "dq_rules:\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Public callable missing from release manifests"):
+        flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path, manifests_dir=manifests)
+
+
+def test_release_manifests_use_semantic_version_order(tmp_path: Path) -> None:
+    """Validate 0.10.0 sorts after 0.2.0 for release-contract metadata."""
+    root, pkg, init_path = write_project(tmp_path)
+    manifests = root / "docs" / "releases" / "manifests"
+    write_versioned_manifest(manifests, "0.10.0", status="live")
+    write_versioned_manifest(manifests, "0.1.0", status="preview")
+    write_versioned_manifest(manifests, "0.2.0", status="preview")
+
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path, manifests_dir=manifests)
+
+    assert payload["release_contract"]["release_versions"] == ["0.1.0", "0.2.0", "0.10.0"]
+    assert payload["release_contract"]["latest_release_version"] == "0.10.0"
+    public_a = next(item for item in payload["public_functions"] if item["function_name"] == "public_a")
+    assert public_a["lifecycle_status"] == "live"
+    assert public_a["release_history"] == [
+        {"version": "0.1.0", "status": "preview"},
+        {"version": "0.2.0", "status": "preview"},
+        {"version": "0.10.0", "status": "live"},
+    ]
 
 
 def test_repository_manifest_lifecycle_authority() -> None:
