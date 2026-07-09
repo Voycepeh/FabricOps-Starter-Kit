@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from packaging.version import Version
+
 ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
@@ -181,6 +183,12 @@ def _load_manifest(path: Path) -> dict[str, Any] | None:
             key, value = raw_line.strip().split(":", 1)
             current_item[key] = _parse_scalar(value.strip())
     return result
+
+
+def load_release_manifests(manifests_dir: Path = ROOT / "docs" / "releases" / "manifests") -> list[dict[str, Any]]:
+    """Load release manifests in deterministic version order."""
+    manifests = [manifest for path in sorted(manifests_dir.glob("*.yml")) if (manifest := _load_manifest(path)) is not None]
+    return sorted(manifests, key=lambda manifest: Version(str(manifest.get("release_version", "0"))))
 
 
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:

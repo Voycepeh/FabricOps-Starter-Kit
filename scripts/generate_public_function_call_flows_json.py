@@ -15,10 +15,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.generated_artifact_metadata import update_generated_artifact_metadata
+from scripts.release_inventory import load_release_manifests
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
 DATA_PATH = ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json"
+MANIFESTS_DIR = ROOT / "docs" / "releases" / "manifests"
 SOURCE_JSON_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/docs/reference/_data/public-function-call-flows.json"
 SOURCE_BLOB_BASE_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/"
 LARGE_WIDTH_THRESHOLD = 10
@@ -30,6 +32,7 @@ ARCHITECTURE_VIOLATION_RULES = {
     "Type 4": "Shared function calls a private function from another file.",
     "Type 5": "Private function calls a private function from another file.",
 }
+PUBLIC_LIFECYCLE_STATUSES = {"live", "preview", "discontinued"}
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -63,9 +66,76 @@ class ModuleInfo:
     dispatch_targets: dict[str, set[str]]
 
 
+@dataclass(frozen=True)
+class ReleaseFunctionLifecycle:
+    """Release-manifest lifecycle metadata for a public function."""
+
+    lifecycle_status: str
+    live_since: str | None
+    discontinued_in: str | None
+    release_history: tuple[dict[str, str], ...]
+    release_versions: tuple[str, ...]
+
+
 def repo_relative(path: Path, root: Path = ROOT) -> str:
     """Return a POSIX path relative to the repository root."""
     return path.relative_to(root).as_posix()
+
+
+def read_function_lifecycle(manifests_dir: Path = MANIFESTS_DIR) -> tuple[dict[str, ReleaseFunctionLifecycle], list[str]]:
+    """Read public-function lifecycle metadata from release manifests only."""
+    manifests = load_release_manifests(manifests_dir)
+    versions = [str(manifest.get("release_version", "")) for manifest in manifests if manifest.get("release_version")]
+    history_by_qn: dict[str, list[dict[str, str]]] = {}
+    live_since_by_qn: dict[str, str] = {}
+    discontinued_by_qn: dict[str, str] = {}
+    for manifest in manifests:
+        version = str(manifest.get("release_version", ""))
+        for item in manifest.get("functions", []):
+            qn = item.get("qualified_name")
+            status = item.get("status")
+            if not qn or status not in PUBLIC_LIFECYCLE_STATUSES:
+                continue
+            history_by_qn.setdefault(str(qn), []).append({"version": version, "status": str(status)})
+            if status == "live" and str(qn) not in live_since_by_qn:
+                live_since_by_qn[str(qn)] = str(item.get("live_since") or item.get("introduced_in") or version)
+            if status == "discontinued":
+                discontinued_by_qn[str(qn)] = str(item.get("discontinued_in") or version)
+    lifecycle = {}
+    for qn, history in history_by_qn.items():
+        latest = history[-1]["status"]
+        lifecycle[qn] = ReleaseFunctionLifecycle(
+            lifecycle_status=latest,
+            live_since=live_since_by_qn.get(qn),
+            discontinued_in=discontinued_by_qn.get(qn),
+            release_history=tuple(history),
+            release_versions=tuple(item["version"] for item in history),
+        )
+    for manifest in manifests:
+        for item in manifest.get("functions", []):
+            qn = item.get("qualified_name")
+            name = item.get("name")
+            if qn in lifecycle and name:
+                lifecycle.setdefault(str(name), lifecycle[str(qn)])
+    return lifecycle, versions
+
+
+def validate_public_lifecycle_entries(
+    functions: dict[str, FunctionInfo],
+    public_qns: set[str],
+    lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle],
+    release_versions: list[str],
+) -> None:
+    """Fail clearly when release manifests omit a discovered public callable."""
+    if not release_versions:
+        return
+    missing = [
+        qn
+        for qn in sorted(public_qns, key=lambda item: (functions[item].function_name, item))
+        if qn not in lifecycle_by_qn and functions[qn].function_name not in lifecycle_by_qn
+    ]
+    if missing:
+        raise ValueError("Public callable missing from release manifests:\n" + "\n".join(missing))
 
 
 def module_name_for_path(path: Path, pkg_dir: Path = PKG_DIR) -> str:
@@ -310,12 +380,150 @@ def enrich_flow_candidates(flow: list[dict[str, Any]]) -> None:
         item["inline_candidate"] = bool(len(distinct_callers) == 1 and len(calls) == 1 and not repeated_by_parent and not recursive)
         item["promote_to_shared_candidate"] = bool(item["function_type"] == "private_function" and len(distinct_callers) > 1)
 
-def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH) -> dict[str, Any]:
+
+def public_lifecycle(qn: str, function_name: str, lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle]) -> ReleaseFunctionLifecycle:
+    """Return manifest lifecycle metadata for a public callable."""
+    return lifecycle_by_qn.get(qn) or lifecycle_by_qn.get(function_name) or ReleaseFunctionLifecycle("preview", None, None, tuple(), tuple())
+
+
+def lifecycle_fields(lifecycle: ReleaseFunctionLifecycle) -> dict[str, Any]:
+    """Return common serializable lifecycle fields."""
+    return {
+        "lifecycle_status": lifecycle.lifecycle_status,
+        "live_since": lifecycle.live_since,
+        "discontinued_in": lifecycle.discontinued_in,
+        "release_history": list(lifecycle.release_history),
+        "release_versions": list(lifecycle.release_versions),
+    }
+
+
+def public_contract_classification(status: str) -> str:
+    """Return the public contract classification for a lifecycle status."""
+    return {
+        "live": "live_public_function",
+        "preview": "preview_public_function",
+        "discontinued": "discontinued_public_function",
+    }[status]
+
+
+def public_contract_display(lifecycle: ReleaseFunctionLifecycle) -> str:
+    """Return display text for a public callable lifecycle."""
+    if lifecycle.lifecycle_status == "live":
+        return f"Live · Live since {lifecycle.live_since}" if lifecycle.live_since else "Live"
+    if lifecycle.lifecycle_status == "discontinued":
+        return f"Discontinued · Last available in {lifecycle.discontinued_in}" if lifecycle.discontinued_in else "Discontinued"
+    return "Preview"
+
+
+def calculate_live_impact(
+    public_functions: list[dict[str, Any]],
+    public_qns: set[str],
+    live_public_qns: set[str],
+    preview_public_qns: set[str],
+) -> dict[str, dict[str, Any]]:
+    """Calculate direct/transitive Live dependency impact for every callable node."""
+    impact: dict[str, dict[str, set[str] | bool | str]] = {}
+    preview_reached: set[str] = set()
+    for public_function in public_functions:
+        root_qn = public_function["qualified_name"]
+        is_live = root_qn in live_public_qns
+        is_preview = root_qn in preview_public_qns
+        for row in public_function["flow"]:
+            qn = row["qualified_name"]
+            record = impact.setdefault(qn, {"direct": set(), "transitive": set(), "preview": False})
+            if is_preview:
+                preview_reached.add(qn)
+                record["preview"] = True
+            if is_live and qn != root_qn and qn not in public_qns:
+                target = "direct" if row["parent_qualified_name"] == root_qn else "transitive"
+                record[target].add(root_qn)  # type: ignore[union-attr]
+    normalized: dict[str, dict[str, Any]] = {}
+    for qn, record in impact.items():
+        direct_set = record["direct"]  # type: ignore[assignment]
+        transitive_set = record["transitive"] - direct_set  # type: ignore[operator]
+        direct = sorted(direct_set)  # type: ignore[arg-type]
+        transitive = sorted(transitive_set)  # type: ignore[arg-type]
+        supports_live = bool(direct or transitive)
+        if qn in live_public_qns:
+            level = "direct_public_contract"
+        elif direct:
+            level = "direct_live_dependency"
+        elif transitive:
+            level = "transitive_live_dependency"
+        elif qn in preview_reached:
+            level = "preview_only"
+        else:
+            level = "none"
+        normalized[qn] = {
+            "direct_live_dependents": direct,
+            "direct_live_dependent_count": len(direct),
+            "transitive_live_dependents": transitive,
+            "transitive_live_dependent_count": len(transitive),
+            "supports_live_contract": supports_live or qn in live_public_qns,
+            "live_impact_level": level,
+        }
+    return normalized
+
+
+def internal_contract_classification(impact: dict[str, Any]) -> str:
+    """Return contract classification for a non-public callable."""
+    if impact["supports_live_contract"]:
+        return "live_critical_internal"
+    if impact["live_impact_level"] == "preview_only":
+        return "preview_only_internal"
+    return "internal_function"
+
+
+def internal_contract_display(classification: str) -> str:
+    """Return display text for a non-public callable classification."""
+    return {
+        "live_critical_internal": "Live-critical internal",
+        "preview_only_internal": "Preview-only internal",
+        "internal_function": "Internal",
+    }[classification]
+
+
+def enrich_rows_with_contract(
+    rows: list[dict[str, Any]],
+    impact_by_qn: dict[str, dict[str, Any]],
+    public_qns: set[str],
+    lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle],
+) -> None:
+    """Add lifecycle and Live-impact contract fields to flow rows."""
+    for row in rows:
+        qn = row["qualified_name"]
+        impact = impact_by_qn.get(qn, {})
+        row.update({
+            "direct_live_dependents": impact.get("direct_live_dependents", []),
+            "direct_live_dependent_count": impact.get("direct_live_dependent_count", 0),
+            "transitive_live_dependents": impact.get("transitive_live_dependents", []),
+            "transitive_live_dependent_count": impact.get("transitive_live_dependent_count", 0),
+            "supports_live_contract": impact.get("supports_live_contract", False),
+            "live_impact_level": impact.get("live_impact_level", "none"),
+        })
+        if qn in public_qns:
+            lifecycle = public_lifecycle(qn, row["function_name"], lifecycle_by_qn)
+            row.update(lifecycle_fields(lifecycle))
+            row["contract_classification"] = public_contract_classification(lifecycle.lifecycle_status)
+            row["contract_display"] = public_contract_display(lifecycle)
+        else:
+            row["lifecycle_status"] = "internal"
+            row["live_since"] = None
+            row["discontinued_in"] = None
+            row["release_history"] = []
+            row["release_versions"] = []
+            row["contract_classification"] = internal_contract_classification(row)
+            row["contract_display"] = internal_contract_display(row["contract_classification"])
+
+def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH, manifests_dir: Path | None = None) -> dict[str, Any]:
     """Build the v2 JSON payload."""
+    manifests_dir = manifests_dir or root / "docs" / "releases" / "manifests"
     modules = discover_modules(pkg_dir)
     functions = discover_functions(modules, root)
     public_names = set(read_public_export_names(init_path))
     public_qns = {qn for qn, info in functions.items() if info.function_name in public_names}
+    lifecycle_by_qn, release_versions = read_function_lifecycle(manifests_dir)
+    validate_public_lifecycle_entries(functions, public_qns, lifecycle_by_qn, release_versions)
     used_all: set[str] = set()
     public_functions = []
     for root_qn in sorted(public_qns, key=lambda q: (functions[q].function_name, q)):
@@ -335,12 +543,20 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             public_signals.append("architecture_violation")
         refactor_signals = calculate_refactor_signals(root_info, flow, direct_call_count, max_depth)
         signals = public_signals
+        lifecycle = public_lifecycle(root_qn, root_info.function_name, lifecycle_by_qn)
+        live_dependencies = sorted({item["qualified_name"] for item in flow if item["qualified_name"] != root_qn and item["qualified_name"] not in public_qns})
         public_functions.append({
             "function_name": root_info.function_name,
             "qualified_name": root_qn,
             "source_path": root_info.source_path,
             "source_start_line": root_info.source_start_line,
             "source_end_line": root_info.source_end_line,
+            **lifecycle_fields(lifecycle),
+            "contract_classification": public_contract_classification(lifecycle.lifecycle_status),
+            "contract_display": public_contract_display(lifecycle),
+            "contract_risk": lifecycle.lifecycle_status,
+            "live_critical_dependency_count": len(live_dependencies) if lifecycle.lifecycle_status == "live" else 0,
+            "live_critical_dependencies": live_dependencies if lifecycle.lifecycle_status == "live" else [],
             "flow": flow,
             "width": direct_call_count,
             "scope": len({item["qualified_name"] for item in flow}) - 1,
@@ -357,8 +573,21 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "refactor_signals": refactor_signals,
             "refactor_summary": summarize_refactor_signals(refactor_signals),
         })
-    defined_functions = [function_record(info, public_qns) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
+    live_public_qns = {item["qualified_name"] for item in public_functions if item["lifecycle_status"] == "live"}
+    preview_public_qns = {item["qualified_name"] for item in public_functions if item["lifecycle_status"] == "preview"}
+    impact = calculate_live_impact(public_functions, public_qns, live_public_qns, preview_public_qns)
+    for public_function in public_functions:
+        enrich_rows_with_contract(public_function["flow"], impact, public_qns, lifecycle_by_qn)
+    defined_functions = [function_record(info, public_qns, lifecycle_by_qn, impact) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
     unused = [unused_record(functions[qn]) for qn in sorted(set(functions) - used_all)]
+    release_contract = {
+        "release_versions": release_versions,
+        "latest_release_version": release_versions[-1] if release_versions else None,
+        "live_public_function_count": len(live_public_qns),
+        "preview_public_function_count": len(preview_public_qns),
+        "discontinued_public_function_count": sum(1 for item in public_functions if item["lifecycle_status"] == "discontinued"),
+        "live_critical_internal_count": sum(1 for qn, item in impact.items() if qn not in public_qns and item["supports_live_contract"]),
+    }
     return {
         "metadata": {
             "schema": "fabricops_public_function_call_flows_v2",
@@ -372,6 +601,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
         "defined_functions": defined_functions,
         "used_functions": sorted(used_all),
         "defined_but_not_used": unused,
+        "release_contract": release_contract,
         "summary": {
             "public_function_count": len(public_functions),
             "defined_function_count": len(functions),
@@ -432,9 +662,14 @@ def summarize_refactor_signals(refactor_signals: list[dict[str, Any]]) -> str:
     return f"Review {len(refactor_signals)} refactor signal(s): {signal_names}."
 
 
-def function_record(info: FunctionInfo, public_qns: set[str]) -> dict[str, Any]:
+def function_record(
+    info: FunctionInfo,
+    public_qns: set[str],
+    lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle],
+    impact_by_qn: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
     """Return a serializable function record."""
-    return {
+    record = {
         "function_name": info.function_name,
         "qualified_name": info.qualified_name,
         "source_path": info.source_path,
@@ -442,6 +677,25 @@ def function_record(info: FunctionInfo, public_qns: set[str]) -> dict[str, Any]:
         "source_end_line": info.source_end_line,
         "function_type": function_type(info, public_qns, info.qualified_name if info.qualified_name in public_qns else None),
     }
+    impact = impact_by_qn.get(info.qualified_name, {})
+    record.update({
+        "direct_live_dependents": impact.get("direct_live_dependents", []),
+        "direct_live_dependent_count": impact.get("direct_live_dependent_count", 0),
+        "transitive_live_dependents": impact.get("transitive_live_dependents", []),
+        "transitive_live_dependent_count": impact.get("transitive_live_dependent_count", 0),
+        "supports_live_contract": impact.get("supports_live_contract", False),
+        "live_impact_level": impact.get("live_impact_level", "none"),
+    })
+    if info.qualified_name in public_qns:
+        lifecycle = public_lifecycle(info.qualified_name, info.function_name, lifecycle_by_qn)
+        record.update(lifecycle_fields(lifecycle))
+        record["contract_classification"] = public_contract_classification(lifecycle.lifecycle_status)
+        record["contract_display"] = public_contract_display(lifecycle)
+    else:
+        record.update({"lifecycle_status": "internal", "live_since": None, "discontinued_in": None, "release_history": [], "release_versions": []})
+        record["contract_classification"] = internal_contract_classification(record)
+        record["contract_display"] = internal_contract_display(record["contract_classification"])
+    return record
 
 
 def unused_record(info: FunctionInfo) -> dict[str, Any]:
