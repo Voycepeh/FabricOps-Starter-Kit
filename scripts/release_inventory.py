@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import importlib
+import json
 import inspect
 import re
 import shutil
 import tomllib
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
-MAINTAINER_FIELDS = {"status", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
+MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
 TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
 TEMPLATE_DOCS = {
     "00_env_config": "docs/notebook-templates-implementation-guide/environment-config.md",
@@ -40,6 +42,7 @@ class ReleaseAsset:
     source_path: str
     documentation_path: str | None = None
     qualified_name: str | None = None
+    generated_fields: dict[str, Any] = field(default_factory=dict)
 
     def as_manifest_item(self) -> dict[str, Any]:
         """Return the generated manifest representation for the asset."""
@@ -49,6 +52,7 @@ class ReleaseAsset:
         item["source_path"] = self.source_path
         if self.documentation_path:
             item["documentation_path"] = self.documentation_path
+        item.update(self.generated_fields)
         return item
 
 
@@ -89,12 +93,30 @@ def discover_functions() -> list[ReleaseAsset]:
     return sorted(assets, key=lambda asset: asset.name)
 
 
+def metadata_schema_fingerprint(schema: Any) -> str:
+    """Return a stable SHA-256 fingerprint for a metadata table schema."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_rows
+
+    rows = metadata_table_schema_rows(schema)
+    payload = json.dumps(rows, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def discover_metadata_tables() -> list[ReleaseAsset]:
     """Discover metadata tables from the canonical metadata schema registry."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
     source_path = "src/fabricops_kit/config/metadata_schemas.py"
-    return [ReleaseAsset(name, source_path, f"docs/reference/metadata/{name.lower()}.md") for name in sorted(metadata_table_schema_registry())]
+    registry = metadata_table_schema_registry()
+    return [
+        ReleaseAsset(
+            name,
+            source_path,
+            f"docs/reference/metadata/{name.lower()}.md",
+            generated_fields={"schema_fingerprint": metadata_schema_fingerprint(registry[name])},
+        )
+        for name in sorted(registry)
+    ]
 
 
 def discover_templates() -> list[ReleaseAsset]:
@@ -198,6 +220,13 @@ def synchronize_manifest(existing: dict[str, Any] | None, discovered: dict[str, 
                 if key not in item and key in MAINTAINER_FIELDS:
                     item[key] = value
             item["status"] = previous.get("status", "preview")
+            if item["status"] == "live":
+                item["live_since"] = previous.get("live_since") or previous.get("introduced_in") or version
+            if group == "metadata_tables" and item.get("schema_fingerprint"):
+                if previous.get("schema_fingerprint") == item["schema_fingerprint"]:
+                    item["schema_since"] = previous.get("schema_since") or version
+                else:
+                    item["schema_since"] = version
             rows.append(item)
         for name, previous in existing_by_name.items():
             if name not in discovered_names and previous.get("status") == "discontinued":
@@ -224,7 +253,7 @@ def dump_manifest(manifest: dict[str, Any]) -> str:
     for group in GROUPS:
         lines.append(f"{group}:")
         for item in manifest[group]:
-            keys = ["name", "qualified_name", "source_path", "documentation_path", "status"]
+            keys = ["name", "qualified_name", "source_path", "documentation_path", "status", "live_since", "schema_since", "schema_fingerprint"]
             keys.extend(key for key in item if key not in keys)
             first = True
             for key in keys:
@@ -384,7 +413,7 @@ Signature: `{details['signature']}`
 
 def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
     rows = _metadata_rows(item["name"])
-    lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Source path: `{item['source_path']}`", "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
+    lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Live since: `{item.get('live_since', version)}`", "", f"Schema since: `{item.get('schema_since', version)}`", "", f"Schema fingerprint: `{item.get('schema_fingerprint', 'Not recorded')}`", "", f"Source path: `{item['source_path']}`", "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
     for row in rows:
         lines.append(f"| `{row['name']}` | `{row['type']}` | {row['nullable']} | FabricOps metadata schema registry | `{row['name']}` field in `{item['name']}`. |")
     lines.extend(["", "[Back to 0.1.0 metadata tables](index.md)"])

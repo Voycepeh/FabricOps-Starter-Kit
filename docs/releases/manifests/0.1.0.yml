@@ -21,36 +21,43 @@ functions:
     source_path: src/fabricops_kit/pipeline/profile_dataframe.py
     documentation_path: docs/api/reference/profile_dataframe.md
     status: live
+    live_since: 0.1.0
   - name: read_lakehouse_csv
     qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv
     source_path: src/fabricops_kit/io/read_lakehouse_csv.py
     documentation_path: docs/api/reference/read_lakehouse_csv.md
     status: live
+    live_since: 0.1.0
   - name: read_lakehouse_excel
     qualified_name: fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel
     source_path: src/fabricops_kit/io/read_lakehouse_excel.py
     documentation_path: docs/api/reference/read_lakehouse_excel.md
     status: live
+    live_since: 0.1.0
   - name: read_lakehouse_parquet
     qualified_name: fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet
     source_path: src/fabricops_kit/io/read_lakehouse_parquet.py
     documentation_path: docs/api/reference/read_lakehouse_parquet.md
     status: live
+    live_since: 0.1.0
   - name: read_lakehouse_table
     qualified_name: fabricops_kit.io.read_lakehouse_table.read_lakehouse_table
     source_path: src/fabricops_kit/io/read_lakehouse_table.py
     documentation_path: docs/api/reference/read_lakehouse_table.md
     status: live
+    live_since: 0.1.0
   - name: read_warehouse_query
     qualified_name: fabricops_kit.io.read_warehouse_query.read_warehouse_query
     source_path: src/fabricops_kit/io/read_warehouse_query.py
     documentation_path: docs/api/reference/read_warehouse_query.md
     status: live
+    live_since: 0.1.0
   - name: read_warehouse_table
     qualified_name: fabricops_kit.io.read_warehouse_table.read_warehouse_table
     source_path: src/fabricops_kit/io/read_warehouse_table.py
     documentation_path: docs/api/reference/read_warehouse_table.md
     status: live
+    live_since: 0.1.0
   - name: run_table_guardrails
     qualified_name: fabricops_kit.pipeline.run_table_guardrails
     source_path: src/fabricops_kit/pipeline/run_table_guardrails.py
@@ -121,6 +128,7 @@ functions:
     source_path: src/fabricops_kit/io/write_lakehouse_table.py
     documentation_path: docs/api/reference/write_lakehouse_table.md
     status: live
+    live_since: 0.1.0
   - name: write_pipeline_lineage
     qualified_name: fabricops_kit.pipeline.write_pipeline_lineage
     source_path: src/fabricops_kit/pipeline/write_pipeline_lineage.py
@@ -136,60 +144,89 @@ functions:
     source_path: src/fabricops_kit/io/write_warehouse_table.py
     documentation_path: docs/api/reference/write_warehouse_table.md
     status: live
+    live_since: 0.1.0
 metadata_tables:
   - name: METADATA_DATA_ACCESS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_access.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: 16b89b73a535097a12672f7f2b35206c0ab0eb17b42c522e3b66d4c5c9b6e1a7
   - name: METADATA_DATA_AGREEMENT
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_agreement.md
     status: live
+    live_since: 0.1.0
+    schema_since: 0.1.0
+    schema_fingerprint: 2603c56ecfa7e797050ad0b2cdfc880821dfefb3136b0737c9aa7aa2e9f6017d
   - name: METADATA_DATA_AGREEMENT_EVIDENCE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_agreement_evidence.md
     status: live
+    live_since: 0.1.0
+    schema_since: 0.1.0
+    schema_fingerprint: d5baf9001c1b647b0b3e8d4a6ba517311adaf7cde880c0772b30be4ec1818155
   - name: METADATA_DATA_CATALOGUE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_catalogue.md
     status: live
+    live_since: 0.1.0
+    schema_since: 0.1.0
+    schema_fingerprint: 4b53b76aad4333d07dbfbb21accedeb9d657eac37878f3433877a6f18637f059
   - name: METADATA_DATA_LINEAGE_TABLE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_lineage_table.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: 58e4884d8315f6dcc8a291b2a291d6c42e00d8dfd64034e892f41d8933064661
   - name: METADATA_DATA_STEWARD
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_steward.md
     status: live
+    live_since: 0.1.0
+    schema_since: 0.1.0
+    schema_fingerprint: 664c637c222e7abf02b70a6c1da5177b49f122a5105956f853842df77b1bb913
   - name: METADATA_ENRICHMENT_RULES
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_enrichment_rules.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: f0f4885aa254f875e1cf741e41287860fff0ee617a3de92d41d0c77e073c936d
   - name: METADATA_GUARDRAIL_RESULTS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_results.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: debd39704ce282883f41681da385f7aca45bfa7f90166340f602e3645266b685
   - name: METADATA_GUARDRAIL_RULES
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_rules.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: cce4dc9ca7b53abba619b39efe2ef5c229143453c50155df19665dc4be5c3d47
   - name: METADATA_NOTEBOOK_REGISTRY
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_notebook_registry.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: 8c139a75b788d8309d239bfe7606d34fb3c6a1b03db2988b55bc66baee11a5f9
   - name: METADATA_PIPELINE_RUNS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_pipeline_runs.md
     status: preview
+    schema_since: 0.1.0
+    schema_fingerprint: 236362572e50f3aa36ec9ef16e44a5a97825bd314db9f1a36bbe27ead8c3b145
 templates:
   - name: 00_env_config
     source_path: templates/notebooks/00_env_config.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/environment-config.md
     status: live
+    live_since: 0.1.0
   - name: 01_agreement
     source_path: templates/notebooks/01_agreement.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/agreement-setup.md
     status: live
+    live_since: 0.1.0
   - name: 02_pipeline
     source_path: templates/notebooks/02_pipeline.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/pipeline-execution.md
@@ -202,6 +239,7 @@ templates:
     source_path: templates/notebooks/99_explore.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/index.md
     status: live
+    live_since: 0.1.0
   - name: example_dq_rule_smoke_test
     source_path: templates/notebooks/example_dq_rule_smoke_test.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/index.md

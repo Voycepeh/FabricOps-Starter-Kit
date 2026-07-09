@@ -235,3 +235,69 @@ def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
     with zipfile.ZipFile(path) as archive:
         assert sorted(archive.namelist()) == expected
     assert "02_pipeline.ipynb" not in expected
+
+
+def test_metadata_manifest_records_schema_since_and_fingerprint():
+    """Verify metadata schemas are tied to package releases by fingerprint."""
+    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    assert manifest is not None
+    agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
+    assert agreement["live_since"] == "0.1.0"
+    assert agreement["schema_since"] == "0.1.0"
+    assert len(agreement["schema_fingerprint"]) == 64
+
+
+def test_metadata_schema_since_is_preserved_when_fingerprint_unchanged():
+    """Verify schema_since does not advance when a schema fingerprint is unchanged."""
+    existing = {
+        "release_version": "0.1.1",
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [
+            {
+                "name": "METADATA_DATA_AGREEMENT",
+                "source_path": "old.py",
+                "status": "live",
+                "live_since": "0.1.0",
+                "schema_since": "0.1.0",
+                "schema_fingerprint": "same",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "same"})],
+    }
+    manifest = ri.synchronize_manifest(existing, discovered, "0.1.1")
+    assert manifest["metadata_tables"][0]["schema_since"] == "0.1.0"
+
+
+def test_metadata_schema_since_advances_when_fingerprint_changes():
+    """Verify schema_since moves to the package version when schema structure changes."""
+    existing = {
+        "release_version": "0.2.0",
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [
+            {
+                "name": "METADATA_DATA_AGREEMENT",
+                "source_path": "old.py",
+                "status": "live",
+                "live_since": "0.1.0",
+                "schema_since": "0.1.0",
+                "schema_fingerprint": "old",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "new"})],
+    }
+    manifest = ri.synchronize_manifest(existing, discovered, "0.2.0")
+    assert manifest["metadata_tables"][0]["schema_since"] == "0.2.0"

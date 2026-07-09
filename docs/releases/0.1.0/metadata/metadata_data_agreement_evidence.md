@@ -6,6 +6,12 @@
 
 Package version: `0.1.0`
 
+Live since: `0.1.0`
+
+Schema since: `0.1.0`
+
+Schema fingerprint: `d5baf9001c1b647b0b3e8d4a6ba517311adaf7cde880c0772b30be4ec1818155`
+
 Source path: `src/fabricops_kit/config/metadata_schemas.py`
 
 Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`
