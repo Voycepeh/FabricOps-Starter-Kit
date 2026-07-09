@@ -247,6 +247,29 @@ def test_missing_manifest_entry_fails_when_manifests_exist(tmp_path: Path) -> No
         flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path, manifests_dir=manifests)
 
 
+def test_read_function_lifecycle_accepts_custom_manifest_directory(tmp_path: Path) -> None:
+    """Validate call-flow lifecycle loading works with explicit manifest directories."""
+    manifests = tmp_path / "custom-manifests"
+    manifests.mkdir()
+    (manifests / "0.1.0.yml").write_text(
+        "release_version: 0.1.0\n"
+        "functions:\n"
+        "  - name: public_a\n"
+        "    qualified_name: fabricops_kit.public_a.public_a\n"
+        "    status: live\n"
+        "    live_since: 0.1.0\n"
+        "metadata_tables:\n"
+        "templates:\n"
+        "dq_rules:\n",
+        encoding="utf-8",
+    )
+
+    lifecycle_by_qn, release_versions = flows.read_function_lifecycle(manifests)
+
+    assert release_versions == ["0.1.0"]
+    assert lifecycle_by_qn["fabricops_kit.public_a.public_a"].lifecycle_status == "live"
+
+
 def test_release_manifests_use_semantic_version_order(tmp_path: Path) -> None:
     """Validate 0.10.0 sorts after 0.2.0 for release-contract metadata."""
     root, pkg, init_path = write_project(tmp_path)

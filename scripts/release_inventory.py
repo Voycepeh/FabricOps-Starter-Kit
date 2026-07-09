@@ -186,12 +186,6 @@ def _load_manifest(path: Path) -> dict[str, Any] | None:
     return result
 
 
-def load_release_manifests(manifests_dir: Path = ROOT / "docs" / "releases" / "manifests") -> list[dict[str, Any]]:
-    """Load release manifests in deterministic version order."""
-    manifests = [manifest for path in sorted(manifests_dir.glob("*.yml")) if (manifest := _load_manifest(path)) is not None]
-    return sorted(manifests, key=lambda manifest: Version(str(manifest.get("release_version", "0"))))
-
-
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
     if manifest.get("release_version") != version:
         raise ValueError(f"Manifest release_version {manifest.get('release_version')!r} does not match pyproject.toml version {version!r}.")
@@ -496,17 +490,21 @@ def _dq_rule_page(version: str, item: dict[str, Any], notice: str) -> str:
 
 
 def _parse_release_date(value: Any) -> str:
-    """Return a release date as ``YYYY-MM-DD`` text or an empty fallback."""
+    """Return a strictly valid ``YYYY-MM-DD`` release date or empty fallback."""
     if value is None:
         return ""
     if isinstance(value, datetime):
-        return value.date().isoformat()
+        return ""
     if isinstance(value, date):
         return value.isoformat()
     text = str(value).strip()
     if not text or text.lower() in {"null", "none", "not specified"}:
         return ""
-    return text[:10]
+    try:
+        parsed = date.fromisoformat(text)
+    except ValueError:
+        return ""
+    return text if text == parsed.isoformat() else ""
 
 
 def _semantic_version_key(version: Any) -> tuple[int, ...]:
@@ -525,19 +523,23 @@ def _release_description(manifest: dict[str, Any]) -> str:
     return first_sentence or motivation
 
 
-def release_manifest_paths() -> list[Path]:
-    """Return all available release manifest paths in the repository."""
-    return sorted((ROOT / "docs" / "releases" / "manifests").glob("*.yml"))
+def release_manifest_paths(
+    manifests_dir: Path = ROOT / "docs" / "releases" / "manifests",
+) -> list[Path]:
+    """Return all available release manifest paths in deterministic path order."""
+    return sorted(manifests_dir.glob("*.yml"))
 
 
-def load_release_manifests() -> list[dict[str, Any]]:
-    """Load every available release manifest."""
+def load_release_manifests(
+    manifests_dir: Path = ROOT / "docs" / "releases" / "manifests",
+) -> list[dict[str, Any]]:
+    """Load release manifests from ``manifests_dir`` in semantic version order."""
     manifests = []
-    for path in release_manifest_paths():
+    for path in release_manifest_paths(manifests_dir):
         manifest = _load_manifest(path)
         if manifest is not None:
             manifests.append(manifest)
-    return manifests
+    return sorted(manifests, key=lambda manifest: Version(str(manifest.get("release_version", "0"))))
 
 
 def sort_release_manifests(manifests: list[dict[str, Any]]) -> list[dict[str, Any]]:

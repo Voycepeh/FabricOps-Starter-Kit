@@ -93,6 +93,64 @@ def test_release_inventory_output_order_is_deterministic():
     assert [item["name"] for item in manifest["functions"]] == ["a", "b"]
 
 
+def test_load_release_manifests_reads_default_manifest_directory():
+    """Verify the no-argument loader preserves release-page default discovery."""
+    manifests = ri.load_release_manifests()
+
+    assert [manifest["release_version"] for manifest in manifests] == [ri.read_package_version()]
+
+
+def test_load_release_manifests_reads_only_supplied_directory(tmp_path):
+    """Verify custom manifest directories are isolated from repository manifests."""
+    manifests_dir = tmp_path / "manifests"
+    manifests_dir.mkdir()
+    (manifests_dir / "0.2.0.yml").write_text(
+        "release_version: 0.2.0\n"
+        "release_status: live\n"
+        "release_date: 2026-08-01\n"
+        "functions:\n"
+        "metadata_tables:\n"
+        "templates:\n"
+        "dq_rules:\n",
+        encoding="utf-8",
+    )
+
+    manifests = ri.load_release_manifests(manifests_dir)
+
+    assert [manifest["release_version"] for manifest in manifests] == ["0.2.0"]
+
+
+def test_valid_live_release_date_passes_strict_validation():
+    """Verify exact ISO release dates are accepted for Live manifests."""
+    manifest = {
+        "release_version": "1.0.0",
+        "release_status": "live",
+        "release_date": "2026-07-08",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    ri._validate_manifest(manifest, "1.0.0")
+
+
+def test_malformed_live_release_dates_fail_clearly():
+    """Verify Live release dates reject prose, malformed dates, and timestamps."""
+    for release_date in [None, "yesterday", "2026-7-8", "2026-07-08T00:00:00"]:
+        manifest = {
+            "release_version": "1.0.0",
+            "release_status": "live",
+            "release_date": release_date,
+            "functions": [],
+            "metadata_tables": [],
+            "templates": [],
+            "dq_rules": [],
+        }
+        with pytest.raises(ValueError, match="must include release_date in YYYY-MM-DD format"):
+            ri._validate_manifest(manifest, "1.0.0")
+
+
 def test_release_contract_pages_render_live_only_local_inventory():
     """Verify release overview inventory contains only Live local detail links."""
     ri.render_release_pages()
