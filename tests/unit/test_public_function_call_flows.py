@@ -726,7 +726,8 @@ def test_dashboard_lifecycle_and_live_contract_controls_render() -> None:
     assert "Discontinued in ${f.discontinued_in}" in html
     assert "humanizeValue(f.contract_classification)" in html
     assert "humanizeValue(f.contract_risk)" in html
-    assert "Live-critical dependencies" in html
+    assert "Helpers supporting this Live function" in html
+    assert "live_critical_dependency_count" in html
     assert "This function is part of the supported FabricOps public contract" in html
     assert "This function is available for evaluation" in html
     assert "This function is no longer part of the current supported public contract" in html
@@ -737,11 +738,13 @@ def test_dashboard_live_critical_internal_helpers_and_exports_render() -> None:
     """Verify dashboard surfaces Live-impact helper details without relabelling helpers as public."""
     html = dashboard.render_dashboard()
 
-    assert "Supports Live contract" in html
-    assert "Direct Live dependency" in html
-    assert "Transitive Live dependency" in html
-    assert "Preview-only internal" in html
-    assert "Highlight Live-critical" in html
+    assert "Supports Live function" in html
+    assert "Supports Live contract" not in html
+    assert "Direct Live dependency" not in html
+    assert "Transitive Live dependency" not in html
+    assert "Preview-only internal" not in html
+    assert '<span class="badge muted">Internal</span>' not in html
+    assert "Highlight helpers supporting Live functions" in html
     assert "highlightLiveCriticalOnly" in html
     assert "direct_live_dependent_count" in html
     assert "transitive_live_dependent_count" in html
@@ -751,6 +754,15 @@ def test_dashboard_live_critical_internal_helpers_and_exports_render() -> None:
     assert "contract_classification:f.contract_classification" in html
     assert "contract_risk:f.contract_risk" in html
     assert "live_critical_dependency_count:f.live_critical_dependency_count" in html
+    assert "live_impact_level:n.live_impact_level" in html
+    assert "supports_live_contract:!!n.supports_live_contract" in html
+    assert "Used by Live public functions: ${unique.join(', ')}" in html
+    assert ".map(dependentFunctionName).filter(Boolean).sort()" in html
+    assert "direct_live_dependents:n.direct_live_dependents||[]" in html
+    assert "transitive_live_dependents:n.transitive_live_dependents||[]" in html
+    assert "Architecture violations exist in this flow. Internal helper changes may affect the supported Live contract." in html
+    assert "Architecture violations exist in this Preview flow. Review helper boundaries before further development or promotion to Live." in html
+    assert "Architecture violations exist in this historical flow." in html
     assert "Public root" in html
 
 def test_json_generator_writes_only_json(tmp_path: Path) -> None:
