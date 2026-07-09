@@ -425,13 +425,14 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="metric-chip">Scope ${esc(f.derived_scope)}</span>' in html
     assert '<span class="metric-chip">Depth ${esc(f.derived_depth)}</span>' in html
     assert '<span class="metric-chip">Files ${esc((f.files_touched||[]).length)}</span>' in html
-    assert '${badges(publicSignalsForFunction(f))}</div></div>`' in html
-    assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
+    assert '${badges(publicSignalsForFunction(f))}' in html
+    assert "functionLink(f)}<div>${publicLifecycleBits(f)}</div></td><td>${esc(f.derived_width)}</td>" in html
     assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)} · ${githubLink(f)}</td>" in html
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
     assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
     assert "function enrichInventoryRows(rows,flow)" in html
-    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
+    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}<div>${n.function_type==='public_function'?'':liveImpactChip(n)}</div>" in html
+    assert "<td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
     assert "<td>${n.promote_to_shared_candidate?'Yes':'No'}</td><td>${esc(n.source_path)}</td>" in html
     assert ">Parent</button>" not in html
     assert "large_width_or_depth" in html
@@ -681,8 +682,8 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py" in html
     assert "Commit only the regenerated docs/reference/_data/public-function-call-flows.json architecture contract" in html
     assert "Mention any other stale generated docs/dashboard artifacts in the PR summary instead of committing them" in html
-    assert "do not preserve backwards compatibility" in html
     assert "Do not add wrappers, aliases, adapters, resolver layers, or transitional shims" in html
+    assert "Preserve public API behavior where practical for this cleanup mode" not in html
     assert "Run targeted tests first" in html
     assert "Acceptance criteria:" in html
     assert "clean the complete selected public callable flow" in html
@@ -697,6 +698,44 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "Do not clean sibling functions, downstream helpers, or adjacent violations" in html
     assert "docs/assets/function-call-graph-dashboard.html" not in html
 
+    assert "Backward compatibility applies to the selected public callable boundary" in html
+    assert "not to its private or non-exported shared helper chain" in html
+    assert "Private and non-exported shared helpers may be renamed, moved, merged, split, inlined, rewritten, deleted, or replaced" in html
+    assert "An unchanged signature alone is insufficient" in html
+    assert "Verify observable behaviour, accepted inputs, outputs, side effects, persisted contracts, and documented failure behaviour" in html
+    assert "For a Live public callable, preserve the supported public contract" in html
+    assert "Preview callables are not covered by Live backward-compatibility guarantees" in html
+    assert "Discontinued callables do not imply current support" in html
+    assert "identify each changed public contract clearly in the PR summary" in html
+    assert "Internal helper changes alone are not public breaking changes" in html
+    assert "Public compatibility is evaluated at the selected callable boundary" in html
+    assert "Internal helper structure may change completely" in html
+    assert "Preserve mode verifies inputs, outputs, side effects, persisted contracts, and errors, not only the signature" in html
+    assert "Breaking mode identifies every intentionally changed public contract" in html
+    assert "Obsolete wrappers, aliases, adapters, and shims are removed unless explicitly required" in html
+    assert "supports_live_contract:!!n.supports_live_contract" in html
+    assert "live_impact_level:n.live_impact_level" in html
+
+
+
+def test_agents_backward_compatibility_policy_is_public_contract_scoped() -> None:
+    """Verify repository compatibility guidance distinguishes public contracts from helper structure."""
+    text = Path("AGENTS.md").read_text(encoding="utf-8")
+
+    assert "## Backward compatibility and public contracts" in text
+    assert "Backward compatibility applies to supported public callables" in text
+    assert "It does not require preserving private or shared" in text
+    assert "implementation structure" in text
+    assert "The internal implementation may be replaced completely" in text
+    assert "renamed, moved, merged, split, inlined" in text
+    assert "Do not preserve obsolete internal wrappers, aliases, adapters, resolver layers" in text
+    assert "An unchanged function signature alone does not prove backward compatibility" in text
+    assert "observable behaviour, accepted inputs, return contracts, side effects" in text
+    assert "persisted outputs, and failure behaviour" in text
+    assert "Preview callables are not covered by Live backward-compatibility guarantees" in text
+    assert "Discontinued callables do not imply current support" in text
+    assert "Clearly identify every changed" in text
+    assert "public contract in the PR summary" in text
 
 def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
     """Validate optional standalone/debug mode can still embed JSON."""
@@ -708,6 +747,64 @@ def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
     assert "public-function-call-flows-json" in html
     assert "fabricops_public_function_call_flows_v2" in html
 
+
+def test_dashboard_lifecycle_and_live_contract_controls_render() -> None:
+    """Verify dashboard exposes lifecycle filtering and Live-contract presentation."""
+    html = dashboard.render_dashboard()
+
+    assert 'id="lifecycleFilter"' in html
+    assert '<option value="" selected>All</option>' in html
+    assert '<option value="live">Live</option>' in html
+    assert '<option value="preview">Preview</option>' in html
+    assert '<option value="discontinued">Discontinued</option>' in html
+    assert "lifecycleValue(f)==='live'" in html
+    assert "s==='preview'" in html
+    assert "s==='discontinued'" in html
+    assert "Live since ${f.live_since}" in html
+    assert "Discontinued in ${f.discontinued_in}" in html
+    assert "humanizeValue(f.contract_classification)" in html
+    assert "humanizeValue(f.contract_risk)" in html
+    assert "helperDependencyLabel(f)" in html
+    assert "Helpers supporting this Live function" in html
+    assert "Helpers in this function flow" in html
+    assert "Helpers in this historical flow" in html
+    assert "live_critical_dependency_count" in html
+    assert "This function is part of the supported FabricOps public contract" in html
+    assert "This function is available for evaluation" in html
+    assert "This function is no longer part of the current supported public contract" in html
+    assert "Lifecycle data missing for public function" in html
+
+
+def test_dashboard_live_critical_internal_helpers_and_exports_render() -> None:
+    """Verify dashboard surfaces Live-impact helper details without relabelling helpers as public."""
+    html = dashboard.render_dashboard()
+
+    assert "Supports Live function" in html
+    assert "Supports Live contract" not in html
+    assert "Direct Live dependency" not in html
+    assert "Transitive Live dependency" not in html
+    assert "Preview-only internal" not in html
+    assert '<span class="badge muted">Internal</span>' not in html
+    assert "Highlight helpers supporting Live functions" in html
+    assert "highlightLiveCriticalOnly" in html
+    assert "direct_live_dependent_count" in html
+    assert "transitive_live_dependent_count" in html
+    assert "direct_live_dependents" in html
+    assert "transitive_live_dependents" in html
+    assert "lifecycle_status:f.lifecycle_status" in html
+    assert "contract_classification:f.contract_classification" in html
+    assert "contract_risk:f.contract_risk" in html
+    assert "live_critical_dependency_count:f.live_critical_dependency_count" in html
+    assert "live_impact_level:n.live_impact_level" in html
+    assert "supports_live_contract:!!n.supports_live_contract" in html
+    assert "Used by Live public functions: ${unique.join(', ')}" in html
+    assert ".map(dependentFunctionName).filter(Boolean).sort()" in html
+    assert "direct_live_dependents:n.direct_live_dependents||[]" in html
+    assert "transitive_live_dependents:n.transitive_live_dependents||[]" in html
+    assert "Architecture violations exist in this flow. Internal helper changes may affect the supported Live contract." in html
+    assert "Architecture violations exist in this Preview flow. Review helper boundaries before further development or promotion to Live." in html
+    assert "Architecture violations exist in this historical flow." in html
+    assert "Public root" in html
 
 def test_json_generator_writes_only_json(tmp_path: Path) -> None:
     """Validate the JSON writer does not create dashboard HTML."""
