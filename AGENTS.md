@@ -21,6 +21,45 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` stores observed table and column profiles, `METADATA_GUARDRAIL_RULES` is approved
   guardrail intent, and `METADATA_GUARDRAIL_RESULTS` is runtime outcomes.
 
+## Backward compatibility and public contracts
+
+Backward compatibility applies to supported public callables and externally
+consumed data contracts. It does not require preserving private or shared
+implementation structure.
+
+For a Live public callable, preserve its externally observable contract unless
+the task explicitly authorizes a breaking change. The public contract includes:
+
+- public import path and exported name
+- parameter names, order, defaults, and accepted inputs
+- return type, schema, shape, and documented meaning
+- documented side effects and persisted outputs
+- documented exceptions and normal failure behaviour
+
+The internal implementation may be replaced completely. Private helpers,
+non-exported shared helpers, helper filenames, call chains, internal imports,
+and internal algorithms may be renamed, moved, merged, split, inlined,
+rewritten, deleted, or replaced with a different helper chain.
+
+Do not preserve obsolete internal wrappers, aliases, adapters, resolver layers,
+or transitional shims merely because internal implementation changed.
+
+An unchanged function signature alone does not prove backward compatibility.
+Verify observable behaviour, accepted inputs, return contracts, side effects,
+persisted outputs, and failure behaviour.
+
+Preview callables are not covered by Live backward-compatibility guarantees.
+Preserve only behaviour required by the task and existing tests unless the task
+explicitly promotes or freezes the callable.
+
+Discontinued callables do not imply current support. Preserve historical
+behaviour only when the task explicitly requires it.
+
+When a task explicitly permits breaking cleanup, do not add compatibility
+wrappers or deprecated aliases unless requested. Clearly identify every changed
+public contract in the PR summary, and do not claim a change is non-breaking
+merely because the signature is unchanged.
+
 
 ## Function architecture rules
 

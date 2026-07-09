@@ -698,6 +698,44 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "Do not clean sibling functions, downstream helpers, or adjacent violations" in html
     assert "docs/assets/function-call-graph-dashboard.html" not in html
 
+    assert "Backward compatibility applies to the selected public callable boundary" in html
+    assert "not to its private or non-exported shared helper chain" in html
+    assert "Private and non-exported shared helpers may be renamed, moved, merged, split, inlined, rewritten, deleted, or replaced" in html
+    assert "An unchanged signature alone is insufficient" in html
+    assert "Verify observable behaviour, accepted inputs, outputs, side effects, persisted contracts, and documented failure behaviour" in html
+    assert "For a Live public callable, preserve the supported public contract" in html
+    assert "Preview callables are not covered by Live backward-compatibility guarantees" in html
+    assert "Discontinued callables do not imply current support" in html
+    assert "identify each changed public contract clearly in the PR summary" in html
+    assert "Internal helper changes alone are not public breaking changes" in html
+    assert "Public compatibility is evaluated at the selected callable boundary" in html
+    assert "Internal helper structure may change completely" in html
+    assert "Preserve mode verifies inputs, outputs, side effects, persisted contracts, and errors, not only the signature" in html
+    assert "Breaking mode identifies every intentionally changed public contract" in html
+    assert "Obsolete wrappers, aliases, adapters, and shims are removed unless explicitly required" in html
+    assert "supports_live_contract:!!n.supports_live_contract" in html
+    assert "live_impact_level:n.live_impact_level" in html
+
+
+
+def test_agents_backward_compatibility_policy_is_public_contract_scoped() -> None:
+    """Verify repository compatibility guidance distinguishes public contracts from helper structure."""
+    text = Path("AGENTS.md").read_text(encoding="utf-8")
+
+    assert "## Backward compatibility and public contracts" in text
+    assert "Backward compatibility applies to supported public callables" in text
+    assert "It does not require preserving private or shared" in text
+    assert "implementation structure" in text
+    assert "The internal implementation may be replaced completely" in text
+    assert "renamed, moved, merged, split, inlined" in text
+    assert "Do not preserve obsolete internal wrappers, aliases, adapters, resolver layers" in text
+    assert "An unchanged function signature alone does not prove backward compatibility" in text
+    assert "observable behaviour, accepted inputs, return contracts, side effects" in text
+    assert "persisted outputs, and failure behaviour" in text
+    assert "Preview callables are not covered by Live backward-compatibility guarantees" in text
+    assert "Discontinued callables do not imply current support" in text
+    assert "Clearly identify every changed" in text
+    assert "public contract in the PR summary" in text
 
 def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
     """Validate optional standalone/debug mode can still embed JSON."""
