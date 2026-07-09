@@ -93,12 +93,13 @@ def test_release_inventory_output_order_is_deterministic():
     assert [item["name"] for item in manifest["functions"]] == ["a", "b"]
 
 
-def test_release_contract_pages_render_live_only_local_indexes():
-    """Verify public release index tables contain only Live local detail links."""
+def test_release_contract_pages_render_live_only_local_inventory():
+    """Verify release overview inventory contains only Live local detail links."""
+    ri.render_release_pages()
     version = ri.read_package_version()
-    content = (ri.ROOT / "docs" / "releases" / version / "functions" / "index.md").read_text(encoding="utf-8")
-    assert "| Status | Function | Description | Details |" in content
-    assert "[Open](read_lakehouse_table.md)" in content
+    content = (ri.ROOT / "docs" / "releases" / version / "index.md").read_text(encoding="utf-8")
+    assert "| Function | Description |" in content
+    assert "[`read_lakehouse_table`](functions/read_lakehouse_table.md)" in content
     assert "docs/api/reference" not in content
     assert "| Status | Name | Documentation | Source |" not in content
     assert "src/fabricops_kit/io/read_lakehouse_table.py" not in content
@@ -150,40 +151,99 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
 
 
 def test_release_generates_exact_live_detail_pages_and_no_preview_pages():
-    """Verify 0.1.0 frozen details exist exactly for Live assets."""
+    """Verify frozen details exist only where release-specific details are useful."""
+    ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
-    assert len(list((base / "functions").glob("*.md"))) - 1 == 9
-    assert len(list((base / "metadata").glob("*.md"))) - 1 == 4
-    assert len(list((base / "templates").glob("*.md"))) - 1 == 3
+    assert len(list((base / "functions").glob("*.md"))) == 9
+    assert len(list((base / "metadata").glob("*.md"))) == 4
+    assert not (base / "templates").exists()
     assert not (base / "dq-rules").exists()
+    assert not (base / "functions" / "index.md").exists()
+    assert not (base / "metadata" / "index.md").exists()
     assert not (base / "functions" / "setup_notebook.md").exists()
-    assert not (base / "templates" / "02_pipeline.md").exists()
 
 
-def test_release_homepage_only_lists_live_non_empty_categories():
-    """Verify the homepage cards omit empty DQ rules and summarize Live counts."""
+def test_release_overview_lists_live_inventory_in_collapsible_sections():
+    """Verify release overview sections include counts and direct asset links."""
+    ri.render_release_pages()
     content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
-    assert "9</strong><span>Live functions" in content
-    assert "4</strong><span>Live metadata tables" in content
-    assert "3</strong><span>Live notebook templates" in content
+
+    assert '<details class="fabricops-release-inventory" markdown>' in content
+    assert "<summary>9 Live functions</summary>" in content
+    assert "<summary>4 Live metadata tables</summary>" in content
+    assert "<summary>3 Live notebook templates</summary>" in content
     assert "Live dq rules" not in content
-    assert "Download wheel" in content
-    assert "SHA256SUMS.txt" in content
+    assert "| Function | Description |" in content
+    assert "| Metadata table | Purpose |" in content
+    assert "| Notebook template | Purpose |" in content
+    assert "[`profile_dataframe`](functions/profile_dataframe.md)" in content
+    assert "[`METADATA_DATA_CATALOGUE`](metadata/metadata_data_catalogue.md)" in content
+    assert "[`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb)" in content
+    assert "/blob/main/" not in content
+    assert "| Status |" not in content
+    assert "Details" not in content
+    assert "[Open]" not in content
 
 
-def test_release_category_links_are_local():
-    """Verify category indexes link to local frozen detail pages."""
+def test_live_release_requires_release_date():
+    """Verify Live release manifests must include a release date."""
+    manifest = {"release_version": "1.0.0", "release_status": "live", "release_date": None, "functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}
+
+    with pytest.raises(ValueError, match="must include release_date"):
+        ri._validate_manifest(manifest, "1.0.0")
+
+
+def test_individual_release_overview_is_concise_record():
+    """Verify individual release overview uses the concise release-record layout."""
+    ri.render_release_pages()
+    version = ri.read_package_version()
+    content = (ri.ROOT / "docs" / "releases" / version / "index.md").read_text(encoding="utf-8")
+
+    assert "- Release date: `2026-07-08`" in content
+    assert '<a class="md-button md-button--primary" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0">' in content
+    assert "View GitHub Release" in content
+    assert "## Downloads" not in content
+    assert "Download wheel" not in content
+    assert "Download source distribution" not in content
+    assert "Download notebook pack" not in content
+    assert "SHA256SUMS.txt" not in content
+    assert "## Get started" not in content
+    assert "## Why this release exists" not in content
+    assert "\n## Known limitations" not in content
+    assert "\n## Upgrade instructions" not in content
+    assert content.count("## Changelog") == 1
+    assert "### Added" in content
+    assert "### Known limitations" in content
+    assert "### Upgrade instructions" in content
+    assert "<summary>9 Live functions</summary>" in content
+    assert "<summary>4 Live metadata tables</summary>" in content
+    assert "<summary>3 Live notebook templates</summary>" in content
+
+
+def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
+    """Verify DQ sections link directly to detail pages and empty groups are omitted."""
+    manifest = {"github_owner": "Voycepeh", "github_repo": "FabricOps-Starter-Kit"}
+    live = {"functions": [], "metadata_tables": [], "templates": [], "dq_rules": [{"name": "not_null", "purpose": "Values must be present."}]}
+
+    sections = ri._release_inventory_sections(manifest, "1.2.3", live)
+    content = "\n".join(sections)
+
+    assert "<summary>1 Live DQ rules</summary>" in content
+    assert "| DQ rule | Purpose |" in content
+    assert "[`not_null`](dq-rules/not-null.md)" in content
+    assert "Live functions" not in content
+    assert "Live metadata tables" not in content
+    assert "Live notebook templates" not in content
+
+
+def test_release_detail_back_links_return_to_release_overview():
+    """Verify detail page back links return directly to the release overview."""
+    ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
-    checks = {
-        "functions": "[Open](read_lakehouse_excel.md)",
-        "metadata": "[Open](metadata_data_catalogue.md)",
-        "templates": "[Open](00_env_config.md)",
-    }
-    for folder, expected in checks.items():
-        content = (base / folder / "index.md").read_text(encoding="utf-8")
-        assert expected in content
-        assert "../../api/reference" not in content
-        assert "../../reference" not in content
+    for path in [base / "functions" / "read_lakehouse_excel.md", base / "metadata" / "metadata_data_catalogue.md"]:
+        content = path.read_text(encoding="utf-8")
+        assert "[Back to release overview](../index.md)" in content
+        assert "[Back to 0.1.0" not in content
 
 
 def test_no_release_table_uses_raw_source_path_columns():
@@ -210,13 +270,14 @@ def test_release_generation_is_deterministic_and_second_run_clean():
     assert first == second
 
 
-def test_mkdocs_navigation_has_no_empty_release_dq_section():
-    """Verify 0.1.0 navigation omits the empty DQ release section."""
+def test_mkdocs_navigation_links_only_release_overview():
+    """Verify 0.1.0 navigation omits removed category summary pages."""
     content = (ri.ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    assert "releases/0.1.0/functions/index.md" in content
-    assert "releases/0.1.0/metadata/index.md" in content
-    assert "releases/0.1.0/templates/index.md" in content
-    assert "releases/0.1.0/dq-rules" not in content
+    assert "0.1.0: releases/0.1.0/index.md" in content
+    assert "releases/0.1.0/functions/index.md" not in content
+    assert "releases/0.1.0/metadata/index.md" not in content
+    assert "releases/0.1.0/templates/index.md" not in content
+    assert "releases/0.1.0/dq-rules/index.md" not in content
 
 
 def test_release_renderer_creates_version_directory():
@@ -301,3 +362,43 @@ def test_metadata_schema_since_advances_when_fingerprint_changes():
     }
     manifest = ri.synchronize_manifest(existing, discovered, "0.2.0")
     assert manifest["metadata_tables"][0]["schema_since"] == "0.2.0"
+
+
+def test_release_history_index_renders_all_manifests_as_sorted_table_rows():
+    """Verify release manifests render as newest-first release history rows."""
+    manifests = [
+        {
+            "release_version": "0.1.0",
+            "release_date": "2026-07-08",
+            "release_motivation": "Initial governed Fabric notebook workflows. Extra detail omitted.",
+        },
+        {
+            "release_version": "0.2.0",
+            "release_date": "2026-08-01",
+            "release_motivation": "Expanded release workflow coverage.",
+        },
+    ]
+
+    content = ri.render_releases_index(manifests, "<!-- Generated file. Test notice. -->")
+
+    assert content.startswith("<!-- Generated file. Test notice. -->")
+    assert "## Release history" in content
+    assert "## Current release" not in content
+    assert "| Release | Release date | Description |" in content
+    assert "| [FabricOps Starter Kit 0.2.0](0.2.0/) | 2026-08-01 | Expanded release workflow coverage. |" in content
+    assert "| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-08 | Initial governed Fabric notebook workflows. |" in content
+    assert content.index("FabricOps Starter Kit 0.2.0") < content.index("FabricOps Starter Kit 0.1.0")
+
+
+def test_release_history_semantic_version_fallback_order_is_deterministic():
+    """Verify equal or unavailable dates fall back to semantic-version order."""
+    manifests = [
+        {"release_version": "0.1.9", "release_date": None, "release_motivation": "Patch release."},
+        {"release_version": "0.1.10", "release_date": None, "release_motivation": "Later patch release."},
+        {"release_version": "0.2.0", "release_date": "2026-08-01", "release_motivation": "Minor release."},
+        {"release_version": "0.3.0", "release_date": "2026-08-01", "release_motivation": "Later minor release."},
+    ]
+
+    versions = [manifest["release_version"] for manifest in ri.sort_release_manifests(manifests)]
+
+    assert versions == ["0.3.0", "0.2.0", "0.1.10", "0.1.9"]

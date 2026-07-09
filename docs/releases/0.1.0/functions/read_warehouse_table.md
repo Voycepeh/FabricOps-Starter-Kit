@@ -45,4 +45,4 @@ for small tables, lookup tables, smoke tests, or intentional full extracts;
 prefer ``read_warehouse_query`` for large Warehouse sources so filters and
 projections run before Spark receives rows.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

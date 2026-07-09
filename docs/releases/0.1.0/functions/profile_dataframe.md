@@ -48,4 +48,4 @@ pyspark.sql.DataFrame
 
 Not documented in the source docstring.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

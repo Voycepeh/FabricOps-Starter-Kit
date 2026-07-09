@@ -12,6 +12,7 @@ import re
 import shutil
 import tomllib
 import zipfile
+from datetime import date, datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -32,7 +33,7 @@ TEMPLATE_DOCS = {
 }
 GROUP_LABELS = {"functions": "Functions", "metadata_tables": "Metadata tables", "templates": "Notebook templates", "dq_rules": "DQ rules"}
 CATEGORY_DIRS = {"functions": "functions", "metadata_tables": "metadata", "templates": "templates", "dq_rules": "dq-rules"}
-CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Table", "templates": "Template", "dq_rules": "DQ rule"}
+CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Metadata table", "templates": "Notebook template", "dq_rules": "DQ rule"}
 CATEGORY_PURPOSE = {"functions": "Description", "metadata_tables": "Purpose", "templates": "Purpose", "dq_rules": "Purpose"}
 
 
@@ -194,6 +195,9 @@ def load_release_manifests(manifests_dir: Path = ROOT / "docs" / "releases" / "m
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
     if manifest.get("release_version") != version:
         raise ValueError(f"Manifest release_version {manifest.get('release_version')!r} does not match pyproject.toml version {version!r}.")
+    release_status = str(manifest.get("release_status") or "").lower()
+    if release_status == "live" and not _parse_release_date(manifest.get("release_date")):
+        raise ValueError(f"Live release manifest {version} must include release_date in YYYY-MM-DD format.")
     for group in GROUPS:
         seen: set[str] = set()
         for item in manifest.get(group, []):
@@ -374,12 +378,53 @@ def _description(item: dict[str, Any], group: str) -> str:
     return item["name"]
 
 
-def _category_index(version: str, group: str, items: list[dict[str, Any]], notice: str) -> str:
-    lines = [notice, "", f"# FabricOps Starter Kit {version} {GROUP_LABELS[group].lower()}", "", f"Package version: `{version}`", "", f"Live assets in this section: **{len(items)}**.", "", "This frozen release section includes only assets classified as Live for this version.", "", '<div class="fabricops-release-table" markdown>', "", f"| Status | {CATEGORY_NOUN[group]} | {CATEGORY_PURPOSE[group]} | Details |", "| --- | --- | --- | --- |"]
+def _template_preview_url(manifest: dict[str, Any], version: str, source_path: str) -> str:
+    """Return the immutable tagged GitHub preview URL for a release notebook."""
+    owner = manifest.get("github_owner") or "Voycepeh"
+    repo = manifest.get("github_repo") or "FabricOps-Starter-Kit"
+    return f"https://github.com/{owner}/{repo}/blob/v{version}/{source_path}"
+
+
+def _release_inventory_link(manifest: dict[str, Any], version: str, group: str, item: dict[str, Any]) -> str:
+    """Return the release overview table link for a Live inventory item."""
+    if group == "templates":
+        return _template_preview_url(manifest, version, str(item["source_path"]))
+    if group == "dq_rules":
+        return f"{CATEGORY_DIRS[group]}/{_slug(item['name'])}.md"
+    return f"{CATEGORY_DIRS[group]}/{_page_name(item['name'])}"
+
+
+def _release_inventory_section(manifest: dict[str, Any], version: str, group: str, items: list[dict[str, Any]]) -> list[str]:
+    """Render one collapsible Live inventory section for the release overview."""
+    if not items:
+        return []
+    label = GROUP_LABELS[group] if group == "dq_rules" else GROUP_LABELS[group].lower()
+    noun = CATEGORY_NOUN[group]
+    purpose = CATEGORY_PURPOSE[group]
+    lines = [
+        '<details class="fabricops-release-inventory" markdown>',
+        f"<summary>{len(items)} Live {label}</summary>",
+        "",
+        f"| {noun} | {purpose} |",
+        "| --- | --- |",
+    ]
     for item in items:
-        lines.append(f"| {release_status_chip('live')} | `{item['name']}` | {_description(item, group)} | [Open]({_page_name(item['name'])}) |")
-    lines.extend(["", "</div>", "", "!!! info \"Current product documentation\"", "    Current documentation may include newer Live and Preview capabilities. Use these release pages for the frozen 0.1.0 release surface."])
-    return "\n".join(lines) + "\n"
+        link = _release_inventory_link(manifest, version, group, item)
+        lines.append(f"| [`{item['name']}`]({link}) | {_description(item, group)} |")
+    lines.extend(["", "</details>"])
+    return lines
+
+
+def _release_inventory_sections(manifest: dict[str, Any], version: str, live: dict[str, list[dict[str, Any]]]) -> list[str]:
+    """Render all non-empty Live inventory sections for the release overview."""
+    sections: list[str] = []
+    for group in GROUPS:
+        section = _release_inventory_section(manifest, version, group, live[group])
+        if section:
+            if sections:
+                sections.append("")
+            sections.extend(section)
+    return sections
 
 
 def _function_page(version: str, item: dict[str, Any], notice: str) -> str:
@@ -415,7 +460,7 @@ Signature: `{details['signature']}`
 
 {notes}
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)
 """
 
 
@@ -424,48 +469,97 @@ def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
     lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Live since: `{item.get('live_since', version)}`", "", f"Schema since: `{item.get('schema_since', version)}`", "", f"Schema fingerprint: `{item.get('schema_fingerprint', 'Not recorded')}`", "", f"Source path: `{item['source_path']}`", "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
     for row in rows:
         lines.append(f"| `{row['name']}` | `{row['type']}` | {row['nullable']} | FabricOps metadata schema registry | `{row['name']}` field in `{item['name']}`. |")
-    lines.extend(["", "[Back to 0.1.0 metadata tables](index.md)"])
+    lines.extend(["", "[Back to release overview](../index.md)"])
     return "\n".join(lines) + "\n"
 
 
-def _template_page(version: str, item: dict[str, Any], notice: str, notebook_pack_url: str) -> str:
-    summary = _template_summary(item)
-    flow = "\n".join(f"{idx}. {step}" for idx, step in enumerate(summary["flow"], 1))
-    source = item["source_path"]
-    return f"""{notice}
+def _dq_rule_page(version: str, item: dict[str, Any], notice: str) -> str:
+    """Render a frozen release detail page for a Live DQ rule."""
+    lines = [
+        notice,
+        "",
+        f"# `{item['name']}`",
+        "",
+        release_status_chip("live"),
+        "",
+        f"Package version: `{version}`",
+        "",
+        f"Source path: `{item['source_path']}`",
+        "",
+        "## Purpose",
+        "",
+        _description(item, "dq_rules"),
+        "",
+        "[Back to release overview](../index.md)",
+    ]
+    return "\n".join(lines) + "\n"
 
-# `{item['name']}`
 
-{release_status_chip('live')}
+def _parse_release_date(value: Any) -> str:
+    """Return a release date as ``YYYY-MM-DD`` text or an empty fallback."""
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.date().isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    text = str(value).strip()
+    if not text or text.lower() in {"null", "none", "not specified"}:
+        return ""
+    return text[:10]
 
-Package version: `{version}`
 
-Source notebook path: `{source}`
+def _semantic_version_key(version: Any) -> tuple[int, ...]:
+    """Return a deterministic numeric semantic-version sort key."""
+    text = str(version or "")
+    numbers = [int(part) for part in re.findall(r"\d+", text)]
+    return tuple(numbers or [0])
 
-## Purpose
 
-{summary['purpose']}
+def _release_description(manifest: dict[str, Any]) -> str:
+    """Return concise release overview text sourced from release_motivation."""
+    motivation = str(manifest.get("release_motivation") or "").strip()
+    if not motivation:
+        return "Release details are documented in the frozen release page."
+    first_sentence = re.split(r"(?<=[.!?])\s+", motivation, maxsplit=1)[0].strip()
+    return first_sentence or motivation
 
-## Expected inputs
 
-- Microsoft Fabric notebook runtime with FabricOps Starter Kit {version} installed.
-- Any variables or metadata produced by earlier notebooks in the supported release flow.
+def release_manifest_paths() -> list[Path]:
+    """Return all available release manifest paths in the repository."""
+    return sorted((ROOT / "docs" / "releases" / "manifests").glob("*.yml"))
 
-## Expected outputs
 
-- Notebook state and metadata updates described by the template purpose.
-- Release-supported workflow artifacts for downstream notebooks when applicable.
+def load_release_manifests() -> list[dict[str, Any]]:
+    """Load every available release manifest."""
+    manifests = []
+    for path in release_manifest_paths():
+        manifest = _load_manifest(path)
+        if manifest is not None:
+            manifests.append(manifest)
+    return manifests
 
-## Short usage flow
 
-{flow}
+def sort_release_manifests(manifests: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sort release manifests newest first by date, then semantic version."""
+    return sorted(
+        manifests,
+        key=lambda manifest: (
+            _parse_release_date(manifest.get("release_date")),
+            _semantic_version_key(manifest.get("release_version")),
+        ),
+        reverse=True,
+    )
 
-## Download
 
-[Download the released notebook pack]({notebook_pack_url})
-
-[Back to 0.1.0 notebook templates](index.md)
-"""
+def render_releases_index(manifests: list[dict[str, Any]], notice: str) -> str:
+    """Render the top-level release history page from release manifests."""
+    lines = [notice, "", "# Releases", "", "## Release history", "", "| Release | Release date | Description |", "| --- | --- | --- |"]
+    for manifest in sort_release_manifests(manifests):
+        version = str(manifest["release_version"])
+        release_date = _parse_release_date(manifest.get("release_date"))
+        lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
+    return "\n".join(lines) + "\n"
 
 
 def _release_url(manifest: dict[str, Any], version: str, asset: str = "") -> str:
@@ -495,46 +589,64 @@ def render_release_pages() -> list[Path]:
     release_dir.mkdir(parents=True, exist_ok=True)
     notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
     live = {group: live_release_items(manifest, group) for group in GROUPS}
-    wheel, sdist = project_distribution_names(version)
-    notebook_pack = manifest.get("notebook_pack_asset") or f"fabricops-kit-{version}-notebooks.zip"
     release_status = manifest.get("release_status") or "Live"
-    release_date = manifest.get("release_date") or "Not specified"
-    motivation = manifest.get("release_motivation") or "FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. It focuses on reliable Fabric input and output, dataframe profiling, agreement-driven metadata, and lightweight exploration workflows."
+    release_date = _parse_release_date(manifest.get("release_date"))
 
     paths: list[Path] = []
-    cards = []
-    for group in ("functions", "metadata_tables", "templates", "dq_rules"):
-        if live[group]:
-            label = GROUP_LABELS[group]
-            cards.append(f'<a class="fabricops-release-card" href="{CATEGORY_DIRS[group]}/"><strong>{len(live[group])}</strong><span>Live {label.lower()}</span></a>')
+    inventory_sections = _release_inventory_sections(manifest, version, live)
     index = release_dir / "index.md"
-    index.write_text("\n".join([notice, "", f"# FabricOps Starter Kit {version}", "", f"- Package version: `{version}`", f"- Release status: {release_status_chip(str(release_status).lower()) if str(release_status).lower() in VALID_STATUSES else release_status}", f"- Release date: {release_date}", f"- [GitHub Release]({_release_url(manifest, version)})", "", "## Why this release exists", "", motivation, "", "## Live in this release", "", '<div class="fabricops-release-card-grid">', *cards, "</div>", "", "## Downloads", "", f"- [Download wheel]({_release_url(manifest, version, wheel)})", f"- [Download source distribution]({_release_url(manifest, version, sdist)})", f"- [Download notebook pack]({_release_url(manifest, version, notebook_pack)})", f"- [View GitHub Release]({_release_url(manifest, version)})", f"- Verify downloads with [SHA256SUMS]({_release_url(manifest, version, 'SHA256SUMS.txt')})", "", "## Get started", "", "1. Download and install the wheel.", "2. Download the released notebook pack.", "3. Run `00_env_config`.", "4. Run `01_agreement`.", "5. Use `99_explore` for supported exploration.", "", "## Known limitations", "", "The pipeline execution workflow, governance review workflow, DQ rule authoring and enforcement, and notebook registry remain Preview and are not part of the supported frozen release surface for 0.1.0.", "", "## Release notes", "", notes, ""]) , encoding="utf-8")
+    github_release_url = _release_url(manifest, version)
+    release_status_text = str(release_status).lower()
+    rendered_status = release_status_chip(release_status_text) if release_status_text in VALID_STATUSES else str(release_status)
+    index.write_text(
+        "\n".join(
+            [
+                notice,
+                "",
+                f"# FabricOps Starter Kit {version}",
+                "",
+                f"- Package version: `{version}`",
+                f"- Release status: {rendered_status}",
+                f"- Release date: `{release_date}`",
+                "",
+                f'<a class="md-button md-button--primary" href="{github_release_url}">',
+                "  View GitHub Release",
+                "</a>",
+                "",
+                "## Live in this release",
+                "",
+                *inventory_sections,
+                "",
+                "## Changelog",
+                "",
+                notes,
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     paths.append(index)
 
-    for group in GROUPS:
+    for group in ("functions", "metadata_tables", "dq_rules"):
         items = live[group]
         if not items:
             continue
         group_dir = release_dir / CATEGORY_DIRS[group]
         group_dir.mkdir(parents=True, exist_ok=True)
-        idx = group_dir / "index.md"
-        idx.write_text(_category_index(version, group, items, notice), encoding="utf-8")
-        paths.append(idx)
         for item in items:
-            page = group_dir / _page_name(item["name"])
+            page_name = f"{_slug(item['name'])}.md" if group == "dq_rules" else _page_name(item["name"])
+            page = group_dir / page_name
             if group == "functions":
                 content = _function_page(version, item, notice)
             elif group == "metadata_tables":
                 content = _metadata_page(version, item, notice)
-            elif group == "templates":
-                content = _template_page(version, item, notice, _release_url(manifest, version, notebook_pack))
             else:
-                content = ""
+                content = _dq_rule_page(version, item, notice)
             page.write_text(content, encoding="utf-8")
             paths.append(page)
 
     releases_index = ROOT / "docs" / "releases" / "index.md"
-    releases_index.write_text(f"{notice}\n\n# Releases\n\n## Current release\n\n- [FabricOps Starter Kit {version}]({version}/)\n", encoding="utf-8")
+    releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
     return [releases_index, *paths]
 
 

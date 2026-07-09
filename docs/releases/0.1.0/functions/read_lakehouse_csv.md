@@ -42,4 +42,4 @@ FabricOps resolves the configured Lakehouse Files path from
 ``00_env_config`` and then delegates to Spark's CSV reader with the supplied
 options.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

@@ -44,4 +44,4 @@ SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
 can use two-part names such as ``dbo.orders`` when the configured target
 identifies the warehouse database/artifact.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

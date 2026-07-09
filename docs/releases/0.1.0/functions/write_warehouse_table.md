@@ -49,4 +49,4 @@ FabricOps resolves the configured Warehouse target and table name, then
 delegates to the Fabric Warehouse Spark connector. ``options`` are passed to
 the underlying ``DataFrameWriter`` after required Fabric connector options.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

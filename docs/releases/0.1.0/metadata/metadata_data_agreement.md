@@ -41,4 +41,4 @@ Description: Supported FabricOps metadata table for data agreement.
 | `_metadata_lakehouse_name` | `string` | No | FabricOps metadata schema registry | `_metadata_lakehouse_name` field in `METADATA_DATA_AGREEMENT`. |
 | `_activity_id` | `string` | No | FabricOps metadata schema registry | `_activity_id` field in `METADATA_DATA_AGREEMENT`. |
 
-[Back to 0.1.0 metadata tables](index.md)
+[Back to release overview](../index.md)
