@@ -726,7 +726,10 @@ def test_dashboard_lifecycle_and_live_contract_controls_render() -> None:
     assert "Discontinued in ${f.discontinued_in}" in html
     assert "humanizeValue(f.contract_classification)" in html
     assert "humanizeValue(f.contract_risk)" in html
+    assert "helperDependencyLabel(f)" in html
     assert "Helpers supporting this Live function" in html
+    assert "Helpers in this function flow" in html
+    assert "Helpers in this historical flow" in html
     assert "live_critical_dependency_count" in html
     assert "This function is part of the supported FabricOps public contract" in html
     assert "This function is available for evaluation" in html
