@@ -682,8 +682,8 @@ def test_dashboard_refactor_packet_wraps_evidence_with_scope_prompts(tmp_path: P
     assert "PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py" in html
     assert "Commit only the regenerated docs/reference/_data/public-function-call-flows.json architecture contract" in html
     assert "Mention any other stale generated docs/dashboard artifacts in the PR summary instead of committing them" in html
-    assert "do not preserve backwards compatibility" in html
     assert "Do not add wrappers, aliases, adapters, resolver layers, or transitional shims" in html
+    assert "Preserve public API behavior where practical for this cleanup mode" not in html
     assert "Run targeted tests first" in html
     assert "Acceptance criteria:" in html
     assert "clean the complete selected public callable flow" in html
