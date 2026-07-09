@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
 import time
 
@@ -70,6 +71,28 @@ def write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
     return root, pkg, init_path
 
 
+def write_manifest(root: Path) -> Path:
+    """Create a minimal lifecycle manifest fixture."""
+    manifests = root / "docs" / "releases" / "manifests"
+    manifests.mkdir(parents=True)
+    (manifests / "0.1.0.yml").write_text(
+        "release_version: 0.1.0\n"
+        "functions:\n"
+        "  - name: public_a\n"
+        "    qualified_name: fabricops_kit.public_a.public_a\n"
+        "    status: live\n"
+        "    live_since: 0.1.0\n"
+        "  - name: public_b\n"
+        "    qualified_name: fabricops_kit.public_b.public_b\n"
+        "    status: preview\n"
+        "metadata_tables:\n"
+        "templates:\n"
+        "dq_rules:\n",
+        encoding="utf-8",
+    )
+    return manifests
+
+
 def info(name: str, path: str) -> flows.FunctionInfo:
     """Build minimal function metadata for violation classifier tests."""
     node = ast.parse(f"def {name}():\n    pass\n").body[0]
@@ -120,6 +143,83 @@ def test_public_function_call_flow_payload_rules(tmp_path: Path) -> None:
     }
     assert "Type 6" not in payload["metadata"]["architecture_violation_rules"]
     assert payload["metadata"]["architecture_violation_signal"] == "Any Type 1 to Type 5 edge appears in the public function flow."
+
+
+def test_release_lifecycle_and_live_impact_contract(tmp_path: Path) -> None:
+    """Validate manifest-sourced lifecycle metadata and Live dependency impact."""
+    root, pkg, init_path = write_project(tmp_path)
+    manifests = write_manifest(root)
+
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path, manifests_dir=manifests)
+
+    public_a = next(item for item in payload["public_functions"] if item["function_name"] == "public_a")
+    assert public_a["lifecycle_status"] == "live"
+    assert public_a["live_since"] == "0.1.0"
+    assert public_a["release_history"] == [{"version": "0.1.0", "status": "live"}]
+    assert public_a["release_versions"] == ["0.1.0"]
+    assert public_a["contract_classification"] == "live_public_function"
+    assert public_a["contract_display"] == "Live · Live since 0.1.0"
+    assert public_a["contract_risk"] == "live"
+
+    public_b = next(item for item in payload["public_functions"] if item["function_name"] == "public_b")
+    assert public_b["lifecycle_status"] == "preview"
+    assert public_b["contract_classification"] == "preview_public_function"
+    assert public_b["contract_risk"] == "preview"
+
+    assert payload["release_contract"]["release_versions"] == ["0.1.0"]
+    assert payload["release_contract"]["latest_release_version"] == "0.1.0"
+    assert payload["release_contract"]["live_public_function_count"] == 1
+    assert payload["release_contract"]["preview_public_function_count"] == 1
+
+    helper = next(item for item in public_a["flow"] if item["function_name"] == "helper")
+    assert helper["lifecycle_status"] == "internal"
+    assert helper["direct_live_dependents"] == ["fabricops_kit.public_a.public_a"]
+    assert helper["transitive_live_dependents"] == []
+    assert helper["supports_live_contract"] is True
+    assert helper["live_impact_level"] == "direct_live_dependency"
+    assert helper["contract_classification"] == "live_critical_internal"
+
+    private_shared = next(item for item in public_a["flow"] if item["function_name"] == "_private_shared")
+    assert private_shared["direct_live_dependents"] == ["fabricops_kit.public_a.public_a"]
+    assert private_shared["transitive_live_dependents"] == ["fabricops_kit.public_a.public_a"]
+    assert private_shared["direct_live_dependents"] == sorted(set(private_shared["direct_live_dependents"]))
+    assert private_shared["transitive_live_dependents"] == sorted(set(private_shared["transitive_live_dependents"]))
+    assert private_shared["contract_classification"] == "live_critical_internal"
+
+    public_b_root = next(item for item in public_b["flow"] if item["qualified_name"] == "fabricops_kit.public_b.public_b")
+    assert public_b_root["live_impact_level"] == "preview_only"
+    assert public_b_root["supports_live_contract"] is False
+    assert public_b_root["lifecycle_status"] == "preview"
+
+
+def test_public_lifecycle_is_not_inferred_from_all(tmp_path: Path) -> None:
+    """Validate exported public callables default to Preview without manifest authority."""
+    root, pkg, init_path = write_project(tmp_path)
+    manifests = root / "docs" / "releases" / "manifests"
+    manifests.mkdir(parents=True)
+
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path, manifests_dir=manifests)
+
+    assert {item["lifecycle_status"] for item in payload["public_functions"]} == {"preview"}
+    assert all(item["live_since"] is None for item in payload["public_functions"])
+
+
+def test_repository_manifest_lifecycle_authority() -> None:
+    """Validate repository release manifest lifecycle fields drive real output."""
+    payload = flows.build_payload()
+
+    excel = next(item for item in payload["public_functions"] if item["function_name"] == "read_lakehouse_excel")
+    assert excel["lifecycle_status"] == "live"
+    assert excel["live_since"] == "0.1.0"
+    assert excel["release_history"] == [{"version": "0.1.0", "status": "live"}]
+
+    preview = next(item for item in payload["public_functions"] if item["function_name"] == "display_guardrail_results")
+    assert preview["lifecycle_status"] == "preview"
+    assert preview["live_since"] is None
+
+    manifest = flows.load_release_manifests()[0]
+    expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live")
+    assert payload["release_contract"]["live_public_function_count"] == expected_live
 
 
 def test_large_width_or_depth_thresholds_are_strict() -> None:
@@ -585,6 +685,16 @@ def test_json_output_is_deterministic_across_consecutive_writes(tmp_path: Path) 
     second = data_path.read_text(encoding="utf-8")
 
     assert first == second
+
+
+def test_committed_json_matches_generator_output() -> None:
+    """Validate committed call-flow JSON matches the generator payload."""
+    expected = json.dumps(flows.build_payload(), indent=2, sort_keys=True) + "\n"
+    actual = flows.DATA_PATH.read_text(encoding="utf-8")
+
+    assert actual == expected
+    assert "schema v1" not in actual.lower()
+
 
 def test_callable_flow_docs_page_uses_deterministic_signal_rules() -> None:
     """Validate callable flow docs describe the deterministic V2 signal model."""

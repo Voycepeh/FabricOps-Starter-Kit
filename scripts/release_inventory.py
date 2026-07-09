@@ -183,6 +183,12 @@ def _load_manifest(path: Path) -> dict[str, Any] | None:
     return result
 
 
+def load_release_manifests(manifests_dir: Path = ROOT / "docs" / "releases" / "manifests") -> list[dict[str, Any]]:
+    """Load release manifests in deterministic version order."""
+    manifests = [manifest for path in sorted(manifests_dir.glob("*.yml")) if (manifest := _load_manifest(path)) is not None]
+    return sorted(manifests, key=lambda manifest: str(manifest.get("release_version", "")))
+
+
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
     if manifest.get("release_version") != version:
         raise ValueError(f"Manifest release_version {manifest.get('release_version')!r} does not match pyproject.toml version {version!r}.")
