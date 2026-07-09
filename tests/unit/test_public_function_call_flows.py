@@ -425,13 +425,14 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<span class="metric-chip">Scope ${esc(f.derived_scope)}</span>' in html
     assert '<span class="metric-chip">Depth ${esc(f.derived_depth)}</span>' in html
     assert '<span class="metric-chip">Files ${esc((f.files_touched||[]).length)}</span>' in html
-    assert '${badges(publicSignalsForFunction(f))}</div></div>`' in html
-    assert "functionLink(f)}</td><td>${esc(f.derived_width)}</td>" in html
+    assert '${badges(publicSignalsForFunction(f))}' in html
+    assert "functionLink(f)}<div>${publicLifecycleBits(f)}</div></td><td>${esc(f.derived_width)}</td>" in html
     assert "<td>${badges(publicSignalsForFunction(f))}</td><td>${esc(f.source_path)} · ${githubLink(f)}</td>" in html
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
     assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
     assert "function enrichInventoryRows(rows,flow)" in html
-    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}</td><td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
+    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}<div>${n.function_type==='public_function'?'':liveImpactChip(n)}</div>" in html
+    assert "<td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
     assert "<td>${n.promote_to_shared_candidate?'Yes':'No'}</td><td>${esc(n.source_path)}</td>" in html
     assert ">Parent</button>" not in html
     assert "large_width_or_depth" in html
@@ -708,6 +709,49 @@ def test_dashboard_can_embed_json_for_debug_mode(tmp_path: Path) -> None:
     assert "public-function-call-flows-json" in html
     assert "fabricops_public_function_call_flows_v2" in html
 
+
+def test_dashboard_lifecycle_and_live_contract_controls_render() -> None:
+    """Verify dashboard exposes lifecycle filtering and Live-contract presentation."""
+    html = dashboard.render_dashboard()
+
+    assert 'id="lifecycleFilter"' in html
+    assert '<option value="" selected>All</option>' in html
+    assert '<option value="live">Live</option>' in html
+    assert '<option value="preview">Preview</option>' in html
+    assert '<option value="discontinued">Discontinued</option>' in html
+    assert "lifecycleValue(f)==='live'" in html
+    assert "s==='preview'" in html
+    assert "s==='discontinued'" in html
+    assert "Live since ${f.live_since}" in html
+    assert "Discontinued in ${f.discontinued_in}" in html
+    assert "humanizeValue(f.contract_classification)" in html
+    assert "humanizeValue(f.contract_risk)" in html
+    assert "Live-critical dependencies" in html
+    assert "This function is part of the supported FabricOps public contract" in html
+    assert "This function is available for evaluation" in html
+    assert "This function is no longer part of the current supported public contract" in html
+    assert "Lifecycle data missing for public function" in html
+
+
+def test_dashboard_live_critical_internal_helpers_and_exports_render() -> None:
+    """Verify dashboard surfaces Live-impact helper details without relabelling helpers as public."""
+    html = dashboard.render_dashboard()
+
+    assert "Supports Live contract" in html
+    assert "Direct Live dependency" in html
+    assert "Transitive Live dependency" in html
+    assert "Preview-only internal" in html
+    assert "Highlight Live-critical" in html
+    assert "highlightLiveCriticalOnly" in html
+    assert "direct_live_dependent_count" in html
+    assert "transitive_live_dependent_count" in html
+    assert "direct_live_dependents" in html
+    assert "transitive_live_dependents" in html
+    assert "lifecycle_status:f.lifecycle_status" in html
+    assert "contract_classification:f.contract_classification" in html
+    assert "contract_risk:f.contract_risk" in html
+    assert "live_critical_dependency_count:f.live_critical_dependency_count" in html
+    assert "Public root" in html
 
 def test_json_generator_writes_only_json(tmp_path: Path) -> None:
     """Validate the JSON writer does not create dashboard HTML."""
