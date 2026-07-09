@@ -397,7 +397,7 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
 
     assert "## Call-flow summary" in implementation_section
     assert "- Downstream callables:" in implementation_section
-    assert "Open focused call flow in dashboard" in implementation_section
+    assert "Open Preview call flow" in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Implementation helper count: 11" not in text
@@ -534,14 +534,14 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
 def test_public_callable_call_tree_renders_before_description() -> None:
     """Verify public callable helper trees appear directly below the title."""
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
-    title_index = text.index("# prepare_pipeline_table_configs")
+    title_index = text.index("# `prepare_pipeline_table_configs`")
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
     source_index = text.index('<div class="reference-source-card" markdown="1">')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < description_index < source_index < usage_index
     assert "## Call-flow summary" in text
-    assert "Open focused call flow in dashboard" in text
+    assert "Open Preview call flow" in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:

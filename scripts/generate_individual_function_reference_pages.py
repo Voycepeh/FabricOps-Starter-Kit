@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.generated_artifact_metadata import read_generated_artifact_metadata, update_generated_artifact_metadata
+from scripts.generated_artifact_metadata import read_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -1275,6 +1275,98 @@ def _load_public_call_flow_inventory() -> dict[str, Any]:
         raise RuntimeError("public-function-call-flows.json must contain a public_functions list")
     return data
 
+
+
+def _dash(value: Any) -> str:
+    """Return a display dash for optional generated-reference values."""
+    return "—" if value is None or value == "" else str(value)
+
+
+def _lifecycle_status(row: dict[str, Any]) -> str:
+    """Return the normalized lifecycle status from the call-flow contract."""
+    raw_status = str(row.get("lifecycle_status") or "").strip()
+    status = raw_status[:1].upper() + raw_status[1:].lower() if raw_status else ""
+    if not status:
+        raise RuntimeError(
+            "Public function reference lifecycle data missing for:\n"
+            f"{row.get('qualified_name', '<unknown>')}"
+        )
+    return status
+
+
+def _lifecycle_chip(status: str, label: str | None = None, *, prominent: bool = False) -> str:
+    """Return a lifecycle chip using existing reference chip styling hooks."""
+    slug = status.lower().replace(" ", "-")
+    classes = ["reference-chip", "reference-lifecycle-chip", f"reference-lifecycle-{slug}"]
+    if prominent:
+        classes.append("reference-lifecycle-chip-prominent")
+    return f'<span class="{html_escape(" ".join(classes))}">{html_escape(label or status)}</span>'
+
+
+def _lifecycle_header_lines(row: dict[str, Any]) -> list[str]:
+    """Return lifecycle chips and notice lines for a public callable page."""
+    status = _lifecycle_status(row)
+    chips = [_lifecycle_chip(status, prominent=True)]
+    if status == "Live" and row.get("live_since"):
+        chips.append(_lifecycle_chip(status, f"Live since {row['live_since']}", prominent=True))
+    if status == "Discontinued" and row.get("discontinued_in"):
+        chips.append(_lifecycle_chip(status, f"Discontinued in {row['discontinued_in']}", prominent=True))
+    chips.append('<span class="reference-chip reference-chip-muted">Public function</span>')
+    notices = {
+        "Live": "This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.",
+        "Preview": "This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.",
+        "Discontinued": "This function is no longer part of the current supported public contract. Use the release history below to identify the last supported version.",
+    }
+    notice = notices.get(status, f"This function has lifecycle status `{status}` in the public call-flow contract.")
+    return [
+        '<p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">',
+        *chips,
+        "</p>",
+        "",
+        f"> {notice}",
+        "",
+    ]
+
+
+def _dashboard_link_label(status: str) -> str:
+    """Return the lifecycle-aware focused dashboard link label."""
+    return {
+        "Live": "Open Live contract call flow",
+        "Preview": "Open Preview call flow",
+        "Discontinued": "Open historical call flow",
+    }.get(status, "Open focused call flow")
+
+
+def _contract_impact_lines(row: dict[str, Any], *, docs_metadata: dict[str, Any], public_page_names: set[str]) -> list[str]:
+    """Return the contract-impact section sourced from the call-flow JSON."""
+    status = _lifecycle_status(row)
+    classification = row.get("contract_display") or row.get("contract_classification") or "—"
+    lines = [
+        "## Contract impact",
+        "",
+        "| Property | Value |",
+        "| --- | --- |",
+        f"| Lifecycle | {_lifecycle_chip(status)} |",
+        f"| Live since | {_dash(row.get('live_since'))} |",
+        f"| Discontinued in | {_dash(row.get('discontinued_in'))} |",
+        f"| Contract classification | {html_escape(str(classification))} |",
+        f"| Live-critical dependencies | {_dash(row.get('live_critical_dependency_count', 0))} |",
+        f"| Direct Live dependents | {_dash(row.get('direct_live_dependent_count', 0))} |",
+        f"| Transitive Live dependents | {_dash(row.get('transitive_live_dependent_count', 0))} |",
+        "",
+    ]
+    deps = [str(dep) for dep in row.get("live_critical_dependencies") or []]
+    if status == "Live" and deps:
+        lines.extend(["### Live-critical dependencies", "", '<ul class="reference-compact-list">'])
+        for dep in deps:
+            short = dep.rsplit(".", 1)[-1]
+            if short in public_page_names:
+                href = public_reference_link(short, docs_metadata, context="reference")
+                lines.append(f'<li><a href="{html_escape(href)}"><code>{html_escape(dep)}</code></a></li>')
+            else:
+                lines.append(f'<li><code>{html_escape(dep)}</code></li>')
+        lines.extend(["</ul>", ""])
+    return lines
 
 def _dashboard_focus_url(function_name: str) -> str:
     """Return the focused dashboard URL for a public function."""
@@ -4577,6 +4669,16 @@ def main() -> None:
         for node in node_by_qn.values()
         if node.get("exported") and node.get("callable_kind") == "function"
     }
+    missing_public_flows = sorted(
+        f"{PACKAGE_NAME}.{node['module_name']}.{node['callable_name']}"
+        for node in node_by_public_function_name.values()
+        if f"{PACKAGE_NAME}.{node['module_name']}.{node['callable_name']}" not in public_flow_by_qn
+    )
+    if missing_public_flows:
+        raise RuntimeError(
+            "Public function reference lifecycle data missing for:\n"
+            + "\n".join(missing_public_flows)
+        )
     public_function_count = len(dashboard_public_functions)
     callable_metrics = {
         "public_api_entrypoints": public_function_count,
@@ -4654,7 +4756,9 @@ def main() -> None:
         starter_path_attribute = f' data-callable-starter-path="{_esc(starter_path)}"' if starter_path != "—" else ""
         usage_source_attribute = f' data-callable-usage-source="{_esc(usage_source)}"' if usage_source != "—" else ""
         qn = f"{PACKAGE_NAME}.{module_name}.{name}"
-        public_flow = public_flow_by_qn.get(qn, {})
+        public_flow = public_flow_by_qn[qn]
+        lifecycle_status = _lifecycle_status(public_flow)
+        live_since = _dash(public_flow.get("live_since"))
         downstream_callables = [row["qualified_name"] for row in public_flow.get("flow", [])[1:] if row.get("qualified_name")]
 
         def _catalogue_relationship_list(items: list[str]) -> str:
@@ -4697,7 +4801,9 @@ def main() -> None:
                 f'  <p class="reference-catalogue-item-purpose">{_esc(purpose)}</p>',
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
-                    f'<span class="reference-chip">{_esc("Public Starter Kit function")}</span>'
+                    f'{_lifecycle_chip(lifecycle_status, prominent=True)}'
+                    f'<span class="reference-chip reference-chip-muted">{_esc("Live since " + live_since if live_since != "—" else "Live since —")}</span>'
+                    f'<span class="reference-chip reference-chip-muted">{_esc("Public function")}</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
                 ),
@@ -4713,7 +4819,22 @@ def main() -> None:
                 "</article>",
             ]
         )
-    ref.extend(['<div class="reference-catalogue-list">', *all_items, "</div>"])
+    table_lines = [
+        "| Function | Lifecycle | Live since | Summary |",
+        "| --- | --- | --- | --- |",
+    ]
+    for node in catalogue_nodes:
+        name = node["callable_name"]
+        symbol = symbol_map[name]
+        qn = f"{PACKAGE_NAME}.{node['module_name']}.{name}"
+        public_flow = public_flow_by_qn[qn]
+        status = _lifecycle_status(public_flow)
+        purpose = symbol.purpose or symbol.summary or "—"
+        table_lines.append(
+            f"| [`{_esc(name)}`]({public_reference_link(name, docs_metadata, context='reference')}) "
+            f"| {_lifecycle_chip(status)} | {_dash(public_flow.get('live_since'))} | {_esc(purpose)} |"
+        )
+    ref.extend([*table_lines, "", '<div class="reference-catalogue-list">', *all_items, "</div>"])
 
     ref.append("")
     REFERENCE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -4725,18 +4846,13 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
-    update_generated_artifact_metadata(
-        artifact_key="individual_function_reference_pages",
-        label="Individual function reference pages",
-        generator="scripts/generate_individual_function_reference_pages.py",
-        output_path="docs/api/reference",
-    )
     for public_flow in dashboard_public_functions:
         short_name = str(public_flow["function_name"])
         node = node_by_public_function_name.get(short_name)
         if not node:
             continue
         qn = str(public_flow["qualified_name"])
+        lifecycle_status = _lifecycle_status(public_flow)
         module_name = node["module_name"]
         raw_deps = sorted(set(calls_by_qn.get(qn, [])))
         raw_used_by = sorted(set(used_by_qn.get(qn, [])))
@@ -4778,7 +4894,8 @@ def main() -> None:
         if node["exported"]:
             parameter_overrides = _metadata_parameter_overrides(metadata.get("parameters"))
             input_lines = _render_parameter_definitions(parameter_rows, parameter_overrides, PARAMETER_DISPLAY_TYPES.get(short_name, {}))
-            public_flow = public_flow_by_name.get(short_name, public_flow_by_qn.get(qn, {}))
+            public_flow = public_flow_by_name.get(short_name, public_flow_by_qn[qn])
+            lifecycle_status = _lifecycle_status(public_flow)
             used_in_templates = template_usage_by_symbol.get(short_name, [])
             downstream_count = len(public_flow.get("flow", [])) - 1
             shared_helper_count = sum(1 for row in public_flow.get("flow", [])[1:] if row.get("function_type") == "shared_function")
@@ -4791,7 +4908,7 @@ def main() -> None:
                 f"- Shared helpers: {shared_helper_count}",
                 f"- Private helpers: {private_helper_count}",
                 "",
-                f'<a class="reference-source-link" href="{dashboard_url}">Open focused call flow in dashboard</a>',
+                f'<a class="reference-source-link" href="{dashboard_url}">{html_escape(_dashboard_link_label(lifecycle_status))}</a>',
                 "",
             ]
             notebook_usage_chips = [
@@ -4825,9 +4942,11 @@ def main() -> None:
                 else []
             )
             lines = [
-                f"# {short_name}",
+                f"# `{short_name}`",
                 "",
+                *_lifecycle_header_lines(public_flow),
                 *call_flow_lines,
+                *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)),
                 "",
                 purpose,
                 "",

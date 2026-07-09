@@ -1,4 +1,12 @@
-# read_warehouse_query
+# `read_warehouse_query`
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.1.0</span>
+<span class="reference-chip reference-chip-muted">Public function</span>
+</p>
+
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 ## Call-flow summary
 
@@ -6,7 +14,36 @@
 - Shared helpers: 8
 - Private helpers: 4
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open Live contract call flow</a>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.1.0 |
+| Discontinued in | — |
+| Contract classification | Live · Live since 0.1.0 |
+| Live-critical dependencies | 12 |
+| Direct Live dependents | 0 |
+| Transitive Live dependents | 0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
+</ul>
 
 
 Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.
@@ -95,4 +132,4 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 
 !!! info "Generated reference freshness"
     Reference pages generated: 08 Jul 2026, 1:08 PM SGT
-    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT
+    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT

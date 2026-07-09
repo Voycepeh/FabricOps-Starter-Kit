@@ -641,6 +641,10 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     """Verify individual reference generation succeeds without restoring removed pages."""
     root = Path(__file__).parents[2]
     env = {**os.environ, "PYTHONPATH": str(root / "src")}
+    call_flow_json = root / "docs" / "reference" / "_data" / "public-function-call-flows.json"
+    dashboard_html = root / "docs" / "assets" / "public-function-call-flows-dashboard.html"
+    call_flow_before = call_flow_json.read_text(encoding="utf-8")
+    dashboard_before = dashboard_html.read_text(encoding="utf-8")
     result = subprocess.run(
         [sys.executable, "scripts/generate_individual_function_reference_pages.py"],
         cwd=root,
@@ -650,6 +654,8 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+    assert call_flow_json.read_text(encoding="utf-8") == call_flow_before
+    assert dashboard_html.read_text(encoding="utf-8") == dashboard_before
     assert not (root / "docs" / "reference" / "template-function-map.md").exists()
     public_function_page = root / "docs" / "api" / "reference" / "read_lakehouse_csv.md"
     mkdocs_text = (root / "mkdocs.yml").read_text(encoding="utf-8")
@@ -657,9 +663,51 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert public_function_page.exists()
     function_text = public_function_page.read_text(encoding="utf-8")
     assert '<div class="reference-source-card" markdown="1">' in function_text
+    assert 'reference-lifecycle-chip-prominent">Live</span>' in function_text
+    assert 'Live since 0.1.0' in (root / "docs" / "api" / "reference" / "read_lakehouse_excel.md").read_text(encoding="utf-8")
+    preview_text = (root / "docs" / "api" / "reference" / "setup_metadata_tables.md").read_text(encoding="utf-8")
+    assert 'reference-lifecycle-chip-prominent">Preview</span>' in preview_text
+    assert "not part of the supported Live release contract" in preview_text
+    assert "backward-compatibility guarantees" in preview_text
+    assert "Changes to its signature, behaviour" not in preview_text
+    assert "## Contract impact" in function_text
+    assert "| Live-critical dependencies |" in function_text
+    assert "### Live-critical dependencies" in function_text
+    assert '<code>fabricops_kit.config.shared.resolve_fabric_context</code>' in function_text
+    assert "Open Live contract call flow" in function_text
+    assert "../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_csv" in function_text
+    reference_index = (root / "docs" / "reference" / "index.md").read_text(encoding="utf-8")
+    assert "Lifecycle" in reference_index
+    assert "Live since 0.1.0" in reference_index
     assert "api-chip-module" not in function_text
     assert not (root / "docs" / "api" / "modules" / "config.md").exists()
     assert "api/modules/config.md" not in mkdocs_text
+
+
+def test_lifecycle_reference_helpers_render_discontinued_and_missing_data() -> None:
+    """Verify lifecycle helper output for discontinued and missing contract rows."""
+    generator = importlib.import_module("scripts.generate_individual_function_reference_pages")
+    discontinued = {
+        "qualified_name": "fabricops_kit.old.old_function",
+        "lifecycle_status": "Discontinued",
+        "discontinued_in": "0.3.0",
+        "contract_display": "Historical public callable",
+        "live_critical_dependency_count": 0,
+        "direct_live_dependent_count": 0,
+        "transitive_live_dependent_count": 0,
+    }
+
+    header = "\n".join(generator._lifecycle_header_lines(discontinued))
+    impact = "\n".join(
+        generator._contract_impact_lines(discontinued, docs_metadata={}, public_page_names=set())
+    )
+
+    assert "Discontinued" in header
+    assert "Discontinued in 0.3.0" in header
+    assert "no longer part of the current supported public contract" in header
+    assert "| Discontinued in | 0.3.0 |" in impact
+    with pytest.raises(RuntimeError, match="Public function reference lifecycle data missing for"):
+        generator._lifecycle_status({"qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"})
 
 
 def test_package_root_all_exports_are_importable() -> None:

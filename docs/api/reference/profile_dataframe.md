@@ -1,4 +1,12 @@
-# profile_dataframe
+# `profile_dataframe`
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.1.0</span>
+<span class="reference-chip reference-chip-muted">Public function</span>
+</p>
+
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 ## Call-flow summary
 
@@ -6,7 +14,34 @@
 - Shared helpers: 7
 - Private helpers: 5
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Live contract call flow</a>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.1.0 |
+| Discontinued in | — |
+| Contract classification | Live · Live since 0.1.0 |
+| Live-critical dependencies | 10 |
+| Direct Live dependents | 0 |
+| Transitive Live dependents | 0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_audit_timestamp_expr</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.pipeline.shared._build_categorical_distribution</code></li>
+<li><code>fabricops_kit.pipeline.shared._build_numeric_distribution</code></li>
+<li><code>fabricops_kit.pipeline.shared._numeric_bin_edges</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_distribution_summaries</code></li>
+<li><code>fabricops_kit.pipeline.shared.is_min_max_supported_type</code></li>
+<li><code>fabricops_kit.pipeline.shared.profile_dataframe_core</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
+</ul>
 
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
@@ -107,4 +142,4 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 !!! info "Generated reference freshness"
     Reference pages generated: 08 Jul 2026, 1:08 PM SGT
-    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT
+    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT

@@ -1,4 +1,11 @@
-# write_pipeline_run_summary
+# `write_pipeline_run_summary`
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-chip-muted">Public function</span>
+</p>
+
+> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
 ## Call-flow summary
 
@@ -6,7 +13,19 @@
 - Shared helpers: 25
 - Private helpers: 26
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_pipeline_run_summary">Open Preview call flow</a>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
+| Live since | — |
+| Discontinued in | — |
+| Contract classification | Preview |
+| Live-critical dependencies | 0 |
+| Direct Live dependents | 0 |
+| Transitive Live dependents | 0 |
 
 
 Write one pipeline runtime summary row to metadata.
@@ -134,4 +153,4 @@ Not documented yet
 
 !!! info "Generated reference freshness"
     Reference pages generated: 08 Jul 2026, 1:08 PM SGT
-    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT
+    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
