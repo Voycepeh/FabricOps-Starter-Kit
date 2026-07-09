@@ -40,6 +40,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - No runtime upgrade is required for this process-only change. Future released sections should document version-specific upgrade steps here when needed.
 
+## [0.1.0]
+
+### Added
+
+- Established the first supported FabricOps Starter Kit release surface for governed Microsoft Fabric notebook projects.
+- Shipped Live Fabric input/output helpers, dataframe profiling support, agreement-driven metadata tables, and the supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates.
+- Published the release lifecycle manifest used to separate Live release assets from Preview capabilities.
+
+### Known limitations
+
+- Pipeline execution, governance review, DQ rule authoring and enforcement, and notebook registry capabilities remain Preview in this release.
+
+### Upgrade instructions
+
+- This is the first supported release; no prior supported release upgrade is required.
+
 ## Historical notes
 
 A standardized changelog was not maintained before this file. Do not invent historical release entries; add released sections only from reviewed release notes and repository history.

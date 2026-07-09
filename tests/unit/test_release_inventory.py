@@ -93,15 +93,17 @@ def test_release_inventory_output_order_is_deterministic():
     assert [item["name"] for item in manifest["functions"]] == ["a", "b"]
 
 
-def test_release_contract_pages_render_status_chips_and_links():
-    """Verify rendered release contract tables include status chips and stable links."""
-    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "functions.md").read_text(encoding="utf-8")
-    assert "| Status | Name | Documentation | Source |" in content
+def test_release_contract_pages_render_live_only_local_indexes():
+    """Verify public release index tables contain only Live local detail links."""
+    version = ri.read_package_version()
+    content = (ri.ROOT / "docs" / "releases" / version / "functions" / "index.md").read_text(encoding="utf-8")
+    assert "| Status | Function | Description | Details |" in content
+    assert "[Open](read_lakehouse_table.md)" in content
+    assert "docs/api/reference" not in content
+    assert "| Status | Name | Documentation | Source |" not in content
+    assert "src/fabricops_kit/io/read_lakehouse_table.py" not in content
     assert 'fabricops-release-status fabricops-release-status--live">Live</span>' in content
-    assert 'fabricops-release-status fabricops-release-status--preview">Preview</span>' in content
-    assert "[docs/api/reference/read_lakehouse_table.md](../../api/reference/read_lakehouse_table.md)" in content
-    assert "`src/fabricops_kit/io/read_lakehouse_table.py`" in content
-    assert "https://" not in content
+    assert 'fabricops-release-status fabricops-release-status--preview">Preview</span>' not in content
 
 
 def test_release_status_chip_supports_all_lifecycle_values():
@@ -123,8 +125,16 @@ def test_release_status_ordering_is_deterministic():
 
 
 def test_release_notes_are_sourced_from_changelog():
-    """Verify missing release notes are reported rather than invented."""
-    assert ri.extract_changelog_notes(ri.read_package_version()) == "Release notes have not yet been prepared."
+    """Verify release notes come from the matching changelog section."""
+    assert "first supported FabricOps Starter Kit release" in ri.extract_changelog_notes(ri.read_package_version())
+
+
+def test_missing_release_notes_fail_generation_clearly(tmp_path):
+    """Verify missing release notes fail instead of rendering placeholders."""
+    changelog = tmp_path / "CHANGELOG.md"
+    changelog.write_text("# Changelog\n\n## [Unreleased]\n\n- Pending.\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="no release section"):
+        ri.extract_changelog_notes("9.9.9", changelog)
 
 
 def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
@@ -134,18 +144,160 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
     assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 3
     assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
+    assert any(item["status"] == "preview" for item in manifest["functions"])
+    assert any(item["status"] == "preview" for item in manifest["templates"])
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])
 
 
-def test_release_overview_links_to_split_version_pages():
-    """Verify release overview links to generated split contract pages."""
+def test_release_generates_exact_live_detail_pages_and_no_preview_pages():
+    """Verify 0.1.0 frozen details exist exactly for Live assets."""
+    base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
+    assert len(list((base / "functions").glob("*.md"))) - 1 == 9
+    assert len(list((base / "metadata").glob("*.md"))) - 1 == 4
+    assert len(list((base / "templates").glob("*.md"))) - 1 == 3
+    assert not (base / "dq-rules").exists()
+    assert not (base / "functions" / "setup_notebook.md").exists()
+    assert not (base / "templates" / "02_pipeline.md").exists()
+
+
+def test_release_homepage_only_lists_live_non_empty_categories():
+    """Verify the homepage cards omit empty DQ rules and summarize Live counts."""
     content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
-    assert "- [Functions](functions.md)" in content
-    assert "- [Metadata tables](metadata-tables.md)" in content
-    assert "- [Templates](templates.md)" in content
-    assert "- [DQ rules](dq-rules.md)" in content
+    assert "9</strong><span>Live functions" in content
+    assert "4</strong><span>Live metadata tables" in content
+    assert "3</strong><span>Live notebook templates" in content
+    assert "Live dq rules" not in content
+    assert "Download wheel" in content
+    assert "SHA256SUMS.txt" in content
+
+
+def test_release_category_links_are_local():
+    """Verify category indexes link to local frozen detail pages."""
+    base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
+    checks = {
+        "functions": "[Open](read_lakehouse_excel.md)",
+        "metadata": "[Open](metadata_data_catalogue.md)",
+        "templates": "[Open](00_env_config.md)",
+    }
+    for folder, expected in checks.items():
+        content = (base / folder / "index.md").read_text(encoding="utf-8")
+        assert expected in content
+        assert "../../api/reference" not in content
+        assert "../../reference" not in content
+
+
+def test_no_release_table_uses_raw_source_path_columns():
+    """Verify public release inventory tables avoid raw source/documentation columns."""
+    for path in (ri.ROOT / "docs" / "releases" / ri.read_package_version()).glob("**/*.md"):
+        content = path.read_text(encoding="utf-8")
+        assert "| Status | Name | Documentation | Source |" not in content
+        assert "Documentation | Source" not in content
+
+
+def test_generated_release_pages_have_required_notice():
+    """Verify generated release pages declare their generated ownership."""
+    prefix = "<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->"
+    for path in (ri.ROOT / "docs" / "releases" / ri.read_package_version()).glob("**/*.md"):
+        assert path.read_text(encoding="utf-8").startswith(prefix)
+
+
+def test_release_generation_is_deterministic_and_second_run_clean():
+    """Verify rendering twice produces identical page content."""
+    ri.render_release_pages()
+    first = {p.relative_to(ri.ROOT).as_posix(): p.read_text(encoding="utf-8") for p in (ri.ROOT / "docs" / "releases").glob("**/*.md")}
+    ri.render_release_pages()
+    second = {p.relative_to(ri.ROOT).as_posix(): p.read_text(encoding="utf-8") for p in (ri.ROOT / "docs" / "releases").glob("**/*.md")}
+    assert first == second
+
+
+def test_mkdocs_navigation_has_no_empty_release_dq_section():
+    """Verify 0.1.0 navigation omits the empty DQ release section."""
+    content = (ri.ROOT / "mkdocs.yml").read_text(encoding="utf-8")
+    assert "releases/0.1.0/functions/index.md" in content
+    assert "releases/0.1.0/metadata/index.md" in content
+    assert "releases/0.1.0/templates/index.md" in content
+    assert "releases/0.1.0/dq-rules" not in content
 
 
 def test_release_renderer_creates_version_directory():
     """Verify release renderer creates the version directory automatically."""
     assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).is_dir()
+
+
+def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
+    """Verify the release notebook ZIP is built from Live template manifest entries."""
+    path = ri.build_notebook_pack(ri.read_package_version(), tmp_path)
+    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    assert manifest is not None
+    expected = sorted(f"{item['name']}.ipynb" for item in manifest["templates"] if item["status"] == "live")
+    import zipfile
+
+    with zipfile.ZipFile(path) as archive:
+        assert sorted(archive.namelist()) == expected
+    assert "02_pipeline.ipynb" not in expected
+
+
+def test_metadata_manifest_records_schema_since_and_fingerprint():
+    """Verify metadata schemas are tied to package releases by fingerprint."""
+    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    assert manifest is not None
+    agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
+    assert agreement["live_since"] == "0.1.0"
+    assert agreement["schema_since"] == "0.1.0"
+    assert len(agreement["schema_fingerprint"]) == 64
+
+
+def test_metadata_schema_since_is_preserved_when_fingerprint_unchanged():
+    """Verify schema_since does not advance when a schema fingerprint is unchanged."""
+    existing = {
+        "release_version": "0.1.1",
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [
+            {
+                "name": "METADATA_DATA_AGREEMENT",
+                "source_path": "old.py",
+                "status": "live",
+                "live_since": "0.1.0",
+                "schema_since": "0.1.0",
+                "schema_fingerprint": "same",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "same"})],
+    }
+    manifest = ri.synchronize_manifest(existing, discovered, "0.1.1")
+    assert manifest["metadata_tables"][0]["schema_since"] == "0.1.0"
+
+
+def test_metadata_schema_since_advances_when_fingerprint_changes():
+    """Verify schema_since moves to the package version when schema structure changes."""
+    existing = {
+        "release_version": "0.2.0",
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [
+            {
+                "name": "METADATA_DATA_AGREEMENT",
+                "source_path": "old.py",
+                "status": "live",
+                "live_since": "0.1.0",
+                "schema_since": "0.1.0",
+                "schema_fingerprint": "old",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [],
+        "templates": [],
+        "dq_rules": [],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "new"})],
+    }
+    manifest = ri.synchronize_manifest(existing, discovered, "0.2.0")
+    assert manifest["metadata_tables"][0]["schema_since"] == "0.2.0"

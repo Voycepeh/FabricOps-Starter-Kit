@@ -36,10 +36,9 @@ nav:
       - Overview: releases/index.md
       - 0.1.0:
           - Overview: releases/0.1.0/index.md
-          - Functions: releases/0.1.0/functions.md
-          - Metadata tables: releases/0.1.0/metadata-tables.md
-          - Templates: releases/0.1.0/templates.md
-          - DQ rules: releases/0.1.0/dq-rules.md
+          - Functions: releases/0.1.0/functions/index.md
+          - Metadata tables: releases/0.1.0/metadata/index.md
+          - Notebook templates: releases/0.1.0/templates/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
       - Data Access: reference/metadata/metadata_data_access.md
@@ -137,6 +136,7 @@ extra_css:
   - stylesheets/breadcrumbs.css
   - stylesheets/api-chips.css
   - stylesheets/release-status.css
+  - stylesheets/release-pages.css
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
   - stylesheets/table-controls.css
