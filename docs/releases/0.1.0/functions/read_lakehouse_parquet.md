@@ -47,4 +47,4 @@ cannot read the original path because of timestamp precision issues, the
 existing ``_tsus`` fallback conversion path is attempted with the same
 reader options.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

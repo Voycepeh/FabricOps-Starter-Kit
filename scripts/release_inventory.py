@@ -31,7 +31,7 @@ TEMPLATE_DOCS = {
 }
 GROUP_LABELS = {"functions": "Functions", "metadata_tables": "Metadata tables", "templates": "Notebook templates", "dq_rules": "DQ rules"}
 CATEGORY_DIRS = {"functions": "functions", "metadata_tables": "metadata", "templates": "templates", "dq_rules": "dq-rules"}
-CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Table", "templates": "Template", "dq_rules": "DQ rule"}
+CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Metadata table", "templates": "Notebook template", "dq_rules": "DQ rule"}
 CATEGORY_PURPOSE = {"functions": "Description", "metadata_tables": "Purpose", "templates": "Purpose", "dq_rules": "Purpose"}
 
 
@@ -370,12 +370,53 @@ def _description(item: dict[str, Any], group: str) -> str:
     return item["name"]
 
 
-def _category_index(version: str, group: str, items: list[dict[str, Any]], notice: str) -> str:
-    lines = [notice, "", f"# FabricOps Starter Kit {version} {GROUP_LABELS[group].lower()}", "", f"Package version: `{version}`", "", f"Live assets in this section: **{len(items)}**.", "", "This frozen release section includes only assets classified as Live for this version.", "", '<div class="fabricops-release-table" markdown>', "", f"| Status | {CATEGORY_NOUN[group]} | {CATEGORY_PURPOSE[group]} | Details |", "| --- | --- | --- | --- |"]
+def _template_preview_url(manifest: dict[str, Any], version: str, source_path: str) -> str:
+    """Return the immutable tagged GitHub preview URL for a release notebook."""
+    owner = manifest.get("github_owner") or "Voycepeh"
+    repo = manifest.get("github_repo") or "FabricOps-Starter-Kit"
+    return f"https://github.com/{owner}/{repo}/blob/v{version}/{source_path}"
+
+
+def _release_inventory_link(manifest: dict[str, Any], version: str, group: str, item: dict[str, Any]) -> str:
+    """Return the release overview table link for a Live inventory item."""
+    if group == "templates":
+        return _template_preview_url(manifest, version, str(item["source_path"]))
+    if group == "dq_rules":
+        return f"{CATEGORY_DIRS[group]}/{_slug(item['name'])}.md"
+    return f"{CATEGORY_DIRS[group]}/{_page_name(item['name'])}"
+
+
+def _release_inventory_section(manifest: dict[str, Any], version: str, group: str, items: list[dict[str, Any]]) -> list[str]:
+    """Render one collapsible Live inventory section for the release overview."""
+    if not items:
+        return []
+    label = GROUP_LABELS[group] if group == "dq_rules" else GROUP_LABELS[group].lower()
+    noun = CATEGORY_NOUN[group]
+    purpose = CATEGORY_PURPOSE[group]
+    lines = [
+        '<details class="fabricops-release-inventory" markdown>',
+        f"<summary>{len(items)} Live {label}</summary>",
+        "",
+        f"| {noun} | {purpose} |",
+        "| --- | --- |",
+    ]
     for item in items:
-        lines.append(f"| {release_status_chip('live')} | `{item['name']}` | {_description(item, group)} | [Open]({_page_name(item['name'])}) |")
-    lines.extend(["", "</div>", "", "!!! info \"Current product documentation\"", "    Current documentation may include newer Live and Preview capabilities. Use these release pages for the frozen 0.1.0 release surface."])
-    return "\n".join(lines) + "\n"
+        link = _release_inventory_link(manifest, version, group, item)
+        lines.append(f"| [`{item['name']}`]({link}) | {_description(item, group)} |")
+    lines.extend(["", "</details>"])
+    return lines
+
+
+def _release_inventory_sections(manifest: dict[str, Any], version: str, live: dict[str, list[dict[str, Any]]]) -> list[str]:
+    """Render all non-empty Live inventory sections for the release overview."""
+    sections: list[str] = []
+    for group in GROUPS:
+        section = _release_inventory_section(manifest, version, group, live[group])
+        if section:
+            if sections:
+                sections.append("")
+            sections.extend(section)
+    return sections
 
 
 def _function_page(version: str, item: dict[str, Any], notice: str) -> str:
@@ -411,7 +452,7 @@ Signature: `{details['signature']}`
 
 {notes}
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)
 """
 
 
@@ -420,48 +461,30 @@ def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
     lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Live since: `{item.get('live_since', version)}`", "", f"Schema since: `{item.get('schema_since', version)}`", "", f"Schema fingerprint: `{item.get('schema_fingerprint', 'Not recorded')}`", "", f"Source path: `{item['source_path']}`", "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
     for row in rows:
         lines.append(f"| `{row['name']}` | `{row['type']}` | {row['nullable']} | FabricOps metadata schema registry | `{row['name']}` field in `{item['name']}`. |")
-    lines.extend(["", "[Back to 0.1.0 metadata tables](index.md)"])
+    lines.extend(["", "[Back to release overview](../index.md)"])
     return "\n".join(lines) + "\n"
 
 
-def _template_page(version: str, item: dict[str, Any], notice: str, notebook_pack_url: str) -> str:
-    summary = _template_summary(item)
-    flow = "\n".join(f"{idx}. {step}" for idx, step in enumerate(summary["flow"], 1))
-    source = item["source_path"]
-    return f"""{notice}
-
-# `{item['name']}`
-
-{release_status_chip('live')}
-
-Package version: `{version}`
-
-Source notebook path: `{source}`
-
-## Purpose
-
-{summary['purpose']}
-
-## Expected inputs
-
-- Microsoft Fabric notebook runtime with FabricOps Starter Kit {version} installed.
-- Any variables or metadata produced by earlier notebooks in the supported release flow.
-
-## Expected outputs
-
-- Notebook state and metadata updates described by the template purpose.
-- Release-supported workflow artifacts for downstream notebooks when applicable.
-
-## Short usage flow
-
-{flow}
-
-## Download
-
-[Download the released notebook pack]({notebook_pack_url})
-
-[Back to 0.1.0 notebook templates](index.md)
-"""
+def _dq_rule_page(version: str, item: dict[str, Any], notice: str) -> str:
+    """Render a frozen release detail page for a Live DQ rule."""
+    lines = [
+        notice,
+        "",
+        f"# `{item['name']}`",
+        "",
+        release_status_chip("live"),
+        "",
+        f"Package version: `{version}`",
+        "",
+        f"Source path: `{item['source_path']}`",
+        "",
+        "## Purpose",
+        "",
+        _description(item, "dq_rules"),
+        "",
+        "[Back to release overview](../index.md)",
+    ]
+    return "\n".join(lines) + "\n"
 
 
 def _parse_release_date(value: Any) -> str:
@@ -558,16 +581,11 @@ def render_release_pages() -> list[Path]:
     release_dir.mkdir(parents=True, exist_ok=True)
     notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
     live = {group: live_release_items(manifest, group) for group in GROUPS}
-    notebook_pack = manifest.get("notebook_pack_asset") or f"fabricops-kit-{version}-notebooks.zip"
     release_status = manifest.get("release_status") or "Live"
     release_date = _parse_release_date(manifest.get("release_date"))
 
     paths: list[Path] = []
-    cards = []
-    for group in ("functions", "metadata_tables", "templates", "dq_rules"):
-        if live[group]:
-            label = GROUP_LABELS[group]
-            cards.append(f'<a class="fabricops-release-card" href="{CATEGORY_DIRS[group]}/"><strong>{len(live[group])}</strong><span>Live {label.lower()}</span></a>')
+    inventory_sections = _release_inventory_sections(manifest, version, live)
     index = release_dir / "index.md"
     github_release_url = _release_url(manifest, version)
     release_status_text = str(release_status).lower()
@@ -589,9 +607,7 @@ def render_release_pages() -> list[Path]:
                 "",
                 "## Live in this release",
                 "",
-                '<div class="fabricops-release-card-grid">',
-                *cards,
-                "</div>",
+                *inventory_sections,
                 "",
                 "## Changelog",
                 "",
@@ -603,25 +619,21 @@ def render_release_pages() -> list[Path]:
     )
     paths.append(index)
 
-    for group in GROUPS:
+    for group in ("functions", "metadata_tables", "dq_rules"):
         items = live[group]
         if not items:
             continue
         group_dir = release_dir / CATEGORY_DIRS[group]
         group_dir.mkdir(parents=True, exist_ok=True)
-        idx = group_dir / "index.md"
-        idx.write_text(_category_index(version, group, items, notice), encoding="utf-8")
-        paths.append(idx)
         for item in items:
-            page = group_dir / _page_name(item["name"])
+            page_name = f"{_slug(item['name'])}.md" if group == "dq_rules" else _page_name(item["name"])
+            page = group_dir / page_name
             if group == "functions":
                 content = _function_page(version, item, notice)
             elif group == "metadata_tables":
                 content = _metadata_page(version, item, notice)
-            elif group == "templates":
-                content = _template_page(version, item, notice, _release_url(manifest, version, notebook_pack))
             else:
-                content = ""
+                content = _dq_rule_page(version, item, notice)
             page.write_text(content, encoding="utf-8")
             paths.append(page)
 

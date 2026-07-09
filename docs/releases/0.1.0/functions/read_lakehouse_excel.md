@@ -43,4 +43,4 @@ FabricOps resolves the configured Lakehouse Files path from
 ``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
 DataFrame.
 
-[Back to 0.1.0 functions](index.md)
+[Back to release overview](../index.md)

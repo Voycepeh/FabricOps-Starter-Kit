@@ -39,4 +39,4 @@ Description: Supported FabricOps metadata table for data steward.
 | `_metadata_lakehouse_name` | `string` | No | FabricOps metadata schema registry | `_metadata_lakehouse_name` field in `METADATA_DATA_STEWARD`. |
 | `_activity_id` | `string` | No | FabricOps metadata schema registry | `_activity_id` field in `METADATA_DATA_STEWARD`. |
 
-[Back to 0.1.0 metadata tables](index.md)
+[Back to release overview](../index.md)
