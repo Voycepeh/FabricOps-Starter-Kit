@@ -28,6 +28,6 @@ Environment bootstrap for FabricOps Starter Kit notebooks. This notebook defines
 
 ## Download
 
-[Download `00_env_config.ipynb`](../../../../templates/notebooks/00_env_config.ipynb)
+[Download the released notebook pack](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops-kit-0.1.0-notebooks.zip)
 
 [Back to 0.1.0 notebook templates](index.md)

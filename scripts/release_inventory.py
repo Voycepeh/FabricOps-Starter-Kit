@@ -9,6 +9,7 @@ import inspect
 import re
 import shutil
 import tomllib
+import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -390,7 +391,7 @@ def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _template_page(version: str, item: dict[str, Any], notice: str) -> str:
+def _template_page(version: str, item: dict[str, Any], notice: str, notebook_pack_url: str) -> str:
     summary = _template_summary(item)
     flow = "\n".join(f"{idx}. {step}" for idx, step in enumerate(summary["flow"], 1))
     source = item["source_path"]
@@ -424,7 +425,7 @@ Source notebook path: `{source}`
 
 ## Download
 
-[Download `{item['name']}.ipynb`](../../../../{source})
+[Download the released notebook pack]({notebook_pack_url})
 
 [Back to 0.1.0 notebook templates](index.md)
 """
@@ -489,7 +490,7 @@ def render_release_pages() -> list[Path]:
             elif group == "metadata_tables":
                 content = _metadata_page(version, item, notice)
             elif group == "templates":
-                content = _template_page(version, item, notice)
+                content = _template_page(version, item, notice, _release_url(manifest, version, notebook_pack))
             else:
                 content = ""
             page.write_text(content, encoding="utf-8")
@@ -499,6 +500,32 @@ def render_release_pages() -> list[Path]:
     releases_index.write_text(f"{notice}\n\n# Releases\n\n## Current release\n\n- [FabricOps Starter Kit {version}]({version}/)\n", encoding="utf-8")
     return [releases_index, *paths]
 
+
+
+def build_notebook_pack(version: str | None = None, output_dir: Path | None = None) -> Path:
+    """Build a release notebook ZIP from Live template manifest entries."""
+    release_version = version or read_package_version()
+    manifest = _load_manifest(manifest_path(release_version))
+    if manifest is None:
+        raise ValueError(f"Release manifest not found for {release_version}.")
+    _validate_manifest(manifest, release_version)
+    output_root = output_dir or ROOT / "dist"
+    output_root.mkdir(parents=True, exist_ok=True)
+    asset_name = manifest.get("notebook_pack_asset") or f"fabricops-kit-{release_version}-notebooks.zip"
+    output_path = output_root / str(asset_name)
+    live_templates = live_release_items(manifest, "templates")
+    if not live_templates:
+        raise ValueError(f"Release manifest {release_version} has no Live notebook templates to package.")
+    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for item in live_templates:
+            source_path = ROOT / str(item["source_path"])
+            if not source_path.exists():
+                raise ValueError(f"Live notebook template not found: {item['source_path']}")
+            info = zipfile.ZipInfo(source_path.name, date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            archive.writestr(info, source_path.read_bytes())
+    return output_path
 
 def inventory_main(argv: list[str] | None = None) -> int:
     """CLI entry point for release inventory generation."""

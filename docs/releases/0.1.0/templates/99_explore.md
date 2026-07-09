@@ -33,6 +33,6 @@ Use this optional support notebook for discovery, profiling, troubleshooting, in
 
 ## Download
 
-[Download `99_explore.ipynb`](../../../../templates/notebooks/99_explore.ipynb)
+[Download the released notebook pack](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops-kit-0.1.0-notebooks.zip)
 
 [Back to 0.1.0 notebook templates](index.md)

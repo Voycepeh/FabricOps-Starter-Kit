@@ -32,6 +32,6 @@ Defines what should be built, who owns it, which rules apply, and what readiness
 
 ## Download
 
-[Download `01_agreement.ipynb`](../../../../templates/notebooks/01_agreement.ipynb)
+[Download the released notebook pack](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops-kit-0.1.0-notebooks.zip)
 
 [Back to 0.1.0 notebook templates](index.md)

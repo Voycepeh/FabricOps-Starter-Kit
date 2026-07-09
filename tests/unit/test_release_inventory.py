@@ -222,3 +222,16 @@ def test_mkdocs_navigation_has_no_empty_release_dq_section():
 def test_release_renderer_creates_version_directory():
     """Verify release renderer creates the version directory automatically."""
     assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).is_dir()
+
+
+def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
+    """Verify the release notebook ZIP is built from Live template manifest entries."""
+    path = ri.build_notebook_pack(ri.read_package_version(), tmp_path)
+    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
+    assert manifest is not None
+    expected = sorted(f"{item['name']}.ipynb" for item in manifest["templates"] if item["status"] == "live")
+    import zipfile
+
+    with zipfile.ZipFile(path) as archive:
+        assert sorted(archive.namelist()) == expected
+    assert "02_pipeline.ipynb" not in expected

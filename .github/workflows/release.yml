@@ -90,15 +90,7 @@ jobs:
           PY
 
       - name: Build Live notebook pack
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="${FABRICOPS_PACKAGE_VERSION}"
-          mkdir -p "${RUNNER_TEMP}/fabricops-notebooks"
-          cp templates/notebooks/00_env_config.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
-          cp templates/notebooks/01_agreement.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
-          cp templates/notebooks/99_explore.ipynb "${RUNNER_TEMP}/fabricops-notebooks/"
-          (cd "${RUNNER_TEMP}/fabricops-notebooks" && zip -r "${GITHUB_WORKSPACE}/dist/fabricops-kit-${version}-notebooks.zip" .)
+        run: uv run python scripts/build_release_notebook_pack.py "${FABRICOPS_PACKAGE_VERSION}" --output-dir dist
 
       - name: Generate SHA256 checksums
         run: |
