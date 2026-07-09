@@ -45,11 +45,40 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 
 ## Public functions
 
+| Function | Lifecycle | Live since | Summary |
+| --- | --- | --- | --- |
+| [`display_guardrail_results`](../api/reference/display_guardrail_results/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Return summary, detailed, or debug guardrail display output for Fabric notebooks. |
+| [`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Prepare source or target table configs for 02_pipeline. |
+| [`profile_dataframe`](../api/reference/profile_dataframe/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Profile a source or target DataFrame for schema, quality, and catalogue evidence. |
+| [`read_lakehouse_csv`](../api/reference/read_lakehouse_csv/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a CSV file from a configured Fabric-resolved path through Spark CSV. |
+| [`read_lakehouse_excel`](../api/reference/read_lakehouse_excel/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read an Excel file from a configured Fabric-resolved path through pandas.read_excel. |
+| [`read_lakehouse_parquet`](../api/reference/read_lakehouse_parquet/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a Parquet path from a configured Fabric-resolved path through Spark Parquet. |
+| [`read_lakehouse_table`](../api/reference/read_lakehouse_table/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a Delta table from a configured Fabric lakehouse target. |
+| [`read_warehouse_query`](../api/reference/read_warehouse_query/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read warehouse rows with SQL pushdown through a configured Fabric warehouse target. |
+| [`read_warehouse_table`](../api/reference/read_warehouse_table/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Read a table from a configured Fabric warehouse target. |
+| [`run_table_guardrails`](../api/reference/run_table_guardrails/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs. |
+| [`setup_metadata_tables`](../api/reference/setup_metadata_tables/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Create or validate all FabricOps metadata tables through one setup action. |
+| [`setup_notebook`](../api/reference/setup_notebook/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context. |
+| [`widget_author_dq_rules`](../api/reference/widget_author_dq_rules/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render interactive manual DQ guardrail authoring controls. |
+| [`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render interactive schema, freshness, and profile-behavior guardrail authoring controls. |
+| [`widget_browse_metadata_catalogue`](../api/reference/widget_browse_metadata_catalogue/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render a searchable metadata catalogue browser. |
+| [`widget_enrich_table_metadata`](../api/reference/widget_enrich_table_metadata/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render a consolidated column enrichment widget. |
+| [`widget_pipeline_bootstrap`](../api/reference/widget_pipeline_bootstrap/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Bootstrap a guided pipeline notebook run and store runtime defaults. |
+| [`widget_render_agreement_evidence`](../api/reference/widget_render_agreement_evidence/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render the standalone agreement-evidence widget. |
+| [`widget_render_data_agreement`](../api/reference/widget_render_data_agreement/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render the standalone data-agreement intake widget. |
+| [`widget_render_data_steward`](../api/reference/widget_render_data_steward/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render the standalone data-steward intake widget. |
+| [`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render interactive controls for reviewing proposed and bypassed guardrail rules. |
+| [`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Render an interactive target selector for guardrail authoring and governance review. |
+| [`write_lakehouse_table`](../api/reference/write_lakehouse_table/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Write a Spark DataFrame to a configured Fabric lakehouse Delta table. |
+| [`write_pipeline_lineage`](../api/reference/write_pipeline_lineage/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Write many-to-many source-to-target lineage evidence. |
+| [`write_pipeline_run_summary`](../api/reference/write_pipeline_run_summary/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> | — | Write one pipeline runtime summary row to metadata. |
+| [`write_warehouse_table`](../api/reference/write_warehouse_table/) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | 0.1.0 | Write a DataFrame to a configured Fabric warehouse target. |
+
 <div class="reference-catalogue-list">
 <article id="pipeline.display_guardrail_results-display_guardrail_results" class="reference-catalogue-item" data-callable-row="true" data-callable-name="display_guardrail_results" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Return summary, detailed, or debug guardrail display output for Fabric notebooks.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/display_guardrail_results/"><code>display_guardrail_results</code></a></h3>
   <p class="reference-catalogue-item-purpose">Return summary, detailed, or debug guardrail display output for Fabric notebooks.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -59,7 +88,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="pipeline.prepare_pipeline_table_configs-prepare_pipeline_table_configs" class="reference-catalogue-item" data-callable-row="true" data-callable-name="prepare_pipeline_table_configs" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Prepare source or target table configs for 02_pipeline.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/prepare_pipeline_table_configs/"><code>prepare_pipeline_table_configs</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare source or target table configs for 02_pipeline.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -69,7 +98,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="pipeline.profile_dataframe-profile_dataframe" class="reference-catalogue-item" data-callable-row="true" data-callable-name="profile_dataframe" data-callable-module="pipeline" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Profile a source or target DataFrame for schema, quality, and catalogue evidence.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/profile_dataframe/"><code>profile_dataframe</code></a></h3>
   <p class="reference-catalogue-item-purpose">Profile a source or target DataFrame for schema, quality, and catalogue evidence.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -79,7 +108,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_lakehouse_csv-read_lakehouse_csv" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_csv" data-callable-module="io" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a CSV file from a configured Fabric-resolved path through Spark CSV.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_csv/"><code>read_lakehouse_csv</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a CSV file from a configured Fabric-resolved path through Spark CSV.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -89,7 +118,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_lakehouse_excel-read_lakehouse_excel" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_excel" data-callable-module="io" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_excel/"><code>read_lakehouse_excel</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -99,7 +128,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_lakehouse_parquet-read_lakehouse_parquet" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_parquet" data-callable-module="io" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_parquet/"><code>read_lakehouse_parquet</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -109,7 +138,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_lakehouse_table-read_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_table" data-callable-module="io" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Read a Delta table from a configured Fabric lakehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_table/"><code>read_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a Delta table from a configured Fabric lakehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -119,7 +148,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_warehouse_query-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="io" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -129,7 +158,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.read_warehouse_table-read_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_table" data-callable-module="io" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore" data-function-type="public-starter-kit" data-callable-purpose="Read a table from a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_table/"><code>read_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -139,7 +168,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="pipeline.run_table_guardrails-run_table_guardrails" class="reference-catalogue-item" data-callable-row="true" data-callable-name="run_table_guardrails" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/run_table_guardrails/"><code>run_table_guardrails</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, example_dq_rule_smoke_test</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, example_dq_rule_smoke_test</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -149,7 +178,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="config.setup_metadata_tables-setup_metadata_tables" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_metadata_tables" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Create or validate all FabricOps metadata tables through one setup action.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_metadata_tables/"><code>setup_metadata_tables</code></a></h3>
   <p class="reference-catalogue-item-purpose">Create or validate all FabricOps metadata tables through one setup action.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">00_env_config</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -159,7 +188,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="config.setup_notebook-setup_notebook" class="reference-catalogue-item" data-callable-row="true" data-callable-name="setup_notebook" data-callable-module="config" data-callable-starter-path="00_env_config" data-callable-usage-source="00_env_config" data-function-type="public-starter-kit" data-callable-purpose="Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/setup_notebook/"><code>setup_notebook</code></a></h3>
   <p class="reference-catalogue-item-purpose">Prepare a FabricOps notebook by validating configuration, resolving environment targets, and returning reusable runtime context.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">00_env_config</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">00_env_config</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 00_env_config</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -169,7 +198,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_author_dq_rules-widget_author_dq_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_dq_rules" data-callable-module="widgets.widget_author_dq_rules" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render interactive manual DQ guardrail authoring controls.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_dq_rules/"><code>widget_author_dq_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render interactive manual DQ guardrail authoring controls.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 03_governance</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -179,7 +208,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_author_schema_freshness_profile_rules-widget_author_schema_freshness_profile_rules" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_author_schema_freshness_profile_rules" data-callable-module="widgets.widget_author_schema_freshness_profile_rules" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render interactive schema, freshness, and profile-behavior guardrail authoring controls.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_author_schema_freshness_profile_rules/"><code>widget_author_schema_freshness_profile_rules</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render interactive schema, freshness, and profile-behavior guardrail authoring controls.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 03_governance</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -189,7 +218,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_browse_metadata_catalogue-widget_browse_metadata_catalogue" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_browse_metadata_catalogue" data-callable-module="widgets.widget_browse_metadata_catalogue" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Render a searchable metadata catalogue browser.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_browse_metadata_catalogue/"><code>widget_browse_metadata_catalogue</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render a searchable metadata catalogue browser.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -199,7 +228,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_enrich_table_metadata-widget_enrich_table_metadata" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_enrich_table_metadata" data-callable-module="widgets.widget_enrich_table_metadata" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render a consolidated column enrichment widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_enrich_table_metadata/"><code>widget_enrich_table_metadata</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render a consolidated column enrichment widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 03_governance</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -209,7 +238,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_pipeline_bootstrap-widget_pipeline_bootstrap" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_pipeline_bootstrap" data-callable-module="widgets.widget_pipeline_bootstrap" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Bootstrap a guided pipeline notebook run and store runtime defaults.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_pipeline_bootstrap/"><code>widget_pipeline_bootstrap</code></a></h3>
   <p class="reference-catalogue-item-purpose">Bootstrap a guided pipeline notebook run and store runtime defaults.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -219,7 +248,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_render_agreement_evidence-widget_render_agreement_evidence" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_agreement_evidence" data-callable-module="widgets.widget_render_agreement_evidence" data-callable-starter-path="01_agreement" data-callable-usage-source="01_agreement" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone agreement-evidence widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_agreement_evidence/"><code>widget_render_agreement_evidence</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone agreement-evidence widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">01_agreement</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 01_agreement</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -229,7 +258,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_render_data_agreement-widget_render_data_agreement" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_agreement" data-callable-module="widgets.widget_render_data_agreement" data-callable-starter-path="01_agreement" data-callable-usage-source="01_agreement" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-agreement intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_agreement/"><code>widget_render_data_agreement</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-agreement intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">01_agreement</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 01_agreement</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -239,7 +268,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_render_data_steward-widget_render_data_steward" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_render_data_steward" data-callable-module="widgets.widget_render_data_steward" data-callable-starter-path="01_agreement" data-callable-usage-source="01_agreement" data-function-type="public-starter-kit" data-callable-purpose="Render the standalone data-steward intake widget.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_render_data_steward/"><code>widget_render_data_steward</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render the standalone data-steward intake widget.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">01_agreement</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">01_agreement</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 01_agreement</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -249,7 +278,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_review_guardrail_governance-widget_review_guardrail_governance" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_review_guardrail_governance" data-callable-module="widgets.widget_review_guardrail_governance" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render interactive controls for reviewing proposed and bypassed guardrail rules.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_review_guardrail_governance/"><code>widget_review_guardrail_governance</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render interactive controls for reviewing proposed and bypassed guardrail rules.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 03_governance</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -259,7 +288,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="widgets.widget_select_guardrail_target-widget_select_guardrail_target" class="reference-catalogue-item" data-callable-row="true" data-callable-name="widget_select_guardrail_target" data-callable-module="widgets.widget_select_guardrail_target" data-callable-starter-path="02_pipeline, 03_governance" data-callable-usage-source="02_pipeline, 03_governance" data-function-type="public-starter-kit" data-callable-purpose="Render an interactive target selector for guardrail authoring and governance review.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/widget_select_guardrail_target/"><code>widget_select_guardrail_target</code></a></h3>
   <p class="reference-catalogue-item-purpose">Render an interactive target selector for guardrail authoring and governance review.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 03_governance</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 03_governance</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -269,7 +298,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.write_lakehouse_table-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="io" data-callable-starter-path="02_pipeline, 99_explore" data-callable-usage-source="02_pipeline, 99_explore, example_pipeline_demo, example_dq_rule_smoke_test" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a Spark DataFrame to a configured Fabric lakehouse Delta table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline, 99_explore, example_pipeline_demo, example_dq_rule_smoke_test</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline, 99_explore, example_pipeline_demo, example_dq_rule_smoke_test</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline, 99_explore, example_pipeline_demo, example_dq_rule_smoke_test</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -279,7 +308,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="pipeline.write_pipeline_lineage-write_pipeline_lineage" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_lineage" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write many-to-many source-to-target lineage evidence.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_lineage/"><code>write_pipeline_lineage</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write many-to-many source-to-target lineage evidence.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -289,7 +318,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="pipeline.write_pipeline_run_summary-write_pipeline_run_summary" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_pipeline_run_summary" data-callable-module="pipeline" data-callable-starter-path="02_pipeline" data-callable-usage-source="02_pipeline" data-function-type="public-starter-kit" data-callable-purpose="Write one pipeline runtime summary row to metadata.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_pipeline_run_summary/"><code>write_pipeline_run_summary</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write one pipeline runtime summary row to metadata.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">02_pipeline</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">02_pipeline</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 02_pipeline</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">
@@ -299,7 +328,7 @@ Use the finder below to search 26 public functions. Config classes stay out of t
 <article id="io.write_warehouse_table-write_warehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_warehouse_table" data-callable-module="io" data-callable-starter-path="99_explore" data-callable-usage-source="99_explore" data-function-type="public-starter-kit" data-callable-purpose="Write a DataFrame to a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_warehouse_table/"><code>write_warehouse_table</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write a DataFrame to a configured Fabric warehouse target.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip">Public Starter Kit function</span><span class="reference-chip">99_explore</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip reference-chip-muted">Public function</span><span class="reference-chip">99_explore</span></p>
   <p class="reference-catalogue-item-used-in"><strong>Used in notebooks:</strong> 99_explore</p>
   <p class="reference-catalogue-item-provenance">Dependency data is generated from the callable architecture inventory.</p>
   <div class="reference-catalogue-item-counts">

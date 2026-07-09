@@ -1,4 +1,12 @@
-# read_lakehouse_table
+# `read_lakehouse_table`
+
+<p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.1.0</span>
+<span class="reference-chip reference-chip-muted">Public function</span>
+</p>
+
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 ## Call-flow summary
 
@@ -6,7 +14,39 @@
 - Shared helpers: 8
 - Private helpers: 8
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_table">Open focused call flow in dashboard</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_table">Open Live contract call flow</a>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.1.0 |
+| Discontinued in | — |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 16 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+</ul>
 
 
 Read a Delta table from a configured Fabric lakehouse target.
@@ -95,5 +135,5 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
-    Call-flow data generated: 08 Jul 2026, 1:07 PM SGT
+    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
+    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
