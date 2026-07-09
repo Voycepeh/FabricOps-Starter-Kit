@@ -301,3 +301,43 @@ def test_metadata_schema_since_advances_when_fingerprint_changes():
     }
     manifest = ri.synchronize_manifest(existing, discovered, "0.2.0")
     assert manifest["metadata_tables"][0]["schema_since"] == "0.2.0"
+
+
+def test_release_history_index_renders_all_manifests_as_sorted_table_rows():
+    """Verify release manifests render as newest-first release history rows."""
+    manifests = [
+        {
+            "release_version": "0.1.0",
+            "release_date": "2026-07-08",
+            "release_motivation": "Initial governed Fabric notebook workflows. Extra detail omitted.",
+        },
+        {
+            "release_version": "0.2.0",
+            "release_date": "2026-08-01",
+            "release_motivation": "Expanded release workflow coverage.",
+        },
+    ]
+
+    content = ri.render_releases_index(manifests, "<!-- Generated file. Test notice. -->")
+
+    assert content.startswith("<!-- Generated file. Test notice. -->")
+    assert "## Release history" in content
+    assert "## Current release" not in content
+    assert "| Release | Release date | Description |" in content
+    assert "| [FabricOps Starter Kit 0.2.0](0.2.0/) | 2026-08-01 | Expanded release workflow coverage. |" in content
+    assert "| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-08 | Initial governed Fabric notebook workflows. |" in content
+    assert content.index("FabricOps Starter Kit 0.2.0") < content.index("FabricOps Starter Kit 0.1.0")
+
+
+def test_release_history_semantic_version_fallback_order_is_deterministic():
+    """Verify equal or unavailable dates fall back to semantic-version order."""
+    manifests = [
+        {"release_version": "0.1.9", "release_date": None, "release_motivation": "Patch release."},
+        {"release_version": "0.1.10", "release_date": None, "release_motivation": "Later patch release."},
+        {"release_version": "0.2.0", "release_date": "2026-08-01", "release_motivation": "Minor release."},
+        {"release_version": "0.3.0", "release_date": "2026-08-01", "release_motivation": "Later minor release."},
+    ]
+
+    versions = [manifest["release_version"] for manifest in ri.sort_release_manifests(manifests)]
+
+    assert versions == ["0.3.0", "0.2.0", "0.1.10", "0.1.9"]
