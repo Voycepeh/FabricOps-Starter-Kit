@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 import tomllib
 
+from packaging.version import Version
 import pytest
 
 import scripts.release_inventory as ri
@@ -97,7 +98,11 @@ def test_load_release_manifests_reads_default_manifest_directory():
     """Verify the no-argument loader preserves release-page default discovery."""
     manifests = ri.load_release_manifests()
 
-    assert [manifest["release_version"] for manifest in manifests] == [ri.read_package_version()]
+    versions = [manifest["release_version"] for manifest in manifests]
+
+    assert versions
+    assert ri.read_package_version() in versions
+    assert versions == sorted(versions, key=Version)
 
 
 def test_load_release_manifests_reads_only_supplied_directory(tmp_path):
