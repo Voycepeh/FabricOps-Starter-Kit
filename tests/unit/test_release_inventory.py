@@ -167,8 +167,41 @@ def test_release_homepage_only_lists_live_non_empty_categories():
     assert "4</strong><span>Live metadata tables" in content
     assert "3</strong><span>Live notebook templates" in content
     assert "Live dq rules" not in content
-    assert "Download wheel" in content
-    assert "SHA256SUMS.txt" in content
+
+
+def test_live_release_requires_release_date():
+    """Verify Live release manifests must include a release date."""
+    manifest = {"release_version": "1.0.0", "release_status": "live", "release_date": None, "functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}
+
+    with pytest.raises(ValueError, match="must include release_date"):
+        ri._validate_manifest(manifest, "1.0.0")
+
+
+def test_individual_release_overview_is_concise_record():
+    """Verify individual release overview uses the concise release-record layout."""
+    ri.render_release_pages()
+    version = ri.read_package_version()
+    content = (ri.ROOT / "docs" / "releases" / version / "index.md").read_text(encoding="utf-8")
+
+    assert "- Release date: `2026-07-08`" in content
+    assert '<a class="md-button md-button--primary" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0">' in content
+    assert "View GitHub Release" in content
+    assert "## Downloads" not in content
+    assert "Download wheel" not in content
+    assert "Download source distribution" not in content
+    assert "Download notebook pack" not in content
+    assert "SHA256SUMS.txt" not in content
+    assert "## Get started" not in content
+    assert "## Why this release exists" not in content
+    assert "\n## Known limitations" not in content
+    assert "\n## Upgrade instructions" not in content
+    assert content.count("## Changelog") == 1
+    assert "### Added" in content
+    assert "### Known limitations" in content
+    assert "### Upgrade instructions" in content
+    assert "9</strong><span>Live functions" in content
+    assert "4</strong><span>Live metadata tables" in content
+    assert "3</strong><span>Live notebook templates" in content
 
 
 def test_release_category_links_are_local():

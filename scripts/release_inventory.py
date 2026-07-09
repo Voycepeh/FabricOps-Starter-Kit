@@ -187,6 +187,9 @@ def _load_manifest(path: Path) -> dict[str, Any] | None:
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
     if manifest.get("release_version") != version:
         raise ValueError(f"Manifest release_version {manifest.get('release_version')!r} does not match pyproject.toml version {version!r}.")
+    release_status = str(manifest.get("release_status") or "").lower()
+    if release_status == "live" and not _parse_release_date(manifest.get("release_date")):
+        raise ValueError(f"Live release manifest {version} must include release_date in YYYY-MM-DD format.")
     for group in GROUPS:
         seen: set[str] = set()
         for item in manifest.get(group, []):
@@ -523,7 +526,7 @@ def render_releases_index(manifests: list[dict[str, Any]], notice: str) -> str:
     lines = [notice, "", "# Releases", "", "## Release history", "", "| Release | Release date | Description |", "| --- | --- | --- |"]
     for manifest in sort_release_manifests(manifests):
         version = str(manifest["release_version"])
-        release_date = _parse_release_date(manifest.get("release_date")) or "Not specified"
+        release_date = _parse_release_date(manifest.get("release_date"))
         lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
     return "\n".join(lines) + "\n"
 
@@ -555,11 +558,9 @@ def render_release_pages() -> list[Path]:
     release_dir.mkdir(parents=True, exist_ok=True)
     notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
     live = {group: live_release_items(manifest, group) for group in GROUPS}
-    wheel, sdist = project_distribution_names(version)
     notebook_pack = manifest.get("notebook_pack_asset") or f"fabricops-kit-{version}-notebooks.zip"
     release_status = manifest.get("release_status") or "Live"
-    release_date = manifest.get("release_date") or "Not specified"
-    motivation = manifest.get("release_motivation") or "FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. It focuses on reliable Fabric input and output, dataframe profiling, agreement-driven metadata, and lightweight exploration workflows."
+    release_date = _parse_release_date(manifest.get("release_date"))
 
     paths: list[Path] = []
     cards = []
@@ -568,7 +569,38 @@ def render_release_pages() -> list[Path]:
             label = GROUP_LABELS[group]
             cards.append(f'<a class="fabricops-release-card" href="{CATEGORY_DIRS[group]}/"><strong>{len(live[group])}</strong><span>Live {label.lower()}</span></a>')
     index = release_dir / "index.md"
-    index.write_text("\n".join([notice, "", f"# FabricOps Starter Kit {version}", "", f"- Package version: `{version}`", f"- Release status: {release_status_chip(str(release_status).lower()) if str(release_status).lower() in VALID_STATUSES else release_status}", f"- Release date: {release_date}", f"- [GitHub Release]({_release_url(manifest, version)})", "", "## Why this release exists", "", motivation, "", "## Live in this release", "", '<div class="fabricops-release-card-grid">', *cards, "</div>", "", "## Downloads", "", f"- [Download wheel]({_release_url(manifest, version, wheel)})", f"- [Download source distribution]({_release_url(manifest, version, sdist)})", f"- [Download notebook pack]({_release_url(manifest, version, notebook_pack)})", f"- [View GitHub Release]({_release_url(manifest, version)})", f"- Verify downloads with [SHA256SUMS]({_release_url(manifest, version, 'SHA256SUMS.txt')})", "", "## Get started", "", "1. Download and install the wheel.", "2. Download the released notebook pack.", "3. Run `00_env_config`.", "4. Run `01_agreement`.", "5. Use `99_explore` for supported exploration.", "", "## Known limitations", "", "The pipeline execution workflow, governance review workflow, DQ rule authoring and enforcement, and notebook registry remain Preview and are not part of the supported frozen release surface for 0.1.0.", "", "## Release notes", "", notes, ""]) , encoding="utf-8")
+    github_release_url = _release_url(manifest, version)
+    release_status_text = str(release_status).lower()
+    rendered_status = release_status_chip(release_status_text) if release_status_text in VALID_STATUSES else str(release_status)
+    index.write_text(
+        "\n".join(
+            [
+                notice,
+                "",
+                f"# FabricOps Starter Kit {version}",
+                "",
+                f"- Package version: `{version}`",
+                f"- Release status: {rendered_status}",
+                f"- Release date: `{release_date}`",
+                "",
+                f'<a class="md-button md-button--primary" href="{github_release_url}">',
+                "  View GitHub Release",
+                "</a>",
+                "",
+                "## Live in this release",
+                "",
+                '<div class="fabricops-release-card-grid">',
+                *cards,
+                "</div>",
+                "",
+                "## Changelog",
+                "",
+                notes,
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     paths.append(index)
 
     for group in GROUPS:

@@ -4,12 +4,11 @@
 
 - Package version: `0.1.0`
 - Release status: <span class="fabricops-release-status fabricops-release-status--live">Live</span>
-- Release date: Not specified
-- [GitHub Release](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0)
+- Release date: `2026-07-08`
 
-## Why this release exists
-
-FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. It focuses on reliable Fabric input and output, dataframe profiling, agreement-driven metadata, and lightweight exploration workflows.
+<a class="md-button md-button--primary" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0">
+  View GitHub Release
+</a>
 
 ## Live in this release
 
@@ -19,27 +18,7 @@ FabricOps 0.1.0 establishes the first supported foundation for governed Microsof
 <a class="fabricops-release-card" href="templates/"><strong>3</strong><span>Live notebook templates</span></a>
 </div>
 
-## Downloads
-
-- [Download wheel](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops_kit-0.1.0-py3-none-any.whl)
-- [Download source distribution](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops_kit-0.1.0.tar.gz)
-- [Download notebook pack](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/fabricops-kit-0.1.0-notebooks.zip)
-- [View GitHub Release](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0)
-- Verify downloads with [SHA256SUMS](https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/download/v0.1.0/SHA256SUMS.txt)
-
-## Get started
-
-1. Download and install the wheel.
-2. Download the released notebook pack.
-3. Run `00_env_config`.
-4. Run `01_agreement`.
-5. Use `99_explore` for supported exploration.
-
-## Known limitations
-
-The pipeline execution workflow, governance review workflow, DQ rule authoring and enforcement, and notebook registry remain Preview and are not part of the supported frozen release surface for 0.1.0.
-
-## Release notes
+## Changelog
 
 ### Added
 
