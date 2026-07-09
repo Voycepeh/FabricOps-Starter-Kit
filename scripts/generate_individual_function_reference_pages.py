@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.generated_artifact_metadata import read_generated_artifact_metadata
+from scripts.generated_artifact_metadata import read_generated_artifact_metadata, update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -1282,6 +1282,15 @@ def _dash(value: Any) -> str:
     return "—" if value is None or value == "" else str(value)
 
 
+
+def _humanize_contract_value(value: Any) -> str:
+    """Return a compact human-readable label for contract enum values."""
+    text = _dash(value)
+    if text == "—":
+        return text
+    return text.replace("_", " ").strip().capitalize()
+
+
 def _lifecycle_status(row: dict[str, Any]) -> str:
     """Return the normalized lifecycle status from the call-flow contract."""
     raw_status = str(row.get("lifecycle_status") or "").strip()
@@ -1340,7 +1349,8 @@ def _dashboard_link_label(status: str) -> str:
 def _contract_impact_lines(row: dict[str, Any], *, docs_metadata: dict[str, Any], public_page_names: set[str]) -> list[str]:
     """Return the contract-impact section sourced from the call-flow JSON."""
     status = _lifecycle_status(row)
-    classification = row.get("contract_display") or row.get("contract_classification") or "—"
+    classification = _humanize_contract_value(row.get("contract_classification"))
+    risk = _humanize_contract_value(row.get("contract_risk"))
     lines = [
         "## Contract impact",
         "",
@@ -1350,9 +1360,8 @@ def _contract_impact_lines(row: dict[str, Any], *, docs_metadata: dict[str, Any]
         f"| Live since | {_dash(row.get('live_since'))} |",
         f"| Discontinued in | {_dash(row.get('discontinued_in'))} |",
         f"| Contract classification | {html_escape(str(classification))} |",
+        f"| Contract risk | {html_escape(str(risk))} |",
         f"| Live-critical dependencies | {_dash(row.get('live_critical_dependency_count', 0))} |",
-        f"| Direct Live dependents | {_dash(row.get('direct_live_dependent_count', 0))} |",
-        f"| Transitive Live dependents | {_dash(row.get('transitive_live_dependent_count', 0))} |",
         "",
     ]
     deps = [str(dep) for dep in row.get("live_critical_dependencies") or []]
@@ -4759,6 +4768,11 @@ def main() -> None:
         public_flow = public_flow_by_qn[qn]
         lifecycle_status = _lifecycle_status(public_flow)
         live_since = _dash(public_flow.get("live_since"))
+        lifecycle_extra_chip = ""
+        if lifecycle_status == "Live" and live_since != "—":
+            lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Live since {live_since}")
+        elif lifecycle_status == "Discontinued" and public_flow.get("discontinued_in"):
+            lifecycle_extra_chip = _lifecycle_chip(lifecycle_status, f"Discontinued in {public_flow['discontinued_in']}")
         downstream_callables = [row["qualified_name"] for row in public_flow.get("flow", [])[1:] if row.get("qualified_name")]
 
         def _catalogue_relationship_list(items: list[str]) -> str:
@@ -4802,7 +4816,7 @@ def main() -> None:
                 (
                     '  <p class="reference-catalogue-item-meta reference-catalogue-item-badges">'
                     f'{_lifecycle_chip(lifecycle_status, prominent=True)}'
-                    f'<span class="reference-chip reference-chip-muted">{_esc("Live since " + live_since if live_since != "—" else "Live since —")}</span>'
+                    f'{lifecycle_extra_chip}'
                     f'<span class="reference-chip reference-chip-muted">{_esc("Public function")}</span>'
                     f'<span class="reference-chip">{_esc(usage_source)}</span>'
                     "</p>"
@@ -4846,6 +4860,12 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink()
+    update_generated_artifact_metadata(
+        artifact_key="individual_function_reference_pages",
+        label="Individual function reference pages",
+        generator="scripts/generate_individual_function_reference_pages.py",
+        output_path="docs/api/reference",
+    )
     for public_flow in dashboard_public_functions:
         short_name = str(public_flow["function_name"])
         node = node_by_public_function_name.get(short_name)

@@ -23,10 +23,9 @@
 | Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
 | Live since | 0.1.0 |
 | Discontinued in | — |
-| Contract classification | Live · Live since 0.1.0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
 | Live-critical dependencies | 15 |
-| Direct Live dependents | 0 |
-| Transitive Live dependents | 0 |
 
 ### Live-critical dependencies
 
@@ -140,5 +139,5 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
     Call-flow data generated: 09 Jul 2026, 8:52 PM SGT

@@ -354,6 +354,34 @@
   background: color-mix(in srgb, var(--md-default-bg-color) 98%, rgb(148, 163, 184) 2%);
 }
 
+.reference-lifecycle-chip {
+  font-weight: 600;
+}
+
+.reference-lifecycle-chip-prominent {
+  border-width: 1.5px;
+  font-size: 0.78rem;
+  padding: 0.1rem 0.64rem;
+}
+
+.reference-lifecycle-live {
+  border-color: color-mix(in srgb, rgb(22, 163, 74) 46%, var(--md-default-bg-color));
+  color: color-mix(in srgb, rgb(22, 101, 52) 86%, var(--md-default-fg-color));
+  background: color-mix(in srgb, rgb(34, 197, 94) 16%, var(--md-default-bg-color));
+}
+
+.reference-lifecycle-preview {
+  border-color: color-mix(in srgb, rgb(217, 119, 6) 46%, var(--md-default-bg-color));
+  color: color-mix(in srgb, rgb(146, 64, 14) 86%, var(--md-default-fg-color));
+  background: color-mix(in srgb, rgb(245, 158, 11) 18%, var(--md-default-bg-color));
+}
+
+.reference-lifecycle-discontinued {
+  border-color: color-mix(in srgb, rgb(220, 38, 38) 46%, var(--md-default-bg-color));
+  color: color-mix(in srgb, rgb(153, 27, 27) 86%, var(--md-default-fg-color));
+  background: color-mix(in srgb, rgb(248, 113, 113) 16%, var(--md-default-bg-color));
+}
+
 .reference-chip-type.reference-chip-callable {
   background: color-mix(in srgb, rgb(16, 185, 129) 18%, var(--md-default-bg-color));
 }

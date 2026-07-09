@@ -22,10 +22,9 @@
 | Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
 | Live since | — |
 | Discontinued in | — |
-| Contract classification | Preview |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
 | Live-critical dependencies | 0 |
-| Direct Live dependents | 0 |
-| Transitive Live dependents | 0 |
 
 
 Render interactive manual DQ guardrail authoring controls.
@@ -122,5 +121,5 @@ No related guides documented.
 
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 08 Jul 2026, 1:08 PM SGT
+    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
     Call-flow data generated: 09 Jul 2026, 8:52 PM SGT

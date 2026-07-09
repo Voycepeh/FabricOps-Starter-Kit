@@ -669,9 +669,14 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert 'reference-lifecycle-chip-prominent">Preview</span>' in preview_text
     assert "not part of the supported Live release contract" in preview_text
     assert "backward-compatibility guarantees" in preview_text
+    assert "Live since —" not in preview_text
     assert "Changes to its signature, behaviour" not in preview_text
     assert "## Contract impact" in function_text
+    assert "| Contract classification | Live public function |" in function_text
+    assert "| Contract risk | Live |" in function_text
     assert "| Live-critical dependencies |" in function_text
+    assert "Direct Live dependents" not in function_text
+    assert "Transitive Live dependents" not in function_text
     assert "### Live-critical dependencies" in function_text
     assert '<code>fabricops_kit.config.shared.resolve_fabric_context</code>' in function_text
     assert "Open Live contract call flow" in function_text
@@ -706,6 +711,9 @@ def test_lifecycle_reference_helpers_render_discontinued_and_missing_data() -> N
     assert "Discontinued in 0.3.0" in header
     assert "no longer part of the current supported public contract" in header
     assert "| Discontinued in | 0.3.0 |" in impact
+    assert "| Contract risk | — |" in impact
+    assert "Direct Live dependents" not in impact
+    assert "Transitive Live dependents" not in impact
     with pytest.raises(RuntimeError, match="Public function reference lifecycle data missing for"):
         generator._lifecycle_status({"qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel"})
 
