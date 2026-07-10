@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Drafted the first supported FabricOps Starter Kit release surface for governed Microsoft Fabric notebook projects.
+- Drafted Live Fabric input/output helpers, dataframe profiling support, agreement-driven metadata tables, and the supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates for v0.1.0 lifecycle review.
+- Published the draft release lifecycle manifest used to separate provisional Live release assets from Preview capabilities during v0.1.0 preparation.
 - Formalized the GitHub-only release workflow for tagged FabricOps releases.
 - Added CI expectations for locked dependency installation, linting, tests, strict documentation builds, distribution builds, distribution validation, and wheel import smoke tests.
 - Added build-time release traceability documentation for package version, Mike documentation version, and Git commit SHA.
@@ -36,25 +39,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Breaking changes
 
+### Known limitations
+
+- Pipeline execution, governance review, DQ rule authoring and enforcement, and notebook registry capabilities are draft Preview decisions for the v0.1.0 lifecycle review.
+
 ### Upgrade instructions
 
 - No runtime upgrade is required for this process-only change. Future released sections should document version-specific upgrade steps here when needed.
-
-## [0.1.0]
-
-### Added
-
-- Established the first supported FabricOps Starter Kit release surface for governed Microsoft Fabric notebook projects.
-- Shipped Live Fabric input/output helpers, dataframe profiling support, agreement-driven metadata tables, and the supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates.
-- Published the release lifecycle manifest used to separate Live release assets from Preview capabilities.
-
-### Known limitations
-
-- Pipeline execution, governance review, DQ rule authoring and enforcement, and notebook registry capabilities remain Preview in this release.
-
-### Upgrade instructions
-
-- This is the first supported release; no prior supported release upgrade is required.
+- Draft v0.1.0 notes currently assume this will be the first supported release; no prior supported release upgrade is expected.
 
 ## Historical notes
 

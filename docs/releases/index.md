@@ -4,6 +4,10 @@
 
 ## Release history
 
-| Release | Release date | Description |
+No completed FabricOps Starter Kit releases have been published yet.
+
+## In preparation
+
+| Release | Status | Description |
 | --- | --- | --- |
-| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-08 | FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. |
+| FabricOps Starter Kit 0.1.0 | Preparing | FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. |
