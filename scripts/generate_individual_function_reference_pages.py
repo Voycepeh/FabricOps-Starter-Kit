@@ -1292,7 +1292,7 @@ def render_function_page_from_record(
     *,
     context: str = "current",
     release_version: str | None = None,
-    release_index_href: str = "../index.md",
+    release_index_href: str = "index.md",
 ) -> str:
     """Render a public function page from one call-flow contract record."""
     name = str(record["function_name"])

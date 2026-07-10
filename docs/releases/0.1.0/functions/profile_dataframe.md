@@ -6,7 +6,7 @@ Release version: `0.1.0`
 
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-[Current function page](../../../api/reference/profile_dataframe.md) · [Release function index](../index.md)
+[Current function page](../../../api/reference/profile_dataframe.md) · [Release function index](index.md)
 
 Build canonical DQ-ready profiling rows from a Spark DataFrame.
 
@@ -15,7 +15,7 @@ Build canonical DQ-ready profiling rows from a Spark DataFrame.
 
 `fabricops_kit/pipeline/profile_dataframe.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/0f77d1a/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce157/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">View on GitHub</a>
 </div>
 
 ## Signature
@@ -67,6 +67,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 12
-- Frozen source ref: `0f77d1a`
+- Frozen source ref: `bfce157`
 
 </details>

@@ -28,6 +28,10 @@ def test_release_payload_filters_live_roots_and_keeps_frozen_fields(tmp_path: Pa
     assert public_a["signature"].startswith("def public_a(")
     assert frozen["metadata"]["contract_kind"] == "frozen_release_live_only"
     assert frozen["release_contract"]["source_ref"] == "release-ref"
+    retained = {row["qualified_name"] for row in frozen["defined_functions"]}
+    flow_qns = {row["qualified_name"] for public_row in frozen["public_functions"] for row in public_row["flow"]}
+    assert retained <= flow_qns
+    assert frozen["summary"]["defined_function_count"] == len(frozen["defined_functions"])
 
 
 def test_release_pages_render_from_exact_frozen_json(tmp_path: Path) -> None:
@@ -72,6 +76,8 @@ def test_release_pages_render_from_exact_frozen_json(tmp_path: Path) -> None:
     assert "def old_live(value: str) -> str" in page_text
     assert "release-ref/src/fabricops_kit/old.py#L10-L20" in page_text
     assert "[Current function page](../../../api/reference/old_live.md)" in page_text
+    assert "[Release function index](index.md)" in page_text
+    assert (tmp_path / "functions" / "index.md").exists()
     assert "<summary>Maintainer architecture details</summary>" in page_text
 
 

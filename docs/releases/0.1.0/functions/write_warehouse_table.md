@@ -6,7 +6,7 @@ Release version: `0.1.0`
 
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-[Current function page](../../../api/reference/write_warehouse_table.md) · [Release function index](../index.md)
+[Current function page](../../../api/reference/write_warehouse_table.md) · [Release function index](index.md)
 
 Write a Spark DataFrame to a Microsoft Fabric warehouse table.
 
@@ -15,7 +15,7 @@ Write a Spark DataFrame to a Microsoft Fabric warehouse table.
 
 `fabricops_kit/io/write_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/0f77d1a/src/fabricops_kit/io/write_warehouse_table.py#L10-L78">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce157/src/fabricops_kit/io/write_warehouse_table.py#L10-L78">View on GitHub</a>
 </div>
 
 ## Signature
@@ -63,6 +63,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 15
-- Frozen source ref: `0f77d1a`
+- Frozen source ref: `bfce157`
 
 </details>

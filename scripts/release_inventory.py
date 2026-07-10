@@ -24,7 +24,7 @@ VALID_STATUSES = {"live", "preview", "discontinued"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
 MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
-TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
+TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
 TEMPLATE_DOCS = {
     "00_env_config": "docs/notebook-templates-implementation-guide/environment-config.md",
     "01_agreement": "docs/notebook-templates-implementation-guide/agreement-setup.md",

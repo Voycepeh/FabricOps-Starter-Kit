@@ -824,17 +824,34 @@ def freeze_release_payload(payload: dict[str, Any], *, release_version: str, sou
             live_public.append(row)
             live_roots.add(str(row.get("qualified_name")))
     frozen["public_functions"] = live_public
+    retained_qns = {
+        str(flow_row.get("qualified_name"))
+        for public_row in live_public
+        for flow_row in public_row.get("flow", [])
+        if flow_row.get("qualified_name")
+    }
+    retained_qns.update(live_roots)
     frozen["defined_functions"] = [
         row for row in frozen.get("defined_functions", [])
-        if row.get("qualified_name") in live_roots or row.get("function_type") != "public_function"
+        if row.get("qualified_name") in retained_qns
     ]
+    frozen["used_functions"] = sorted(qn for qn in frozen.get("used_functions", []) if qn in retained_qns)
+    frozen["defined_but_not_used"] = [
+        row for row in frozen.get("defined_but_not_used", [])
+        if row.get("qualified_name") in retained_qns
+    ]
+    live_critical_internal_count = sum(
+        1
+        for row in frozen["defined_functions"]
+        if row.get("function_type") != "public_function" and row.get("contract_classification") == "live_critical_internal"
+    )
     frozen["release_contract"] = {
         "release_versions": [release_version],
         "latest_release_version": release_version,
         "live_public_function_count": len(live_public),
         "preview_public_function_count": 0,
         "discontinued_public_function_count": 0,
-        "live_critical_internal_count": frozen.get("release_contract", {}).get("live_critical_internal_count", 0),
+        "live_critical_internal_count": live_critical_internal_count,
         "source_ref": source_ref,
         "frozen": True,
     }
@@ -843,7 +860,12 @@ def freeze_release_payload(payload: dict[str, Any], *, release_version: str, sou
         "source_ref": source_ref,
         "contract_kind": "frozen_release_live_only",
     }
-    frozen["summary"] = dict(frozen.get("summary", {})) | {"public_function_count": len(live_public)}
+    frozen["summary"] = {
+        "public_function_count": len(live_public),
+        "defined_function_count": len(frozen["defined_functions"]),
+        "used_function_count": len(frozen["used_functions"]),
+        "defined_but_not_used_count": len(frozen["defined_but_not_used"]),
+    }
     return frozen
 
 def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
