@@ -86,14 +86,40 @@ def test_stale_pipeline_guardrail_links_do_not_return() -> None:
     assert offenders == []
 
 
+def _release_source_ref(version: str) -> str:
+    """Return the exact source ref pinned by a release manifest."""
+    manifest_path = DOCS / "releases" / "manifests" / f"{version}.yml"
+    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("source_ref:"):
+            return line.split(":", 1)[1].strip()
+    raise AssertionError(f"Release manifest missing source_ref: {manifest_path.relative_to(ROOT)}")
+
+
+def _release_function_version(markdown_path: Path) -> str | None:
+    """Return the release version for release function pages only."""
+    relative = markdown_path.relative_to(DOCS)
+    if len(relative.parts) >= 4 and relative.parts[0] == "releases" and relative.parts[2] == "functions":
+        return relative.parts[1]
+    return None
+
+
 def test_generated_github_links_use_main_not_local_sha() -> None:
-    """Verify generated GitHub links do not point at local commit SHAs."""
-    stale_sha_pattern = re.compile(r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/[0-9a-f]{40}/")
-    offenders = [
-        str(path.relative_to(ROOT))
-        for path in sorted(DOCS.rglob("*.md"))
-        if stale_sha_pattern.search(path.read_text(encoding="utf-8"))
-    ]
+    """Verify generated GitHub links use current main or the matching frozen release ref."""
+    blob_pattern = re.compile(r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/([^/]+)/")
+    full_sha_pattern = re.compile(r"^[0-9a-f]{40}$")
+    offenders: list[str] = []
+
+    for path in sorted(DOCS.rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        release_version = _release_function_version(path)
+        expected_release_ref = _release_source_ref(release_version) if release_version else None
+        for match in blob_pattern.finditer(text):
+            ref = match.group(1)
+            if expected_release_ref is not None:
+                if ref != expected_release_ref:
+                    offenders.append(f"{path.relative_to(ROOT)} uses {ref}; expected release source_ref {expected_release_ref}")
+            elif full_sha_pattern.match(ref):
+                offenders.append(f"{path.relative_to(ROOT)} uses local commit SHA {ref}; expected main")
 
     assert offenders == []
 
