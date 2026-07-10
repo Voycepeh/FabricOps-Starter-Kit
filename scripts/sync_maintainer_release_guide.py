@@ -11,7 +11,7 @@ START = "<!-- FABRICOPS-RELEASE-SKILL-CONTENT:START -->"
 END = "<!-- FABRICOPS-RELEASE-SKILL-CONTENT:END -->"
 INTRO = """# FabricOps Maintainer Release Guide
 
-This page publishes the same operational workflow used by the `FabricOps Release Maintainer` AI skill. The canonical workflow source is [`.agents/skills/fabricops-release/SKILL.md`](../../.agents/skills/fabricops-release/SKILL.md); run [`scripts/sync_maintainer_release_guide.py`](../../scripts/sync_maintainer_release_guide.py) after editing the skill.
+This page publishes the same operational workflow used by the `FabricOps Release Maintainer` AI skill. The canonical workflow source is [`.agents/skills/fabricops-release/SKILL.md`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.agents/skills/fabricops-release/SKILL.md); run [`scripts/sync_maintainer_release_guide.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/sync_maintainer_release_guide.py) after editing the skill.
 
 """
 

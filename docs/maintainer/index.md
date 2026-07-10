@@ -1,6 +1,6 @@
 # FabricOps Maintainer Release Guide
 
-This page publishes the same operational workflow used by the `FabricOps Release Maintainer` AI skill. The canonical workflow source is [`.agents/skills/fabricops-release/SKILL.md`](../../.agents/skills/fabricops-release/SKILL.md); run [`scripts/sync_maintainer_release_guide.py`](../../scripts/sync_maintainer_release_guide.py) after editing the skill.
+This page publishes the same operational workflow used by the `FabricOps Release Maintainer` AI skill. The canonical workflow source is [`.agents/skills/fabricops-release/SKILL.md`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.agents/skills/fabricops-release/SKILL.md); run [`scripts/sync_maintainer_release_guide.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/sync_maintainer_release_guide.py) after editing the skill.
 
 <!-- FABRICOPS-RELEASE-SKILL-CONTENT:START -->
 
@@ -27,10 +27,10 @@ Source registries decide what exists; the manifest decides whether each discover
 
 | Asset group | Authoritative source | Release inventory behaviour |
 | --- | --- | --- |
-| Functions | [`src/fabricops_kit/public_api.py`](../../src/fabricops_kit/public_api.py) `SUPPORTED_PUBLIC_API` | A function enters the release inventory only when it is in the supported public API boundary. |
-| Metadata tables | [`src/fabricops_kit/config/metadata_schemas.py`](../../src/fabricops_kit/config/metadata_schemas.py) canonical schema registry | A metadata table enters the inventory when it is registered in the canonical schema registry. |
-| Notebook templates | [`templates/notebooks/`](../../templates/notebooks/) | A committed notebook in this directory enters the inventory. |
-| DQ rules | [`src/fabricops_kit/pipeline/guardrails_shared.py`](../../src/fabricops_kit/pipeline/guardrails_shared.py) `DQ_RULE_TYPES` | A DQ rule enters the inventory only when registered in `DQ_RULE_TYPES`. |
+| Functions | [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py) `SUPPORTED_PUBLIC_API` | A function enters the release inventory only when it is in the supported public API boundary. |
+| Metadata tables | [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py) canonical schema registry | A metadata table enters the inventory when it is registered in the canonical schema registry. |
+| Notebook templates | [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/) | A committed notebook in this directory enters the inventory. |
+| DQ rules | [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py) `DQ_RULE_TYPES` | A DQ rule enters the inventory only when registered in `DQ_RULE_TYPES`. |
 
 ## 2. Before you start
 
@@ -49,15 +49,15 @@ Purpose: confirm the working tree, branch, and latest `main` state. These comman
 
 Read these files and directories before proposing changes:
 
-- [`pyproject.toml`](../../pyproject.toml): authoritative package version and package configuration.
-- [`src/fabricops_kit/__init__.py`](../../src/fabricops_kit/__init__.py): package exports and runtime `__version__` loader.
+- [`pyproject.toml`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/pyproject.toml): authoritative package version and package configuration.
+- [`src/fabricops_kit/__init__.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/__init__.py): package exports and runtime `__version__` loader.
 - `CHANGELOG.md`: human-approved release narrative.
-- [`docs/releases/manifests/`](../../docs/releases/manifests/): version-specific lifecycle manifests.
-- [`.github/workflows/`](../../.github/workflows/): release and documentation automation.
-- [`src/fabricops_kit/public_api.py`](../../src/fabricops_kit/public_api.py): supported public API registry.
-- [`src/fabricops_kit/config/metadata_schemas.py`](../../src/fabricops_kit/config/metadata_schemas.py): canonical metadata schema registry.
-- [`src/fabricops_kit/pipeline/guardrails_shared.py`](../../src/fabricops_kit/pipeline/guardrails_shared.py): DQ rule registry.
-- [`templates/notebooks/`](../../templates/notebooks/): release template source directory.
+- [`docs/releases/manifests/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/docs/releases/manifests/): version-specific lifecycle manifests.
+- [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/): release and documentation automation.
+- [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py): supported public API registry.
+- [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py): canonical metadata schema registry.
+- [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py): DQ rule registry.
+- [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/): release template source directory.
 
 Identify the latest released version from `docs/releases/manifests/*.yml`, the current development version from `pyproject.toml`, and the requested release scope from the maintainer or merged PR history. Never assume the next version.
 
@@ -85,7 +85,7 @@ Run non-mutating validation where supported:
 PYTHONPATH=src python scripts/generate_release_inventory.py --check
 ```
 
-Entry point: [`scripts/generate_release_inventory.py`](../../scripts/generate_release_inventory.py). Implementation: [`scripts/release_inventory.py`](../../scripts/release_inventory.py).
+Entry point: [`scripts/generate_release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_inventory.py). Implementation: [`scripts/release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/release_inventory.py).
 
 This reads `pyproject.toml`, source registries, and `docs/releases/manifests/<version>.yml`. It writes nothing in `--check` mode. Success prints `Release inventory validated: docs/releases/manifests/<version>.yml`. If it fails because the target manifest is missing or stale, prepare the target manifest as described below instead of weakening validation.
 
@@ -154,7 +154,7 @@ Pause for maintainer approval before selecting or writing the final version.
 
 ## 8. Update version and manifest
 
-When the target version is approved, update [`pyproject.toml`](../../pyproject.toml). The release inventory command reads that version.
+When the target version is approved, update [`pyproject.toml`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/pyproject.toml). The release inventory command reads that version.
 
 For a follow-up release, copy the latest prior manifest first so lifecycle decisions carry forward:
 
@@ -208,12 +208,12 @@ Run only the generators required for the release scope. Do not manually edit gen
 
 Generator source links:
 
-- [`scripts/generate_public_function_call_flows_json.py`](../../scripts/generate_public_function_call_flows_json.py)
-- [`scripts/generate_individual_function_reference_pages.py`](../../scripts/generate_individual_function_reference_pages.py)
-- [`scripts/generate_release_inventory.py`](../../scripts/generate_release_inventory.py)
-- [`scripts/release_inventory.py`](../../scripts/release_inventory.py)
-- [`scripts/generate_release_contract_pages.py`](../../scripts/generate_release_contract_pages.py)
-- [`scripts/generate_public_function_call_flows_dashboard.py`](../../scripts/generate_public_function_call_flows_dashboard.py)
+- [`scripts/generate_public_function_call_flows_json.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows_json.py)
+- [`scripts/generate_individual_function_reference_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_individual_function_reference_pages.py)
+- [`scripts/generate_release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_inventory.py)
+- [`scripts/release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/release_inventory.py)
+- [`scripts/generate_release_contract_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_contract_pages.py)
+- [`scripts/generate_public_function_call_flows_dashboard.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows_dashboard.py)
 
 ## 11. Review generated evidence
 
@@ -283,7 +283,7 @@ After the tag workflow completes, verify the GitHub Release contains:
 - release notes
 - notebook pack when configured by the release manifest
 
-Release workflow source lives under [`.github/workflows/`](../../.github/workflows/). If the workflow fails, report the exact failing step and recovery path.
+Release workflow source lives under [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/). If the workflow fails, report the exact failing step and recovery path.
 
 ## 16. Retry, hotfix and rollback guidance
 
@@ -312,15 +312,15 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 
 ## 18. Exact source-code links
 
-- Package configuration: [`pyproject.toml`](../../pyproject.toml)
-- Package root and exports: [`src/fabricops_kit/__init__.py`](../../src/fabricops_kit/__init__.py)
-- Public API registry: [`src/fabricops_kit/public_api.py`](../../src/fabricops_kit/public_api.py)
-- Metadata schema registry: [`src/fabricops_kit/config/metadata_schemas.py`](../../src/fabricops_kit/config/metadata_schemas.py)
-- DQ rule registry: [`src/fabricops_kit/pipeline/guardrails_shared.py`](../../src/fabricops_kit/pipeline/guardrails_shared.py)
-- Notebook template directory: [`templates/notebooks/`](../../templates/notebooks/)
-- Release manifests: [`docs/releases/manifests/`](../../docs/releases/manifests/)
-- Release workflow automation: [`.github/workflows/`](../../.github/workflows/)
-- Release inventory entry point: [`scripts/generate_release_inventory.py`](../../scripts/generate_release_inventory.py)
-- Release inventory implementation: [`scripts/release_inventory.py`](../../scripts/release_inventory.py)
+- Package configuration: [`pyproject.toml`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/pyproject.toml)
+- Package root and exports: [`src/fabricops_kit/__init__.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/__init__.py)
+- Public API registry: [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py)
+- Metadata schema registry: [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py)
+- DQ rule registry: [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py)
+- Notebook template directory: [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/)
+- Release manifests: [`docs/releases/manifests/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/docs/releases/manifests/)
+- Release workflow automation: [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/)
+- Release inventory entry point: [`scripts/generate_release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_inventory.py)
+- Release inventory implementation: [`scripts/release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/release_inventory.py)
 
 <!-- FABRICOPS-RELEASE-SKILL-CONTENT:END -->

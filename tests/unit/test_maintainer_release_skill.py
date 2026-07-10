@@ -63,13 +63,17 @@ def test_removed_maintainer_pages_are_not_referenced() -> None:
         assert removed_path not in haystack
 
 
-def test_release_guide_links_to_existing_source_paths() -> None:
-    """Verify repository source links in the maintainer guide resolve."""
+def test_release_guide_uses_canonical_github_source_links() -> None:
+    """Verify repository source links use GitHub URLs and resolve locally."""
     guide = GUIDE.read_text(encoding="utf-8")
-    links = re.findall(r"\[[^\]]+\]\((\.\./\.\./[^)#]+)", guide)
+    assert not re.search(r"\]\(\.\./\.\./(?:scripts|src|\.agents|pyproject\.toml|templates|docs/releases|\.github)", guide)
+    links = re.findall(
+        r"https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/([^\s)]+)",
+        guide,
+    )
     assert links
     for link in links:
-        assert (GUIDE.parent / link).resolve().exists(), link
+        assert (ROOT / link).exists(), link
 
 
 def test_documented_release_generators_exist() -> None:
