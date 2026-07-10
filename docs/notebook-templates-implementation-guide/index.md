@@ -1,10 +1,21 @@
-# Notebook Templates Implementation Guide
+# Templates
 
-The Notebook Templates Implementation Guide is the canonical scan-friendly guide for what each FabricOps notebook contains and what users normally configure. Use the [Guided Demo](../guided-demo.md) for the run sequence, and use the [Function Reference](../reference/index.md) for reusable functions and classes.
+FabricOps Starter Kit provides editable Microsoft Fabric notebook templates for governed, quality-checked notebook workflows. Use this page as the lightweight template landing page: download the notebooks, scan the run order, then follow the Guided Demo for the maintained step-by-step instructions.
 
 <p class="template-download-hero">
   <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Download all template notebooks from this GitHub folder</a>
 </p>
+
+## Notebook sequence
+
+| Order | Notebook | Guided Demo destination |
+| ----- | -------- | ----------------------- |
+| 1 | `00_env_config` | [Run Environment Setup](../guided-demo/run-environment-setup.md) |
+| 2 | `01_agreement` | [Create Agreement](../guided-demo/create-agreement.md) |
+| 3 | `example_pipeline_demo` | [Run Pipeline](../guided-demo/run-pipeline.md#seed-demo-source-data-with-example_pipeline_demo) |
+| 4 | `02_pipeline` | [Run Pipeline](../guided-demo/run-pipeline.md#run-02_pipeline) |
+| 5 | `03_governance` | [Review Guardrails](../guided-demo/review-guardrails.md) |
+| Optional | `99_explore` | [Explore Metadata Outputs](../guided-demo/explore-metadata-outputs.md) |
 
 <div class="template-card-grid" markdown="1">
 
@@ -12,30 +23,9 @@ The Notebook Templates Implementation Guide is the canonical scan-friendly guide
 
 ## [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb)
 
-Centralizes environment, workspace, path, metadata routing, runtime validation, and audit settings so every later notebook uses the same configured targets.
+Centralizes environment, workspace, path, metadata routing, runtime validation, widget configuration, and audit settings so every later notebook uses the same configured targets.
 
-[Open Environment Config Guide](environment-config.md){ .md-button }
-
-??? info "Details"
-    **Purpose**
-
-    Configure shared `CONFIG` and `ENV` values, metadata lakehouse routing, schemas, default table names, validation behavior, and audit context.
-
-    **When to use it**
-
-    Run it first in every workspace setup, demo, or governed workflow. Revisit it when workspace item names, schemas, metadata targets, validation behavior, or audit values change.
-
-    **What users normally edit**
-
-    Environment name, workspace and Fabric item names, source/unified/metadata/warehouse routes, schema names, default workflow table names, runtime validation flags, and audit values.
-
-    **What it validates or produces**
-
-    It validates required environment keys and configured paths, routes `METADATA_*` tables through the configured metadata lakehouse, and creates or validates required metadata tables.
-
-    **Downstream dependencies**
-
-    `01_agreement`, `02_pipeline`, `03_governance`, and `99_explore` depend on its routes and runtime context.
+[Open Guided Demo step](../guided-demo/run-environment-setup.md){ .md-button }
 
 </div>
 
@@ -43,30 +33,9 @@ Centralizes environment, workspace, path, metadata routing, runtime validation, 
 
 ## [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb)
 
-Captures business agreement, ownership, purpose, readiness, and supporting context before engineering execution begins.
+Captures steward, agreement, business purpose, readiness, and supporting evidence before pipeline execution begins.
 
-[Open Agreement Setup Guide](agreement-setup.md){ .md-button }
-
-??? info "Details"
-    **Purpose**
-
-    Record steward details, agreement scope, business purpose, readiness notes, approvals, and public-safe supporting files.
-
-    **When to use it**
-
-    Use it when governed data work needs approved context before pipeline execution starts.
-
-    **What users normally edit**
-
-    Steward and owner details, agreement name, scope, status, purpose, supporting file labels, notes, links, and readiness context.
-
-    **What it validates or produces**
-
-    It validates required agreement and steward fields, then writes steward, agreement, and agreement file metadata to the configured metadata target.
-
-    **Downstream dependencies**
-
-    `02_pipeline`, `03_governance`, and `99_explore` use agreement context to connect technical metadata to ownership and purpose.
+[Open Guided Demo step](../guided-demo/create-agreement.md){ .md-button }
 
 </div>
 
@@ -74,30 +43,9 @@ Captures business agreement, ownership, purpose, readiness, and supporting conte
 
 ## [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb)
 
-Provides the engineering notebook for data loading, transformation, validation, publishing, lineage, and run history.
+Runs source-to-target processing under an agreement, profiles data, evaluates guardrails, writes governed outputs, and records lineage and run evidence.
 
-[Open Pipeline Execution Guide](pipeline-execution.md){ .md-button }
-
-??? info "Details"
-    **Purpose**
-
-    Run source-to-target processing under an agreement, profile data, evaluate guardrails, write outputs, and capture lineage and run summaries.
-
-    **When to use it**
-
-    Run it after `00_env_config` and `01_agreement` when source-to-target processing is ready to execute.
-
-    **What users normally edit**
-
-    Source table names, target table names, read and write settings, transformation logic, run labels, operational notes, and exposed validation choices.
-
-    **What it validates or produces**
-
-    It validates agreement context, source reads, schema, freshness, profile, DQ, and load behavior; it produces catalogue profiles, guardrail results, lineage, run summaries, and reviewed outputs.
-
-    **Downstream dependencies**
-
-    `03_governance` reviews observed metadata and proposed guardrails from pipeline runs. Later pipeline runs enforce active approved rules.
+[Open Guided Demo step](../guided-demo/run-pipeline.md#run-02_pipeline){ .md-button }
 
 </div>
 
@@ -105,30 +53,9 @@ Provides the engineering notebook for data loading, transformation, validation, 
 
 ## [`03_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_governance.ipynb)
 
-Supports metadata enrichment review, guardrail review, lifecycle decisions, and promotion-readiness assessment.
+Supports enrichment review, guardrail review, lifecycle decisions, and promotion-readiness assessment based on observed metadata and runtime evidence.
 
-[Open Governance Review Guide](governance-review.md){ .md-button }
-
-??? info "Details"
-    **Purpose**
-
-    Review observed metadata, complete business metadata, approve or update guardrails, and record lifecycle decisions.
-
-    **When to use it**
-
-    Use it after pipeline run details exist, or when reviewers need to approve, reject, replace, deactivate, or update enrichment and guardrail intent.
-
-    **What users normally edit**
-
-    Review notes, lifecycle decisions, business descriptions, classifications, stewardship context, and guardrail fields exposed by widgets.
-
-    **What it validates or produces**
-
-    It validates reviewed records and required review fields, then writes enrichment lifecycle records and approved, rejected, replaced, or inactive guardrail intent.
-
-    **Downstream dependencies**
-
-    Future `02_pipeline` runs use active guardrail intent from governance metadata.
+[Open Guided Demo step](../guided-demo/review-guardrails.md){ .md-button }
 
 </div>
 
@@ -136,28 +63,9 @@ Supports metadata enrichment review, guardrail review, lifecycle decisions, and 
 
 ## [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)
 
-Provides optional read-only inspection and troubleshooting helpers for metadata, data context, or helper behavior.
+Provides optional read-only inspection and troubleshooting for metadata, configured data targets, and helper behavior without changing governed workflow state.
 
-??? info "Details"
-    **Purpose**
-
-    Inspect metadata or data context without changing governed workflow state.
-
-    **When to use it**
-
-    Use it before or after the governed flow for discovery, scratch profiling, troubleshooting, or support investigation.
-
-    **What users normally edit**
-
-    The table or agreement context to inspect, scratch analysis cells, and temporary display logic.
-
-    **What it validates or produces**
-
-    It does not validate production workflow state and creates no required metadata. Outputs are ad hoc notebook displays unless users save separate scratch artifacts.
-
-    **Downstream dependencies**
-
-    No production notebook depends on `99_explore`; treat it as an inspection helper.
+[Open Guided Demo step](../guided-demo/explore-metadata-outputs.md){ .md-button }
 
 </div>
 
@@ -165,7 +73,7 @@ Provides optional read-only inspection and troubleshooting helpers for metadata,
 
 ## Optional example notebooks
 
-The example notebooks support demos, training, and smoke tests. They are optional and are not part of the required production workflow sequence.
+These notebooks support demos, training, and smoke tests. They are not part of the required production workflow sequence.
 
 <div class="template-card-grid" markdown="1">
 
@@ -173,28 +81,9 @@ The example notebooks support demos, training, and smoke tests. They are optiona
 
 ## [`example_pipeline_demo`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_pipeline_demo.ipynb)
 
-Generates deterministic demo source tables for the guided demo.
+Generates deterministic demo source tables and demo-scoped rule intent for the Guided Demo pipeline run.
 
-??? info "Details"
-    **Purpose**
-
-    Create repeatable demo source scenarios and demo-scoped DQ rules.
-
-    **When to use it**
-
-    Use it only for demos, training, and local validation of the starter workflow. It is not a production delivery notebook.
-
-    **What users normally edit**
-
-    Demo schema, table prefix, and scenario choices exposed by the notebook.
-
-    **What it validates or produces**
-
-    It helps validate that the demo can produce repeatable source inputs for `02_pipeline` and creates demo source tables in the configured source lakehouse.
-
-    **Downstream dependencies**
-
-    The guided demo version of `02_pipeline` reads the generated demo source tables.
+[Open Guided Demo step](../guided-demo/run-pipeline.md#seed-demo-source-data-with-example_pipeline_demo){ .md-button }
 
 </div>
 
@@ -202,28 +91,9 @@ Generates deterministic demo source tables for the guided demo.
 
 ## [`example_dq`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb)
 
-Demonstrates DQ rule evaluation, warning behavior, and blocking behavior in a smoke-test context.
+Demonstrates supported DQ rule outcomes in a smoke-test context for users learning rule behavior outside the production sequence. It is not a production delivery notebook.
 
-??? info "Details"
-    **Purpose**
-
-    Validate DQ rule helper behavior with controlled smoke-test examples.
-
-    **When to use it**
-
-    Use it when learning supported DQ rule outcomes or validating helper behavior. It is not a production delivery notebook.
-
-    **What users normally edit**
-
-    Smoke-test rule examples and toy input values.
-
-    **What it validates or produces**
-
-    It validates supported DQ rule behavior in a controlled context and does not define production workflow history.
-
-    **Downstream dependencies**
-
-    No production notebook depends on this smoke test. Use the DQ rule reference for rule syntax and supported behavior.
+[Open DQ rule reference](../reference/dq-rules/index.md){ .md-button }
 
 </div>
 

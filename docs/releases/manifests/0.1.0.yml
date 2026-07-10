@@ -221,21 +221,21 @@ metadata_tables:
 templates:
   - name: 00_env_config
     source_path: templates/notebooks/00_env_config.ipynb
-    documentation_path: docs/notebook-templates-implementation-guide/environment-config.md
+    documentation_path: docs/guided-demo/run-environment-setup.md
     status: live
     live_since: 0.1.0
   - name: 01_agreement
     source_path: templates/notebooks/01_agreement.ipynb
-    documentation_path: docs/notebook-templates-implementation-guide/agreement-setup.md
+    documentation_path: docs/guided-demo/create-agreement.md
     status: live
     live_since: 0.1.0
   - name: 02_pipeline
     source_path: templates/notebooks/02_pipeline.ipynb
-    documentation_path: docs/notebook-templates-implementation-guide/pipeline-execution.md
+    documentation_path: docs/guided-demo/run-pipeline.md
     status: preview
   - name: 03_governance
     source_path: templates/notebooks/03_governance.ipynb
-    documentation_path: docs/notebook-templates-implementation-guide/governance-review.md
+    documentation_path: docs/guided-demo/review-guardrails.md
     status: preview
   - name: 99_explore
     source_path: templates/notebooks/99_explore.ipynb

@@ -13,18 +13,18 @@ Use this file as a concise navigation map for documentation and automation workf
 
 - [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
 - [List of Metadata Tables](reference/metadata.md): Metadata table responsibilities and governance evidence model.
-- [Pipeline Execution](notebook-templates-implementation-guide/pipeline-execution.md): Runtime pipeline flow, guardrails, DQ enforcement, and profile behaviour.
+- [Pipeline Execution](guided-demo/run-pipeline.md): Runtime pipeline flow, guardrails, DQ enforcement, and profile behaviour.
 - [Metadata Dashboard](notebook-templates-implementation-guide/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
 
 ## Notebook flow
 
-- [Notebook Templates Implementation Guide](notebook-templates-implementation-guide/index.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
-- [Environment Config](notebook-templates-implementation-guide/environment-config.md): Runtime configuration and metadata target setup for `00_env_config`.
-- [Agreement Setup](notebook-templates-implementation-guide/agreement-setup.md): Agreement and steward context setup for governed runs.
+- [Templates](notebook-templates-implementation-guide/index.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
+- [Environment Config](guided-demo/run-environment-setup.md): Runtime configuration and metadata target setup for `00_env_config`.
+- [Agreement Setup](guided-demo/create-agreement.md): Agreement and steward context setup for governed runs.
 
 ## Metadata and contracts
 
-- [Data Quality and Governance](notebook-templates-implementation-guide/governance-review.md): Review flows for column context, classification, DQ rules, and governance evidence.
+- [Data Quality and Governance](guided-demo/review-guardrails.md): Review flows for column context, classification, DQ rules, and governance evidence.
 - [DQ Rules Reference](reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
 
 ## API reference

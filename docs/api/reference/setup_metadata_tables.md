@@ -100,7 +100,7 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 - [Metadata Tables](../../reference/metadata.md)
 
 
@@ -122,5 +122,5 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 10 Jul 2026, 5:32 PM SGT
     Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

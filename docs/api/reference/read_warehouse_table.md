@@ -99,7 +99,7 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>
@@ -140,5 +140,5 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 10 Jul 2026, 5:32 PM SGT
     Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

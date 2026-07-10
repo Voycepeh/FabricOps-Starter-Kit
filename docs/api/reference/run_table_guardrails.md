@@ -105,7 +105,7 @@ Not documented yet
 
 ## See also
 
-- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+- [Pipeline Execution](../../guided-demo/run-pipeline.md)
 
 
 <details>
@@ -126,5 +126,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 10 Jul 2026, 5:32 PM SGT
     Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

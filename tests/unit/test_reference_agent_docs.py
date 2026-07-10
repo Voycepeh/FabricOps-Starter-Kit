@@ -656,43 +656,22 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
-    environment_config = (
-        ROOT / "docs" / "notebook-templates-implementation-guide" / "environment-config.md"
-    ).read_text(encoding="utf-8")
-    agreement_setup = (ROOT / "docs" / "notebook-templates-implementation-guide" / "agreement-setup.md").read_text(
-        encoding="utf-8"
-    )
-    pipeline_execution = (
-        ROOT / "docs" / "notebook-templates-implementation-guide" / "pipeline-execution.md"
-    ).read_text(encoding="utf-8")
-    governance_review = (ROOT / "docs" / "notebook-templates-implementation-guide" / "governance-review.md").read_text(
-        encoding="utf-8"
-    )
+    environment_config = (ROOT / "docs" / "guided-demo" / "run-environment-setup.md").read_text(encoding="utf-8")
+    agreement_setup = (ROOT / "docs" / "guided-demo" / "create-agreement.md").read_text(encoding="utf-8")
+    pipeline_execution = (ROOT / "docs" / "guided-demo" / "run-pipeline.md").read_text(encoding="utf-8")
+    governance_review = (ROOT / "docs" / "guided-demo" / "review-guardrails.md").read_text(encoding="utf-8")
     metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
     metadata_tables = metadata_tables_path.read_text(encoding="utf-8")
     lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md").read_text(
         encoding="utf-8"
     )
 
-    assert "[`setup_notebook`](../api/reference/setup_notebook.md)" in environment_config
-    assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in environment_config
-    assert "[`widget_render_data_steward`](../api/reference/widget_render_data_steward.md)" in agreement_setup
-    assert (
-        "[`prepare_pipeline_table_configs`](../api/reference/prepare_pipeline_table_configs.md)" in pipeline_execution
-    )
-    guardrail_target = "run_table_guardrails"
-    guardrail_link = f"[`run_table_guardrails`](../api/reference/{guardrail_target}.md)"
-    assert guardrail_link in pipeline_execution
-    assert "[`widget_select_guardrail_target`](../api/reference/widget_select_guardrail_target.md)" in governance_review
-    assert (
-        "[`widget_author_schema_freshness_profile_rules`](../api/reference/widget_author_schema_freshness_profile_rules.md)"
-        in governance_review
-    )
-    assert "[`widget_author_dq_rules`](../api/reference/widget_author_dq_rules.md)" in governance_review
-    assert (
-        "[`widget_review_guardrail_governance`](../api/reference/widget_review_guardrail_governance.md)"
-        in governance_review
-    )
+    assert "metadata setup cell" in environment_config
+    assert "DATA_AGREEMENT_CONFIG" in agreement_setup
+    assert "source and target table settings" in pipeline_execution
+    assert "schema, freshness, profile behavior, and active DQ rules" in pipeline_execution
+    assert "Select the governed table context" in governance_review
+    assert "Approve, reject, replace, deactivate" in governance_review
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)" in lineage_table
@@ -782,7 +761,7 @@ def test_reference_nav_preserves_existing_user_facing_entries() -> None:
 
     assert "  - Reference:" not in mkdocs_text
     assert (
-        "  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md" in mkdocs_text
+        "  - Templates: notebook-templates-implementation-guide/index.md" in mkdocs_text
     )
     assert "  - List of Metadata Tables:" in mkdocs_text
     assert "      - Overview: reference/metadata.md" in mkdocs_text

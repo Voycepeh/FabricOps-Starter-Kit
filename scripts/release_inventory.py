@@ -26,10 +26,10 @@ GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{
 MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
 TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
 TEMPLATE_DOCS = {
-    "00_env_config": "docs/notebook-templates-implementation-guide/environment-config.md",
-    "01_agreement": "docs/notebook-templates-implementation-guide/agreement-setup.md",
-    "02_pipeline": "docs/notebook-templates-implementation-guide/pipeline-execution.md",
-    "03_governance": "docs/notebook-templates-implementation-guide/governance-review.md",
+    "00_env_config": "docs/guided-demo/run-environment-setup.md",
+    "01_agreement": "docs/guided-demo/create-agreement.md",
+    "02_pipeline": "docs/guided-demo/run-pipeline.md",
+    "03_governance": "docs/guided-demo/review-guardrails.md",
 }
 GROUP_LABELS = {"functions": "Functions", "metadata_tables": "Metadata tables", "templates": "Notebook templates", "dq_rules": "DQ rules"}
 CATEGORY_DIRS = {"functions": "functions", "metadata_tables": "metadata", "templates": "templates", "dq_rules": "dq-rules"}

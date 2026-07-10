@@ -1,8 +1,8 @@
 # FabricOps Guided Demo
 
-Use this walkthrough to run the FabricOps Starter Kit demo from workspace setup through metadata inspection. It focuses on the user journey: what to open, what to run, and what metadata to expect.
+Use this walkthrough to run the FabricOps Starter Kit demo from workspace setup through metadata inspection. It is the canonical user guide for configuring and running the template notebooks: what to open, what to edit, what to run, and what metadata to expect.
 
-For the detailed contents and configurable settings inside each notebook, use [Template Notebooks](notebook-templates-implementation-guide/index.md). The [API Reference](reference/index.md) remains the source for reusable functions and classes.
+Use [Templates](notebook-templates-implementation-guide/index.md) only as the lightweight notebook overview and download entry point. The [API Reference](reference/index.md) remains the source for reusable functions and classes.
 
 ## Overview
 
@@ -16,8 +16,6 @@ Keep the default demo values for your first run so the notebooks and expected me
 | Generated source table prefix | `demo_` |
 | Happy path source tables | `demo_src_orders_happy` and `demo_src_customers_happy` |
 | Default unified outputs | `demo_unified_orders_enriched` and `demo_unified_orders_summary` |
-
-## Guided demo flow
 
 ## Run sequence
 
@@ -45,6 +43,7 @@ After the walkthrough, you should be able to answer these questions from metadat
 
 ## Where to go for details
 
-- Use [Template Notebooks](notebook-templates-implementation-guide/index.md) to understand notebook internals, editable settings, advanced options, validations, and downstream dependencies.
+- Use this Guided Demo as the maintained execution guide for the template notebooks.
+- Use [Templates](notebook-templates-implementation-guide/index.md) to download notebooks and scan their roles.
 - Use [Metadata Tables](reference/metadata.md) to inspect the shape of stored workflow context.
 - Use [Function Reference](reference/index.md) only when you need helper-level API details.

@@ -98,7 +98,7 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>
@@ -138,5 +138,5 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 10 Jul 2026, 5:32 PM SGT
     Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
