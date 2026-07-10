@@ -671,13 +671,15 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert "backward-compatibility guarantees" in preview_text
     assert "Live since —" not in preview_text
     assert "Changes to its signature, behaviour" not in preview_text
-    assert "## Contract impact" in function_text
+    assert "<summary>Maintainer architecture details</summary>" in function_text
+    assert function_text.rfind("## Contract impact") > function_text.find("## See also")
     assert "| Contract classification | Live public function |" in function_text
     assert "| Contract risk | Live |" in function_text
     assert "| Live-critical dependencies |" in function_text
     assert "Direct Live dependents" not in function_text
     assert "Transitive Live dependents" not in function_text
     assert "### Live-critical dependencies" in function_text
+    assert function_text.rfind("### Live-critical dependencies") > function_text.find("<summary>Maintainer architecture details</summary>")
     assert '<code>fabricops_kit.config.shared.resolve_fabric_context</code>' in function_text
     assert "Open Live contract call flow" in function_text
     assert "../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_csv" in function_text

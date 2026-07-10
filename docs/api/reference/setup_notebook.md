@@ -15,18 +15,6 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_notebook">Open Preview call flow</a>
 
-## Contract impact
-
-| Property | Value |
-| --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
-| Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
-
-
 Shared environment setup and runtime validation for notebook templates.
 
 <div class="reference-source-card" markdown="1">
@@ -114,6 +102,23 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 - [Metadata Tables](../../reference/metadata.md)
 
 
+<details>
+<summary>Maintainer architecture details</summary>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
+| Live since | — |
+| Discontinued in | — |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
+| Live-critical dependencies | 0 |
+
+
+</details>
+
 !!! info "Generated reference freshness"
-    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
-    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

@@ -1,45 +1,63 @@
-<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->
-
 # `read_lakehouse_csv`
 
-<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+This page documents `read_lakehouse_csv` as released in version `0.1.0`.
 
-Package version: `0.1.0`
+Release version: `0.1.0`
 
-Qualified callable: `fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv`
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-Source path: `src/fabricops_kit/io/read_lakehouse_csv.py`
-
-Signature: `read_lakehouse_csv(relative_path: 'str', *, target: 'str' = 'source', spark_session=None, header: 'bool' = True, context: 'dict[str, Any] | None' = None, **options)`
-
-## Description
+[Current function page](../../../api/reference/read_lakehouse_csv.md) · [Release function index](index.md)
 
 Read a CSV file from a configured Fabric-resolved path through Spark.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_lakehouse_csv.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce15756427d96277b26f87924380a748007acc/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L49">View on GitHub</a>
+</div>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_csv(
+    relative_path: str,
+    target: str='source',
+    spark_session=None,
+    header: bool=True,
+    context: dict[str, Any] | None=None,
+    **options,
+):
+```
+
+</div>
+
 ## Parameters
 
-relative_path : str
-    CSV file or folder path resolved by the Fabric resolver.
-target : str, default="source"
-    Logical lakehouse target from ``00_env_config``.
-spark_session : object, optional
-    Spark session to use instead of the notebook global ``spark``.
-header : bool, default=True
-    Whether the first row contains column names.
-context : dict[str, Any], optional
-    Active Fabric context override.
-**options
-    Additional Spark CSV reader options forwarded to Spark's CSV reader.
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | CSV file or folder path resolved by the Fabric resolver. |
+| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `spark_session` | `object, optional` | No | Spark session to use instead of the notebook global ``spark``. |
+| `header` | `bool` | No | Whether the first row contains column names. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options forwarded to Spark's CSV reader. |
 
-## Return value
+## Returns
 
 pyspark.sql.DataFrame
     Spark DataFrame loaded from the CSV path.
 
-## Usage notes
+## Raises / Errors
 
-FabricOps resolves the configured Lakehouse Files path from
-``00_env_config`` and then delegates to Spark's CSV reader with the supplied
-options.
+Not documented yet
 
-[Back to release overview](../index.md)
+<details>
+<summary>Maintainer architecture details</summary>
+
+- Downstream callables: 15
+- Frozen source ref: `bfce15756427d96277b26f87924380a748007acc`
+
+</details>

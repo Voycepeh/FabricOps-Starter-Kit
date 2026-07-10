@@ -1,48 +1,63 @@
-<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->
-
 # `read_warehouse_table`
 
-<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+This page documents `read_warehouse_table` as released in version `0.1.0`.
 
-Package version: `0.1.0`
+Release version: `0.1.0`
 
-Qualified callable: `fabricops_kit.io.read_warehouse_table.read_warehouse_table`
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-Source path: `src/fabricops_kit/io/read_warehouse_table.py`
-
-Signature: `read_warehouse_table(schema: 'str', table_name: 'str', *, target: 'str' = 'warehouse', spark_session=None, context: 'dict[str, Any] | None' = None, **options)`
-
-## Description
+[Current function page](../../../api/reference/read_warehouse_table.md) · [Release function index](index.md)
 
 Read a full table from a Microsoft Fabric warehouse.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_warehouse_table.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce15756427d96277b26f87924380a748007acc/src/fabricops_kit/io/read_warehouse_table.py#L10-L70">View on GitHub</a>
+</div>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_warehouse_table(
+    schema: str,
+    table_name: str,
+    target: str='warehouse',
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **options,
+):
+```
+
+</div>
+
 ## Parameters
 
-schema : str
-    Warehouse schema name.
-table_name : str
-    Warehouse table name.
-target : str, default="warehouse"
-    Logical warehouse target from ``00_env_config``.
-spark_session : object, optional
-    Spark session to use instead of the notebook global ``spark``.
-context : dict[str, Any], optional
-    Active Fabric context override.
-**options
-    Additional Fabric Warehouse Spark connector reader options. Required
-    Fabric connector options are always set from ``00_env_config``.
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `schema` | `str` | Yes | Warehouse schema name. |
+| `table_name` | `str` | Yes | Warehouse table name. |
+| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `spark_session` | `object, optional` | No | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
-## Return value
+## Returns
 
 pyspark.sql.DataFrame
     Spark DataFrame loaded through the Fabric warehouse connector.
 
-## Usage notes
+## Raises / Errors
 
-FabricOps resolves the configured Warehouse target and table name, then
-delegates to the Fabric Warehouse Spark connector. Use this full-table read
-for small tables, lookup tables, smoke tests, or intentional full extracts;
-prefer ``read_warehouse_query`` for large Warehouse sources so filters and
-projections run before Spark receives rows.
+Not documented yet
 
-[Back to release overview](../index.md)
+<details>
+<summary>Maintainer architecture details</summary>
+
+- Downstream callables: 15
+- Frozen source ref: `bfce15756427d96277b26f87924380a748007acc`
+
+</details>

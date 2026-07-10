@@ -7135,6 +7135,7 @@
       "depth": 5,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/pipeline/display_guardrail_results.py",
         "src/fabricops_kit/pipeline/shared.py"
@@ -8372,8 +8373,30 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 5,
+      "parameters": [
+        {
+          "description": "Not documented yet",
+          "name": "result_bundle",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "mode",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.display_guardrail_results",
       "public_signals": [],
       "qualified_name": "fabricops_kit.pipeline.display_guardrail_results.display_guardrail_results",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -8385,12 +8408,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Not documented yet",
       "scope": 14,
       "signals": [],
+      "signature": "def display_guardrail_results(result_bundle: Mapping[str, Any], mode: str='summary', spark_session: Any | None=None) -> Any",
       "source_end_line": 14,
       "source_path": "src/fabricops_kit/pipeline/display_guardrail_results.py",
       "source_start_line": 10,
+      "summary": "Return guardrail results prepared for summary, detailed, or debug display.",
       "transitive_function_count": 14,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -8401,6 +8428,7 @@
       "depth": 4,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
@@ -8587,8 +8615,42 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Not documented yet",
+          "name": "table_configs",
+          "required": "Yes",
+          "type": "list[dict[str, Any]]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "default_settings",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "table_role",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "run_id",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "pipeline_name",
+          "required": "No",
+          "type": "str"
+        }
+      ],
+      "public_import_path": "fabricops_kit.prepare_pipeline_table_configs",
       "public_signals": [],
       "qualified_name": "fabricops_kit.pipeline.prepare_pipeline_table_configs.prepare_pipeline_table_configs",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -8600,12 +8662,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Not documented yet",
       "scope": 4,
       "signals": [],
+      "signature": "def prepare_pipeline_table_configs(table_configs: list[dict[str, Any]], default_settings: Mapping[str, Any], *, table_role: str, run_id: str='', pipeline_name: str='') -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]",
       "source_end_line": 25,
       "source_path": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
       "source_start_line": 10,
+      "summary": "Prepare source or target table configs for a pipeline notebook.",
       "transitive_function_count": 4,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -8616,6 +8682,7 @@
       "depth": 4,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/pipeline/profile_dataframe.py",
@@ -9089,8 +9156,72 @@
       "live_critical_dependency_count": 10,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Spark DataFrame to profile.",
+          "name": "df",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Logical table name written into each profile row.",
+          "name": "table_name",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Additional columns to skip, on top of standard technical columns.",
+          "name": "exclude_columns",
+          "required": "No",
+          "type": "list[str] or set[str], optional"
+        },
+        {
+          "description": "Explicit IANA time zone used for profile evidence timestamps.",
+          "name": "run_timestamp_timezone",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Framework-like configuration carrying audit settings.",
+          "name": "config",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "Whether to include distribution metadata.",
+          "name": "include_distributions",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Columns to profile with distributions.",
+          "name": "distribution_columns",
+          "required": "No",
+          "type": "list[str] | set[str] | tuple[str, ...] | None"
+        },
+        {
+          "description": "Explicit numeric bin edges by column.",
+          "name": "distribution_bin_edges",
+          "required": "No",
+          "type": "dict[str, list[float]] | None"
+        },
+        {
+          "description": "Explicit categorical values by column.",
+          "name": "categorical_categories",
+          "required": "No",
+          "type": "dict[str, list[str]] | None"
+        },
+        {
+          "description": "Maximum categorical values to include when inferred.",
+          "name": "categorical_top_n",
+          "required": "No",
+          "type": "int"
+        }
+      ],
+      "public_import_path": "fabricops_kit.profile_dataframe",
       "public_signals": [],
       "qualified_name": "fabricops_kit.pipeline.profile_dataframe.profile_dataframe",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -9102,12 +9233,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Metadata-compatible profile DataFrame.",
       "scope": 10,
       "signals": [],
+      "signature": "def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)",
       "source_end_line": 65,
       "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
       "source_start_line": 10,
+      "summary": "Build canonical DQ-ready profiling rows from a Spark DataFrame.",
       "transitive_function_count": 10,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -9118,6 +9253,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_csv.py",
@@ -9766,8 +9902,42 @@
       "live_critical_dependency_count": 14,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "CSV file or folder path resolved by the Fabric resolver.",
+          "name": "relative_path",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical lakehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Whether the first row contains column names.",
+          "name": "header",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Active Fabric context override. **options Additional Spark CSV reader options forwarded to Spark's CSV reader.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_lakehouse_csv",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -9779,12 +9949,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the CSV path.",
       "scope": 14,
       "signals": [],
+      "signature": "def read_lakehouse_csv(relative_path: str, *, target: str='source', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 49,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
       "source_start_line": 10,
+      "summary": "Read a CSV file from a configured Fabric-resolved path through Spark.",
       "transitive_function_count": 14,
+      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions.",
       "width": 3
     },
     {
@@ -9795,6 +9969,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_excel.py",
@@ -10478,8 +10653,42 @@
       "live_critical_dependency_count": 15,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Excel file path resolved by the Fabric resolver.",
+          "name": "relative_path",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical lakehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Worksheet name or index to read.",
+          "name": "sheet_name",
+          "required": "No",
+          "type": "str or int, default=0"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_lakehouse_excel",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -10491,12 +10700,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame converted from the selected Excel worksheet.",
       "scope": 15,
       "signals": [],
+      "signature": "def read_lakehouse_excel(relative_path: str, *, target: str='source', sheet_name=0, spark_session=None, context: dict[str, Any] | None=None, **read_excel_kwargs)",
       "source_end_line": 52,
       "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
       "source_start_line": 10,
+      "summary": "Read an Excel workbook from a configured Fabric-resolved path.",
       "transitive_function_count": 15,
+      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config``, reads the workbook binary through Spark, parses it with\n``pandas.read_excel``, and converts the pandas DataFrame back to a Spark\nDataFrame.",
       "width": 3
     },
     {
@@ -10507,6 +10720,7 @@
       "depth": 4,
       "direct_call_count": 4,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_parquet.py",
@@ -11266,8 +11480,42 @@
       "live_critical_dependency_count": 14,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Parquet file path resolved by the Fabric resolver. Root-level files such as ``customers.parquet`` and nested paths such as ``input/customers.parquet`` are supported.",
+          "name": "relative_path",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical lakehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Whether to print read and timestamp-conversion fallback progress.",
+          "name": "verbose",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active Fabric context override. **options Additional Spark Parquet reader options forwarded to every original and timestamp-converted fallback read attempt.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_lakehouse_parquet",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -11279,12 +11527,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the Parquet path.",
       "scope": 14,
       "signals": [],
+      "signature": "def read_lakehouse_parquet(relative_path: str, *, target: str='source', verbose: bool=True, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 119,
       "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
       "source_start_line": 15,
+      "summary": "Read a Parquet file from a configured Fabric-resolved path through Spark.",
       "transitive_function_count": 14,
+      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's Parquet reader. If Spark\ncannot read the original path because of timestamp precision issues, the\nexisting ``_tsus`` fallback conversion path is attempted with the same\nreader options.",
       "width": 4
     },
     {
@@ -11295,6 +11547,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_lakehouse_table.py",
@@ -11978,8 +12231,42 @@
       "live_critical_dependency_count": 16,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.",
+          "name": "table_name",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical lakehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Optional schema override for schema-enabled lakehouses.",
+          "name": "schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active Fabric context override. **options Additional Spark Delta reader options forwarded to ``DataFrameReader``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_lakehouse_table",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_table.read_lakehouse_table",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -11991,12 +12278,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the configured Delta table path.",
       "scope": 16,
       "signals": [],
+      "signature": "def read_lakehouse_table(table_name: str, *, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 56,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 10,
+      "summary": "Read a Delta table from a Fabric lakehouse.",
       "transitive_function_count": 16,
+      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options.",
       "width": 3
     },
     {
@@ -12007,6 +12298,7 @@
       "depth": 4,
       "direct_call_count": 4,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_warehouse_query.py",
@@ -12539,8 +12831,36 @@
       "live_critical_dependency_count": 12,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric warehouse connector.",
+          "name": "query",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical warehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_warehouse_query",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_warehouse_query.read_warehouse_query",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -12552,12 +12872,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame returned by the SQL serving engine.",
       "scope": 12,
       "signals": [],
+      "signature": "def read_warehouse_query(query: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 74,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
       "source_start_line": 15,
+      "summary": "Read warehouse rows with SQL pushdown.",
       "transitive_function_count": 12,
+      "usage_notes": "FabricOps resolves the configured Warehouse target, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured target\nidentifies the warehouse database/artifact.",
       "width": 4
     },
     {
@@ -12568,6 +12892,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/read_warehouse_table.py",
@@ -13214,8 +13539,42 @@
       "live_critical_dependency_count": 15,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Warehouse schema name.",
+          "name": "schema",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Warehouse table name.",
+          "name": "table_name",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical warehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Spark session to use instead of the notebook global ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.read_warehouse_table",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -13227,12 +13586,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded through the Fabric warehouse connector.",
       "scope": 15,
       "signals": [],
+      "signature": "def read_warehouse_table(schema: str, table_name: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 70,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
       "source_start_line": 10,
+      "summary": "Read a full table from a Microsoft Fabric warehouse.",
       "transitive_function_count": 15,
+      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Use this full-table read\nfor small tables, lookup tables, smoke tests, or intentional full extracts;\nprefer ``read_warehouse_query`` for large Warehouse sources so filters and\nprojections run before Spark receives rows.",
       "width": 3
     },
     {
@@ -13243,6 +13606,7 @@
       "depth": 8,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -28252,11 +28616,69 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 8,
+      "parameters": [
+        {
+          "description": "Not documented yet",
+          "name": "table_configs",
+          "required": "Yes",
+          "type": "list[dict[str, Any]]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "run_id",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_id",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_version",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "table_role",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "mode",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "stop_on_failure",
+          "required": "No",
+          "type": "bool | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.run_table_guardrails",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.pipeline.run_table_guardrails.run_table_guardrails",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -28407,15 +28829,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Not documented yet",
       "scope": 117,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def run_table_guardrails(table_configs: list[dict[str, Any]], *, run_id: str | None=None, context: dict[str, Any] | None=None, spark_session: Any | None=None, agreement_id: str='', agreement_version: str='', table_role: str='', mode: str='profile', stop_on_failure: bool | None=None) -> dict[str, Any]",
       "source_end_line": 38,
       "source_path": "src/fabricops_kit/pipeline/run_table_guardrails.py",
       "source_start_line": 10,
+      "summary": "Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.",
       "transitive_function_count": 117,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -28426,6 +28852,7 @@
       "depth": 5,
       "direct_call_count": 7,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/metadata_schemas.py",
         "src/fabricops_kit/config/setup_metadata_tables.py",
@@ -30171,8 +30598,42 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 5,
+      "parameters": [
+        {
+          "description": "Fabric Spark session used to create and validate metadata tables.",
+          "name": "spark",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Shared ``00_env_config`` configuration containing the metadata target.",
+          "name": "config",
+          "required": "Yes",
+          "type": "FrameworkConfig | dict[str, Any]"
+        },
+        {
+          "description": "Environment key to prepare.",
+          "name": "env",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Optional schema name for schema-enabled Fabric Lakehouses.",
+          "name": "metadata_schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Whether setup should fail until ``METADATA_DATA_STEWARD`` contains an active steward row.",
+          "name": "require_active_steward",
+          "required": "No",
+          "type": "bool"
+        }
+      ],
+      "public_import_path": "fabricops_kit.setup_metadata_tables",
       "public_signals": [],
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -30184,12 +30645,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Setup summary with canonical metadata table names, created tables,\n    schema routing details, and component readiness sections.",
       "scope": 30,
       "signals": [],
+      "signature": "def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None=None, require_active_steward: bool=False) -> dict[str, Any]",
       "source_end_line": 235,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_start_line": 50,
+      "summary": "Prepare all FabricOps metadata tables for the configured environment.",
       "transitive_function_count": 30,
+      "usage_notes": "Metadata table bootstrap resolves the configured ``metadata`` FabricStore\nfrom ``00_env_config`` and routes reads and writes through FabricOps shared\nLakehouse IO helpers. It does not use partial Spark table namespaces or\nrequire an attached default Lakehouse when the metadata target is configured.",
       "width": 7
     },
     {
@@ -30200,6 +30665,7 @@
       "depth": 3,
       "direct_call_count": 4,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/setup_notebook.py",
         "src/fabricops_kit/config/shared.py"
@@ -30533,8 +30999,48 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 3,
+      "parameters": [
+        {
+          "description": "Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.",
+          "name": "config",
+          "required": "Yes",
+          "type": "FrameworkConfig | dict[str, Any]"
+        },
+        {
+          "description": "Environment key used to resolve target paths.",
+          "name": "env",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Target names that must resolve for ``env``. Defaults to ``[\"Source\", \"Unified\"]``.",
+          "name": "required_targets",
+          "required": "No",
+          "type": "list[str] | None"
+        },
+        {
+          "description": "Explicit notebook name used for runtime metadata and naming checks.",
+          "name": "notebook_name",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Prefix used when a Fabric runtime run identifier is unavailable.",
+          "name": "run_id_prefix",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.",
+          "name": "local_fallback_name",
+          "required": "No",
+          "type": "str | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.setup_notebook",
       "public_signals": [],
       "qualified_name": "fabricops_kit.config.setup_notebook.setup_notebook",
+      "raises_documentation": "ValueError\n    Raised when config sections are invalid or required targets cannot be\n    resolved for the selected environment.",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -30546,12 +31052,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "NotebookSetupContext\n    Validated runtime context with resolved paths, smoke-check results,\n    runtime metadata, and overall readiness status.",
       "scope": 7,
       "signals": [],
+      "signature": "def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None) -> NotebookSetupContext",
       "source_end_line": 145,
       "source_path": "src/fabricops_kit/config/setup_notebook.py",
       "source_start_line": 20,
+      "summary": "Run consolidated FabricOps startup for delivery and optional support notebooks.",
       "transitive_function_count": 7,
+      "usage_notes": "Validation and smoke checks are local to notebook startup. This helper does\nnot provision Fabric resources or persist metadata.",
       "width": 4
     },
     {
@@ -30562,6 +31072,7 @@
       "depth": 9,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -32850,11 +33361,87 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 9,
+      "parameters": [
+        {
+          "description": "Guardrail target state returned by the target selector or prepared by a notebook workflow.",
+          "name": "state",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Authoring mode for the widget. The public widget supports manual rule authoring.",
+          "name": "dq_authoring_mode",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Initial DQ rule type selected in the widget.",
+          "name": "rule_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Initial columns selected for the rule.",
+          "name": "selected_columns",
+          "required": "No",
+          "type": "Iterable[str] | None"
+        },
+        {
+          "description": "Initial rule parameters.",
+          "name": "parameters",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Initial rule severity.",
+          "name": "severity",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Fabric Spark session used when committing metadata rows.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Governance-bypass reason used when applying rules immediately.",
+          "name": "bypass_reason",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Notebook role recorded on authored metadata rows.",
+          "name": "source_notebook_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Actor role recorded on authored metadata rows.",
+          "name": "created_by_role",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "When True, commit the selected rule instead of preview-only behavior.",
+          "name": "commit",
+          "required": "No",
+          "type": "bool"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_author_dq_rules",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -33050,15 +33637,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls and save actions for notebook automation.",
       "scope": 45,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_author_dq_rules(state: Mapping[str, Any], *, dq_authoring_mode: str='manual', rule_type: str='not_null', selected_columns: Iterable[str] | None=None, parameters: Mapping[str, Any] | None=None, severity: str='warning', spark_session: Any=None, context: dict[str, Any] | None=None, bypass_reason: str='', source_notebook_type: str='02_pipeline', created_by_role: str='engineering', commit: bool=False) -> dict[str, Any]",
       "source_end_line": 80,
       "source_path": "src/fabricops_kit/widgets/widget_author_dq_rules.py",
       "source_start_line": 15,
+      "summary": "Render interactive manual DQ rule authoring UI.",
       "transitive_function_count": 45,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -33069,6 +33660,7 @@
       "depth": 9,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -35357,11 +35949,57 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 9,
+      "parameters": [
+        {
+          "description": "Guardrail target state returned by the target selector or prepared by a notebook workflow.",
+          "name": "state",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Fabric Spark session used when committing metadata rows.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Governance-bypass reason used when applying rules immediately.",
+          "name": "bypass_reason",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Notebook role recorded on authored metadata rows.",
+          "name": "source_notebook_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Actor role recorded on authored metadata rows.",
+          "name": "created_by_role",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "When True, commit the selected rule instead of preview-only behavior.",
+          "name": "commit",
+          "required": "No",
+          "type": "bool"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_author_schema_freshness_profile_rules",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -35557,15 +36195,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls and save actions for notebook automation.",
       "scope": 45,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_author_schema_freshness_profile_rules(state: Mapping[str, Any], *, spark_session: Any=None, context: dict[str, Any] | None=None, bypass_reason: str='', source_notebook_type: str='02_pipeline', created_by_role: str='engineering', commit: bool=False) -> dict[str, Any]",
       "source_end_line": 59,
       "source_path": "src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py",
       "source_start_line": 15,
+      "summary": "Render schema, freshness, and profile behavior authoring controls.",
       "transitive_function_count": 45,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -35576,6 +36218,7 @@
       "depth": 5,
       "direct_call_count": 8,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -36695,8 +37338,60 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 5,
+      "parameters": [
+        {
+          "description": "Agreement context used as a fallback for agreement and contract filters.",
+          "name": "agreement",
+          "required": "No",
+          "type": "dict | None"
+        },
+        {
+          "description": "Explicit agreement identifier. Takes precedence over ``agreement``.",
+          "name": "agreement_id",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Explicit contract version. Takes precedence over ``agreement``.",
+          "name": "agreement_version",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Logical FabricStore target used to read the catalogue table.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Optional metadata lakehouse schema override.",
+          "name": "schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Metadata catalogue table to read.",
+          "name": "metadata_table",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Spark session override.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "object, optional"
+        },
+        {
+          "description": "Active FabricOps context override.",
+          "name": "context",
+          "required": "No",
+          "type": "object, optional"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_browse_metadata_catalogue",
       "public_signals": [],
       "qualified_name": "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -36708,12 +37403,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict\n    Mutable widget state. The ``dataframe`` key contains the currently\n    filtered Spark DataFrame and updates when selections change.",
       "scope": 24,
       "signals": [],
+      "signature": "def widget_browse_metadata_catalogue(*, agreement: dict | None=None, agreement_id: str | None=None, agreement_version: str | None=None, target: str='metadata', schema: str | None=None, metadata_table: str='METADATA_DATA_CATALOGUE', spark_session=None, context=None)",
       "source_end_line": 123,
       "source_path": "src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py",
       "source_start_line": 12,
+      "summary": "Render a searchable metadata catalogue browser.",
       "transitive_function_count": 24,
+      "usage_notes": "",
       "width": 8
     },
     {
@@ -36724,6 +37423,7 @@
       "depth": 8,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -39724,11 +40424,45 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 8,
+      "parameters": [
+        {
+          "description": "Guardrail target state containing table identity and catalogue profile rows for enrichment.",
+          "name": "guardrail_state",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Fabric Spark session used when committing enrichment metadata rows.",
+          "name": "spark_session",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Notebook role recorded on authored metadata rows.",
+          "name": "source_notebook_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Actor role recorded on authored metadata rows.",
+          "name": "created_by_role",
+          "required": "No",
+          "type": "str"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_enrich_table_metadata",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -39954,15 +40688,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls and save actions for notebook automation.",
       "scope": 54,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_enrich_table_metadata(guardrail_state: Mapping[str, Any], *, spark_session: Any, context: dict[str, Any] | None=None, source_notebook_type: str='02_pipeline', created_by_role: str='engineering') -> dict[str, Any]",
       "source_end_line": 50,
       "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
       "source_start_line": 14,
+      "summary": "Render governed table metadata enrichment controls.",
       "transitive_function_count": 54,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -39973,6 +40711,7 @@
       "depth": 9,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -44354,11 +45093,63 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 9,
+      "parameters": [
+        {
+          "description": "FabricOps notebook type to associate with the active context.",
+          "name": "notebook_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "When True, render the agreement selector and capture the selected agreement for downstream defaults.",
+          "name": "select_agreement",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "When True, allow the agreement selector to register this notebook to the selected agreement. Use ``False`` for read-only exploration.",
+          "name": "register_notebook",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "Marks the active context as read-only for exploratory notebooks. The startup helper itself does not write metadata unless ``register_notebook=True`` is explicitly requested.",
+          "name": "read_only",
+          "required": "No",
+          "type": "bool"
+        },
+        {
+          "description": "``RUN_CONTEXT`` from ``00_env_config``. Defaults to the active notebook variable named ``RUN_CONTEXT``.",
+          "name": "run_context",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "Spark session. Defaults to the active notebook variable named ``spark``.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "``METADATA_SCHEMA`` from ``00_env_config`` when schema routing is used.",
+          "name": "metadata_schema",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Advanced FabricOps context override.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_pipeline_bootstrap",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -44449,15 +45240,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Any\n    Pipeline runtime context object with resolved runtime defaults. Most notebooks\n    use it only as ``PIPELINE`` for runtime context when\n    preparing target configs or lineage. The concrete context class is\n    intentionally internal and not part of the primary public API.",
       "scope": 58,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_pipeline_bootstrap(*, notebook_type: str='02_pipeline', select_agreement: bool=False, register_notebook: bool=False, read_only: bool=False, run_context: Any=None, spark_session: Any=None, metadata_schema: str | None=None, context: dict[str, Any] | None=None) -> Any",
       "source_end_line": 82,
       "source_path": "src/fabricops_kit/widgets/widget_pipeline_bootstrap.py",
       "source_start_line": 22,
+      "summary": "Bootstrap a guided pipeline notebook run and store runtime defaults.",
       "transitive_function_count": 58,
+      "usage_notes": "This helper keeps template code concise while preserving explicit lower-level\nparameters on guardrail and summary helpers for advanced notebooks.",
       "width": 1
     },
     {
@@ -44468,6 +45263,7 @@
       "depth": 8,
       "direct_call_count": 2,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -47241,10 +48037,26 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 8,
+      "parameters": [
+        {
+          "description": "Fabric Spark session used for metadata reads, file writes, and append-only evidence metadata writes.",
+          "name": "spark",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_render_agreement_evidence",
       "public_signals": [
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -47268,14 +48080,18 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls for selecting an agreement version, pasting\n    metadata lakehouse evidence file paths, refreshing agreement options,\n    and saving evidence metadata rows.",
       "scope": 47,
       "signals": [
         "large_width_or_depth"
       ],
+      "signature": "def widget_render_agreement_evidence(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 47,
       "source_path": "src/fabricops_kit/widgets/widget_render_agreement_evidence.py",
       "source_start_line": 26,
+      "summary": "Render standalone agreement evidence upload controls.",
       "transitive_function_count": 47,
+      "usage_notes": "",
       "width": 2
     },
     {
@@ -47286,6 +48102,7 @@
       "depth": 7,
       "direct_call_count": 15,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -53950,10 +54767,26 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 7,
+      "parameters": [
+        {
+          "description": "Fabric Spark session used for metadata reads and append-only writes.",
+          "name": "spark",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_render_data_agreement",
       "public_signals": [
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -53977,14 +54810,18 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls, including read-only generated-identifier context.",
       "scope": 65,
       "signals": [
         "large_width_or_depth"
       ],
+      "signature": "def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 182,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_agreement.py",
       "source_start_line": 34,
+      "summary": "Render append-only agreement create/update maintenance using active stewards.",
       "transitive_function_count": 65,
+      "usage_notes": "",
       "width": 15
     },
     {
@@ -53995,6 +54832,7 @@
       "depth": 7,
       "direct_call_count": 13,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -57489,10 +58327,26 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 7,
+      "parameters": [
+        {
+          "description": "Fabric Spark session used for metadata reads and append-only writes.",
+          "name": "spark",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_render_data_steward",
       "public_signals": [
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -57516,14 +58370,18 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered widget controls keyed for notebook customization.",
       "scope": 57,
       "signals": [
         "large_width_or_depth"
       ],
+      "signature": "def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 156,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 33,
+      "summary": "Render append-only data steward create/update maintenance.",
       "transitive_function_count": 57,
+      "usage_notes": "",
       "width": 13
     },
     {
@@ -57534,6 +58392,7 @@
       "depth": 8,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -60569,11 +61428,33 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 8,
+      "parameters": [
+        {
+          "description": "Guardrail state with existing enrichment and guardrail rule records to review.",
+          "name": "state",
+          "required": "Yes",
+          "type": "Mapping[str, Any]"
+        },
+        {
+          "description": "Fabric Spark session used when saving governance review decisions.",
+          "name": "spark_session",
+          "required": "No",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_review_guardrail_governance",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -60694,15 +61575,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Rendered controls and review actions for notebook automation.",
       "scope": 40,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_review_guardrail_governance(state: Mapping[str, Any], *, spark_session: Any=None, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 39,
       "source_path": "src/fabricops_kit/widgets/widget_review_guardrail_governance.py",
       "source_start_line": 15,
+      "summary": "Render governance policy and shared rule-review controls.",
       "transitive_function_count": 40,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -60713,6 +61598,7 @@
       "depth": 7,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -61887,11 +62773,27 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 7,
+      "parameters": [
+        {
+          "description": "Fabric Spark session used to read metadata catalogue, enrichment, and guardrail rule rows.",
+          "name": "spark_session",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Advanced override for the active Fabric context.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.widget_select_guardrail_target",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -61952,15 +62854,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "dict[str, Any]\n    Handover state for downstream enrichment, authoring, and governance\n    review widgets.",
       "scope": 24,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def widget_select_guardrail_target(*, spark_session: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
       "source_end_line": 32,
       "source_path": "src/fabricops_kit/widgets/widget_select_guardrail_target.py",
       "source_start_line": 14,
+      "summary": "Render an interactive guardrail target selector.",
       "transitive_function_count": 24,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -61971,6 +62877,7 @@
       "depth": 4,
       "direct_call_count": 4,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -62685,8 +63592,72 @@
       "live_critical_dependency_count": 17,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Spark DataFrame to write.",
+          "name": "df",
+          "required": "Yes",
+          "type": "pyspark.sql.DataFrame"
+        },
+        {
+          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.",
+          "name": "table_name",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical lakehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Optional schema override for schema-enabled lakehouses.",
+          "name": "schema",
+          "required": "No",
+          "type": "str or None, default=None"
+        },
+        {
+          "description": "Spark write mode: ``append``, ``overwrite``, ``errorifexists``, or ``ignore``.",
+          "name": "mode",
+          "required": "No",
+          "type": "str, default=\"append\""
+        },
+        {
+          "description": "Column or columns used to physically partition the Delta table.",
+          "name": "partition_by",
+          "required": "No",
+          "type": "str or list[str], optional"
+        },
+        {
+          "description": "Optional repartitioning before write.",
+          "name": "repartition_by",
+          "required": "No",
+          "type": "int, str, list, or tuple, optional"
+        },
+        {
+          "description": "Additional Spark Delta ``DataFrameWriter`` options forwarded before saving the configured Lakehouse Tables path.",
+          "name": "options",
+          "required": "No",
+          "type": "dict, optional"
+        },
+        {
+          "description": "Whether to print the resolved output path before writing.",
+          "name": "verbose",
+          "required": "No",
+          "type": "bool, default=True"
+        },
+        {
+          "description": "Active Fabric context override.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any], optional"
+        }
+      ],
+      "public_import_path": "fabricops_kit.write_lakehouse_table",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -62698,12 +63669,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "None\n    The DataFrame is written to the configured Delta table path.",
       "scope": 17,
       "signals": [],
+      "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None)",
       "source_end_line": 87,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 15,
+      "summary": "Write a Spark DataFrame to a Fabric lakehouse Delta table.",
       "transitive_function_count": 17,
+      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta writer with any\nsupplied writer options.",
       "width": 4
     },
     {
@@ -62714,6 +63689,7 @@
       "depth": 6,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -64414,11 +65390,75 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 6,
+      "parameters": [
+        {
+          "description": "Not documented yet",
+          "name": "spark",
+          "required": "Yes",
+          "type": "Any"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_definitions",
+          "required": "Yes",
+          "type": "Mapping[str, Mapping[str, Any]]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_definitions",
+          "required": "Yes",
+          "type": "Mapping[str, Mapping[str, Any]]"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "relationships",
+          "required": "No",
+          "type": "list[Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "dataset_name",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_id",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_version",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "metadata_table",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "mode",
+          "required": "No",
+          "type": "str"
+        }
+      ],
+      "public_import_path": "fabricops_kit.write_pipeline_lineage",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_lineage.write_pipeline_lineage",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -64464,15 +65504,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Not documented yet",
       "scope": 37,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def write_pipeline_lineage(*, spark: Any, context: dict[str, Any] | None=None, source_definitions: Mapping[str, Mapping[str, Any]], target_definitions: Mapping[str, Mapping[str, Any]], relationships: list[Mapping[str, Any]] | None=None, dataset_name: str='', agreement_id: str='', agreement_version: str='', metadata_table: str=LINEAGE_TABLE, mode: str='append') -> dict[str, Any]",
       "source_end_line": 35,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_lineage.py",
       "source_start_line": 10,
+      "summary": "Write many-to-many source-to-target lineage evidence.",
       "transitive_function_count": 37,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -64483,6 +65527,7 @@
       "depth": 6,
       "direct_call_count": 1,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",
@@ -66347,11 +67392,177 @@
       "live_critical_dependency_count": 0,
       "live_since": null,
       "max_depth": 6,
+      "parameters": [
+        {
+          "description": "Not documented yet",
+          "name": "spark",
+          "required": "No",
+          "type": "Any | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_id",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "agreement_version",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "notebook_type",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "started_at",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "completed_at",
+          "required": "No",
+          "type": "str | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "status",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_definitions",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_definitions",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_schema_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_schema_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_freshness_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_freshness_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_stability_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_stability_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_dq_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_dq_results",
+          "required": "No",
+          "type": "Mapping[str, Mapping[str, Any]] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "lineage_status",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "catalogue_status",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "message",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "source_guardrail_results",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_guardrail_results",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "target_write_status",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "lineage_result",
+          "required": "No",
+          "type": "Mapping[str, Any] | None"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "metadata_table",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Not documented yet",
+          "name": "mode",
+          "required": "No",
+          "type": "str"
+        }
+      ],
+      "public_import_path": "fabricops_kit.write_pipeline_run_summary",
       "public_signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.pipeline.write_pipeline_run_summary.write_pipeline_run_summary",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [
         {
           "evidence": [
@@ -66397,15 +67608,19 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "Not documented yet",
       "scope": 39,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
+      "signature": "def write_pipeline_run_summary(*, spark: Any | None=None, context: dict[str, Any] | None=None, agreement_id: str='', agreement_version: str='', notebook_type: str='02_pipeline', started_at: str | None=None, completed_at: str | None=None, status: str='completed', source_definitions: Mapping[str, Mapping[str, Any]] | None=None, target_definitions: Mapping[str, Mapping[str, Any]] | None=None, source_schema_results: Mapping[str, Mapping[str, Any]] | None=None, target_schema_results: Mapping[str, Mapping[str, Any]] | None=None, source_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, target_freshness_results: Mapping[str, Mapping[str, Any]] | None=None, source_stability_results: Mapping[str, Mapping[str, Any]] | None=None, target_stability_results: Mapping[str, Mapping[str, Any]] | None=None, source_dq_results: Mapping[str, Mapping[str, Any]] | None=None, target_dq_results: Mapping[str, Mapping[str, Any]] | None=None, lineage_status: str='not_run', catalogue_status: str='not_run', message: str='', source_guardrail_results: Mapping[str, Any] | None=None, target_guardrail_results: Mapping[str, Any] | None=None, target_write_status: Mapping[str, Any] | None=None, lineage_result: Mapping[str, Any] | None=None, metadata_table: str=METADATA_PIPELINE_RUNS_TABLE, mode: str='append') -> dict[str, Any]",
       "source_end_line": 69,
       "source_path": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
       "source_start_line": 10,
+      "summary": "Write a pipeline runtime summary to metadata.",
       "transitive_function_count": 39,
+      "usage_notes": "",
       "width": 1
     },
     {
@@ -66416,6 +67631,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
+      "examples": "Not documented yet",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -67057,8 +68273,60 @@
       "live_critical_dependency_count": 15,
       "live_since": "0.1.0",
       "max_depth": 4,
+      "parameters": [
+        {
+          "description": "Spark DataFrame to publish.",
+          "name": "df",
+          "required": "Yes",
+          "type": "pyspark.sql.DataFrame"
+        },
+        {
+          "description": "Warehouse schema name.",
+          "name": "schema",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Warehouse table name.",
+          "name": "table_name",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Logical warehouse target from ``00_env_config``.",
+          "name": "target",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Spark writer mode supported by the Fabric connector.",
+          "name": "mode",
+          "required": "No",
+          "type": "str"
+        },
+        {
+          "description": "Optional repartitioning before write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table.",
+          "name": "repartition_by",
+          "required": "No",
+          "type": "int, str, list, or tuple, optional"
+        },
+        {
+          "description": "Additional Fabric Warehouse Spark connector writer options. Required Fabric connector options are always set from ``00_env_config``.",
+          "name": "options",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        },
+        {
+          "description": "Active Fabric context override.",
+          "name": "context",
+          "required": "No",
+          "type": "dict[str, Any] | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.write_warehouse_table",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+      "raises_documentation": "Not documented yet",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -67070,12 +68338,16 @@
       "release_versions": [
         "0.1.0"
       ],
+      "returns_documentation": "None\n    The DataFrame is written through the Fabric warehouse connector.",
       "scope": 15,
       "signals": [],
+      "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
       "source_end_line": 78,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 10,
+      "summary": "Write a Spark DataFrame to a Microsoft Fabric warehouse table.",
       "transitive_function_count": 15,
+      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. ``options`` are passed to\nthe underlying ``DataFrameWriter`` after required Fabric connector options.",
       "width": 3
     }
   ],

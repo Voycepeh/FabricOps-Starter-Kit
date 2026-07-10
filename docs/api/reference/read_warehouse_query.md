@@ -16,35 +16,6 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_query">Open Live contract call flow</a>
 
-## Contract impact
-
-| Property | Value |
-| --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | 0.1.0 |
-| Discontinued in | — |
-| Contract classification | Live public function |
-| Contract risk | Live |
-| Live-critical dependencies | 12 |
-
-### Live-critical dependencies
-
-<ul class="reference-compact-list">
-<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
-<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.get_store</code></li>
-<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
-<li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
-<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
-<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
-<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
-<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
-</ul>
-
-
 Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.
 
 <div class="reference-source-card" markdown="1">
@@ -129,6 +100,40 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 
 
+<details>
+<summary>Maintainer architecture details</summary>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.1.0 |
+| Discontinued in | — |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 12 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._require_fabric_connector</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_warehouse_synapsesql</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_warehouse_query_target</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.validate_select_query</code></li>
+</ul>
+
+
+</details>
+
 !!! info "Generated reference freshness"
-    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
-    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

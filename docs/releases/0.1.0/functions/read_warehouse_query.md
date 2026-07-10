@@ -1,47 +1,61 @@
-<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->
-
 # `read_warehouse_query`
 
-<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+This page documents `read_warehouse_query` as released in version `0.1.0`.
 
-Package version: `0.1.0`
+Release version: `0.1.0`
 
-Qualified callable: `fabricops_kit.io.read_warehouse_query.read_warehouse_query`
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-Source path: `src/fabricops_kit/io/read_warehouse_query.py`
-
-Signature: `read_warehouse_query(query: 'str', *, target: 'str' = 'warehouse', spark_session=None, context: 'dict[str, Any] | None' = None, **options)`
-
-## Description
+[Current function page](../../../api/reference/read_warehouse_query.md) · [Release function index](index.md)
 
 Read warehouse rows with SQL pushdown.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_warehouse_query.py:15`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce15756427d96277b26f87924380a748007acc/src/fabricops_kit/io/read_warehouse_query.py#L15-L74">View on GitHub</a>
+</div>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_warehouse_query(
+    query: str,
+    target: str='warehouse',
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **options,
+):
+```
+
+</div>
+
 ## Parameters
 
-query : str
-    SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in
-    a ``SELECT``, to execute through the Fabric warehouse connector.
-target : str, default="warehouse"
-    Logical warehouse target from ``00_env_config``.
-spark_session : object, optional
-    Spark session to use instead of the notebook global ``spark``.
-context : dict[str, Any], optional
-    Active Fabric context override.
-**options
-    Additional Fabric Warehouse Spark connector reader options. Required
-    Fabric connector options are always set from ``00_env_config``.
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `query` | `str` | Yes | SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric warehouse connector. |
+| `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
+| `spark_session` | `object, optional` | No | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Fabric Warehouse Spark connector reader options. Required Fabric connector options are always set from ``00_env_config``. |
 
-## Return value
+## Returns
 
 pyspark.sql.DataFrame
     Spark DataFrame returned by the SQL serving engine.
 
-## Usage notes
+## Raises / Errors
 
-FabricOps resolves the configured Warehouse target, sets the Fabric
-connector database to that warehouse artifact, and delegates the read-only
-SQL text to the Fabric Warehouse Spark connector for pushdown. Query callers
-can use two-part names such as ``dbo.orders`` when the configured target
-identifies the warehouse database/artifact.
+Not documented yet
 
-[Back to release overview](../index.md)
+<details>
+<summary>Maintainer architecture details</summary>
+
+- Downstream callables: 12
+- Frozen source ref: `bfce15756427d96277b26f87924380a748007acc`
+
+</details>

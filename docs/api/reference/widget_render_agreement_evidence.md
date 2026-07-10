@@ -15,18 +15,6 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_agreement_evidence">Open Preview call flow</a>
 
-## Contract impact
-
-| Property | Value |
-| --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
-| Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
-
-
 Render the standalone agreement-evidence widget.
 
 <div class="reference-source-card" markdown="1">
@@ -103,6 +91,23 @@ Not documented yet
 - [Metadata Tables](../../reference/metadata.md)
 
 
+<details>
+<summary>Maintainer architecture details</summary>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
+| Live since | — |
+| Discontinued in | — |
+| Contract classification | Preview public function |
+| Contract risk | Preview |
+| Live-critical dependencies | 0 |
+
+
+</details>
+
 !!! info "Generated reference freshness"
-    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
-    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
