@@ -9,9 +9,9 @@ Generator discovers and synchronises it
         ↓
 Maintainer decides Preview / Live / Discontinued
         ↓
-Generator compares and renders New / Updated / Unchanged
+Release tooling identifies New / Updated / Unchanged where supported
         ↓
-Maintainer approves changelog and release narrative
+Maintainer reviews the evidence and approves the changelog
         ↓
 Tag workflow builds and publishes immutable assets
 ```
@@ -57,8 +57,9 @@ Choose the smallest semantic version bump that communicates public impact:
 Update the version before synchronising the release inventory:
 
 1. Set `pyproject.toml` `[project].version` to `X.Y.Z`.
-2. Set `src/fabricops_kit/__init__.py` `__version__` to `X.Y.Z`.
-3. Keep package version, source commit, agreement version, and pipeline version as separate traceability concepts.
+2. Treat `pyproject.toml` as the authoritative package version.
+3. `fabricops_kit.__version__` is loaded from installed package metadata, with a local fallback to `pyproject.toml`; do not treat it as a separate committed version authority.
+4. Keep package version, source commit, agreement version, and pipeline version as separate traceability concepts.
 
 The inventory generator reads the target release version from `pyproject.toml`.
 
@@ -86,11 +87,25 @@ Source registries determine whether an asset exists. The release manifest determ
 | `templates` | `templates/notebooks/*.ipynb` | A notebook file in this directory enters the generated inventory. |
 | `dq_rules` | `guardrails_shared.DQ_RULE_TYPES` | A rule implementation that is not registered in `DQ_RULE_TYPES` is not part of the release inventory. |
 
-Synchronise the manifest after setting the package version:
+For a follow-up release, copy the latest prior manifest first so the new manifest starts from the prior lifecycle decisions:
+
+```bash
+cp docs/releases/manifests/0.1.0.yml docs/releases/manifests/0.2.0.yml
+```
+
+Then update the copied file's top-level version field:
+
+```yaml
+release_version: 0.2.0
+```
+
+After that, synchronise generated fields for the target version:
 
 ```bash
 PYTHONPATH=src python scripts/generate_release_inventory.py
 ```
+
+The generator reads only `docs/releases/manifests/<version>.yml` for the current `pyproject.toml` version. If that file does not exist, it creates a fresh manifest and newly discovered current assets start as `preview`; it does not carry lifecycle decisions forward from older manifests automatically.
 
 The actual CLI supports `--check` for validation only:
 
@@ -113,7 +128,7 @@ Use the release inventory and generated release pages to distinguish lifecycle s
 - lifecycle status: `preview`, `live`, `discontinued`
 - release change type: New, Updated, Unchanged, Removed, or Discontinued
 
-Do not encode `updated` as a lifecycle status. Updated labels should come from deterministic comparison with prior release contracts, fingerprints, source metadata, or other release-tooling evidence.
+Do not encode `updated` as a lifecycle status. Release tooling should identify New, Updated, or Unchanged where deterministic comparison evidence is implemented. Where current tooling cannot deterministically identify an implementation, template, or rule update, the maintainer must record the user-facing change in the changelog and release narrative instead of adding a manual `updated` flag to the manifest.
 
 ### Classify each release change
 
@@ -128,19 +143,31 @@ Do not encode `updated` as a lifecycle status. Updated labels should come from d
 
 An asset removed from source is not sufficiently managed by deletion alone. The inventory synchroniser rejects previously tracked assets that disappear from source unless they were explicitly marked `discontinued` in the manifest first.
 
+To discontinue an asset safely:
+
+1. In the new release manifest, change its status to `discontinued`.
+2. Set `discontinued_in: X.Y.Z`.
+3. Add a human-readable `rationale` and migration guidance.
+4. Generate and review the release contract.
+5. Remove it from the source registry only when the intended compatibility policy allows removal.
+6. Regenerate and validate again.
+
+`Discontinued` does not always mean delete immediately. It can mean unsupported but still physically present for one release, depending on compatibility policy. Because FabricOps does not preserve backwards compatibility unless explicitly requested, removal may occur in the same release when the release intentionally makes a breaking change, but the lifecycle evidence must be captured first.
+
 ## 6. Promote Preview assets to Live
 
 Promotion is an intentional maintainer decision.
 
 1. Set the target release version in `pyproject.toml`.
-2. Create or synchronise `docs/releases/manifests/<version>.yml`:
+2. For a follow-up release, copy the latest prior manifest to `docs/releases/manifests/<version>.yml` and update its top-level `release_version`.
+3. Synchronise generated fields:
 
    ```bash
    PYTHONPATH=src python scripts/generate_release_inventory.py
    ```
 
-3. Open `docs/releases/manifests/<version>.yml`.
-4. Find the relevant item under one of:
+4. Open `docs/releases/manifests/<version>.yml`.
+5. Find the relevant item under one of:
 
    ```yaml
    functions:
@@ -149,7 +176,7 @@ Promotion is an intentional maintainer decision.
    dq_rules:
    ```
 
-5. Change:
+6. Change:
 
    ```yaml
    status: preview
@@ -162,7 +189,7 @@ Promotion is an intentional maintainer decision.
    live_since: X.Y.Z
    ```
 
-6. Add or update human-owned fields where useful:
+7. Add or update human-owned fields where useful:
 
    ```yaml
    notes:
@@ -173,10 +200,62 @@ Promotion is an intentional maintainer decision.
    managed_by:
    ```
 
-7. Regenerate the release inventory and release contract pages.
-8. Review the generated release pages before tagging.
+8. Regenerate the release inventory and release contract pages.
+9. Review the generated release pages before tagging.
 
 `live_since` should identify the first release where the asset became Live. Do not reset `live_since` during ordinary updates.
+
+### Example: preparing 0.2.0
+
+Assume `0.1.0` contains:
+
+- `read_lakehouse_table`: Live
+- `widget_pipeline_bootstrap`: Preview
+- `METADATA_PIPELINE_RUNS`: Live
+- `not_null`: Live
+
+For `0.2.0`:
+
+- `read_lakehouse_table` receives a backward-compatible fix
+- `widget_pipeline_bootstrap` is approved for Live use
+- `METADATA_PIPELINE_RUNS` receives an additive schema column
+- a new DQ rule `accepted_values` is introduced as Preview
+
+The `0.2.0` manifest should preserve the existing Live function status and original `live_since`:
+
+```yaml
+- name: read_lakehouse_table
+  status: live
+  live_since: 0.1.0
+```
+
+Promote the previously Preview widget by setting its first Live release:
+
+```yaml
+- name: widget_pipeline_bootstrap
+  status: live
+  introduced_in: 0.1.0
+  live_since: 0.2.0
+```
+
+Preserve the metadata table as Live while generated schema evidence reflects the schema update:
+
+```yaml
+- name: METADATA_PIPELINE_RUNS
+  status: live
+  live_since: 0.1.0
+  schema_since: 0.2.0
+```
+
+Keep the new rule as Preview unless the maintainer approves it for supported use:
+
+```yaml
+- name: accepted_values
+  status: preview
+  introduced_in: 0.2.0
+```
+
+The changelog then explains the user-facing fix, promotion, schema addition, and new Preview capability.
 
 ## 7. Write and approve the changelog
 
@@ -265,7 +344,7 @@ Confirm the root documentation site remains the evolving product documentation a
 | `live_since` | release manifest | Human-owned, generator-preserved | Set once on first Live release. |
 | Metadata schema fingerprint | generated release inventory | Deterministic | Never edit manually. |
 | Source paths and documentation paths | generated release inventory | Deterministic | Fix source or generator when wrong. |
-| New or Updated labels | comparison with prior release | Deterministic where supported | Review the result, do not hand-maintain duplicate flags. |
+| New or Updated labels | comparison with prior release | Deterministic where supported | Review the result; where tooling cannot prove an update, explain it in the changelog instead of hand-maintaining duplicate flags. |
 | Changelog wording | `CHANGELOG.md` | Human-approved | Write or approve release-facing explanation. |
 | Release contract pages | release contract generator | Deterministic rendering | Regenerate, review, do not hand-edit. |
 | Wheel, sdist, checksums | tag workflow | Deterministic build | Verify published assets. |
