@@ -48,3 +48,35 @@
   background: color-mix(in srgb, #b95d5d 24%, var(--md-default-bg-color, #1f1f1f));
   border-color: color-mix(in srgb, #d77b7b 45%, transparent);
 }
+
+.fabricops-release-asset-status {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.25;
+  vertical-align: 0.08em;
+  white-space: nowrap;
+}
+
+.fabricops-release-asset-status--new {
+  color: #1f5132;
+  background: color-mix(in srgb, #2e7d32 16%, var(--md-default-bg-color, #ffffff));
+}
+
+.fabricops-release-asset-status--updated {
+  color: #674600;
+  background: color-mix(in srgb, #d9a300 22%, var(--md-default-bg-color, #ffffff));
+}
+
+[data-md-color-scheme="slate"] .fabricops-release-asset-status--new {
+  color: #b8e6c8;
+  background: color-mix(in srgb, #5fa878 30%, var(--md-default-bg-color, #1f1f1f));
+}
+
+[data-md-color-scheme="slate"] .fabricops-release-asset-status--updated {
+  color: #f4d991;
+  background: color-mix(in srgb, #c99a2c 32%, var(--md-default-bg-color, #1f1f1f));
+}
