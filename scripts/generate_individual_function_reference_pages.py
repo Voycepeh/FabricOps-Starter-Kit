@@ -1262,19 +1262,145 @@ def _source_card_lines(
 PLACEHOLDER = "Not documented yet"
 
 
-def _load_public_call_flow_inventory() -> dict[str, Any]:
+def _load_public_call_flow_inventory(path: Path = PUBLIC_CALL_FLOW_DATA_PATH) -> dict[str, Any]:
     """Load the generated public callable inventory used by the dashboard."""
-    if not PUBLIC_CALL_FLOW_DATA_PATH.exists():
+    if not path.exists():
         raise RuntimeError(
             "Missing generated public callable inventory: "
-            f"{PUBLIC_CALL_FLOW_DATA_PATH.relative_to(ROOT).as_posix()}"
+            f"{path.relative_to(ROOT).as_posix()}"
         )
-    data = json.loads(PUBLIC_CALL_FLOW_DATA_PATH.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
     public_functions = data.get("public_functions")
     if not isinstance(public_functions, list):
         raise RuntimeError("public-function-call-flows.json must contain a public_functions list")
     return data
 
+
+
+def _release_source_url(source_path: str, source_ref: str, start_line: int | None = None, end_line: int | None = None) -> str:
+    """Return a GitHub source URL pinned to a release ref."""
+    anchor = ""
+    if start_line:
+        anchor = f"#L{start_line}"
+        if end_line and end_line != start_line:
+            anchor += f"-L{end_line}"
+    return f"{GITHUB_REPO_URL}/blob/{source_ref}/{source_path}{anchor}"
+
+
+def render_function_page_from_record(
+    record: dict[str, Any],
+    *,
+    context: str = "current",
+    release_version: str | None = None,
+    release_index_href: str = "../index.md",
+) -> str:
+    """Render a public function page from one call-flow contract record."""
+    name = str(record["function_name"])
+    status = _lifecycle_status(record)
+    source_ref = str(record.get("source_ref") or DEFAULT_SOURCE_REF)
+    source_url = _release_source_url(
+        str(record.get("source_path", "")),
+        source_ref,
+        record.get("source_start_line"),
+        record.get("source_end_line"),
+    )
+    parameters = record.get("parameters") if isinstance(record.get("parameters"), list) else []
+    parameter_lines = _render_parameter_definitions(parameters, {}, {})
+    title = f"# `{name}`"
+    lines = [title, ""]
+    if context == "release":
+        if not release_version:
+            raise RuntimeError("release_version is required for release page rendering")
+        lines.extend([
+            f"This page documents `{name}` as released in version `{release_version}`.",
+            "",
+            f"Release version: `{release_version}`",
+            "",
+            _lifecycle_chip(status, prominent=True),
+            "",
+            f"[Current function page](../../../api/reference/{name}.md) · [Release function index]({release_index_href})",
+            "",
+        ])
+    else:
+        lines.extend(_lifecycle_header_lines(record))
+    lines.extend([
+        str(record.get("summary") or "No summary available."),
+        "",
+        *_source_card_lines(
+            source_path=str(record.get("source_path", "")),
+            source_start_line=record.get("source_start_line"),
+            source_ref=source_url,
+            short_name=name,
+        ),
+        "",
+        "## Signature",
+        "",
+        *_reference_code_block(_format_api_signature(str(record.get("signature") or f"def {name}(...)")), class_name="reference-api-definition"),
+        "",
+        "## Parameters",
+        "",
+        *parameter_lines,
+        "",
+        "## Returns",
+        "",
+        str(record.get("returns_documentation") or PLACEHOLDER),
+        "",
+        "## Raises / Errors",
+        "",
+        str(record.get("raises_documentation") or PLACEHOLDER),
+        "",
+    ])
+    if record.get("examples") and record.get("examples") != PLACEHOLDER:
+        lines.extend(["## Example usage", "", *_reference_code_block(str(record["examples"]), class_name="reference-example-usage"), ""])
+    if context == "release":
+        lines.extend([
+            "<details>",
+            "<summary>Maintainer architecture details</summary>",
+            "",
+            f"- Downstream callables: {max(len(record.get('flow', [])) - 1, 0)}",
+            f"- Frozen source ref: `{source_ref}`",
+            "",
+            "</details>",
+            "",
+        ])
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def generate_release_function_reference_pages(
+    *,
+    contract_path: Path,
+    output_dir: Path,
+    release_version: str,
+) -> list[Path]:
+    """Generate release-specific public function pages from an exact frozen JSON contract."""
+    data = _load_public_call_flow_inventory(contract_path)
+    rows = sorted(data["public_functions"], key=lambda row: str(row.get("function_name", "")).lower())
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for old_page in output_dir.glob("*.md"):
+        old_page.unlink()
+    paths: list[Path] = []
+    index_lines = [
+        f"# Function reference for {release_version}",
+        "",
+        f"This index lists Live public functions frozen for FabricOps Starter Kit `{release_version}`.",
+        "",
+        "[Frozen call-flow JSON](../_data/public-function-call-flows.json)",
+        "",
+        "| Function | Lifecycle | Summary |",
+        "| --- | --- | --- |",
+    ]
+    for row in rows:
+        name = str(row["function_name"])
+        page_path = output_dir / f"{name}.md"
+        page_path.write_text(
+            render_function_page_from_record(row, context="release", release_version=release_version),
+            encoding="utf-8",
+        )
+        paths.append(page_path)
+        index_lines.append(f"| [`{name}`]({name}.md) | {_lifecycle_chip(_lifecycle_status(row))} | {html_escape(str(row.get('summary') or '—'))} |")
+    index_path = output_dir / "index.md"
+    index_path.write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+    return [index_path, *paths]
 
 
 def _dash(value: Any) -> str:
@@ -4966,8 +5092,6 @@ def main() -> None:
                 "",
                 *_lifecycle_header_lines(public_flow),
                 *call_flow_lines,
-                *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)),
-                "",
                 purpose,
                 "",
                 *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
@@ -5071,6 +5195,7 @@ def main() -> None:
                 lines.extend(["", "_No used-by or calls references detected._"])
 
         if node["exported"]:
+            lines.extend(["", "<details>", "<summary>Maintainer architecture details</summary>", "", *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)), "", "</details>"])
             lines.extend(_generated_freshness_note())
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:

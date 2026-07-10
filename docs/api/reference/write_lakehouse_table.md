@@ -16,40 +16,6 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_lakehouse_table">Open Live contract call flow</a>
 
-## Contract impact
-
-| Property | Value |
-| --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | 0.1.0 |
-| Discontinued in | — |
-| Contract classification | Live public function |
-| Contract risk | Live |
-| Live-critical dependencies | 17 |
-
-### Live-critical dependencies
-
-<ul class="reference-compact-list">
-<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
-<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
-<li><code>fabricops_kit.config.shared.get_store</code></li>
-<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
-<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
-<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
-<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
-<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
-<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
-<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
-<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
-<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
-<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
-<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
-<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
-<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
-</ul>
-
-
 Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
 <div class="reference-source-card" markdown="1">
@@ -147,6 +113,45 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 - [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
 
 
+<details>
+<summary>Maintainer architecture details</summary>
+
+## Contract impact
+
+| Property | Value |
+| --- | --- |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.1.0 |
+| Discontinued in | — |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 17 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+</ul>
+
+
+</details>
+
 !!! info "Generated reference freshness"
-    Reference pages generated: 09 Jul 2026, 11:26 PM SGT
-    Call-flow data generated: 09 Jul 2026, 8:52 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

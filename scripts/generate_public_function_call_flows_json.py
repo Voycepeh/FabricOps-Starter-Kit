@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 from dataclasses import dataclass, field
 import json
 import sys
@@ -515,6 +516,100 @@ def enrich_rows_with_contract(
             row["contract_classification"] = internal_contract_classification(row)
             row["contract_display"] = internal_contract_display(row["contract_classification"])
 
+
+def _signature_from_node(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
+    """Return a compact source signature for a function record."""
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    returns = f" -> {ast.unparse(node.returns)}" if node.returns is not None else ""
+    return f"{prefix} {node.name}({ast.unparse(node.args)}){returns}"
+
+
+def _first_sentence(doc: str | None) -> str:
+    """Return the first sentence from a docstring."""
+    if not doc:
+        return ""
+    line = doc.strip().splitlines()[0].strip()
+    return line.split(".")[0].strip() + ("." if "." in line else "")
+
+
+def _docstring_sections(doc: str | None) -> dict[str, str]:
+    """Extract simple NumPy-style docstring sections for frozen references."""
+    if not doc:
+        return {}
+    lines = doc.strip().splitlines()
+    sections: dict[str, list[str]] = {}
+    current: str | None = None
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
+        if line and next_line and set(next_line) <= {"-"} and len(next_line) >= 3:
+            current = line.lower().replace(" ", "_")
+            sections[current] = []
+            index += 2
+            continue
+        if current is not None:
+            sections[current].append(lines[index].rstrip())
+        index += 1
+    return {key: "\n".join(value).strip() for key, value in sections.items() if "\n".join(value).strip()}
+
+
+def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]]:
+    """Return first-paragraph NumPy-style parameter docs keyed by name."""
+    docs: dict[str, dict[str, Any]] = {}
+    current: str | None = None
+    for raw_line in parameters_section.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if not line.startswith(" ") and " : " in line:
+            name, type_part = stripped.split(" : ", 1)
+            current = name.split(",")[0].strip()
+            docs[current] = {"type": type_part.strip(), "description_lines": []}
+            continue
+        if current is not None:
+            docs[current]["description_lines"].append(stripped)
+    return {
+        name: {"type": str(values.get("type", "")).strip(), "description": " ".join(values.get("description_lines", [])).strip()}
+        for name, values in docs.items()
+    }
+
+
+def _documentation_fields(info: FunctionInfo) -> dict[str, Any]:
+    """Return user-facing documentation fields frozen into a public record."""
+    doc = ast.get_docstring(info.node)
+    sections = _docstring_sections(doc)
+    param_docs = _parameter_doc_metadata(sections.get("parameters", ""))
+    positional = [arg for arg in [*info.node.args.posonlyargs, *info.node.args.args] if arg.arg not in {"self", "cls"}]
+    positional_required = len(positional) - len(info.node.args.defaults)
+    parameters: list[dict[str, str]] = []
+
+    def row(arg: ast.arg, required: bool) -> dict[str, str]:
+        doc_row = param_docs.get(arg.arg, {})
+        annotation = ast.unparse(arg.annotation) if arg.annotation is not None else ""
+        return {
+            "name": arg.arg,
+            "required": "Yes" if required else "No",
+            "type": annotation or doc_row.get("type", ""),
+            "description": doc_row.get("description", "Not documented yet") or "Not documented yet",
+        }
+
+    for index, arg in enumerate(positional):
+        parameters.append(row(arg, index < positional_required))
+    for arg, default in zip(info.node.args.kwonlyargs, info.node.args.kw_defaults):
+        parameters.append(row(arg, default is None))
+    return {
+        "signature": _signature_from_node(info.node),
+        "summary": _first_sentence(doc) or "No summary available.",
+        "parameters": parameters,
+        "returns_documentation": sections.get("returns", "Not documented yet"),
+        "raises_documentation": sections.get("raises", "Not documented yet"),
+        "examples": sections.get("examples", "Not documented yet"),
+        "usage_notes": sections.get("notes", ""),
+        "public_import_path": f"fabricops_kit.{info.function_name}",
+    }
+
 def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH, manifests_dir: Path | None = None) -> dict[str, Any]:
     """Build the v2 JSON payload."""
     manifests_dir = manifests_dir or root / "docs" / "releases" / "manifests"
@@ -551,6 +646,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "source_path": root_info.source_path,
             "source_start_line": root_info.source_start_line,
             "source_end_line": root_info.source_end_line,
+            **_documentation_fields(root_info),
             **lifecycle_fields(lifecycle),
             "contract_classification": public_contract_classification(lifecycle.lifecycle_status),
             "contract_display": public_contract_display(lifecycle),
@@ -710,6 +806,45 @@ def unused_record(info: FunctionInfo) -> dict[str, Any]:
         "suggested_action": "review_for_deletion_or_connection",
     }
 
+
+
+def freeze_release_payload(payload: dict[str, Any], *, release_version: str, source_ref: str) -> dict[str, Any]:
+    """Return a Live-only release-specific call-flow payload from generated source data."""
+    frozen = copy.deepcopy(payload)
+    live_public: list[dict[str, Any]] = []
+    live_roots: set[str] = set()
+    for row in frozen.get("public_functions", []):
+        history = row.get("release_history") or []
+        release_status = next((item.get("status") for item in history if str(item.get("version")) == release_version), None)
+        if release_status == "live":
+            row["lifecycle_status"] = "live"
+            row["release_version"] = release_version
+            row["source_ref"] = source_ref
+            row["release_history"] = [item for item in history if str(item.get("version")) == release_version]
+            live_public.append(row)
+            live_roots.add(str(row.get("qualified_name")))
+    frozen["public_functions"] = live_public
+    frozen["defined_functions"] = [
+        row for row in frozen.get("defined_functions", [])
+        if row.get("qualified_name") in live_roots or row.get("function_type") != "public_function"
+    ]
+    frozen["release_contract"] = {
+        "release_versions": [release_version],
+        "latest_release_version": release_version,
+        "live_public_function_count": len(live_public),
+        "preview_public_function_count": 0,
+        "discontinued_public_function_count": 0,
+        "live_critical_internal_count": frozen.get("release_contract", {}).get("live_critical_internal_count", 0),
+        "source_ref": source_ref,
+        "frozen": True,
+    }
+    frozen["metadata"] = dict(frozen.get("metadata", {})) | {
+        "release_version": release_version,
+        "source_ref": source_ref,
+        "contract_kind": "frozen_release_live_only",
+    }
+    frozen["summary"] = dict(frozen.get("summary", {})) | {"public_function_count": len(live_public)}
+    return frozen
 
 def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
     """Write only the public function call-flow JSON output."""

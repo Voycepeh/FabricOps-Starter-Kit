@@ -1,46 +1,63 @@
-<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->
-
 # `read_lakehouse_excel`
 
-<span class="fabricops-release-status fabricops-release-status--live">Live</span>
+This page documents `read_lakehouse_excel` as released in version `0.1.0`.
 
-Package version: `0.1.0`
+Release version: `0.1.0`
 
-Qualified callable: `fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel`
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
 
-Source path: `src/fabricops_kit/io/read_lakehouse_excel.py`
-
-Signature: `read_lakehouse_excel(relative_path: 'str', *, target: 'str' = 'source', sheet_name=0, spark_session=None, context: 'dict[str, Any] | None' = None, **read_excel_kwargs)`
-
-## Description
+[Current function page](../../../api/reference/read_lakehouse_excel.md) · [Release function index](../index.md)
 
 Read an Excel workbook from a configured Fabric-resolved path.
 
+<div class="reference-source-card" markdown="1">
+**Source**
+
+`fabricops_kit/io/read_lakehouse_excel.py:10`
+
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/0f77d1a/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L52">View on GitHub</a>
+</div>
+
+## Signature
+
+<div class="reference-api-definition" markdown="1">
+
+```python
+def read_lakehouse_excel(
+    relative_path: str,
+    target: str='source',
+    sheet_name=0,
+    spark_session=None,
+    context: dict[str, Any] | None=None,
+    **read_excel_kwargs,
+):
+```
+
+</div>
+
 ## Parameters
 
-relative_path : str
-    Excel file path resolved by the Fabric resolver.
-target : str, default="source"
-    Logical lakehouse target from ``00_env_config``.
-sheet_name : str or int, default=0
-    Worksheet name or index to read.
-spark_session : object, optional
-    Spark session to use instead of the notebook global ``spark``.
-context : dict[str, Any], optional
-    Active Fabric context override.
-**read_excel_kwargs
-    Additional keyword arguments passed to ``pandas.read_excel``.
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `relative_path` | `str` | Yes | Excel file path resolved by the Fabric resolver. |
+| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `sheet_name` | `str or int, default=0` | No | Worksheet name or index to read. |
+| `spark_session` | `object, optional` | No | Spark session to use instead of the notebook global ``spark``. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **read_excel_kwargs Additional keyword arguments passed to ``pandas.read_excel``. |
 
-## Return value
+## Returns
 
 pyspark.sql.DataFrame
     Spark DataFrame converted from the selected Excel worksheet.
 
-## Usage notes
+## Raises / Errors
 
-FabricOps resolves the configured Lakehouse Files path from
-``00_env_config``, reads the workbook binary through Spark, parses it with
-``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
-DataFrame.
+Not documented yet
 
-[Back to release overview](../index.md)
+<details>
+<summary>Maintainer architecture details</summary>
+
+- Downstream callables: 16
+- Frozen source ref: `0f77d1a`
+
+</details>
