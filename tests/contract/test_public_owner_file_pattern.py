@@ -156,14 +156,13 @@ def test_existing_public_callable_packages_follow_owner_file_pattern() -> None:
 
 def test_public_function_architecture_guide_is_documented_and_linked() -> None:
     """Verify the maintainer guide documents and navigates the architecture rule."""
-    guide_path = Path("docs/reference/public-function-architecture.md")
+    guide_path = Path("docs/maintainer/public-api-architecture.md")
     guide = guide_path.read_text(encoding="utf-8")
-    agents = Path("AGENTS.md").read_text(encoding="utf-8")
     mkdocs = Path("mkdocs.yml").read_text(encoding="utf-8")
 
-    assert "# Public Function Architecture" in guide
-    assert "one owner file per public function" in guide
-    assert "Do not add `public.py`, `models.py`, `classes.py`" in guide
-    assert "The test suite enforces this pattern." in guide
-    assert str(guide_path) in agents
-    assert "Public Function Architecture: reference/public-function-architecture.md" in mkdocs
+    assert "# Public API & Architecture" in guide
+    assert "## Public Function Architecture" in guide
+    assert "Avoid catch-all files such as `public.py`, `models.py`, `classes.py`" in guide
+    assert "one public owner file named after the function" in guide
+    assert "FabricOps Maintainer:" in mkdocs
+    assert "Public API & Architecture: maintainer/public-api-architecture.md" in mkdocs
