@@ -8,7 +8,7 @@ It provides reusable notebook templates, helper functions, metadata tables, guar
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
 [![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-[![Create Wheel](https://img.shields.io/badge/Create-Wheel-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/create-wheel/)
+[![Release Workflow](https://img.shields.io/badge/Release-Workflow-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/release-workflow/)
 
 </div>
 
@@ -23,8 +23,8 @@ It provides reusable notebook templates, helper functions, metadata tables, guar
   - [Pipeline Guardrails](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/schema-and-data-drift/)
   - [Governance Review](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/governance-review/)
   - [Metadata Dashboard](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/metadata-dashboard/)
-- [Create Wheel](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/create-wheel/)
 - [Setup Fabric Artifacts](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/setup-fabric-artifacts/)
+- [FabricOps Maintainer](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
 
 ## Documentation navigation

@@ -6,7 +6,7 @@ For the detailed contents and configurable settings inside each notebook, use [T
 
 ## Overview
 
-The guided demo shows how the starter kit works with deterministic order and customer source data. You build the FabricOps wheel, create Fabric runtime items, configure shared routes, capture an agreement, generate demo source tables, run the pipeline, enrich metadata, review guardrails, and inspect the metadata outputs.
+The guided demo shows how the starter kit works with deterministic order and customer source data. You start from an already published FabricOps release, create Fabric runtime items, configure shared routes, capture an agreement, generate demo source tables, run the pipeline, enrich metadata, review guardrails, and inspect the metadata outputs.
 
 Keep the default demo values for your first run so the notebooks and expected metadata rows line up.
 
@@ -23,14 +23,13 @@ Keep the default demo values for your first run so the notebooks and expected me
 
 | Order | Step | What you do | What you should have afterward |
 | ----- | ---- | ----------- | ------------------------------ |
-| 1 | [Create Wheel](guided-demo/create-wheel.md) | Build the FabricOps wheel locally. | A `.whl` file ready for Fabric Environment upload. |
-| 2 | [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md) | Create or choose the Fabric workspace, data items, Environment, wheel install, and copied notebooks. | A workspace where copied notebooks can import `fabricops_kit` and route to named runtime targets. |
-| 3 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
-| 4 | [Register Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and supporting files. | Agreement metadata that the pipeline can select. |
-| 5 | [Run Example Pipeline Demo](guided-demo/run-pipeline.md) | Run `example_pipeline_demo` to create deterministic demo source tables and demo-scoped rules. | Demo source data and starter rule intent ready for pipeline execution. |
-| 6 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `02_pipeline`. | Governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
-| 7 | [Review Governance](guided-demo/review-guardrails.md) | Use governance review widgets to enrich metadata and approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules, enriched metadata, and fresh runtime results from active checks. |
-| 8 | [Explore Metadata](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
+| 1 | [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md) | Create or choose the Fabric workspace, data items, Environment, published release wheel install, and copied notebooks. | A workspace where copied notebooks can import `fabricops_kit` and route to named runtime targets. |
+| 2 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
+| 3 | [Register Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and supporting files. | Agreement metadata that the pipeline can select. |
+| 4 | [Run Example Pipeline Demo](guided-demo/run-pipeline.md) | Run `example_pipeline_demo` to create deterministic demo source tables and demo-scoped rules. | Demo source data and starter rule intent ready for pipeline execution. |
+| 5 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `02_pipeline`. | Governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
+| 6 | [Review Governance](guided-demo/review-guardrails.md) | Use governance review widgets to enrich metadata and approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules, enriched metadata, and fresh runtime results from active checks. |
+| 7 | [Explore Metadata](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
 
 ## Success criteria
 

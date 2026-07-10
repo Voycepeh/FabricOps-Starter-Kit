@@ -1,10 +1,10 @@
 # Setup Fabric Artifacts
 
-Create or choose the Microsoft Fabric runtime artifacts that the guided demo uses. Complete these steps after [Create Wheel](create-wheel.md) and before [Run Environment Setup](run-environment-setup.md).
+Create or choose the Microsoft Fabric runtime artifacts that the guided demo uses. Start with an already published FabricOps release wheel, then complete these steps before [Run Environment Setup](run-environment-setup.md).
 
 ## What you prepare
 
-This page consolidates workspace, lakehouse, warehouse, Environment, wheel upload, and notebook-copy setup into one practical Fabric-side sequence.
+This page consolidates workspace, lakehouse, warehouse, Environment, published wheel upload, and notebook-copy setup into one practical Fabric-side sequence.
 
 By the end, your copied notebooks can import `fabricops_kit`, and `00_env_config` can point every `METADATA_*` operation at the configured metadata lakehouse rather than an attached default lakehouse.
 
@@ -40,18 +40,20 @@ Record the workspace, lakehouse, warehouse, and schema names so you can enter th
 
 ## 4. Upload and install the FabricOps wheel
 
-Use the `.whl` file built in [Create Wheel](create-wheel.md).
+Use the `.whl` file attached to the GitHub Release you want to demo. Repository maintainers build release wheels as part of the [Release Workflow](../maintainer/release-workflow.md).
 
-1. Open the Fabric Environment.
-2. Go to **Libraries** / **Custom libraries**.
-3. Upload the generated wheel from your local `dist/` folder, for example `dist/fabricops_kit-0.1.0-py3-none-any.whl`. The exact version number may differ.
-4. Save or publish the Environment so Fabric applies the library change.
-5. Restart notebook sessions after changing the Environment if Fabric prompts you or if sessions were already running.
+1. Open the FabricOps Starter Kit GitHub Release for the version you want to use.
+2. Download the release wheel, for example `fabricops_kit-0.1.0-py3-none-any.whl`. The exact version number may differ.
+3. Open the Fabric Environment.
+4. Go to **Libraries** / **Custom libraries**.
+5. Upload the downloaded wheel.
+6. Save or publish the Environment so Fabric applies the library change.
+7. Restart notebook sessions after changing the Environment if Fabric prompts you or if sessions were already running.
 
 ![Fabric custom wheel install example](../assets/fabric-example-install-custom-whl.png)
 
 !!! tip "Use the wheel artifact"
-    Upload `dist/*.whl`, not a `.zip`, the `.tar.gz` source distribution, `uv.lock`, or the repository folder.
+    Upload the release `.whl`, not a `.zip`, the `.tar.gz` source distribution, `uv.lock`, or the repository folder.
 
 ## 5. Copy template notebooks
 
