@@ -1,7 +1,7 @@
 release_version: 0.1.0
 release_status: live
 release_date: 2026-07-08
-source_ref: bfce157
+source_ref: bfce15756427d96277b26f87924380a748007acc
 source_ref_note: Canonical 0.1.0 release commit that first recorded the live release date and release-history index.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit

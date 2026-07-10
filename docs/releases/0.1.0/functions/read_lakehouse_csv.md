@@ -15,7 +15,7 @@ Read a CSV file from a configured Fabric-resolved path through Spark.
 
 `fabricops_kit/io/read_lakehouse_csv.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce157/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L49">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce15756427d96277b26f87924380a748007acc/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L49">View on GitHub</a>
 </div>
 
 ## Signature
@@ -58,6 +58,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 15
-- Frozen source ref: `bfce157`
+- Frozen source ref: `bfce15756427d96277b26f87924380a748007acc`
 
 </details>

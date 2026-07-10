@@ -15,7 +15,7 @@ Read warehouse rows with SQL pushdown.
 
 `fabricops_kit/io/read_warehouse_query.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce157/src/fabricops_kit/io/read_warehouse_query.py#L15-L74">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/bfce15756427d96277b26f87924380a748007acc/src/fabricops_kit/io/read_warehouse_query.py#L15-L74">View on GitHub</a>
 </div>
 
 ## Signature
@@ -56,6 +56,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 12
-- Frozen source ref: `bfce157`
+- Frozen source ref: `bfce15756427d96277b26f87924380a748007acc`
 
 </details>
