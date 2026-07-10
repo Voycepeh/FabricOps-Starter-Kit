@@ -1,8 +1,9 @@
+---
+name: FabricOps Release Maintainer
+description: Guide an AI coding agent through preparing a FabricOps release, performing deterministic repository work automatically, and pausing for explicit maintainer decisions where human judgement is required.
+---
+
 # FabricOps Maintainer Release Guide
-
-This page publishes the same operational workflow used by the `FabricOps Release Maintainer` AI skill. The canonical workflow source is [`.agents/skills/fabricops-release/SKILL.md`](../../.agents/skills/fabricops-release/SKILL.md); run [`scripts/sync_maintainer_release_guide.py`](../../scripts/sync_maintainer_release_guide.py) after editing the skill.
-
-<!-- FABRICOPS-RELEASE-SKILL-CONTENT:START -->
 
 This skill is the operational source of truth for FabricOps release preparation. The published human page at `docs/maintainer/index.md` is synchronised from this file; do not maintain a second independent copy of the release workflow.
 
@@ -322,5 +323,3 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 - Release workflow automation: [`.github/workflows/`](../../.github/workflows/)
 - Release inventory entry point: [`scripts/generate_release_inventory.py`](../../scripts/generate_release_inventory.py)
 - Release inventory implementation: [`scripts/release_inventory.py`](../../scripts/release_inventory.py)
-
-<!-- FABRICOPS-RELEASE-SKILL-CONTENT:END -->

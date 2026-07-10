@@ -31,6 +31,8 @@ Use the published documentation site for the complete sidebar. This README keeps
   - [Release Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
   - [Public API and Architecture](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/public-api-architecture/)
 
+The Release Guide is also available as an AI-agent skill for interactive release preparation.
+
 FabricOps also publishes a [documentation navigation map](https://voycepeh.github.io/FabricOps-Starter-Kit/llms.txt) for documentation and automation tooling. Most documentation pages have raw Markdown variants by adding `.md` to the page URL, for example [Guided Demo Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo.md).
 
 ## Template quick links (Download and open in fabric directly for best experience)
