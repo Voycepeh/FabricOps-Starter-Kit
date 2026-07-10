@@ -161,7 +161,7 @@ def test_public_function_architecture_guide_is_documented_and_linked() -> None:
     mkdocs = Path("mkdocs.yml").read_text(encoding="utf-8")
 
     assert "# Public API & Architecture" in guide
-    assert "## Public Function Architecture" in guide
+    assert "## Public function architecture" in guide
     assert "Avoid catch-all files such as `public.py`, `models.py`, `classes.py`" in guide
     assert "one public owner file named after the function" in guide
     assert "FabricOps Maintainer:" in mkdocs

@@ -1,4 +1,8 @@
-# Release Workflow
+# FabricOps Maintainer Release Guide
+
+This page is for repository maintainers preparing, validating, and publishing FabricOps Starter Kit releases. End-user setup and notebook walkthrough content stays in the [Guided Demo](../guided-demo.md); maintainer-only release curation, packaging, and publishing guidance belongs here.
+
+Use this page as the release runbook. Use [Public API & Architecture](public-api-architecture.md) as the companion technical reference when validating supported callable boundaries and call-flow artifacts.
 
 Use this checklist when preparing a new FabricOps Starter Kit release. The release manifest is the centre of the workflow: source registries decide what exists, the generator synchronises discovered assets, the maintainer decides each asset's lifecycle status, release tooling renders the release contract, and the tag workflow publishes immutable assets.
 
@@ -404,5 +408,4 @@ For a hotfix, branch from the released tag or production release commit, apply t
 ## Supporting references
 
 - [Public API & Architecture](public-api-architecture.md)
-- [Generators](generators.md)
 - [Releases](../releases/index.md)

@@ -212,7 +212,7 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "example_pipeline_demo",
         "99_explore",
         "published FabricOps release wheel",
-        "Release Workflow",
+        "Release Guide",
     ]:
         assert expected in setup_page
 

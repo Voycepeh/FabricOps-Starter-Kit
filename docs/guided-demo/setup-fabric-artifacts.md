@@ -40,7 +40,7 @@ Record the workspace, lakehouse, warehouse, and schema names so you can enter th
 
 ## 4. Upload and install the FabricOps wheel
 
-Use the `.whl` file attached to the GitHub Release you want to demo. Repository maintainers build release wheels as part of the [Release Workflow](../maintainer/release-workflow.md).
+Use the `.whl` file attached to the GitHub Release you want to demo. Repository maintainers build release wheels as part of the [Release Guide](../maintainer/index.md).
 
 1. Open the FabricOps Starter Kit GitHub Release for the version you want to use.
 2. Download the release wheel, for example `fabricops_kit-0.1.0-py3-none-any.whl`. The exact version number may differ.

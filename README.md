@@ -8,7 +8,7 @@ It provides reusable notebook templates, helper functions, metadata tables, guar
 
 [![Open Documentation](https://img.shields.io/badge/Docs-Open%20FabricOps-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
 [![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-[![Release Workflow](https://img.shields.io/badge/Release-Workflow-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/release-workflow/)
+[![Release Guide](https://img.shields.io/badge/Release-Guide-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
 
 </div>
 
@@ -27,11 +27,9 @@ Use the published documentation site for the complete sidebar. This README keeps
   - [DQ Rules](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/)
 - [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
 - [Releases](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
-- [FabricOps Maintainer](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/overview/)
-  - [Overview](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/overview/)
-  - [Release Workflow](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/release-workflow/)
+- [FabricOps Maintainer](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
+  - [Release Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
   - [Public API and Architecture](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/public-api-architecture/)
-  - [Generators](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/generators/)
 
 FabricOps also publishes a [documentation navigation map](https://voycepeh.github.io/FabricOps-Starter-Kit/llms.txt) for documentation and automation tooling. Most documentation pages have raw Markdown variants by adding `.md` to the page URL, for example [Guided Demo Markdown](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo.md).
 
