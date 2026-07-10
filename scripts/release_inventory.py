@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
-MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
+MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
 TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
 TEMPLATE_DOCS = {
     "00_env_config": "docs/notebook-templates-implementation-guide/environment-config.md",
@@ -319,7 +319,35 @@ def sort_release_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def live_release_items(manifest: dict[str, Any], group: str) -> list[dict[str, Any]]:
     """Return deterministic Live items for a manifest group."""
-    return [item for item in sort_release_items(manifest[group]) if item["status"] == "live"]
+    version = str(manifest["release_version"])
+    live_items = [item for item in sort_release_items(manifest[group]) if item["status"] == "live"]
+    return sort_release_inventory_items(live_items, version)
+
+
+def release_asset_change_status(item: dict[str, Any], version: str) -> str:
+    """Return the release-local change status for a Live manifest item."""
+    if str(item.get("live_since") or item.get("introduced_in") or "") == version:
+        return "new"
+    if str(item.get("updated_in") or "") == version:
+        return "updated"
+    if item.get("schema_since") is not None and str(item.get("schema_since") or "") == version:
+        return "updated"
+    return ""
+
+
+def release_asset_status_badge(status: str) -> str:
+    """Return a compact badge for a release-local asset change status."""
+    if not status:
+        return ""
+    if status not in {"new", "updated"}:
+        raise ValueError(f"Invalid release asset change status: {status!r}.")
+    return f'<span class="fabricops-release-asset-status fabricops-release-asset-status--{status}">{status.upper()}</span>'
+
+
+def sort_release_inventory_items(items: list[dict[str, Any]], version: str) -> list[dict[str, Any]]:
+    """Sort Live release items by release-local change status, then name."""
+    order = {"new": 0, "updated": 1, "": 2}
+    return sorted(items, key=lambda item: (order[release_asset_change_status(item, version)], item["name"]))
 
 
 def _function_details(item: dict[str, Any]) -> dict[str, Any]:
@@ -402,9 +430,11 @@ def _release_inventory_section(manifest: dict[str, Any], version: str, group: st
         f"| {noun} | {purpose} |",
         "| --- | --- |",
     ]
-    for item in items:
+    for item in sort_release_inventory_items(items, version):
         link = _release_inventory_link(manifest, version, group, item)
-        lines.append(f"| [`{item['name']}`]({link}) | {_description(item, group)} |")
+        badge = release_asset_status_badge(release_asset_change_status(item, version))
+        badge_suffix = f" {badge}" if badge else ""
+        lines.append(f"| [`{item['name']}`]({link}){badge_suffix} | {_description(item, group)} |")
     lines.extend(["", "</details>"])
     return lines
 

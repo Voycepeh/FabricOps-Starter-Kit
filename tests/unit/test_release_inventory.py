@@ -188,6 +188,56 @@ def test_release_status_ordering_is_deterministic():
     assert [item["name"] for item in ri.sort_release_items(rows)] == ["a_live", "a_preview", "b_preview", "z_old"]
 
 
+def test_release_asset_status_badges_are_manifest_driven():
+    """Verify release-local status badges come from manifest metadata."""
+    version = "1.2.0"
+
+    assert ri.release_asset_change_status({"name": "new", "live_since": version}, version) == "new"
+    assert ri.release_asset_change_status({"name": "updated", "live_since": "1.1.0", "updated_in": version}, version) == "updated"
+    assert ri.release_asset_change_status({"name": "schema", "live_since": "1.1.0", "schema_since": version}, version) == "updated"
+    assert ri.release_asset_change_status({"name": "same", "live_since": "1.1.0"}, version) == ""
+    assert ri.release_asset_status_badge("new") == '<span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span>'
+    assert ri.release_asset_status_badge("updated") == '<span class="fabricops-release-asset-status fabricops-release-asset-status--updated">UPDATED</span>'
+    assert ri.release_asset_status_badge("") == ""
+
+
+def test_release_inventory_status_sorting_prioritizes_new_updated_then_name():
+    """Verify release inventory rows sort new, updated, then unchanged alphabetically."""
+    version = "1.2.0"
+    rows = [
+        {"name": "z_same", "status": "live", "live_since": "1.0.0"},
+        {"name": "b_updated", "status": "live", "live_since": "1.0.0", "updated_in": version},
+        {"name": "a_new", "status": "live", "live_since": version},
+        {"name": "a_same", "status": "live", "live_since": "1.0.0"},
+        {"name": "a_updated", "status": "live", "live_since": "1.0.0", "updated_in": version},
+    ]
+
+    sorted_names = [item["name"] for item in ri.sort_release_inventory_items(rows, version)]
+
+    assert sorted_names == ["a_new", "a_updated", "b_updated", "a_same", "z_same"]
+
+
+def test_release_inventory_section_renders_optional_status_badges():
+    """Verify release overview badges and ordering are generated from manifest fields."""
+    manifest = {"release_version": "1.2.0", "github_owner": "Voycepeh", "github_repo": "FabricOps-Starter-Kit"}
+    items = [
+        {"name": "z_same", "status": "live", "live_since": "1.0.0", "description": "Same."},
+        {"name": "b_updated", "status": "live", "live_since": "1.0.0", "updated_in": "1.2.0", "description": "Updated."},
+        {"name": "a_new", "status": "live", "live_since": "1.2.0", "description": "New."},
+        {"name": "a_same", "status": "live", "live_since": "1.0.0", "description": "Same A."},
+    ]
+
+    lines = ri._release_inventory_section(manifest, "1.2.0", "functions", items)
+    rows = [line for line in lines if line.startswith("| [`")]
+
+    assert rows == [
+        '| [`a_new`](functions/a_new.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | New. |',
+        '| [`b_updated`](functions/b_updated.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--updated">UPDATED</span> | Updated. |',
+        '| [`a_same`](functions/a_same.md) | Same A. |',
+        '| [`z_same`](functions/z_same.md) | Same. |',
+    ]
+
+
 def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     assert "first supported FabricOps Starter Kit release" in ri.extract_changelog_notes(ri.read_package_version())

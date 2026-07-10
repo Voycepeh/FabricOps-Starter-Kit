@@ -17,15 +17,15 @@
 
 | Function | Description |
 | --- | --- |
-| [`profile_dataframe`](functions/profile_dataframe.md) | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
-| [`read_lakehouse_csv`](functions/read_lakehouse_csv.md) | Read a CSV file from a configured Fabric-resolved path through Spark. |
-| [`read_lakehouse_excel`](functions/read_lakehouse_excel.md) | Read an Excel workbook from a configured Fabric-resolved path. |
-| [`read_lakehouse_parquet`](functions/read_lakehouse_parquet.md) | Read a Parquet file from a configured Fabric-resolved path through Spark. |
-| [`read_lakehouse_table`](functions/read_lakehouse_table.md) | Read a Delta table from a Fabric lakehouse. |
-| [`read_warehouse_query`](functions/read_warehouse_query.md) | Read warehouse rows with SQL pushdown. |
-| [`read_warehouse_table`](functions/read_warehouse_table.md) | Read a full table from a Microsoft Fabric warehouse. |
-| [`write_lakehouse_table`](functions/write_lakehouse_table.md) | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
-| [`write_warehouse_table`](functions/write_warehouse_table.md) | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
+| [`profile_dataframe`](functions/profile_dataframe.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
+| [`read_lakehouse_csv`](functions/read_lakehouse_csv.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a CSV file from a configured Fabric-resolved path through Spark. |
+| [`read_lakehouse_excel`](functions/read_lakehouse_excel.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read an Excel workbook from a configured Fabric-resolved path. |
+| [`read_lakehouse_parquet`](functions/read_lakehouse_parquet.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a Parquet file from a configured Fabric-resolved path through Spark. |
+| [`read_lakehouse_table`](functions/read_lakehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a Delta table from a Fabric lakehouse. |
+| [`read_warehouse_query`](functions/read_warehouse_query.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read warehouse rows with SQL pushdown. |
+| [`read_warehouse_table`](functions/read_warehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a full table from a Microsoft Fabric warehouse. |
+| [`write_lakehouse_table`](functions/write_lakehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
+| [`write_warehouse_table`](functions/write_warehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
 
 </details>
 
@@ -34,10 +34,10 @@
 
 | Metadata table | Purpose |
 | --- | --- |
-| [`METADATA_DATA_AGREEMENT`](metadata/metadata_data_agreement.md) | Supported FabricOps metadata table for data agreement. |
-| [`METADATA_DATA_AGREEMENT_EVIDENCE`](metadata/metadata_data_agreement_evidence.md) | Supported FabricOps metadata table for data agreement evidence. |
-| [`METADATA_DATA_CATALOGUE`](metadata/metadata_data_catalogue.md) | Supported FabricOps metadata table for data catalogue. |
-| [`METADATA_DATA_STEWARD`](metadata/metadata_data_steward.md) | Supported FabricOps metadata table for data steward. |
+| [`METADATA_DATA_AGREEMENT`](metadata/metadata_data_agreement.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data agreement. |
+| [`METADATA_DATA_AGREEMENT_EVIDENCE`](metadata/metadata_data_agreement_evidence.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data agreement evidence. |
+| [`METADATA_DATA_CATALOGUE`](metadata/metadata_data_catalogue.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data catalogue. |
+| [`METADATA_DATA_STEWARD`](metadata/metadata_data_steward.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data steward. |
 
 </details>
 
@@ -46,9 +46,9 @@
 
 | Notebook template | Purpose |
 | --- | --- |
-| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb) | Environment bootstrap for FabricOps Starter Kit notebooks. This notebook defines environment-wide values and assembles framework config. |
-| [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/01_agreement.ipynb) | Defines what should be built, who owns it, which rules apply, and what readiness means. This is the first required delivery notebook after `00_env_config`. |
-| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/99_explore.ipynb) | Use this optional support notebook for discovery, profiling, troubleshooting, investigation, and ad hoc analysis. The required delivery path remains: `01_agreement` → `02_pipeline` → `03_governance`. |
+| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Environment bootstrap for FabricOps Starter Kit notebooks. This notebook defines environment-wide values and assembles framework config. |
+| [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/01_agreement.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Defines what should be built, who owns it, which rules apply, and what readiness means. This is the first required delivery notebook after `00_env_config`. |
+| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/99_explore.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Use this optional support notebook for discovery, profiling, troubleshooting, investigation, and ad hoc analysis. The required delivery path remains: `01_agreement` → `02_pipeline` → `03_governance`. |
 
 </details>
 
