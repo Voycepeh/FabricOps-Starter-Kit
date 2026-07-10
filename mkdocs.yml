@@ -20,10 +20,8 @@ theme:
 nav:
   - Home: index.md
   - How FabricOps Works: how-fabricops-works.md
-  - Function Call Graph: function-call-graph.md
   - Guided Demo:
       - Overview: guided-demo.md
-      - Create Wheel: guided-demo/create-wheel.md
       - Setup Fabric Artifacts: guided-demo/setup-fabric-artifacts.md
       - Run Environment Setup: guided-demo/run-environment-setup.md
       - Run IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
@@ -74,14 +72,9 @@ nav:
       - required_when: reference/dq-rules/required-when.md
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
-  - Maintainer References:
-      - Public API Contract: reference/public-api-contract.md
-      - Public Function Architecture: reference/public-function-architecture.md
-      - Release Management: development/release-management.md
-      - Implementation Appendix:
-          # AUTO-GENERATED-MODULES-START
-          []
-      # AUTO-GENERATED-MODULES-END
+  - FabricOps Maintainer:
+      - Release Guide: maintainer/index.md
+      - Public API & Architecture: maintainer/public-api-architecture.md
 
 markdown_extensions:
   - admonition

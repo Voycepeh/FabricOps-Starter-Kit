@@ -163,9 +163,6 @@ def test_notebook_template_docs_describe_optional_example_notebooks():
 def test_guided_demo_links_pipeline_guardrail_demo():
     """Verify guided demo links the step pages for the pipeline guardrail demo."""
     guided_demo = (ROOT / "docs" / "guided-demo.md").read_text(encoding="utf-8")
-    create_wheel_page = (ROOT / "docs" / "guided-demo" / "create-wheel.md").read_text(
-        encoding="utf-8"
-    )
     setup_page = (ROOT / "docs" / "guided-demo" / "setup-fabric-artifacts.md").read_text(
         encoding="utf-8"
     )
@@ -181,7 +178,6 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         assert expected in guided_demo
 
     for expected_link in [
-        "(guided-demo/create-wheel.md)",
         "(guided-demo/setup-fabric-artifacts.md)",
         "(guided-demo/run-environment-setup.md)",
         "(guided-demo/create-agreement.md)",
@@ -204,15 +200,6 @@ def test_guided_demo_links_pipeline_guardrail_demo():
     assert "milestone" not in guided_demo
 
     for expected in [
-        "# Create Wheel",
-        "uv build",
-        "FabricOps `.whl` file",
-        "dist/*.whl",
-        "[Setup Fabric Artifacts](setup-fabric-artifacts.md)",
-    ]:
-        assert expected in create_wheel_page
-
-    for expected in [
         "# Setup Fabric Artifacts",
         "metadata_lakehouse",
         "source_lakehouse",
@@ -224,6 +211,8 @@ def test_guided_demo_links_pipeline_guardrail_demo():
         "03_governance",
         "example_pipeline_demo",
         "99_explore",
+        "published FabricOps release wheel",
+        "Release Guide",
     ]:
         assert expected in setup_page
 
