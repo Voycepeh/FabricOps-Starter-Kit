@@ -21,6 +21,7 @@ from packaging.version import Version
 
 ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
+VALID_RELEASE_STATUSES = {"preparing", "live"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
 MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
@@ -189,7 +190,9 @@ def _load_manifest(path: Path) -> dict[str, Any] | None:
 def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
     if manifest.get("release_version") != version:
         raise ValueError(f"Manifest release_version {manifest.get('release_version')!r} does not match pyproject.toml version {version!r}.")
-    release_status = str(manifest.get("release_status") or "").lower()
+    release_status = str(manifest.get("release_status") or "preparing").lower()
+    if release_status not in VALID_RELEASE_STATUSES:
+        raise ValueError(f"Invalid release_status for {version}: {release_status!r}. Use preparing or live.")
     if release_status == "live" and not _parse_release_date(manifest.get("release_date")):
         raise ValueError(f"Live release manifest {version} must include release_date in YYYY-MM-DD format.")
     for group in GROUPS:
@@ -586,11 +589,22 @@ def sort_release_manifests(manifests: list[dict[str, Any]]) -> list[dict[str, An
 
 def render_releases_index(manifests: list[dict[str, Any]], notice: str) -> str:
     """Render the top-level release history page from release manifests."""
-    lines = [notice, "", "# Releases", "", "## Release history", "", "| Release | Release date | Description |", "| --- | --- | --- |"]
-    for manifest in sort_release_manifests(manifests):
-        version = str(manifest["release_version"])
-        release_date = _parse_release_date(manifest.get("release_date"))
-        lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
+    lines = [notice, "", "# Releases", "", "## Release history", ""]
+    live_manifests = [manifest for manifest in manifests if str(manifest.get("release_status") or "").lower() == "live"]
+    if live_manifests:
+        lines.extend(["| Release | Release date | Description |", "| --- | --- | --- |"] )
+        for manifest in sort_release_manifests(live_manifests):
+            version = str(manifest["release_version"])
+            release_date = _parse_release_date(manifest.get("release_date"))
+            lines.append(f"| [FabricOps Starter Kit {version}]({version}/) | {release_date} | {_release_description(manifest)} |")
+    else:
+        lines.append("No completed FabricOps Starter Kit releases have been published yet.")
+    preparing_manifests = [manifest for manifest in manifests if str(manifest.get("release_status") or "").lower() == "preparing"]
+    if preparing_manifests:
+        lines.extend(["", "## In preparation", "", "| Release | Status | Description |", "| --- | --- | --- |"] )
+        for manifest in sorted(preparing_manifests, key=lambda item: Version(str(item.get("release_version", "0"))), reverse=True):
+            version = str(manifest["release_version"])
+            lines.append(f"| FabricOps Starter Kit {version} | Preparing | {_release_description(manifest)} |")
     return "\n".join(lines) + "\n"
 
 
@@ -609,17 +623,24 @@ def render_release_pages() -> list[Path]:
     if manifest is None:
         raise SystemExit(f"Release manifest not found: {path}. Run scripts/generate_release_inventory.py first.")
     _validate_manifest(manifest, version)
+    release_dir = ROOT / "docs" / "releases" / version
+    release_status_text = str(manifest.get("release_status") or "preparing").lower()
+    notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
+    if release_status_text != "live":
+        if release_dir.exists():
+            shutil.rmtree(release_dir)
+        releases_index = ROOT / "docs" / "releases" / "index.md"
+        releases_index.write_text(render_releases_index(load_release_manifests(), notice), encoding="utf-8")
+        return [releases_index]
     try:
         notes = extract_changelog_notes(version)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
-    release_dir = ROOT / "docs" / "releases" / version
     if release_dir.exists():
         for child in release_dir.iterdir():
             if child.is_dir() or child.suffix == ".md":
                 shutil.rmtree(child) if child.is_dir() else child.unlink()
     release_dir.mkdir(parents=True, exist_ok=True)
-    notice = GENERATED_NOTICE_TEMPLATE.format(version=version)
     live = {group: live_release_items(manifest, group) for group in GROUPS}
     release_status = manifest.get("release_status") or "Live"
     release_date = _parse_release_date(manifest.get("release_date"))
@@ -628,7 +649,6 @@ def render_release_pages() -> list[Path]:
     inventory_sections = _release_inventory_sections(manifest, version, live)
     index = release_dir / "index.md"
     github_release_url = _release_url(manifest, version)
-    release_status_text = str(release_status).lower()
     rendered_status = release_status_chip(release_status_text) if release_status_text in VALID_STATUSES else str(release_status)
     index.write_text(
         "\n".join(

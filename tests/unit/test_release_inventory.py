@@ -140,6 +140,37 @@ def test_valid_live_release_date_passes_strict_validation():
     ri._validate_manifest(manifest, "1.0.0")
 
 
+def test_preparing_release_status_allows_null_release_evidence():
+    """Verify preparing releases can omit release date and source commit evidence."""
+    manifest = {
+        "release_version": "1.0.0",
+        "release_status": "preparing",
+        "release_date": None,
+        "source_ref": None,
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    ri._validate_manifest(manifest, "1.0.0")
+
+
+def test_invalid_release_status_fails_clearly():
+    """Verify release status is distinct from asset lifecycle values."""
+    manifest = {
+        "release_version": "1.0.0",
+        "release_status": "preview",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    with pytest.raises(ValueError, match="Invalid release_status"):
+        ri._validate_manifest(manifest, "1.0.0")
+
+
 def test_malformed_live_release_dates_fail_clearly():
     """Verify Live release dates reject prose, malformed dates, and timestamps."""
     for release_date in [None, "yesterday", "2026-7-8", "2026-07-08T00:00:00"]:
@@ -156,18 +187,17 @@ def test_malformed_live_release_dates_fail_clearly():
             ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_release_contract_pages_render_live_only_local_inventory():
-    """Verify release overview inventory contains only Live local detail links."""
-    ri.render_release_pages()
+def test_release_contract_pages_skip_preparing_manifest_snapshot():
+    """Verify preparing manifests do not render frozen release evidence."""
+    paths = ri.render_release_pages()
     version = ri.read_package_version()
-    content = (ri.ROOT / "docs" / "releases" / version / "index.md").read_text(encoding="utf-8")
-    assert "| Function | Description |" in content
-    assert "[`read_lakehouse_table`](functions/read_lakehouse_table.md)" in content
-    assert "docs/api/reference" not in content
-    assert "| Status | Name | Documentation | Source |" not in content
-    assert "src/fabricops_kit/io/read_lakehouse_table.py" not in content
-    assert 'fabricops-release-status fabricops-release-status--live">Live</span>' in content
-    assert 'fabricops-release-status fabricops-release-status--preview">Preview</span>' not in content
+    content = (ri.ROOT / "docs" / "releases" / "index.md").read_text(encoding="utf-8")
+
+    assert paths == [ri.ROOT / "docs" / "releases" / "index.md"]
+    assert not (ri.ROOT / "docs" / "releases" / version).exists()
+    assert "No completed FabricOps Starter Kit releases have been published yet." in content
+    assert f"| FabricOps Starter Kit {version} | Preparing |" in content
+    assert "2026-07-08" not in content
 
 
 def test_release_status_chip_supports_all_lifecycle_values():
@@ -240,7 +270,8 @@ def test_release_inventory_section_renders_optional_status_badges():
 
 def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
-    assert "first supported FabricOps Starter Kit release" in ri.extract_changelog_notes(ri.read_package_version())
+    with pytest.raises(ValueError, match="no release section"):
+        ri.extract_changelog_notes(ri.read_package_version())
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -263,39 +294,25 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])
 
 
-def test_release_generates_exact_live_detail_pages_and_no_preview_pages():
-    """Verify frozen details exist only where release-specific details are useful."""
+def test_release_generates_no_frozen_detail_pages_for_preparing_manifest():
+    """Verify preparing releases do not keep frozen detail pages."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
-    assert len(list((base / "functions").glob("*.md"))) == 9
-    assert len(list((base / "metadata").glob("*.md"))) == 4
-    assert not (base / "templates").exists()
-    assert not (base / "dq-rules").exists()
-    assert not (base / "functions" / "index.md").exists()
-    assert not (base / "metadata" / "index.md").exists()
-    assert not (base / "functions" / "setup_notebook.md").exists()
+
+    assert not base.exists()
 
 
-def test_release_overview_lists_live_inventory_in_collapsible_sections():
-    """Verify release overview sections include counts and direct asset links."""
+def test_release_overview_lists_preparing_release_without_live_inventory():
+    """Verify preparing releases are listed without frozen Live inventory links."""
     ri.render_release_pages()
-    content = (ri.ROOT / "docs" / "releases" / ri.read_package_version() / "index.md").read_text(encoding="utf-8")
+    content = (ri.ROOT / "docs" / "releases" / "index.md").read_text(encoding="utf-8")
 
-    assert '<details class="fabricops-release-inventory" markdown>' in content
-    assert "<summary>9 Live functions</summary>" in content
-    assert "<summary>4 Live metadata tables</summary>" in content
-    assert "<summary>3 Live notebook templates</summary>" in content
-    assert "Live dq rules" not in content
-    assert "| Function | Description |" in content
-    assert "| Metadata table | Purpose |" in content
-    assert "| Notebook template | Purpose |" in content
-    assert "[`profile_dataframe`](functions/profile_dataframe.md)" in content
-    assert "[`METADATA_DATA_CATALOGUE`](metadata/metadata_data_catalogue.md)" in content
-    assert "[`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb)" in content
-    assert "/blob/main/" not in content
-    assert "| Status |" not in content
-    assert "Details" not in content
-    assert "[Open]" not in content
+    assert "## Release history" in content
+    assert "No completed FabricOps Starter Kit releases have been published yet." in content
+    assert "## In preparation" in content
+    assert f"| FabricOps Starter Kit {ri.read_package_version()} | Preparing |" in content
+    assert "2026-07-08" not in content
+    assert "functions/read_lakehouse_table.md" not in content
 
 
 def test_live_release_requires_release_date():
@@ -306,31 +323,13 @@ def test_live_release_requires_release_date():
         ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_individual_release_overview_is_concise_record():
-    """Verify individual release overview uses the concise release-record layout."""
+def test_individual_release_overview_is_not_rendered_for_preparing_release():
+    """Verify preparing releases do not render GitHub Release claims."""
     ri.render_release_pages()
     version = ri.read_package_version()
-    content = (ri.ROOT / "docs" / "releases" / version / "index.md").read_text(encoding="utf-8")
+    release_dir = ri.ROOT / "docs" / "releases" / version
 
-    assert "- Release date: `2026-07-08`" in content
-    assert '<a class="md-button md-button--primary" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/releases/tag/v0.1.0">' in content
-    assert "View GitHub Release" in content
-    assert "## Downloads" not in content
-    assert "Download wheel" not in content
-    assert "Download source distribution" not in content
-    assert "Download notebook pack" not in content
-    assert "SHA256SUMS.txt" not in content
-    assert "## Get started" not in content
-    assert "## Why this release exists" not in content
-    assert "\n## Known limitations" not in content
-    assert "\n## Upgrade instructions" not in content
-    assert content.count("## Changelog") == 1
-    assert "### Added" in content
-    assert "### Known limitations" in content
-    assert "### Upgrade instructions" in content
-    assert "<summary>9 Live functions</summary>" in content
-    assert "<summary>4 Live metadata tables</summary>" in content
-    assert "<summary>3 Live notebook templates</summary>" in content
+    assert not release_dir.exists()
 
 
 def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
@@ -349,14 +348,13 @@ def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
     assert "Live notebook templates" not in content
 
 
-def test_release_detail_back_links_return_to_release_overview():
-    """Verify detail page back links return directly to the release overview."""
+def test_release_detail_pages_are_removed_for_preparing_release():
+    """Verify preparing releases do not retain detail page back-link evidence."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
-    for path in [base / "functions" / "read_lakehouse_excel.md", base / "metadata" / "metadata_data_catalogue.md"]:
-        content = path.read_text(encoding="utf-8")
-        assert "[Back to release overview](../index.md)" in content
-        assert "[Back to 0.1.0" not in content
+
+    assert not (base / "functions" / "read_lakehouse_excel.md").exists()
+    assert not (base / "metadata" / "metadata_data_catalogue.md").exists()
 
 
 def test_no_release_table_uses_raw_source_path_columns():
@@ -383,19 +381,19 @@ def test_release_generation_is_deterministic_and_second_run_clean():
     assert first == second
 
 
-def test_mkdocs_navigation_links_only_release_overview():
-    """Verify 0.1.0 navigation omits removed category summary pages."""
+def test_mkdocs_navigation_links_only_release_overview_until_release_exists():
+    """Verify 0.1.0 navigation is absent until frozen release pages exist."""
     content = (ri.ROOT / "mkdocs.yml").read_text(encoding="utf-8")
-    assert "0.1.0: releases/0.1.0/index.md" in content
+    assert "releases/index.md" in content
+    assert "0.1.0: releases/0.1.0/index.md" not in content
     assert "releases/0.1.0/functions/index.md" not in content
-    assert "releases/0.1.0/metadata/index.md" not in content
-    assert "releases/0.1.0/templates/index.md" not in content
-    assert "releases/0.1.0/dq-rules/index.md" not in content
 
 
-def test_release_renderer_creates_version_directory():
-    """Verify release renderer creates the version directory automatically."""
-    assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).is_dir()
+def test_release_renderer_removes_preparing_version_directory():
+    """Verify release renderer removes the version directory while preparing."""
+    ri.render_release_pages()
+
+    assert not (ri.ROOT / "docs" / "releases" / ri.read_package_version()).exists()
 
 
 def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
@@ -482,11 +480,13 @@ def test_release_history_index_renders_all_manifests_as_sorted_table_rows():
     manifests = [
         {
             "release_version": "0.1.0",
+            "release_status": "live",
             "release_date": "2026-07-08",
             "release_motivation": "Initial governed Fabric notebook workflows. Extra detail omitted.",
         },
         {
             "release_version": "0.2.0",
+            "release_status": "live",
             "release_date": "2026-08-01",
             "release_motivation": "Expanded release workflow coverage.",
         },
