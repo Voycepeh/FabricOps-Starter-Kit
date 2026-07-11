@@ -29,7 +29,7 @@ nav:
       - Run Example Pipeline Demo and Pipeline: guided-demo/run-pipeline.md
       - Review Governance: guided-demo/review-guardrails.md
       - Explore Metadata: guided-demo/explore-metadata-outputs.md
-  - Notebook Templates Implementation Guide: notebook-templates-implementation-guide/index.md
+  - Templates: notebook-templates-implementation-guide/index.md
   - Releases:
       - Overview: releases/index.md
   - List of Metadata Tables:

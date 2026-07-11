@@ -98,7 +98,7 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>

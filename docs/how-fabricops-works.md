@@ -2,7 +2,7 @@
 
 FabricOps Starter Kit gives data teams a guided starting point for Microsoft Fabric notebook projects. The workflow starts with environment setup, captures agreement context, runs pipelines with guardrails, writes metadata for catalogue, lineage, checks, notebook registry, and pipeline runs, then supports governance review and troubleshooting.
 
-This overview explains how the starter kit works: the workspace setup, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Notebook Templates Implementation Guide](../notebook-templates-implementation-guide/).
+This overview explains how the starter kit works: the workspace setup, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Templates](../notebook-templates-implementation-guide/).
 
 ## Workspace Operating Model
 
@@ -37,7 +37,7 @@ The role workflow keeps implementation and review responsibilities clear without
 
 <div class="cta-center">
   <a class="md-button md-button--primary" href="../notebook-templates-implementation-guide/">
-    Open the Notebook Templates Implementation Guide
+    Open Templates
   </a>
 </div>
 
@@ -48,26 +48,26 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <div class="metadata-flow-grid">
 
 <div class="metadata-flow-card">
-<strong><a href="../notebook-templates-implementation-guide/environment-config/"><code>00_env_config</code></a></strong>
+<strong><a href="../guided-demo/run-environment-setup/"><code>00_env_config</code></a></strong>
 <p>Creates the <a href="../reference/metadata/">metadata foundation</a>.</p>
 <p>Writes or validates the 12 <a href="../reference/metadata/">metadata tables</a> used by the workflow.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="../notebook-templates-implementation-guide/agreement-setup/"><code>01_agreement</code></a></strong>
+<strong><a href="../guided-demo/create-agreement/"><code>01_agreement</code></a></strong>
 <p>Captures <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and <a href="../reference/metadata/metadata_data_steward/">steward context</a>.</p>
 <p>Writes to <a href="../reference/metadata/">agreement metadata tables</a>, including <a href="../reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="../reference/metadata/metadata_data_steward/">steward context</a>, <a href="../reference/metadata/metadata_data_agreement/">approved usage</a>, and supporting <a href="../reference/metadata/metadata_data_agreement_evidence/">agreement files</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="../notebook-templates-implementation-guide/pipeline-execution/"><code>02_pipeline</code></a></strong>
+<strong><a href="../guided-demo/run-pipeline/"><code>02_pipeline</code></a></strong>
 <p>Runs governed source-to-target pipeline execution.</p>
 <p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and configuration metadata.</p>
 <p>Writes <a href="../reference/metadata/metadata_pipeline_runs/">pipeline run details</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, <a href="../reference/metadata/metadata_data_catalogue/">output table records</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
-<strong><a href="../notebook-templates-implementation-guide/governance-review/"><code>03_governance</code></a></strong>
+<strong><a href="../guided-demo/review-guardrails/"><code>03_governance</code></a></strong>
 <p>Reviews and approves governed outputs.</p>
 <p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a>, <a href="../reference/metadata/metadata_pipeline_runs/">pipeline run details</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
 <p>Writes <a href="../reference/metadata/metadata_guardrail_rules/">review decisions</a>, <a href="../reference/metadata/metadata_guardrail_rules/">approval state</a>, <a href="../reference/metadata/metadata_guardrail_rules/">rule outcomes</a>, <a href="../reference/metadata/metadata_enrichment_rules/">enrichment decisions</a>, <a href="../reference/metadata/metadata_enrichment_rules/">lifecycle decisions</a>, and production handover state.</p>

@@ -98,7 +98,7 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>

@@ -98,7 +98,7 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 - [Metadata Tables](../../reference/metadata.md)
 
 

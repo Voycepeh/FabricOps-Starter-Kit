@@ -100,7 +100,7 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 - [Metadata Tables](../../reference/metadata.md)
 
 

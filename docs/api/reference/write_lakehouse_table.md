@@ -110,7 +110,7 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>

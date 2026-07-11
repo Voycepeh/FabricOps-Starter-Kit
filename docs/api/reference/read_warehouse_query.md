@@ -97,7 +97,7 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>

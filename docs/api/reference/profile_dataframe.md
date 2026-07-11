@@ -108,8 +108,8 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 ## See also
 
-- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
-- [Governance Review](../../notebook-templates-implementation-guide/governance-review.md)
+- [Pipeline Execution](../../guided-demo/run-pipeline.md)
+- [Governance Review](../../guided-demo/review-guardrails.md)
 
 
 <details>

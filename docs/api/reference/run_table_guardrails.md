@@ -105,7 +105,7 @@ Not documented yet
 
 ## See also
 
-- [Pipeline Execution](../../notebook-templates-implementation-guide/pipeline-execution.md)
+- [Pipeline Execution](../../guided-demo/run-pipeline.md)
 
 
 <details>

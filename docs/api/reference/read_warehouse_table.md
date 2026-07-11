@@ -99,7 +99,7 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 
 ## See also
 
-- [Notebook Templates Implementation Guide](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates-implementation-guide/index.md)
 
 
 <details>

@@ -41,7 +41,7 @@ def test_release_inventory_discovers_templates_from_files():
     """Verify notebook templates are discovered from actual template files."""
     assets = ri.discover_templates()
     assert {asset.source_path for asset in assets} == {path.as_posix() for path in sorted(Path("templates/notebooks").glob("*.ipynb"))}
-    assert next(asset for asset in assets if asset.name == "00_env_config").documentation_path.endswith("environment-config.md")
+    assert next(asset for asset in assets if asset.name == "00_env_config").documentation_path == "docs/guided-demo/run-environment-setup.md"
 
 
 def test_release_inventory_discovers_dq_rules_from_registry():
