@@ -15,7 +15,7 @@ Build canonical DQ-ready profiling rows from a Spark DataFrame.
 
 `fabricops_kit/pipeline/profile_dataframe.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/10f60521772adabe0fb92be4a01405555d34d586/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b3d0d480883f2a7acf3e10f08806edfceedcafe8/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">View on GitHub</a>
 </div>
 
 ## Signature
@@ -67,6 +67,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 12
-- Frozen source ref: `10f60521772adabe0fb92be4a01405555d34d586`
+- Frozen source ref: `b3d0d480883f2a7acf3e10f08806edfceedcafe8`
 
 </details>

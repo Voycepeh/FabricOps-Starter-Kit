@@ -1388,7 +1388,7 @@
     "schema": "fabricops_public_function_call_flows_v2",
     "source": "src/fabricops_kit",
     "source_json_url": "https://github.com/Voycepeh/FabricOps-Starter-Kit/raw/main/docs/reference/_data/public-function-call-flows.json",
-    "source_ref": "10f60521772adabe0fb92be4a01405555d34d586"
+    "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8"
   },
   "public_functions": [
     {
@@ -1957,7 +1957,7 @@
       "signature": "def profile_dataframe(df, table_name: str, *, exclude_columns=None, run_timestamp_timezone: str | None=None, config: Any=None, include_distributions: bool=False, distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None, distribution_bin_edges: dict[str, list[float]] | None=None, categorical_categories: dict[str, list[str]] | None=None, categorical_top_n: int=20)",
       "source_end_line": 65,
       "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Build canonical DQ-ready profiling rows from a Spark DataFrame.",
       "transitive_function_count": 10,
@@ -2675,7 +2675,7 @@
       "signature": "def read_lakehouse_csv(relative_path: str, *, target: str='source', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 49,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Read a CSV file from a configured Fabric-resolved path through Spark.",
       "transitive_function_count": 14,
@@ -3428,7 +3428,7 @@
       "signature": "def read_lakehouse_excel(relative_path: str, *, target: str='source', sheet_name=0, spark_session=None, context: dict[str, Any] | None=None, **read_excel_kwargs)",
       "source_end_line": 52,
       "source_path": "src/fabricops_kit/io/read_lakehouse_excel.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Read an Excel workbook from a configured Fabric-resolved path.",
       "transitive_function_count": 15,
@@ -4257,7 +4257,7 @@
       "signature": "def read_lakehouse_parquet(relative_path: str, *, target: str='source', verbose: bool=True, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 119,
       "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 15,
       "summary": "Read a Parquet file from a configured Fabric-resolved path through Spark.",
       "transitive_function_count": 14,
@@ -5010,7 +5010,7 @@
       "signature": "def read_lakehouse_table(table_name: str, *, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 56,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Read a Delta table from a Fabric lakehouse.",
       "transitive_function_count": 16,
@@ -5606,7 +5606,7 @@
       "signature": "def read_warehouse_query(query: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 74,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 15,
       "summary": "Read warehouse rows with SQL pushdown.",
       "transitive_function_count": 12,
@@ -6322,7 +6322,7 @@
       "signature": "def read_warehouse_table(schema: str, table_name: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
       "source_end_line": 70,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Read a full table from a Microsoft Fabric warehouse.",
       "transitive_function_count": 15,
@@ -7136,7 +7136,7 @@
       "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None)",
       "source_end_line": 87,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 15,
       "summary": "Write a Spark DataFrame to a Fabric lakehouse Delta table.",
       "transitive_function_count": 17,
@@ -7865,7 +7865,7 @@
       "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
       "source_end_line": 78,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
-      "source_ref": "10f60521772adabe0fb92be4a01405555d34d586",
+      "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8",
       "source_start_line": 10,
       "summary": "Write a Spark DataFrame to a Microsoft Fabric warehouse table.",
       "transitive_function_count": 15,
@@ -7883,7 +7883,7 @@
     "release_versions": [
       "0.1.0"
     ],
-    "source_ref": "10f60521772adabe0fb92be4a01405555d34d586"
+    "source_ref": "b3d0d480883f2a7acf3e10f08806edfceedcafe8"
   },
   "summary": {
     "defined_but_not_used_count": 0,

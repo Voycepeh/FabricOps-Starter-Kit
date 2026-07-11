@@ -1,7 +1,7 @@
 release_version: 0.1.0
 release_status: live
 release_date: 2026-07-11
-source_ref: 10f60521772adabe0fb92be4a01405555d34d586
+source_ref: b3d0d480883f2a7acf3e10f08806edfceedcafe8
 source_ref_note: Canonical v0.1.0 release candidate source used to generate the frozen release contract.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
