@@ -9,6 +9,62 @@ This skill is the operational source of truth for FabricOps release preparation.
 
 End-user setup and notebook walkthrough content stays in the [Guided Demo](../guided-demo.md). Maintainer-only release curation, packaging, publishing, and recovery guidance belongs here.
 
+## Choose the correct execution environment
+
+Use the release workflow in the environment that matches the current phase. Codex Cloud is appropriate for release preparation and release-readiness reporting, but the final tag and publication phase requires Codex Desktop or another authenticated local environment.
+
+### Codex Cloud
+
+Codex Cloud may be used for:
+
+1. Release inventory inspection.
+2. Lifecycle curation.
+3. Release PR preparation.
+4. Generator execution.
+5. Tests, linting and documentation validation.
+6. Package and notebook-pack builds.
+7. Final release preflight.
+8. Reporting whether the repository is ready to tag.
+
+Codex Cloud must not be assumed capable of:
+
+1. Creating or pushing the final annotated release tag.
+2. Using the maintainer's local Git or GitHub credentials.
+3. Accessing a persistent corrected local branch state.
+4. Waiting for a GitHub Actions release workflow to complete.
+5. Reliably verifying the final GitHub Release and published assets.
+
+When the release-preparation PR has merged and Codex Cloud completes preflight, it must stop and provide the exact tag command for the maintainer to run in an authenticated local environment, for example `git tag -a vX.Y.Z -m "FabricOps Starter Kit vX.Y.Z"`. It must not create or push the tag from Codex Cloud.
+
+### Codex Desktop or authenticated local environment
+
+Run the final tag step in Codex Desktop or another authenticated local environment that has:
+
+- a clean local clone
+- the latest `origin/main`
+- working GitHub authentication
+- permission to push tags
+- network access to GitHub
+- `git`
+- `gh` where workflow and release inspection are required
+- `uv` and the repository build dependencies
+
+Codex Desktop or the local environment may:
+
+1. Run the final release preflight.
+2. Create the local annotated tag.
+3. Pause for explicit maintainer approval.
+4. Push only the approved release tag.
+5. Inspect the tag-triggered GitHub Actions workflow.
+6. Verify the GitHub Release and frozen source links.
+
+!!! warning "Final tag creation requires an authenticated local environment"
+    Do not rely on Codex Cloud to push the release tag. Cloud environments may have a stale or temporary checkout, no GitHub write credentials, restricted network access, or no ability to wait for and inspect the completed release workflow.
+
+    Attempting the final release step from such an environment may fail after the release PR has already been merged.
+
+    Use Codex Desktop or a local terminal with confirmed GitHub authentication for the final tag and publication step.
+
 ## 1. What a FabricOps release contains
 
 A FabricOps release contains a tagged source commit, package artifacts, release notes, release lifecycle evidence, and generated release contract pages. The release manifest is the lifecycle decision file:
@@ -105,9 +161,10 @@ Default release workflow:
 7. Generate and commit frozen release documentation using the tag reference.
 8. Validate package version, manifest version, source tag, generated artifacts, tests, documentation, wheel, and notebook pack.
 9. Merge the release PR into `main`. The release PR may be squash-merged or rebased because frozen source documentation depends on the release tag, not an intermediate PR commit.
-10. Create and push the annotated tag on the resulting merged `main` commit.
-11. Allow the tag-triggered release workflow to build and publish the GitHub Release.
-12. Verify the published assets and frozen source links.
+10. Stage A: run release preflight in Codex Cloud, Codex Desktop, or another supported environment and report whether the release is ready to tag. Codex Cloud must stop here and provide the exact local tag command.
+11. Stage B: in Codex Desktop or another authenticated local environment, refresh `main`, create the local annotated tag, pause for explicit maintainer approval, and push only the approved tag.
+12. Allow the tag-triggered GitHub Actions workflow to build and publish the GitHub Release.
+13. Verify the workflow result, GitHub Release assets, and frozen source links from the authenticated local environment.
 
 Do not require any PR branch commit as the frozen source identity. Normal PR history cleanup must not invalidate frozen release links.
 
@@ -311,30 +368,101 @@ The release PR targets `main` and should contain only release-preparation change
 
 Ask for final approval before opening or finalising the PR when required.
 
-## 14. Create release tag
+## 14. Stage A: release preflight
 
-Tagging is a separate explicit maintainer action after the release PR is merged,
-required CI has passed, and `main` is checked out and updated. The final tag must
-be created from the merged `main` commit, not from the PR branch.
+Stage A may run in Codex Cloud, Codex Desktop, or another environment with the required dependencies. It is a release-readiness check only. It must not create or push a tag when running in Codex Cloud.
 
-1. Confirm the release PR is merged into `main`.
-2. Confirm required CI checks passed.
-3. Confirm package version, changelog heading, manifest `release_version`, and manifest `source_ref` match the intended tag.
-4. Show the exact tag to create.
-5. Ask for explicit approval.
-6. Create and push the annotated tag only when authorised and technically available.
+The preflight must:
+
+1. Validate package, manifest, changelog, and tag alignment.
+2. Run targeted tests.
+3. Run full validation where supported.
+4. Build distributions.
+5. Validate the notebook pack.
+6. Confirm no tracked files changed.
+7. Report whether the release is ready.
+
+Recommended checks include:
 
 ```bash
+PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z
+uv run ruff check .
+uv run pytest
+uv run mkdocs build --strict
+uv build
+uvx twine check dist/*
+uv run python scripts/build_release_notebook_pack.py "X.Y.Z" --output-dir dist
+git status --short
+```
+
+`git status --short` must be clean after validation and builds. If validation fails before tag creation, create a focused fix PR against `main`; do not tag a failing release.
+
+## 15. Stage B: tag and publish
+
+Stage B must run in Codex Desktop or another authenticated local environment. It must refresh `main`, repeat the critical release-readiness check, confirm the tag does not already exist, create the annotated tag locally, show the tag target to the maintainer, pause for explicit approval, push only the tag, inspect the tag-triggered workflow, verify the GitHub Release and assets, and verify frozen `blob/vX.Y.Z/` source links.
+
+Before creating the tag, run these mandatory environment checks:
+
+```bash
+git status --short
+git fetch origin --tags
 git checkout main
 git pull --ff-only origin main
+git rev-parse HEAD
+git ls-remote origin
+gh auth status
+```
+
+Requirements:
+
+1. `git status --short` must be clean.
+2. `git pull --ff-only` must succeed.
+3. `git ls-remote origin` must succeed.
+4. `gh auth status` must show an authenticated account when `gh` is used for workflow and release inspection.
+5. The authenticated account must have permission to push tags to the repository.
+
+If any check fails, stop before creating the tag. Do not bypass authentication, disable protections, or force-push.
+
+Use this concise authenticated-local command sequence after the release PR has merged and required CI has passed:
+
+```bash
+git fetch origin --tags
+git checkout main
+git pull --ff-only origin main
+git status --short
+
+PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z
+
+git tag --list vX.Y.Z
+git ls-remote --tags origin refs/tags/vX.Y.Z refs/tags/vX.Y.Z^{}
+
 git tag -a vX.Y.Z -m "FabricOps Starter Kit vX.Y.Z"
+
+git show --no-patch --decorate vX.Y.Z
+git rev-list -n 1 vX.Y.Z
+```
+
+Stop immediately before pushing the tag. Ask for explicit approval and show the maintainer:
+
+- current `main` SHA
+- local annotated tag
+- resolved tag target
+- release-readiness result
+- test result
+- built artifact names
+- notebook-pack contents
+
+Push the tag only after explicit maintainer approval:
+
+```bash
 git push origin vX.Y.Z
 ```
 
-Do not create or push the tag from within the release-preparation PR. Do not
-rewrite or move an already published release tag.
+Do not use `--force`. Do not create or push the tag from within the release-preparation PR. Do not rewrite, move, recreate, delete, or force-push an already published release tag.
 
-## 15. Verify GitHub Release
+## 16. Verify GitHub Release
+
+The maintainer or Codex Desktop pushes the annotated tag. The tag-triggered GitHub Actions workflow builds and publishes the release. The local agent verifies the resulting workflow and GitHub Release. The local agent should not manually upload substitute assets unless the documented recovery process explicitly requires it.
 
 The tag workflow must:
 
@@ -357,23 +485,31 @@ After the tag workflow completes, verify the GitHub Release contains:
 - release notes
 - notebook pack when configured by the release manifest
 
-Verify frozen source links now resolve through `blob/vX.Y.Z/`. If frozen source
-links return 404 before the release tag is pushed, confirm the manifest uses the
-intended tag and proceed only after the release PR is approved. If the links
-still return 404 after the tag is pushed, verify that the tag exists in GitHub
-and points to the merged release commit.
+Verify frozen source links now resolve through `blob/vX.Y.Z/`. If frozen source links return 404 before the release tag is pushed, confirm the manifest uses the intended tag; this is expected because the tag does not exist yet. If the links still return 404 after the tag is pushed, verify that the tag exists remotely in GitHub and points to the merged release commit.
 
 Release workflow source lives under [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/). If the workflow fails, report the exact failing step and recovery path.
 
-## 16. Retry, hotfix and rollback guidance
+## 17. Retry, hotfix and rollback guidance
 
-If automation fails before the GitHub Release is created, fix the problem and push a new annotated tag for the corrected release commit. Do not rewrite a published release tag.
+No GitHub authentication: stop and ask the maintainer to authenticate locally. Do not create or push the tag.
+
+Remote access fails: stop before tag creation. Do not assume the remote state.
+
+Tag already exists: do not recreate, delete, move, or force-push it. Inspect the existing tag and release instead.
+
+Validation fails before tag creation: create a focused fix PR against `main`. Do not tag a failing release.
+
+Tag workflow fails after the tag is pushed: do not move or recreate the tag. Inspect the failing workflow step and prepare a focused hotfix PR. Follow the repository's existing release recovery policy.
+
+Frozen source links return 404 before tagging: this is expected because the tag does not exist yet.
+
+Frozen source links return 404 after tagging: verify the tag exists remotely and points to the merged release commit.
 
 For a hotfix, branch from the released tag or production release commit, apply the minimal fix, update the changelog and patch version, refresh release contract pages as needed, validate locally, and tag the new patch release.
 
 GitHub Releases and tags are immutable release evidence. Prefer deprecating a bad release with a clear GitHub Release note and a follow-up patch release instead of deleting or rewriting history.
 
-## 17. Human, AI, generator and automation ownership table
+## 18. Human, AI, generator and automation ownership table
 
 | Item | Owner | Maintainer or AI action |
 | --- | --- | --- |
@@ -391,7 +527,7 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | Canonical frozen source reference | Human-approved manifest field | Use `source_ref: vX.Y.Z`; resolved commit SHA is audit metadata only. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
 
-## 18. Exact source-code links
+## 19. Exact source-code links
 
 - Package configuration: [`pyproject.toml`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/pyproject.toml)
 - Package root and exports: [`src/fabricops_kit/__init__.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/__init__.py)
