@@ -171,6 +171,40 @@ def test_invalid_release_status_fails_clearly():
         ri._validate_manifest(manifest, "1.0.0")
 
 
+
+def test_manifest_accepts_matching_tag_source_ref():
+    """Verify release tag source refs may match the manifest version before tag creation."""
+    manifest = {
+        "release_version": "0.1.0",
+        "release_status": "live",
+        "release_date": "2026-07-11",
+        "source_ref": "v0.1.0",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    ri._validate_manifest(manifest, "0.1.0")
+
+
+def test_manifest_rejects_mismatched_tag_source_ref():
+    """Verify release tag source refs must match the manifest version."""
+    manifest = {
+        "release_version": "0.1.0",
+        "release_status": "live",
+        "release_date": "2026-07-11",
+        "source_ref": "v0.2.0",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    with pytest.raises(ValueError, match="source_ref 'v0.2.0' must match v0.1.0"):
+        ri._validate_manifest(manifest, "0.1.0")
+
+
 def test_malformed_live_release_dates_fail_clearly():
     """Verify Live release dates reject prose, malformed dates, and timestamps."""
     for release_date in [None, "yesterday", "2026-7-8", "2026-07-08T00:00:00"]:

@@ -1,8 +1,8 @@
 release_version: 0.1.0
 release_status: live
 release_date: 2026-07-11
-source_ref: b3d0d480883f2a7acf3e10f08806edfceedcafe8
-source_ref_note: Canonical v0.1.0 release candidate source used to generate the frozen release contract.
+source_ref: v0.1.0
+source_ref_note: Canonical Git release tag for the frozen v0.1.0 release contract.
 github_owner: Voycepeh
 github_repo: FabricOps-Starter-Kit
 release_motivation: FabricOps 0.1.0 establishes the first supported foundation for governed Microsoft Fabric notebook projects. It focuses on reliable Fabric input and output, dataframe profiling, agreement-driven metadata, and lightweight exploration workflows.

@@ -15,7 +15,7 @@ Read a full table from a Microsoft Fabric warehouse.
 
 `fabricops_kit/io/read_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b3d0d480883f2a7acf3e10f08806edfceedcafe8/src/fabricops_kit/io/read_warehouse_table.py#L10-L70">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/src/fabricops_kit/io/read_warehouse_table.py#L10-L70">View on GitHub</a>
 </div>
 
 ## Signature
@@ -58,6 +58,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 15
-- Frozen source ref: `b3d0d480883f2a7acf3e10f08806edfceedcafe8`
+- Frozen source ref: `v0.1.0`
 
 </details>

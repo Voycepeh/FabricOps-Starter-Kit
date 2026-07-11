@@ -92,3 +92,29 @@ def test_release_bundle_refuses_existing_snapshot_without_overwrite(tmp_path: Pa
 
     with pytest.raises(RuntimeError, match="Use --overwrite-release"):
         bundle.generate_release_bundle("0.1.0")
+
+
+def test_release_source_ref_accepts_matching_manifest_tag() -> None:
+    """Verify matching release tag source refs are accepted before the tag exists."""
+    manifest = {"release_version": "0.1.0", "source_ref": "v0.1.0"}
+
+    assert bundle._release_source_ref(manifest) == "v0.1.0"
+
+
+def test_release_source_ref_rejects_mismatched_manifest_tag() -> None:
+    """Verify tag source refs must match the manifest release version."""
+    manifest = {"release_version": "0.1.0", "source_ref": "v0.2.0"}
+
+    with pytest.raises(RuntimeError, match="must match release_version"):
+        bundle._release_source_ref(manifest)
+
+
+def test_release_source_ref_uses_current_tree_when_matching_tag_is_not_created(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify release prep can freeze with a future tag source ref before tag creation."""
+    monkeypatch.setattr(bundle, "_source_ref_exists", lambda source_ref: False)
+    monkeypatch.setattr(bundle.flows, "build_payload", lambda: {"public_functions": [], "defined_functions": [], "metadata": {}, "summary": {}})
+
+    payload = bundle._build_release_payload("0.1.0", "v0.1.0")
+
+    assert payload["metadata"]["source_ref"] == "v0.1.0"
+    assert payload["release_contract"]["source_ref"] == "v0.1.0"

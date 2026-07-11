@@ -15,7 +15,7 @@ Read a Parquet file from a configured Fabric-resolved path through Spark.
 
 `fabricops_kit/io/read_lakehouse_parquet.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b3d0d480883f2a7acf3e10f08806edfceedcafe8/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L119">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L119">View on GitHub</a>
 </div>
 
 ## Signature
@@ -58,6 +58,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 18
-- Frozen source ref: `b3d0d480883f2a7acf3e10f08806edfceedcafe8`
+- Frozen source ref: `v0.1.0`
 
 </details>

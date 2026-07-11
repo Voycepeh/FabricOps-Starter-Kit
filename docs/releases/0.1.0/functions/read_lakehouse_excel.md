@@ -15,7 +15,7 @@ Read an Excel workbook from a configured Fabric-resolved path.
 
 `fabricops_kit/io/read_lakehouse_excel.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/b3d0d480883f2a7acf3e10f08806edfceedcafe8/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L52">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/src/fabricops_kit/io/read_lakehouse_excel.py#L10-L52">View on GitHub</a>
 </div>
 
 ## Signature
@@ -58,6 +58,6 @@ Not documented yet
 <summary>Maintainer architecture details</summary>
 
 - Downstream callables: 16
-- Frozen source ref: `b3d0d480883f2a7acf3e10f08806edfceedcafe8`
+- Frozen source ref: `v0.1.0`
 
 </details>

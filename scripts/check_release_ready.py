@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT_PATH = ROOT / "pyproject.toml"
+MANIFESTS_DIR = ROOT / "docs" / "releases" / "manifests"
 SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TAG_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
@@ -69,6 +70,31 @@ def version_from_tag(tag_name: str) -> str:
     return tag_name[1:]
 
 
+
+def get_release_manifest_fields(version: str) -> dict[str, str]:
+    """Return top-level scalar fields from the release manifest for a version."""
+    path = MANIFESTS_DIR / f"{version}.yml"
+    if not path.exists():
+        raise ValueError(f"Release manifest not found: {path.relative_to(ROOT)}")
+    fields: dict[str, str] = {}
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        if raw_line.startswith(" ") or ":" not in raw_line:
+            continue
+        key, value = raw_line.split(":", 1)
+        fields[key] = value.strip()
+    return fields
+
+
+def validate_manifest_release_alignment(version: str, tag_name: str) -> None:
+    """Validate manifest release_version and source_ref match the pushed tag."""
+    fields = get_release_manifest_fields(version)
+    manifest_version = fields.get("release_version")
+    source_ref = fields.get("source_ref")
+    if manifest_version != version:
+        raise ValueError(f"Manifest release_version={manifest_version!r} != package/tag version={version!r}")
+    if source_ref != tag_name:
+        raise ValueError(f"Manifest source_ref={source_ref!r} != release tag={tag_name!r}")
+
 def main(tag_name: str | None = None) -> int:
     """Run the command-line workflow."""
     pyproject_version = get_pyproject_version(PYPROJECT_PATH.read_text(encoding="utf-8"))
@@ -92,6 +118,11 @@ def main(tag_name: str | None = None) -> int:
                 "Release-ready tag check failed: "
                 f"tag version={tag_version} != pyproject.toml [project].version={pyproject_version}"
             )
+            return 1
+        try:
+            validate_manifest_release_alignment(pyproject_version, tag_name)
+        except ValueError as exc:
+            print(f"Release-ready manifest check failed: {exc}")
             return 1
 
     print(f"Release-ready version check passed: {pyproject_version}")

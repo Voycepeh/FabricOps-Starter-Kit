@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from scripts.release_inventory import load_release_manifests
 
 CURRENT_CONTRACT = ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json"
 RELEASES_DIR = ROOT / "docs" / "releases"
+TAG_SOURCE_REF_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
 
 def _manifest_for_release(version: str) -> dict[str, Any]:
@@ -36,10 +38,22 @@ def _release_source_ref(manifest: dict[str, Any]) -> str:
     ref = str(manifest.get("source_ref") or manifest.get("git_ref") or manifest.get("tag") or "").strip()
     if not ref:
         raise RuntimeError("Release manifest lacks required source_ref/git_ref/tag for freezing.")
+    version = str(manifest.get("release_version") or "").strip()
+    if TAG_SOURCE_REF_RE.match(ref):
+        expected = f"v{version}"
+        if ref != expected:
+            raise RuntimeError(f"Release source_ref {ref!r} must match release_version {version!r} as {expected!r}.")
+        return ref
     result = subprocess.run(["git", "rev-parse", "--verify", f"{ref}^{{commit}}"], cwd=ROOT, text=True, capture_output=True)
     if result.returncode != 0:
         raise RuntimeError(f"Release source ref {ref!r} cannot be resolved.\n{result.stderr.strip()}")
     return ref
+
+
+def _source_ref_exists(source_ref: str) -> bool:
+    """Return whether a source ref already resolves in the local Git checkout."""
+    result = subprocess.run(["git", "rev-parse", "--verify", f"{source_ref}^{{commit}}"], cwd=ROOT, text=True, capture_output=True)
+    return result.returncode == 0
 
 
 def generate_current_bundle() -> None:
@@ -57,6 +71,9 @@ def _copy_release_manifest(worktree: Path, version: str) -> None:
 
 def _build_release_payload(version: str, source_ref: str) -> dict[str, Any]:
     """Build the release payload from the pinned source revision."""
+    if TAG_SOURCE_REF_RE.match(source_ref) and not _source_ref_exists(source_ref):
+        payload = flows.build_payload()
+        return flows.freeze_release_payload(payload, release_version=version, source_ref=source_ref)
     with tempfile.TemporaryDirectory(prefix="fabricops-release-ref-") as tmp:
         worktree = Path(tmp) / "src"
         subprocess.run(["git", "worktree", "add", "--detach", str(worktree), source_ref], cwd=ROOT, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
