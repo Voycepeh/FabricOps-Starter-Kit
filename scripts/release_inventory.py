@@ -636,8 +636,12 @@ def render_release_pages() -> list[Path]:
         notes = extract_changelog_notes(version)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
+    frozen_function_contract = release_dir / "_data" / "public-function-call-flows.json"
+    has_frozen_function_bundle = frozen_function_contract.exists()
     if release_dir.exists():
         for child in release_dir.iterdir():
+            if has_frozen_function_bundle and child.name in {"_data", "functions"}:
+                continue
             if child.is_dir() or child.suffix == ".md":
                 shutil.rmtree(child) if child.is_dir() else child.unlink()
     release_dir.mkdir(parents=True, exist_ok=True)
@@ -682,6 +686,8 @@ def render_release_pages() -> list[Path]:
     for group in ("functions", "metadata_tables", "dq_rules"):
         items = live[group]
         if not items:
+            continue
+        if group == "functions" and has_frozen_function_bundle:
             continue
         group_dir = release_dir / CATEGORY_DIRS[group]
         group_dir.mkdir(parents=True, exist_ok=True)

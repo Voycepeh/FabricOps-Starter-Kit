@@ -32,6 +32,7 @@ nav:
   - Templates: notebook-templates-implementation-guide/index.md
   - Releases:
       - Overview: releases/index.md
+      - 0.1.0: releases/0.1.0/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
       - Data Access: reference/metadata/metadata_data_access.md

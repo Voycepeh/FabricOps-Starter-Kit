@@ -8,12 +8,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- Curated the formal FabricOps Starter Kit v0.1.0 release inventory while keeping the release in preparation.
-- Documented supported Fabric lakehouse and warehouse input/output helpers for the first v0.1.0 release surface.
-- Documented dataframe profiling as part of the supported v0.1.0 release surface.
-- Documented the core agreement, evidence, catalogue, and steward metadata contracts as the supported v0.1.0 metadata boundary.
-- Documented the supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates for v0.1.0.
-- Added release lifecycle visibility that separates Live v0.1.0 assets from Preview capabilities still being stabilised.
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+### Python package
+
+### Notebook templates
+
+### Metadata model
+
+### Documentation
+
+### Breaking changes
+
+### Known limitations
+
+### Upgrade instructions
+
+## [0.1.0] - 2026-07-11
+
+### Added
+
+- Stable Fabric lakehouse and warehouse read/write helpers.
+- Dataframe profiling.
+- Core agreement, agreement evidence, catalogue, and steward metadata contracts.
+- Supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates.
+- Generated lifecycle-aware release contracts and reference material.
 - Formalized the GitHub-only release workflow for tagged FabricOps releases.
 - Added CI expectations for locked dependency installation, linting, tests, strict documentation builds, distribution builds, distribution validation, and wheel import smoke tests.
 - Added build-time release traceability documentation for package version, Mike documentation version, and Git commit SHA.
@@ -53,8 +80,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Upgrade instructions
 
-- No runtime upgrade is required for this process-only release-preparation change. Future released sections should document version-specific upgrade steps here when needed.
-- Draft v0.1.0 notes currently assume this will be the first supported release; no prior supported release upgrade is expected.
+- This is the first supported FabricOps Starter Kit release; no prior supported-version migration is required.
 
 ## Historical notes
 
