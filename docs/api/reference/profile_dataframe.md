@@ -145,5 +145,5 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 5:32 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
     Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
