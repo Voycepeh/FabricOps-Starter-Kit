@@ -26,6 +26,7 @@ GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
 MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
 TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
+TAG_SOURCE_REF_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TEMPLATE_DOCS = {
     "00_env_config": "docs/guided-demo/run-environment-setup.md",
     "01_agreement": "docs/guided-demo/create-agreement.md",
@@ -195,6 +196,9 @@ def _validate_manifest(manifest: dict[str, Any], version: str) -> None:
         raise ValueError(f"Invalid release_status for {version}: {release_status!r}. Use preparing or live.")
     if release_status == "live" and not _parse_release_date(manifest.get("release_date")):
         raise ValueError(f"Live release manifest {version} must include release_date in YYYY-MM-DD format.")
+    source_ref = str(manifest.get("source_ref") or "").strip()
+    if TAG_SOURCE_REF_RE.match(source_ref) and source_ref != f"v{version}":
+        raise ValueError(f"Release manifest {version} source_ref {source_ref!r} must match v{version!s}.")
     for group in GROUPS:
         seen: set[str] = set()
         for item in manifest.get(group, []):
@@ -636,8 +640,12 @@ def render_release_pages() -> list[Path]:
         notes = extract_changelog_notes(version)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
+    frozen_function_contract = release_dir / "_data" / "public-function-call-flows.json"
+    has_frozen_function_bundle = frozen_function_contract.exists()
     if release_dir.exists():
         for child in release_dir.iterdir():
+            if has_frozen_function_bundle and child.name in {"_data", "functions"}:
+                continue
             if child.is_dir() or child.suffix == ".md":
                 shutil.rmtree(child) if child.is_dir() else child.unlink()
     release_dir.mkdir(parents=True, exist_ok=True)
@@ -682,6 +690,8 @@ def render_release_pages() -> list[Path]:
     for group in ("functions", "metadata_tables", "dq_rules"):
         items = live[group]
         if not items:
+            continue
+        if group == "functions" and has_frozen_function_bundle:
             continue
         group_dir = release_dir / CATEGORY_DIRS[group]
         group_dir.mkdir(parents=True, exist_ok=True)

@@ -23,6 +23,34 @@ It contains four release asset groups:
 - `templates`
 - `dq_rules`
 
+The canonical frozen source reference is the annotated Git release tag, not an
+intermediate PR commit SHA. For a release `X.Y.Z`, set the manifest fields to:
+
+```yaml
+release_version: X.Y.Z
+source_ref: vX.Y.Z
+```
+
+For example:
+
+```yaml
+release_version: 0.1.0
+source_ref: v0.1.0
+```
+
+Generated frozen source links must use the tag form:
+
+```text
+https://github.com/<owner>/<repo>/blob/vX.Y.Z/<source-path>
+```
+
+The release tag is the stable, human-readable release identity. During the
+release-preparation PR, frozen source links that use the intended release tag
+may return 404 because the tag does not exist yet. This is expected. The links
+become valid immediately after the annotated tag is pushed following merge.
+Release-preparation validation checks tag/version consistency without requiring
+the tag to already exist.
+
 Source registries decide what exists; the manifest decides whether each discovered asset is `preview`, `live`, or `discontinued` for the release.
 
 | Asset group | Authoritative source | Release inventory behaviour |
@@ -65,17 +93,40 @@ Identify the latest released version from `docs/releases/manifests/*.yml`, the c
 
 The AI should perform safe deterministic work itself and pause only for explicit maintainer decisions.
 
-Default release PR workflow:
+Default release workflow:
 
-1. Work from latest `main`.
-2. Create a focused release-preparation branch.
-3. Make only release-preparation changes.
-4. Keep unrelated source work out of the release PR.
-5. Run release checks and generators.
-6. Show selected version, lifecycle changes, New/Updated evidence, generated artifacts, changelog draft, tests run, and unresolved manual steps.
-7. Ask for final approval before opening or finalising the release PR when approval is required.
+1. Inspect the latest `main`.
+2. Curate and approve the release inventory and lifecycle decisions.
+3. Prepare the final release PR from a focused release-preparation branch.
+4. Set the manifest to Live with the release date.
+5. Set `source_ref` to the intended annotated release tag, such as `v0.1.0`.
+6. Finalise the changelog.
+7. Generate and commit frozen release documentation using the tag reference.
+8. Validate package version, manifest version, source tag, generated artifacts, tests, documentation, wheel, and notebook pack.
+9. Merge the release PR into `main`. The release PR may be squash-merged or rebased because frozen source documentation depends on the release tag, not an intermediate PR commit.
+10. Create and push the annotated tag on the resulting merged `main` commit.
+11. Allow the tag-triggered release workflow to build and publish the GitHub Release.
+12. Verify the published assets and frozen source links.
+
+Do not require any PR branch commit as the frozen source identity. Normal PR history cleanup must not invalidate frozen release links.
 
 Release-required generated artifacts may include the release manifest, release contract pages, individual function reference pages, and `docs/reference/_data/public-function-call-flows.json` when function-level source changes affect the architecture contract. Do not include unrelated dashboard output unless the dashboard is intentionally refreshed.
+
+Required release consistency checks must agree before merge and again in the
+tag workflow:
+
+- Git tag: `vX.Y.Z`
+- Package version: `X.Y.Z`
+- Manifest `release_version`: `X.Y.Z`
+- Manifest `source_ref`: `vX.Y.Z`
+- Changelog release heading: `X.Y.Z`
+- Frozen release directory: `docs/releases/X.Y.Z/`
+
+A mismatch blocks the release. The release workflow may also record the resolved
+commit SHA for audit evidence, for example `Release tag: v0.1.0` and
+`Resolved commit: <merged-main-sha>`, but that SHA is resolved release metadata
+rather than the canonical source URL stored in the manifest. Generated
+documentation should link to the release tag, not the resolved SHA.
 
 ## 4. Inspect current release state
 
@@ -215,6 +266,11 @@ Generator source links:
 - [`scripts/generate_release_contract_pages.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_contract_pages.py)
 - [`scripts/generate_public_function_call_flows_dashboard.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_public_function_call_flows_dashboard.py)
 
+When freezing release function references, the generator reads `source_ref` from
+the release manifest. For release-preparation PRs, `source_ref: vX.Y.Z` is valid
+even before the tag exists. Do not hardcode a release tag into generated pages;
+fix the manifest if the generated links use the wrong tag.
+
 ## 11. Review generated evidence
 
 Review generated diffs before testing:
@@ -256,24 +312,41 @@ Ask for final approval before opening or finalising the PR when required.
 
 ## 14. Create release tag
 
-Tagging is a separate explicit phase after the release PR is merged.
+Tagging is a separate explicit maintainer action after the release PR is merged,
+required CI has passed, and `main` is checked out and updated. The final tag must
+be created from the merged `main` commit, not from the PR branch.
 
 1. Confirm the release PR is merged into `main`.
-2. Fetch and inspect the merged commit.
-3. Confirm package version, changelog, and manifest match.
-4. Confirm required CI checks passed.
-5. Show the exact tag to create.
-6. Ask for explicit approval.
-7. Create and push the annotated tag only when authorised and technically available.
+2. Confirm required CI checks passed.
+3. Confirm package version, changelog heading, manifest `release_version`, and manifest `source_ref` match the intended tag.
+4. Show the exact tag to create.
+5. Ask for explicit approval.
+6. Create and push the annotated tag only when authorised and technically available.
 
 ```bash
+git checkout main
+git pull --ff-only origin main
 git tag -a vX.Y.Z -m "FabricOps Starter Kit vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
-Do not rewrite or move an already published release tag.
+Do not create or push the tag from within the release-preparation PR. Do not
+rewrite or move an already published release tag.
 
 ## 15. Verify GitHub Release
+
+The tag workflow must:
+
+1. Verify the pushed tag matches the package version.
+2. Verify the manifest version matches the tag.
+3. Verify `source_ref` equals the pushed tag.
+4. Run lint, tests, and strict documentation validation.
+5. Build wheel and source distribution.
+6. Validate distributions.
+7. Smoke-test the installed wheel.
+8. Build the approved Live notebook pack.
+9. Generate checksums.
+10. Create the GitHub Release and attach its assets.
 
 After the tag workflow completes, verify the GitHub Release contains:
 
@@ -282,6 +355,12 @@ After the tag workflow completes, verify the GitHub Release contains:
 - checksums
 - release notes
 - notebook pack when configured by the release manifest
+
+Verify frozen source links now resolve through `blob/vX.Y.Z/`. If frozen source
+links return 404 before the release tag is pushed, confirm the manifest uses the
+intended tag and proceed only after the release PR is approved. If the links
+still return 404 after the tag is pushed, verify that the tag exists in GitHub
+and points to the merged release commit.
 
 Release workflow source lives under [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/). If the workflow fails, report the exact failing step and recovery path.
 
@@ -308,6 +387,7 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | Changelog wording | Human-approved | AI drafts; maintainer approves. |
 | Generated release pages | Deterministic rendering | AI regenerates and reviews; do not hand-edit. |
 | Build artifacts and checksums | Tag workflow | AI verifies published assets. |
+| Canonical frozen source reference | Human-approved manifest field | Use `source_ref: vX.Y.Z`; resolved commit SHA is audit metadata only. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
 
 ## 18. Exact source-code links

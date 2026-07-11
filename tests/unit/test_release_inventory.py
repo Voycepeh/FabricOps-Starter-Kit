@@ -171,6 +171,40 @@ def test_invalid_release_status_fails_clearly():
         ri._validate_manifest(manifest, "1.0.0")
 
 
+
+def test_manifest_accepts_matching_tag_source_ref():
+    """Verify release tag source refs may match the manifest version before tag creation."""
+    manifest = {
+        "release_version": "0.1.0",
+        "release_status": "live",
+        "release_date": "2026-07-11",
+        "source_ref": "v0.1.0",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    ri._validate_manifest(manifest, "0.1.0")
+
+
+def test_manifest_rejects_mismatched_tag_source_ref():
+    """Verify release tag source refs must match the manifest version."""
+    manifest = {
+        "release_version": "0.1.0",
+        "release_status": "live",
+        "release_date": "2026-07-11",
+        "source_ref": "v0.2.0",
+        "functions": [],
+        "metadata_tables": [],
+        "templates": [],
+        "dq_rules": [],
+    }
+
+    with pytest.raises(ValueError, match="source_ref 'v0.2.0' must match v0.1.0"):
+        ri._validate_manifest(manifest, "0.1.0")
+
+
 def test_malformed_live_release_dates_fail_clearly():
     """Verify Live release dates reject prose, malformed dates, and timestamps."""
     for release_date in [None, "yesterday", "2026-7-8", "2026-07-08T00:00:00"]:
@@ -187,17 +221,17 @@ def test_malformed_live_release_dates_fail_clearly():
             ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_release_contract_pages_skip_preparing_manifest_snapshot():
-    """Verify preparing manifests do not render frozen release evidence."""
+def test_release_contract_pages_render_live_manifest_snapshot():
+    """Verify Live manifests render frozen release evidence."""
     paths = ri.render_release_pages()
     version = ri.read_package_version()
     content = (ri.ROOT / "docs" / "releases" / "index.md").read_text(encoding="utf-8")
 
-    assert paths == [ri.ROOT / "docs" / "releases" / "index.md"]
-    assert not (ri.ROOT / "docs" / "releases" / version).exists()
-    assert "No completed FabricOps Starter Kit releases have been published yet." in content
-    assert f"| FabricOps Starter Kit {version} | Preparing |" in content
-    assert "2026-07-08" not in content
+    assert ri.ROOT / "docs" / "releases" / "index.md" in paths
+    assert ri.ROOT / "docs" / "releases" / version / "index.md" in paths
+    assert (ri.ROOT / "docs" / "releases" / version).exists()
+    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-07-11 |" in content
+    assert "No completed FabricOps Starter Kit releases have been published yet." not in content
 
 
 def test_release_status_chip_supports_all_lifecycle_values():
@@ -270,8 +304,10 @@ def test_release_inventory_section_renders_optional_status_badges():
 
 def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
-    with pytest.raises(ValueError, match="no release section"):
-        ri.extract_changelog_notes(ri.read_package_version())
+    notes = ri.extract_changelog_notes(ri.read_package_version())
+
+    assert "Stable Fabric lakehouse and warehouse read/write helpers." in notes
+    assert "first supported FabricOps Starter Kit release" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -294,24 +330,23 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])
 
 
-def test_release_generates_no_frozen_detail_pages_for_preparing_manifest():
-    """Verify preparing releases do not keep frozen detail pages."""
+def test_release_generates_frozen_detail_pages_for_live_manifest():
+    """Verify Live releases render frozen detail pages."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
 
-    assert not base.exists()
+    assert base.exists()
 
 
-def test_release_overview_lists_preparing_release_without_live_inventory():
-    """Verify preparing releases are listed without frozen Live inventory links."""
+def test_release_overview_lists_live_release_with_inventory():
+    """Verify Live releases are listed with frozen Live inventory links."""
     ri.render_release_pages()
     content = (ri.ROOT / "docs" / "releases" / "index.md").read_text(encoding="utf-8")
 
     assert "## Release history" in content
-    assert "No completed FabricOps Starter Kit releases have been published yet." in content
-    assert "## In preparation" in content
-    assert f"| FabricOps Starter Kit {ri.read_package_version()} | Preparing |" in content
-    assert "2026-07-08" not in content
+    assert "No completed FabricOps Starter Kit releases have been published yet." not in content
+    assert "## In preparation" not in content
+    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-07-11 |" in content
     assert "functions/read_lakehouse_table.md" not in content
 
 
@@ -323,13 +358,13 @@ def test_live_release_requires_release_date():
         ri._validate_manifest(manifest, "1.0.0")
 
 
-def test_individual_release_overview_is_not_rendered_for_preparing_release():
-    """Verify preparing releases do not render GitHub Release claims."""
+def test_individual_release_overview_is_rendered_for_live_release():
+    """Verify Live releases render a release overview."""
     ri.render_release_pages()
     version = ri.read_package_version()
     release_dir = ri.ROOT / "docs" / "releases" / version
 
-    assert not release_dir.exists()
+    assert (release_dir / "index.md").exists()
 
 
 def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
@@ -348,13 +383,13 @@ def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
     assert "Live notebook templates" not in content
 
 
-def test_release_detail_pages_are_removed_for_preparing_release():
-    """Verify preparing releases do not retain detail page back-link evidence."""
+def test_release_detail_pages_are_rendered_for_live_release():
+    """Verify Live releases render detail page back-link evidence."""
     ri.render_release_pages()
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
 
-    assert not (base / "functions" / "read_lakehouse_excel.md").exists()
-    assert not (base / "metadata" / "metadata_data_catalogue.md").exists()
+    assert (base / "functions" / "read_lakehouse_excel.md").exists()
+    assert (base / "metadata" / "metadata_data_catalogue.md").exists()
 
 
 def test_no_release_table_uses_raw_source_path_columns():
@@ -368,8 +403,13 @@ def test_no_release_table_uses_raw_source_path_columns():
 def test_generated_release_pages_have_required_notice():
     """Verify generated release pages declare their generated ownership."""
     prefix = "<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->"
-    for path in (ri.ROOT / "docs" / "releases" / ri.read_package_version()).glob("**/*.md"):
-        assert path.read_text(encoding="utf-8").startswith(prefix)
+    release_root = ri.ROOT / "docs" / "releases" / ri.read_package_version()
+    for path in release_root.glob("**/*.md"):
+        content = path.read_text(encoding="utf-8")
+        if path.is_relative_to(release_root / "functions"):
+            assert "Frozen source ref:" in content or "frozen for FabricOps Starter Kit" in content
+        else:
+            assert content.startswith(prefix)
 
 
 def test_release_generation_is_deterministic_and_second_run_clean():
@@ -381,19 +421,19 @@ def test_release_generation_is_deterministic_and_second_run_clean():
     assert first == second
 
 
-def test_mkdocs_navigation_links_only_release_overview_until_release_exists():
-    """Verify 0.1.0 navigation is absent until frozen release pages exist."""
+def test_mkdocs_navigation_links_release_overview_after_release_exists():
+    """Verify 0.1.0 navigation links the frozen release overview."""
     content = (ri.ROOT / "mkdocs.yml").read_text(encoding="utf-8")
     assert "releases/index.md" in content
-    assert "0.1.0: releases/0.1.0/index.md" not in content
+    assert "0.1.0: releases/0.1.0/index.md" in content
     assert "releases/0.1.0/functions/index.md" not in content
 
 
-def test_release_renderer_removes_preparing_version_directory():
-    """Verify release renderer removes the version directory while preparing."""
+def test_release_renderer_keeps_live_version_directory():
+    """Verify release renderer keeps the version directory for Live releases."""
     ri.render_release_pages()
 
-    assert not (ri.ROOT / "docs" / "releases" / ri.read_package_version()).exists()
+    assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).exists()
 
 
 def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
