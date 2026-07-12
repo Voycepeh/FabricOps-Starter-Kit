@@ -89,9 +89,6 @@ jobs:
           print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
           PY
 
-      - name: Build Live notebook pack
-        run: uv run python scripts/build_release_notebook_pack.py "${FABRICOPS_PACKAGE_VERSION}" --output-dir dist
-
       - name: Generate SHA256 checksums
         run: |
           cd dist

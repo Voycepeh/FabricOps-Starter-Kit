@@ -11,7 +11,6 @@ import inspect
 import re
 import shutil
 import tomllib
-import zipfile
 from datetime import date, datetime
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,21 +21,15 @@ from packaging.version import Version
 ROOT = Path(__file__).resolve().parents[1]
 VALID_STATUSES = {"live", "preview", "discontinued"}
 VALID_RELEASE_STATUSES = {"preparing", "live"}
-GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
+GROUPS = ("functions", "metadata_tables")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
-MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by", "included_in_notebook_pack", "contains_live_sections", "contains_preview_sections", "tested_with"}
-TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
+MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
+TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation")
 TAG_SOURCE_REF_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
-TEMPLATE_DOCS = {
-    "00_env_config": "docs/guided-demo/run-environment-setup.md",
-    "01_agreement": "docs/guided-demo/create-agreement.md",
-    "02_pipeline": "docs/guided-demo/run-pipeline.md",
-    "03_governance": "docs/guided-demo/review-guardrails.md",
-}
-GROUP_LABELS = {"functions": "Functions", "metadata_tables": "Metadata tables", "templates": "Notebook templates", "dq_rules": "DQ rules"}
-CATEGORY_DIRS = {"functions": "functions", "metadata_tables": "metadata", "templates": "templates", "dq_rules": "dq-rules"}
-CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Metadata table", "templates": "Notebook template", "dq_rules": "DQ rule"}
-CATEGORY_PURPOSE = {"functions": "Description", "metadata_tables": "Purpose", "templates": "Purpose", "dq_rules": "Purpose"}
+GROUP_LABELS = {"functions": "Functions", "metadata_tables": "Metadata tables"}
+CATEGORY_DIRS = {"functions": "functions", "metadata_tables": "metadata"}
+CATEGORY_NOUN = {"functions": "Function", "metadata_tables": "Metadata table"}
+CATEGORY_PURPOSE = {"functions": "Description", "metadata_tables": "Purpose"}
 
 
 @dataclass(frozen=True)
@@ -124,26 +117,9 @@ def discover_metadata_tables() -> list[ReleaseAsset]:
     ]
 
 
-def discover_templates() -> list[ReleaseAsset]:
-    """Discover notebook templates from repository template files."""
-    assets = []
-    for path in sorted((ROOT / "templates" / "notebooks").glob("*.ipynb")):
-        name = path.stem
-        assets.append(ReleaseAsset(name, _relative(path), TEMPLATE_DOCS.get(name, "docs/notebook-templates-implementation-guide/index.md")))
-    return assets
-
-
-def discover_dq_rules() -> list[ReleaseAsset]:
-    """Discover DQ rule types from the authoritative guardrail registry."""
-    from fabricops_kit.pipeline import guardrails_shared
-
-    source_path = _relative(Path(inspect.getsourcefile(guardrails_shared) or ""))
-    return [ReleaseAsset(name, source_path, f"docs/reference/dq-rules/{_slug(name)}.md") for name in sorted(guardrails_shared.DQ_RULE_TYPES)]
-
-
 def discover_inventory() -> dict[str, list[ReleaseAsset]]:
-    """Discover every release inventory asset group."""
-    return {"functions": discover_functions(), "metadata_tables": discover_metadata_tables(), "templates": discover_templates(), "dq_rules": discover_dq_rules()}
+    """Discover formal release inventory assets: public functions and metadata tables."""
+    return {"functions": discover_functions(), "metadata_tables": discover_metadata_tables()}
 
 
 def _parse_scalar(value: str) -> Any:
@@ -343,16 +319,6 @@ def release_asset_change_status(item: dict[str, Any], version: str) -> str:
 
 
 
-def release_notebook_pack_items(manifest: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return notebook templates explicitly included in the release pack."""
-    version = str(manifest.get("release_version") or "")
-    included = [
-        item
-        for item in sort_release_items(manifest.get("templates", []))
-        if str(item.get("included_in_notebook_pack", "")).lower() == "true" or item.get("status") == "live"
-    ]
-    return sort_release_inventory_items(included, version)
-
 def release_asset_status_badge(status: str) -> str:
     """Return a compact badge for a release-local asset change status."""
     if not status:
@@ -394,16 +360,6 @@ def _metadata_rows(table_name: str) -> list[dict[str, Any]]:
     return [{"name": str(f.name), "type": _metadata_type(f), "nullable": "Yes" if bool(getattr(f, "nullable", True)) else "No"} for f in getattr(schema, "fields", [])]
 
 
-def _template_summary(item: dict[str, Any]) -> dict[str, Any]:
-    import json
-    data = json.loads((ROOT / item["source_path"]).read_text(encoding="utf-8"))
-    markdown = ["".join(c.get("source", [])) for c in data.get("cells", []) if c.get("cell_type") == "markdown"]
-    title = markdown[0].strip().splitlines()[0].lstrip("# ") if markdown else item["name"]
-    purpose = " ".join(line.strip() for line in (markdown[0].splitlines()[1:4] if markdown else []) if line.strip()) or title
-    headings = [line.lstrip("# ").strip().replace("`", "") for block in markdown for line in block.splitlines() if line.startswith("## ")]
-    return {"title": title, "purpose": purpose, "flow": headings[:6] or ["Open the notebook in Microsoft Fabric.", "Run cells in order."]}
-
-
 def _description(item: dict[str, Any], group: str) -> str:
     if item.get("description"):
         return str(item["description"])
@@ -413,24 +369,11 @@ def _description(item: dict[str, Any], group: str) -> str:
         return _function_details(item)["description"].rstrip(".") + "."
     if group == "metadata_tables":
         return f"Supported FabricOps metadata table for {item['name'].removeprefix('METADATA_').lower().replace('_', ' ')}."
-    if group == "templates":
-        return _template_summary(item)["purpose"]
     return item["name"]
-
-
-def _template_preview_url(manifest: dict[str, Any], version: str, source_path: str) -> str:
-    """Return the immutable tagged GitHub preview URL for a release notebook."""
-    owner = manifest.get("github_owner") or "Voycepeh"
-    repo = manifest.get("github_repo") or "FabricOps-Starter-Kit"
-    return f"https://github.com/{owner}/{repo}/blob/v{version}/{source_path}"
 
 
 def _release_inventory_link(manifest: dict[str, Any], version: str, group: str, item: dict[str, Any]) -> str:
     """Return the release overview table link for a Live inventory item."""
-    if group == "templates":
-        return _template_preview_url(manifest, version, str(item["source_path"]))
-    if group == "dq_rules":
-        return f"{CATEGORY_DIRS[group]}/{_slug(item['name'])}.md"
     return f"{CATEGORY_DIRS[group]}/{_page_name(item['name'])}"
 
 
@@ -438,7 +381,7 @@ def _release_inventory_section(manifest: dict[str, Any], version: str, group: st
     """Render one collapsible Live inventory section for the release overview."""
     if not items:
         return []
-    label = GROUP_LABELS[group] if group == "dq_rules" else GROUP_LABELS[group].lower()
+    label = GROUP_LABELS[group].lower()
     noun = CATEGORY_NOUN[group]
     purpose = CATEGORY_PURPOSE[group]
     lines = [
@@ -458,26 +401,6 @@ def _release_inventory_section(manifest: dict[str, Any], version: str, group: st
 
 
 
-def _included_notebook_pack_section(manifest: dict[str, Any], version: str) -> list[str]:
-    """Render version-pinned notebook templates included in the release asset."""
-    items = release_notebook_pack_items(manifest)
-    if not items:
-        return []
-    lines = [
-        '<details class="fabricops-release-inventory" markdown>',
-        f"<summary>{len(items)} included Preview notebook templates</summary>",
-        "",
-        "| Notebook template | Template lifecycle | Contains Live sections | Contains Preview sections |",
-        "| --- | --- | --- | --- |",
-    ]
-    for item in items:
-        link = _template_preview_url(manifest, version, str(item["source_path"]))
-        live_sections = "Yes" if str(item.get("contains_live_sections", "")).lower() == "true" else "No"
-        preview_sections = "Yes" if str(item.get("contains_preview_sections", "")).lower() == "true" else "No"
-        lines.append(f"| [`{item['name']}`]({link}) | {release_status_chip(str(item.get('status', 'preview')))} | {live_sections} | {preview_sections} |")
-    lines.extend(["", "</details>"])
-    return lines
-
 def _release_inventory_sections(manifest: dict[str, Any], version: str, live: dict[str, list[dict[str, Any]]]) -> list[str]:
     """Render all non-empty Live inventory sections for the release overview."""
     sections: list[str] = []
@@ -487,11 +410,6 @@ def _release_inventory_sections(manifest: dict[str, Any], version: str, live: di
             if sections:
                 sections.append("")
             sections.extend(section)
-    included_templates = _included_notebook_pack_section(manifest, version)
-    if included_templates:
-        if sections:
-            sections.append("")
-        sections.extend(included_templates)
     return sections
 
 
@@ -538,28 +456,6 @@ def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
     for row in rows:
         lines.append(f"| `{row['name']}` | `{row['type']}` | {row['nullable']} | FabricOps metadata schema registry | `{row['name']}` field in `{item['name']}`. |")
     lines.extend(["", "[Back to release overview](../index.md)"])
-    return "\n".join(lines) + "\n"
-
-
-def _dq_rule_page(version: str, item: dict[str, Any], notice: str) -> str:
-    """Render a frozen release detail page for a Live DQ rule."""
-    lines = [
-        notice,
-        "",
-        f"# `{item['name']}`",
-        "",
-        release_status_chip("live"),
-        "",
-        f"Package version: `{version}`",
-        "",
-        f"Source path: `{item['source_path']}`",
-        "",
-        "## Purpose",
-        "",
-        _description(item, "dq_rules"),
-        "",
-        "[Back to release overview](../index.md)",
-    ]
     return "\n".join(lines) + "\n"
 
 
@@ -710,7 +606,7 @@ def render_release_pages() -> list[Path]:
                 "  View GitHub Release",
                 "</a>",
                 "",
-                "## Live in this release",
+                "## Formal release scope",
                 "",
                 *inventory_sections,
                 "",
@@ -724,7 +620,7 @@ def render_release_pages() -> list[Path]:
     )
     paths.append(index)
 
-    for group in ("functions", "metadata_tables", "dq_rules"):
+    for group in ("functions", "metadata_tables"):
         items = live[group]
         if not items:
             continue
@@ -733,14 +629,11 @@ def render_release_pages() -> list[Path]:
         group_dir = release_dir / CATEGORY_DIRS[group]
         group_dir.mkdir(parents=True, exist_ok=True)
         for item in items:
-            page_name = f"{_slug(item['name'])}.md" if group == "dq_rules" else _page_name(item["name"])
-            page = group_dir / page_name
+            page = group_dir / _page_name(item["name"])
             if group == "functions":
                 content = _function_page(version, item, notice)
-            elif group == "metadata_tables":
-                content = _metadata_page(version, item, notice)
             else:
-                content = _dq_rule_page(version, item, notice)
+                content = _metadata_page(version, item, notice)
             page.write_text(content, encoding="utf-8")
             paths.append(page)
 
@@ -749,31 +642,6 @@ def render_release_pages() -> list[Path]:
     return [releases_index, *paths]
 
 
-
-def build_notebook_pack(version: str | None = None, output_dir: Path | None = None) -> Path | None:
-    """Build a release notebook ZIP from explicitly included template entries, if any."""
-    release_version = version or read_package_version()
-    manifest = _load_manifest(manifest_path(release_version))
-    if manifest is None:
-        raise ValueError(f"Release manifest not found for {release_version}.")
-    _validate_manifest(manifest, release_version)
-    output_root = output_dir or ROOT / "dist"
-    output_root.mkdir(parents=True, exist_ok=True)
-    asset_name = manifest.get("notebook_pack_asset") or f"fabricops-kit-{release_version}-notebooks.zip"
-    output_path = output_root / str(asset_name)
-    notebook_templates = release_notebook_pack_items(manifest)
-    if not notebook_templates:
-        return None
-    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for item in notebook_templates:
-            source_path = ROOT / str(item["source_path"])
-            if not source_path.exists():
-                raise ValueError(f"Live notebook template not found: {item['source_path']}")
-            info = zipfile.ZipInfo(source_path.name, date_time=(1980, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
-            archive.writestr(info, source_path.read_bytes())
-    return output_path
 
 def inventory_main(argv: list[str] | None = None) -> int:
     """CLI entry point for release inventory generation."""

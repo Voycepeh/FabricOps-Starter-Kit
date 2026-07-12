@@ -37,33 +37,17 @@ def test_release_inventory_discovers_metadata_tables_and_docs():
     assert catalogue.documentation_path == "docs/reference/metadata/metadata_data_catalogue.md"
 
 
-def test_release_inventory_discovers_templates_from_files():
-    """Verify notebook templates are discovered from actual template files."""
-    assets = ri.discover_templates()
-    assert {asset.source_path for asset in assets} == {path.as_posix() for path in sorted(Path("templates/notebooks").glob("*.ipynb"))}
-    assert next(asset for asset in assets if asset.name == "00_env_config").documentation_path == "docs/guided-demo/run-environment-setup.md"
-
-
-def test_release_inventory_discovers_dq_rules_from_registry():
-    """Verify DQ rules are discovered from the authoritative guardrail registry."""
-    from fabricops_kit.pipeline.guardrails_shared import DQ_RULE_TYPES
-
-    assets = ri.discover_dq_rules()
-    assert {asset.name for asset in assets} == set(DQ_RULE_TYPES)
-    assert next(asset for asset in assets if asset.name == "not_null").documentation_path == "docs/reference/dq-rules/not-null.md"
-
-
 def test_release_inventory_first_generation_defaults_preview():
     """Verify first-generation manifests mark every asset preview."""
-    manifest = ri.synchronize_manifest(None, {"functions": [ri.ReleaseAsset("a", "src/a.py")], "metadata_tables": [], "templates": [], "dq_rules": []}, "1.2.3")
+    manifest = ri.synchronize_manifest(None, {"functions": [ri.ReleaseAsset("a", "src/a.py")], "metadata_tables": []}, "1.2.3")
     assert manifest["release_version"] == "1.2.3"
     assert manifest["functions"][0]["status"] == "preview"
 
 
 def test_release_inventory_regeneration_preserves_status_and_adds_new_preview():
     """Verify regeneration preserves statuses and adds new assets as preview."""
-    existing = {"release_version": "1.0.0", "functions": [{"name": "a", "source_path": "old.py", "status": "live", "notes": "keep"}], "metadata_tables": [], "templates": [], "dq_rules": []}
-    discovered = {"functions": [ri.ReleaseAsset("a", "new.py"), ri.ReleaseAsset("b", "b.py")], "metadata_tables": [], "templates": [], "dq_rules": []}
+    existing = {"release_version": "1.0.0", "functions": [{"name": "a", "source_path": "old.py", "status": "live", "notes": "keep"}], "metadata_tables": []}
+    discovered = {"functions": [ri.ReleaseAsset("a", "new.py"), ri.ReleaseAsset("b", "b.py")], "metadata_tables": []}
     manifest = ri.synchronize_manifest(existing, discovered, "1.0.0")
     assert manifest["functions"][0]["source_path"] == "new.py"
     assert manifest["functions"][0]["status"] == "live"
@@ -71,8 +55,8 @@ def test_release_inventory_regeneration_preserves_status_and_adds_new_preview():
     assert manifest["functions"][1]["status"] == "preview"
 
 
-def test_release_inventory_preserves_human_owned_fields_for_all_asset_groups():
-    """Verify regeneration preserves lifecycle evidence across manifest groups."""
+def test_release_inventory_preserves_human_owned_fields_for_release_groups():
+    """Verify regeneration preserves lifecycle evidence for formal release groups."""
     existing = {
         "release_version": "1.0.0",
         "functions": [
@@ -97,36 +81,10 @@ def test_release_inventory_preserves_human_owned_fields_for_all_asset_groups():
                 "managed_by": "schema owner",
             }
         ],
-        "templates": [
-            {
-                "name": "00_env_config",
-                "source_path": "old.ipynb",
-                "status": "preview",
-                "introduced_in": "0.7.0",
-                "rationale": "template rationale",
-                "included_in_notebook_pack": "true",
-                "contains_live_sections": "true",
-                "contains_preview_sections": "true",
-                "tested_with": "1.0.0",
-            }
-        ],
-        "dq_rules": [
-            {
-                "name": "not_null",
-                "source_path": "old.py",
-                "status": "preview",
-                "introduced_in": "0.6.0",
-                "rationale": "dq rationale",
-                "description": "dq description",
-                "purpose": "dq purpose",
-            }
-        ],
     }
     discovered = {
         "functions": [ri.ReleaseAsset("function_a", "new.py")],
         "metadata_tables": [ri.ReleaseAsset("METADATA_A", "new.py", generated_fields={"schema_fingerprint": "same"})],
-        "templates": [ri.ReleaseAsset("00_env_config", "new.ipynb")],
-        "dq_rules": [ri.ReleaseAsset("not_null", "new.py")],
     }
 
     manifest = ri.synchronize_manifest(existing, discovered, "1.0.0")
@@ -140,40 +98,28 @@ def test_release_inventory_preserves_human_owned_fields_for_all_asset_groups():
     assert metadata["introduced_in"] == "0.8.0"
     assert metadata["rationale"] == "metadata rationale"
     assert metadata["managed_by"] == "schema owner"
-    template = manifest["templates"][0]
-    assert template["introduced_in"] == "0.7.0"
-    assert template["rationale"] == "template rationale"
-    assert template["included_in_notebook_pack"] == "true"
-    assert template["contains_live_sections"] == "true"
-    assert template["contains_preview_sections"] == "true"
-    assert template["tested_with"] == "1.0.0"
-    dq_rule = manifest["dq_rules"][0]
-    assert dq_rule["introduced_in"] == "0.6.0"
-    assert dq_rule["rationale"] == "dq rationale"
-    assert dq_rule["description"] == "dq description"
-    assert dq_rule["purpose"] == "dq purpose"
 
 
 def test_release_inventory_removed_asset_requires_discontinued():
     """Verify removed tracked assets fail until maintainers discontinue them."""
-    existing = {"release_version": "1.0.0", "functions": [{"name": "gone", "source_path": "gone.py", "status": "live"}], "metadata_tables": [], "templates": [], "dq_rules": []}
+    existing = {"release_version": "1.0.0", "functions": [{"name": "gone", "source_path": "gone.py", "status": "live"}], "metadata_tables": []}
     with pytest.raises(ValueError, match="Mark each removed asset"):
-        ri.synchronize_manifest(existing, {"functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}, "1.0.0")
+        ri.synchronize_manifest(existing, {"functions": [], "metadata_tables": []}, "1.0.0")
 
 
 def test_release_inventory_rejects_invalid_status_and_duplicates():
     """Verify invalid lifecycle status values and duplicate names fail."""
-    bad_status = {"release_version": "1.0.0", "functions": [{"name": "a", "status": "alpha"}], "metadata_tables": [], "templates": [], "dq_rules": []}
+    bad_status = {"release_version": "1.0.0", "functions": [{"name": "a", "status": "alpha"}], "metadata_tables": []}
     with pytest.raises(ValueError, match="Invalid lifecycle status"):
-        ri.synchronize_manifest(bad_status, {"functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}, "1.0.0")
-    duplicate = {"release_version": "1.0.0", "functions": [{"name": "a", "status": "preview"}, {"name": "a", "status": "live"}], "metadata_tables": [], "templates": [], "dq_rules": []}
+        ri.synchronize_manifest(bad_status, {"functions": [], "metadata_tables": []}, "1.0.0")
+    duplicate = {"release_version": "1.0.0", "functions": [{"name": "a", "status": "preview"}, {"name": "a", "status": "live"}], "metadata_tables": []}
     with pytest.raises(ValueError, match="Duplicate identifier"):
-        ri.synchronize_manifest(duplicate, {"functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}, "1.0.0")
+        ri.synchronize_manifest(duplicate, {"functions": [], "metadata_tables": []}, "1.0.0")
 
 
 def test_release_inventory_output_order_is_deterministic():
     """Verify manifest rows are sorted deterministically."""
-    manifest = ri.synchronize_manifest(None, {"functions": [ri.ReleaseAsset("b", "b.py"), ri.ReleaseAsset("a", "a.py")], "metadata_tables": [], "templates": [], "dq_rules": []}, "1.0.0")
+    manifest = ri.synchronize_manifest(None, {"functions": [ri.ReleaseAsset("b", "b.py"), ri.ReleaseAsset("a", "a.py")], "metadata_tables": []}, "1.0.0")
     assert [item["name"] for item in manifest["functions"]] == ["a", "b"]
 
 
@@ -197,9 +143,7 @@ def test_load_release_manifests_reads_only_supplied_directory(tmp_path):
         "release_status: live\n"
         "release_date: 2026-08-01\n"
         "functions:\n"
-        "metadata_tables:\n"
-        "templates:\n"
-        "dq_rules:\n",
+        "metadata_tables:\n",
         encoding="utf-8",
     )
 
@@ -216,8 +160,6 @@ def test_valid_live_release_date_passes_strict_validation():
         "release_date": "2026-07-08",
         "functions": [],
         "metadata_tables": [],
-        "templates": [],
-        "dq_rules": [],
     }
 
     ri._validate_manifest(manifest, "1.0.0")
@@ -232,8 +174,6 @@ def test_preparing_release_status_allows_null_release_evidence():
         "source_ref": None,
         "functions": [],
         "metadata_tables": [],
-        "templates": [],
-        "dq_rules": [],
     }
 
     ri._validate_manifest(manifest, "1.0.0")
@@ -246,8 +186,6 @@ def test_invalid_release_status_fails_clearly():
         "release_status": "preview",
         "functions": [],
         "metadata_tables": [],
-        "templates": [],
-        "dq_rules": [],
     }
 
     with pytest.raises(ValueError, match="Invalid release_status"):
@@ -264,8 +202,6 @@ def test_manifest_accepts_matching_tag_source_ref():
         "source_ref": "v0.1.0",
         "functions": [],
         "metadata_tables": [],
-        "templates": [],
-        "dq_rules": [],
     }
 
     ri._validate_manifest(manifest, "0.1.0")
@@ -280,8 +216,6 @@ def test_manifest_rejects_mismatched_tag_source_ref():
         "source_ref": "v0.2.0",
         "functions": [],
         "metadata_tables": [],
-        "templates": [],
-        "dq_rules": [],
     }
 
     with pytest.raises(ValueError, match="source_ref 'v0.2.0' must match v0.1.0"):
@@ -297,8 +231,6 @@ def test_malformed_live_release_dates_fail_clearly():
             "release_date": release_date,
             "functions": [],
             "metadata_tables": [],
-            "templates": [],
-            "dq_rules": [],
         }
         with pytest.raises(ValueError, match="must include release_date in YYYY-MM-DD format"):
             ri._validate_manifest(manifest, "1.0.0")
@@ -406,12 +338,10 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 8
-    assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 0
     assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 0
-    assert {item["name"] for item in ri.release_notebook_pack_items(manifest)} == {"00_env_config", "99_explore"}
+    assert "templates" not in manifest
+    assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
-    assert any(item["status"] == "preview" for item in manifest["templates"])
-    assert all(item["status"] == "preview" for item in manifest["dq_rules"])
 
 
 def test_release_generates_frozen_detail_pages_for_live_manifest():
@@ -436,7 +366,7 @@ def test_release_overview_lists_live_release_with_inventory():
 
 def test_live_release_requires_release_date():
     """Verify Live release manifests must include a release date."""
-    manifest = {"release_version": "1.0.0", "release_status": "live", "release_date": None, "functions": [], "metadata_tables": [], "templates": [], "dq_rules": []}
+    manifest = {"release_version": "1.0.0", "release_status": "live", "release_date": None, "functions": [], "metadata_tables": []}
 
     with pytest.raises(ValueError, match="must include release_date"):
         ri._validate_manifest(manifest, "1.0.0")
@@ -451,20 +381,17 @@ def test_individual_release_overview_is_rendered_for_live_release():
     assert (release_dir / "index.md").exists()
 
 
-def test_release_inventory_section_supports_dq_links_and_omits_empty_groups():
-    """Verify DQ sections link directly to detail pages and empty groups are omitted."""
+def test_release_inventory_section_omits_empty_manual_asset_groups():
+    """Verify manual asset groups cannot enter formal release sections."""
     manifest = {"github_owner": "Voycepeh", "github_repo": "FabricOps-Starter-Kit"}
-    live = {"functions": [], "metadata_tables": [], "templates": [], "dq_rules": [{"name": "not_null", "purpose": "Values must be present."}]}
+    live = {"functions": [], "metadata_tables": []}
 
     sections = ri._release_inventory_sections(manifest, "1.2.3", live)
     content = "\n".join(sections)
 
-    assert "<summary>1 Live DQ rules</summary>" in content
-    assert "| DQ rule | Purpose |" in content
-    assert "[`not_null`](dq-rules/not-null.md)" in content
-    assert "Live functions" not in content
-    assert "Live metadata tables" not in content
-    assert "Live notebook templates" not in content
+    assert content == ""
+    assert "DQ rules" not in content
+    assert "notebook templates" not in content
 
 
 def test_release_detail_pages_are_rendered_for_live_release():
@@ -520,20 +447,6 @@ def test_release_renderer_keeps_live_version_directory():
     assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).exists()
 
 
-def test_release_notebook_pack_uses_included_preview_templates(tmp_path):
-    """Verify the release notebook ZIP includes version-pinned Preview templates with Live sections."""
-    path = ri.build_notebook_pack(ri.read_package_version(), tmp_path)
-    manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
-    assert manifest is not None
-    assert not [item for item in manifest["templates"] if item["status"] == "live"]
-    assert path is not None
-
-    import zipfile
-
-    with zipfile.ZipFile(path) as archive:
-        assert sorted(archive.namelist()) == ["00_env_config.ipynb", "99_explore.ipynb"]
-
-
 def test_metadata_manifest_records_schema_since_and_fingerprint():
     """Verify metadata schemas are tied to package releases by fingerprint."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
@@ -549,8 +462,6 @@ def test_metadata_schema_since_is_preserved_when_fingerprint_unchanged():
     existing = {
         "release_version": "0.1.1",
         "functions": [],
-        "templates": [],
-        "dq_rules": [],
         "metadata_tables": [
             {
                 "name": "METADATA_DATA_AGREEMENT",
@@ -564,8 +475,6 @@ def test_metadata_schema_since_is_preserved_when_fingerprint_unchanged():
     }
     discovered = {
         "functions": [],
-        "templates": [],
-        "dq_rules": [],
         "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "same"})],
     }
     manifest = ri.synchronize_manifest(existing, discovered, "0.1.1")
@@ -577,8 +486,6 @@ def test_metadata_schema_since_advances_when_fingerprint_changes():
     existing = {
         "release_version": "0.2.0",
         "functions": [],
-        "templates": [],
-        "dq_rules": [],
         "metadata_tables": [
             {
                 "name": "METADATA_DATA_AGREEMENT",
@@ -592,8 +499,6 @@ def test_metadata_schema_since_advances_when_fingerprint_changes():
     }
     discovered = {
         "functions": [],
-        "templates": [],
-        "dq_rules": [],
         "metadata_tables": [ri.ReleaseAsset("METADATA_DATA_AGREEMENT", "new.py", generated_fields={"schema_fingerprint": "new"})],
     }
     manifest = ri.synchronize_manifest(existing, discovered, "0.2.0")
