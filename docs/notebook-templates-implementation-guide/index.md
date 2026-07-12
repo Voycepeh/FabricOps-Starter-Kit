@@ -2,6 +2,10 @@
 
 FabricOps Starter Kit provides editable Microsoft Fabric notebook templates for governed, quality-checked notebook workflows. Use this page as the lightweight template landing page: download the notebooks, scan the run order, then follow the Guided Demo for the maintained step-by-step instructions.
 
+## Tested release records
+
+Notebook templates are maintained as a living track independently from FabricOps package releases. The compatibility table near the top of each maintained template is a manual Microsoft Fabric test record: add a package release only after that template has actually been run and verified with the release in Microsoft Fabric. Keep the stable template filenames current instead of duplicating or freezing a separate notebook copy for every package release.
+
 <p class="template-download-hero">
   <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Download all template notebooks from this GitHub folder</a>
 </p>
