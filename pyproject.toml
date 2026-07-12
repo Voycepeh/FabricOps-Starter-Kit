@@ -70,6 +70,7 @@ ignore = ["E402", "E501", "E701", "E702", "E712", "F401", "F821", "I001"]
 [dependency-groups]
 dev = [
     "build>=1.3.0",
+    "nbformat>=5.10.4",
     "pyspark>=4.1.1",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
