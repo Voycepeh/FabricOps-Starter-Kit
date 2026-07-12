@@ -247,6 +247,153 @@ The AI must ask the maintainer to decide before editing lifecycle fields:
 
 New assets default to `preview`. The generator must not automatically promote assets to `live`.
 
+Template lifecycle decisions have an additional dependency gate, but the gate
+applies to the required minimum execution path rather than every cell in the
+notebook. Template lifecycle and section maturity are separate: a Preview
+template may contain Live sections, and a Live template may contain isolated
+Preview sections when those Preview sections are optional and excluded from the
+supported path. Do not exclude a notebook from a release merely because the
+notebook's overall template lifecycle is Preview.
+
+A template is a versioned workflow container with three release maturity layers:
+
+| Layer | Purpose |
+| --- | --- |
+| Template lifecycle | Whether the notebook as a whole is `preview` or `live`. |
+| Template revision metadata | When the notebook was introduced, promoted, materially updated, and tested. |
+| Cell or section maturity | Whether each block is required, optional supported content, or experimental Preview content. |
+
+Use stable logical notebook filenames such as `00_env_config.ipynb`; do not add
+package-version suffixes such as `00_env_config_v0_4_0.ipynb`. The exact
+notebook file included in a release is frozen by the release tag, release asset,
+template metadata, and release manifest. Later releases may update the same
+stable notebook filename while Git records the exact released copy. Add an
+independent `template_revision` only when a separate per-template revision
+identity is genuinely needed.
+
+Template inclusion and promotion are separate concepts:
+
+| Concept | Meaning |
+| --- | --- |
+| Included in release | The exact notebook file is packaged and pinned to the release tag. |
+| Template lifecycle Preview | The notebook as a whole may still evolve materially. |
+| Live section | This section forms part of the supported path for the release. |
+| Preview section | This section is experimental and may change or be removed. |
+| Live template | The complete required execution path and all required dependencies are stable and supported. |
+
+Each template should expose visible top-level metadata in the notebook header,
+mirrored where practical in machine-readable notebook metadata. These fields
+describe the current repository copy and should be updated only when the
+template materially changes:
+
+```yaml
+template_id: 00_env_config
+template_lifecycle: preview
+introduced_in: 0.1.0
+live_since: null
+last_updated_in: 0.1.0
+tested_with: 0.1.0
+contains_live_sections: true
+contains_preview_sections: true
+```
+
+Use the corresponding `template_id` value for `99_explore.ipynb` and update the
+version fields to match the release where that template copy was introduced,
+materially changed, or tested.
+
+Template sections should be visibly labelled, versioned, and tagged for
+automation:
+
+| Section maturity | Meaning | Required tags |
+| --- | --- | --- |
+| Required | Supported minimum execution path. Must run in order, use only Live dependencies, be covered by notebook validation, require configuration values rather than source-code edits during normal use, and remain compatible within the stated release line. | `fabricops-required`, `fabricops-live` |
+| Optional | Supported feature block that may be skipped without breaking the basic workflow. | `fabricops-optional`, `fabricops-live` |
+| Preview | Experimental block that may change between releases, depend on Preview functions, require extra setup, be removed later, and be excluded from standard validation. | `fabricops-optional`, `fabricops-preview` |
+
+Each major notebook section should visibly state `Section maturity`, `Required
+for normal execution`, `Introduced in`, and `Last updated in`. For example:
+
+```markdown
+## Configure Fabric stores
+
+Section maturity: Live
+Required for normal execution: Yes
+Introduced in: 0.1.0
+Last updated in: 0.1.0
+```
+
+```markdown
+## Agreement and governance configuration
+
+Section maturity: Preview
+Required for normal execution: No
+Introduced in: 0.1.0
+May change without backward compatibility.
+```
+
+A Live section is part of the supported release path. A Preview section may
+change without backward compatibility or be removed. A Live template may contain
+Preview sections only when those sections are optional, isolated, visually
+marked, excluded from standard template validation, do not run automatically, do
+not affect downstream required cells, and can be removed without breaking the
+notebook. The template's required execution path must contain only Live
+dependencies.
+
+For `v0.1.0`, include `00_env_config.ipynb` and `99_explore.ipynb` as
+version-pinned Preview template artifacts. Their required Fabric I/O path may
+contain explicitly marked Live sections, while all other experimental or
+incomplete capabilities remain clearly marked Preview.
+
+Expected `v0.1.0` notebook state:
+
+| Template | Template lifecycle | Included since | Contains Live sections | Contains Preview sections |
+| --- | --- | --- | --- | --- |
+| `00_env_config.ipynb` | Preview | `0.1.0` | Yes | Yes |
+| `99_explore.ipynb` | Preview | `0.1.0` | Yes | Yes |
+
+The `v0.1.0` Live section boundary is limited to the stable Fabric I/O path
+backed by these Live public functions:
+
+- `read_lakehouse_csv`
+- `read_lakehouse_excel`
+- `read_lakehouse_parquet`
+- `read_lakehouse_table`
+- `read_warehouse_query`
+- `read_warehouse_table`
+- `write_lakehouse_table`
+- `write_warehouse_table`
+
+Sections that depend on profiling, agreement workflows, metadata registration,
+widgets, DQ rules, notebook registry, governance automation, or other Preview
+functions must remain Preview.
+
+Before promoting any template to `live`, the AI must prepare and show a template
+dependency report with these fields:
+
+| Field | Required content |
+| --- | --- |
+| Template | Template ID, source path, lifecycle, `introduced_in`, `live_since`, `last_updated_in`, `tested_with`, and whether it contains Live or Preview sections. |
+| Functions | Public functions required for normal required-path execution and each lifecycle status. |
+| Config contracts | Configuration contracts or required configuration structures used by the required path and each lifecycle status. |
+| Metadata | Metadata tables or schemas read or written by the required path and each lifecycle status. |
+| Widgets | Interactive widgets required for normal required-path execution and each lifecycle status. |
+| Preview dependencies | Any required-path dependency that is still `preview`, grouped by dependency type. |
+
+A template can become Live only when every required section is classified, every
+required-path dependency is Live, required cells run from a clean environment,
+required cells need configuration values rather than source-code editing, Preview
+sections are isolated, the notebook records `introduced_in`, `live_since`, and
+`last_updated_in`, the complete required path is tested against the package
+release, and the release pack contains the exact tested notebook. Any required
+Preview dependency blocks template promotion. If the dependency report contains
+one or more required-path Preview dependencies, keep the template as `preview`,
+promote the dependencies first where approved, or defer the template to a later
+release.
+
+Templates should generally be among the last release surfaces stabilised, after
+the underlying package, metadata, configuration, and widget contracts are stable.
+This makes future promotion evidence-based rather than subjective.
+
 ## 7. Decide Patch, Minor or Major
 
 `pyproject.toml` is the authoritative package version. `fabricops_kit.__version__` is loaded from installed package metadata with a local fallback to `pyproject.toml`; it is not a second committed version authority.
