@@ -386,7 +386,7 @@ The preflight must:
 5. Confirm no tracked files changed.
 6. Report whether the release is ready.
 
-Notebook templates, template snapshots, skills, DQ validation, sample generation, environment resource bundles, and notebook packs must not block package release preflight.
+Notebook templates, template snapshots, skills, DQ validation, sample generation, and environment resource bundles must not block package release preflight.
 
 Recommended checks include:
 
