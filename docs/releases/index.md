@@ -6,4 +6,4 @@
 
 | Release | Release date | Description |
 | --- | --- | --- |
-| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-11 | FabricOps 0.1.0 establishes the supported Fabric lakehouse and warehouse input/output foundation and ships versioned Preview notebook templates with explicitly marked Live sections for that I/O path. |
+| [FabricOps Starter Kit 0.1.0](0.1.0/) | 2026-07-11 | FabricOps 0.1.0 establishes the supported Fabric lakehouse and warehouse input/output public functions. |

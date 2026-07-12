@@ -87,9 +87,7 @@ def write_manifest(root: Path) -> Path:
         "  - name: public_b\n"
         "    qualified_name: fabricops_kit.public_b.public_b\n"
         "    status: preview\n"
-        "metadata_tables:\n"
-        "templates:\n"
-        "dq_rules:\n",
+        "metadata_tables:\n",
         encoding="utf-8",
     )
     return manifests
@@ -107,9 +105,7 @@ def write_versioned_manifest(manifests: Path, version: str, status: str = "previ
         "  - name: public_b\n"
         "    qualified_name: fabricops_kit.public_b.public_b\n"
         "    status: preview\n"
-        "metadata_tables:\n"
-        "templates:\n"
-        "dq_rules:\n",
+        "metadata_tables:\n",
         encoding="utf-8",
     )
 
@@ -237,9 +233,7 @@ def test_missing_manifest_entry_fails_when_manifests_exist(tmp_path: Path) -> No
         "    qualified_name: fabricops_kit.public_a.public_a\n"
         "    status: live\n"
         "    live_since: 0.1.0\n"
-        "metadata_tables:\n"
-        "templates:\n"
-        "dq_rules:\n",
+        "metadata_tables:\n",
         encoding="utf-8",
     )
 
@@ -258,9 +252,7 @@ def test_read_function_lifecycle_accepts_custom_manifest_directory(tmp_path: Pat
         "    qualified_name: fabricops_kit.public_a.public_a\n"
         "    status: live\n"
         "    live_since: 0.1.0\n"
-        "metadata_tables:\n"
-        "templates:\n"
-        "dq_rules:\n",
+        "metadata_tables:\n",
         encoding="utf-8",
     )
 

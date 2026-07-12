@@ -21,7 +21,7 @@ Codex Cloud may be used for:
 3. Release PR preparation.
 4. Generator execution.
 5. Tests, linting and documentation validation.
-6. Package and optional notebook-pack builds.
+6. Package and wheel builds.
 7. Final release preflight.
 8. Reporting whether the repository is ready to tag.
 
@@ -66,18 +66,16 @@ Codex Desktop or the local environment may:
 
 ## 1. What a FabricOps release contains
 
-A FabricOps release contains a tagged source commit, package artifacts, release notes, release lifecycle evidence, and generated release contract pages. The release manifest is the lifecycle decision file:
+A FabricOps release currently governs only two formal areas: FabricOps public functions and FabricOps metadata schema. Notebook templates, skills, samples, guided demos, DQ assets, and environment resource bundles are manually maintained outside the package release contract. The release manifest is the lifecycle decision file:
 
 ```text
 docs/releases/manifests/<version>.yml
 ```
 
-It contains four release asset groups:
+It contains two release asset groups:
 
 - `functions`
 - `metadata_tables`
-- `templates`
-- `dq_rules`
 
 The canonical frozen source reference is the annotated Git release tag, not an
 intermediate PR commit SHA. For a release `X.Y.Z`, set the manifest fields to:
@@ -113,8 +111,6 @@ Source registries decide what exists; the manifest decides whether each discover
 | --- | --- | --- |
 | Functions | [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py) `SUPPORTED_PUBLIC_API` | A function enters the release inventory only when it is in the supported public API boundary. |
 | Metadata tables | [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py) canonical schema registry | A metadata table enters the inventory when it is registered in the canonical schema registry. |
-| Notebook templates | [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/) | A committed notebook in this directory enters the inventory. |
-| DQ rules | [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py) `DQ_RULE_TYPES` | A DQ rule enters the inventory only when registered in `DQ_RULE_TYPES`. |
 
 ## 2. Before you start
 
@@ -140,8 +136,6 @@ Read these files and directories before proposing changes:
 - [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/): release and documentation automation.
 - [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py): supported public API registry.
 - [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py): canonical metadata schema registry.
-- [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py): DQ rule registry.
-- [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/): release template source directory.
 
 Identify the latest released version from `docs/releases/manifests/*.yml`, the current development version from `pyproject.toml`, and the requested release scope from the maintainer or merged PR history. Never assume the next version.
 
@@ -158,7 +152,7 @@ Default release workflow:
 5. Set `source_ref` to the intended annotated release tag, such as `v0.1.0`.
 6. Finalise the changelog.
 7. Generate and commit frozen release documentation using the tag reference.
-8. Validate package version, manifest version, source tag, generated artifacts, tests, documentation, wheel, and any configured notebook pack.
+8. Validate package version, manifest version, source tag, generated function/metadata release pages, tests, documentation, and wheel artifacts.
 9. Merge the release PR into `main`. The release PR may be squash-merged or rebased because frozen source documentation depends on the release tag, not an intermediate PR commit.
 10. Stage A: run release preflight in Codex Cloud, Codex Desktop, or another supported environment and report whether the release is ready to tag. Codex Cloud must stop here and provide the exact local tag command.
 11. Stage B: in Codex Desktop or another authenticated local environment, refresh `main`, create the local annotated tag, pause for explicit maintainer approval, and push only the approved tag.
@@ -199,7 +193,7 @@ This reads `pyproject.toml`, source registries, and `docs/releases/manifests/<ve
 
 ## 5. Review all available release assets
 
-Before setting lifecycle statuses or drafting the changelog, discover and present all release assets grouped as Functions, Metadata tables, Notebook templates, and DQ rules.
+Before setting lifecycle statuses or drafting the changelog, discover and present the formal release assets grouped as Functions and Metadata tables only.
 
 For each asset, show where available:
 
@@ -246,152 +240,11 @@ The AI must ask the maintainer to decide before editing lifecycle fields:
 
 New assets default to `preview`. The generator must not automatically promote assets to `live`.
 
-Template lifecycle decisions have an additional dependency gate, but the gate
-applies to the required minimum execution path rather than every cell in the
-notebook. Template lifecycle and section maturity are separate: a Preview
-template may contain Live sections, and a Live template may contain isolated
-Preview sections when those Preview sections are optional and excluded from the
-supported path. Do not exclude a notebook from a release merely because the
-notebook's overall template lifecycle is Preview.
+Formal lifecycle decisions apply only to public functions and metadata tables. Do not classify notebook templates, DQ rules, skills, samples, guided demos, function packets, refactor packets, documentation examples, or environment resource bundles as package release assets.
 
-A template is a versioned workflow container with three release maturity layers:
+Notebook templates are manually maintained living applications of the package. They are not promoted, frozen, copied, renamed by package version, packaged, automatically stamped, or release-blocked by this workflow. Maintainers may run separate manual validation for templates, and each template should keep a manually maintained `Tested with FabricOps` table that Voyce Peh updates only after testing in Microsoft Fabric.
 
-| Layer | Purpose |
-| --- | --- |
-| Template lifecycle | Whether the notebook as a whole is `preview` or `live`. |
-| Template revision metadata | When the notebook was introduced, promoted, materially updated, and tested. |
-| Cell or section maturity | Whether each block is required, optional supported content, or experimental Preview content. |
-
-Use stable logical notebook filenames such as `00_env_config.ipynb`; do not add
-package-version suffixes such as `00_env_config_v0_4_0.ipynb`. The exact
-notebook file included in a release is frozen by the release tag, release asset,
-template metadata, and release manifest. Later releases may update the same
-stable notebook filename while Git records the exact released copy. Add an
-independent `template_revision` only when a separate per-template revision
-identity is genuinely needed.
-
-Template inclusion and promotion are separate concepts:
-
-| Concept | Meaning |
-| --- | --- |
-| Included in release | The exact notebook file is packaged and pinned to the release tag. |
-| Template lifecycle Preview | The notebook as a whole may still evolve materially. |
-| Live section | This section forms part of the supported path for the release. |
-| Preview section | This section is experimental and may change or be removed. |
-| Live template | The complete required execution path and all required dependencies are stable and supported. |
-
-Each template should expose visible top-level metadata in the notebook header,
-mirrored where practical in machine-readable notebook metadata. These fields
-describe the current repository copy and should be updated only when the
-template materially changes:
-
-```yaml
-template_id: 00_env_config
-template_lifecycle: preview
-introduced_in: 0.1.0
-live_since: null
-last_updated_in: 0.1.0
-tested_with: 0.1.0
-contains_live_sections: true
-contains_preview_sections: true
-```
-
-Use the corresponding `template_id` value for `99_explore.ipynb` and update the
-version fields to match the release where that template copy was introduced,
-materially changed, or tested.
-
-Template sections should be visibly labelled, versioned, and tagged for
-automation:
-
-| Section maturity | Meaning | Required tags |
-| --- | --- | --- |
-| Required | Supported minimum execution path. Must run in order, use only Live dependencies, be covered by notebook validation, require configuration values rather than source-code edits during normal use, and remain compatible within the stated release line. | `fabricops-required`, `fabricops-live` |
-| Optional | Supported feature block that may be skipped without breaking the basic workflow. | `fabricops-optional`, `fabricops-live` |
-| Preview | Experimental block that may change between releases, depend on Preview functions, require extra setup, be removed later, and be excluded from standard validation. | `fabricops-optional`, `fabricops-preview` |
-
-Each major notebook section should visibly state `Section maturity`, `Required
-for normal execution`, `Introduced in`, and `Last updated in`. For example:
-
-```markdown
-## Configure Fabric stores
-
-Section maturity: Live
-Required for normal execution: Yes
-Introduced in: 0.1.0
-Last updated in: 0.1.0
-```
-
-```markdown
-## Agreement and governance configuration
-
-Section maturity: Preview
-Required for normal execution: No
-Introduced in: 0.1.0
-May change without backward compatibility.
-```
-
-A Live section is part of the supported release path. A Preview section may
-change without backward compatibility or be removed. A Live template may contain
-Preview sections only when those sections are optional, isolated, visually
-marked, excluded from standard template validation, do not run automatically, do
-not affect downstream required cells, and can be removed without breaking the
-notebook. The template's required execution path must contain only Live
-dependencies.
-
-For `v0.1.0`, include `00_env_config.ipynb` and `99_explore.ipynb` as
-version-pinned Preview template artifacts. Their required Fabric I/O path may
-contain explicitly marked Live sections, while all other experimental or
-incomplete capabilities remain clearly marked Preview.
-
-Expected `v0.1.0` notebook state:
-
-| Template | Template lifecycle | Included since | Contains Live sections | Contains Preview sections |
-| --- | --- | --- | --- | --- |
-| `00_env_config.ipynb` | Preview | `0.1.0` | Yes | Yes |
-| `99_explore.ipynb` | Preview | `0.1.0` | Yes | Yes |
-
-The `v0.1.0` Live section boundary is limited to the stable Fabric I/O path
-backed by these Live public functions:
-
-- `read_lakehouse_csv`
-- `read_lakehouse_excel`
-- `read_lakehouse_parquet`
-- `read_lakehouse_table`
-- `read_warehouse_query`
-- `read_warehouse_table`
-- `write_lakehouse_table`
-- `write_warehouse_table`
-
-Sections that depend on profiling, agreement workflows, metadata registration,
-widgets, DQ rules, notebook registry, governance automation, or other Preview
-functions must remain Preview.
-
-Before promoting any template to `live`, the AI must prepare and show a template
-dependency report with these fields:
-
-| Field | Required content |
-| --- | --- |
-| Template | Template ID, source path, lifecycle, `introduced_in`, `live_since`, `last_updated_in`, `tested_with`, and whether it contains Live or Preview sections. |
-| Functions | Public functions required for normal required-path execution and each lifecycle status. |
-| Config contracts | Configuration contracts or required configuration structures used by the required path and each lifecycle status. |
-| Metadata | Metadata tables or schemas read or written by the required path and each lifecycle status. |
-| Widgets | Interactive widgets required for normal required-path execution and each lifecycle status. |
-| Preview dependencies | Any required-path dependency that is still `preview`, grouped by dependency type. |
-
-A template can become Live only when every required section is classified, every
-required-path dependency is Live, required cells run from a clean environment,
-required cells need configuration values rather than source-code editing, Preview
-sections are isolated, the notebook records `introduced_in`, `live_since`, and
-`last_updated_in`, the complete required path is tested against the package
-release, and the release pack contains the exact tested notebook. Any required
-Preview dependency blocks template promotion. If the dependency report contains
-one or more required-path Preview dependencies, keep the template as `preview`,
-promote the dependencies first where approved, or defer the template to a later
-release.
-
-Templates should generally be among the last release surfaces stabilised, after
-the underlying package, metadata, configuration, and widget contracts are stable.
-This makes future promotion evidence-based rather than subjective.
+DQ logic may remain available in the repository, but DQ validation, DQ rules, DQ widgets, and DQ release notes are not part of the formal release contract for now. Do not add DQ versioning, migration, compatibility, schema, or release requirements during package release preparation.
 
 ## 7. Decide Patch, Minor or Major
 
@@ -401,9 +254,9 @@ Use the smallest semantic version bump that communicates public impact:
 
 | Bump | Use when |
 | --- | --- |
-| Patch | Backward-compatible fixes, documentation corrections, and non-breaking notebook-template improvements. |
-| Minor | Backward-compatible public APIs, new notebook capabilities, new optional configuration, or additive metadata/rule formats. |
-| Major | Breaking changes to Python APIs, notebook contracts, configuration structures, metadata schemas, agreement or pipeline contracts, or DQ rule formats. |
+| Patch | Backward-compatible fixes and documentation corrections for public functions or metadata schemas. |
+| Minor | Backward-compatible public function additions or additive metadata schema changes. |
+| Major | Breaking changes to public Python functions or metadata schemas. |
 
 Pause for maintainer approval before selecting or writing the final version.
 
@@ -457,7 +310,7 @@ Run only the generators required for the release scope. Do not manually edit gen
 | --- | --- | --- | --- | --- |
 | Public call-flow JSON | `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py` | Python source, public API registry, release manifests | `docs/reference/_data/public-function-call-flows.json` | No. Fix source or generator. |
 | Individual function references | `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` | Source docstrings and reference metadata | `docs/api/reference/*.md`, `docs/reference/index.md` | No. Fix source docstrings or metadata. |
-| Release inventory | `PYTHONPATH=src python scripts/generate_release_inventory.py` | `pyproject.toml`, source registries, version manifest | `docs/releases/manifests/<version>.yml` | Edit human-owned lifecycle fields only. |
+| Release inventory | `PYTHONPATH=src python scripts/generate_release_inventory.py` | `pyproject.toml`, public function and metadata schema registries, version manifest | `docs/releases/manifests/<version>.yml` | Edit human-owned lifecycle fields only. |
 | Release contract pages | `PYTHONPATH=src python scripts/generate_release_contract_pages.py` | release manifest, changelog, source registries | `docs/releases/<version>/`, `docs/releases/index.md` | No. Fix manifest, changelog, source, or generator. |
 | Dashboard | `PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py` | call-flow JSON | `docs/assets/public-function-call-flows-dashboard.html` | No. Run only for intentional dashboard refreshes. |
 
@@ -501,7 +354,7 @@ uvx twine check dist/*
 If the AI cannot run a command because of credentials, missing dependencies, unavailable network, or Fabric access, it must explain why, provide the exact manual action, state the expected result, wait for confirmation, and continue from the next verifiable step.
 
 
-A release may validly contain zero fully Live notebook templates, zero Live metadata contracts, or both. Preview notebook templates may still be included as version-pinned release assets when the manifest marks them with `included_in_notebook_pack: true`; in that model, only explicitly marked Live notebook sections are supported and Preview sections carry no compatibility promise. If no templates are included, omit `notebook_pack_asset`, let the notebook-pack build step skip cleanly, and do not create an empty ZIP solely to preserve workflow shape.
+A release may validly contain zero Live metadata contracts. Notebook templates are living applications of the FabricOps package; do not copy, freeze, version, package, or stamp them during package release preparation. Their `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
 
 ## 13. Prepare and merge release PR
 
@@ -521,15 +374,18 @@ Ask for final approval before opening or finalising the PR when required.
 
 Stage A may run in Codex Cloud, Codex Desktop, or another environment with the required dependencies. It is a release-readiness check only. It must not create or push a tag when running in Codex Cloud.
 
+The preflight has only two blocking groups: public function checks and metadata schema checks. Public function checks may validate package version consistency, public exports, function signatures, function compatibility classification, function documentation, wheel/build outputs, and public-function release notes. Metadata schema checks may validate required metadata tables, columns, data types, nullability, schema compatibility, breaking-change classification, and metadata release notes.
+
 The preflight must:
 
-1. Validate package, manifest, changelog, and tag alignment.
-2. Run targeted tests.
+1. Validate package, manifest, changelog, and tag alignment for the formal release scope.
+2. Run targeted public function and metadata schema tests.
 3. Run full validation where supported.
 4. Build distributions.
-5. Validate and build the notebook pack whenever `notebook_pack_asset` is configured or one or more templates have `included_in_notebook_pack: true`; Preview templates may be included in the pack.
-6. Confirm no tracked files changed.
-7. Report whether the release is ready.
+5. Confirm no tracked files changed.
+6. Report whether the release is ready.
+
+Notebook templates, template snapshots, skills, DQ validation, sample generation, environment resource bundles, and notebook packs must not block package release preflight.
 
 Recommended checks include:
 
@@ -540,7 +396,6 @@ uv run pytest
 uv run mkdocs build --strict
 uv build
 uvx twine check dist/*
-uv run python scripts/build_release_notebook_pack.py "X.Y.Z" --output-dir dist
 git status --short
 ```
 
@@ -599,7 +454,6 @@ Stop immediately before pushing the tag. Ask for explicit approval and show the 
 - release-readiness result
 - test result
 - built artifact names
-- notebook-pack contents
 
 Push the tag only after explicit maintainer approval:
 
@@ -622,7 +476,6 @@ The tag workflow must:
 5. Build wheel and source distribution.
 6. Validate distributions.
 7. Smoke-test the installed wheel.
-8. Build the approved Live notebook pack.
 9. Generate checksums.
 10. Create the GitHub Release and attach its assets.
 
@@ -632,7 +485,6 @@ After the tag workflow completes, verify the GitHub Release contains:
 - source distribution
 - checksums
 - release notes
-- notebook pack when configured by the release manifest
 
 Verify frozen source links now resolve through `blob/vX.Y.Z/`. If frozen source links return 404 before the release tag is pushed, confirm the manifest uses the intended tag; this is expected because the tag does not exist yet. If the links still return 404 after the tag is pushed, verify that the tag exists remotely in GitHub and points to the merged release commit.
 
@@ -682,8 +534,6 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 - Package root and exports: [`src/fabricops_kit/__init__.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/__init__.py)
 - Public API registry: [`src/fabricops_kit/public_api.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/public_api.py)
 - Metadata schema registry: [`src/fabricops_kit/config/metadata_schemas.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/metadata_schemas.py)
-- DQ rule registry: [`src/fabricops_kit/pipeline/guardrails_shared.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/guardrails_shared.py)
-- Notebook template directory: [`templates/notebooks/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/)
 - Release manifests: [`docs/releases/manifests/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/docs/releases/manifests/)
 - Release workflow automation: [`.github/workflows/`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/.github/workflows/)
 - Release inventory entry point: [`scripts/generate_release_inventory.py`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/scripts/generate_release_inventory.py)

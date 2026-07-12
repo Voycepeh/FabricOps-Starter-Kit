@@ -2,7 +2,7 @@
 
 All notable changes to **FabricOps Starter Kit** are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use semantic versioning across the public FabricOps surface: Python APIs, notebook contracts, configuration structures, metadata schemas, agreement and pipeline contract structures, and data-quality rule formats.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use semantic versioning across the formal FabricOps release surface: public Python functions and metadata schemas.
 
 ## [Unreleased]
 
@@ -37,8 +37,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - Stable Fabric lakehouse and warehouse read/write helpers as the only Live v0.1.0 public API surface.
-- Versioned `00_env_config` and `99_explore` notebook templates are included in the release pack as Preview templates with explicitly marked Live Fabric I/O sections.
-- Preview dataframe profiling, metadata contracts, widgets, governance workflows, and DQ capabilities remain available for evaluation but outside the supported v0.1.0 contract.
+- Notebook templates, samples, skills, and DQ assets remain manually maintained outside the formal package release contract.
 - Generated lifecycle-aware release contracts and reference material.
 - Formalized the GitHub-only release workflow for tagged FabricOps releases.
 - Added CI expectations for locked dependency installation, linting, tests, strict documentation builds, distribution builds, distribution validation, and wheel import smoke tests.
@@ -70,12 +69,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Known limitations
 
-- Notebook templates remain Preview overall; only explicitly marked Live sections in `00_env_config` and `99_explore` are part of the supported v0.1.0 workflow.
+- Notebook templates are manually maintained living applications and are not frozen or packaged by v0.1.0.
 - Metadata contracts remain Preview for v0.1.0.
 - Dataframe profiling remains Preview for v0.1.0.
 - Pipeline execution remains Preview for v0.1.0.
 - Governance review remains Preview for v0.1.0.
-- DQ rule authoring and enforcement remain Preview for v0.1.0.
+- DQ rule authoring and enforcement are not part of the formal v0.1.0 release contract.
 - Pipeline lineage and run-summary evidence remain Preview for v0.1.0.
 - The notebook registry remains Preview for v0.1.0.
 - Interactive widget APIs remain Preview for v0.1.0.
