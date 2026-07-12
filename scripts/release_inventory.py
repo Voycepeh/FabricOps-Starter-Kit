@@ -751,7 +751,7 @@ def render_release_pages() -> list[Path]:
 
 
 def build_notebook_pack(version: str | None = None, output_dir: Path | None = None) -> Path | None:
-    """Build a release notebook ZIP from Live template manifest entries, if any."""
+    """Build a release notebook ZIP from explicitly included template entries, if any."""
     release_version = version or read_package_version()
     manifest = _load_manifest(manifest_path(release_version))
     if manifest is None:

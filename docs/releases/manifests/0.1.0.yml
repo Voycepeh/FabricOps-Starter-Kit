@@ -13,139 +13,191 @@ functions:
     source_path: src/fabricops_kit/pipeline/display_guardrail_results.py
     documentation_path: docs/api/reference/display_guardrail_results.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: prepare_pipeline_table_configs
     qualified_name: fabricops_kit.pipeline.prepare_pipeline_table_configs
     source_path: src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py
     documentation_path: docs/api/reference/prepare_pipeline_table_configs.md
     status: preview
+    rationale: pipeline execution contract still being stabilised
+    introduced_in: 0.1.0
   - name: profile_dataframe
     qualified_name: fabricops_kit.pipeline.profile_dataframe
     source_path: src/fabricops_kit/pipeline/profile_dataframe.py
     documentation_path: docs/api/reference/profile_dataframe.md
     status: preview
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_lakehouse_csv
     qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv
     source_path: src/fabricops_kit/io/read_lakehouse_csv.py
     documentation_path: docs/api/reference/read_lakehouse_csv.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_lakehouse_excel
     qualified_name: fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel
     source_path: src/fabricops_kit/io/read_lakehouse_excel.py
     documentation_path: docs/api/reference/read_lakehouse_excel.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_lakehouse_parquet
     qualified_name: fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet
     source_path: src/fabricops_kit/io/read_lakehouse_parquet.py
     documentation_path: docs/api/reference/read_lakehouse_parquet.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_lakehouse_table
     qualified_name: fabricops_kit.io.read_lakehouse_table.read_lakehouse_table
     source_path: src/fabricops_kit/io/read_lakehouse_table.py
     documentation_path: docs/api/reference/read_lakehouse_table.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_warehouse_query
     qualified_name: fabricops_kit.io.read_warehouse_query.read_warehouse_query
     source_path: src/fabricops_kit/io/read_warehouse_query.py
     documentation_path: docs/api/reference/read_warehouse_query.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: read_warehouse_table
     qualified_name: fabricops_kit.io.read_warehouse_table.read_warehouse_table
     source_path: src/fabricops_kit/io/read_warehouse_table.py
     documentation_path: docs/api/reference/read_warehouse_table.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: run_table_guardrails
     qualified_name: fabricops_kit.pipeline.run_table_guardrails
     source_path: src/fabricops_kit/pipeline/run_table_guardrails.py
     documentation_path: docs/api/reference/run_table_guardrails.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: setup_metadata_tables
     qualified_name: fabricops_kit.config.setup_metadata_tables.setup_metadata_tables
     source_path: src/fabricops_kit/config/setup_metadata_tables.py
     documentation_path: docs/api/reference/setup_metadata_tables.md
     status: preview
+    rationale: notebook setup or registry experience not yet part of the supported v0.1.0 contract
+    introduced_in: 0.1.0
   - name: setup_notebook
     qualified_name: fabricops_kit.config.setup_notebook.setup_notebook
     source_path: src/fabricops_kit/config/setup_notebook.py
     documentation_path: docs/api/reference/setup_notebook.md
     status: preview
+    rationale: notebook setup or registry experience not yet part of the supported v0.1.0 contract
+    introduced_in: 0.1.0
   - name: widget_author_dq_rules
     qualified_name: fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules
     source_path: src/fabricops_kit/widgets/widget_author_dq_rules.py
     documentation_path: docs/api/reference/widget_author_dq_rules.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: widget_author_schema_freshness_profile_rules
     qualified_name: fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules
     source_path: src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py
     documentation_path: docs/api/reference/widget_author_schema_freshness_profile_rules.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: widget_browse_metadata_catalogue
     qualified_name: fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue
     source_path: src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py
     documentation_path: docs/api/reference/widget_browse_metadata_catalogue.md
     status: preview
+    rationale: governance workflow still being validated
+    introduced_in: 0.1.0
   - name: widget_enrich_table_metadata
     qualified_name: fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata
     source_path: src/fabricops_kit/widgets/widget_enrich_table_metadata.py
     documentation_path: docs/api/reference/widget_enrich_table_metadata.md
     status: preview
+    rationale: governance workflow still being validated
+    introduced_in: 0.1.0
   - name: widget_pipeline_bootstrap
     qualified_name: fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap
     source_path: src/fabricops_kit/widgets/widget_pipeline_bootstrap.py
     documentation_path: docs/api/reference/widget_pipeline_bootstrap.md
     status: preview
+    rationale: pipeline execution contract still being stabilised
+    introduced_in: 0.1.0
   - name: widget_render_agreement_evidence
     qualified_name: fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence
     source_path: src/fabricops_kit/widgets/widget_render_agreement_evidence.py
     documentation_path: docs/api/reference/widget_render_agreement_evidence.md
     status: preview
+    rationale: governance workflow still being validated
+    introduced_in: 0.1.0
   - name: widget_render_data_agreement
     qualified_name: fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement
     source_path: src/fabricops_kit/widgets/widget_render_data_agreement.py
     documentation_path: docs/api/reference/widget_render_data_agreement.md
     status: preview
+    rationale: governance workflow still being validated
+    introduced_in: 0.1.0
   - name: widget_render_data_steward
     qualified_name: fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward
     source_path: src/fabricops_kit/widgets/widget_render_data_steward.py
     documentation_path: docs/api/reference/widget_render_data_steward.md
     status: preview
+    rationale: governance workflow still being validated
+    introduced_in: 0.1.0
   - name: widget_review_guardrail_governance
     qualified_name: fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance
     source_path: src/fabricops_kit/widgets/widget_review_guardrail_governance.py
     documentation_path: docs/api/reference/widget_review_guardrail_governance.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: widget_select_guardrail_target
     qualified_name: fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target
     source_path: src/fabricops_kit/widgets/widget_select_guardrail_target.py
     documentation_path: docs/api/reference/widget_select_guardrail_target.md
     status: preview
+    rationale: DQ authoring and enforcement workflow remains Preview
+    introduced_in: 0.1.0
   - name: write_lakehouse_table
     qualified_name: fabricops_kit.io.write_lakehouse_table.write_lakehouse_table
     source_path: src/fabricops_kit/io/write_lakehouse_table.py
     documentation_path: docs/api/reference/write_lakehouse_table.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
   - name: write_pipeline_lineage
     qualified_name: fabricops_kit.pipeline.write_pipeline_lineage
     source_path: src/fabricops_kit/pipeline/write_pipeline_lineage.py
     documentation_path: docs/api/reference/write_pipeline_lineage.md
     status: preview
+    rationale: pipeline execution contract still being stabilised
+    introduced_in: 0.1.0
   - name: write_pipeline_run_summary
     qualified_name: fabricops_kit.pipeline.write_pipeline_run_summary
     source_path: src/fabricops_kit/pipeline/write_pipeline_run_summary.py
     documentation_path: docs/api/reference/write_pipeline_run_summary.md
     status: preview
+    rationale: pipeline execution contract still being stabilised
+    introduced_in: 0.1.0
   - name: write_warehouse_table
     qualified_name: fabricops_kit.io.write_warehouse_table.write_warehouse_table
     source_path: src/fabricops_kit/io/write_warehouse_table.py
     documentation_path: docs/api/reference/write_warehouse_table.md
     status: live
     live_since: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+    introduced_in: 0.1.0
 metadata_tables:
   - name: METADATA_DATA_ACCESS
     source_path: src/fabricops_kit/config/metadata_schemas.py
@@ -153,66 +205,88 @@ metadata_tables:
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 16b89b73a535097a12672f7f2b35206c0ab0eb17b42c522e3b66d4c5c9b6e1a7
+    rationale: access governance model still being stabilised
+    introduced_in: 0.1.0
   - name: METADATA_DATA_AGREEMENT
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_agreement.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 2603c56ecfa7e797050ad0b2cdfc880821dfefb3136b0737c9aa7aa2e9f6017d
+    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    introduced_in: 0.1.0
   - name: METADATA_DATA_AGREEMENT_EVIDENCE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_agreement_evidence.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: d5baf9001c1b647b0b3e8d4a6ba517311adaf7cde880c0772b30be4ec1818155
+    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    introduced_in: 0.1.0
   - name: METADATA_DATA_CATALOGUE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_catalogue.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 4b53b76aad4333d07dbfbb21accedeb9d657eac37878f3433877a6f18637f059
+    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    introduced_in: 0.1.0
   - name: METADATA_DATA_LINEAGE_TABLE
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_lineage_table.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 58e4884d8315f6dcc8a291b2a291d6c42e00d8dfd64034e892f41d8933064661
+    rationale: lineage and pipeline execution evidence still Preview
+    introduced_in: 0.1.0
   - name: METADATA_DATA_STEWARD
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_data_steward.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 664c637c222e7abf02b70a6c1da5177b49f122a5105956f853842df77b1bb913
+    rationale: Core agreement and catalogue metadata contract required by the supported v0.1.0 setup and review workflow.
+    introduced_in: 0.1.0
   - name: METADATA_ENRICHMENT_RULES
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_enrichment_rules.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: f0f4885aa254f875e1cf741e41287860fff0ee617a3de92d41d0c77e073c936d
+    rationale: enrichment authoring still Preview
+    introduced_in: 0.1.0
   - name: METADATA_GUARDRAIL_RESULTS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_results.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: debd39704ce282883f41681da385f7aca45bfa7f90166340f602e3645266b685
+    rationale: DQ rule and result contract still Preview
+    introduced_in: 0.1.0
   - name: METADATA_GUARDRAIL_RULES
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_guardrail_rules.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: cce4dc9ca7b53abba619b39efe2ef5c229143453c50155df19665dc4be5c3d47
+    rationale: DQ rule and result contract still Preview
+    introduced_in: 0.1.0
   - name: METADATA_NOTEBOOK_REGISTRY
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_notebook_registry.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 8c139a75b788d8309d239bfe7606d34fb3c6a1b03db2988b55bc66baee11a5f9
+    rationale: notebook registry deferred beyond v0.1.0
+    introduced_in: 0.1.0
   - name: METADATA_PIPELINE_RUNS
     source_path: src/fabricops_kit/config/metadata_schemas.py
     documentation_path: docs/reference/metadata/metadata_pipeline_runs.md
     status: preview
     schema_since: 0.1.0
     schema_fingerprint: 236362572e50f3aa36ec9ef16e44a5a97825bd314db9f1a36bbe27ead8c3b145
+    rationale: lineage and pipeline execution evidence still Preview
+    introduced_in: 0.1.0
 templates:
   - name: 00_env_config
     source_path: templates/notebooks/00_env_config.ipynb
@@ -222,18 +296,26 @@ templates:
     contains_live_sections: true
     contains_preview_sections: true
     tested_with: 0.1.0
+    rationale: supported workspace and Fabric target configuration entry point
+    introduced_in: 0.1.0
   - name: 01_agreement
     source_path: templates/notebooks/01_agreement.ipynb
     documentation_path: docs/guided-demo/create-agreement.md
     status: preview
+    rationale: supported agreement setup workflow
+    introduced_in: 0.1.0
   - name: 02_pipeline
     source_path: templates/notebooks/02_pipeline.ipynb
     documentation_path: docs/guided-demo/run-pipeline.md
     status: preview
+    rationale: pipeline and governance contracts still require final end-to-end release validation
+    introduced_in: 0.1.0
   - name: 03_governance
     source_path: templates/notebooks/03_governance.ipynb
     documentation_path: docs/guided-demo/review-guardrails.md
     status: preview
+    rationale: pipeline and governance contracts still require final end-to-end release validation
+    introduced_in: 0.1.0
   - name: 99_explore
     source_path: templates/notebooks/99_explore.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/index.md
@@ -242,104 +324,156 @@ templates:
     contains_live_sections: true
     contains_preview_sections: true
     tested_with: 0.1.0
+    rationale: optional supported exploration workflow that does not define the production pipeline contract
+    introduced_in: 0.1.0
   - name: example_dq_rule_smoke_test
     source_path: templates/notebooks/example_dq_rule_smoke_test.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/index.md
     status: preview
+    rationale: example notebooks are supporting demonstrations, not supported release contracts
+    introduced_in: 0.1.0
   - name: example_pipeline_demo
     source_path: templates/notebooks/example_pipeline_demo.ipynb
     documentation_path: docs/notebook-templates-implementation-guide/index.md
     status: preview
+    rationale: example notebooks are supporting demonstrations, not supported release contracts
+    introduced_in: 0.1.0
 dq_rules:
   - name: accepted_values
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/accepted-values.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: between
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/between.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: column_a_gt_column_b
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/column-a-gt-column-b.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: column_a_gte_column_b
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/column-a-gte-column-b.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: column_pair_equal
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/column-pair-equal.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: date_between
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/date-between.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: date_not_future
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/date-not-future.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: expression_true
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/expression-true.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: freshness
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/freshness.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: greater_than
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/greater-than.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: greater_than_or_equal
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/greater-than-or-equal.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: less_than
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/less-than.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: less_than_or_equal
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/less-than-or-equal.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: max_age_days
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/max-age-days.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: non_empty_string
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/non-empty-string.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: not_in_values
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/not-in-values.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: not_null
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/not-null.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: null_rate_below
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/null-rate-below.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: regex_match
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/regex-match.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: required_when
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/required-when.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: unique
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/unique.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: unique_combination
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/unique-combination.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0
   - name: value_when
     source_path: src/fabricops_kit/pipeline/guardrails_shared.py
     documentation_path: docs/reference/dq-rules/value-when.md
     status: preview
+    rationale: The DQ rule vocabulary is available for evaluation, but rule authoring, execution, persistence, and governance are not yet part of the supported v0.1.0 contract.
+    introduced_in: 0.1.0

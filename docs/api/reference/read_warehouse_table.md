@@ -140,5 +140,5 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 12 Jul 2026, 12:52 PM SGT
-    Call-flow data generated: 12 Jul 2026, 12:50 PM SGT
+    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
+    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT

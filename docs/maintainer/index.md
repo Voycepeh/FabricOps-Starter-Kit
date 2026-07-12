@@ -380,7 +380,7 @@ The preflight must:
 2. Run targeted tests.
 3. Run full validation where supported.
 4. Build distributions.
-5. Validate the notebook pack when the manifest contains Live templates; releases with zero Live templates may skip pack creation.
+5. Validate and build the notebook pack whenever `notebook_pack_asset` is configured or one or more templates have `included_in_notebook_pack: true`; Preview templates may be included in the pack.
 6. Confirm no tracked files changed.
 7. Report whether the release is ready.
 

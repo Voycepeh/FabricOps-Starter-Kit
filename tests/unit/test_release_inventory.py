@@ -85,6 +85,89 @@ def test_release_inventory_regeneration_preserves_status_and_adds_new_preview():
     assert manifest["functions"][1]["status"] == "preview"
 
 
+def test_release_inventory_preserves_human_owned_fields_for_all_asset_groups():
+    """Verify regeneration preserves lifecycle evidence across manifest groups."""
+    existing = {
+        "release_version": "1.0.0",
+        "functions": [
+            {
+                "name": "function_a",
+                "source_path": "old.py",
+                "status": "preview",
+                "introduced_in": "0.9.0",
+                "rationale": "function rationale",
+                "notes": "function note",
+            }
+        ],
+        "metadata_tables": [
+            {
+                "name": "METADATA_A",
+                "source_path": "old.py",
+                "status": "preview",
+                "schema_since": "0.8.0",
+                "schema_fingerprint": "same",
+                "introduced_in": "0.8.0",
+                "rationale": "metadata rationale",
+                "managed_by": "schema owner",
+            }
+        ],
+        "templates": [
+            {
+                "name": "00_env_config",
+                "source_path": "old.ipynb",
+                "status": "preview",
+                "introduced_in": "0.7.0",
+                "rationale": "template rationale",
+                "included_in_notebook_pack": "true",
+                "contains_live_sections": "true",
+                "contains_preview_sections": "true",
+                "tested_with": "1.0.0",
+            }
+        ],
+        "dq_rules": [
+            {
+                "name": "not_null",
+                "source_path": "old.py",
+                "status": "preview",
+                "introduced_in": "0.6.0",
+                "rationale": "dq rationale",
+                "description": "dq description",
+                "purpose": "dq purpose",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [ri.ReleaseAsset("function_a", "new.py")],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_A", "new.py", generated_fields={"schema_fingerprint": "same"})],
+        "templates": [ri.ReleaseAsset("00_env_config", "new.ipynb")],
+        "dq_rules": [ri.ReleaseAsset("not_null", "new.py")],
+    }
+
+    manifest = ri.synchronize_manifest(existing, discovered, "1.0.0")
+
+    assert manifest["functions"][0]["source_path"] == "new.py"
+    assert manifest["functions"][0]["introduced_in"] == "0.9.0"
+    assert manifest["functions"][0]["rationale"] == "function rationale"
+    assert manifest["functions"][0]["notes"] == "function note"
+    metadata = manifest["metadata_tables"][0]
+    assert metadata["schema_since"] == "0.8.0"
+    assert metadata["introduced_in"] == "0.8.0"
+    assert metadata["rationale"] == "metadata rationale"
+    assert metadata["managed_by"] == "schema owner"
+    template = manifest["templates"][0]
+    assert template["introduced_in"] == "0.7.0"
+    assert template["rationale"] == "template rationale"
+    assert template["included_in_notebook_pack"] == "true"
+    assert template["contains_live_sections"] == "true"
+    assert template["contains_preview_sections"] == "true"
+    assert template["tested_with"] == "1.0.0"
+    dq_rule = manifest["dq_rules"][0]
+    assert dq_rule["introduced_in"] == "0.6.0"
+    assert dq_rule["rationale"] == "dq rationale"
+    assert dq_rule["description"] == "dq description"
+    assert dq_rule["purpose"] == "dq purpose"
+
+
 def test_release_inventory_removed_asset_requires_discontinued():
     """Verify removed tracked assets fail until maintainers discontinue them."""
     existing = {"release_version": "1.0.0", "functions": [{"name": "gone", "source_path": "gone.py", "status": "live"}], "metadata_tables": [], "templates": [], "dq_rules": []}
