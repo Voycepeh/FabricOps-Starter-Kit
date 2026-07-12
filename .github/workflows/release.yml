@@ -92,7 +92,7 @@ jobs:
       - name: Generate SHA256 checksums
         run: |
           cd dist
-          sha256sum *.whl *.tar.gz $(find . -maxdepth 1 -name "*.zip" -printf "%f ") > SHA256SUMS.txt
+          sha256sum *.whl *.tar.gz > SHA256SUMS.txt
 
       - name: Extract changelog release notes
         shell: bash
@@ -124,5 +124,4 @@ jobs:
           files: |
             dist/*.whl
             dist/*.tar.gz
-            dist/*.zip
             dist/SHA256SUMS.txt
