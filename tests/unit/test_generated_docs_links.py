@@ -6,6 +6,7 @@ import ast
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -127,7 +128,9 @@ def test_generated_github_links_use_main_not_local_sha() -> None:
 def test_generated_reference_includes_every_exported_public_callable_page() -> None:
     """Verify PR 555-style template filtering does not remove public pages."""
     env = {**os.environ, "PYTHONPATH": "src"}
-    subprocess.run(["python", "scripts/generate_individual_function_reference_pages.py"], cwd=ROOT, env=env, check=True)
+    subprocess.run(
+        [sys.executable, "scripts/generate_individual_function_reference_pages.py"], cwd=ROOT, env=env, check=True
+    )
 
     import json
 

@@ -172,7 +172,7 @@ def test_guardrail_result_writer_has_single_shared_implementation():
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
         writer_definitions.extend(
-            f"{path.relative_to(SRC)}:{node.name}"
+            f"{path.relative_to(SRC).as_posix()}:{node.name}"
             for node in ast.walk(tree)
             if isinstance(node, ast.FunctionDef) and node.name == "_write_guardrail_result_row"
         )
