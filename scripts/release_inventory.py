@@ -24,7 +24,7 @@ VALID_STATUSES = {"live", "preview", "discontinued"}
 VALID_RELEASE_STATUSES = {"preparing", "live"}
 GROUPS = ("functions", "metadata_tables", "templates", "dq_rules")
 GENERATED_NOTICE_TEMPLATE = "<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
-MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by"}
+MAINTAINER_FIELDS = {"status", "live_since", "schema_since", "updated_in", "notes", "rationale", "introduced_in", "discontinued_in", "description", "purpose", "managed_by", "included_in_notebook_pack", "contains_live_sections", "contains_preview_sections", "tested_with"}
 TOP_LEVEL_FIELDS = ("release_version", "release_status", "release_date", "source_ref", "source_ref_note", "github_owner", "github_repo", "release_motivation", "notebook_pack_asset")
 TAG_SOURCE_REF_RE = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 TEMPLATE_DOCS = {
@@ -85,11 +85,11 @@ def _page_name(name: str) -> str:
 
 
 def discover_functions() -> list[ReleaseAsset]:
-    """Discover release-facing functions from SUPPORTED_PUBLIC_API."""
-    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+    """Discover release-facing functions from the Live and Preview API registry."""
+    from fabricops_kit.public_api import RELEASE_PUBLIC_API
 
     assets = []
-    for qualified_name in SUPPORTED_PUBLIC_API:
+    for qualified_name in RELEASE_PUBLIC_API:
         module_name, function_name = qualified_name.rsplit(".", 1)
         module = importlib.import_module(module_name)
         function = getattr(module, function_name)
@@ -342,6 +342,17 @@ def release_asset_change_status(item: dict[str, Any], version: str) -> str:
     return ""
 
 
+
+def release_notebook_pack_items(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return notebook templates explicitly included in the release pack."""
+    version = str(manifest.get("release_version") or "")
+    included = [
+        item
+        for item in sort_release_items(manifest.get("templates", []))
+        if str(item.get("included_in_notebook_pack", "")).lower() == "true" or item.get("status") == "live"
+    ]
+    return sort_release_inventory_items(included, version)
+
 def release_asset_status_badge(status: str) -> str:
     """Return a compact badge for a release-local asset change status."""
     if not status:
@@ -446,6 +457,27 @@ def _release_inventory_section(manifest: dict[str, Any], version: str, group: st
     return lines
 
 
+
+def _included_notebook_pack_section(manifest: dict[str, Any], version: str) -> list[str]:
+    """Render version-pinned notebook templates included in the release asset."""
+    items = release_notebook_pack_items(manifest)
+    if not items:
+        return []
+    lines = [
+        '<details class="fabricops-release-inventory" markdown>',
+        f"<summary>{len(items)} included Preview notebook templates</summary>",
+        "",
+        "| Notebook template | Template lifecycle | Contains Live sections | Contains Preview sections |",
+        "| --- | --- | --- | --- |",
+    ]
+    for item in items:
+        link = _template_preview_url(manifest, version, str(item["source_path"]))
+        live_sections = "Yes" if str(item.get("contains_live_sections", "")).lower() == "true" else "No"
+        preview_sections = "Yes" if str(item.get("contains_preview_sections", "")).lower() == "true" else "No"
+        lines.append(f"| [`{item['name']}`]({link}) | {release_status_chip(str(item.get('status', 'preview')))} | {live_sections} | {preview_sections} |")
+    lines.extend(["", "</details>"])
+    return lines
+
 def _release_inventory_sections(manifest: dict[str, Any], version: str, live: dict[str, list[dict[str, Any]]]) -> list[str]:
     """Render all non-empty Live inventory sections for the release overview."""
     sections: list[str] = []
@@ -455,6 +487,11 @@ def _release_inventory_sections(manifest: dict[str, Any], version: str, live: di
             if sections:
                 sections.append("")
             sections.extend(section)
+    included_templates = _included_notebook_pack_section(manifest, version)
+    if included_templates:
+        if sections:
+            sections.append("")
+        sections.extend(included_templates)
     return sections
 
 
@@ -713,8 +750,8 @@ def render_release_pages() -> list[Path]:
 
 
 
-def build_notebook_pack(version: str | None = None, output_dir: Path | None = None) -> Path:
-    """Build a release notebook ZIP from Live template manifest entries."""
+def build_notebook_pack(version: str | None = None, output_dir: Path | None = None) -> Path | None:
+    """Build a release notebook ZIP from Live template manifest entries, if any."""
     release_version = version or read_package_version()
     manifest = _load_manifest(manifest_path(release_version))
     if manifest is None:
@@ -724,11 +761,11 @@ def build_notebook_pack(version: str | None = None, output_dir: Path | None = No
     output_root.mkdir(parents=True, exist_ok=True)
     asset_name = manifest.get("notebook_pack_asset") or f"fabricops-kit-{release_version}-notebooks.zip"
     output_path = output_root / str(asset_name)
-    live_templates = live_release_items(manifest, "templates")
-    if not live_templates:
-        raise ValueError(f"Release manifest {release_version} has no Live notebook templates to package.")
+    notebook_templates = release_notebook_pack_items(manifest)
+    if not notebook_templates:
+        return None
     with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        for item in live_templates:
+        for item in notebook_templates:
             source_path = ROOT / str(item["source_path"])
             if not source_path.exists():
                 raise ValueError(f"Live notebook template not found: {item['source_path']}")

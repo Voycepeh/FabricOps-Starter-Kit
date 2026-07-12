@@ -16,7 +16,10 @@ def main() -> int:
     parser.add_argument("--output-dir", default="dist")
     args = parser.parse_args()
     path = build_notebook_pack(args.version, Path(args.output_dir))
-    print(f"Release notebook pack written: {path.as_posix()}")
+    if path is None:
+        print(f"Release {args.version} has no Live notebook templates; skipping notebook pack.")
+    else:
+        print(f"Release notebook pack written: {path.as_posix()}")
     return 0
 
 

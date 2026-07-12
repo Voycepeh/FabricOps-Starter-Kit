@@ -1,12 +1,11 @@
 # `profile_dataframe`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.1.0</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
 <span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
-> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
+> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
 ## Call-flow summary
 
@@ -14,7 +13,7 @@
 - Shared helpers: 7
 - Private helpers: 5
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Live contract call flow</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Preview call flow</a>
 
 Profile a source or target DataFrame for schema, quality, and catalogue evidence.
 
@@ -119,31 +118,16 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
-| Live since | 0.1.0 |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
+| Live since | — |
 | Discontinued in | — |
-| Contract classification | Live public function |
-| Contract risk | Live |
-| Live-critical dependencies | 10 |
-
-### Live-critical dependencies
-
-<ul class="reference-compact-list">
-<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.build_audit_timestamp_expr</code></li>
-<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
-<li><code>fabricops_kit.pipeline.shared._build_categorical_distribution</code></li>
-<li><code>fabricops_kit.pipeline.shared._build_numeric_distribution</code></li>
-<li><code>fabricops_kit.pipeline.shared._numeric_bin_edges</code></li>
-<li><code>fabricops_kit.pipeline.shared.build_distribution_summaries</code></li>
-<li><code>fabricops_kit.pipeline.shared.is_min_max_supported_type</code></li>
-<li><code>fabricops_kit.pipeline.shared.profile_dataframe_core</code></li>
-<li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
-</ul>
+| Contract classification | Preview public function |
+| Contract risk | Preview |
+| Live-critical dependencies | 0 |
 
 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 12 Jul 2026, 12:52 PM SGT
+    Call-flow data generated: 12 Jul 2026, 12:50 PM SGT

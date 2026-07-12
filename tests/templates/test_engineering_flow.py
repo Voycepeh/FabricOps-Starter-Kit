@@ -28,20 +28,21 @@ def test_explore_template_is_read_only_context_aware_sequence():
     code = _code("99_explore.ipynb")
 
     expected_sections = [
-        "## 01 Configure environment",
-        "## 02 Import functions",
-        "## 03 Read from user-defined source",
-        "### Optional write/read smoke tests",
-        "## 04 Optional standardized data profiling of your defined source",
-        "## 05 Browse metadata catalogue",
-        "## 06 Self exploration",
+        "## Preview: Configure environment",
+        "## Live: Import Fabric I/O functions",
+        "## Preview: Import optional profiling and metadata widgets",
+        "## Live: Read from user-defined source",
+        "## Live: Optional write/read smoke tests",
+        "## Preview: Optional standardized data profiling of your defined source",
+        "## Preview: Browse metadata catalogue",
+        "## Live: Self exploration",
     ]
     positions = [markdown.index(section) for section in expected_sections]
     assert positions == sorted(positions)
 
-    assert "01_agreement` → `02_pipeline` → `03_governance" in markdown
-    assert "read-only" in markdown
-    assert "does **not** approve" in markdown
+    assert "Template lifecycle | Preview" in markdown
+    assert "Contains Live sections | Yes" in markdown
+    assert "Contains Preview sections | Yes" in markdown
     assert "%run 00_env_config" in code
     assert "get_latest_metadata_catalogue(" not in code
     assert "widget_pipeline_bootstrap" not in code

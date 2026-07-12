@@ -22,7 +22,7 @@ Codex Cloud may be used for:
 3. Release PR preparation.
 4. Generator execution.
 5. Tests, linting and documentation validation.
-6. Package and notebook-pack builds.
+6. Package and optional notebook-pack builds.
 7. Final release preflight.
 8. Reporting whether the repository is ready to tag.
 
@@ -159,7 +159,7 @@ Default release workflow:
 5. Set `source_ref` to the intended annotated release tag, such as `v0.1.0`.
 6. Finalise the changelog.
 7. Generate and commit frozen release documentation using the tag reference.
-8. Validate package version, manifest version, source tag, generated artifacts, tests, documentation, wheel, and notebook pack.
+8. Validate package version, manifest version, source tag, generated artifacts, tests, documentation, wheel, and any configured notebook pack.
 9. Merge the release PR into `main`. The release PR may be squash-merged or rebased because frozen source documentation depends on the release tag, not an intermediate PR commit.
 10. Stage A: run release preflight in Codex Cloud, Codex Desktop, or another supported environment and report whether the release is ready to tag. Codex Cloud must stop here and provide the exact local tag command.
 11. Stage B: in Codex Desktop or another authenticated local environment, refresh `main`, create the local annotated tag, pause for explicit maintainer approval, and push only the approved tag.
@@ -354,6 +354,9 @@ uvx twine check dist/*
 
 If the AI cannot run a command because of credentials, missing dependencies, unavailable network, or Fabric access, it must explain why, provide the exact manual action, state the expected result, wait for confirmation, and continue from the next verifiable step.
 
+
+A release may validly contain zero fully Live notebook templates, zero Live metadata contracts, or both. Preview notebook templates may still be included as version-pinned release assets when the manifest marks them with `included_in_notebook_pack: true`; in that model, only explicitly marked Live notebook sections are supported and Preview sections carry no compatibility promise. If no templates are included, omit `notebook_pack_asset`, let the notebook-pack build step skip cleanly, and do not create an empty ZIP solely to preserve workflow shape.
+
 ## 13. Prepare and merge release PR
 
 The release PR targets `main` and should contain only release-preparation changes. Before finalising the PR, show the maintainer:
@@ -378,7 +381,7 @@ The preflight must:
 2. Run targeted tests.
 3. Run full validation where supported.
 4. Build distributions.
-5. Validate the notebook pack.
+5. Validate the notebook pack when the manifest contains Live templates; releases with zero Live templates may skip pack creation.
 6. Confirm no tracked files changed.
 7. Report whether the release is ready.
 
