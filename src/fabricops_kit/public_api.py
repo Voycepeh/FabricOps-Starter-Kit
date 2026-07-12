@@ -1,12 +1,8 @@
-"""Supported public API contract for release-facing notebook functions."""
+"""Release-facing public API lifecycle registry for notebook functions."""
 
+# Live public functions carry the supported compatibility guarantee for the
+# current release line. Importability alone does not imply Live support.
 SUPPORTED_PUBLIC_API = (
-    "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-    "fabricops_kit.config.setup_notebook.setup_notebook",
-    "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
-    "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
-    "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
-    "fabricops_kit.pipeline.profile_dataframe",
     "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
     "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
     "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
@@ -15,6 +11,17 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.io.read_warehouse_table.read_warehouse_table",
     "fabricops_kit.io.write_lakehouse_table.write_lakehouse_table",
     "fabricops_kit.io.write_warehouse_table.write_warehouse_table",
+)
+
+# Preview public functions remain importable for evaluation, but are not part of
+# the supported compatibility surface until promoted in a future release.
+PREVIEW_PUBLIC_API = (
+    "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
+    "fabricops_kit.config.setup_notebook.setup_notebook",
+    "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
+    "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+    "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+    "fabricops_kit.pipeline.profile_dataframe",
     "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
@@ -28,3 +35,5 @@ SUPPORTED_PUBLIC_API = (
     "fabricops_kit.pipeline.write_pipeline_lineage",
     "fabricops_kit.pipeline.write_pipeline_run_summary",
 )
+
+RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API

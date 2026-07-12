@@ -6,7 +6,6 @@ This index lists Live public functions frozen for FabricOps Starter Kit `0.1.0`.
 
 | Function | Lifecycle | Summary |
 | --- | --- | --- |
-| [`profile_dataframe`](profile_dataframe.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
 | [`read_lakehouse_csv`](read_lakehouse_csv.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read a CSV file from a configured Fabric-resolved path through Spark. |
 | [`read_lakehouse_excel`](read_lakehouse_excel.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read an Excel workbook from a configured Fabric-resolved path. |
 | [`read_lakehouse_parquet`](read_lakehouse_parquet.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read a Parquet file from a configured Fabric-resolved path through Spark. |

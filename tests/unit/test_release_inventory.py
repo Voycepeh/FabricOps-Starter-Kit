@@ -19,10 +19,10 @@ def test_release_inventory_reads_version_from_pyproject():
 
 def test_release_inventory_discovers_supported_public_api():
     """Verify all supported public API functions are discovered."""
-    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
+    from fabricops_kit.public_api import RELEASE_PUBLIC_API
 
     assets = ri.discover_functions()
-    assert {asset.qualified_name for asset in assets} == set(SUPPORTED_PUBLIC_API)
+    assert {asset.qualified_name for asset in assets} == set(RELEASE_PUBLIC_API)
     assert all(asset.source_path.startswith("src/fabricops_kit/") for asset in assets)
 
 
@@ -42,6 +42,20 @@ def test_release_inventory_discovers_templates_from_files():
     assets = ri.discover_templates()
     assert {asset.source_path for asset in assets} == {path.as_posix() for path in sorted(Path("templates/notebooks").glob("*.ipynb"))}
     assert next(asset for asset in assets if asset.name == "00_env_config").documentation_path == "docs/guided-demo/run-environment-setup.md"
+
+
+def test_included_release_templates_declare_section_maturity():
+    """Verify included v0.1.0 notebooks declare template and section maturity."""
+    import json
+
+    for notebook_name in ["00_env_config", "99_explore"]:
+        notebook = json.loads((Path("templates/notebooks") / f"{notebook_name}.ipynb").read_text(encoding="utf-8"))
+        text = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "markdown")
+        assert "Template lifecycle | Preview" in text
+        assert "Contains Live sections | Yes" in text
+        assert "Contains Preview sections | Yes" in text
+        assert "## Live:" in text
+        assert "## Preview:" in text
 
 
 def test_release_inventory_discovers_dq_rules_from_registry():
@@ -69,6 +83,89 @@ def test_release_inventory_regeneration_preserves_status_and_adds_new_preview():
     assert manifest["functions"][0]["status"] == "live"
     assert manifest["functions"][0]["notes"] == "keep"
     assert manifest["functions"][1]["status"] == "preview"
+
+
+def test_release_inventory_preserves_human_owned_fields_for_all_asset_groups():
+    """Verify regeneration preserves lifecycle evidence across manifest groups."""
+    existing = {
+        "release_version": "1.0.0",
+        "functions": [
+            {
+                "name": "function_a",
+                "source_path": "old.py",
+                "status": "preview",
+                "introduced_in": "0.9.0",
+                "rationale": "function rationale",
+                "notes": "function note",
+            }
+        ],
+        "metadata_tables": [
+            {
+                "name": "METADATA_A",
+                "source_path": "old.py",
+                "status": "preview",
+                "schema_since": "0.8.0",
+                "schema_fingerprint": "same",
+                "introduced_in": "0.8.0",
+                "rationale": "metadata rationale",
+                "managed_by": "schema owner",
+            }
+        ],
+        "templates": [
+            {
+                "name": "00_env_config",
+                "source_path": "old.ipynb",
+                "status": "preview",
+                "introduced_in": "0.7.0",
+                "rationale": "template rationale",
+                "included_in_notebook_pack": "true",
+                "contains_live_sections": "true",
+                "contains_preview_sections": "true",
+                "tested_with": "1.0.0",
+            }
+        ],
+        "dq_rules": [
+            {
+                "name": "not_null",
+                "source_path": "old.py",
+                "status": "preview",
+                "introduced_in": "0.6.0",
+                "rationale": "dq rationale",
+                "description": "dq description",
+                "purpose": "dq purpose",
+            }
+        ],
+    }
+    discovered = {
+        "functions": [ri.ReleaseAsset("function_a", "new.py")],
+        "metadata_tables": [ri.ReleaseAsset("METADATA_A", "new.py", generated_fields={"schema_fingerprint": "same"})],
+        "templates": [ri.ReleaseAsset("00_env_config", "new.ipynb")],
+        "dq_rules": [ri.ReleaseAsset("not_null", "new.py")],
+    }
+
+    manifest = ri.synchronize_manifest(existing, discovered, "1.0.0")
+
+    assert manifest["functions"][0]["source_path"] == "new.py"
+    assert manifest["functions"][0]["introduced_in"] == "0.9.0"
+    assert manifest["functions"][0]["rationale"] == "function rationale"
+    assert manifest["functions"][0]["notes"] == "function note"
+    metadata = manifest["metadata_tables"][0]
+    assert metadata["schema_since"] == "0.8.0"
+    assert metadata["introduced_in"] == "0.8.0"
+    assert metadata["rationale"] == "metadata rationale"
+    assert metadata["managed_by"] == "schema owner"
+    template = manifest["templates"][0]
+    assert template["introduced_in"] == "0.7.0"
+    assert template["rationale"] == "template rationale"
+    assert template["included_in_notebook_pack"] == "true"
+    assert template["contains_live_sections"] == "true"
+    assert template["contains_preview_sections"] == "true"
+    assert template["tested_with"] == "1.0.0"
+    dq_rule = manifest["dq_rules"][0]
+    assert dq_rule["introduced_in"] == "0.6.0"
+    assert dq_rule["rationale"] == "dq rationale"
+    assert dq_rule["description"] == "dq description"
+    assert dq_rule["purpose"] == "dq purpose"
 
 
 def test_release_inventory_removed_asset_requires_discontinued():
@@ -306,7 +403,7 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Stable Fabric lakehouse and warehouse read/write helpers." in notes
+    assert "Stable Fabric lakehouse and warehouse read/write helpers as the only Live v0.1.0 public API surface." in notes
     assert "first supported FabricOps Starter Kit release" in notes
 
 
@@ -322,9 +419,10 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     """Verify maintainer-owned lifecycle classifications match the initial release baseline."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
-    assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 3
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 8
+    assert sum(1 for item in manifest["templates"] if item["status"] == "live") == 0
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 0
+    assert {item["name"] for item in ri.release_notebook_pack_items(manifest)} == {"00_env_config", "99_explore"}
     assert any(item["status"] == "preview" for item in manifest["functions"])
     assert any(item["status"] == "preview" for item in manifest["templates"])
     assert all(item["status"] == "preview" for item in manifest["dq_rules"])
@@ -389,7 +487,7 @@ def test_release_detail_pages_are_rendered_for_live_release():
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
 
     assert (base / "functions" / "read_lakehouse_excel.md").exists()
-    assert (base / "metadata" / "metadata_data_catalogue.md").exists()
+    assert not (base / "metadata" / "metadata_data_catalogue.md").exists()
 
 
 def test_no_release_table_uses_raw_source_path_columns():
@@ -436,17 +534,18 @@ def test_release_renderer_keeps_live_version_directory():
     assert (ri.ROOT / "docs" / "releases" / ri.read_package_version()).exists()
 
 
-def test_release_notebook_pack_uses_live_manifest_templates(tmp_path):
-    """Verify the release notebook ZIP is built from Live template manifest entries."""
+def test_release_notebook_pack_uses_included_preview_templates(tmp_path):
+    """Verify the release notebook ZIP includes version-pinned Preview templates with Live sections."""
     path = ri.build_notebook_pack(ri.read_package_version(), tmp_path)
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    expected = sorted(f"{item['name']}.ipynb" for item in manifest["templates"] if item["status"] == "live")
+    assert not [item for item in manifest["templates"] if item["status"] == "live"]
+    assert path is not None
+
     import zipfile
 
     with zipfile.ZipFile(path) as archive:
-        assert sorted(archive.namelist()) == expected
-    assert "02_pipeline.ipynb" not in expected
+        assert sorted(archive.namelist()) == ["00_env_config.ipynb", "99_explore.ipynb"]
 
 
 def test_metadata_manifest_records_schema_since_and_fingerprint():
@@ -454,7 +553,7 @@ def test_metadata_manifest_records_schema_since_and_fingerprint():
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
     agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
-    assert agreement["live_since"] == "0.1.0"
+    assert agreement["status"] == "preview"
     assert agreement["schema_since"] == "0.1.0"
     assert len(agreement["schema_fingerprint"]) == 64
 

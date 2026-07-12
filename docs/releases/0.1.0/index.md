@@ -13,11 +13,10 @@
 ## Live in this release
 
 <details class="fabricops-release-inventory" markdown>
-<summary>9 Live functions</summary>
+<summary>8 Live functions</summary>
 
 | Function | Description |
 | --- | --- |
-| [`profile_dataframe`](functions/profile_dataframe.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Build canonical DQ-ready profiling rows from a Spark DataFrame. |
 | [`read_lakehouse_csv`](functions/read_lakehouse_csv.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a CSV file from a configured Fabric-resolved path through Spark. |
 | [`read_lakehouse_excel`](functions/read_lakehouse_excel.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read an Excel workbook from a configured Fabric-resolved path. |
 | [`read_lakehouse_parquet`](functions/read_lakehouse_parquet.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a Parquet file from a configured Fabric-resolved path through Spark. |
@@ -30,25 +29,12 @@
 </details>
 
 <details class="fabricops-release-inventory" markdown>
-<summary>4 Live metadata tables</summary>
+<summary>2 included Preview notebook templates</summary>
 
-| Metadata table | Purpose |
-| --- | --- |
-| [`METADATA_DATA_AGREEMENT`](metadata/metadata_data_agreement.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data agreement. |
-| [`METADATA_DATA_AGREEMENT_EVIDENCE`](metadata/metadata_data_agreement_evidence.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data agreement evidence. |
-| [`METADATA_DATA_CATALOGUE`](metadata/metadata_data_catalogue.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data catalogue. |
-| [`METADATA_DATA_STEWARD`](metadata/metadata_data_steward.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Supported FabricOps metadata table for data steward. |
-
-</details>
-
-<details class="fabricops-release-inventory" markdown>
-<summary>3 Live notebook templates</summary>
-
-| Notebook template | Purpose |
-| --- | --- |
-| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Environment bootstrap for FabricOps Starter Kit notebooks. This notebook defines environment-wide values and assembles framework config. |
-| [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/01_agreement.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Defines what should be built, who owns it, which rules apply, and what readiness means. This is the first required delivery notebook after `00_env_config`. |
-| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/99_explore.ipynb) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Use this optional support notebook for discovery, profiling, troubleshooting, investigation, and ad hoc analysis. The required delivery path remains: `01_agreement` → `02_pipeline` → `03_governance`. |
+| Notebook template | Template lifecycle | Contains Live sections | Contains Preview sections |
+| --- | --- | --- | --- |
+| [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/00_env_config.ipynb) | <span class="fabricops-release-status fabricops-release-status--preview">Preview</span> | Yes | Yes |
+| [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/v0.1.0/templates/notebooks/99_explore.ipynb) | <span class="fabricops-release-status fabricops-release-status--preview">Preview</span> | Yes | Yes |
 
 </details>
 
@@ -56,10 +42,9 @@
 
 ### Added
 
-- Stable Fabric lakehouse and warehouse read/write helpers.
-- Dataframe profiling.
-- Core agreement, agreement evidence, catalogue, and steward metadata contracts.
-- Supported `00_env_config`, `01_agreement`, and `99_explore` notebook templates.
+- Stable Fabric lakehouse and warehouse read/write helpers as the only Live v0.1.0 public API surface.
+- Versioned `00_env_config` and `99_explore` notebook templates are included in the release pack as Preview templates with explicitly marked Live Fabric I/O sections.
+- Preview dataframe profiling, metadata contracts, widgets, governance workflows, and DQ capabilities remain available for evaluation but outside the supported v0.1.0 contract.
 - Generated lifecycle-aware release contracts and reference material.
 - Formalized the GitHub-only release workflow for tagged FabricOps releases.
 - Added CI expectations for locked dependency installation, linting, tests, strict documentation builds, distribution builds, distribution validation, and wheel import smoke tests.
@@ -91,6 +76,9 @@
 
 ### Known limitations
 
+- Notebook templates remain Preview overall; only explicitly marked Live sections in `00_env_config` and `99_explore` are part of the supported v0.1.0 workflow.
+- Metadata contracts remain Preview for v0.1.0.
+- Dataframe profiling remains Preview for v0.1.0.
 - Pipeline execution remains Preview for v0.1.0.
 - Governance review remains Preview for v0.1.0.
 - DQ rule authoring and enforcement remain Preview for v0.1.0.
