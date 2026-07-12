@@ -845,7 +845,7 @@ def test_config_public_import_contract_and_package_shape():
     assert Path("src/fabricops_kit/config/setup_notebook.py").exists()
     assert Path("src/fabricops_kit/config/setup_metadata_tables.py").exists()
     assert Path("src/fabricops_kit/config/shared.py").exists()
-    assert config_package.__file__.endswith("config/__init__.py")
+    assert Path(config_package.__file__).parts[-2:] == ("config", "__init__.py")
     assert RootFabricStore is ConfigFabricStore
     assert RootFrameworkConfig is ConfigFrameworkConfig
     assert RootGovernanceConfig is GovernanceConfig
