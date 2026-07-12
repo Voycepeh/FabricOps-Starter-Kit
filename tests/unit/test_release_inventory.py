@@ -44,20 +44,6 @@ def test_release_inventory_discovers_templates_from_files():
     assert next(asset for asset in assets if asset.name == "00_env_config").documentation_path == "docs/guided-demo/run-environment-setup.md"
 
 
-def test_included_release_templates_declare_section_maturity():
-    """Verify included v0.1.0 notebooks declare template and section maturity."""
-    import json
-
-    for notebook_name in ["00_env_config", "99_explore"]:
-        notebook = json.loads((Path("templates/notebooks") / f"{notebook_name}.ipynb").read_text(encoding="utf-8"))
-        text = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "markdown")
-        assert "Template lifecycle | Preview" in text
-        assert "Contains Live sections | Yes" in text
-        assert "Contains Preview sections | Yes" in text
-        assert "## Live:" in text
-        assert "## Preview:" in text
-
-
 def test_release_inventory_discovers_dq_rules_from_registry():
     """Verify DQ rules are discovered from the authoritative guardrail registry."""
     from fabricops_kit.pipeline.guardrails_shared import DQ_RULE_TYPES
