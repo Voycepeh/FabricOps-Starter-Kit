@@ -1490,6 +1490,15 @@ def _contract_impact_lines(row: dict[str, Any], *, docs_metadata: dict[str, Any]
         f"| Live-critical dependencies | {_dash(row.get('live_critical_dependency_count', 0))} |",
         "",
     ]
+    history = [item for item in row.get("release_history") or [] if isinstance(item, dict)]
+    if history:
+        lines.extend(["### Release history", "", "| Status | Version |", "| --- | --- |"])
+        for item in history:
+            history_status = str(item.get("status") or "").strip().title() or "—"
+            version = _dash(item.get("version"))
+            lines.append(f"| {html_escape(history_status)} | {html_escape(version)} |")
+        lines.append("")
+
     deps = [str(dep) for dep in row.get("live_critical_dependencies") or []]
     if status == "Live" and deps:
         lines.extend(["### Live-critical dependencies", "", '<ul class="reference-compact-list">'])

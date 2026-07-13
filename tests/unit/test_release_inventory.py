@@ -337,7 +337,10 @@ def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
     """Verify maintainer-owned lifecycle classifications match the initial release baseline."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 8
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
+    setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
+    assert setup["status"] == "live"
+    assert setup["live_since"] == "0.1.0"
     assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 0
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
