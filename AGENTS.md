@@ -40,6 +40,22 @@ deterministic scripts and tests for anything that can be checked mechanically;
 use agent judgement for interpretation, planning, review, and changes that
 cannot be fully encoded as deterministic checks.
 
+## Task-specific skills
+
+Use the relevant workflow skill before implementing these tasks:
+
+- Public callable or function-level source changes:
+  `.agents/skills/fabricops-public-api-change/SKILL.md`
+- Release preparation or release-readiness checks:
+  `.agents/skills/fabricops-release/SKILL.md`
+- Documentation cleanup or restructuring:
+  `.agents/skills/fabricops-docs-maintenance/SKILL.md`
+- Notebook template creation or validation:
+  `.agents/skills/fabricops-notebook-template/SKILL.md`
+
+`AGENTS.md` remains the repository-wide contract. Skills provide the focused
+workflow for a particular task and must not override `AGENTS.md`.
+
 ## Backward compatibility and public contracts
 
 Backward compatibility applies to supported public callables and externally

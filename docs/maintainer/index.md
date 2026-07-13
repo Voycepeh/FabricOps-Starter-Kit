@@ -8,16 +8,6 @@ This skill is the operational source of truth for FabricOps release preparation.
 
 End-user setup and notebook walkthrough content stays in the [Guided Demo](../guided-demo.md). Maintainer-only release curation, packaging, publishing, and recovery guidance belongs here.
 
-## Agent task structure
-
-Before editing release files or reporting release readiness, resolve:
-
-1. **Context** - target version, candidate commit, release manifest, changelog section, release pages, and current public callable inventory.
-2. **Task** - prepare a release PR, validate a candidate, or perform an authenticated local tag/publish step.
-3. **Constraints** - package releases cover public functions and metadata schemas; notebook templates, samples, skills, and demos are maintained independently unless explicitly scoped.
-4. **Expected output** - updated release files, a readiness report, or an authenticated-local tag command; never an unverified tag.
-5. **Verification** - repository release commands, generated-output provenance checks, package/docs builds, and a clean working tree.
-
 ## Minimum maintainer workflow
 
 1. Identify the target version from `pyproject.toml`, the intended manifest under `docs/releases/manifests/`, and the candidate commit with `git rev-parse HEAD`.

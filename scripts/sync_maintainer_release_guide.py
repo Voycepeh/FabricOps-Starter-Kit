@@ -28,7 +28,25 @@ def skill_body() -> str:
         lines = lines[1:]
         if lines and not lines[0].strip():
             lines = lines[1:]
+    lines = _drop_agent_only_section(lines, "## Agent task structure")
     return "\n".join(lines).strip() + "\n"
+
+
+def _drop_agent_only_section(lines: list[str], heading: str) -> list[str]:
+    """Return ``lines`` without an agent-only second-level Markdown section."""
+    output: list[str] = []
+    skipping = False
+    for line in lines:
+        if line == heading:
+            skipping = True
+            continue
+        if skipping and line.startswith("## "):
+            skipping = False
+        if not skipping:
+            output.append(line)
+    while output and not output[-1].strip():
+        output.pop()
+    return output
 
 
 def rendered_doc() -> str:
