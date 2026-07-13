@@ -13,8 +13,10 @@ from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configu
 from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 
+PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
+PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
@@ -106,7 +108,7 @@ def _frequency_json_dataframe(df, frequency_columns: Sequence[str] | None, frequ
     )
 
 
-def _canonical_catalogue_dataframe(
+def _canonical_profiled_dataframe(
     profile_df,
     *,
     source_df,
@@ -119,7 +121,7 @@ def _canonical_catalogue_dataframe(
     frequency_top_n: int,
     is_sampled: bool,
 ):
-    """Return profile rows mapped to the metadata catalogue schema."""
+    """Return profile rows mapped to the detailed profiled schema."""
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
@@ -128,7 +130,7 @@ def _canonical_catalogue_dataframe(
     frequency_df = _frequency_json_dataframe(source_df, frequency_columns, frequency_top_n)
     schema_fingerprint = _schema_fingerprint(source_df)
 
-    catalogue_df = profile_df.select(
+    profiled_df = profile_df.select(
         F.col("COLUMN_NAME").alias("column_name"),
         F.col("DATA_TYPE").alias("data_type"),
         F.col("ROW_COUNT").cast("long").alias("row_count"),
@@ -146,11 +148,11 @@ def _canonical_catalogue_dataframe(
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
     if frequency_df is not None:
-        catalogue_df = catalogue_df.join(frequency_df, catalogue_df.column_name == frequency_df.COLUMN_NAME, "left").drop(frequency_df.COLUMN_NAME)
+        profiled_df = profiled_df.join(frequency_df, profiled_df.column_name == frequency_df.COLUMN_NAME, "left").drop(frequency_df.COLUMN_NAME)
     else:
-        catalogue_df = catalogue_df.withColumn("frequency_json", F.lit(None).cast("string"))
+        profiled_df = profiled_df.withColumn("frequency_json", F.lit(None).cast("string"))
 
-    return catalogue_df.select(
+    return profiled_df.select(
         F.lit(metadata_table_key).cast("string").alias("metadata_table_key"),
         column_key_udf(F.col("column_name")).alias("metadata_column_key"),
         F.lit(environment_name).cast("string").alias("environment_name"),
@@ -178,7 +180,26 @@ def _canonical_catalogue_dataframe(
         F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
         F.current_timestamp().cast("timestamp").alias("profiled_at"),
         F.current_timestamp().cast("timestamp").alias("_committed_at"),
-    ).select(*CATALOGUE_COLUMNS)
+    ).select(*PROFILED_COLUMNS)
+
+
+def _catalogue_dataframe_from_profiled(profiled_df):
+    """Return distinct catalogue identity rows derived from detailed profiled rows."""
+    from pyspark.sql import functions as F
+
+    return profiled_df.select(
+        F.col("metadata_table_key").cast("string"),
+        F.col("metadata_column_key").cast("string"),
+        F.col("schema_fingerprint").cast("string"),
+        F.col("environment_name").cast("string"),
+        F.col("store_type").cast("string"),
+        F.col("layer").cast("string"),
+        F.col("schema_name").cast("string"),
+        F.col("table_name").cast("string"),
+        F.col("column_name").cast("string"),
+        F.col("data_type").cast("string"),
+        F.col("_committed_at").cast("timestamp"),
+    ).dropDuplicates(["metadata_table_key", "metadata_column_key", "schema_fingerprint"]).select(*CATALOGUE_COLUMNS)
 
 
 def _write_lineage_participation(
@@ -227,6 +248,29 @@ def _write_lineage_participation(
     _upsert_lineage_event(lineage_df=lineage_df, config=config, env=env, spark_session=spark_session)
 
 
+def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
+    """Upsert catalogue identities by table key, column key, and schema fingerprint."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes.") from exc
+
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "metadata", CATALOGUE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
+    )
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(
+            catalogue_df.alias("source"),
+            "target.metadata_table_key = source.metadata_table_key AND target.metadata_column_key = source.metadata_column_key AND target.schema_fingerprint = source.schema_fingerprint",
+        )
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
+
+
 def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_session: Any) -> None:
     """Upsert lineage rows by lineage_event_id without falling back to append."""
     try:
@@ -260,7 +304,7 @@ def profile_and_register_dataframe(
     frequency_top_n=20,
     is_sampled=False,
 ):
-    """Profile and append one DataFrame snapshot to ``METADATA_DATA_CATALOGUE``.
+    """Profile evidence, catalogue identities, and lineage for one DataFrame.
 
     Parameters
     ----------
@@ -269,8 +313,9 @@ def profile_and_register_dataframe(
         helper does not sample, re-read, or mutate this DataFrame.
     profile_role : {"source", "target"}
         Execution participation context for the DataFrame in the notebook flow.
-        The validated value is not stored in ``METADATA_DATA_CATALOGUE``; an
-        automatic lineage flow records one table-level runtime participation row.
+        The validated value is not stored in ``METADATA_DATA_PROFILED`` or
+        ``METADATA_DATA_CATALOGUE``; an automatic lineage flow records one
+        table-level runtime participation row.
     environment_name : str
         FabricOps environment name to persist with the catalogue snapshot.
     store_type : {"lakehouse", "warehouse"}
@@ -288,12 +333,12 @@ def profile_and_register_dataframe(
     frequency_top_n : int, default=20
         Number of ranked values to request from frequency profiling.
     is_sampled : bool, default=False
-        Caller-declared provenance flag persisted in the catalogue snapshot.
+        Caller-declared provenance flag persisted in the profiled evidence.
 
     Returns
     -------
     pyspark.sql.DataFrame
-        Final catalogue DataFrame appended to ``METADATA_DATA_CATALOGUE``.
+        Detailed profiled DataFrame appended to ``METADATA_DATA_PROFILED``.
 
     Raises
     ------
@@ -303,9 +348,10 @@ def profile_and_register_dataframe(
     Notes
     -----
     Metadata writes route through the configured ``metadata`` target from
-    ``00_env_config`` and append one profile snapshot per invocation. Exact
-    lineage registration appends one participation row after the catalogue
-    snapshot; guardrail execution is a separate workflow.
+    ``00_env_config``. Detailed profiling evidence is appended to
+    ``METADATA_DATA_PROFILED`` and distinct catalogue identities are upserted
+    to ``METADATA_DATA_CATALOGUE`` before lineage registration. Guardrail
+    execution is a separate workflow.
 
     """
     normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
@@ -319,7 +365,7 @@ def profile_and_register_dataframe(
     config, env, context = resolve_fabric_context(env=normalized_environment)
     profile_df = profile_dataframe(df)
     schema_fingerprint = _schema_fingerprint(df)
-    catalogue_df = _canonical_catalogue_dataframe(
+    profiled_df = _canonical_profiled_dataframe(
         profile_df,
         source_df=df,
         environment_name=normalized_environment,
@@ -332,13 +378,15 @@ def profile_and_register_dataframe(
         is_sampled=is_sampled,
     )
     write_lakehouse_table_core(
-        catalogue_df,
-        CATALOGUE_TABLE,
+        profiled_df,
+        PROFILED_TABLE,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
         context={"config": config, "env": env},
         mode="append",
     )
+    catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
+    _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
     metadata_table_key = _metadata_table_key(
         normalized_environment,
         normalized_store_type,
@@ -359,7 +407,7 @@ def profile_and_register_dataframe(
         )
     except Exception as exc:
         raise RuntimeError(
-            "Catalogue registration succeeded but lineage registration failed "
+            "Profile and catalogue registration succeeded but lineage registration failed "
             f"for metadata_table_key={metadata_table_key!r} and profile_role={normalized_profile_role!r}."
         ) from exc
-    return catalogue_df
+    return profiled_df

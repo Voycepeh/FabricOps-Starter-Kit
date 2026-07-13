@@ -16,7 +16,7 @@ def widget_browse_metadata_catalogue(
     agreement_version: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
-    metadata_table: str = "METADATA_DATA_CATALOGUE",
+    metadata_table: str = "METADATA_DATA_PROFILED",
     spark_session=None,
     context=None,
 ):
@@ -34,7 +34,7 @@ def widget_browse_metadata_catalogue(
         Logical FabricStore target used to read the catalogue table.
     schema : str, optional
         Optional metadata lakehouse schema override.
-    metadata_table : str, default="METADATA_DATA_CATALOGUE"
+    metadata_table : str, default="METADATA_DATA_PROFILED"
         Metadata catalogue table to read.
     spark_session : object, optional
         Spark session override.

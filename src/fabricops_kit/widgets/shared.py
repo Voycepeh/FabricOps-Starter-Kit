@@ -192,6 +192,7 @@ AGREEMENT_EVIDENCE_TYPES = ["Signed Agreement", "Email Approval", "Policy Docume
 WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
 FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "evidence_type": "Evidence Type"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+PROFILED_TABLE = "METADATA_DATA_PROFILED"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
@@ -665,7 +666,7 @@ def build_enrichment_rule_records(
     Parameters
     ----------
     profile_rows : list of dict
-        Selected ``METADATA_DATA_CATALOGUE`` column evidence.
+        Selected ``METADATA_DATA_PROFILED`` column evidence.
     reviewed_rows : list of dict
         Enrichment payload rows to persist when ``commit`` is true.
     state : Mapping[str, Any], optional
@@ -1287,7 +1288,7 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table_core(CATALOGUE_TABLE, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table_core(PROFILED_TABLE, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
     selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
@@ -1300,7 +1301,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
         ):
             filtered.append(row)
     if not filtered:
-        raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
+        raise ValueError("The selected successful profile has no column rows in METADATA_DATA_PROFILED.")
     return filtered
 
 def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:

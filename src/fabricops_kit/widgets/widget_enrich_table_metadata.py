@@ -90,7 +90,7 @@ def _table_metadata_enrichment_widget_workflow(
 
     profile_rows = _governance_review._selected_catalogue_rows_for_enrichment(guardrail_state)
     if not profile_rows:
-        raise ValueError("Selected guardrail target has no column rows in METADATA_DATA_CATALOGUE.")
+        raise ValueError("Selected guardrail target has no column rows in METADATA_DATA_PROFILED.")
     sensitivity_options, pii_options, context_defs, classification_defs = _governance_review._enrichment_options(config)
     row_controls: list[dict[str, Any]] = []
     row_widgets = []

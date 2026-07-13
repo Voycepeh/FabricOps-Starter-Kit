@@ -55,11 +55,11 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
     widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
-    catalogue = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.CATALOGUE_TABLE, spark_session=spark_session)
+    catalogue = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.PROFILED_TABLE, spark_session=spark_session)
     rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.GUARDRAIL_TABLE, spark_session=spark_session)
     enrichment_rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.ENRICHMENT_TABLE, spark_session=spark_session)
     if not catalogue:
-        raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
+        raise ValueError("METADATA_DATA_PROFILED has no guardrail targets.")
 
     targets = {}
     for row in catalogue:
@@ -73,7 +73,7 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
         label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
         targets.setdefault(label, key)
     if not targets:
-        raise ValueError("METADATA_DATA_CATALOGUE has no table-level guardrail targets.")
+        raise ValueError("METADATA_DATA_PROFILED has no table-level guardrail targets.")
 
     target_dropdown = widgets.Dropdown(options=[(label, value) for label, value in sorted(targets.items())], description="Target", layout=widgets.Layout(width="760px"))
     governance_badge = widgets.HTML()

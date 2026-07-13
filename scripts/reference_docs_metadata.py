@@ -899,22 +899,22 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Profile and append one DataFrame snapshot to METADATA_DATA_CATALOGUE.',
+  'summary_override': 'Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identities to METADATA_DATA_CATALOGUE.',
   'symbol_name': 'profile_and_register_dataframe',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profiling',
-  'use_when': 'Use when any DataFrame should be profiled and registered as physical-asset catalogue evidence with one cloneable call.',
+  'use_when': 'Use when any DataFrame should be profiled and registered as physical-asset profiling evidence and catalogue identity with one cloneable call.',
   'do_not_use_when': 'Do not use for lineage registration, guardrail execution, or automatic sampling; those are separate workflows.',
   'parameters': 'df, profile_role, environment_name, store_type, layer, table_name, optional schema_name, optional frequency_columns, frequency_top_n, and is_sampled.',
-  'returns': 'Final Spark DataFrame appended to METADATA_DATA_CATALOGUE.',
+  'returns': 'Detailed Spark DataFrame appended to METADATA_DATA_PROFILED.',
   'raises': 'Raises ValueError for unsupported profile_role, unsupported store_type, or empty required identity fields; lower-level profiling validation is preserved.',
-  'side_effects': 'Appends one catalogue profile snapshot to the configured metadata lakehouse.',
+  'side_effects': 'Appends detailed profiling evidence to METADATA_DATA_PROFILED, upserts derived identities to METADATA_DATA_CATALOGUE, and writes lineage evidence through the configured metadata lakehouse.',
   'fabric_context': 'Requires 00_env_config so the canonical metadata lakehouse route is available.',
-  'ai_verification': 'Verify the physical asset identity, execution participation role, optional frequency columns, and append-only metadata write before running; the role is not stored in METADATA_DATA_CATALOGUE.',
-  'preferred_example': 'catalogue_profile_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")',
+  'ai_verification': 'Verify the physical asset identity, execution participation role, optional frequency columns, and append-only profiled evidence write and catalogue identity upsert before running; the role is not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE.',
+  'preferred_example': 'profiled_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")',
   'related_functions': ['profile_dataframe', 'profile_frequency_distribution', 'run_table_guardrails'],
-  'expanded_purpose': 'Orchestrates DataFrame profiling, optional top-N frequency evidence, canonical catalogue schema mapping, deterministic key creation, and append-only metadata registration while accepting profile_role as execution participation context. The role is validated but not stored in METADATA_DATA_CATALOGUE; automatic lineage registration follows separately.',
-  'when_to_use': 'Use in 02_pipeline once for each DataFrame that should produce catalogue profile evidence. Pass profile_role as execution participation context; automatic lineage registration follows separately and will record the role outside the catalogue.',
+  'expanded_purpose': 'Orchestrates DataFrame profiling, optional top-N frequency evidence, canonical profiled schema mapping, catalogue identity derivation, deterministic key creation, and append-only profiled evidence registration and catalogue identity upsert while accepting profile_role as execution participation context. The role is validated but not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE; automatic lineage registration follows separately.',
+  'when_to_use': 'Use in 02_pipeline once for each DataFrame that should produce profiled evidence and catalogue identity. Pass profile_role as execution participation context; automatic lineage registration follows separately and will record the role outside the catalogue.',
   'glossary_terms': ['evidence', 'source data', 'target table'],
   'return_interpretation': 'The returned rows are exactly the catalogue snapshot submitted to the metadata writer for the supplied DataFrame.',
   'common_failure_causes': ['00_env_config has not been run.',
@@ -970,7 +970,7 @@ PUBLIC_SYMBOL_DOCS = [
   'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted '
-                      'catalogue profiles.',
+                      'profiled evidence.',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
@@ -980,7 +980,7 @@ PUBLIC_SYMBOL_DOCS = [
                       'approved baseline, the function returns a failed guardrail result so the '
                       'pipeline can stop before writing data.',
   'use_when': 'Use in 02_pipeline to enforce profile_mode expectations against previous accepted '
-              'catalogue profiles.',
+              'profiled evidence.',
   'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously '
                  'approved profile behavior pattern. It is especially useful when full-table '
                  'static data changes unexpectedly or when a previous watermark group changes or '
@@ -1030,7 +1030,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'The configured dataset or table name does not match catalogue '
                             'evidence.',
                             'The configured stage does not match the accepted evidence.',
-                            'The metadata lakehouse or catalogue profile table cannot be read.',
+                            'The metadata lakehouse or profiled evidence table cannot be read.',
                             'The accepted evidence is missing required profile behavior fields.',
                             'The current profile_mode value is invalid or unsupported.',
                             'The accepted evidence is stale or incomplete.'],
@@ -1043,7 +1043,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'stability_result = enforce_profile_behavior(\n'
                        '    spark=spark,\n'
                        '    dataframe=df,\n'
-                       '    metadata_table="METADATA_DATA_CATALOGUE",\n'
+                       '    metadata_table="METADATA_DATA_PROFILED",\n'
                        '    dataset_name="sales_orders",\n'
                        '    table_name="orders_raw",\n'
                        '    stage="target",\n'
@@ -1194,7 +1194,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook '
                 'context, and optional guardrail results.',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
-  'side_effects': 'Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse '
+  'side_effects': 'Writes METADATA_DATA_PROFILED through the configured metadata lakehouse '
                   'target.',
   'related_functions': ['profile_dataframe', 'write_lakehouse_table'],
   'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to '
@@ -1283,7 +1283,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
   'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
   'related_functions': ['widget_select_guardrail_target', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.',
+  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or profiled evidence.',
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
   'do_not_use_when': 'Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
   'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
@@ -1306,7 +1306,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders an interactive selector that reads catalogue profiles, '
+  'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
   'when_to_use': 'Use at the start of 02_pipeline authoring or 03_governance review when a user '
@@ -1317,7 +1317,7 @@ PUBLIC_SYMBOL_DOCS = [
   'return_interpretation': 'The returned state includes environment, dataset, table, metadata '
                            'keys, profile rows, existing rules, and governance policy values for '
                            'downstream widgets.',
-  'common_failure_causes': ['METADATA_DATA_CATALOGUE has no profiles.',
+  'common_failure_causes': ['METADATA_DATA_PROFILED has no profiles.',
                             'The selected table lacks metadata identity fields.',
                             'Metadata tables cannot be read.',
                             'ipywidgets is unavailable.']},
@@ -1362,7 +1362,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for agreement, metadata table, Spark session, and context parameters.',
   'returns': 'Mutable widget state whose dataframe key contains the currently filtered Spark DataFrame.',
   'related_functions': ['read_lakehouse_table', 'profile_dataframe'],
-  'expanded_purpose': 'Reads METADATA_DATA_CATALOGUE from the configured metadata target, lets users choose a logical FabricStore target, and exposes catalogue rows for the selected table.',
+  'expanded_purpose': 'Reads METADATA_DATA_PROFILED from the configured metadata target, lets users choose a logical FabricStore target, and exposes profiled rows for the selected table.',
   'when_to_use': 'Use in 99_explore when notebook authors need searchable, read-only catalogue evidence filtered by the active agreement context.',
   'do_not_use_when': 'Do not use for writing metadata, approving rules, or enforcing guardrails.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'notebook template'],
@@ -1850,7 +1850,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                          'The caller expects debug internals while '
                                                          'using summary mode.']},
  'widget_select_guardrail_target': {'expanded_purpose': 'Renders an interactive selector that '
-                                                        'reads catalogue profiles, '
+                                                        'reads profiled evidence, '
                                                         'existing guardrail rules, and table '
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
@@ -1871,7 +1871,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                              'existing rules, and governance '
                                                              'policy values for downstream '
                                                              'widgets.',
-                                    'common_failure_causes': ['METADATA_DATA_CATALOGUE has no '
+                                    'common_failure_causes': ['METADATA_DATA_PROFILED has no '
                                                               'profiles.',
                                                               'The selected table lacks metadata '
                                                               'identity fields.',

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
+from datetime import datetime
 
 import pytest
 
@@ -13,6 +14,9 @@ from fabricops_kit.pipeline import profile_and_register_dataframe as public_prof
 from fabricops_kit.pipeline.profile_and_register_dataframe import (
     CATALOGUE_COLUMNS,
     CATALOGUE_TABLE,
+    PROFILED_COLUMNS,
+    PROFILED_TABLE,
+    _catalogue_dataframe_from_profiled,
     _metadata_column_key,
     _metadata_table_key,
     profile_and_register_dataframe,
@@ -88,10 +92,14 @@ def registered(monkeypatch):
     def write(df, table_name, *, target, schema, context, mode):
         writes.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
 
+    def upsert_catalogue(*, catalogue_df, config, env, spark_session):
+        writes.append({"df": catalogue_df, "table_name": CATALOGUE_TABLE, "target": "metadata", "schema": None, "context": {"config": config, "env": env}, "mode": "upsert"})
+
     def upsert_lineage(*, lineage_df, config, env, spark_session):
         writes.append({"df": lineage_df, "table_name": "METADATA_DATA_LINEAGE", "target": "metadata", "schema": None, "context": {"config": config, "env": env}, "mode": "upsert"})
 
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
+    monkeypatch.setattr(module, "_upsert_catalogue_identities", upsert_catalogue)
     monkeypatch.setattr(module, "_upsert_lineage_event", upsert_lineage)
     return writes
 
@@ -233,7 +241,7 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
     assert result.count() == 3
 
 
-def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalogue(spark_session, monkeypatch, registered):
+def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(spark_session, monkeypatch, registered):
     """Verify output contract, frequency JSON, deterministic keys, and writer usage."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
@@ -281,22 +289,26 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
         "frequency_kwargs": {"columns": ["customer_type", "country"], "top_n": 5, "df_is_source": True},
         "sample": 0,
     }
-    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"]
+    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"]
     assert registered[0] == {
         "df": result,
-        "table_name": CATALOGUE_TABLE,
+        "table_name": PROFILED_TABLE,
         "target": "metadata",
         "schema": None,
         "context": {"config": registered[0]["context"]["config"], "env": "dev"},
         "mode": "append",
     }
-    assert registered[1]["context"]["env"] == "dev"
+    assert registered[1]["table_name"] == CATALOGUE_TABLE
+    assert registered[1]["mode"] == "upsert"
+    assert registered[1]["df"].columns == CATALOGUE_COLUMNS
+    assert registered[1]["df"].count() == 3
+    assert registered[2]["context"]["env"] == "dev"
     lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
-    assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[1]["df"].schema.fields] == [
+    assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[2]["df"].schema.fields] == [
         (f.name, type(f.dataType).__name__, f.nullable) for f in lineage_schema.fields
     ]
-    assert result.columns == CATALOGUE_COLUMNS
-    expected_schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
+    assert result.columns == PROFILED_COLUMNS
+    expected_schema = metadata_table_schema_registry()[PROFILED_TABLE]
     assert [(f.name, type(f.dataType).__name__) for f in result.schema.fields] == [
         (f.name, type(f.dataType).__name__) for f in expected_schema.fields
     ]
@@ -318,7 +330,11 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
     assert expected_table_key != _metadata_table_key("dev", "warehouse", "silver", None, "customers_clean")
 
-    lineage_rows = registered[1]["df"].collect()
+    catalogue_rows = registered[1]["df"].collect()
+    assert {row.metadata_column_key for row in catalogue_rows} == {row["metadata_column_key"] for row in rows.values()}
+    assert all(row.row_count is None if hasattr(row, "row_count") else True for row in catalogue_rows)
+
+    lineage_rows = registered[2]["df"].collect()
     assert len(lineage_rows) == 1
     lineage = lineage_rows[0].asDict()
     assert lineage["metadata_table_key"] == expected_table_key
@@ -343,10 +359,10 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     assert {row.metadata_table_key for row in source_role_result.select("metadata_table_key").collect()} == {expected_table_key}
 
 
-def test_catalogue_schema_matches_main_contract_without_profile_role():
-    """Verify catalogue schema remains the canonical physical profile contract."""
-    schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
-    assert schema.fieldNames() == CATALOGUE_COLUMNS
+def test_profiled_schema_matches_detailed_profile_contract_without_profile_role():
+    """Verify profiled schema remains the detailed physical profile contract."""
+    schema = metadata_table_schema_registry()[PROFILED_TABLE]
+    assert schema.fieldNames() == PROFILED_COLUMNS
     assert schema.fieldNames() == [
         "metadata_table_key",
         "metadata_column_key",
@@ -377,6 +393,82 @@ def test_catalogue_schema_matches_main_contract_without_profile_role():
         "_committed_at",
     ]
     assert "profile_role" not in schema.fieldNames()
+
+
+def test_catalogue_schema_is_narrow_identity_contract():
+    """Verify catalogue schema contains identity columns without profiling statistics."""
+    schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
+    assert schema.fieldNames() == CATALOGUE_COLUMNS
+    assert schema.fieldNames() == [
+        "metadata_table_key",
+        "metadata_column_key",
+        "schema_fingerprint",
+        "environment_name",
+        "store_type",
+        "layer",
+        "schema_name",
+        "table_name",
+        "column_name",
+        "data_type",
+        "_committed_at",
+    ]
+    assert {
+        "row_count",
+        "non_null_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "mean_value",
+        "stddev_value",
+        "min_value",
+        "percentile_25_value",
+        "median_value",
+        "percentile_75_value",
+        "max_value",
+        "is_sampled",
+        "frequency_json",
+        "profiled_at",
+    }.isdisjoint(schema.fieldNames())
+
+
+def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_session):
+    """Verify duplicate profiled observations produce unique catalogue identities."""
+    schema = metadata_table_schema_registry()[PROFILED_TABLE]
+    rows = [
+        {name: None for name in schema.fieldNames()},
+        {name: None for name in schema.fieldNames()},
+        {name: None for name in schema.fieldNames()},
+    ]
+    base = {
+        "metadata_table_key": "table-1",
+        "environment_name": "dev",
+        "store_type": "lakehouse",
+        "layer": "raw",
+        "schema_name": None,
+        "table_name": "orders",
+        "data_type": "string",
+        "row_count": 10,
+        "non_null_count": 10,
+        "null_count": 0,
+        "null_percent": 0.0,
+        "distinct_count": 10,
+        "distinct_percent": 100.0,
+        "is_sampled": False,
+        "schema_fingerprint": "schema-1",
+        "profiled_at": datetime(2026, 1, 1),
+        "_committed_at": datetime(2026, 1, 1),
+    }
+    rows[0].update(base | {"metadata_column_key": "col-1", "column_name": "id"})
+    rows[1].update(base | {"metadata_column_key": "col-1", "column_name": "id", "row_count": 20})
+    rows[2].update(base | {"metadata_column_key": "col-2", "column_name": "name"})
+    profiled_df = spark_session.createDataFrame(rows, schema=schema)
+
+    catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
+
+    assert catalogue_df.columns == CATALOGUE_COLUMNS
+    assert catalogue_df.count() == 2
+    assert {row.metadata_column_key for row in catalogue_df.collect()} == {"col-1", "col-2"}
 
 
 def test_lineage_schema_is_table_participation_contract():
@@ -433,7 +525,7 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
 
     monkeypatch.setattr(module, "_upsert_lineage_event", fail_upsert)
     expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
-    with pytest.raises(RuntimeError, match=f"Catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
+    with pytest.raises(RuntimeError, match=f"Profile and catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
@@ -442,19 +534,19 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
             layer="raw",
             table_name="customers",
         )
-    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE]
+    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE]
 
 
-def test_lineage_is_not_attempted_when_catalogue_write_fails(spark_session, monkeypatch, registered):
-    """Verify catalogue write failure stops before lineage registration."""
+def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monkeypatch, registered):
+    """Verify profiled evidence write failure stops before catalogue and lineage registration."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
     monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
 
-    def fail_catalogue(*_args, **_kwargs):
-        raise ValueError("catalogue boom")
+    def fail_profiled(*_args, **_kwargs):
+        raise ValueError("profiled boom")
 
-    monkeypatch.setattr(module, "write_lakehouse_table_core", fail_catalogue)
-    with pytest.raises(ValueError, match="catalogue boom"):
+    monkeypatch.setattr(module, "write_lakehouse_table_core", fail_profiled)
+    with pytest.raises(ValueError, match="profiled boom"):
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
@@ -464,3 +556,24 @@ def test_lineage_is_not_attempted_when_catalogue_write_fails(spark_session, monk
             table_name="customers",
         )
 
+
+
+def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, monkeypatch, registered):
+    """Verify failed catalogue upserts are not converted to append writes."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+
+    def fail_catalogue_upsert(*, catalogue_df, config, env, spark_session):
+        raise RuntimeError("catalogue merge failed")
+
+    monkeypatch.setattr(module, "_upsert_catalogue_identities", fail_catalogue_upsert)
+    with pytest.raises(RuntimeError, match="catalogue merge failed"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+        )
+    assert [write["table_name"] for write in registered] == [PROFILED_TABLE]

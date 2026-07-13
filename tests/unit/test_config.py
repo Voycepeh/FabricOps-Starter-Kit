@@ -630,56 +630,56 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
         assert legacy not in tables
 
 
-def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
-    """Verify catalogue schema exactly matches the minimal column-profile contract."""
+def test_metadata_data_catalogue_and_profiled_schema_split():
+    """Verify catalogue is narrow identity and profiled keeps detailed evidence."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
 
-    schema = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"]
-    actual = [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields]
-    expected = [
-        ("metadata_table_key", "StringType", False),
-        ("metadata_column_key", "StringType", False),
-        ("environment_name", "StringType", False),
-        ("store_type", "StringType", False),
-        ("layer", "StringType", False),
-        ("schema_name", "StringType", True),
-        ("table_name", "StringType", False),
-        ("column_name", "StringType", False),
-        ("data_type", "StringType", False),
-        ("row_count", "LongType", False),
-        ("non_null_count", "LongType", False),
-        ("null_count", "LongType", False),
-        ("null_percent", "DoubleType", False),
-        ("distinct_count", "LongType", False),
-        ("distinct_percent", "DoubleType", False),
-        ("mean_value", "DoubleType", True),
-        ("stddev_value", "DoubleType", True),
-        ("min_value", "StringType", True),
-        ("percentile_25_value", "DoubleType", True),
-        ("median_value", "DoubleType", True),
-        ("percentile_75_value", "DoubleType", True),
-        ("max_value", "StringType", True),
-        ("is_sampled", "BooleanType", False),
-        ("frequency_json", "StringType", True),
-        ("schema_fingerprint", "StringType", False),
-        ("profiled_at", "TimestampType", False),
-        ("_committed_at", "TimestampType", False),
-    ]
-    audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
-
-    assert actual == expected
-    assert len(schema.fieldNames()) == len(set(schema.fieldNames()))
-    assert audit_names & set(schema.fieldNames()) == {"_committed_at"}
-
-    removed_fields = {
-        "dataset_name", "fabric_store_target", "asset_kind", "profile_stage", "profile_status",
-        "profile_role", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
-        "watermark_value", "profile_hash", "profile_payload_json", "governance_mode",
-        "approval_policy", "bypass_allowed", "policy_reason", "agreement_id", "agreement_version",
-        "profile_scope_json",
+    registry = metadata_table_schema_registry()
+    catalogue = registry["METADATA_DATA_CATALOGUE"]
+    profiled = registry["METADATA_DATA_PROFILED"]
+    catalogue_names = catalogue.fieldNames()
+    profiled_names = profiled.fieldNames()
+    profiling_fields = {
+        "row_count",
+        "non_null_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "mean_value",
+        "stddev_value",
+        "min_value",
+        "percentile_25_value",
+        "median_value",
+        "percentile_75_value",
+        "max_value",
+        "is_sampled",
+        "frequency_json",
+        "profiled_at",
     }
-    assert removed_fields.isdisjoint(schema.fieldNames())
 
+    assert catalogue_names == [
+        "metadata_table_key",
+        "metadata_column_key",
+        "schema_fingerprint",
+        "environment_name",
+        "store_type",
+        "layer",
+        "schema_name",
+        "table_name",
+        "column_name",
+        "data_type",
+        "_committed_at",
+    ]
+    assert profiling_fields.isdisjoint(catalogue_names)
+    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(catalogue_names)
+    assert profiling_fields.issubset(profiled_names)
+    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(profiled_names)
+    assert len(catalogue_names) == len(set(catalogue_names))
+    assert len(profiled_names) == len(set(profiled_names))
+    audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
+    assert audit_names & set(catalogue_names) == {"_committed_at"}
+    assert audit_names & set(profiled_names) == {"_committed_at"}
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
@@ -940,7 +940,7 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
-        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_LINEAGE"}:
+        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_LINEAGE"}:
             assert audit_columns & set(fields) <= {"_committed_at"}
         else:
             assert audit_columns.issubset(fields)
@@ -1056,6 +1056,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
 
     registry = metadata_table_schema_registry()
     catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}
+    profiled = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_PROFILED"])}
     agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
     contract = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CONTRACT"])}
     docs_catalogue = catalogue
@@ -1068,9 +1069,10 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert catalogue["schema_fingerprint"] == "string"
     assert "fabric_store_target" not in catalogue
     assert contract["agreement_id"] == "string"
-    assert catalogue["null_percent"] == "double"
+    assert "null_percent" not in catalogue
+    assert profiled["null_percent"] == "double"
     assert docs_catalogue["_committed_at"] == "timestamp"
-    assert docs_catalogue["profiled_at"] == "timestamp"
+    assert "profiled_at" not in docs_catalogue
     assert "policy_updated_at" not in docs_catalogue
 
     for table_name, schema in registry.items():
@@ -1078,7 +1080,9 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-1:] == ["_committed_at"]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["profiled_at", "_committed_at"]
+            assert timestamp_fields == ["_committed_at"]
+        elif table_name == "METADATA_DATA_PROFILED":
+            assert names[-1:] == ["_committed_at"]
         elif table_name != "METADATA_DATA_LINEAGE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
 
@@ -1093,10 +1097,10 @@ def test_metadata_audit_schema_nullability_contract():
         fields = {field.name: field for field in schema.fields}
         if table_name == "METADATA_DATA_LINEAGE":
             continue
-        expected_audit_names = ["_committed_at"] if table_name == "METADATA_DATA_CATALOGUE" else audit_names
+        expected_audit_names = ["_committed_at"] if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED"} else audit_names
         for name in expected_audit_names:
             assert fields[name].nullable is False, table_name
-        if table_name == "METADATA_DATA_CATALOGUE":
+        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED"}:
             assert set(audit_names) & set(fields) == {"_committed_at"}
         else:
             assert set(audit_names).issubset(fields)

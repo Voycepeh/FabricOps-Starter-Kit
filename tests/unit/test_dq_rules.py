@@ -135,14 +135,15 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
         set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
     )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
+    profiled_fields = set(schemas["METADATA_DATA_PROFILED"].fieldNames())
+    assert {"store_type", "metadata_table_key", "metadata_column_key", "schema_fingerprint"}.issubset(catalogue_fields)
     assert {
-        "store_type",
         "row_count",
         "non_null_count",
         "null_percent",
         "distinct_percent",
         "frequency_json",
-    }.issubset(catalogue_fields)
+    }.issubset(profiled_fields)
     assert {"profile_role", "watermark_column", "watermark_value", "profile_hash", "profile_payload_json"}.isdisjoint(catalogue_fields)
     assert {
         "baseline_status",

@@ -565,7 +565,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     )
 
     assert result == {"orders": "written"}
-    assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
+    assert writes[0][2:4] == ("metadata", "METADATA_DATA_PROFILED")
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" not in writes[0][0].columns
     assert "freshness_status" not in writes[0][0].columns

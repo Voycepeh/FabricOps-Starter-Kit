@@ -784,7 +784,7 @@ def enforce_profile_behavior(
     dataframe : Any
         Spark DataFrame being checked.
     metadata_table : str
-        Metadata catalogue table, normally ``METADATA_DATA_CATALOGUE``.
+        Metadata profiled evidence table, normally ``METADATA_DATA_PROFILED``.
     dataset_name : str
         Dataset identifier used for rule and baseline lookup.
     table_name : str
@@ -815,7 +815,7 @@ def enforce_profile_behavior(
     env : str, optional
         Environment key used with ``config`` for configured metadata routing.
     catalogue_df : DataFrame or iterable of mappings, optional
-        Preloaded ``METADATA_DATA_CATALOGUE`` evidence.
+        Preloaded ``METADATA_DATA_PROFILED`` evidence.
     current_profile : DataFrame or iterable of mappings, optional
         Current profile evidence for static mode.
     write_results : bool, default=True
@@ -833,13 +833,13 @@ def enforce_profile_behavior(
     -------
     dict
         Standard guardrail result plus catalogue profile evidence and comparison
-        details suitable for ``METADATA_DATA_CATALOGUE`` and
+        details suitable for ``METADATA_DATA_PROFILED`` and
         ``METADATA_GUARDRAIL_RESULTS``.
 
     Notes
     -----
     Baselines are never reset here. Current profile evidence is compared to the
-    previous accepted or passed catalogue evidence. Intentional blocked changes
+    previous accepted or passed profiled evidence. Intentional blocked changes
     should be reviewed in governance or handled by superseding/resetting the
     relevant guardrail rule.
 
@@ -925,11 +925,11 @@ def enforce_profile_behavior(
     if not previous:
         status = "baseline_created"
         can_continue = True
-        message = "No previous accepted profile_behavior evidence was available; current profile establishes the catalogue baseline."
+        message = "No previous accepted profile_behavior evidence was available; current profile establishes the profiled baseline."
     elif differences:
         status = "failed" if normalized_severity == "blocking" else "warning"
         can_continue = normalized_severity == "warning"
-        message = "Profile behavior changed versus previous accepted catalogue evidence. Review and approve the change in governance, or supersede/reset the relevant guardrail rule if intentional."
+        message = "Profile behavior changed versus previous accepted profiled evidence. Review and approve the change in governance, or supersede/reset the relevant guardrail rule if intentional."
     else:
         status = "passed"
         can_continue = True
