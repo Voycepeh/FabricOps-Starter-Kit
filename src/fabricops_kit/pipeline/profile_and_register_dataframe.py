@@ -224,29 +224,27 @@ def _write_lineage_participation(
     )
     lineage_schema = metadata_table_schema_registry()[LINEAGE_TABLE]
     lineage_df = spark_session.createDataFrame([row], schema=lineage_schema)
+    _upsert_lineage_event(lineage_df=lineage_df, config=config, env=env, spark_session=spark_session)
+
+
+def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_session: Any) -> None:
+    """Upsert lineage rows by lineage_event_id without falling back to append."""
     try:
         from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
 
-        _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-            "metadata", LINEAGE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
-        )
-        target = DeltaTable.forPath(spark_session, path)
-        (
-            target.alias("target")
-            .merge(lineage_df.alias("source"), "target.lineage_event_id = source.lineage_event_id")
-            .whenMatchedUpdateAll()
-            .whenNotMatchedInsertAll()
-            .execute()
-        )
-    except Exception:
-        write_lakehouse_table_core(
-            lineage_df,
-            LINEAGE_TABLE,
-            target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
-            context={"config": config, "env": env},
-            mode="append",
-        )
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "metadata", LINEAGE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
+    )
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(lineage_df.alias("source"), "target.lineage_event_id = source.lineage_event_id")
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
+    )
 
 
 def profile_and_register_dataframe(
