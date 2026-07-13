@@ -636,6 +636,7 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
     expected = [
         ("metadata_table_key", "StringType", False),
         ("metadata_column_key", "StringType", False),
+        ("profile_role", "StringType", False),
         ("environment_name", "StringType", False),
         ("store_type", "StringType", False),
         ("layer", "StringType", False),
@@ -658,7 +659,6 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
         ("max_value", "StringType", True),
         ("is_sampled", "BooleanType", False),
         ("frequency_json", "StringType", True),
-        ("profiled_at", "TimestampType", False),
         ("_committed_at", "TimestampType", False),
     ]
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -669,7 +669,7 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
 
     removed_fields = {
         "dataset_name", "fabric_store_target", "asset_kind", "profile_stage", "profile_status",
-        "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
+        "profiled_at", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
         "watermark_value", "profile_hash", "profile_payload_json", "governance_mode",
         "approval_policy", "bypass_allowed", "policy_reason", "agreement_id", "agreement_version",
         "profile_scope_json",
@@ -1063,18 +1063,22 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert agreement["start_date"] == "date"
     assert "approved_usage_internal" not in agreement
     assert agreement["agreement_version"] == "string"
-    assert catalogue["profiled_at"] == "timestamp"
     assert catalogue["store_type"] == "string"
+    assert catalogue["profile_role"] == "string"
+    assert "profiled_at" not in catalogue
     assert "fabric_store_target" not in catalogue
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
-    assert docs_catalogue["profiled_at"] == "timestamp"
+    assert docs_catalogue["_committed_at"] == "timestamp"
+    assert "profiled_at" not in docs_catalogue
     assert "policy_updated_at" not in docs_catalogue
 
     for table_name, schema in registry.items():
         names = [row["name"] for row in metadata_table_schema_rows(schema)]
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-1:] == ["_committed_at"]
+            timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
+            assert timestamp_fields == ["_committed_at"]
         else:
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
 

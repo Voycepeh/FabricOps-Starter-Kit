@@ -2,7 +2,7 @@
 
 **Purpose:** Minimal column-profile contract for observed physical Fabric tables.
 
-One row represents one profiled column. Numeric-only statistics are nullable for non-numeric columns. `frequency_json` is optional evidence for callers that calculate a top-N frequency profile. Existing physical `METADATA_DATA_CATALOGUE` tables must be recreated because this is an intentional breaking schema change.
+One row represents one profiled column snapshot. Numeric-only statistics are nullable for non-numeric columns. `frequency_json` is optional evidence for callers that calculate a top-N frequency profile. The contract records a single commit timestamp, `_committed_at`, for when the profile snapshot was written. Existing physical `METADATA_DATA_CATALOGUE` tables must be recreated because this is an intentional breaking schema change.
 
 ## Implemented schema
 
@@ -10,6 +10,7 @@ One row represents one profiled column. Numeric-only statistics are nullable for
 | --- | --- | --- | --- | --- |
 | `metadata_table_key` | `string` | No | Catalogue evidence writers | Stable key identifying the physical table across environment, store type, layer, schema, and table context. |
 | `metadata_column_key` | `string` | No | Catalogue evidence writers | Stable key identifying a specific column within the physical table. |
+| `profile_role` | `string` | No | Catalogue evidence writers | How the profiled DataFrame participated in the pipeline flow; expected values are `source` or `target`. |
 | `environment_name` | `string` | No | Catalogue evidence writers | FabricOps environment such as development, test, or production. |
 | `store_type` | `string` | No | Catalogue evidence writers | Physical Fabric storage type, currently `lakehouse` or `warehouse`. |
 | `layer` | `string` | No | Catalogue evidence writers | Pipeline or data architecture layer such as raw, bronze, silver, gold, or curated. |
@@ -32,8 +33,7 @@ One row represents one profiled column. Numeric-only statistics are nullable for
 | `max_value` | `string` | Yes | Profiling functions | Maximum observed value serialized as a string for ordered columns. |
 | `is_sampled` | `boolean` | No | Catalogue evidence writers | True when the caller supplied a sampled or filtered DataFrame rather than the complete intended dataset. |
 | `frequency_json` | `string` | Yes | Profiling functions | Optional serialized top-N frequency profile produced from `profile_frequency_distribution` output. |
-| `profiled_at` | `timestamp` | No | Profiling functions | Time the data profile was calculated. |
-| `_committed_at` | `timestamp` | No | Runtime audit context | Time the catalogue row was persisted. |
+| `_committed_at` | `timestamp` | No | Runtime audit context | Time the profile snapshot was written. |
 
 ## Related function reference
 
