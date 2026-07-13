@@ -73,10 +73,10 @@ METADATA_FIELD_DESCRIPTIONS = {
     "bypassed_at": "Timestamp captured when governance review is intentionally bypassed.",
 }
 METADATA_RELATED_FUNCTIONS = {
-    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement", "widget_pipeline_bootstrap", "write_pipeline_run_summary"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
     "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
-    "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
+    "METADATA_DATA_LINEAGE": ["profile_and_register_dataframe"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT_RULES": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
@@ -85,8 +85,6 @@ METADATA_RELATED_FUNCTIONS = {
         "widget_author_dq_rules",
         "widget_review_guardrail_governance",
     ],
-    "METADATA_NOTEBOOK_REGISTRY": ["widget_pipeline_bootstrap"],
-    "METADATA_PIPELINE_RUNS": ["widget_pipeline_bootstrap", "write_pipeline_run_summary"],
 }
 
 
@@ -200,7 +198,7 @@ PARAMETER_DISPLAY_TYPES = {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
     },
-    "write_pipeline_run_summary": {
+    "profile_and_register_dataframe": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
     },
@@ -4025,13 +4023,11 @@ def _metadata_managed_by(table_name: str, column_name: str) -> str:
         "METADATA_DATA_AGREEMENT": "Agreement widget",
         "METADATA_DATA_AGREEMENT_EVIDENCE": "Agreement evidence widget",
         "METADATA_DATA_CATALOGUE": "Catalogue evidence writers",
-        "METADATA_DATA_LINEAGE_TABLE": "Pipeline lineage writer",
+        "METADATA_DATA_LINEAGE": "Pipeline lineage writer",
         "METADATA_DATA_STEWARD": "Data steward widget",
         "METADATA_ENRICHMENT_RULES": "Enrichment and governance widgets",
         "METADATA_GUARDRAIL_RESULTS": "Pipeline guardrail writers",
         "METADATA_GUARDRAIL_RULES": "Guardrail authoring and governance widgets",
-        "METADATA_NOTEBOOK_REGISTRY": "Notebook registration workflow",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summary writer",
     }
     return table_owners.get(table_name, "FabricOps workflow")
 
@@ -4040,8 +4036,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PIPELINE_RUNS" and column_name == "_activity_id":
-        return "Canonical execution identity for the pipeline run."
+    if table_name == "METADATA_DATA_LINEAGE" and column_name == "activity_id":
+        return "Canonical Fabric activity identity for the runtime lineage event."
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
     return f"{_metadata_table_title(table_name)} field `{column_name}`."
@@ -4054,13 +4050,11 @@ def _metadata_table_purpose(table_name: str) -> str:
         "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
         "METADATA_DATA_AGREEMENT_EVIDENCE": "Supporting agreement files and related metadata captured during agreement intake.",
         "METADATA_DATA_CATALOGUE": "Observed table and column profiles used for catalogue review and runtime comparisons.",
-        "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage rows written by pipeline runs.",
+        "METADATA_DATA_LINEAGE": "Runtime lineage events binding one activity, observed table schema, and source or target role.",
         "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
         "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
         "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
         "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
-        "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summaries for execution, guardrail, lineage, and catalogue status.",
     }
     return purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
 
@@ -4108,7 +4102,7 @@ def generate_metadata_reference_pages() -> None:
                 f"| `{column}` | `{row['type']}` | {nullable} | "
                 f"{_metadata_managed_by(table_name, column)} | {_metadata_field_description(table_name, column)} |"
             )
-        if table_name == "METADATA_PIPELINE_RUNS":
+        if table_name == "METADATA_DATA_LINEAGE":
             lines.extend([
                 "",
                 "## Execution identity",

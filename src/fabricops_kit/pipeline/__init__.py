@@ -11,7 +11,6 @@ from fabricops_kit.pipeline.profile_and_register_dataframe import profile_and_re
 from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 from fabricops_kit.pipeline.run_table_guardrails import run_table_guardrails
-from fabricops_kit.pipeline.write_pipeline_run_summary import write_pipeline_run_summary
 
 __all__ = [
     "display_guardrail_results",
@@ -23,5 +22,4 @@ __all__ = [
     "profile_dataframe",
     "profile_frequency_distribution",
     "run_table_guardrails",
-    "write_pipeline_run_summary",
 ]

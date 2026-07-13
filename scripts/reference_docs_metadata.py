@@ -149,11 +149,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_pipeline_bootstrap',
-  'visibility': 'public',
-  'module_summary': 'Owns the pipeline bootstrap widget and active runtime context setup.',
-  'sidebar_group': '3. Data engineer',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_select_guardrail_target',
   'visibility': 'public',
   'module_summary': 'Owns the guardrail target selection widget workflow.',
@@ -232,15 +227,13 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                    'configs, transform logic, target writes, lineage relationships, and pipeline '
                    'naming visible while package helpers handle reusable config enrichment, '
                    'guardrails, and evidence plumbing.',
-  'segments': [{'symbols': ['widget_pipeline_bootstrap',
-                            'read_warehouse_table',
+  'segments': [{'symbols': [                            'read_warehouse_table',
                             'read_warehouse_query',
                             'read_lakehouse_table',
                             'prepare_pipeline_table_configs',
                             'run_table_guardrails',
                             'write_lakehouse_table',
-                            'write_pipeline_run_summary',
-                            'display_guardrail_results',
+                                                        'display_guardrail_results',
                             'widget_select_guardrail_target',
                             'widget_author_schema_freshness_profile_rules',
                             'widget_author_dq_rules',
@@ -272,7 +265,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'write_warehouse_table',
                             'profile_dataframe',
                             'widget_browse_metadata_catalogue',
-                            'widget_pipeline_bootstrap'],
+                            ],
                 'title': 'Exploration'}],
   'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
@@ -595,34 +588,34 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'widgets.shared',
   'function_type': 'callable',
-  'summary_override': 'Return the agreement selected by widget_pipeline_bootstrap.',
+  'summary_override': 'Return the agreement selected by runtime context setup.',
   'symbol_name': 'get_selected_agreement',
   'template_notebook': '02_pipeline',
   'template_segment': 'Agreement selection',
-  'use_when': 'Use after widget_pipeline_bootstrap(select_agreement=True) to retrieve the selected agreement '
+  'use_when': 'Use after runtime context setup(select_agreement=True) to retrieve the selected agreement '
               'record for pipeline logic and evidence binding.',
-  'do_not_use_when': 'Do not use before running widget_pipeline_bootstrap(select_agreement=True), or as a '
+  'do_not_use_when': 'Do not use before running runtime context setup(select_agreement=True), or as a '
                      'substitute for querying all agreement metadata.',
   'parameters': 'No required parameters; reads the current in-memory widget selection state.',
   'returns': 'Selected agreement dictionary for the active notebook session.',
   'raises': 'Raises an error when no agreement has been selected in the current session.',
   'side_effects': 'Reads session/widget state only; it does not write metadata, tables, or files.',
-  'fabric_context': 'Depends on a prior widget_pipeline_bootstrap(select_agreement=True) call in the same notebook session '
+  'fabric_context': 'Depends on a prior runtime context setup(select_agreement=True) call in the same notebook session '
                     'and agreement metadata loaded via 00_env_config routing.',
   'ai_verification': 'Verify the returned agreement has the expected dataset/table identifiers '
                      'before using it to drive reads, writes, or governance evidence.',
   'preferred_example': 'agreement = get_selected_agreement()\n'
                        'dataset_name = agreement["dataset_name"]',
-  'related_functions': ['widget_pipeline_bootstrap'],
-  'expanded_purpose': 'Returns the agreement chosen by widget_pipeline_bootstrap so downstream cells '
+  'related_functions': ['runtime context setup'],
+  'expanded_purpose': 'Returns the agreement chosen by runtime context setup so downstream cells '
                       'can pass consistent agreement identifiers to pipeline helpers.',
-  'when_to_use': 'Use after rendering and completing widget_pipeline_bootstrap when code needs the '
+  'when_to_use': 'Use after rendering and completing runtime context setup when code needs the '
                  'selected agreement values.',
   'glossary_terms': ['notebook template'],
   'return_interpretation': 'A returned dictionary contains the selected agreement fields. A '
                            'missing value means the selector has not been completed in the current '
                            'notebook state.',
-  'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
+  'common_failure_causes': ['runtime context setup(select_agreement=True) has not been run.',
                             'The user has not selected an agreement.',
                             'Notebook state was reset.',
                             'The selected row is no longer present in metadata.'],
@@ -1182,28 +1175,6 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Pipeline Execution',
                       'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
-  'module': 'widgets.widget_pipeline_bootstrap',
-  'function_type': 'callable',
-  'summary_override': 'Bootstrap a guided pipeline notebook run and store runtime defaults.',
-  'symbol_name': 'widget_pipeline_bootstrap',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'runtime context setup / pipeline bootstrap',
-  'use_when': 'Use near the top of 02_pipeline to resolve run, agreement, notebook, and pipeline defaults without repeating runtime plumbing.',
-  'do_not_use_when': 'Do not use when an advanced custom notebook needs to pass every runtime parameter explicitly to lower-level helpers.',
-  'parameters': 'notebook_type, select_agreement, register_notebook, read_only, and optional runtime overrides.',
-  'returns': 'Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults. The concrete context class is internal and not a primary public API.',
-  'side_effects': 'Stores active in-memory context for the current notebook session; renders agreement selection when select_agreement=True and registers only when register_notebook=True.',
-  'fabric_context': 'Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config.',
-  'ai_verification': 'Verify delivery notebooks use register_notebook=True and read-only exploration notebooks use register_notebook=False with read_only=True.',
-  'preferred_example': 'PIPELINE = widget_pipeline_bootstrap(notebook_type="02_pipeline", select_agreement=True, register_notebook=True)',
-  'related_functions': ['run_table_guardrails', 'write_pipeline_run_summary'],
-  'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
-  'when_to_use': 'Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.',
-  'glossary_terms': ['notebook template', 'data agreement', 'metadata lakehouse'],
-  'return_interpretation': 'The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.',
-  'common_failure_causes': ['RUN_CONTEXT is unavailable.', 'spark is unavailable.', 'No agreement exists when select_agreement=True.', 'The user has not selected an agreement.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates-implementation-guide/index.md'}, {'title': 'Pipeline Execution', 'path': '../../guided-demo/run-pipeline.md'}]},
- {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Run profiling, schema, freshness, profile behavior, DQ, and catalogue '
@@ -1275,36 +1246,6 @@ PUBLIC_SYMBOL_DOCS = [
                             'The metadata lakehouse cannot be written.',
                             'Spark cannot convert evidence rows to the target schema.',
                             'The caller lacks metadata write permission.'],
-  'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/run-pipeline.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../reference/metadata.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Write one pipeline runtime summary row to metadata.',
-  'symbol_name': 'write_pipeline_run_summary',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Runtime summary',
-  'use_when': 'Use at the end of 02_pipeline to store operational run evidence in '
-              'METADATA_PIPELINE_RUNS.',
-  'parameters': 'spark, config, env, run_id, agreement context, source/target definitions, '
-                'guardrail results, and evidence statuses.',
-  'returns': 'Runtime summary row that was written.',
-  'side_effects': 'Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.',
-  'related_functions': ['write_catalogue_evidence',
-                        'write_lakehouse_table'],
-  'expanded_purpose': 'Writes a compact run-level summary that ties pipeline name, agreement '
-                      'context, guardrail results, lineage, and write outcomes together.',
-  'when_to_use': 'Use at the end of 02_pipeline when downstream operators need one metadata record '
-                 'describing the run outcome.',
-  'glossary_terms': ['guardrails', 'can_continue', 'evidence', 'metadata lakehouse'],
-  'return_interpretation': 'The returned summary shows what run metadata was assembled or written. '
-                           'Compare status and guardrail counts with expected pipeline outcomes.',
-  'common_failure_causes': ['Required run identifiers are missing.',
-                            'Guardrail result structures are malformed.',
-                            'Metadata routing is unavailable.',
-                            'The configured summary table cannot be written.'],
   'related_guides': [{'title': 'Pipeline Execution',
                       'path': '../../guided-demo/run-pipeline.md'},
                      {'title': 'Metadata Tables',
@@ -1865,7 +1806,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                               'differ from expected dictionaries.',
                                                               'Defaults in CONFIG do not match the '
                                                               'notebook environment.']},
- 'widget_pipeline_bootstrap': {'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
+ 'runtime context setup': {'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
                         'when_to_use': 'Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.',
                         'glossary_terms': ['notebook template', 'data agreement', 'metadata lakehouse'],
                         'return_interpretation': 'The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.',
@@ -1913,7 +1854,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'target schema.',
                                                         'The caller lacks metadata write '
                                                         'permission.']},
- 'write_pipeline_run_summary': {'expanded_purpose': 'Writes a compact run-level summary that ties '
+ '': {'expanded_purpose': 'Writes a compact run-level summary that ties '
                                                     'pipeline name, agreement context, guardrail '
                                                     'results, lineage, and write outcomes '
                                                     'together.',
@@ -2093,18 +2034,18 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                   'The metadata target cannot be '
                                                                   'written.']},
  'get_selected_agreement': {'expanded_purpose': 'Returns the agreement chosen by '
-                                                'widget_pipeline_bootstrap so downstream cells can '
+                                                'runtime context setup so downstream cells can '
                                                 'pass consistent agreement identifiers to pipeline '
                                                 'helpers.',
                             'when_to_use': 'Use after rendering and completing '
-                                           'widget_pipeline_bootstrap when code needs the selected '
+                                           'runtime context setup when code needs the selected '
                                            'agreement values.',
                             'glossary_terms': ['notebook template'],
                             'return_interpretation': 'A returned dictionary contains the selected '
                                                      'agreement fields. A missing value means the '
                                                      'selector has not been completed in the '
                                                      'current notebook state.',
-                            'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
+                            'common_failure_causes': ['runtime context setup(select_agreement=True) has not been run.',
                                                       'The user has not selected an agreement.',
                                                       'Notebook state was reset.',
                                                       'The selected row is no longer present in '
@@ -2164,7 +2105,7 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
                                'path': '../../reference/metadata.md'}],
- 'write_pipeline_run_summary': [{'title': 'Pipeline Execution',
+ '': [{'title': 'Pipeline Execution',
                                  'path': '../../guided-demo/run-pipeline.md'},
                                 {'title': 'Metadata Tables',
                                  'path': '../../reference/metadata.md'}],

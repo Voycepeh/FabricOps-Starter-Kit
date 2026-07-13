@@ -13,7 +13,6 @@ import pytest
 import fabricops_kit
 import fabricops_kit.pipeline as pipeline
 from fabricops_kit.pipeline import shared as pipeline_shared
-pipeline_bootstrap_module = importlib.import_module("fabricops_kit.widgets.widget_pipeline_bootstrap")
 widgets_shared_module = importlib.import_module("fabricops_kit.widgets.shared")
 from tests.helpers import framework_config
 
@@ -56,7 +55,7 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
     assert "write_pipeline_lineage" not in fabricops_kit.__all__
-    assert "write_pipeline_run_summary" in fabricops_kit.__all__
+    assert "write_pipeline_run_summary" not in fabricops_kit.__all__
     for removed_name in {
         "prepare_source_table_configs",
         "prepare_target_table_configs",
@@ -256,37 +255,6 @@ def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezo
     ]
     created_at = dict(df.with_columns)["_fabricops_created_at"][1]
     assert created_at.endswith("+08:00")
-
-
-def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):
-    """Verify write pipeline run summary writes metadata table."""
-    writes = []
-    fake_spark = FakeSpark()
-
-    def write_table(df, table, *, target, context, **kwargs):
-        assert target == "metadata"
-        assert context["env"] == "dev"
-        writes.append((df, context["env"], target, table, kwargs))
-
-    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", write_table)
-
-    row = pipeline.write_pipeline_run_summary(
-        spark=fake_spark,
-        context={"config": {}, "env": "dev"},
-        source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
-        target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
-        source_schema_results={"s1": {"status": "passed"}},
-        target_schema_results={"t1": {"status": "passed"}},
-        source_dq_results={"s1": {"status": "passed"}},
-        target_dq_results={"t1": {"status": "warning"}},
-        started_at="2026-01-01T00:00:00+00:00",
-    )
-
-    assert row["source_count"] == 2
-    assert row["target_count"] == 2
-    assert row["dq_status"] == "warning"
-    assert writes[0][2:4] == ("metadata", "METADATA_PIPELINE_RUNS")
-    assert writes[0][4]["mode"] == "append"
 
 
 def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():
@@ -769,50 +737,6 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 
 
 
-def test_widget_pipeline_bootstrap_public_import_surface():
-    """Verify widget_pipeline_bootstrap remains available from public package surfaces."""
-    assert fabricops_kit.widget_pipeline_bootstrap is pipeline_bootstrap_module.widget_pipeline_bootstrap
-
-
-def test_widget_pipeline_bootstrap_stores_agreement_context(monkeypatch):
-    """Verify widget_pipeline_bootstrap stores agreement and runtime defaults."""
-    spark = FakeSpark()
-    run_context = types.SimpleNamespace(
-        run_id="run-123",
-        runtime_metadata={"currentNotebookName": "02_pipeline", "currentNotebookId": "notebook-1"},
-    )
-    widget_calls = []
-    monkeypatch.setattr(pipeline_bootstrap_module, "_render_bootstrap_agreement_selector", lambda **kwargs: widget_calls.append(kwargs))
-    monkeypatch.setattr(
-        pipeline_bootstrap_module,
-        "get_selected_agreement",
-        lambda: {"agreement_id": "agreement-1", "agreement_version": "2", "registration_id": "registry-1"},
-    )
-
-    result = fabricops_kit.widget_pipeline_bootstrap(
-        notebook_type="02_pipeline",
-        select_agreement=True,
-        register_notebook=True,
-        run_context=run_context,
-        spark_session=spark,
-        metadata_schema="metadata_schema",
-    )
-
-    assert result.run_id == "run-123"
-    assert result.pipeline_name == "02_pipeline"
-    assert result.agreement_id == "agreement-1"
-    assert result.agreement_version == "2"
-    assert widget_calls == [
-        {
-            "spark_session": spark,
-            "metadata_schema": "metadata_schema",
-            "register_notebook": True,
-            "notebook_type": "02_pipeline",
-            "context": None,
-        }
-    ]
-
-
 def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     """Verify run_table_guardrails derives omitted runtime parameters from context."""
     spark = FakeSpark()
@@ -861,38 +785,3 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     assert captured["catalogue"]["agreement_version"] == "2"
     assert active.source_definitions["orders"]["fabric_store_target"] == "source"
 
-
-def test_write_pipeline_run_summary_accepts_guardrail_bundles_from_active_context(monkeypatch):
-    """Verify summary writer derives context and guardrail result fields."""
-    spark = FakeSpark()
-    active = widgets_shared_module.PipelineRunContext(
-        run_id="run-123",
-        pipeline_started_at="2026-01-01T00:00:00Z",
-        pipeline_name="demo_pipeline",
-        spark_session=spark,
-        agreement_id="agreement-1",
-        agreement_version="2",
-        source_definitions={"orders": {"table_name": "orders"}},
-        target_definitions={"curated": {"table_name": "curated"}},
-    )
-    monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
-    monkeypatch.setattr(pipeline_shared, "resolve_fabric_context", lambda context=None: (framework_config(), "dev", {"config": framework_config(), "env": "dev"}))
-    writes = []
-    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: writes.append((args, kwargs)))
-    source_results = {"can_continue": True, "schema_results": {"orders": {"status": "passed"}}, "catalogue_status": {"orders": "written"}}
-    target_results = {"can_continue": False, "dq_results": {"curated": {"status": "failed"}}, "catalogue_status": {"curated": "written"}}
-
-    row = pipeline.write_pipeline_run_summary(
-        source_guardrail_results=source_results,
-        target_guardrail_results=target_results,
-        target_write_status={"curated": "written"},
-        lineage_result={"status": "written"},
-    )
-
-    assert row["_activity_id"] == "activity-id"
-    assert "run_id" not in row
-    assert row["status"] == "failed"
-    assert "pipeline_name" not in row
-    assert row["lineage_status"] == "written"
-    assert row["catalogue_status"] == "written"
-    assert writes

@@ -201,8 +201,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     _check_schema_rule_runtime,
 )
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
-METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 
 
@@ -818,10 +817,10 @@ def _run_table_guardrails_workflow(
         and ``exclude_columns`` control the guardrail behavior.
     run_id : str, optional
         Current pipeline run identifier. When omitted, the active context from
-        :func:`widget_pipeline_bootstrap` is used.
+        :func:`runtime context setup` is used.
     spark_session : Any, optional
         Spark session used by profile behavior and DQ helpers. When omitted,
-        the active context from :func:`widget_pipeline_bootstrap` is used.
+        the active context from :func:`runtime context setup` is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -866,7 +865,7 @@ def _run_table_guardrails_workflow(
         agreement_id = agreement_id or active.agreement_id
         agreement_version = agreement_version or active.agreement_version
     if spark_session is None:
-        raise ValueError("spark_session is required unless widget_pipeline_bootstrap has established an active context.")
+        raise ValueError("spark_session is required unless runtime context setup has established an active context.")
     if not run_id:
         raise ValueError("run_id is required for in-memory profile grouping; use the active pipeline context or pass a real run_id.")
     normalized_mode = str(mode or "profile").lower().strip()
@@ -1188,183 +1187,3 @@ def write_catalogue_evidence(
             )
         statuses[name] = "written"
     return statuses
-
-
-def _write_pipeline_run_summary_workflow(
-    *,
-    spark: Any | None = None,
-    context: dict[str, Any] | None = None,
-    agreement_id: str = "",
-    agreement_version: str = "",
-    notebook_type: str = "02_pipeline",
-    started_at: str | None = None,
-    completed_at: str | None = None,
-    status: str = "completed",
-    source_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    lineage_status: str = "not_run",
-    catalogue_status: str = "not_run",
-    message: str = "",
-    source_guardrail_results: Mapping[str, Any] | None = None,
-    target_guardrail_results: Mapping[str, Any] | None = None,
-    target_write_status: Mapping[str, Any] | None = None,
-    lineage_result: Mapping[str, Any] | None = None,
-    metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Write a pipeline runtime summary to metadata.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession, optional
-        Spark session used to create the one-row summary DataFrame. When omitted,
-        the active context from :func:`widget_pipeline_bootstrap` is used.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    agreement_id, agreement_version, notebook_type : str, optional
-        Agreement and notebook registry context.
-    started_at, completed_at : str, optional
-        Runtime timestamps. Defaults to current UTC time when omitted.
-    status : str, default="completed"
-        Overall pipeline status.
-    source_definitions, target_definitions : mapping, optional
-        Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_freshness_results, target_freshness_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
-        Guardrail result dictionaries included in the JSON summary.
-    lineage_status, catalogue_status, message : str, optional
-        Evidence write statuses and support message.
-    source_guardrail_results, target_guardrail_results : mapping, optional
-        Template-facing guardrail result bundles returned by
-        :func:`run_table_guardrails`. When supplied, schema, freshness, profile
-        behavior, DQ, catalogue, and status fields are derived automatically.
-    target_write_status, lineage_result : mapping, optional
-        Template-facing write and lineage outcomes included in the run summary.
-    metadata_table : str, default="METADATA_PIPELINE_RUNS"
-        Metadata table that stores runtime summaries.
-    mode : str, default="append"
-        Write mode for the runtime summary row.
-
-    Returns
-    -------
-    dict[str, Any]
-        The summary row that was written.
-
-    Notes
-    -----
-    The row is written via ``write_lakehouse_table(..., metadata_table,
-    target="metadata", context=resolved_context, mode="append")`` so runtime
-    evidence never relies on a default attached lakehouse.
-
-    """
-    from ..widgets.shared import pipeline_active_context
-
-    active = pipeline_active_context()
-    if active is not None:
-        context = context if context is not None else active.context
-        spark = spark if spark is not None else active.spark_session
-        agreement_id = agreement_id or active.agreement_id
-        agreement_version = agreement_version or active.agreement_version
-        notebook_type = notebook_type or active.notebook_type
-        started_at = started_at or active.pipeline_started_at
-        source_definitions = source_definitions or active.source_definitions
-        target_definitions = target_definitions or active.target_definitions
-    if spark is None:
-        raise ValueError("spark is required unless widget_pipeline_bootstrap has established an active context.")
-
-    source_guardrail_results = source_guardrail_results or {}
-    target_guardrail_results = target_guardrail_results or {}
-    source_schema_results = source_schema_results or source_guardrail_results.get("schema_results")
-    target_schema_results = target_schema_results or target_guardrail_results.get("schema_results")
-    source_freshness_results = source_freshness_results or source_guardrail_results.get("freshness_results")
-    target_freshness_results = target_freshness_results or target_guardrail_results.get("freshness_results")
-    source_stability_results = source_stability_results or source_guardrail_results.get("stability_results")
-    target_stability_results = target_stability_results or target_guardrail_results.get("stability_results")
-    source_dq_results = source_dq_results or source_guardrail_results.get("dq_results")
-    target_dq_results = target_dq_results or target_guardrail_results.get("dq_results")
-    source_definitions = source_definitions or source_guardrail_results.get("evidence_definitions")
-    target_definitions = target_definitions or target_guardrail_results.get("evidence_definitions")
-    if lineage_result is not None:
-        lineage_status = str(lineage_result.get("status", lineage_status))
-    if source_guardrail_results or target_guardrail_results:
-        if status == "completed":
-            status = (
-                "succeeded"
-                if all(
-                    bool(result.get("can_continue", True))
-                    for result in (source_guardrail_results, target_guardrail_results)
-                )
-                else "failed"
-            )
-        if catalogue_status == "not_run" and any(
-            result.get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)
-        ):
-            catalogue_status = "written"
-    if target_write_status and not message:
-        message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
-
-    config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = _runtime_audit_fields(config, env, resolved_context)
-    completed = _timestamp_value(completed_at, config=config)
-    if not started_at:
-        raise ValueError("started_at is required for pipeline run summaries; pass the pipeline bootstrap start time or an explicit runtime start timestamp.")
-    started = _timestamp_value(started_at, config=config)
-    sources = source_definitions or {}
-    targets = target_definitions or {}
-    source_guardrail_status = _summary_status(
-        {**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})}
-    )
-    target_guardrail_status = _summary_status(
-        {**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})}
-    )
-    dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
-    run_summary = {
-        "source_schema_results": source_schema_results or {},
-        "target_schema_results": target_schema_results or {},
-        "source_freshness_results": source_freshness_results or {},
-        "target_freshness_results": target_freshness_results or {},
-        "source_stability_results": source_stability_results or {},
-        "target_stability_results": target_stability_results or {},
-        "source_dq_results": source_dq_results or {},
-        "target_dq_results": target_dq_results or {},
-        "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
-        "target_tables": [_definition_name(name, definition) for name, definition in targets.items()],
-        "target_write_status": dict(target_write_status or {}),
-        "lineage_result": dict(lineage_result or {}),
-    }
-    row = {
-        "agreement_id": agreement_id,
-        "agreement_version": agreement_version,
-        "notebook_type": notebook_type,
-        "environment_name": env,
-        "started_at": started,
-        "completed_at": completed,
-        "status": status,
-        "source_count": len(sources),
-        "target_count": len(targets),
-        "source_guardrail_status": source_guardrail_status,
-        "target_guardrail_status": target_guardrail_status,
-        "dq_status": dq_status,
-        "lineage_status": lineage_status,
-        "catalogue_status": catalogue_status,
-        "message": message,
-        "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        **audit,
-    }
-    write_lakehouse_table_core(
-        spark.createDataFrame([coerce_metadata_row_types(metadata_table, row)]),
-        metadata_table,
-        target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        context=resolved_context,
-        mode=mode,
-    )
-    return row
