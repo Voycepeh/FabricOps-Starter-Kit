@@ -6,13 +6,8 @@
 
 | Column | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
-| `lineage_id` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `lineage_id`. |
-| `dataset_name` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `dataset_name`. |
-| `source_table` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `source_table`. |
-| `target_table` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `target_table`. |
-| `source_table_key` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `source_table_key`. |
-| `target_table_key` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `target_table_key`. |
-| `transformation_steps_json` | `string` | Yes | Pipeline lineage writer | Metadata Data Lineage Table field `transformation_steps_json`. |
+| `metadata_table_key` | `string` | No | Pipeline lineage writer | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `profile_role` | `string` | No | Pipeline lineage writer | Metadata Data Lineage Table field `profile_role`. |
 | `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
@@ -24,4 +19,4 @@
 
 ## Related function reference
 
-- [`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)
+- [`profile_and_register_dataframe`](../../api/reference/profile_and_register_dataframe.md)

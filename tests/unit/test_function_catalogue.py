@@ -25,7 +25,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 28 public functions." in page
+    assert "Use the finder below to search 27 public functions." in page
     assert "Search public functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -158,6 +158,7 @@ def _expected_direct_public_template_calls() -> set[str]:
         str(row["function"])
         for row in _audit_rows()
         if row["in_root_exports"]
+        and str(row["function"]) != "write_pipeline_lineage"
         and (row["directly_called_in_core_templates"] or row["directly_called_in_example_templates"])
     }
     expected.update(
@@ -203,9 +204,9 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
 
 def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
-    assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig"}) <= _catalogue_row_names()
+    assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 28
+    assert len(_catalogue_row_names()) == 27
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -257,6 +258,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     import fabricops_kit
 
     audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    audit_names.discard("write_pipeline_lineage")
     audit_names.add("widget_browse_metadata_catalogue")
     audit_names.add("profile_frequency_distribution")
     audit_names.add("profile_and_register_dataframe")

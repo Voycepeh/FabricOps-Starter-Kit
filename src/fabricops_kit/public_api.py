@@ -34,7 +34,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.prepare_pipeline_table_configs",
     "fabricops_kit.pipeline.run_table_guardrails",
     "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
-    "fabricops_kit.pipeline.write_pipeline_lineage",
     "fabricops_kit.pipeline.write_pipeline_run_summary",
 )
 

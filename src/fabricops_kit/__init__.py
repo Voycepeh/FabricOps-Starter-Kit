@@ -33,7 +33,6 @@ from .pipeline import (
     profile_dataframe,
     profile_frequency_distribution,
     run_table_guardrails,
-    write_pipeline_lineage,
     write_pipeline_run_summary,
 )
 
@@ -67,7 +66,6 @@ PIPELINE_EXPORTS = (
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "write_pipeline_lineage",
     "write_pipeline_run_summary",
 )
 

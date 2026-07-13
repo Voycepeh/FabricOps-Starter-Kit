@@ -1,4 +1,4 @@
-# `profile_dataframe`
+# `profile_frequency_distribution`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -9,28 +9,28 @@
 
 ## Call-flow summary
 
-- Downstream callables: 4
-- Shared helpers: 2
+- Downstream callables: 3
+- Shared helpers: 1
 - Private helpers: 2
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Preview call flow</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_frequency_distribution">Open Preview call flow</a>
 
-Profile a Spark DataFrame for structural and statistical exploration.
+Profile top-N value frequencies for selected Spark DataFrame columns.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_dataframe.py:8`
+`fabricops_kit/pipeline/profile_frequency_distribution.py:46`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L34">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_frequency_distribution.py#L46-L123">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">99_explore</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
 </p>
 
-**Used in notebooks:** `99_explore`
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage notes
 
@@ -44,7 +44,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=True)
+def profile_frequency_distribution(df, *, columns=None, top_n: int=20)
 ```
 
 </div>
@@ -54,7 +54,7 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=Tr
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])
+frequency_df = profile_frequency_distribution(df, columns=["status"], top_n=10)
 ```
 
 </div>
@@ -63,33 +63,31 @@ profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile. |
-| `exclude_columns` | `list[str] or set[str]` | No | Additional caller-selected columns to skip after standard FabricOps technical-column exclusions are applied. |
-| `approximate_distinct` | `bool` | No | When True, use Spark ``approx_count_distinct`` for per-column cardinality. When False, use exact ``count_distinct``. |
+| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. |
+| `columns` | `list[str] or set[str] or tuple[str, ...]` | No | Source columns to profile. By default, eligible non-technical scalar columns are selected. |
+| `top_n` | `int` | No | Maximum ranked values to retain per source column. |
 
 ## Returns
 
-Spark DataFrame containing one profile row per eligible business column.
+Spark DataFrame containing ranked top-N value frequencies per profiled column.
 
 ### Return interpretation
 
-Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.
+Each returned row describes one retained value for one source column.
 
 ## Raises / Errors
 
-Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
+Raises ValueError when top_n is not positive or requested columns do not exist.
 
 ### Common failure causes
 
-- The DataFrame is empty or missing expected columns.
-- Requested statistics are unsupported for a column type.
-- Spark actions fail while computing counts or summaries.
-- Excluded columns remove fields needed for review.
+- Requested columns are missing.
+- top_n is not greater than zero.
+- Spark actions fail while computing frequency counts.
 
 ## See also
 
 - [Pipeline Execution](../../guided-demo/run-pipeline.md)
-- [Governance Review](../../guided-demo/review-guardrails.md)
 
 
 <details>
@@ -105,12 +103,6 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.1.0 |
 
 
 </details>
