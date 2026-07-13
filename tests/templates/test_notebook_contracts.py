@@ -134,3 +134,18 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "profiled_at" not in source
     assert "registers catalogue evidence only" in source
     assert "follow-up lineage PR will automatically record that role" in source
+
+
+def test_pipeline_and_explore_notebooks_do_not_reference_deleted_pipeline_helpers():
+    """Verify templates do not reference callables intentionally removed from the public surface."""
+    removed_names = {
+        "widget_pipeline_bootstrap",
+        "write_pipeline_run_summary",
+        "get_selected_agreement",
+    }
+    offenders = []
+    for notebook_name in ("02_pipeline.ipynb", "99_explore.ipynb"):
+        source = (NOTEBOOK_DIR / notebook_name).read_text(encoding="utf-8")
+        offenders.extend(f"{notebook_name}: {name}" for name in sorted(removed_names) if name in source)
+
+    assert offenders == []

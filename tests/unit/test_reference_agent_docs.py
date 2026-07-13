@@ -1846,7 +1846,6 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
         "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
-        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
     for function_name, expected_path in expected_paths.items():
@@ -1877,7 +1876,6 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
         "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
-        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
     for function_name, expected_path in expected_paths.items():
@@ -1908,7 +1906,6 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
         "profile_dataframe",
         "run_table_guardrails",
         "profile_and_register_dataframe",
-        "write_pipeline_run_summary",
     }
 
     for name in split_names:
@@ -1956,14 +1953,12 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
             "fabricops_kit.pipeline.profile_dataframe",
             "fabricops_kit.pipeline.run_table_guardrails",
             "fabricops_kit.pipeline.profile_and_register_dataframe",
-            "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
         "fabricops_kit.pipeline.profile_dataframe": {
             "fabricops_kit.pipeline.display_guardrail_results",
             "fabricops_kit.pipeline.prepare_pipeline_table_configs",
             "fabricops_kit.pipeline.run_table_guardrails",
             "fabricops_kit.pipeline.profile_and_register_dataframe",
-            "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
     }
     for qn, siblings in forbidden.items():

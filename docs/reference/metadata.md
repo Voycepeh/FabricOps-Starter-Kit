@@ -24,9 +24,9 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
     Observed table and column profiles used for catalogue review and runtime comparisons.
 
--   **[METADATA_DATA_LINEAGE_TABLE](metadata/metadata_data_lineage_table.md)**
+-   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
 
-    Source-to-target lineage rows written by pipeline runs.
+    Metadata Data Lineage metadata table.
 
 -   **[METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)**
 
@@ -43,13 +43,5 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 -   **[METADATA_GUARDRAIL_RULES](metadata/metadata_guardrail_rules.md)**
 
     Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.
-
--   **[METADATA_NOTEBOOK_REGISTRY](metadata/metadata_notebook_registry.md)**
-
-    Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.
-
--   **[METADATA_PIPELINE_RUNS](metadata/metadata_pipeline_runs.md)**
-
-    Pipeline run summaries for execution, guardrail, lineage, and catalogue status.
 
 </div>

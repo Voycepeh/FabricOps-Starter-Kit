@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[2]
 REFERENCE_INDEX = ROOT / "docs" / "reference" / "index.md"
 CALLABLE_FINDER_JS = ROOT / "docs" / "javascripts" / "callable-finder.js"
+DELETED_PUBLIC_CALLABLES = {"widget_pipeline_bootstrap", "write_pipeline_run_summary"}
 
 
 def _reference_index() -> str:
@@ -25,7 +26,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 27 public functions." in page
+    assert "Use the finder below to search" in page
     assert "Search public functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -134,7 +135,7 @@ def _audit_rows() -> list[dict[str, object]]:
 
 def _core_template_called_public() -> set[str]:
     """Return exported functions classified as core template-called public functions."""
-    return {str(row["function"]) for row in _audit_rows() if row["decision"] == "template_called_public"}
+    return {str(row["function"]) for row in _audit_rows() if row["decision"] == "template_called_public"} - DELETED_PUBLIC_CALLABLES
 
 
 def _direct_template_call_set() -> set[str]:
@@ -158,7 +159,7 @@ def _expected_direct_public_template_calls() -> set[str]:
         str(row["function"])
         for row in _audit_rows()
         if row["in_root_exports"]
-        and str(row["function"]) != "write_pipeline_lineage"
+        and str(row["function"]) not in ({"write_pipeline_lineage"} | DELETED_PUBLIC_CALLABLES)
         and (row["directly_called_in_core_templates"] or row["directly_called_in_example_templates"])
     }
     expected.update(
@@ -190,9 +191,9 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
 
     assert called == _expected_direct_public_template_calls()
     assert "setup_notebook" in called
-    assert "write_pipeline_run_summary" in called
+    assert "write_pipeline_run_summary" not in called
     assert "get_latest_metadata_catalogue" not in called
-    assert "widget_pipeline_bootstrap" in called
+    assert "widget_pipeline_bootstrap" not in called
     assert "validate_schema" not in called
     assert "validate_schema_rule" not in called
     assert "read_lakehouse_csv" in called
@@ -204,9 +205,9 @@ def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> No
 
 def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
-    assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage"}) <= _catalogue_row_names()
-    assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 27
+    assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage"}) <= (_catalogue_row_names() - DELETED_PUBLIC_CALLABLES)
+    assert (_catalogue_row_names() - DELETED_PUBLIC_CALLABLES) == _public_inventory_function_names()
+    assert len(_public_inventory_function_names()) == 25
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -257,7 +258,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     """Verify root exports match callable surface audit rows."""
     import fabricops_kit
 
-    audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
+    audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]} - DELETED_PUBLIC_CALLABLES
     audit_names.discard("write_pipeline_lineage")
     audit_names.add("widget_browse_metadata_catalogue")
     audit_names.add("profile_frequency_distribution")

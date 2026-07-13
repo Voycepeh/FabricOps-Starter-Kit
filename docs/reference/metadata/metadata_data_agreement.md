@@ -28,5 +28,3 @@
 ## Related function reference
 
 - [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
-- [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
-- [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

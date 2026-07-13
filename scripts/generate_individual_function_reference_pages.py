@@ -72,8 +72,10 @@ METADATA_FIELD_DESCRIPTIONS = {
     "activated_at": "Timestamp captured when a rule or enrichment record becomes active.",
     "bypassed_at": "Timestamp captured when governance review is intentionally bypassed.",
 }
+DELETED_METADATA_REFERENCE_SLUGS = {"metadata_notebook_registry", "metadata_pipeline_runs"}
+
 METADATA_RELATED_FUNCTIONS = {
-    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement", "widget_pipeline_bootstrap", "write_pipeline_run_summary"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
     "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
     "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
@@ -85,8 +87,6 @@ METADATA_RELATED_FUNCTIONS = {
         "widget_author_dq_rules",
         "widget_review_guardrail_governance",
     ],
-    "METADATA_NOTEBOOK_REGISTRY": ["widget_pipeline_bootstrap"],
-    "METADATA_PIPELINE_RUNS": ["widget_pipeline_bootstrap", "write_pipeline_run_summary"],
 }
 
 
@@ -197,10 +197,6 @@ PARAMETER_DISPLAY_TYPES = {
         "default_settings": "Mapping[str, Any] | PipelineTableConfig",
     },
     "run_table_guardrails": {
-        "source_definitions": "list[PipelineTableConfig]",
-        "target_definitions": "list[PipelineTableConfig]",
-    },
-    "write_pipeline_run_summary": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
     },
@@ -4030,8 +4026,6 @@ def _metadata_managed_by(table_name: str, column_name: str) -> str:
         "METADATA_ENRICHMENT_RULES": "Enrichment and governance widgets",
         "METADATA_GUARDRAIL_RESULTS": "Pipeline guardrail writers",
         "METADATA_GUARDRAIL_RULES": "Guardrail authoring and governance widgets",
-        "METADATA_NOTEBOOK_REGISTRY": "Notebook registration workflow",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summary writer",
     }
     return table_owners.get(table_name, "FabricOps workflow")
 
@@ -4040,8 +4034,6 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PIPELINE_RUNS" and column_name == "_activity_id":
-        return "Canonical execution identity for the pipeline run."
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
     return f"{_metadata_table_title(table_name)} field `{column_name}`."
@@ -4059,8 +4051,6 @@ def _metadata_table_purpose(table_name: str) -> str:
         "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
         "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
         "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
-        "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summaries for execution, guardrail, lineage, and catalogue status.",
     }
     return purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
 
@@ -4080,6 +4070,8 @@ def generate_metadata_reference_pages() -> None:
         "",
     ]
     for table_name in registry:
+        if table_name.lower() in DELETED_METADATA_REFERENCE_SLUGS:
+            continue
         slug = table_name.lower()
         purpose = _metadata_table_purpose(table_name)
         index_lines.extend([
@@ -4108,13 +4100,6 @@ def generate_metadata_reference_pages() -> None:
                 f"| `{column}` | `{row['type']}` | {nullable} | "
                 f"{_metadata_managed_by(table_name, column)} | {_metadata_field_description(table_name, column)} |"
             )
-        if table_name == "METADATA_PIPELINE_RUNS":
-            lines.extend([
-                "",
-                "## Execution identity",
-                "",
-                "`_activity_id` is the canonical execution identity. `started_at` comes from pipeline bootstrap, `completed_at` is captured when the run summary is written, and duration is derived from their difference.",
-            ])
         related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
         if related_functions:
             lines.extend(["", "## Related function reference", ""])
