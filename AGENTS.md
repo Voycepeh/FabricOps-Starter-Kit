@@ -21,6 +21,41 @@ Canonical operating guide for Codex/agent contributions in this repository. Keep
 - Keep metadata responsibilities separated: `METADATA_DATA_CATALOGUE` stores observed table and column profiles, `METADATA_GUARDRAIL_RULES` is approved
   guardrail intent, and `METADATA_GUARDRAIL_RESULTS` is runtime outcomes.
 
+## Default task execution approach
+
+Before implementing a substantial task, agents should resolve five items:
+
+1. **Context** - repository area, source-of-truth files, current behavior, and relevant existing workflows.
+2. **Task** - the smallest complete change that satisfies the request.
+3. **Constraints** - explicit out-of-scope areas, public contracts, generated-artifact boundaries, and runtime assumptions.
+4. **Expected output** - files or reports that should change, and files that must remain unchanged.
+5. **Verification** - deterministic scripts, tests, builds, diffs, or manual checks needed to prove the outcome.
+
+Prefer minimum-change engineering: inspect and reuse existing implementations before
+creating new ones, update an existing owner file or workflow before adding a
+parallel path, remove duplication instead of creating another maintained copy,
+and avoid abstractions for hypothetical future use. Do not expand the requested
+scope without a concrete repository need. Keep generated content generated. Use
+deterministic scripts and tests for anything that can be checked mechanically;
+use agent judgement for interpretation, planning, review, and changes that
+cannot be fully encoded as deterministic checks.
+
+## Task-specific skills
+
+Use the relevant workflow skill before implementing these tasks:
+
+- Public callable or function-level source changes:
+  `.agents/skills/fabricops-public-api-change/SKILL.md`
+- Release preparation or release-readiness checks:
+  `.agents/skills/fabricops-release/SKILL.md`
+- Documentation cleanup or restructuring:
+  `.agents/skills/fabricops-docs-maintenance/SKILL.md`
+- Notebook template creation or validation:
+  `.agents/skills/fabricops-notebook-template/SKILL.md`
+
+`AGENTS.md` remains the repository-wide contract. Skills provide the focused
+workflow for a particular task and must not override `AGENTS.md`.
+
 ## Backward compatibility and public contracts
 
 Backward compatibility applies to supported public callables and externally

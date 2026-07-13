@@ -9,6 +9,27 @@ This skill is the operational source of truth for FabricOps release preparation.
 
 End-user setup and notebook walkthrough content stays in the [Guided Demo](../guided-demo.md). Maintainer-only release curation, packaging, publishing, and recovery guidance belongs here.
 
+## Agent task structure
+
+Before editing release files or reporting release readiness, resolve:
+
+1. **Context** - target version, candidate commit, release manifest, changelog section, release pages, and current public callable inventory.
+2. **Task** - prepare a release PR, validate a candidate, or perform an authenticated local tag/publish step.
+3. **Constraints** - package releases cover public functions and metadata schemas; notebook templates, samples, skills, and demos are maintained independently unless explicitly scoped.
+4. **Expected output** - updated release files, a readiness report, or an authenticated-local tag command; never an unverified tag.
+5. **Verification** - repository release commands, generated-output provenance checks, package/docs builds, and a clean working tree.
+
+## Minimum maintainer workflow
+
+1. Identify the target version from `pyproject.toml`, the intended manifest under `docs/releases/manifests/`, and the candidate commit with `git rev-parse HEAD`.
+2. Inspect the release-specific public callable inventory generated from `src/fabricops_kit/public_api.py`; verify all intended Live public functions are represented.
+3. Keep package release assets separate from independently maintained notebook templates. Do not copy, freeze, version, package, or stamp templates during package release preparation.
+4. Verify release notes in `CHANGELOG.md`, package metadata in `pyproject.toml`, release pages under `docs/releases/`, dashboard data where intentionally refreshed, and standalone function pages where applicable to the release scope.
+5. Repair release presentation by fixing the proper source file, manifest, changelog, metadata, or generator. Do not change function implementations merely to repair release presentation.
+6. Verify generated outputs originate from their documented generator; do not hand-edit generated pages or inventories as source of truth.
+7. Run the existing release validation commands documented below, especially `PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z` for the target tag.
+8. Stop and report blockers instead of tagging an unverified release. Final reports must say either **READY TO TAG** or **NOT READY TO TAG** with supporting evidence.
+
 ## Choose the correct execution environment
 
 Use the release workflow in the environment that matches the current phase. Codex Cloud is appropriate for release preparation and release-readiness reporting, but the final tag and publication phase requires Codex Desktop or another authenticated local environment.
