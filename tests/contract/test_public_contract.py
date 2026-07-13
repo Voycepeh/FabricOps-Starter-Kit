@@ -239,7 +239,8 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
 
     assert (APPROVED_V1_CALLABLES - {"widget_browse_metadata_catalogue"}).issubset(manifest_callables)
     assert called <= manifest_callables | {"widget_browse_metadata_catalogue"}
-    for callable_name in manifest_callables:
+    current_public_callables = set(fabricops_kit.__all__)
+    for callable_name in manifest_callables & current_public_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
         legacy_page = root / "docs" / "reference" / "callables" / f"{callable_name}.md"
         assert canonical_page.exists()
@@ -390,7 +391,6 @@ def test_package_root_expected_public_names_are_present() -> None:
         "write_lakehouse_table",
         "profile_dataframe",
         "run_table_guardrails",
-        "write_pipeline_lineage",
         "write_pipeline_run_summary",
         "widget_pipeline_bootstrap",
         "widget_render_data_steward",

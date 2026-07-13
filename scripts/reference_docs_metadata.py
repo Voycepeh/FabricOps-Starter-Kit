@@ -239,7 +239,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'prepare_pipeline_table_configs',
                             'run_table_guardrails',
                             'write_lakehouse_table',
-                            'write_pipeline_lineage',
                             'write_pipeline_run_summary',
                             'display_guardrail_results',
                             'widget_select_guardrail_target',
@@ -1283,37 +1282,6 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Write many-to-many source-to-target lineage evidence.',
-  'symbol_name': 'write_pipeline_lineage',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Lineage evidence',
-  'use_when': 'Use after target writes to persist lineage relationships tied to agreement and '
-              'notebook registry context.',
-  'parameters': 'spark, config, env, run_id, source_definitions, target_definitions, '
-                'relationships, and governance context.',
-  'returns': 'Status, row count, and lineage rows.',
-  'side_effects': 'Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse '
-                  'target.',
-  'related_functions': ['write_catalogue_evidence', 'write_pipeline_run_summary'],
-  'expanded_purpose': 'Persists lineage records for a pipeline run so source tables, target '
-                      'tables, and transformation steps remain traceable.',
-  'when_to_use': 'Use near the end of 02_pipeline after transformations and target config '
-                 'resolution have produced lineage-ready records.',
-  'glossary_terms': ['source data', 'target table', 'evidence', 'metadata lakehouse'],
-  'return_interpretation': 'A successful result indicates lineage rows were prepared for metadata '
-                           'persistence; review returned counts against expected transformation '
-                           'steps.',
-  'common_failure_causes': ['Lineage records are empty or malformed.',
-                            'run_id, source, or target identifiers are missing.',
-                            'The metadata table cannot be written.',
-                            'Audit fields cannot be resolved from configuration.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates-implementation-guide/index.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../reference/metadata.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
   'summary_override': 'Write one pipeline runtime summary row to metadata.',
   'symbol_name': 'write_pipeline_run_summary',
   'template_notebook': '02_pipeline',
@@ -1325,7 +1293,6 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Runtime summary row that was written.',
   'side_effects': 'Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.',
   'related_functions': ['write_catalogue_evidence',
-                        'write_pipeline_lineage',
                         'write_lakehouse_table'],
   'expanded_purpose': 'Writes a compact run-level summary that ties pipeline name, agreement '
                       'context, guardrail results, lineage, and write outcomes together.',
@@ -1946,26 +1913,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'target schema.',
                                                         'The caller lacks metadata write '
                                                         'permission.']},
- 'write_pipeline_lineage': {'expanded_purpose': 'Persists lineage records for a pipeline run so '
-                                                'source tables, target tables, and transformation '
-                                                'steps remain traceable.',
-                            'when_to_use': 'Use near the end of 02_pipeline after transformations '
-                                           'and target config resolution have produced '
-                                           'lineage-ready records.',
-                            'glossary_terms': ['source data',
-                                               'target table',
-                                               'evidence',
-                                               'metadata lakehouse'],
-                            'return_interpretation': 'A successful result indicates lineage rows '
-                                                     'were prepared for metadata persistence; '
-                                                     'review returned counts against expected '
-                                                     'transformation steps.',
-                            'common_failure_causes': ['Lineage records are empty or malformed.',
-                                                      'run_id, source, or target identifiers are '
-                                                      'missing.',
-                                                      'The metadata table cannot be written.',
-                                                      'Audit fields cannot be resolved from '
-                                                      'configuration.']},
  'write_pipeline_run_summary': {'expanded_purpose': 'Writes a compact run-level summary that ties '
                                                     'pipeline name, agreement context, guardrail '
                                                     'results, lineage, and write outcomes '
@@ -2217,10 +2164,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
                                'path': '../../reference/metadata.md'}],
- 'write_pipeline_lineage': [{'title': 'Templates',
-                             'path': '../../notebook-templates-implementation-guide/index.md'},
-                            {'title': 'Metadata Tables',
-                             'path': '../../reference/metadata.md'}],
  'write_pipeline_run_summary': [{'title': 'Pipeline Execution',
                                  'path': '../../guided-demo/run-pipeline.md'},
                                 {'title': 'Metadata Tables',

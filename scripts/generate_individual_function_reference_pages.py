@@ -76,7 +76,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement", "widget_pipeline_bootstrap", "write_pipeline_run_summary"],
     "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
     "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
-    "METADATA_DATA_LINEAGE_TABLE": ["write_pipeline_lineage"],
+    "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT_RULES": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
@@ -197,10 +197,6 @@ PARAMETER_DISPLAY_TYPES = {
         "default_settings": "Mapping[str, Any] | PipelineTableConfig",
     },
     "run_table_guardrails": {
-        "source_definitions": "list[PipelineTableConfig]",
-        "target_definitions": "list[PipelineTableConfig]",
-    },
-    "write_pipeline_lineage": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
     },

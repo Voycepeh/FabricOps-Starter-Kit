@@ -58,8 +58,32 @@ def registered(monkeypatch):
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
     writes = []
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda env: (object(), env, {"config": object(), "env": env}))
+    resolved_context = {
+        "config": object(),
+        "env": "dev",
+        "activityId": "activity-1",
+        "currentWorkspaceId": "workspace-1",
+        "currentWorkspaceName": "Workspace One",
+        "currentNotebookId": "notebook-1",
+        "currentNotebookName": "Notebook One",
+        "userName": "tester",
+    }
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda env: (resolved_context["config"], env, {**resolved_context, "env": env}))
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda config, env, target: None)
+    monkeypatch.setattr(
+        module,
+        "build_runtime_audit_fields",
+        lambda *, config, env, runtime_context=None: {
+            "_committed_by": runtime_context["userName"],
+            "_committed_at": "2026-01-01T00:00:00",
+            "_workspace_id": runtime_context["currentWorkspaceId"],
+            "_workspace_name": runtime_context["currentWorkspaceName"],
+            "_notebook_id": runtime_context["currentNotebookId"],
+            "_notebook_name": runtime_context["currentNotebookName"],
+            "_metadata_lakehouse_name": "metadata_lh",
+            "_activity_id": runtime_context["activityId"],
+        },
+    )
 
     def write(df, table_name, *, target, schema, context, mode):
         writes.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
@@ -253,15 +277,19 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
         "frequency_kwargs": {"columns": ["customer_type", "country"], "top_n": 5, "df_is_source": True},
         "sample": 0,
     }
-    assert registered == [
-        {
-            "df": result,
-            "table_name": CATALOGUE_TABLE,
-            "target": "metadata",
-            "schema": None,
-            "context": {"config": registered[0]["context"]["config"], "env": "dev"},
-            "mode": "append",
-        }
+    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE_TABLE"]
+    assert registered[0] == {
+        "df": result,
+        "table_name": CATALOGUE_TABLE,
+        "target": "metadata",
+        "schema": None,
+        "context": {"config": registered[0]["context"]["config"], "env": "dev"},
+        "mode": "append",
+    }
+    assert registered[1]["context"]["activityId"] == "activity-1"
+    lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE_TABLE"]
+    assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[1]["df"].schema.fields] == [
+        (f.name, type(f.dataType).__name__, f.nullable) for f in lineage_schema.fields
     ]
     assert result.columns == CATALOGUE_COLUMNS
     expected_schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
@@ -285,6 +313,15 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     assert rows["country"]["metadata_column_key"] == _metadata_column_key(expected_table_key, "country")
     assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
     assert expected_table_key != _metadata_table_key("dev", "warehouse", "silver", None, "customers_clean")
+
+    lineage_rows = registered[1]["df"].collect()
+    assert len(lineage_rows) == 1
+    lineage = lineage_rows[0].asDict()
+    assert lineage["metadata_table_key"] == expected_table_key
+    assert lineage["profile_role"] == "source"
+    assert lineage["_activity_id"] == "activity-1"
+    assert lineage["_workspace_id"] == "workspace-1"
+    assert lineage["_notebook_id"] == "notebook-1"
 
     source_role_result = profile_and_register_dataframe(
         source,
@@ -331,3 +368,82 @@ def test_catalogue_schema_matches_main_contract_without_profile_role():
         "_committed_at",
     ]
     assert "profile_role" not in schema.fieldNames()
+
+
+def test_lineage_schema_is_table_participation_contract():
+    """Verify lineage keeps only participation fields plus canonical audit fields."""
+    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE_TABLE"]
+    assert schema.fieldNames() == [
+        "metadata_table_key",
+        "profile_role",
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    ]
+    fields = {field.name: field for field in schema.fields}
+    assert type(fields["metadata_table_key"].dataType).__name__ == "StringType"
+    assert type(fields["profile_role"].dataType).__name__ == "StringType"
+    assert fields["metadata_table_key"].nullable is False
+    assert fields["profile_role"].nullable is False
+    obsolete = {
+        "lineage_id",
+        "dataset_name",
+        "source_table",
+        "target_table",
+        "source_table_key",
+        "target_table_key",
+        "source_metadata_table_key",
+        "target_metadata_table_key",
+        "transformation_steps_json",
+        "activity_id",
+    }
+    assert obsolete.isdisjoint(schema.fieldNames())
+
+
+def test_lineage_is_not_attempted_when_catalogue_write_fails(spark_session, monkeypatch, registered):
+    """Verify catalogue write failure stops before lineage registration."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+
+    def fail_catalogue(*_args, **_kwargs):
+        raise ValueError("catalogue boom")
+
+    monkeypatch.setattr(module, "write_lakehouse_table_core", fail_catalogue)
+    with pytest.raises(ValueError, match="catalogue boom"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+        )
+
+
+def test_lineage_failure_reports_partial_write_state(spark_session, monkeypatch, registered):
+    """Verify lineage write failures explain the catalogue snapshot was already written."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+
+    def write(df, table_name, *, target, schema, context, mode):
+        registered.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
+        if table_name == "METADATA_DATA_LINEAGE_TABLE":
+            raise ValueError("lineage boom")
+
+    monkeypatch.setattr(module, "write_lakehouse_table_core", write)
+    expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
+    with pytest.raises(RuntimeError, match=f"Catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+        )
+    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE_TABLE"]

@@ -159,5 +159,5 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 6:04 PM SGT
-    Call-flow data generated: 13 Jul 2026, 6:03 PM SGT
+    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

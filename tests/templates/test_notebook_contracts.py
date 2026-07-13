@@ -125,8 +125,8 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
     assert "profile_and_register_dataframe" in source
-    assert "profile_role=\"source\"" in source
-    assert "profile_role=\"target\"" in source
+    assert "profile_role=\\\"source\\\"" in source
+    assert "profile_role=\\\"target\\\"" in source
     assert "Clone this block once for every DataFrame" in source
     assert "frequency_json" not in source
     assert "metadata_table_key" not in source
