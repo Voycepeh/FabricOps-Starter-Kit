@@ -169,8 +169,7 @@ def _write_lineage_participation(
     """Append one table-level runtime participation row to metadata lineage."""
     normalized_key = _require_non_empty_string(metadata_table_key, "metadata_table_key")
     normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
-    runtime_context = context.get("runtime_context") or context.get("audit_runtime_context")
-    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     row = coerce_metadata_row_types(
         LINEAGE_TABLE,
         {
@@ -179,12 +178,14 @@ def _write_lineage_participation(
             **audit,
         },
     )
+    lineage_schema = metadata_table_schema_registry()[LINEAGE_TABLE]
+    lineage_df = spark_session.createDataFrame([row], schema=lineage_schema)
     write_lakehouse_table_core(
-        spark_session.createDataFrame([row]),
+        lineage_df,
         LINEAGE_TABLE,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
-        context={"config": config, "env": env},
+        context=context,
         mode="append",
     )
 
@@ -211,7 +212,7 @@ def profile_and_register_dataframe(
         helper does not sample, re-read, or mutate this DataFrame.
     profile_role : {"source", "target"}
         Execution participation context for the DataFrame in the notebook flow.
-        The validated value is not stored in ``METADATA_DATA_CATALOGUE``; a
+        The validated value is not stored in ``METADATA_DATA_CATALOGUE``; an
         automatic lineage flow records one table-level runtime participation row.
     environment_name : str
         FabricOps environment name to persist with the catalogue snapshot.

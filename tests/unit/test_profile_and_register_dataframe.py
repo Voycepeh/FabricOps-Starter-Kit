@@ -58,7 +58,9 @@ def registered(monkeypatch):
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
     writes = []
-    runtime_context = {
+    resolved_context = {
+        "config": object(),
+        "env": "dev",
         "activityId": "activity-1",
         "currentWorkspaceId": "workspace-1",
         "currentWorkspaceName": "Workspace One",
@@ -66,7 +68,7 @@ def registered(monkeypatch):
         "currentNotebookName": "Notebook One",
         "userName": "tester",
     }
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda env: (object(), env, {"config": object(), "env": env, "runtime_context": runtime_context}))
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda env: (resolved_context["config"], env, {**resolved_context, "env": env}))
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda config, env, target: None)
     monkeypatch.setattr(
         module,
@@ -284,6 +286,11 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
         "context": {"config": registered[0]["context"]["config"], "env": "dev"},
         "mode": "append",
     }
+    assert registered[1]["context"]["activityId"] == "activity-1"
+    lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE_TABLE"]
+    assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[1]["df"].schema.fields] == [
+        (f.name, type(f.dataType).__name__, f.nullable) for f in lineage_schema.fields
+    ]
     assert result.columns == CATALOGUE_COLUMNS
     expected_schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
     assert [(f.name, type(f.dataType).__name__) for f in result.schema.fields] == [
