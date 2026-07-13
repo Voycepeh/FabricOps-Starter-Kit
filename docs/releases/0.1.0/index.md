@@ -13,7 +13,7 @@
 ## Formal release scope
 
 <details class="fabricops-release-inventory" markdown>
-<summary>8 Live functions</summary>
+<summary>9 Live functions</summary>
 
 | Function | Description |
 | --- | --- |
@@ -23,6 +23,7 @@
 | [`read_lakehouse_table`](functions/read_lakehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a Delta table from a Fabric lakehouse. |
 | [`read_warehouse_query`](functions/read_warehouse_query.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read warehouse rows with SQL pushdown. |
 | [`read_warehouse_table`](functions/read_warehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Read a full table from a Microsoft Fabric warehouse. |
+| [`setup_notebook`](functions/setup_notebook.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Run consolidated FabricOps startup for delivery and optional support notebooks. |
 | [`write_lakehouse_table`](functions/write_lakehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
 | [`write_warehouse_table`](functions/write_warehouse_table.md) <span class="fabricops-release-asset-status fabricops-release-asset-status--new">NEW</span> | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
 

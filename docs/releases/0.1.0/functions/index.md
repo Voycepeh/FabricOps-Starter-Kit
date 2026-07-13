@@ -12,5 +12,6 @@ This index lists Live public functions frozen for FabricOps Starter Kit `0.1.0`.
 | [`read_lakehouse_table`](read_lakehouse_table.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read a Delta table from a Fabric lakehouse. |
 | [`read_warehouse_query`](read_warehouse_query.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read warehouse rows with SQL pushdown. |
 | [`read_warehouse_table`](read_warehouse_table.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Read a full table from a Microsoft Fabric warehouse. |
+| [`setup_notebook`](setup_notebook.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Run consolidated FabricOps startup for delivery and optional support notebooks. |
 | [`write_lakehouse_table`](write_lakehouse_table.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Write a Spark DataFrame to a Fabric lakehouse Delta table. |
 | [`write_warehouse_table`](write_warehouse_table.md) | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> | Write a Spark DataFrame to a Microsoft Fabric warehouse table. |
