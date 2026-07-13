@@ -52,6 +52,7 @@ EXPECTED_V1_CALLABLES = [
     'read_warehouse_query',
     'write_warehouse_table',
     'profile_dataframe',
+    'profile_frequency_distribution',
     'display_guardrail_results',
     'prepare_pipeline_table_configs',
     'run_table_guardrails',

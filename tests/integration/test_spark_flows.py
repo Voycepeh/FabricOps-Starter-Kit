@@ -552,7 +552,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
@@ -587,7 +587,7 @@ def test_write_catalogue_evidence_writes_explicit_fabric_store_target(spark_sess
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
     definitions = {
         "explicit": {
             "dataset_name": "sales",
@@ -620,7 +620,7 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 
     monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: None)
     df = spark_session.createDataFrame([(1,)], "id int")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     with pytest.raises(KeyError):
         pipeline_shared.write_catalogue_evidence(
@@ -673,7 +673,7 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},

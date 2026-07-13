@@ -28,6 +28,13 @@ functions:
     status: preview
     rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
     introduced_in: 0.1.0
+  - name: profile_frequency_distribution
+    qualified_name: fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution
+    source_path: src/fabricops_kit/pipeline/profile_frequency_distribution.py
+    documentation_path: docs/api/reference/profile_frequency_distribution.md
+    status: preview
+    rationale: Preview profiling capability for frequency summaries on caller-supplied Spark DataFrames.
+    introduced_in: 0.1.0
   - name: read_lakehouse_csv
     qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv
     source_path: src/fabricops_kit/io/read_lakehouse_csv.py

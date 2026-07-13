@@ -884,17 +884,14 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Profile a source or target DataFrame for schema, quality, and catalogue '
-                      'evidence.',
+  'summary_override': 'Profile a Spark DataFrame for structural and statistical exploration.',
   'symbol_name': 'profile_dataframe',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Profiling',
-  'use_when': 'Use to create schema, null, distinct, min/max, and optional distribution evidence '
-              'from a Spark DataFrame.',
+  'use_when': 'Use to create schema, row-count, null, distinct, min/max, and numeric statistic profiles from a Spark DataFrame.',
   'do_not_use_when': 'Do not use as a data-quality enforcement step or as a persistence helper; it '
                      'builds profile rows but does not approve governance evidence.',
-  'parameters': 'df, table_name, optional exclude_columns, timezone, distribution options, bin '
-                'edges, category baselines, and top-N settings.',
+  'parameters': 'df, optional exclude_columns, and approximate_distinct.',
   'returns': 'Spark DataFrame containing one profile row per eligible business column.',
   'raises': 'Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.',
   'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write '
@@ -903,17 +900,14 @@ PUBLIC_SYMBOL_DOCS = [
                     'governance review workflows that need profiles.',
   'ai_verification': 'Verify the profile row count matches expected business columns and inspect '
                      'key schema/profile fields before writing evidence.',
-  'preferred_example': 'profile_rows_df = profile_dataframe(df, table_name="orders", '
-                       'include_distributions=True, distribution_columns=["status"] )',
+  'preferred_example': 'profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])',
   'related_functions': ['enforce_profile_behavior', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, '
-                      'row counts, nulls, distinct counts, and optional summary values.',
+                      'row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
   'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table '
                  'needs reproducible profiles.',
   'glossary_terms': ['evidence', 'source data', 'target table'],
-  'return_interpretation': 'Each returned profile row describes one table or column metric. '
-                           'Downstream governance and guardrail helpers use those rows as '
-                           'evidence.',
+  'return_interpretation': 'Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.',
   'common_failure_causes': ['The DataFrame is empty or missing expected columns.',
                             'Requested statistics are unsupported for a column type.',
                             'Spark actions fail while computing counts or summaries.',
@@ -922,6 +916,32 @@ PUBLIC_SYMBOL_DOCS = [
                       'path': '../../guided-demo/run-pipeline.md'},
                      {'title': 'Governance Review',
                       'path': '../../guided-demo/review-guardrails.md'}]},
+ {'kind': 'function',
+  'module': 'pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Profile top-N value frequencies for selected Spark DataFrame columns.',
+  'symbol_name': 'profile_frequency_distribution',
+  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_segment': 'Profiling',
+  'use_when': 'Use to inspect value frequencies on exactly the Spark DataFrame supplied by the caller.',
+  'do_not_use_when': 'Do not use as a sampling helper, metadata writer, or data-quality enforcement step.',
+  'parameters': 'df, optional columns, and top_n.',
+  'returns': 'Spark DataFrame containing ranked top-N value frequencies per profiled column.',
+  'raises': 'Raises ValueError when top_n is not positive or requested columns do not exist.',
+  'side_effects': 'Computes frequency aggregations on the provided DataFrame; it does not write metadata, tables, or files.',
+  'fabric_context': 'Use after the caller has intentionally selected the exact DataFrame rows to profile.',
+  'ai_verification': 'Verify requested columns and top_n match the intended exploration scope.',
+  'preferred_example': 'frequency_df = profile_frequency_distribution(df, columns=["status"], top_n=10)',
+  'related_functions': ['profile_dataframe'],
+  'expanded_purpose': 'Calculates deterministic top-N value frequencies with counts, percentages, ranks, and profiled row counts for selected scalar columns.',
+  'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
+  'glossary_terms': ['source data', 'distinct value'],
+  'return_interpretation': 'Each returned row describes one retained value for one source column.',
+  'common_failure_causes': ['Requested columns are missing.',
+                            'top_n is not greater than zero.',
+                            'Spark actions fail while computing frequency counts.'],
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1723,7 +1743,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'The caller lacks write permission.']},
  'profile_dataframe': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, '
                                            'including schema, row counts, nulls, distinct counts, '
-                                           'and optional summary values.',
+                                           'numeric statistics, and supported min/max values.',
                        'when_to_use': 'Use during exploration, governance review, or guardrail '
                                       'preparation when a table needs reproducible profile '
                                       'evidence.',
@@ -1739,6 +1759,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                  'summaries.',
                                                  'Excluded columns remove fields needed for '
                                                  'review.']},
+ 'profile_frequency_distribution': {'expanded_purpose': 'Calculates deterministic top-N value frequencies with counts, percentages, ranks, and profiled row counts for selected scalar columns.',
+                                    'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
+                                    'glossary_terms': ['source data', 'distinct value'],
+                                    'return_interpretation': 'Each returned row describes one retained value for one source column.',
+                                    'common_failure_causes': ['Requested columns are missing.',
+                                                              'top_n is not greater than zero.',
+                                                              'Spark actions fail while computing frequency counts.']},
  'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column '
                                            'is recent enough for the configured maximum lag before '
                                            'pipeline writes continue.',
