@@ -817,10 +817,10 @@ def _run_table_guardrails_workflow(
         and ``exclude_columns`` control the guardrail behavior.
     run_id : str, optional
         Current pipeline run identifier. When omitted, the active context from
-        :func:`runtime context setup` is used.
+        an active pipeline context is used.
     spark_session : Any, optional
         Spark session used by profile behavior and DQ helpers. When omitted,
-        the active context from :func:`runtime context setup` is used.
+        the active context from an active pipeline context is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -865,7 +865,7 @@ def _run_table_guardrails_workflow(
         agreement_id = agreement_id or active.agreement_id
         agreement_version = agreement_version or active.agreement_version
     if spark_session is None:
-        raise ValueError("spark_session is required unless runtime context setup has established an active context.")
+        raise ValueError("spark_session is required unless an active pipeline context is established.")
     if not run_id:
         raise ValueError("run_id is required for in-memory profile grouping; use the active pipeline context or pass a real run_id.")
     normalized_mode = str(mode or "profile").lower().strip()

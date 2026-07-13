@@ -227,13 +227,13 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                    'configs, transform logic, target writes, lineage relationships, and pipeline '
                    'naming visible while package helpers handle reusable config enrichment, '
                    'guardrails, and evidence plumbing.',
-  'segments': [{'symbols': [                            'read_warehouse_table',
+  'segments': [{'symbols': ['read_warehouse_table',
                             'read_warehouse_query',
                             'read_lakehouse_table',
                             'prepare_pipeline_table_configs',
                             'run_table_guardrails',
                             'write_lakehouse_table',
-                                                        'display_guardrail_results',
+                            'display_guardrail_results',
                             'widget_select_guardrail_target',
                             'widget_author_schema_freshness_profile_rules',
                             'widget_author_dq_rules',
@@ -264,8 +264,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'write_lakehouse_table',
                             'write_warehouse_table',
                             'profile_dataframe',
-                            'widget_browse_metadata_catalogue',
-                            ],
+                            'widget_browse_metadata_catalogue'],
                 'title': 'Exploration'}],
   'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
@@ -585,42 +584,6 @@ PUBLIC_SYMBOL_DOCS = [
                       'path': '../../notebook-templates-implementation-guide/index.md'},
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
- {'kind': 'function',
-  'module': 'widgets.shared',
-  'function_type': 'callable',
-  'summary_override': 'Return the agreement selected by runtime context setup.',
-  'symbol_name': 'get_selected_agreement',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Agreement selection',
-  'use_when': 'Use after runtime context setup(select_agreement=True) to retrieve the selected agreement '
-              'record for pipeline logic and evidence binding.',
-  'do_not_use_when': 'Do not use before running runtime context setup(select_agreement=True), or as a '
-                     'substitute for querying all agreement metadata.',
-  'parameters': 'No required parameters; reads the current in-memory widget selection state.',
-  'returns': 'Selected agreement dictionary for the active notebook session.',
-  'raises': 'Raises an error when no agreement has been selected in the current session.',
-  'side_effects': 'Reads session/widget state only; it does not write metadata, tables, or files.',
-  'fabric_context': 'Depends on a prior runtime context setup(select_agreement=True) call in the same notebook session '
-                    'and agreement metadata loaded via 00_env_config routing.',
-  'ai_verification': 'Verify the returned agreement has the expected dataset/table identifiers '
-                     'before using it to drive reads, writes, or governance evidence.',
-  'preferred_example': 'agreement = get_selected_agreement()\n'
-                       'dataset_name = agreement["dataset_name"]',
-  'related_functions': ['runtime context setup'],
-  'expanded_purpose': 'Returns the agreement chosen by runtime context setup so downstream cells '
-                      'can pass consistent agreement identifiers to pipeline helpers.',
-  'when_to_use': 'Use after rendering and completing runtime context setup when code needs the '
-                 'selected agreement values.',
-  'glossary_terms': ['notebook template'],
-  'return_interpretation': 'A returned dictionary contains the selected agreement fields. A '
-                           'missing value means the selector has not been completed in the current '
-                           'notebook state.',
-  'common_failure_causes': ['runtime context setup(select_agreement=True) has not been run.',
-                            'The user has not selected an agreement.',
-                            'Notebook state was reset.',
-                            'The selected row is no longer present in metadata.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates-implementation-guide/index.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1806,14 +1769,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                               'differ from expected dictionaries.',
                                                               'Defaults in CONFIG do not match the '
                                                               'notebook environment.']},
- 'runtime context setup': {'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
-                        'when_to_use': 'Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.',
-                        'glossary_terms': ['notebook template', 'data agreement', 'metadata lakehouse'],
-                        'return_interpretation': 'The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.',
-                        'common_failure_causes': ['RUN_CONTEXT is unavailable.',
-                                                  'spark is unavailable.',
-                                                  'No agreement exists when select_agreement=True.',
-                                                  'The user has not selected an agreement.']},
  'run_table_guardrails': {'expanded_purpose': 'Coordinates profiling, schema, freshness, profile '
                                               'behavior, DQ, and evidence checks for a '
                                               'group of pipeline table configs.',
@@ -1854,27 +1809,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'target schema.',
                                                         'The caller lacks metadata write '
                                                         'permission.']},
- '': {'expanded_purpose': 'Writes a compact run-level summary that ties '
-                                                    'pipeline name, agreement context, guardrail '
-                                                    'results, lineage, and write outcomes '
-                                                    'together.',
-                                'when_to_use': 'Use at the end of 02_pipeline when downstream '
-                                               'operators need one metadata record describing the '
-                                               'run outcome.',
-                                'glossary_terms': ['guardrails',
-                                                   'can_continue',
-                                                   'evidence',
-                                                   'metadata lakehouse'],
-                                'return_interpretation': 'The returned summary shows what run '
-                                                         'metadata was assembled or written. '
-                                                         'Compare status and guardrail counts with '
-                                                         'expected pipeline outcomes.',
-                                'common_failure_causes': ['Required run identifiers are missing.',
-                                                          'Guardrail result structures are '
-                                                          'malformed.',
-                                                          'Metadata routing is unavailable.',
-                                                          'The configured summary table cannot be '
-                                                          'written.']},
 
  'enforce_freshness_rule': {'expanded_purpose': 'Evaluates freshness using a metadata-backed '
                                                 'guardrail rule so active freshness intent from '
@@ -2032,24 +1966,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                   'Unsupported governance action '
                                                                   'is selected.',
                                                                   'The metadata target cannot be '
-                                                                  'written.']},
- 'get_selected_agreement': {'expanded_purpose': 'Returns the agreement chosen by '
-                                                'runtime context setup so downstream cells can '
-                                                'pass consistent agreement identifiers to pipeline '
-                                                'helpers.',
-                            'when_to_use': 'Use after rendering and completing '
-                                           'runtime context setup when code needs the selected '
-                                           'agreement values.',
-                            'glossary_terms': ['notebook template'],
-                            'return_interpretation': 'A returned dictionary contains the selected '
-                                                     'agreement fields. A missing value means the '
-                                                     'selector has not been completed in the '
-                                                     'current notebook state.',
-                            'common_failure_causes': ['runtime context setup(select_agreement=True) has not been run.',
-                                                      'The user has not selected an agreement.',
-                                                      'Notebook state was reset.',
-                                                      'The selected row is no longer present in '
-                                                      'metadata.']}}
+                                                                  'written.']},}
 
 RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                      'path': '../../notebook-templates-implementation-guide/index.md'},
@@ -2104,13 +2021,7 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
                                'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
-                               'path': '../../reference/metadata.md'}],
- '': [{'title': 'Pipeline Execution',
-                                 'path': '../../guided-demo/run-pipeline.md'},
-                                {'title': 'Metadata Tables',
-                                 'path': '../../reference/metadata.md'}],
- 'get_selected_agreement': [{'title': 'Templates',
-                             'path': '../../notebook-templates-implementation-guide/index.md'}]}
+                               'path': '../../reference/metadata.md'}],}
 
 
 

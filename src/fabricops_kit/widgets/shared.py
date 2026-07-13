@@ -256,10 +256,10 @@ def _get_selected_agreement_state() -> dict[str, Any] | None:
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by ``runtime context setup``."""
+    """Return the agreement selected by the active agreement-selection state."""
     selected = _get_selected_agreement_state()
     if not selected:
-        raise RuntimeError("No agreement selected. Run runtime context setup(select_agreement=True) first.")
+        raise RuntimeError("No agreement selected. Run the agreement selection workflow first.")
     return selected
 
 
