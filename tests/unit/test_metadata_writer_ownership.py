@@ -118,7 +118,7 @@ def test_catalogue_writer_targets_catalogue_only():
 
     assert _calls_write_lakehouse_table_core(source)
     assert "metadata_table: str = CATALOGUE_TABLE" in source
-    assert "GUARDRAIL_RULES_TABLE" not in source
+    assert "GUARDRAIL_TABLE" not in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
     for result_field in ("freshness_status", "stability_status", "dq_status", "source_schema_check", "target_schema_check"):
         assert result_field not in source
@@ -130,7 +130,7 @@ def test_runtime_result_writers_target_guardrail_results_only():
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
-        assert "GUARDRAIL_RULES_TABLE" not in source
+        assert "GUARDRAIL_TABLE" not in source
 
 
 def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
@@ -146,8 +146,8 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
     """Verify table governance commits DQ approvals to guardrail rules."""
     source = _function_source("widgets/shared.py", "record_table_governance")
 
-    assert "GUARDRAIL_RULES_TABLE" in source
-    assert "ENRICHMENT_RULES_TABLE" in source
+    assert "GUARDRAIL_TABLE" in source
+    assert "ENRICHMENT_TABLE" in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
 
 
@@ -198,8 +198,8 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     review_widget_source = workflow_sources["_guardrail_governance_review_widget_workflow"]
 
     assert "CATALOGUE_TABLE" in selector_source
-    assert "GUARDRAIL_RULES_TABLE" in selector_source
-    assert "ENRICHMENT_RULES_TABLE" in selector_source
+    assert "GUARDRAIL_TABLE" in selector_source
+    assert "ENRICHMENT_TABLE" in selector_source
     assert "_read_metadata_table_or_empty" in selector_source
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
@@ -226,9 +226,9 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         assert "_write_rule_records" not in wrapper_source
         assert "_write_enrichment_records" not in wrapper_source
         assert "CATALOGUE_TABLE" not in wrapper_source
-        assert "GUARDRAIL_RULES_TABLE" not in wrapper_source
+        assert "GUARDRAIL_TABLE" not in wrapper_source
         assert "GUARDRAIL_RESULTS_TABLE" not in wrapper_source
-        assert "ENRICHMENT_RULES_TABLE" not in wrapper_source
+        assert "ENRICHMENT_TABLE" not in wrapper_source
 
     for path in SRC.rglob("*.py"):
         source = path.read_text(encoding="utf-8")

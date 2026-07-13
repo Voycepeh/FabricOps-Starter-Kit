@@ -56,8 +56,8 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
     from IPython import display as ip
 
     catalogue = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.CATALOGUE_TABLE, spark_session=spark_session)
-    rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.GUARDRAIL_RULES_TABLE, spark_session=spark_session)
-    enrichment_rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.ENRICHMENT_RULES_TABLE, spark_session=spark_session)
+    rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.GUARDRAIL_TABLE, spark_session=spark_session)
+    enrichment_rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.ENRICHMENT_TABLE, spark_session=spark_session)
     if not catalogue:
         raise ValueError("METADATA_DATA_CATALOGUE has no guardrail targets.")
 

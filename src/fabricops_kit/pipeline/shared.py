@@ -950,7 +950,7 @@ def _run_table_guardrails_workflow(
             env=env,
             current_profile=profiles[table_key],
             write_results=table_config.get("write_profile_behavior_results", True),
-            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
+            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
             rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 

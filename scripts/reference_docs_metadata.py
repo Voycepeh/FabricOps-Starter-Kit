@@ -1230,7 +1230,7 @@ PUBLIC_SYMBOL_DOCS = [
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
-  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL_RULES '
+  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
                  'should determine the freshness column and maximum lag.',
   'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring '
                      'and governance review widgets for lifecycle changes.',
@@ -1287,7 +1287,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
   'do_not_use_when': 'Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
   'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
-  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.',
+  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT.',
   'common_failure_causes': ['The selected guardrail target has no column-level evidence.',
                             'Configured custom fields omit a field name.',
                             'Metadata lakehouse writes cannot be routed through 00_env_config.']},
@@ -1343,7 +1343,7 @@ PUBLIC_SYMBOL_DOCS = [
                  'self-approved rules, submit proposed rules, or bypass approval with a required '
                  'reason.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
-                     'intent only to METADATA_GUARDRAIL_RULES when saving.',
+                     'intent only to METADATA_GUARDRAIL when saving.',
   'glossary_terms': ['guardrails', 'profile behavior', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget state exposes controls, preview records, and save actions '
                            'that produce append-only guardrail rule rows under the table policy.',
@@ -1395,7 +1395,7 @@ PUBLIC_SYMBOL_DOCS = [
   'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
-                           'METADATA_GUARDRAIL_RULES.',
+                           'METADATA_GUARDRAIL.',
   'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
                             'Rule suggestions cannot be parsed.',
                             'Bypass reason is missing when bypass is requested.',
@@ -1814,7 +1814,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                 'guardrail rule so active freshness intent from '
                                                 'governance is enforced during pipeline execution.',
                             'when_to_use': 'Use in 02_pipeline when active freshness rules from '
-                                           'METADATA_GUARDRAIL_RULES should determine the '
+                                           'METADATA_GUARDRAIL should determine the '
                                            'freshness column and maximum lag.',
                             'do_not_use_when': 'Do not use to create or review freshness rules; '
                                                'use the guardrail authoring and governance review '
@@ -1893,7 +1893,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                      'evidence or '
                                                                      'runtime outcomes; it writes '
                                                                      'rule intent only to '
-                                                                     'METADATA_GUARDRAIL_RULES '
+                                                                     'METADATA_GUARDRAIL '
                                                                      'when saving.',
                                                   'glossary_terms': ['guardrails',
                                                                      'profile behavior',
@@ -1933,7 +1933,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'return_interpretation': 'The widget returns mutable preview records '
                                                      'and draft suggestions; approved saves '
                                                      'write guardrail rule intent to '
-                                                     'METADATA_GUARDRAIL_RULES.',
+                                                     'METADATA_GUARDRAIL.',
                             'common_failure_causes': ['Rule parameters are invalid for the '
                                                       'selected DQ type.',
                                                       'Rule suggestions cannot be parsed.',

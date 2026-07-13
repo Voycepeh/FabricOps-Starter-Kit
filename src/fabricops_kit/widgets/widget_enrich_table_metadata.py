@@ -79,7 +79,7 @@ def _table_metadata_enrichment_widget_workflow(
     dict[str, Any]
         Widget state with rendered row controls, record builders, and save
         callbacks. Saves write reviewable enrichment intent to
-        ``METADATA_ENRICHMENT_RULES``. The widget does not write to removed
+        ``METADATA_ENRICHMENT``. The widget does not write to removed
         split enrichment metadata tables and uses the same approval lifecycle as
         guardrail rules.
 
@@ -161,7 +161,7 @@ def _table_metadata_enrichment_widget_workflow(
         selected_action = "apply_now" if use_bypass else action
         records = build_records(action=selected_action)
         _governance_review._write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
-        status.value = f"Saved {len(records)} enrichment rule row(s) to METADATA_ENRICHMENT_RULES."
+        status.value = f"Saved {len(records)} enrichment rule row(s) to METADATA_ENRICHMENT."
         return {"enrichment_rules": records}
 
     draft_button = widgets.Button(description="Save draft", button_style="")

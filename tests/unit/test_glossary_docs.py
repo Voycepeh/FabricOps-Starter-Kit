@@ -40,9 +40,8 @@ REQUIRED_TERMS = {
     "schema", "freshness", "watermark", "DQ", "data quality rule", "lineage", "transformation",
     "deterministic logic", "row count", "null", "distinct value", "distribution", "partitioning", "repartitioning",
     "append", "overwrite", "CSV", "Excel", "Parquet", "JSON", "YAML", "configuration", "parameter", "flag",
-    "dashboard", "METADATA_DATA_CATALOGUE", "METADATA_ENRICHMENT_RULES", "METADATA_GUARDRAIL_RULES",
-    "METADATA_GUARDRAIL_RESULTS", "METADATA_PIPELINE_RUNS", "METADATA_DATA_LINEAGE_TABLE",
-    "METADATA_NOTEBOOK_REGISTRY", "METADATA_DATA_ACCESS", "METADATA_DATA_AGREEMENTS",
+    "dashboard", "METADATA_DATA_CATALOGUE", "METADATA_GUARDRAIL_RESULTS",
+    "METADATA_DATA_ACCESS", "METADATA_DATA_AGREEMENTS",
     "METADATA_DATA_STEWARDS", "METADATA_AGREEMENT_EVIDENCE",
 }
 

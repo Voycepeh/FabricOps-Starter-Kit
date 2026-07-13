@@ -33,7 +33,7 @@ _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
 _ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
-GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
+GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 DQ_RULE_TYPES = [
     "not_null",
     "null_rate_below",
@@ -772,7 +772,7 @@ def enforce_profile_behavior(
     catalogue_df=None,
     current_profile=None,
     write_results: bool = True,
-    rules_table: str = "METADATA_GUARDRAIL_RULES",
+    rules_table: str = "METADATA_GUARDRAIL",
     rules_df=None,
 ) -> dict:
     """Enforce profile behavior guardrails using catalogue evidence as baseline.
@@ -822,7 +822,7 @@ def enforce_profile_behavior(
         Whether to append runtime outcome rows to
         ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are
         supplied.
-    rules_table : str, default="METADATA_GUARDRAIL_RULES"
+    rules_table : str, default="METADATA_GUARDRAIL"
         Metadata table used to load approved profile behavior rules when
         ``rules_df`` is not supplied.
     rules_df : DataFrame or iterable of mappings, optional
@@ -1410,7 +1410,7 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
     schema = configured_lakehouse_schema(config, env, "metadata")
-    frame = read_lakehouse_table_core(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
+    frame = read_lakehouse_table_core(GUARDRAIL_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
@@ -1438,7 +1438,7 @@ def _run_active_dq_guardrail(
         Runtime configuration containing the configured metadata lakehouse
         route from ``00_env_config``.
     env : str
-        Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the
+        Environment name used to read ``METADATA_GUARDRAIL`` from the
         configured metadata target.
     dataset_name : str
         Dataset identifier used with ``table_name`` to scope active DQ guardrail rules
@@ -1468,7 +1468,7 @@ def _run_active_dq_guardrail(
     Notes
     -----
     This v1 guardrail reads active DQ guardrail rules from
-    ``METADATA_GUARDRAIL_RULES`` via the configured metadata route and writes the aggregate runtime
+    ``METADATA_GUARDRAIL`` via the configured metadata route and writes the aggregate runtime
     outcome to ``METADATA_GUARDRAIL_RESULTS`` when result writing is enabled. It
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.

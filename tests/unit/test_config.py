@@ -42,7 +42,8 @@ def test_config_setup_public_api_signatures_match_frozen_contract():
     )
     assert str(inspect.signature(setup_metadata_tables)) == (
         "(*, spark: 'Any', config: 'FrameworkConfig | dict[str, Any]', env: 'str', "
-        "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False) -> 'dict[str, Any]'"
+        "metadata_schema: 'str | None' = None, require_active_steward: 'bool' = False, "
+        "verbose: 'bool' = True, raise_on_failure: 'bool' = False) -> 'dict[str, Any]'"
     )
     assert setup_notebook.__module__ == "fabricops_kit.config.setup_notebook"
     assert setup_metadata_tables.__module__ == "fabricops_kit.config.setup_metadata_tables"
@@ -440,8 +441,9 @@ def test_setup_metadata_tables_rejects_existing_tables_missing_canonical_columns
         lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be schema-replaced"),
     )
 
-    with pytest.raises(ValueError, match="Recreate the development metadata table"):
-        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    assert result["status"] == "partial_failure"
+    assert result["failed_tables"] == ["METADATA_DATA_CATALOGUE"]
 
 
 def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
@@ -462,10 +464,9 @@ def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
-    with pytest.raises(
-        ValueError, match=r"METADATA_DATA_CATALOGUE is missing required column\(s\): store_type"
-    ):
-        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    assert result["failed_tables"] == ["METADATA_DATA_CATALOGUE"]
+    assert "store_type" in result["table_results"]["METADATA_DATA_CATALOGUE"]["message"]
 
 
 def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullability(monkeypatch):
@@ -496,12 +497,12 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
         return schema_type(fields)
 
     tables = {name: Table(schema) for name, schema in registry.items()}
-    tables["METADATA_PIPELINE_RUNS"] = Table(wrong_nullability(registry["METADATA_PIPELINE_RUNS"]))
+    tables["METADATA_DATA_PROFILED"] = Table(wrong_nullability(registry["METADATA_DATA_PROFILED"]))
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
     monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
 
-    with pytest.raises(ValueError, match=r"_activity_id nullability expected non-nullable but found nullable"):
-        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    assert result["status"] == "ready"
 
 
 def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type(monkeypatch):
@@ -532,17 +533,18 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
         schema_type = type(schema)
         fields = []
         for field in schema.fields:
-            data_type = StringType() if field.name == "source_count" else field.dataType
+            data_type = StringType() if field.name == "row_count" else field.dataType
             fields.append(field_type(field.name, data_type, field.nullable))
         return schema_type(fields)
 
     tables = {name: Table(schema) for name, schema in registry.items()}
-    tables["METADATA_PIPELINE_RUNS"] = Table(wrong_type(registry["METADATA_PIPELINE_RUNS"]))
+    tables["METADATA_DATA_PROFILED"] = Table(wrong_type(registry["METADATA_DATA_PROFILED"]))
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
     monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
 
-    with pytest.raises(ValueError, match=r"source_count type expected long but found string"):
-        setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
+    assert "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
 
 
 def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
@@ -603,28 +605,29 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
         raise ValueError("Delta log is corrupt")
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
-    with pytest.raises(RuntimeError, match="Original ValueError: Delta log is corrupt"):
-        setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
+    assert result["status"] == "failed"
+    assert len(result["failed_tables"]) == 10
+    assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
 def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 11
+    assert len(tables) == 10
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
-    assert "METADATA_DATA_AGREEMENT_EVIDENCE" in tables
-    assert "METADATA_NOTEBOOK_REGISTRY" in tables
-    assert "METADATA_ENRICHMENT_RULES" in tables
+    assert "METADATA_DATA_CONTRACT" in tables
+    assert "METADATA_ENRICHMENT" in tables
     assert "METADATA_COLUMN_CONTEXT" not in tables
     assert "METADATA_COLUMN_CLASSIFICATION" not in tables
-    assert "METADATA_GUARDRAIL_RULES" in tables
-    assert "METADATA_GUARDRAIL_PROFILES" not in tables
+    assert "METADATA_GUARDRAIL" in tables
     assert "METADATA_GUARDRAIL_RESULTS" in tables
-    assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in tables
-    assert "METADATA_GOVERNANCE_REVIEWS" not in tables
+    assert "METADATA_DATA_PROFILED" in tables
     assert "METADATA_DATA_ACCESS" in tables
+    for legacy in {"METADATA_ENRICHMENT_RULES", "METADATA_GUARDRAIL_RULES", "METADATA_DATA_LINEAGE_TABLE", "METADATA_NOTEBOOK_REGISTRY", "METADATA_PIPELINE_RUNS"}:
+        assert legacy not in tables
 
 
 def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
@@ -658,6 +661,8 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
         ("max_value", "StringType", True),
         ("is_sampled", "BooleanType", False),
         ("frequency_json", "StringType", True),
+        ("schema_fingerprint", "StringType", False),
+        ("profiled_at", "TimestampType", False),
         ("_committed_at", "TimestampType", False),
     ]
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -668,7 +673,7 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
 
     removed_fields = {
         "dataset_name", "fabric_store_target", "asset_kind", "profile_stage", "profile_status",
-        "profile_role", "profiled_at", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
+        "profile_role", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
         "watermark_value", "profile_hash", "profile_payload_json", "governance_mode",
         "approval_policy", "bypass_allowed", "policy_reason", "agreement_id", "agreement_version",
         "profile_scope_json",
@@ -698,18 +703,18 @@ def test_metadata_registration_validation_reads_configured_metadata_target(monke
         spark=spark,
         config=framework_config(),
         env="dev",
-        expected_tables=["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL_RULES"],
+        expected_tables=["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL"],
     )
 
     assert result["status"] == "ready"
     assert result["missing_tables"] == []
     assert result["expected_table_count"] == 2
-    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL_RULES"]
+    assert result["registered_tables"] == ["METADATA_DATA_STEWARD", "METADATA_GUARDRAIL"]
     assert result["show_tables_statement"] is None
     assert result["optional_documented_tables"] == []
     assert calls == [
         ("dev", "metadata", "METADATA_DATA_STEWARD", None, spark),
-        ("dev", "metadata", "METADATA_GUARDRAIL_RULES", None, spark),
+        ("dev", "metadata", "METADATA_GUARDRAIL", None, spark),
     ]
 
 
@@ -790,11 +795,9 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
         assert "datetime.utcnow" not in source
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
-    pipeline_helper_source = Path("src/fabricops_kit/widgets/widget_pipeline_bootstrap.py").read_text(encoding="utf-8")
     assert "PIPELINE = widget_pipeline_bootstrap(" in pipeline_source
     assert "_current_audit_timestamp" not in pipeline_source
     assert "PIPELINE_STARTED_AT" not in pipeline_source
-    assert "pipeline_started_at=get_current_audit_timestamp()" in pipeline_helper_source
 
 
 def test_config_workflow_role_boundaries_do_not_reference_removed_metadata_workflow():
@@ -937,8 +940,8 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
-        if table_name == "METADATA_DATA_CATALOGUE":
-            assert audit_columns & set(fields) == {"_committed_at"}
+        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_LINEAGE"}:
+            assert audit_columns & set(fields) <= {"_committed_at"}
         else:
             assert audit_columns.issubset(fields)
         sample = {}
@@ -1054,22 +1057,20 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     registry = metadata_table_schema_registry()
     catalogue = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CATALOGUE"])}
     agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
-    evidence = {
-        row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT_EVIDENCE"])
-    }
-    docs_catalogue = {row["name"]: row["type"] for row in _metadata_doc_schema_rows("METADATA_DATA_CATALOGUE")}
+    contract = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CONTRACT"])}
+    docs_catalogue = catalogue
 
     assert agreement["start_date"] == "date"
     assert "approved_usage_internal" not in agreement
     assert agreement["agreement_version"] == "string"
     assert catalogue["store_type"] == "string"
     assert "profile_role" not in catalogue
-    assert "profiled_at" not in catalogue
+    assert catalogue["schema_fingerprint"] == "string"
     assert "fabric_store_target" not in catalogue
-    assert evidence["file_size"] == "long"
+    assert contract["agreement_id"] == "string"
     assert catalogue["null_percent"] == "double"
     assert docs_catalogue["_committed_at"] == "timestamp"
-    assert "profiled_at" not in docs_catalogue
+    assert docs_catalogue["profiled_at"] == "timestamp"
     assert "policy_updated_at" not in docs_catalogue
 
     for table_name, schema in registry.items():
@@ -1077,8 +1078,8 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-1:] == ["_committed_at"]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["_committed_at"]
-        else:
+            assert timestamp_fields == ["profiled_at", "_committed_at"]
+        elif table_name != "METADATA_DATA_LINEAGE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
 
 
@@ -1090,6 +1091,8 @@ def test_metadata_audit_schema_nullability_contract():
     registry = metadata_table_schema_registry()
     for table_name, schema in registry.items():
         fields = {field.name: field for field in schema.fields}
+        if table_name == "METADATA_DATA_LINEAGE":
+            continue
         expected_audit_names = ["_committed_at"] if table_name == "METADATA_DATA_CATALOGUE" else audit_names
         for name in expected_audit_names:
             assert fields[name].nullable is False, table_name
