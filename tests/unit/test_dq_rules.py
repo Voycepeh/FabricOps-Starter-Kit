@@ -136,13 +136,14 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
     assert {
-        "watermark_column",
-        "watermark_value",
-        "profile_hash",
-        "profile_payload_json",
+        "store_type",
         "row_count",
+        "non_null_count",
         "null_percent",
+        "distinct_percent",
+        "frequency_json",
     }.issubset(catalogue_fields)
+    assert {"profile_role", "watermark_column", "watermark_value", "profile_hash", "profile_payload_json"}.isdisjoint(catalogue_fields)
     assert {
         "baseline_status",
         "source_schema_check",
