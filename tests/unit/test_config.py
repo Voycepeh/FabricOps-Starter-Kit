@@ -431,7 +431,7 @@ def test_setup_metadata_tables_rejects_existing_tables_missing_canonical_columns
 
     tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
     tables["METADATA_DATA_CATALOGUE"] = Table(
-        [name for name in registry["METADATA_DATA_CATALOGUE"].fieldNames() if name != "fabric_store_target"]
+        [name for name in registry["METADATA_DATA_CATALOGUE"].fieldNames() if name != "store_type"]
     )
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
     monkeypatch.setattr(
@@ -457,13 +457,13 @@ def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
 
     def read_table(table_name, **_kwargs):
         if table_name == "METADATA_DATA_CATALOGUE":
-            return Table([name for name in registry[table_name].fieldNames() if name != "fabric_store_target"])
+            return Table([name for name in registry[table_name].fieldNames() if name != "store_type"])
         return Table(registry[table_name].fieldNames())
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
     with pytest.raises(
-        ValueError, match=r"METADATA_DATA_CATALOGUE is missing required column\(s\): fabric_store_target"
+        ValueError, match=r"METADATA_DATA_CATALOGUE is missing required column\(s\): store_type"
     ):
         setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
 
@@ -627,28 +627,54 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     assert "METADATA_DATA_ACCESS" in tables
 
 
-def test_metadata_data_catalogue_schema_is_profile_evidence_only():
-    """Verify catalogue schema has profile_mode but excludes old result fields."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
+    """Verify catalogue schema exactly matches the minimal column-profile contract."""
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
 
-    fields = set(metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames())
+    schema = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"]
+    actual = [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields]
+    expected = [
+        ("metadata_table_key", "StringType", False),
+        ("metadata_column_key", "StringType", False),
+        ("environment_name", "StringType", False),
+        ("store_type", "StringType", False),
+        ("layer", "StringType", False),
+        ("schema_name", "StringType", True),
+        ("table_name", "StringType", False),
+        ("column_name", "StringType", False),
+        ("data_type", "StringType", False),
+        ("row_count", "LongType", False),
+        ("non_null_count", "LongType", False),
+        ("null_count", "LongType", False),
+        ("null_percent", "DoubleType", False),
+        ("distinct_count", "LongType", False),
+        ("distinct_percent", "DoubleType", False),
+        ("mean_value", "DoubleType", True),
+        ("stddev_value", "DoubleType", True),
+        ("min_value", "StringType", True),
+        ("percentile_25_value", "DoubleType", True),
+        ("median_value", "DoubleType", True),
+        ("percentile_75_value", "DoubleType", True),
+        ("max_value", "StringType", True),
+        ("is_sampled", "BooleanType", False),
+        ("frequency_json", "StringType", True),
+        ("profiled_at", "TimestampType", False),
+        ("_committed_at", "TimestampType", False),
+    ]
+    audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
 
-    assert "profile_mode" in fields
-    assert "fabric_store_target" in fields
-    assert "load_behavior" not in fields
-    for result_field in {
-        "freshness_status",
-        "freshness_can_continue",
-        "stability_status",
-        "dq_rule_count",
-        "dq_failed_rule_count",
-        "freshness_message",
-        "stability_can_continue",
-        "stability_message",
-        "source_change_signal_json",
-        "profile_baseline_mode",
-    }:
-        assert result_field not in fields
+    assert actual == expected
+    assert len(schema.fieldNames()) == len(set(schema.fieldNames()))
+    assert audit_names & set(schema.fieldNames()) == {"_committed_at"}
+
+    removed_fields = {
+        "dataset_name", "fabric_store_target", "asset_kind", "profile_stage", "profile_status",
+        "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
+        "watermark_value", "profile_hash", "profile_payload_json", "governance_mode",
+        "approval_policy", "bypass_allowed", "policy_reason", "agreement_id", "agreement_version",
+        "profile_scope_json",
+    }
+    assert removed_fields.isdisjoint(schema.fieldNames())
 
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
@@ -912,7 +938,10 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
-        assert audit_columns.issubset(fields)
+        if table_name == "METADATA_DATA_CATALOGUE":
+            assert audit_columns & set(fields) == {"_committed_at"}
+        else:
+            assert audit_columns.issubset(fields)
         sample = {}
         for field_name, type_name in fields.items():
             if type_name == "TimestampType":
@@ -1035,16 +1064,19 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert "approved_usage_internal" not in agreement
     assert agreement["agreement_version"] == "string"
     assert catalogue["profiled_at"] == "timestamp"
-    assert catalogue["fabric_store_target"] == "string"
+    assert catalogue["store_type"] == "string"
+    assert "fabric_store_target" not in catalogue
     assert evidence["file_size"] == "long"
     assert catalogue["null_percent"] == "double"
     assert docs_catalogue["profiled_at"] == "timestamp"
     assert "policy_updated_at" not in docs_catalogue
 
     for table_name, schema in registry.items():
-        assert [row["name"] for row in metadata_table_schema_rows(schema)][-len(audit_schema_fields()) :] == [
-            name for name, _kind, _nullable in audit_schema_fields()
-        ], table_name
+        names = [row["name"] for row in metadata_table_schema_rows(schema)]
+        if table_name == "METADATA_DATA_CATALOGUE":
+            assert names[-1:] == ["_committed_at"]
+        else:
+            assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
 
 
 def test_metadata_audit_schema_nullability_contract():
@@ -1055,8 +1087,13 @@ def test_metadata_audit_schema_nullability_contract():
     registry = metadata_table_schema_registry()
     for table_name, schema in registry.items():
         fields = {field.name: field for field in schema.fields}
-        for name in audit_names:
+        expected_audit_names = ["_committed_at"] if table_name == "METADATA_DATA_CATALOGUE" else audit_names
+        for name in expected_audit_names:
             assert fields[name].nullable is False, table_name
+        if table_name == "METADATA_DATA_CATALOGUE":
+            assert set(audit_names) & set(fields) == {"_committed_at"}
+        else:
+            assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
     assert access_fields[:14] == [
