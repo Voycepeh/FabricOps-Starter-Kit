@@ -116,6 +116,12 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 | Contract risk | Live |
 | Live-critical dependencies | 16 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.1.0 |
+
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
@@ -141,5 +147,5 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 13 Jul 2026, 6:04 PM SGT
+    Call-flow data generated: 13 Jul 2026, 6:03 PM SGT

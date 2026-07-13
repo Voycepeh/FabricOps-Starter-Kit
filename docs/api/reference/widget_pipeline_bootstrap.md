@@ -28,9 +28,10 @@ Bootstrap a guided pipeline notebook run and store runtime defaults.
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** `02_pipeline`, `99_explore`
 
 ## Usage notes
 
@@ -120,9 +121,15 @@ Not documented yet
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.1.0 |
+
 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 13 Jul 2026, 6:04 PM SGT
+    Call-flow data generated: 13 Jul 2026, 6:03 PM SGT
