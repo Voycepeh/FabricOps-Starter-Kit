@@ -55,7 +55,7 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
-    assert "write_pipeline_lineage" in fabricops_kit.__all__
+    assert "write_pipeline_lineage" not in fabricops_kit.__all__
     assert "write_pipeline_run_summary" in fabricops_kit.__all__
     for removed_name in {
         "prepare_source_table_configs",
@@ -256,32 +256,6 @@ def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezo
     ]
     created_at = dict(df.with_columns)["_fabricops_created_at"][1]
     assert created_at.endswith("+08:00")
-
-
-def test_write_pipeline_lineage_supports_many_to_many_relationships(monkeypatch):
-    """Verify write pipeline lineage supports many to many relationships."""
-    writes = []
-
-    def write_table(df, table, *, target, context, **kwargs):
-        assert target == "metadata"
-        assert context["env"] == "dev"
-        writes.append((df, context["env"], target, table, kwargs))
-
-    monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", write_table)
-
-    result = pipeline.write_pipeline_lineage(
-        spark=FakeSpark(),
-        context={"config": {}, "env": "dev"},
-        source_definitions={"s1": {"table_name": "source_one"}, "s2": {"table_name": "source_two"}},
-        target_definitions={"t1": {"table_name": "target_one"}, "t2": {"table_name": "target_two"}},
-        relationships=[{"sources": ["s1", "s2"], "targets": ["t1", "t2"], "operation": "join"}],
-        dataset_name="sales",
-    )
-
-    assert result["row_count"] == 4
-    assert writes[0][2:4] == ("metadata", "METADATA_DATA_LINEAGE_TABLE")
-    payload = json.loads(result["rows"][0]["transformation_steps_json"])
-    assert payload["operation"] == "join"
 
 
 def test_write_pipeline_run_summary_writes_metadata_table(monkeypatch):

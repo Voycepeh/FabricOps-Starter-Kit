@@ -6,13 +6,15 @@ import hashlib
 import json
 from typing import Any, Sequence
 
-from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
@@ -155,6 +157,38 @@ def _canonical_catalogue_dataframe(
     ).select(*CATALOGUE_COLUMNS)
 
 
+def _write_lineage_participation(
+    *,
+    metadata_table_key: str,
+    profile_role: str,
+    config: Any,
+    env: str,
+    context: dict[str, Any],
+    spark_session: Any,
+) -> None:
+    """Append one table-level runtime participation row to metadata lineage."""
+    normalized_key = _require_non_empty_string(metadata_table_key, "metadata_table_key")
+    normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
+    runtime_context = context.get("runtime_context") or context.get("audit_runtime_context")
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    row = coerce_metadata_row_types(
+        LINEAGE_TABLE,
+        {
+            "metadata_table_key": normalized_key,
+            "profile_role": normalized_role,
+            **audit,
+        },
+    )
+    write_lakehouse_table_core(
+        spark_session.createDataFrame([row]),
+        LINEAGE_TABLE,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
+        mode="append",
+    )
+
+
 def profile_and_register_dataframe(
     df,
     *,
@@ -178,7 +212,7 @@ def profile_and_register_dataframe(
     profile_role : {"source", "target"}
         Execution participation context for the DataFrame in the notebook flow.
         The validated value is not stored in ``METADATA_DATA_CATALOGUE``; a
-        follow-up lineage flow records table-level runtime participation.
+        automatic lineage flow records one table-level runtime participation row.
     environment_name : str
         FabricOps environment name to persist with the catalogue snapshot.
     store_type : {"lakehouse", "warehouse"}
@@ -212,10 +246,11 @@ def profile_and_register_dataframe(
     -----
     Metadata writes route through the configured ``metadata`` target from
     ``00_env_config`` and append one profile snapshot per invocation. Exact
-    lineage registration and guardrail execution are separate workflows.
+    lineage registration appends one participation row after the catalogue
+    snapshot; guardrail execution is a separate workflow.
 
     """
-    _normalize_choice(profile_role, "profile_role", {"source", "target"})
+    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     normalized_store_type = _normalize_choice(store_type, "store_type", {"lakehouse", "warehouse"})
     normalized_environment = _require_non_empty_string(environment_name, "environment_name")
     normalized_layer = _require_non_empty_string(layer, "layer")
@@ -223,7 +258,7 @@ def profile_and_register_dataframe(
     normalized_schema = None if schema_name is None else _require_non_empty_string(schema_name, "schema_name")
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
 
-    config, env, _context = resolve_fabric_context(env=normalized_environment)
+    config, env, context = resolve_fabric_context(env=normalized_environment)
     profile_df = profile_dataframe(df)
     catalogue_df = _canonical_catalogue_dataframe(
         profile_df,
@@ -245,4 +280,25 @@ def profile_and_register_dataframe(
         context={"config": config, "env": env},
         mode="append",
     )
+    metadata_table_key = _metadata_table_key(
+        normalized_environment,
+        normalized_store_type,
+        normalized_layer,
+        normalized_schema,
+        normalized_table,
+    )
+    try:
+        _write_lineage_participation(
+            metadata_table_key=metadata_table_key,
+            profile_role=normalized_profile_role,
+            config=config,
+            env=env,
+            context=context,
+            spark_session=df.sparkSession,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            "Catalogue registration succeeded but lineage registration failed "
+            f"for metadata_table_key={metadata_table_key!r} and profile_role={normalized_profile_role!r}."
+        ) from exc
     return catalogue_df
