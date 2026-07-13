@@ -10,7 +10,6 @@ One row represents one profiled column snapshot. Numeric-only statistics are nul
 | --- | --- | --- | --- | --- |
 | `metadata_table_key` | `string` | No | Catalogue evidence writers | Stable key identifying the physical table across environment, store type, layer, schema, and table context. |
 | `metadata_column_key` | `string` | No | Catalogue evidence writers | Stable key identifying a specific column within the physical table. |
-| `profile_role` | `string` | No | Catalogue evidence writers | How the profiled DataFrame participated in the pipeline flow; expected values are `source` or `target`. |
 | `environment_name` | `string` | No | Catalogue evidence writers | FabricOps environment such as development, test, or production. |
 | `store_type` | `string` | No | Catalogue evidence writers | Physical Fabric storage type, currently `lakehouse` or `warehouse`. |
 | `layer` | `string` | No | Catalogue evidence writers | Pipeline or data architecture layer such as raw, bronze, silver, gold, or curated. |
