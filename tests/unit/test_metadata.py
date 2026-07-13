@@ -11,7 +11,6 @@ import fabricops_kit.widgets.shared as agreement
 import fabricops_kit.widgets.widget_render_data_steward as steward_widget
 from fabricops_kit.config import audit as audit_helpers
 from fabricops_kit.config import metadata_keys
-from fabricops_kit.widgets import notebook_registry
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -29,105 +28,6 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
     assert audit["_committed_by"] == "fabricops.test@example.com"
     assert audit["_metadata_lakehouse_name"] == "lh_metadata_dev"
     assert audit["_activity_id"] == "manual-activity"
-
-
-def test_notebook_registration_uses_configured_metadata_route(monkeypatch):
-    """Verify notebook registration uses configured metadata route."""
-    writes = []
-
-    monkeypatch.setattr(
-        notebook_registry,
-        "write_lakehouse_table_core",
-        lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
-    )
-    monkeypatch.setattr(
-        notebook_registry,
-        "_runtime_context",
-        lambda: {
-            "currentWorkspaceId": "workspace-id",
-            "currentWorkspaceName": "Workspace Name",
-            "currentNotebookId": "notebook-id",
-            "currentNotebookName": "02_pipeline_orders_pipeline",
-            "userName": "user@example.com",
-            "userId": "user-id",
-            "activityId": "activity-id",
-        },
-    )
-
-    row = notebook_registry.register_current_notebook(
-        spark=FakeSpark(),
-        config=framework_config(),
-        env="dev",
-        agreement_id="DA-1",
-        notebook_type="02_pipeline",
-        environment_name="dev",
-        dataset_name="orders",
-        table_name="fact_orders",
-    )
-
-    assert list(row) == notebook_registry.NOTEBOOK_REGISTRY_FIELDS
-    assert row["notebook_url"] == "https://app.fabric.microsoft.com/groups/workspace-id/notebooks/notebook-id"
-    assert [(env, target, table) for _, env, target, table, _ in writes] == [
-        ("dev", "metadata", notebook_registry.NOTEBOOK_REGISTRY_TABLE),
-    ]
-
-
-def test_current_notebook_active_registrations_filters_current_runtime_rows(monkeypatch):
-    """Verify current notebook active registrations filters current runtime rows."""
-    rows = [
-        {
-            "agreement_id": "DA-1",
-            "agreement_version": "1.0.0",
-            "_committed_at": "2026-01-02T00:00:00Z",
-            "_notebook_id": "notebook-id",
-            "_notebook_name": "02_pipeline_orders",
-            "registration_status": "active",
-            "notebook_type": "02_pipeline",
-            "environment_name": "dev",
-            "registration_role": "primary",
-        },
-        {
-            "agreement_id": "DA-2",
-            "agreement_version": "1.0.0",
-            "_committed_at": "2026-01-01T00:00:00Z",
-            "_notebook_id": "notebook-id",
-            "_notebook_name": "02_pipeline_orders",
-            "registration_status": "superseded",
-            "notebook_type": "02_pipeline",
-            "environment_name": "dev",
-            "registration_role": "primary",
-        },
-        {
-            "agreement_id": "DA-3",
-            "agreement_version": "1.0.0",
-            "_committed_at": "2026-01-03T00:00:00Z",
-            "_notebook_id": "other",
-            "_notebook_name": "02_pipeline_other",
-            "registration_status": "active",
-            "notebook_type": "02_pipeline",
-            "environment_name": "dev",
-            "registration_role": "primary",
-        },
-    ]
-    monkeypatch.setattr(notebook_registry, "_runtime_context", lambda: {"currentNotebookId": "notebook-id"})
-    monkeypatch.setattr(notebook_registry, "read_lakehouse_table_core", lambda *args, **kwargs: rows)
-
-    active = notebook_registry.current_notebook_active_registrations(
-        object(), config=framework_config(), env="dev", notebook_type="02_pipeline", environment_name="dev", registration_role="primary"
-    )
-
-    assert len(active) == 1
-    assert active[0]["_notebook_id"] == "notebook-id"
-
-
-def test_notebook_registry_read_requires_configured_metadata_route():
-    """Verify notebook registry read requires configured metadata route."""
-    class Spark:
-        def table(self, table):
-            raise AssertionError(f"notebook registry must not call spark.table: {table}")
-
-    with pytest.raises(ValueError, match="config and env are required"):
-        notebook_registry._load_notebook_registry(Spark(), missing_ok=True)
 
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
@@ -246,11 +146,9 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'display_guardrail_results',
         'prepare_pipeline_table_configs',
         'run_table_guardrails',
-        'write_pipeline_run_summary',
         'widget_render_data_steward',
         'widget_render_data_agreement',
         'widget_render_agreement_evidence',
-        'widget_pipeline_bootstrap',
         'widget_select_guardrail_target',
         'widget_enrich_table_metadata',
         'widget_author_schema_freshness_profile_rules',
@@ -260,7 +158,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
     ]
     assert fabricops_kit.__all__ == expected_public_callables
     assert len(fabricops_kit.__all__) == len(expected_public_callables)
-    assert "widget_pipeline_bootstrap" in fabricops_kit.__all__
+    assert "widget_pipeline_bootstrap" not in fabricops_kit.__all__
     assert "get_selected_agreement" not in fabricops_kit.__all__
 
 

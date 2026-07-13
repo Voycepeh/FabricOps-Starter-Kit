@@ -9,12 +9,12 @@ from typing import Any, Sequence
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
+from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table, write_lakehouse_table_core
 from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
@@ -48,6 +48,27 @@ def _metadata_table_key(environment_name: str, store_type: str, layer: str, sche
 def _metadata_column_key(metadata_table_key: str, column_name: str) -> str:
     """Return the canonical physical asset key for a catalogue column snapshot."""
     return _stable_catalogue_key(metadata_table_key, column_name)
+
+
+def _schema_fingerprint(df: Any) -> str:
+    """Return the deterministic fingerprint for an observed Spark schema."""
+    fields = [
+        {"name": str(field.name).strip(), "type": field.dataType.simpleString()}
+        for field in getattr(getattr(df, "schema", None), "fields", [])
+    ]
+    payload = {"fields": fields}
+    return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_fingerprint: str, profile_role: str) -> str:
+    """Return the deterministic runtime lineage event identity."""
+    payload = {
+        "activity_id": _require_non_empty_string(activity_id, "activity_id"),
+        "metadata_table_key": _require_non_empty_string(metadata_table_key, "metadata_table_key"),
+        "schema_fingerprint": _require_non_empty_string(schema_fingerprint, "schema_fingerprint"),
+        "profile_role": _normalize_choice(profile_role, "profile_role", {"source", "target"}),
+    }
+    return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def _frequency_json_dataframe(df, frequency_columns: Sequence[str] | None, frequency_top_n: int):
@@ -105,6 +126,7 @@ def _canonical_catalogue_dataframe(
     metadata_table_key = _metadata_table_key(environment_name, store_type, layer, schema_name, table_name)
     column_key_udf = F.udf(lambda column_name: _metadata_column_key(metadata_table_key, column_name), T.StringType())
     frequency_df = _frequency_json_dataframe(source_df, frequency_columns, frequency_top_n)
+    schema_fingerprint = _schema_fingerprint(source_df)
 
     catalogue_df = profile_df.select(
         F.col("COLUMN_NAME").alias("column_name"),
@@ -153,6 +175,8 @@ def _canonical_catalogue_dataframe(
         F.col("max_value"),
         F.lit(bool(is_sampled)).cast("boolean").alias("is_sampled"),
         F.col("frequency_json").cast("string"),
+        F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
+        F.current_timestamp().cast("timestamp").alias("profiled_at"),
         F.current_timestamp().cast("timestamp").alias("_committed_at"),
     ).select(*CATALOGUE_COLUMNS)
 
@@ -160,33 +184,66 @@ def _canonical_catalogue_dataframe(
 def _write_lineage_participation(
     *,
     metadata_table_key: str,
+    schema_fingerprint: str,
     profile_role: str,
+    profiled_at: Any,
     config: Any,
     env: str,
     context: dict[str, Any],
     spark_session: Any,
 ) -> None:
-    """Append one table-level runtime participation row to metadata lineage."""
+    """Write one idempotent runtime lineage event to metadata lineage."""
     normalized_key = _require_non_empty_string(metadata_table_key, "metadata_table_key")
+    normalized_fingerprint = _require_non_empty_string(schema_fingerprint, "schema_fingerprint")
     normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    activity_id = _require_non_empty_string(audit.get("_activity_id"), "activity_id")
+    event_id = _lineage_event_id(
+        activity_id=activity_id,
+        metadata_table_key=normalized_key,
+        schema_fingerprint=normalized_fingerprint,
+        profile_role=normalized_role,
+    )
     row = coerce_metadata_row_types(
         LINEAGE_TABLE,
         {
+            "lineage_event_id": event_id,
+            "activity_id": activity_id,
+            "notebook_id": _require_non_empty_string(audit.get("_notebook_id"), "notebook_id"),
+            "notebook_name": _require_non_empty_string(audit.get("_notebook_name"), "notebook_name"),
+            "workspace_id": _require_non_empty_string(audit.get("_workspace_id"), "workspace_id"),
+            "workspace_name": _require_non_empty_string(audit.get("_workspace_name"), "workspace_name"),
             "metadata_table_key": normalized_key,
+            "schema_fingerprint": normalized_fingerprint,
             "profile_role": normalized_role,
-            **audit,
+            "profiled_at": profiled_at,
+            "committed_by": _require_non_empty_string(audit.get("_committed_by"), "committed_by"),
+            "environment_name": env,
+            "metadata_lakehouse_name": audit.get("_metadata_lakehouse_name"),
         },
     )
     lineage_schema = metadata_table_schema_registry()[LINEAGE_TABLE]
     lineage_df = spark_session.createDataFrame([row], schema=lineage_schema)
-    write_lakehouse_table_core(
-        lineage_df,
-        LINEAGE_TABLE,
-        target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        context=context,
-        mode="append",
+    _upsert_lineage_event(lineage_df=lineage_df, config=config, env=env, spark_session=spark_session)
+
+
+def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_session: Any) -> None:
+    """Upsert lineage rows by lineage_event_id without falling back to append."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
+
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "metadata", LINEAGE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
+    )
+    target = DeltaTable.forPath(spark_session, path)
+    (
+        target.alias("target")
+        .merge(lineage_df.alias("source"), "target.lineage_event_id = source.lineage_event_id")
+        .whenMatchedUpdateAll()
+        .whenNotMatchedInsertAll()
+        .execute()
     )
 
 
@@ -261,6 +318,7 @@ def profile_and_register_dataframe(
 
     config, env, context = resolve_fabric_context(env=normalized_environment)
     profile_df = profile_dataframe(df)
+    schema_fingerprint = _schema_fingerprint(df)
     catalogue_df = _canonical_catalogue_dataframe(
         profile_df,
         source_df=df,
@@ -291,7 +349,9 @@ def profile_and_register_dataframe(
     try:
         _write_lineage_participation(
             metadata_table_key=metadata_table_key,
+            schema_fingerprint=schema_fingerprint,
             profile_role=normalized_profile_role,
+            profiled_at=build_runtime_audit_fields(config=config, env=env, runtime_context=context)["_committed_at"],
             config=config,
             env=env,
             context=context,

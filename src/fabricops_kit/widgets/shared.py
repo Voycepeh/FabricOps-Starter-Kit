@@ -201,8 +201,7 @@ ACTIVATION_STATES = ["active", "pending", "inactive"]
 REVIEW_STATES = ["draft", "pending_governance_review", "active_pending_governance_review", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
 SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "03_governance"]
 CREATED_BY_ROLES = ["engineering", "governance", "system"]
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
-PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
@@ -257,10 +256,10 @@ def _get_selected_agreement_state() -> dict[str, Any] | None:
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by ``widget_pipeline_bootstrap``."""
+    """Return the agreement selected by the active agreement-selection state."""
     selected = _get_selected_agreement_state()
     if not selected:
-        raise RuntimeError("No agreement selected. Run widget_pipeline_bootstrap(select_agreement=True) first.")
+        raise RuntimeError("No agreement selected. Run the agreement selection workflow first.")
     return selected
 
 

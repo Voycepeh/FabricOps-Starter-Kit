@@ -88,7 +88,11 @@ def registered(monkeypatch):
     def write(df, table_name, *, target, schema, context, mode):
         writes.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
 
+    def upsert_lineage(*, lineage_df, config, env, spark_session):
+        writes.append({"df": lineage_df, "table_name": "METADATA_DATA_LINEAGE", "target": "metadata", "schema": None, "context": {"config": config, "env": env}, "mode": "upsert"})
+
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
+    monkeypatch.setattr(module, "_upsert_lineage_event", upsert_lineage)
     return writes
 
 
@@ -224,7 +228,7 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
 
     assert calls == {"profile": 1, "frequency": 0, "df": source}
     assert "profile_role" not in result.columns
-    assert "profiled_at" not in result.columns
+    assert "profiled_at" in result.columns
     assert result.where("frequency_json is not null").count() == 0
     assert result.count() == 3
 
@@ -277,7 +281,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
         "frequency_kwargs": {"columns": ["customer_type", "country"], "top_n": 5, "df_is_source": True},
         "sample": 0,
     }
-    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE_TABLE"]
+    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"]
     assert registered[0] == {
         "df": result,
         "table_name": CATALOGUE_TABLE,
@@ -286,8 +290,8 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
         "context": {"config": registered[0]["context"]["config"], "env": "dev"},
         "mode": "append",
     }
-    assert registered[1]["context"]["activityId"] == "activity-1"
-    lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE_TABLE"]
+    assert registered[1]["context"]["env"] == "dev"
+    lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
     assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[1]["df"].schema.fields] == [
         (f.name, type(f.dataType).__name__, f.nullable) for f in lineage_schema.fields
     ]
@@ -296,8 +300,8 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     assert [(f.name, type(f.dataType).__name__) for f in result.schema.fields] == [
         (f.name, type(f.dataType).__name__) for f in expected_schema.fields
     ]
-    assert {"profile_role", "profiled_at", "_committed_by", "_workspace_name", "_activity_id"}.isdisjoint(result.columns)
-    assert [name for name, dtype in result.dtypes if dtype == "timestamp"] == ["_committed_at"]
+    assert {"profile_role", "_committed_by", "_workspace_name", "_activity_id"}.isdisjoint(result.columns)
+    assert [name for name, dtype in result.dtypes if dtype == "timestamp"] == ["profiled_at", "_committed_at"]
 
     rows = {row.column_name: row.asDict() for row in result.collect()}
     assert rows["id"]["frequency_json"] is None
@@ -319,9 +323,12 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     lineage = lineage_rows[0].asDict()
     assert lineage["metadata_table_key"] == expected_table_key
     assert lineage["profile_role"] == "source"
-    assert lineage["_activity_id"] == "activity-1"
-    assert lineage["_workspace_id"] == "workspace-1"
-    assert lineage["_notebook_id"] == "notebook-1"
+    assert lineage["activity_id"] == "activity-1"
+    assert lineage["workspace_id"] == "workspace-1"
+    assert lineage["notebook_id"] == "notebook-1"
+    assert "_activity_id" not in lineage
+    assert "_workspace_id" not in lineage
+    assert "_notebook_id" not in lineage
 
     source_role_result = profile_and_register_dataframe(
         source,
@@ -365,30 +372,38 @@ def test_catalogue_schema_matches_main_contract_without_profile_role():
         "max_value",
         "is_sampled",
         "frequency_json",
+        "schema_fingerprint",
+        "profiled_at",
         "_committed_at",
     ]
     assert "profile_role" not in schema.fieldNames()
 
 
 def test_lineage_schema_is_table_participation_contract():
-    """Verify lineage keeps only participation fields plus canonical audit fields."""
-    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE_TABLE"]
+    """Verify lineage keeps exactly one unprefixed runtime identity contract."""
+    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
     assert schema.fieldNames() == [
+        "lineage_event_id",
+        "activity_id",
+        "notebook_id",
+        "notebook_name",
+        "workspace_id",
+        "workspace_name",
         "metadata_table_key",
+        "schema_fingerprint",
         "profile_role",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
+        "profiled_at",
+        "committed_by",
+        "environment_name",
+        "metadata_lakehouse_name",
     ]
     fields = {field.name: field for field in schema.fields}
     assert type(fields["metadata_table_key"].dataType).__name__ == "StringType"
     assert type(fields["profile_role"].dataType).__name__ == "StringType"
+    assert fields["lineage_event_id"].nullable is False
+    assert fields["activity_id"].nullable is False
     assert fields["metadata_table_key"].nullable is False
+    assert fields["schema_fingerprint"].nullable is False
     assert fields["profile_role"].nullable is False
     obsolete = {
         "lineage_id",
@@ -400,9 +415,34 @@ def test_lineage_schema_is_table_participation_contract():
         "source_metadata_table_key",
         "target_metadata_table_key",
         "transformation_steps_json",
-        "activity_id",
+        "_activity_id",
+        "_workspace_id",
+        "_notebook_id",
+        "_committed_by",
     }
     assert obsolete.isdisjoint(schema.fieldNames())
+
+
+def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeypatch, registered):
+    """Verify failed lineage upserts are not converted to non-idempotent appends."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+
+    def fail_upsert(*, lineage_df, config, env, spark_session):
+        raise RuntimeError("merge failed")
+
+    monkeypatch.setattr(module, "_upsert_lineage_event", fail_upsert)
+    expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
+    with pytest.raises(RuntimeError, match=f"Catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+        )
+    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE]
 
 
 def test_lineage_is_not_attempted_when_catalogue_write_fails(spark_session, monkeypatch, registered):
@@ -424,26 +464,3 @@ def test_lineage_is_not_attempted_when_catalogue_write_fails(spark_session, monk
             table_name="customers",
         )
 
-
-def test_lineage_failure_reports_partial_write_state(spark_session, monkeypatch, registered):
-    """Verify lineage write failures explain the catalogue snapshot was already written."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
-
-    def write(df, table_name, *, target, schema, context, mode):
-        registered.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
-        if table_name == "METADATA_DATA_LINEAGE_TABLE":
-            raise ValueError("lineage boom")
-
-    monkeypatch.setattr(module, "write_lakehouse_table_core", write)
-    expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
-    with pytest.raises(RuntimeError, match=f"Catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
-        profile_and_register_dataframe(
-            _source_df(spark_session),
-            profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
-            table_name="customers",
-        )
-    assert [write["table_name"] for write in registered] == [CATALOGUE_TABLE, "METADATA_DATA_LINEAGE_TABLE"]
