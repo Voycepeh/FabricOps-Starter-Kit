@@ -34,6 +34,7 @@ CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
     "fabricops_kit.config.shared.NotebookSetupContext",
 }
 LEGACY_APPROVED_V1_CALLABLES = {
+    "setup_notebook",
     "read_lakehouse_table",
     "write_lakehouse_table",
     "read_lakehouse_csv",
@@ -126,15 +127,15 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the v0.1.0 Live public API contract keeps exactly eight Fabric I/O functions."""
+    """Verify the v0.1.0 Live public API contract includes setup and Fabric I/O functions."""
     message = (
-        "The supported public API surface for v0.1.0 must remain the eight Live "
-        "Fabric I/O functions. Update SUPPORTED_PUBLIC_API and release docs "
-        "intentionally if this changes."
+        "The supported public API surface for v0.1.0 must remain setup_notebook "
+        "plus the eight Live Fabric I/O functions. Update SUPPORTED_PUBLIC_API "
+        "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 8, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 8
+    assert len(SUPPORTED_PUBLIC_API) == 9, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 9
     assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
 
 
@@ -163,6 +164,20 @@ def test_supported_public_api_matches_generated_call_flow_contract():
     assert dashboard_path.exists()
     assert callable_flow["metadata"]["schema"] == "fabricops_public_function_call_flows_v2"
     assert {name.rsplit(".", maxsplit=1)[-1] for name in APPROVED_V1_QUALIFIED_FUNCTIONS}.issubset(flow_public)
+
+
+def test_setup_notebook_lifecycle_metadata_is_live_since_v010():
+    """Verify setup_notebook is recorded as Live in the v0.1.0 lifecycle metadata."""
+    root = Path(__file__).parents[2]
+    callable_flow = json.loads(
+        (root / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8")
+    )
+
+    setup_row = next(row for row in callable_flow["public_functions"] if row["function_name"] == "setup_notebook")
+
+    assert setup_row["lifecycle_status"] == "live"
+    assert setup_row["live_since"] == "0.1.0"
+    assert setup_row["release_history"] == [{"status": "live", "version": "0.1.0"}]
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():

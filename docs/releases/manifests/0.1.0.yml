@@ -94,8 +94,9 @@ functions:
     qualified_name: fabricops_kit.config.setup_notebook.setup_notebook
     source_path: src/fabricops_kit/config/setup_notebook.py
     documentation_path: docs/api/reference/setup_notebook.md
-    status: preview
-    rationale: notebook setup or registry experience not yet part of the supported v0.1.0 contract
+    status: live
+    live_since: 0.1.0
+    rationale: Supported notebook setup flow included in the first FabricOps release before the Live read and write functions.
     introduced_in: 0.1.0
   - name: widget_author_dq_rules
     qualified_name: fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules
