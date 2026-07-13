@@ -17,7 +17,7 @@ from typing import Any
 from uuid import uuid4
 
 from fabricops_kit.config.shared import get_current_audit_timestamp
-from fabricops_kit.pipeline.shared import profile_dataframe_core
+from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
 from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
 
@@ -891,8 +891,8 @@ def enforce_profile_behavior(
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
         if current_profile is None:
-            from fabricops_kit.pipeline.shared import profile_dataframe_core
-            current_profile = profile_dataframe_core(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
+            from fabricops_kit.pipeline.shared import build_profile_dataframe
+            current_profile = build_profile_dataframe(dataframe, exclude_columns=effective_exclude_columns)
         payload = _profile_payload_from_profile(current_profile, dataframe=dataframe, watermark_column="", watermark_value="__FULL_TABLE__")
         evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
     else:
@@ -901,10 +901,10 @@ def enforce_profile_behavior(
         if not hasattr(dataframe, "filter") or not hasattr(dataframe, "select"):
             raise ValueError("changing_data profile behavior requires a Spark-like DataFrame")
         values = [row[0] for row in dataframe.select(watermark_column).distinct().collect()]
-        from fabricops_kit.pipeline.shared import profile_dataframe_core
+        from fabricops_kit.pipeline.shared import build_profile_dataframe
         for value in sorted(values, key=lambda item: str(item)):
             group_df = dataframe.filter(dataframe[watermark_column] == value)
-            group_profile = profile_dataframe_core(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)
+            group_profile = build_profile_dataframe(group_df, exclude_columns=effective_exclude_columns)
             payload = _profile_payload_from_profile(group_profile, dataframe=group_df, watermark_column=watermark_column, watermark_value=_string_value(value))
             evidence_rows.append({"watermark_column": watermark_column, "watermark_value": _string_value(value), "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
 
@@ -1509,7 +1509,7 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe_core(df, table_name=table_name, config=config)
+        profile_df = build_profile_dataframe(df)
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df
