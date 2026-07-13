@@ -636,6 +636,7 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
     expected = [
         ("metadata_table_key", "StringType", False),
         ("metadata_column_key", "StringType", False),
+        ("profile_role", "StringType", False),
         ("environment_name", "StringType", False),
         ("store_type", "StringType", False),
         ("layer", "StringType", False),
@@ -668,7 +669,7 @@ def test_metadata_data_catalogue_schema_is_minimal_column_profile_contract():
 
     removed_fields = {
         "dataset_name", "fabric_store_target", "asset_kind", "profile_stage", "profile_status",
-        "profile_role", "profiled_at", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
+        "profiled_at", "evidence_role", "distribution_type", "distribution_json", "profile_mode", "watermark_column",
         "watermark_value", "profile_hash", "profile_payload_json", "governance_mode",
         "approval_policy", "bypass_allowed", "policy_reason", "agreement_id", "agreement_version",
         "profile_scope_json",
@@ -1063,7 +1064,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert "approved_usage_internal" not in agreement
     assert agreement["agreement_version"] == "string"
     assert catalogue["store_type"] == "string"
-    assert "profile_role" not in catalogue
+    assert catalogue["profile_role"] == "string"
     assert "profiled_at" not in catalogue
     assert "fabric_store_target" not in catalogue
     assert evidence["file_size"] == "long"
