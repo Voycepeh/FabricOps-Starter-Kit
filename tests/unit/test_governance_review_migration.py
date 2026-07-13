@@ -218,27 +218,40 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "PROFILE_RUN_ID",
     }
     assert duplicate_legacy_fields.isdisjoint(catalogue_fields)
-    expected_catalogue_fields = {
+    expected_catalogue_fields = [
         "metadata_table_key",
         "metadata_column_key",
         "environment_name",
-        "dataset_name",
+        "store_type",
+        "layer",
+        "schema_name",
         "table_name",
         "column_name",
-        "layer",
+        "data_type",
+        "row_count",
+        "non_null_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "mean_value",
+        "stddev_value",
+        "min_value",
+        "percentile_25_value",
+        "median_value",
+        "percentile_75_value",
+        "max_value",
+        "is_sampled",
+        "frequency_json",
+        "_committed_at",
+    ]
+    retired_catalogue_fields = {
+        "dataset_name",
         "asset_kind",
         "profile_stage",
         "profile_status",
         "profiled_at",
         "evidence_role",
-        "data_type",
-        "row_count",
-        "null_count",
-        "null_percent",
-        "distinct_count",
-        "distinct_percent",
-        "min_value",
-        "max_value",
         "distribution_type",
         "distribution_json",
         "profile_mode",
@@ -248,14 +261,15 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "profile_payload_json",
         "agreement_id",
         "agreement_version",
-        "_committed_at",
         "_committed_by",
+        "_workspace_id",
         "_workspace_name",
+        "_notebook_id",
         "_notebook_name",
         "_metadata_lakehouse_name",
         "_activity_id",
     }
-    removed_catalogue_fields = {
+    removed_catalogue_fields = retired_catalogue_fields | {
         "baseline_status",
         "source_schema_check",
         "target_schema_check",
@@ -268,7 +282,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "target_data_change_check",
         "source_change_signal_json",
     }
-    assert expected_catalogue_fields <= set(catalogue_fields)
+    assert catalogue_fields == expected_catalogue_fields
     assert removed_catalogue_fields.isdisjoint(catalogue_fields)
 
 
