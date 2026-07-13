@@ -4,11 +4,6 @@ from __future__ import annotations
 
 from functools import reduce
 
-from pyspark.sql import functions as F
-from pyspark.sql import types as T
-from pyspark.sql.window import Window
-from pyspark.sql.types import ArrayType, BinaryType, MapType, StructType
-
 from fabricops_kit.pipeline.shared import resolve_profiled_columns
 
 FREQUENCY_PROFILE_COLUMNS = [
@@ -22,21 +17,29 @@ FREQUENCY_PROFILE_COLUMNS = [
     "PROFILED_NON_NULL_COUNT",
 ]
 
-FREQUENCY_PROFILE_SCHEMA = T.StructType(
-    [
-        T.StructField("COLUMN_NAME", T.StringType(), False),
-        T.StructField("DATA_TYPE", T.StringType(), False),
-        T.StructField("VALUE", T.StringType(), True),
-        T.StructField("FREQUENCY_COUNT", T.LongType(), False),
-        T.StructField("FREQUENCY_PERCENT", T.DoubleType(), True),
-        T.StructField("FREQUENCY_RANK", T.IntegerType(), False),
-        T.StructField("PROFILED_ROW_COUNT", T.LongType(), False),
-        T.StructField("PROFILED_NON_NULL_COUNT", T.LongType(), False),
-    ]
-)
+
+
+def _frequency_profile_schema():
+    """Return the frequency profile output schema."""
+    from pyspark.sql import types as T
+
+    return T.StructType(
+        [
+            T.StructField("COLUMN_NAME", T.StringType(), False),
+            T.StructField("DATA_TYPE", T.StringType(), False),
+            T.StructField("VALUE", T.StringType(), True),
+            T.StructField("FREQUENCY_COUNT", T.LongType(), False),
+            T.StructField("FREQUENCY_PERCENT", T.DoubleType(), True),
+            T.StructField("FREQUENCY_RANK", T.IntegerType(), False),
+            T.StructField("PROFILED_ROW_COUNT", T.LongType(), False),
+            T.StructField("PROFILED_NON_NULL_COUNT", T.LongType(), False),
+        ]
+    )
 
 
 def _column(name: str):
+    from pyspark.sql import functions as F
+
     return F.col(f"`{name.replace('`', '``')}`")
 
 
@@ -65,6 +68,10 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
         If ``top_n`` is not greater than zero or a requested column is missing.
 
     """
+    from pyspark.sql import functions as F
+    from pyspark.sql.window import Window
+    from pyspark.sql.types import ArrayType, BinaryType, MapType, StructType
+
     if top_n <= 0:
         raise ValueError("top_n must be greater than zero.")
 
@@ -82,7 +89,7 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
             raise ValueError(f"Requested columns do not exist: {', '.join(missing)}")
 
     if not selected_columns:
-        return df.sparkSession.createDataFrame([], FREQUENCY_PROFILE_SCHEMA)
+        return df.sparkSession.createDataFrame([], _frequency_profile_schema())
 
     metric_exprs = [F.count(F.lit(1)).cast("long").alias("PROFILED_ROW_COUNT")]
     for column_name in selected_columns:
