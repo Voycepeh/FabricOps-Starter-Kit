@@ -9,8 +9,8 @@ from typing import Any, Sequence
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
-from fabricops_kit.pipeline.shared import build_profile_dataframe as profile_dataframe
-from fabricops_kit.pipeline.profile_frequency_distribution import build_frequency_distribution_dataframe as profile_frequency_distribution
+from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
+from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
@@ -87,7 +87,6 @@ def _canonical_catalogue_dataframe(
     profile_df,
     *,
     source_df,
-    profile_role: str,
     environment_name: str,
     store_type: str,
     layer: str,
@@ -130,7 +129,6 @@ def _canonical_catalogue_dataframe(
     return catalogue_df.select(
         F.lit(metadata_table_key).cast("string").alias("metadata_table_key"),
         column_key_udf(F.col("column_name")).alias("metadata_column_key"),
-        F.lit(profile_role).cast("string").alias("profile_role"),
         F.lit(environment_name).cast("string").alias("environment_name"),
         F.lit(store_type).cast("string").alias("store_type"),
         F.lit(layer).cast("string").alias("layer"),
@@ -160,7 +158,6 @@ def _canonical_catalogue_dataframe(
 def profile_and_register_dataframe(
     df,
     *,
-    profile_role,
     environment_name,
     store_type,
     layer,
@@ -177,8 +174,6 @@ def profile_and_register_dataframe(
     df : pyspark.sql.DataFrame
         Spark DataFrame to profile exactly as supplied by the caller. The
         helper does not sample, re-read, or mutate this DataFrame.
-    profile_role : {"source", "target"}
-        Role the physical asset played in the notebook flow.
     environment_name : str
         FabricOps environment name to persist with the catalogue snapshot.
     store_type : {"lakehouse", "warehouse"}
@@ -206,7 +201,7 @@ def profile_and_register_dataframe(
     Raises
     ------
     ValueError
-        If role, store type, or required physical identity inputs are invalid.
+        If store type or required physical identity inputs are invalid.
 
     Notes
     -----
@@ -215,7 +210,6 @@ def profile_and_register_dataframe(
     lineage registration and guardrail execution are separate workflows.
 
     """
-    normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     normalized_store_type = _normalize_choice(store_type, "store_type", {"lakehouse", "warehouse"})
     normalized_environment = _require_non_empty_string(environment_name, "environment_name")
     normalized_layer = _require_non_empty_string(layer, "layer")
@@ -228,7 +222,6 @@ def profile_and_register_dataframe(
     catalogue_df = _canonical_catalogue_dataframe(
         profile_df,
         source_df=df,
-        profile_role=normalized_role,
         environment_name=normalized_environment,
         store_type=normalized_store_type,
         layer=normalized_layer,

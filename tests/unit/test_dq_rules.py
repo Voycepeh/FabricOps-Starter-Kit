@@ -143,8 +143,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
         "distinct_percent",
         "frequency_json",
     }.issubset(catalogue_fields)
-    assert "profile_role" in catalogue_fields
-    assert {"watermark_column", "watermark_value", "profile_hash", "profile_payload_json"}.isdisjoint(catalogue_fields)
+    assert {"profile_role", "watermark_column", "watermark_value", "profile_hash", "profile_payload_json"}.isdisjoint(catalogue_fields)
     assert {
         "baseline_status",
         "source_schema_check",

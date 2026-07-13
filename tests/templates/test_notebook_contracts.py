@@ -125,13 +125,10 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
     assert "profile_and_register_dataframe" in source
-    assert "profile_role" in source
-    assert "source" in source.lower() or "target" in source.lower()
-    assert "Clone this block once for every source or target DataFrame" in source
+    assert "profile_role" not in source
+    assert "Clone this block once for every DataFrame" in source
     assert "frequency_json" not in source
     assert "metadata_table_key" not in source
     assert "metadata_column_key" not in source
     assert "profiled_at" not in source
-    assert "exactly one source" not in source.lower()
-    assert "exactly one target" not in source.lower()
-    assert "many-to-one" in source and "one-to-many" in source and "many-to-many" in source
+    assert "Exact source-to-target relationships are registered separately through the lineage flow" in source

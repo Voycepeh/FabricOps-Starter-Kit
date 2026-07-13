@@ -43,7 +43,7 @@ def _column(name: str):
     return F.col(f"`{name.replace('`', '``')}`")
 
 
-def build_frequency_distribution_dataframe(df, *, columns=None, top_n: int = 20):
+def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
     """Return top-N value frequencies for selected Spark DataFrame columns.
 
     Parameters
@@ -121,31 +121,3 @@ def build_frequency_distribution_dataframe(df, *, columns=None, top_n: int = 20)
         branches.append(grouped.select(*FREQUENCY_PROFILE_COLUMNS))
 
     return reduce(lambda left, right: left.unionByName(right), branches).select(*FREQUENCY_PROFILE_COLUMNS)
-
-
-def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
-    """Return top-N value frequencies for selected Spark DataFrame columns.
-
-    Parameters
-    ----------
-    df : pyspark.sql.DataFrame
-        Spark DataFrame to profile exactly as supplied by the caller.
-    columns : list[str] or set[str] or tuple[str, ...], optional
-        Source columns to profile. By default, eligible non-technical scalar
-        columns are selected.
-    top_n : int, default=20
-        Maximum ranked values to retain per source column.
-
-    Returns
-    -------
-    pyspark.sql.DataFrame
-        Spark DataFrame containing one row per retained top value per profiled
-        source column.
-
-    Raises
-    ------
-    ValueError
-        If ``top_n`` is not greater than zero or a requested column is missing.
-
-    """
-    return build_frequency_distribution_dataframe(df, columns=columns, top_n=top_n)
