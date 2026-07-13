@@ -218,7 +218,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         approved_by="reviewer@example.com",
     )
 
-    assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_RULES_TABLE]
+    assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_TABLE]
     assert writes[0][1].collect()[0]["guardrail_type"] == "dq"
     loaded = dq_runtime._load_active_dq_rules(writes[0][1], table_name="orders")
 
@@ -565,7 +565,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     )
 
     assert result == {"orders": "written"}
-    assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
+    assert writes[0][2:4] == ("metadata", "METADATA_DATA_PROFILED")
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" not in writes[0][0].columns
     assert "freshness_status" not in writes[0][0].columns

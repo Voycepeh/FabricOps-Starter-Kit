@@ -127,7 +127,7 @@ def setup_metadata_tables(
 
     successful = created_tables + validated_tables
     status = "ready" if not failed_tables else ("partial_failure" if successful else "failed")
-    data_agreement_tables = ["METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_AGREEMENT_EVIDENCE"]
+    data_agreement_tables = ["METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT"]
     data_agreement_failed = [table for table in data_agreement_tables if table in failed_tables]
     data_agreement = {"status": "failed" if data_agreement_failed else ("ready" if active_stewards else "not_ready"), "tables": data_agreement_tables, "created_tables": [table for table in data_agreement_tables if table in created_tables], "validated_tables": [table for table in data_agreement_tables if table in validated_tables], "failed_tables": data_agreement_failed, "active_steward_count": active_stewards}
     if require_active_steward and not active_stewards:

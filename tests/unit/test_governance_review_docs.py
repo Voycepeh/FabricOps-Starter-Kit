@@ -20,7 +20,7 @@ def test_governance_review_page_frames_metadata_control_panel():
         "02_pipeline",
         "03_governance",
         "METADATA_DATA_CATALOGUE",
-        "METADATA_GUARDRAIL_RULES",
+        "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
     ):
         assert required_term in text
@@ -52,7 +52,7 @@ def test_dq_rule_index_contains_supported_catalogue():
     for rule_type in governance.DQ_RULE_TYPES:
         assert f"`{rule_type}`" in text
     assert "Great Expectations or dbt" in text
-    assert "METADATA_GUARDRAIL_RULES" in text
+    assert "METADATA_GUARDRAIL" in text
 
 
 def test_dq_rule_reference_pages_exist_for_supported_catalogue():

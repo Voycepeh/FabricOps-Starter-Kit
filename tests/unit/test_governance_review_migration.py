@@ -57,11 +57,9 @@ EXPECTED_V1_CALLABLES = [
     'display_guardrail_results',
     'prepare_pipeline_table_configs',
     'run_table_guardrails',
-    'write_pipeline_run_summary',
     'widget_render_data_steward',
     'widget_render_data_agreement',
     'widget_render_agreement_evidence',
-    'widget_pipeline_bootstrap',
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_schema_freshness_profile_rules',
@@ -221,6 +219,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     expected_catalogue_fields = [
         "metadata_table_key",
         "metadata_column_key",
+        "schema_fingerprint",
         "environment_name",
         "store_type",
         "layer",
@@ -228,6 +227,21 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "table_name",
         "column_name",
         "data_type",
+        "_committed_at",
+    ]
+    retired_catalogue_fields = {
+        "dataset_name",
+        "asset_kind",
+        "profile_stage",
+        "profile_status",
+        "evidence_role",
+        "distribution_type",
+        "distribution_json",
+        "profile_mode",
+        "watermark_column",
+        "watermark_value",
+        "profile_hash",
+        "profile_payload_json",
         "row_count",
         "non_null_count",
         "null_count",
@@ -243,22 +257,7 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "max_value",
         "is_sampled",
         "frequency_json",
-        "_committed_at",
-    ]
-    retired_catalogue_fields = {
-        "dataset_name",
-        "asset_kind",
-        "profile_stage",
-        "profile_status",
         "profiled_at",
-        "evidence_role",
-        "distribution_type",
-        "distribution_json",
-        "profile_mode",
-        "watermark_column",
-        "watermark_value",
-        "profile_hash",
-        "profile_payload_json",
         "agreement_id",
         "agreement_version",
         "_committed_by",
@@ -299,11 +298,11 @@ def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tab
     """Verify governance metadata schemas include guardrail rules without failure tables."""
     schemas = metadata_schemas.metadata_table_schema_registry()
 
-    assert governance.GUARDRAIL_RULES_TABLE in schemas
-    assert governance.PIPELINE_RUNS_TABLE in schemas
+    assert governance.GUARDRAIL_TABLE in schemas
+    assert "METADATA_DATA_PROFILED" in schemas
     assert governance.DATA_ACCESS_TABLE in schemas
-    assert governance.ENRICHMENT_RULES_TABLE in schemas
-    assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()
+    assert governance.ENRICHMENT_TABLE in schemas
+    assert "metadata_table_key" in schemas["METADATA_DATA_PROFILED"].fieldNames()
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
 
 
@@ -319,12 +318,8 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
         "profile_stage": "target",
     }
     tables = {
-        governance.CATALOGUE_TABLE: [
+        governance.PROFILED_TABLE: [
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "agreement_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
-        ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {"environment_name": "dev", "run_id": "run-001", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-01T00:00:00+00:00"},
-            {"environment_name": "dev", "run_id": "run-002", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-02T00:00:00+00:00"},
         ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "agreement_name": "Orders"}],
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
@@ -348,7 +343,7 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
     assert result["outcome"] == "approved"
     assert result["blockers"] == []
     assert writes == []
-    assert result["review"]["pipeline_run_id"] == "run-002"
+    assert result["review"]["pipeline_run_id"] == ""
     assert result["review"]["agreement_id"] == "agr-1"
 
 
@@ -366,9 +361,6 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
     tables = {
         governance.CATALOGUE_TABLE: [
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "agreement_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
-        ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {"environment_name": "dev", "run_id": "run-003", "agreement_id": "missing", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "warning", "dq_status": "failed", "completed_at": "2026-01-03T00:00:00+00:00"},
         ],
         governance.DATA_AGREEMENT_TABLE: [],
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
@@ -392,7 +384,6 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
     assert result["outcome"] == "rejected"
     assert {item["code"] for item in result["blockers"]} == {"missing_agreement_metadata", "dq_failed"}
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
-    assert result["warnings"][0]["code"] == "target_guardrail_status_warning"
     assert writes == []
     assert result["review"]["outcome"] == "rejected"
 
@@ -420,18 +411,6 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
                 "DQ_ERROR_RULE_COUNT": 0,
             },
         ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {
-                "environment_name": "dev",
-                "run_id": selection["profile_run_id"],
-                "agreement_id": "agr-dq",
-                "status": "completed",
-                "source_guardrail_status": "passed",
-                "target_guardrail_status": "passed",
-                "dq_status": pipeline_dq_status,
-                "completed_at": "2026-01-04T00:00:00+00:00",
-            },
-        ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "agreement_name": "Orders"}],
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
     }
@@ -455,7 +434,7 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
 
 def test_evaluate_governance_readiness_blocks_pipeline_failed_dq_status(monkeypatch):
     """Verify governance readiness blocks pipeline failed dq status."""
-    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "failed")
+    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "failed", catalogue_dq_status="failed")
 
     assert result["outcome"] == "rejected"
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
@@ -466,7 +445,7 @@ def test_evaluate_governance_readiness_blocks_pipeline_failed_dq_status(monkeypa
 
 def test_evaluate_governance_readiness_warns_on_pipeline_warning_dq_status(monkeypatch):
     """Verify governance readiness warns on pipeline warning dq status."""
-    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "warning")
+    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "warning", catalogue_dq_status="warning")
 
     assert result["outcome"] == "needs_remediation"
     assert result["blockers"] == []

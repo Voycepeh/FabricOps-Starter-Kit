@@ -200,6 +200,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
+PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
@@ -950,7 +951,7 @@ def _run_table_guardrails_workflow(
             env=env,
             current_profile=profiles[table_key],
             write_results=table_config.get("write_profile_behavior_results", True),
-            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
+            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
             rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 
@@ -1077,10 +1078,10 @@ def write_catalogue_evidence(
     freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    metadata_table: str = CATALOGUE_TABLE,
+    metadata_table: str = PROFILED_TABLE,
     mode: str = "append",
 ) -> dict[str, str]:
-    """Write observed profile evidence to the metadata data catalogue.
+    """Write observed profile evidence to the metadata profiled evidence.
 
     Parameters
     ----------
@@ -1099,8 +1100,8 @@ def write_catalogue_evidence(
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Runtime guardrail results are accepted by this writer but are not
-        written to ``METADATA_DATA_CATALOGUE``.
-    metadata_table : str, default="METADATA_DATA_CATALOGUE"
+        written to ``METADATA_DATA_PROFILED``.
+    metadata_table : str, default="METADATA_DATA_PROFILED"
         Metadata table to append.
     mode : str, default="append"
         Physical write mode for catalogue evidence.

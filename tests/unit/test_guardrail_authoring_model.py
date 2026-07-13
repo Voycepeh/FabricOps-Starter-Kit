@@ -9,7 +9,7 @@ from fabricops_kit.widgets import shared as governance_review
 from fabricops_kit.widgets.shared import (
     CATALOGUE_TABLE,
     GUARDRAIL_RESULTS_TABLE,
-    GUARDRAIL_RULES_TABLE,
+    GUARDRAIL_TABLE,
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.widgets import widget_author_dq_rules, widget_author_schema_freshness_profile_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
@@ -106,7 +106,7 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
     """Verify catalogue, rule, result, and governance policy fields stay separated."""
     schemas = metadata_table_schema_registry()
     catalogue_fields = set(schemas[CATALOGUE_TABLE].fieldNames())
-    rule_fields = set(schemas[GUARDRAIL_RULES_TABLE].fieldNames())
+    rule_fields = set(schemas[GUARDRAIL_TABLE].fieldNames())
     result_fields = set(schemas[GUARDRAIL_RESULTS_TABLE].fieldNames())
 
     removed_catalogue_fields = {
@@ -500,7 +500,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     enrichment = []
 
     def fake_read(config, env, table_name, *, spark_session):
-        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_RULES_TABLE: rules, governance_review.ENRICHMENT_RULES_TABLE: enrichment}[table_name]
+        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_TABLE: rules, governance_review.ENRICHMENT_TABLE: enrichment}[table_name]
 
     monkeypatch.setattr(widget_shared, "_read_metadata_table_or_empty", fake_read)
     state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
@@ -531,7 +531,7 @@ def test_schema_widget_freshness_lag_rejects_negative(monkeypatch):
 
 
 def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
-    """Verify authoring widget save writes only METADATA_GUARDRAIL_RULES."""
+    """Verify authoring widget save writes only METADATA_GUARDRAIL."""
     _install_fake_notebook_widgets(monkeypatch)
     from fabricops_kit.widgets import shared as governance_review
     from fabricops_kit import widgets
@@ -549,7 +549,7 @@ def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
 
     widget["save"]()
 
-    assert writes == [governance_review.GUARDRAIL_RULES_TABLE]
+    assert writes == [governance_review.GUARDRAIL_TABLE]
     assert governance_review.CATALOGUE_TABLE not in writes
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
 
@@ -573,7 +573,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
     widget["save_rule_action"]("approve")
 
-    assert writes == [governance_review.GUARDRAIL_RULES_TABLE]
+    assert writes == [governance_review.GUARDRAIL_TABLE]
     assert governance_review.CATALOGUE_TABLE not in writes
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
 
@@ -678,8 +678,8 @@ def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enr
     assert all(record["enrichment_payload_json"] for record in enrichment_records)
 
     widget["save"]()
-    assert [table for table, _ in writes] == [governance_review.ENRICHMENT_RULES_TABLE]
-    assert governance_review.GUARDRAIL_RULES_TABLE not in [table for table, _ in writes]
+    assert [table for table, _ in writes] == [governance_review.ENRICHMENT_TABLE]
+    assert governance_review.GUARDRAIL_TABLE not in [table for table, _ in writes]
     assert governance_review.GUARDRAIL_RESULTS_TABLE not in [table for table, _ in writes]
     assert governance_review.CATALOGUE_TABLE not in [table for table, _ in writes]
 

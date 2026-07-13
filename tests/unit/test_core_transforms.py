@@ -140,7 +140,7 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
     assert "column_context" not in result
     assert "column_classification" not in result
     assert "governance_review" not in result
-    assert [table for table, _ in writes] == [gr.ENRICHMENT_RULES_TABLE, gr.GUARDRAIL_RULES_TABLE]
+    assert [table for table, _ in writes] == [gr.ENRICHMENT_TABLE, gr.GUARDRAIL_TABLE]
 
 
 def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
