@@ -158,6 +158,7 @@ def _canonical_catalogue_dataframe(
 def profile_and_register_dataframe(
     df,
     *,
+    profile_role,
     environment_name,
     store_type,
     layer,
@@ -174,6 +175,10 @@ def profile_and_register_dataframe(
     df : pyspark.sql.DataFrame
         Spark DataFrame to profile exactly as supplied by the caller. The
         helper does not sample, re-read, or mutate this DataFrame.
+    profile_role : {"source", "target"}
+        Execution participation context for the DataFrame in the notebook flow.
+        The validated value is not stored in ``METADATA_DATA_CATALOGUE``; a
+        follow-up lineage flow records table-level runtime participation.
     environment_name : str
         FabricOps environment name to persist with the catalogue snapshot.
     store_type : {"lakehouse", "warehouse"}
@@ -201,7 +206,7 @@ def profile_and_register_dataframe(
     Raises
     ------
     ValueError
-        If store type or required physical identity inputs are invalid.
+        If profile role, store type, or required physical identity inputs are invalid.
 
     Notes
     -----
@@ -210,6 +215,7 @@ def profile_and_register_dataframe(
     lineage registration and guardrail execution are separate workflows.
 
     """
+    _normalize_choice(profile_role, "profile_role", {"source", "target"})
     normalized_store_type = _normalize_choice(store_type, "store_type", {"lakehouse", "warehouse"})
     normalized_environment = _require_non_empty_string(environment_name, "environment_name")
     normalized_layer = _require_non_empty_string(layer, "layer")

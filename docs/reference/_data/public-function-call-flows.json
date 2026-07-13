@@ -3783,7 +3783,7 @@
       "qualified_name": "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 242,
+      "source_end_line": 248,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
       "source_start_line": 158,
       "supports_live_contract": false,
@@ -8917,7 +8917,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 242,
+          "source_end_line": 248,
           "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
           "source_start_line": 158,
           "supports_live_contract": false,
@@ -10457,6 +10457,12 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
+          "description": "Execution participation context for the DataFrame in the notebook flow. The validated value is not stored in ``METADATA_DATA_CATALOGUE``; a follow-up lineage flow records table-level runtime participation.",
+          "name": "profile_role",
+          "required": "Yes",
+          "type": "{\"source\", \"target\"}"
+        },
+        {
           "description": "FabricOps environment name to persist with the catalogue snapshot.",
           "name": "environment_name",
           "required": "Yes",
@@ -10510,7 +10516,7 @@
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
-      "raises_documentation": "ValueError\n    If store type or required physical identity inputs are invalid.",
+      "raises_documentation": "ValueError\n    If profile role, store type, or required physical identity inputs are invalid.",
       "refactor_signals": [
         {
           "evidence": [
@@ -10558,8 +10564,8 @@
       "signals": [
         "architecture_violation"
       ],
-      "signature": "def profile_and_register_dataframe(df, *, environment_name, store_type, layer, table_name, schema_name=None, frequency_columns=None, frequency_top_n=20, is_sampled=False)",
-      "source_end_line": 242,
+      "signature": "def profile_and_register_dataframe(df, *, profile_role, environment_name, store_type, layer, table_name, schema_name=None, frequency_columns=None, frequency_top_n=20, is_sampled=False)",
+      "source_end_line": 248,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
       "source_start_line": 158,
       "summary": "Profile and append one DataFrame snapshot to ``METADATA_DATA_CATALOGUE``.",

@@ -73,11 +73,12 @@ def test_profile_and_register_dataframe_is_public_export():
     assert public_profile_and_register_dataframe is profile_and_register_dataframe
 
 
-def test_profile_and_register_dataframe_signature_has_no_profile_role():
-    """Verify catalogue registration does not accept source or target role."""
+def test_profile_and_register_dataframe_signature_requires_profile_role():
+    """Verify catalogue registration accepts role as a required API seam."""
     parameters = inspect.signature(profile_and_register_dataframe).parameters
     assert list(parameters) == [
         "df",
+        "profile_role",
         "environment_name",
         "store_type",
         "layer",
@@ -87,7 +88,37 @@ def test_profile_and_register_dataframe_signature_has_no_profile_role():
         "frequency_top_n",
         "is_sampled",
     ]
-    assert "profile_role" not in parameters
+    assert parameters["profile_role"].default is inspect.Parameter.empty
+
+
+@pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
+def test_profile_and_register_dataframe_accepts_source_and_target_roles(spark_session, monkeypatch, registered, role):
+    """Verify source and target role values are accepted but not persisted."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+
+    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    result = profile_and_register_dataframe(
+        _source_df(spark_session),
+        profile_role=role,
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+    )
+
+    assert "profile_role" not in result.columns
+
+
+def test_profile_and_register_dataframe_requires_profile_role(spark_session, registered):
+    """Verify profile_role is required by the public helper signature."""
+    with pytest.raises(TypeError, match="profile_role"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+        )
 
 
 @pytest.mark.parametrize("store_type", ["lakehouse", "warehouse", " Warehouse "])
@@ -98,6 +129,7 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
     monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_dataframe(
         _source_df(spark_session),
+        profile_role="target",
         environment_name="dev",
         store_type=store_type,
         layer="silver",
@@ -112,6 +144,7 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [
+        ({"profile_role": "input"}, "profile_role must be one of"),
         ({"store_type": "delta"}, "store_type must be one of"),
         ({"environment_name": ""}, "environment_name must be a non-empty string"),
         ({"layer": " "}, "layer must be a non-empty string"),
@@ -122,6 +155,7 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
 def test_profile_and_register_dataframe_rejects_invalid_required_inputs(spark_session, registered, kwargs, message):
     """Verify invalid store and required string inputs fail clearly."""
     params = {
+        "profile_role": "source",
         "environment_name": "dev",
         "store_type": "lakehouse",
         "layer": "raw",
@@ -155,6 +189,7 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
 
     result = profile_and_register_dataframe(
         source,
+        profile_role="source",
         environment_name="dev",
         store_type="lakehouse",
         layer="raw",
@@ -201,6 +236,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
 
     result = profile_and_register_dataframe(
         source,
+        profile_role="source",
         environment_name="dev",
         store_type="warehouse",
         layer="silver",
@@ -249,6 +285,18 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_catalog
     assert rows["country"]["metadata_column_key"] == _metadata_column_key(expected_table_key, "country")
     assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
     assert expected_table_key != _metadata_table_key("dev", "warehouse", "silver", None, "customers_clean")
+
+    source_role_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="warehouse",
+        layer="silver",
+        schema_name="dbo",
+        table_name="customers_clean",
+        frequency_columns=None,
+    )
+    assert {row.metadata_table_key for row in source_role_result.select("metadata_table_key").collect()} == {expected_table_key}
 
 
 def test_catalogue_schema_matches_main_contract_without_profile_role():
