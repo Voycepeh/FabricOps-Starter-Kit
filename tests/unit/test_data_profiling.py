@@ -62,6 +62,14 @@ def test_profile_dataframe_output_order_counts_exclusions_and_numeric_stats(spar
     rows = _profile_rows(profile)
 
     assert profile.columns == PROFILE_COLUMNS
+    dtypes = dict(profile.dtypes)
+    assert dtypes["MEAN"] == "double"
+    assert dtypes["STDDEV"] == "double"
+    assert dtypes["PERCENTILE_25"] == "double"
+    assert dtypes["MEDIAN"] == "double"
+    assert dtypes["PERCENTILE_75"] == "double"
+    assert dtypes["MIN_VALUE"] == "string"
+    assert dtypes["MAX_VALUE"] == "string"
     assert set(rows) == {"amount", "category"}
     assert rows["amount"]["ROW_COUNT"] == 4
     assert rows["amount"]["NON_NULL_COUNT"] == 3
@@ -72,9 +80,9 @@ def test_profile_dataframe_output_order_counts_exclusions_and_numeric_stats(spar
     assert rows["amount"]["MEAN"] == pytest.approx(70 / 3)
     assert rows["amount"]["STDDEV"] == pytest.approx(15.2752523165)
     assert rows["amount"]["MIN_VALUE"] == "10.0"
-    assert rows["amount"]["PERCENTILE_25"] == "10.0"
-    assert rows["amount"]["MEDIAN"] == "20.0"
-    assert rows["amount"]["PERCENTILE_75"] == "40.0"
+    assert rows["amount"]["PERCENTILE_25"] == 10.0
+    assert rows["amount"]["MEDIAN"] == 20.0
+    assert rows["amount"]["PERCENTILE_75"] == 40.0
     assert rows["amount"]["MAX_VALUE"] == "40.0"
     assert rows["category"]["MEAN"] is None
     assert rows["category"]["PERCENTILE_25"] is None

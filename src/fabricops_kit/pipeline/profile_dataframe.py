@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.pipeline.shared import profile_dataframe_core
+from fabricops_kit.pipeline.shared import build_profile_dataframe
 
 
 def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = True):
@@ -31,4 +31,4 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = 
         If no eligible non-technical columns remain after exclusions.
 
     """
-    return profile_dataframe_core(df, exclude_columns=exclude_columns, approximate_distinct=approximate_distinct)
+    return build_profile_dataframe(df, exclude_columns=exclude_columns, approximate_distinct=approximate_distinct)

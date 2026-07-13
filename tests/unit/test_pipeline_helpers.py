@@ -394,9 +394,9 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     calls = []
     catalogue_calls = []
 
-    def fake_profile(dataframe, *, table_name, exclude_columns=None, include_distributions=True, distribution_columns=None, **kwargs):
-        calls.append(("profile", table_name))
-        return {"profile_for": table_name, "df": dataframe}
+    def fake_profile(dataframe, *, exclude_columns=None, **kwargs):
+        calls.append(("profile", dataframe))
+        return {"profile_for": dataframe, "df": dataframe}
 
     def fake_validate(dataframe, expected_schema, *, preset="strict"):
         calls.append(("schema", dataframe))
@@ -421,7 +421,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         catalogue_calls.append((profiles, definitions, kwargs))
         return {"status": "written"}
 
-    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", fake_profile)
+    monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", fake_profile)
     monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", fake_validate)
     monkeypatch.setattr(pipeline_shared, "enforce_freshness", fake_freshness)
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", fake_stability)
@@ -474,7 +474,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         "failed_tables": ["bad"],
     }
     assert table_configs[0]["df"] == "df_good_checked"
-    assert ("profile", "orders_bad") in calls
+    assert ("profile", "df_bad") in calls
     assert ("freshness", "df_bad") in calls
     assert ("stability", "orders_bad", result["profiles"]["bad"]) in calls
     assert catalogue_calls
@@ -492,7 +492,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
         def createDataFrame(self, rows):
             return rows
 
-    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
     monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -525,7 +525,7 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     """Verify profile behavior config uses clean profile_mode values only."""
     stability_calls = []
 
-    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
     monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
 
@@ -584,7 +584,7 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     """Verify run table guardrails stop on failure delegates to standard stopper."""
     stopped = []
 
-    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda dataframe, **kwargs: {"profile_for": kwargs["table_name"]})
+    monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
     monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
     monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
@@ -675,10 +675,9 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
 
     monkeypatch.setattr(
         pipeline_shared,
-        "profile_dataframe_core",
+        "build_profile_dataframe",
         lambda dataframe, **kwargs: [
             {
-                "table_name": kwargs["table_name"],
                 "column_name": "business_date",
                 "row_count": dataframe.count(),
                 "min_value": "2026-06-01",
@@ -753,8 +752,8 @@ def test_run_table_guardrails_dq_skip_bypasses_dq_enforcement(monkeypatch, spark
 
     monkeypatch.setattr(
         pipeline_shared,
-        "profile_dataframe_core",
-        lambda dataframe, **kwargs: [{"table_name": kwargs["table_name"], "column_name": "id", "row_count": dataframe.count()}],
+        "build_profile_dataframe",
+        lambda dataframe, **kwargs: [{"column_name": "id", "row_count": dataframe.count()}],
     )
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
@@ -854,7 +853,7 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     )
     monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline_shared, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
-    monkeypatch.setattr(pipeline_shared, "profile_dataframe_core", lambda *args, **kwargs: FakeDataFrame("profile"))
+    monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda *args, **kwargs: FakeDataFrame("profile"))
     monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     captured = {}

@@ -107,21 +107,21 @@ PROFILE_DATAFRAME_COLUMNS = [
 ]
 
 
-def column_expr(name: str):
+def _profile_column_expr(name: str):
     """Return a safely quoted Spark column expression."""
     from pyspark.sql import functions as F
 
     return F.col(f"`{name.replace('`', '``')}`")
 
 
-def percent_expr(numerator, denominator):
+def _profile_percent_expr(numerator, denominator):
     """Return a rounded percentage expression protected against zero rows."""
     from pyspark.sql import functions as F
 
     return F.when(denominator == 0, F.lit(0.0)).otherwise(F.round((numerator.cast("double") / denominator.cast("double")) * F.lit(100.0), 3))
 
 
-def profile_dataframe_core(df, table_name: str | None = None, *, exclude_columns=None, approximate_distinct: bool = True, config: Any = None):
+def build_profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = True):
     """Return structural and statistical profile rows for a Spark DataFrame."""
     from pyspark.sql import functions as F
     from pyspark.sql.types import DateType, NumericType, StringType, TimestampType
@@ -135,7 +135,7 @@ def profile_dataframe_core(df, table_name: str | None = None, *, exclude_columns
     agg_exprs = [F.count(F.lit(1)).cast("long").alias("__ROW_COUNT")]
 
     for column_name in eligible_columns:
-        col = column_expr(column_name)
+        col = _profile_column_expr(column_name)
         data_type = fields[column_name].dataType
         prefix = f"__{column_name}__"
         agg_exprs.extend([
@@ -174,15 +174,15 @@ def profile_dataframe_core(df, table_name: str | None = None, *, exclude_columns
             row_count.cast("long").alias("ROW_COUNT"),
             non_null_count.alias("NON_NULL_COUNT"),
             null_count.alias("NULL_COUNT"),
-            percent_expr(null_count, row_count).alias("NULL_PERCENT"),
+            _profile_percent_expr(null_count, row_count).alias("NULL_PERCENT"),
             distinct_count.alias("DISTINCT_COUNT"),
-            percent_expr(distinct_count, row_count).alias("DISTINCT_PERCENT"),
+            _profile_percent_expr(distinct_count, row_count).alias("DISTINCT_PERCENT"),
             (F.col(f"{prefix}MEAN") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("MEAN"),
             (F.col(f"{prefix}STDDEV") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("STDDEV"),
             (F.col(f"{prefix}MIN_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MIN_VALUE"),
-            (percentile.getItem(0).cast("string") if percentile is not None else F.lit(None).cast("string")).alias("PERCENTILE_25"),
-            (percentile.getItem(1).cast("string") if percentile is not None else F.lit(None).cast("string")).alias("MEDIAN"),
-            (percentile.getItem(2).cast("string") if percentile is not None else F.lit(None).cast("string")).alias("PERCENTILE_75"),
+            (percentile.getItem(0).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_25"),
+            (percentile.getItem(1).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("MEDIAN"),
+            (percentile.getItem(2).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_75"),
             (F.col(f"{prefix}MAX_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MAX_VALUE"),
         ))
 
@@ -190,7 +190,6 @@ def profile_dataframe_core(df, table_name: str | None = None, *, exclude_columns
     for row in rows[1:]:
         out = out.unionByName(row)
     return out.select(*PROFILE_DATAFRAME_COLUMNS)
-
 
 from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail
 from fabricops_kit.pipeline.guardrails_shared import (
@@ -892,13 +891,11 @@ def _run_table_guardrails_workflow(
         stage = table_config.get("stage", "target")
         dataframe = table_config["df"]
 
-        profiles[table_key] = profile_dataframe_core(
+        profiles[table_key] = build_profile_dataframe(
             dataframe,
-            table_name=table_name,
             # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
             # and unions those defaults with any table-specific exclude_columns.
             exclude_columns=table_config.get("exclude_columns"),
-            config=config,
         )
 
         guardrail_rules_df = table_config.get("guardrail_rules_df")

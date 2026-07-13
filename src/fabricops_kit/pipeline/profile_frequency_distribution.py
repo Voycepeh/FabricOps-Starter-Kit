@@ -84,7 +84,10 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
     if not selected_columns:
         return df.sparkSession.createDataFrame([], FREQUENCY_PROFILE_SCHEMA)
 
-    row_count_df = df.agg(F.count(F.lit(1)).cast("long").alias("PROFILED_ROW_COUNT"))
+    metric_exprs = [F.count(F.lit(1)).cast("long").alias("PROFILED_ROW_COUNT")]
+    for column_name in selected_columns:
+        metric_exprs.append(F.count(_column(column_name)).cast("long").alias(f"__{column_name}__PROFILED_NON_NULL_COUNT"))
+    metrics_df = df.agg(*metric_exprs)
     row_count = F.col("PROFILED_ROW_COUNT")
     branches = []
     rank_window = Window.orderBy(F.col("FREQUENCY_COUNT").desc(), F.col("VALUE").asc_nulls_first())
@@ -93,7 +96,7 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
         grouped = (
             df.groupBy(value.alias("VALUE"))
             .agg(F.count(F.lit(1)).cast("long").alias("FREQUENCY_COUNT"))
-            .crossJoin(row_count_df)
+            .crossJoin(metrics_df)
             .withColumn("FREQUENCY_PERCENT", F.when(row_count == 0, F.lit(0.0)).otherwise(F.round((F.col("FREQUENCY_COUNT").cast("double") / row_count.cast("double")) * 100, 3)))
             .withColumn("FREQUENCY_RANK", F.row_number().over(rank_window))
             .where(F.col("FREQUENCY_RANK") <= F.lit(top_n))
@@ -105,11 +108,9 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
                 F.col("FREQUENCY_PERCENT"),
                 F.col("FREQUENCY_RANK"),
                 F.col("PROFILED_ROW_COUNT"),
+                F.col(f"__{column_name}__PROFILED_NON_NULL_COUNT").alias("PROFILED_NON_NULL_COUNT"),
             )
         )
-        # PROFILED_NON_NULL_COUNT is a source-column metric, so attach it once
-        # after grouping rather than dropping null rows from the value profile.
-        non_null = df.agg(F.count(_column(column_name)).cast("long").alias("PROFILED_NON_NULL_COUNT"))
-        branches.append(grouped.crossJoin(non_null).select(*FREQUENCY_PROFILE_COLUMNS))
+        branches.append(grouped.select(*FREQUENCY_PROFILE_COLUMNS))
 
     return reduce(lambda left, right: left.unionByName(right), branches).select(*FREQUENCY_PROFILE_COLUMNS)

@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src" / "fabricops_kit"
-LOWER_LAYER_NAMES = {"profile_dataframe_core"}
+LOWER_LAYER_NAMES: set[str] = set()
 
 
 @dataclass(frozen=True)

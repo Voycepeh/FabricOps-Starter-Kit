@@ -126,17 +126,26 @@ def validate_public_lifecycle_entries(
     public_qns: set[str],
     lifecycle_by_qn: dict[str, ReleaseFunctionLifecycle],
     release_versions: list[str],
+    unreleased_preview_names: set[str] | None = None,
 ) -> None:
-    """Fail clearly when release manifests omit a discovered public callable."""
+    """Fail when release manifests omit a callable except current unreleased previews."""
     if not release_versions:
         return
+    preview_names = unreleased_preview_names or set()
     missing = [
         qn
         for qn in sorted(public_qns, key=lambda item: (functions[item].function_name, item))
-        if qn not in lifecycle_by_qn and functions[qn].function_name not in lifecycle_by_qn
+        if qn not in lifecycle_by_qn and functions[qn].function_name not in lifecycle_by_qn and functions[qn].function_name not in preview_names
     ]
     if missing:
         raise ValueError("Public callable missing from release manifests:\n" + "\n".join(missing))
+
+
+def current_preview_public_api_names() -> set[str]:
+    """Return function names currently listed as preview public API entries."""
+    from fabricops_kit.public_api import PREVIEW_PUBLIC_API
+
+    return {str(item).split(".")[-1] for item in PREVIEW_PUBLIC_API}
 
 
 def module_name_for_path(path: Path, pkg_dir: Path = PKG_DIR) -> str:
@@ -618,7 +627,7 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
     public_names = set(read_public_export_names(init_path))
     public_qns = {qn for qn, info in functions.items() if info.function_name in public_names}
     lifecycle_by_qn, release_versions = read_function_lifecycle(manifests_dir)
-    validate_public_lifecycle_entries(functions, public_qns, lifecycle_by_qn, release_versions)
+    validate_public_lifecycle_entries(functions, public_qns, lifecycle_by_qn, release_versions, current_preview_public_api_names())
     used_all: set[str] = set()
     public_functions = []
     for root_qn in sorted(public_qns, key=lambda q: (functions[q].function_name, q)):
