@@ -18,31 +18,31 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-    Metadata Data Contract metadata table.
+    Contract rows reserved for implemented data contract lifecycle evidence.
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 
-    Observed table and column profiles used for catalogue review and runtime comparisons.
+    Observed table and column identities used for governed catalogue review and runtime comparisons.
 
 -   **[METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)**
 
-    Metadata Data Profiled metadata table.
+    Detailed per-column profiling evidence captured from a profiled dataset snapshot.
 
 -   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
 
-    Metadata Data Lineage metadata table.
+    Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.
 
 -   **[METADATA_DATA_ACCESS](metadata/metadata_data_access.md)**
 
-    Externally collected access inventory for workspace, object, schema, and table access review.
+    Access-review rows reserved for implemented metadata access evidence.
 
 -   **[METADATA_ENRICHMENT](metadata/metadata_enrichment.md)**
 
-    Metadata Enrichment metadata table.
+    Append-only enrichment intent and approved business context for governed tables and columns.
 
 -   **[METADATA_GUARDRAIL](metadata/metadata_guardrail.md)**
 
-    Metadata Guardrail metadata table.
+    Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.
 
 -   **[METADATA_GUARDRAIL_RESULTS](metadata/metadata_guardrail_results.md)**
 

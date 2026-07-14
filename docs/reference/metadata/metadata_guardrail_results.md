@@ -4,34 +4,34 @@
 
 ## Implemented schema
 
-| Column | Data type | Nullable | Managed by | Description |
-| --- | --- | --- | --- | --- |
-| `guardrail_result_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_result_id`. |
-| `guardrail_rule_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_rule_id`. |
-| `result_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `result_id`. |
-| `rule_key` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `rule_key`. |
-| `metadata_table_key` | `string` | Yes | Pipeline guardrail writers | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `environment_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `environment_name`. |
-| `dataset_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `dataset_name`. |
-| `table_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `table_name`. |
-| `column_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `column_name`. |
-| `guardrail_type` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_type`. |
-| `rule_type` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `rule_type`. |
-| `status` | `string` | Yes | Pipeline guardrail writers | Pipeline run status recorded with the run summary. |
-| `can_continue` | `boolean` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `can_continue`. |
-| `severity` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `severity`. |
-| `reason` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `reason`. |
-| `expected_value_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `expected_value_json`. |
-| `actual_value_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `actual_value_json`. |
-| `result_payload_json` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `result_payload_json`. |
-| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Managed by | Description |
+| --- | --- | --- | --- |
+| `guardrail_result_id` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable identifier for the runtime guardrail result row. |
+| `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable identifier for the guardrail rule row. |
+| `result_id` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable identifier for the runtime result payload. |
+| `rule_key` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable key used to group lifecycle versions of the same guardrail or enrichment rule. |
+| `metadata_table_key` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row`, `fabricops_kit.config.metadata_keys._build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `environment_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Environment name recorded for the metadata row. |
+| `dataset_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Dataset name recorded for the metadata row. |
+| `table_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Physical table name recorded for the metadata row. |
+| `column_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Physical column name recorded for the metadata row. |
+| `guardrail_type` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Guardrail family recorded for the row. |
+| `rule_type` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Specific rule type recorded within the guardrail family. |
+| `status` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Pipeline run status recorded with the run summary. |
+| `can_continue` | `boolean` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Metadata Guardrail Results field `can_continue`. |
+| `severity` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Severity recorded for the guardrail intent or result. |
+| `reason` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Human-readable runtime reason recorded for the guardrail outcome. |
+| `expected_value_json` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Serialized expected value payload for the guardrail outcome. |
+| `actual_value_json` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Serialized actual value payload for the guardrail outcome. |
+| `result_payload_json` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Serialized full runtime result payload written for the guardrail outcome. |
+| `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
 
 ## Related function reference
 

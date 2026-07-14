@@ -208,6 +208,10 @@ approved. See `docs/reference/public-function-architecture.md`.
 - Put callable API reference guidance in `src/README.md`.
 - Do not maintain duplicate manual callable/member lists across README/docs pages.
 - Public callable docs are sourced from `src/fabricops_kit/` docstrings plus source metadata.
+- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source for metadata table reference pages.
+- `docs/reference/metadata.md` and `docs/reference/metadata/*.md` are generated artifacts and must not be manually maintained.
+- Metadata schema pages document ordered implemented fields, stable data types, exact column ownership, and useful descriptions; Spark nullability is not part of the documented metadata contract.
+- `Managed by` entries on metadata schema pages must identify exact source functions when they can be traced. Public owners must link to generated function reference pages; generic component labels are not part of the contract.
 - `docs/reference/*`, `docs/api/reference/*`, and related navigation are generated artifacts.
 - Do not manually treat generated docs as source of truth; source code, docstrings, `__all__`, and reference metadata remain the source inputs.
 - Function-level source changes must refresh the committed public callable
@@ -237,6 +241,8 @@ It is useful for planning and review, but not authoritative over source code.
   classification, or public function flow metrics, run the public call-flow
   generator and commit the regenerated
   `docs/reference/_data/public-function-call-flows.json` contract.
+- Metadata schema, stable data type, canonical metadata table, or metadata column ownership changes must regenerate and commit only `docs/reference/metadata.md` and `docs/reference/metadata/*.md`. CI/tests should fail when those committed metadata pages are stale.
+- Keep metadata schema redesign work separate from metadata reference generator-contract work unless the PR explicitly scopes both together.
 - Generator/dashboard/reference-contract PR: when changing split generators,
   dashboard rendering logic, embedded call-flow data contracts, architecture
   classification, callable inventory or public flow generation, or tests that
