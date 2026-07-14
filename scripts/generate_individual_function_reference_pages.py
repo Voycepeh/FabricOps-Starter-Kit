@@ -1104,6 +1104,16 @@ def _render_preferred_example(short_name: str, signature: str, metadata: dict[st
         _validate_preferred_example(short_name, signature, example)
     return example
 
+
+def _render_example_usage(short_name: str, signature: str, metadata: dict[str, Any], doc_examples: str) -> list[str]:
+    """Return rendered example usage, preferring docstring Examples content."""
+    if doc_examples.strip():
+        return _reference_markdown_block(doc_examples, class_name="reference-example-usage")
+    preferred_example = _render_preferred_example(short_name, signature, metadata)
+    if preferred_example != PLACEHOLDER:
+        return _reference_code_block(preferred_example, class_name="reference-example-usage")
+    return ["Example usage not documented yet."]
+
 def _read_template_source(template_path: str) -> str:
     """Return searchable source text from a starter notebook/template file."""
     path = ROOT / template_path
@@ -1751,6 +1761,19 @@ def _reference_code_block(text: str, *, class_name: str) -> list[str]:
         f'<div class="{class_name}" markdown="1">',
         "",
         _code_block(text),
+        "",
+        "</div>",
+    ]
+
+
+def _reference_markdown_block(text: str, *, class_name: str) -> list[str]:
+    """Return a styled Markdown-in-HTML block that preserves rich docstring Markdown."""
+    if not text:
+        return [PLACEHOLDER]
+    return [
+        f'<div class="{class_name}" markdown="1">',
+        "",
+        *text.splitlines(),
         "",
         "</div>",
     ]
@@ -5269,7 +5292,12 @@ def main() -> None:
             usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes else []
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
-            preferred_example = _render_preferred_example(short_name, signature, metadata)
+            rendered_example_usage = _render_example_usage(
+                short_name,
+                signature,
+                metadata,
+                doc_sections.get("examples", ""),
+            )
             return_interpretation_lines = (
                 ["### Return interpretation", "", rendered_return_interpretation, ""]
                 if metadata.get("return_interpretation")
@@ -5308,11 +5336,7 @@ def main() -> None:
                     [
                         "## Example usage",
                         "",
-                        *(
-                            _reference_code_block(preferred_example, class_name="reference-example-usage")
-                            if preferred_example != PLACEHOLDER
-                            else ["Example usage not documented yet."]
-                        ),
+                        *rendered_example_usage,
                         "",
                     ]
                 ),

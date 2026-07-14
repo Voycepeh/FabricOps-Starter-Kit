@@ -147,5 +147,5 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 9:35 PM SGT
+    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

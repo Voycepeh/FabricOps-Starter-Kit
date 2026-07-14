@@ -108,5 +108,5 @@ Raises ValueError when top_n is not positive or requested columns do not exist.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 9:35 PM SGT
+    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

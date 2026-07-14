@@ -475,6 +475,37 @@ def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
     assert written == [(repartitioned, store, "wh_product_dev.dbo.orders", "overwrite", {"batchsize": "5000"})]
 
 
+def test_write_lakehouse_table_docstring_examples_cover_small_and_large_writes():
+    """Verify Lakehouse help text distinguishes Spark repartitioning and Delta partitioning."""
+    from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
+
+    doc = inspect.getdoc(write_lakehouse_table)
+
+    assert doc is not None
+    assert "country_lookup" in doc
+    assert "millions of rows" in doc
+    assert 'repartition_by=(32, "order_year", "order_month")' in doc
+    assert 'partition_by=["order_year", "order_month"]' in doc
+    assert 'orders_df.repartition(32, "order_year", "order_month")' in doc
+    assert "physical Delta directory partitioning" in doc
+
+
+def test_write_warehouse_table_docstring_examples_cover_small_and_large_writes():
+    """Verify Warehouse help text documents Spark repartitioning without physical partitions."""
+    from fabricops_kit.io.write_warehouse_table import write_warehouse_table
+
+    doc = inspect.getdoc(write_warehouse_table)
+    normalized = " ".join(doc.split()) if doc else ""
+
+    assert doc is not None
+    assert "department_summary" in doc
+    assert "millions of rows" in doc
+    assert "repartition_by=32" in doc
+    assert "order_serving_df.repartition(32)" in doc
+    assert "does not physically partition the Warehouse table" in normalized
+    assert "does not create physical Warehouse partitions" in normalized
+
+
 def test_legacy_io_facade_module_is_deleted():
     """Verify the legacy IO facade file is deleted."""
     assert not (Path("src/fabricops_kit") / ("fabric_input_" + "output.py")).exists()

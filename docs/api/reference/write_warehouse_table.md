@@ -23,7 +23,7 @@ Write a DataFrame to a configured Fabric warehouse target.
 
 `fabricops_kit/io/write_warehouse_table.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L78">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L10-L141">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,9 +63,55 @@ def write_warehouse_table(
 
 <div class="reference-example-usage" markdown="1">
 
+Small serving tables normally do not need explicit repartitioning.
+
 ```python
-write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="orders_serving", mode="append")
+# Small curated serving table.
+# Keep the DataFrame's existing Spark partitioning.
+write_warehouse_table(
+    department_summary_df,
+    schema="reporting",
+    table_name="department_summary",
+    target="warehouse",
+    mode="overwrite",
+)
 ```
+
+For a large serving dataset containing millions of rows, increase Spark
+write parallelism before publishing through the Fabric Warehouse
+connector.
+
+```python
+# Large serving dataset containing millions of rows.
+# Increase Spark write parallelism before publishing through the
+# Fabric Warehouse connector.
+write_warehouse_table(
+    order_serving_df,
+    schema="reporting",
+    table_name="orders",
+    target="warehouse",
+    mode="append",
+    repartition_by=32,
+)
+```
+
+``repartition_by=32`` is equivalent to repartitioning the DataFrame before
+the connector write with ``order_serving_df.repartition(32)``.
+
+```python
+write_warehouse_table(
+    order_serving_df,
+    schema="reporting",
+    table_name="orders",
+    target="warehouse",
+    mode="append",
+    repartition_by=(32, "order_year", "order_month"),
+)
+```
+
+The keyed form distributes rows using the specified columns while
+requesting 32 Spark partitions. It still does not create physical
+Warehouse partitions.
 
 </div>
 
@@ -78,7 +124,7 @@ write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="order
 | `table_name` | `str` | Yes | Warehouse table name. |
 | `target` | `str` | No | Logical warehouse target from ``00_env_config``. |
 | `mode` | `str` | No | Spark writer mode supported by the Fabric connector. |
-| `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning before write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table. |
+| `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning applied to the Spark DataFrame before the Fabric connector write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table. Small serving tables normally do not need explicit repartitioning. Repartitioning can increase Spark write parallelism by creating additional partitions that Spark may process concurrently, subject to available cluster resources and destination throughput. Large publications, including workloads with millions of rows, may benefit when partition counts are tuned for data volume, row width, skew, available Spark resources, connector behavior, and Fabric capacity. Millions of rows is an example workload size rather than a hard threshold, and row count alone is not sufficient for tuning. Too many partitions may reduce performance. |
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. Required Fabric connector options are always set from ``00_env_config``. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 
@@ -150,5 +196,5 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 9:35 PM SGT
+    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
