@@ -359,7 +359,7 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
         "profile_stage": "target",
     }
     tables = {
-        governance.CATALOGUE_TABLE: [
+        governance.PROFILED_TABLE: [
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "agreement_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
         ],
         governance.DATA_AGREEMENT_TABLE: [],
@@ -399,7 +399,7 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
         "profile_stage": "target",
     }
     tables = {
-        governance.CATALOGUE_TABLE: [
+        governance.PROFILED_TABLE: [
             {
                 **selection,
                 "profile_status": "success",

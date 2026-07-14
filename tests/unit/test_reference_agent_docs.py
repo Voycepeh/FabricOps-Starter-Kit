@@ -1846,7 +1846,6 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
         "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
-        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
     for function_name, expected_path in expected_paths.items():

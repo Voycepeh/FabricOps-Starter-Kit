@@ -63,13 +63,13 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <strong><a href="../guided-demo/run-pipeline/"><code>02_pipeline</code></a></strong>
 <p>Runs governed source-to-target pipeline execution.</p>
 <p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and configuration metadata.</p>
-<p>Writes <a href="../reference/metadata/metadata_pipeline_runs/">pipeline run details</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, <a href="../reference/metadata/metadata_data_catalogue/">output table records</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
+<p>Writes <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="../reference/metadata/metadata_data_catalogue/">output table records</a>.</p>
 </div>
 
 <div class="metadata-flow-card">
 <strong><a href="../guided-demo/review-guardrails/"><code>03_governance</code></a></strong>
 <p>Reviews and approves governed outputs.</p>
-<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a>, <a href="../reference/metadata/metadata_pipeline_runs/">pipeline run details</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="../reference/metadata/metadata_pipeline_runs/">run status</a>.</p>
+<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, and <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>.</p>
 <p>Writes <a href="../reference/metadata/metadata_guardrail_rules/">review decisions</a>, <a href="../reference/metadata/metadata_guardrail_rules/">approval state</a>, <a href="../reference/metadata/metadata_guardrail_rules/">rule outcomes</a>, <a href="../reference/metadata/metadata_enrichment_rules/">enrichment decisions</a>, <a href="../reference/metadata/metadata_enrichment_rules/">lifecycle decisions</a>, and production handover state.</p>
 </div>
 

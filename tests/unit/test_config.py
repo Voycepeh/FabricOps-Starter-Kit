@@ -795,7 +795,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
         assert "datetime.utcnow" not in source
 
     pipeline_source = Path("templates/notebooks/02_pipeline.ipynb").read_text(encoding="utf-8")
-    assert "PIPELINE = widget_pipeline_bootstrap(" in pipeline_source
+    assert "widget_pipeline_bootstrap" not in pipeline_source
     assert "_current_audit_timestamp" not in pipeline_source
     assert "PIPELINE_STARTED_AT" not in pipeline_source
 

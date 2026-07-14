@@ -500,7 +500,7 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     enrichment = []
 
     def fake_read(config, env, table_name, *, spark_session):
-        return {governance_review.CATALOGUE_TABLE: catalogue, governance_review.GUARDRAIL_TABLE: rules, governance_review.ENRICHMENT_TABLE: enrichment}[table_name]
+        return {governance_review.PROFILED_TABLE: catalogue, governance_review.GUARDRAIL_TABLE: rules, governance_review.ENRICHMENT_TABLE: enrichment}[table_name]
 
     monkeypatch.setattr(widget_shared, "_read_metadata_table_or_empty", fake_read)
     state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
