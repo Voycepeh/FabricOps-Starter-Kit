@@ -108,10 +108,30 @@ def _frequency_json_dataframe(df, frequency_columns: Sequence[str] | None, frequ
     )
 
 
+def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, Any]) -> dict[str, Any]:
+    """Return Spark literals for the canonical runtime audit field set."""
+    from pyspark.sql import functions as F
+
+    audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+    return {
+        "_committed_by": F.lit(audit["_committed_by"]).cast("string"),
+        "_committed_at": F.lit(audit["_committed_at"]).cast("timestamp"),
+        "_workspace_id": F.lit(audit["_workspace_id"]).cast("string"),
+        "_workspace_name": F.lit(audit["_workspace_name"]).cast("string"),
+        "_notebook_id": F.lit(audit["_notebook_id"]).cast("string"),
+        "_notebook_name": F.lit(audit["_notebook_name"]).cast("string"),
+        "_metadata_lakehouse_name": F.lit(audit["_metadata_lakehouse_name"]).cast("string"),
+        "_activity_id": F.lit(audit["_activity_id"]).cast("string"),
+    }
+
+
 def _canonical_profiled_dataframe(
     profile_df,
     *,
     source_df,
+    config: Any,
+    env: str,
+    runtime_context: dict[str, Any],
     environment_name: str,
     store_type: str,
     layer: str,
@@ -129,6 +149,7 @@ def _canonical_profiled_dataframe(
     column_key_udf = F.udf(lambda column_name: _metadata_column_key(metadata_table_key, column_name), T.StringType())
     frequency_df = _frequency_json_dataframe(source_df, frequency_columns, frequency_top_n)
     schema_fingerprint = _schema_fingerprint(source_df)
+    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
 
     profiled_df = profile_df.select(
         F.col("COLUMN_NAME").alias("column_name"),
@@ -178,8 +199,15 @@ def _canonical_profiled_dataframe(
         F.lit(bool(is_sampled)).cast("boolean").alias("is_sampled"),
         F.col("frequency_json").cast("string"),
         F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
-        F.current_timestamp().cast("timestamp").alias("profiled_at"),
-        F.current_timestamp().cast("timestamp").alias("_committed_at"),
+        audit_columns["_committed_at"].alias("profiled_at"),
+        audit_columns["_committed_by"].alias("_committed_by"),
+        audit_columns["_committed_at"].alias("_committed_at"),
+        audit_columns["_workspace_id"].alias("_workspace_id"),
+        audit_columns["_workspace_name"].alias("_workspace_name"),
+        audit_columns["_notebook_id"].alias("_notebook_id"),
+        audit_columns["_notebook_name"].alias("_notebook_name"),
+        audit_columns["_metadata_lakehouse_name"].alias("_metadata_lakehouse_name"),
+        audit_columns["_activity_id"].alias("_activity_id"),
     ).select(*PROFILED_COLUMNS)
 
 
@@ -198,7 +226,14 @@ def _catalogue_dataframe_from_profiled(profiled_df):
         F.col("table_name").cast("string"),
         F.col("column_name").cast("string"),
         F.col("data_type").cast("string"),
+        F.col("_committed_by").cast("string"),
         F.col("_committed_at").cast("timestamp"),
+        F.col("_workspace_id").cast("string"),
+        F.col("_workspace_name").cast("string"),
+        F.col("_notebook_id").cast("string"),
+        F.col("_notebook_name").cast("string"),
+        F.col("_metadata_lakehouse_name").cast("string"),
+        F.col("_activity_id").cast("string"),
     ).dropDuplicates(["metadata_table_key", "metadata_column_key", "schema_fingerprint"]).select(*CATALOGUE_COLUMNS)
 
 
@@ -241,6 +276,7 @@ def _write_lineage_participation(
             "committed_by": _require_non_empty_string(audit.get("_committed_by"), "committed_by"),
             "environment_name": env,
             "metadata_lakehouse_name": audit.get("_metadata_lakehouse_name"),
+            **audit,
         },
     )
     lineage_schema = metadata_table_schema_registry()[LINEAGE_TABLE]
@@ -368,6 +404,9 @@ def profile_and_register_dataframe(
     profiled_df = _canonical_profiled_dataframe(
         profile_df,
         source_df=df,
+        config=config,
+        env=env,
+        runtime_context=context,
         environment_name=normalized_environment,
         store_type=normalized_store_type,
         layer=normalized_layer,

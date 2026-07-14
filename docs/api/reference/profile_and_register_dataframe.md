@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 125
-- Shared helpers: 48
-- Private helpers: 75
+- Downstream callables: 138
+- Shared helpers: 52
+- Private helpers: 84
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_and_register_dataframe">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identit
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:294`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:330`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L294-L413">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L330-L452">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
