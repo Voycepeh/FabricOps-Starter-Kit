@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 125
-- Shared helpers: 48
-- Private helpers: 75
+- Downstream callables: 138
+- Shared helpers: 52
+- Private helpers: 84
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_and_register_dataframe">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identit
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:294`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:330`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L294-L413">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L330-L452">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -127,5 +127,5 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
-    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 3:28 PM SGT
+    Call-flow data generated: 14 Jul 2026, 3:03 PM SGT
