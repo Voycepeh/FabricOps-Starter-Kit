@@ -44,23 +44,59 @@ def _column(name: str):
 
 
 def profile_frequency_distribution(df, *, columns=None, top_n: int = 20):
-    """Return top-N value frequencies for selected Spark DataFrame columns.
+    """Calculate exact value frequencies for selected Spark DataFrame columns.
+
+    The function profiles the complete DataFrame exactly as supplied by the
+    caller and does not perform sampling internally. It returns up to ``top_n``
+    most frequent values for each selected column, includes null as a frequency
+    value, converts returned values to their string representation, and
+    calculates ``FREQUENCY_PERCENT`` from the total number of rows in the
+    supplied DataFrame. Rankings are calculated independently for each
+    profiled column.
 
     Parameters
     ----------
     df : pyspark.sql.DataFrame
         Spark DataFrame to profile exactly as supplied by the caller.
     columns : list[str] or set[str] or tuple[str, ...], optional
-        Source columns to profile. By default, eligible non-technical scalar
-        columns are selected.
+        Source columns to profile. When supplied, each named column is
+        profiled. When omitted, eligible non-technical scalar columns are
+        selected automatically. Array, map, struct, and binary columns are
+        excluded from automatic selection.
     top_n : int, default=20
-        Maximum ranked values to retain per source column.
+        Maximum ranked frequency rows to retain per profiled column. This
+        limits returned result size only; it does not sample the DataFrame or
+        avoid counting all distinct values before ranking them. To return every
+        distinct value, supply a sufficiently large positive ``top_n``.
 
     Returns
     -------
     pyspark.sql.DataFrame
-        Spark DataFrame containing one row per retained top value per profiled
-        source column.
+        A Spark DataFrame containing up to ``top_n`` ranked frequency rows for
+        each selected input column. Each row represents one distinct value,
+        including null, and contains its count, percentage, rank, source data
+        type, total profiled row count, and non-null count. Returned columns
+        are ``COLUMN_NAME`` (profiled input column name), ``DATA_TYPE`` (Spark
+        data type of the input column), ``VALUE`` (distinct value converted to
+        a string; null remains null), ``FREQUENCY_COUNT`` (number of input rows
+        containing the value), ``FREQUENCY_PERCENT`` (percentage of all
+        supplied DataFrame rows containing the value), ``FREQUENCY_RANK``
+        (rank within the profiled column ordered by descending frequency),
+        ``PROFILED_ROW_COUNT`` (total number of rows in the supplied
+        DataFrame), and ``PROFILED_NON_NULL_COUNT`` (number of non-null rows
+        for the profiled column).
+
+    Notes
+    -----
+    The function performs an exact Spark grouped count over the supplied
+    DataFrame for every selected column. ``top_n`` limits the returned rows,
+    not the cost of grouping all distinct values. For large DataFrames,
+    explicitly select useful categorical or low-to-medium-cardinality columns
+    and generally avoid identifiers, UUIDs, timestamps, free-text fields, and
+    columns where most values are unique. For exploratory analysis, callers may
+    pass a manually filtered or sampled DataFrame; when they do, the returned
+    counts and percentages describe that filtered or sampled input rather than
+    the original full DataFrame.
 
     Raises
     ------

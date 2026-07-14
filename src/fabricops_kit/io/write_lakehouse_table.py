@@ -25,31 +25,57 @@ def write_lakehouse_table(
     verbose=True,
     context=None,
 ):
-    """Write a Spark DataFrame to a Fabric lakehouse Delta table.
+    """Resolve a configured Lakehouse table and write the DataFrame to its Delta path.
 
-    Lakehouse Delta is optimized for FabricOps PySpark processing and reuse.
-    Prefer this callable for intermediate, Unified, Product, and metadata Delta
-    outputs that will be read repeatedly by Spark. Publish selected serving
-    outputs to Warehouse separately when SQL serving is required.
+    The function performs an immediate Spark write using the selected write
+    mode and optional execution and storage partitioning settings. Lakehouse
+    Delta is optimized for FabricOps PySpark processing and reuse. Prefer this
+    callable for repeated PySpark processing and reusable intermediate,
+    Unified, Product, and metadata Delta outputs that will be read repeatedly
+    by Spark. Publish selected serving outputs to Warehouse separately when
+    SQL serving is required.
 
     Parameters
     ----------
     df : pyspark.sql.DataFrame
         Spark DataFrame to write.
     table_name : str
-        Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.
+        Lakehouse table name. Supply ``schema`` and ``table_name`` separately;
+        do not pass a qualified name such as ``schema.table`` through
+        ``table_name``.
     target : str, default="unified"
-        Logical lakehouse target from ``00_env_config``.
+        Logical Lakehouse target from ``00_env_config``. FabricOps resolves
+        the selected environment, workspace, Lakehouse item, optional schema,
+        table name, and OneLake Delta path under the Lakehouse ``Tables``
+        area.
     schema : str or None, default=None
-        Optional schema override for schema-enabled lakehouses.
+        Optional schema override for schema-enabled Lakehouses.
     mode : str, default="append"
-        Spark write mode: ``append``, ``overwrite``, ``errorifexists``, or ``ignore``.
+        Spark Delta write mode.
+
+        ``append`` adds rows to the existing destination or creates it when
+        absent. Rerunning the same input can create duplicate rows. No
+        business-key matching, deduplication, or idempotency check is
+        performed.
+
+        ``overwrite`` replaces the destination data according to Spark Delta
+        writer behavior and should be treated as destructive.
+
+        ``errorifexists`` fails when the destination already exists.
+
+        ``ignore`` skips the write when the destination already exists.
+
+        This function does not perform a Delta ``MERGE``, upsert,
+        update-on-match, delete-on-missing, or key-based deduplication.
     partition_by : str or list[str], optional
         Column or columns used to create physical Delta table partitions in
         storage. Use this for stable, commonly filtered, relatively
         low-cardinality columns such as year or month when that layout improves
         downstream reads. ``partition_by`` affects the physical Delta table
-        layout rather than Spark execution parallelism.
+        layout rather than Spark execution parallelism. High-cardinality
+        partition columns can create excessive folders and small files, and
+        the function does not inspect or reconcile an existing table's
+        partition layout before writing.
     repartition_by : int, str, list, or tuple, optional
         Optional repartitioning applied to the Spark DataFrame before the
         write. This changes the Spark partition distribution and can increase
@@ -61,11 +87,25 @@ def write_lakehouse_table(
         width, skew, file sizes, and available Fabric Spark capacity. Millions
         of rows is an example workload size rather than a hard threshold. Row
         count alone is not sufficient for tuning.
-        Excessive repartitioning can add scheduler overhead and create many
-        small files.
+        Excessive repartitioning can add shuffle cost, scheduler overhead, and
+        many small files.
+
+        ``repartition_by=32`` is equivalent to ``df.repartition(32)``.
+        ``repartition_by="department"`` is equivalent to
+        ``df.repartition("department")``.
+        ``repartition_by=["year", "month"]`` is equivalent to
+        ``df.repartition("year", "month")``.
+        ``repartition_by=(32, "year", "month")`` is equivalent to
+        ``df.repartition(32, "year", "month")``.
+
+        Repartitioning changes the DataFrame used for the write but does not
+        mutate the caller's original DataFrame binding.
     options : dict, optional
         Additional Spark Delta ``DataFrameWriter`` options forwarded before
-        saving the configured Lakehouse Tables path.
+        saving the configured Lakehouse ``Tables`` path, such as
+        ``mergeSchema``, ``overwriteSchema``, and other standard Delta writer
+        options supported by the active Spark runtime. FabricOps forwards
+        these options and does not validate their compatibility.
     verbose : bool, default=True
         Whether to print the resolved output path before writing.
     context : dict[str, Any], optional
@@ -74,7 +114,7 @@ def write_lakehouse_table(
     Returns
     -------
     None
-        The DataFrame is written to the configured Delta table path.
+        The function performs the Spark Delta write before returning.
 
     Notes
     -----
@@ -82,7 +122,33 @@ def write_lakehouse_table(
     ``00_env_config`` and then delegates to Spark's Delta writer with any
     supplied writer options. ``repartition_by`` affects Spark execution before
     the write, while ``partition_by`` affects the physical Delta table layout
-    on storage.
+    on storage. The function triggers a Spark write job, does not return a
+    lazy write plan, and returns ``None`` only after the write completes or
+    Spark raises an error. It may create the Delta destination when it does
+    not already exist, subject to Spark write behavior and the selected mode.
+
+    The function does not automatically validate the DataFrame against a data
+    contract, match business keys, add missing columns, reorder columns, cast
+    incompatible types, reconcile schema differences, enable schema evolution,
+    validate nullability, or check existing partition columns. Schema
+    evolution or overwrite-schema behavior depends on supplied Spark Delta
+    writer options where supported.
+
+    This function only writes the DataFrame. It does not automatically
+    register catalogue metadata, register lineage, profile the table, execute
+    guardrails, validate a data contract, apply access governance, or create
+    stewardship or agreement records.
+
+    Comparison:
+
+    | Function | Destination | Write mechanism | Physical partitioning |
+    | --- | --- | --- | --- |
+    | ``write_lakehouse_table`` | Lakehouse ``Tables`` Delta path | Native Spark Delta writer | Supported through ``partition_by`` |
+    | ``write_warehouse_table`` | Fabric Warehouse table | Fabric Warehouse Spark connector | Not created by this function |
+
+    Both functions default to append behavior, both can duplicate rows when
+    the same data is published repeatedly, neither performs merge or upsert
+    logic, and repartitioning affects Spark execution in both functions.
 
     Examples
     --------

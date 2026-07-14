@@ -25,32 +25,57 @@ def setup_notebook(
     run_id_prefix: str = "run",
     local_fallback_name: str | None = None,
 ) -> NotebookSetupContext:
-    """Run consolidated FabricOps startup for delivery and optional support notebooks.
+    """Validate notebook startup configuration and resolve required Fabric targets.
+
+    Validate the selected FabricOps environment and resolve the Fabric targets
+    required by the notebook before downstream IO, profiling, and metadata
+    functions run. The returned context contains resolved stores, runtime
+    identity, startup checks, and an overall readiness status.
+
+    The main value of ``setup_notebook`` is to provide an early startup
+    checkpoint for the configuration and Fabric target information that
+    downstream FabricOps functions rely on, including
+    ``read_lakehouse_table``, ``write_lakehouse_table``,
+    ``read_warehouse_table``, ``read_warehouse_query``, and profiling or
+    metadata registration functions that resolve Fabric targets or runtime
+    context. It validates and resolves the same configuration and Fabric
+    targets used by downstream FabricOps functions, then returns that
+    information in a reusable ``NotebookSetupContext``. It does not
+    automatically inject configuration into every downstream function.
 
     Parameters
     ----------
     config : FrameworkConfig | dict[str, Any]
-        Framework configuration object or compatible mapping. The setup flow
-        validates required sections and configured Fabric targets before
-        running readiness checks.
+        Full FabricOps framework configuration used to resolve environments and
+        target stores.
     env : str, default="Sandbox"
-        Environment key used to resolve target paths.
+        Environment section selected for target resolution.
     required_targets : list[str] | None, optional
-        Target names that must resolve for ``env``. Defaults to
-        ``["Source", "Unified"]``.
+        Logical Fabric target names the notebook requires before execution can
+        proceed. Defaults to ``["Source", "Unified"]``.
     notebook_name : str | None, optional
-        Explicit notebook name used for runtime metadata and naming checks.
+        Explicit notebook name override used for runtime metadata and naming
+        validation.
     run_id_prefix : str, default="run"
-        Prefix used when a Fabric runtime run identifier is unavailable.
+        Prefix used only when no Fabric runtime run identifier is available.
     local_fallback_name : str | None, optional
-        Notebook name used when neither ``notebook_name`` nor Fabric runtime
-        context provides one.
+        Notebook name used only when neither ``notebook_name`` nor Fabric
+        runtime notebook context provides one.
 
     Returns
     -------
     NotebookSetupContext
-        Validated runtime context with resolved paths, smoke-check results,
-        runtime metadata, and overall readiness status.
+        A ``NotebookSetupContext`` containing the selected environment,
+        resolved Fabric stores, runtime and user identity, startup validation
+        results, generated or detected run ID, and overall readiness status.
+        Returned fields are ``run_id`` (generated or detected run identifier),
+        ``notebook_name`` (resolved notebook name), ``workspace_name``
+        (resolved workspace name when available), ``user_name`` (resolved user
+        identity), ``environment`` (selected environment key), ``paths``
+        (requested target names mapped to resolved Fabric store objects),
+        ``validation_results`` (startup check results), ``runtime_metadata``
+        (best-effort runtime metadata), and ``readiness_status`` (overall
+        readiness outcome).
 
     Raises
     ------
@@ -60,8 +85,64 @@ def setup_notebook(
 
     Notes
     -----
+    Startup flow:
+
+    1. Validate the supplied FabricOps framework configuration.
+    2. Resolve the selected environment.
+    3. Resolve every target listed in ``required_targets``.
+    4. Default ``required_targets`` to ``["Source", "Unified"]`` when
+       omitted.
+    5. Collect Fabric notebook runtime information when available.
+    6. Generate a fallback run ID when the Fabric runtime does not provide one.
+    7. Check whether a Spark session is available.
+    8. Check whether Fabric runtime context is readable.
+    9. Validate that each required target contains the necessary store
+       identity fields.
+    10. Validate the notebook name against supported FabricOps notebook naming
+        patterns.
+    11. Return an overall readiness status.
+
+    Supported notebook naming patterns currently include ``00_env_config``,
+    ``01_agreement`` and suffixed variants, ``02_pipeline`` and suffixed
+    variants, ``03_governance`` and suffixed variants, and ``99_explore`` and
+    suffixed variants.
+
+    Each resolved target contains the configured Fabric store identity needed
+    by downstream functions, such as workspace identity, Fabric item identity,
+    store name, store kind, and derived path information where applicable.
+    ``setup.paths`` maps each requested target name to its resolved Fabric
+    store configuration. Conceptual example:
+
+    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified", "Warehouse"])``
+
+    ``source_store = setup.paths["Source"]``
+
+    ``warehouse_store = setup.paths["Warehouse"]``
+
+    ``readiness_status`` is ``"ready"`` when every check is ``pass``,
+    ``warn``, or ``skipped``, and ``"not_ready"`` when any check fails. The
+    function returns this status to the caller and does not automatically stop
+    notebook execution merely because readiness is ``"not_ready"``. Caller-side
+    enforcement is optional but recommended for delivery notebooks. Conceptual
+    pattern:
+
+    ``setup = setup_notebook(CONFIG, env="Development", required_targets=["Source", "Unified"])``
+
+    ``if setup.readiness_status != "ready": raise RuntimeError("FabricOps notebook setup is not ready.")``
+
+    Runtime metadata is collected on a best-effort basis and includes notebook
+    name, workspace name and ID, user name and ID, current run ID, whether the
+    execution is pipeline-driven, whether the execution is interactive, whether
+    the execution is a reference run, and whether Fabric runtime context is
+    available. Local or non-Fabric execution may produce warnings or skipped
+    checks rather than failing automatically.
+
     Validation and smoke checks are local to notebook startup. This helper does
-    not provision Fabric resources or persist metadata.
+    not read business data, write business data, persist metadata, provision
+    workspaces, lakehouses, or warehouses, create missing Fabric resources,
+    mutate the supplied configuration, globally attach setup context to all
+    downstream calls, or automatically stop notebook execution on failed
+    readiness checks.
 
     """
     normalized = validate_framework_config(config)
