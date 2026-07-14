@@ -127,5 +127,5 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 3:28 PM SGT
-    Call-flow data generated: 14 Jul 2026, 3:03 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
