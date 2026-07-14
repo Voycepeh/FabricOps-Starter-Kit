@@ -224,7 +224,14 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "table_name",
         "column_name",
         "data_type",
+        "_committed_by",
         "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
     ]
     retired_catalogue_fields = {
         "dataset_name",
@@ -257,13 +264,6 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "profiled_at",
         "agreement_id",
         "agreement_version",
-        "_committed_by",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
     }
     removed_catalogue_fields = retired_catalogue_fields | {
         "baseline_status",
@@ -300,6 +300,18 @@ def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tab
     assert governance.DATA_ACCESS_TABLE in schemas
     assert governance.ENRICHMENT_TABLE in schemas
     assert "metadata_table_key" in schemas["METADATA_DATA_PROFILED"].fieldNames()
+    required_audit_fields = {
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    }
+    for table_name, schema in schemas.items():
+        assert required_audit_fields.issubset(schema.fieldNames()), table_name
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
 
 
