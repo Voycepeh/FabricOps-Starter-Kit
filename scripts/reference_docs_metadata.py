@@ -144,11 +144,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_render_agreement_evidence',
-  'visibility': 'public',
-  'module_summary': 'Owns widget implementation details for agreement workflows.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_select_guardrail_target',
   'visibility': 'public',
   'module_summary': 'Owns the guardrail target selection widget workflow.',
@@ -215,10 +210,9 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'template_path': 'templates/notebooks/00_env_config.ipynb'},
  {'notebook_key': '01_agreement',
   'notebook_label': '`01_agreement`',
-  'segment_intro': 'Standalone steward, agreement, and evidence widgets for Fabric stability.',
+  'segment_intro': 'Standalone steward and agreement widgets for Fabric stability.',
   'segments': [{'symbols': ['widget_render_data_steward',
-                            'widget_render_data_agreement',
-                            'widget_render_agreement_evidence'],
+                            'widget_render_data_agreement'],
                 'title': 'Agreement intake'}],
   'template_path': 'templates/notebooks/01_agreement.ipynb'},
  {'notebook_key': '02_pipeline',
@@ -532,7 +526,7 @@ PUBLIC_SYMBOL_DOCS = [
                  'creating a data agreement.',
   'glossary_terms': ['notebook template'],
   'return_interpretation': 'The widget itself is the user interface; saved steward values are '
-                           'available to downstream agreement evidence only after the user '
+                           'available to downstream agreement workflows only after the user '
                            'completes the widget action.',
   'common_failure_causes': ['ipywidgets is not available in the runtime.',
                             'Required steward fields are left blank.',
@@ -561,29 +555,6 @@ PUBLIC_SYMBOL_DOCS = [
                             'The metadata target cannot be written.'],
   'related_guides': [{'title': 'Templates',
                       'path': '../../notebook-templates-implementation-guide/index.md'}]},
- {'kind': 'function',
-  'module': 'widgets.widget_render_agreement_evidence',
-  'function_type': 'callable',
-  'summary_override': 'Render the standalone agreement-evidence widget.',
-  'symbol_name': 'widget_render_agreement_evidence',
-  'template_notebook': '01_agreement',
-  'template_segment': 'Agreement intake',
-  'expanded_purpose': 'Renders the supporting-evidence widget for agreement workflows so users can '
-                      'record links or files that justify an agreement.',
-  'when_to_use': 'Use in 01_agreement when agreement records need supporting evidence that '
-                 'downstream users can audit.',
-  'glossary_terms': ['notebook template', 'evidence'],
-  'return_interpretation': 'The widget records evidence references when saved; review the '
-                           'resulting metadata rows before relying on them in handover or audit '
-                           'flows.',
-  'common_failure_causes': ['Evidence details are incomplete.',
-                            'File or URL references are malformed.',
-                            'Widget state is reset before saving.',
-                            'The configured metadata target is not writable.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates-implementation-guide/index.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1477,7 +1448,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                 'glossary_terms': ['notebook template'],
                                 'return_interpretation': 'The widget itself is the user interface; '
                                                          'saved steward values are available to '
-                                                         'downstream agreement evidence only after '
+                                                         'downstream agreement workflows only after '
                                                          'the user completes the widget action.',
                                 'common_failure_causes': ['ipywidgets is not available in the '
                                                           'runtime.',
@@ -1506,26 +1477,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                             'existing metadata.',
                                                             'The metadata target cannot be '
                                                             'written.']},
- 'widget_render_agreement_evidence': {'expanded_purpose': 'Renders the supporting-evidence widget '
-                                                          'for agreement workflows so users can '
-                                                          'record links or files that justify an '
-                                                          'agreement.',
-                                      'when_to_use': 'Use in 01_agreement when agreement records '
-                                                     'need supporting evidence that downstream '
-                                                     'users can audit.',
-                                      'glossary_terms': ['notebook template', 'evidence'],
-                                      'return_interpretation': 'The widget records evidence '
-                                                               'references when saved; review the '
-                                                               'resulting metadata rows before '
-                                                               'relying on them in handover or '
-                                                               'audit flows.',
-                                      'common_failure_causes': ['Evidence details are incomplete.',
-                                                                'File or URL references are '
-                                                                'malformed.',
-                                                                'Widget state is reset before '
-                                                                'saving.',
-                                                                'The configured metadata target is '
-                                                                'not writable.']},
  'read_lakehouse_table': {'expanded_purpose': 'Reads a Delta table from the configured Fabric '
                                               'lakehouse target, resolving to '
                                               '{store.root}/Tables/{table} for classic targets or '
@@ -1980,10 +1931,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                  'path': '../../notebook-templates-implementation-guide/index.md'}],
  'widget_render_data_agreement': [{'title': 'Templates',
                                    'path': '../../notebook-templates-implementation-guide/index.md'}],
- 'widget_render_agreement_evidence': [{'title': 'Templates',
-                                       'path': '../../notebook-templates-implementation-guide/index.md'},
-                                      {'title': 'Metadata Tables',
-                                       'path': '../../reference/metadata.md'}],
  'read_lakehouse_table': [{'title': 'Templates',
                            'path': '../../notebook-templates-implementation-guide/index.md'}],
  'write_lakehouse_table': [{'title': 'Templates',

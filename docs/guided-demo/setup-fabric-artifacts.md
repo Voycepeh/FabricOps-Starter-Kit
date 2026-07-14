@@ -62,7 +62,7 @@ Download or copy editable notebook templates from the GitHub [`templates/noteboo
 | Notebook template | Role in the guided demo |
 | ----------------- | ----------------------- |
 | `00_env_config` | Defines shared environment, workspace, lakehouse, warehouse, metadata target, and audit settings. |
-| `01_agreement` | Captures steward, agreement, and agreement evidence metadata. |
+| `01_agreement` | Captures steward and agreement metadata. |
 | `02_pipeline` | Runs governed source-to-target processing, profiles data, evaluates guardrails, writes outputs, and records run evidence. |
 | `03_governance` | Reviews observed metadata, enrichment intent, and guardrail intent. |
 | `99_explore` | Supports optional read-only discovery or troubleshooting. |

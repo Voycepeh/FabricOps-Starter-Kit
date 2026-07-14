@@ -59,7 +59,6 @@ EXPECTED_V1_CALLABLES = [
     'run_table_guardrails',
     'widget_render_data_steward',
     'widget_render_data_agreement',
-    'widget_render_agreement_evidence',
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_schema_freshness_profile_rules',
@@ -84,7 +83,6 @@ def test_widget_public_callables_live_under_widgets_package():
         'widget_author_schema_freshness_profile_rules',
         'widget_browse_metadata_catalogue',
         'widget_enrich_table_metadata',
-        'widget_render_agreement_evidence',
         'widget_render_data_agreement',
         'widget_render_data_steward',
         'widget_review_guardrail_governance',
@@ -110,7 +108,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
         'widget_author_schema_freshness_profile_rules',
         'widget_browse_metadata_catalogue',
         'widget_enrich_table_metadata',
-        'widget_render_agreement_evidence',
         'widget_render_data_agreement',
         'widget_render_data_steward',
         'widget_review_guardrail_governance',
@@ -322,7 +319,6 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "agreement_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
         ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "agreement_name": "Orders"}],
-        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
     def read_table(table, *, target, context, **kwargs):
@@ -363,7 +359,6 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "agreement_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
         ],
         governance.DATA_AGREEMENT_TABLE: [],
-        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
     }
 
     def read_table(table, *, target, context, **kwargs):
@@ -412,7 +407,6 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
             },
         ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "agreement_name": "Orders"}],
-        governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
     }
 
     def read_table(table, *, target, context, **kwargs):

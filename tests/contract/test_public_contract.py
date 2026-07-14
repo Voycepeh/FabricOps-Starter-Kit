@@ -393,7 +393,6 @@ def test_package_root_expected_public_names_are_present() -> None:
         "run_table_guardrails",
         "widget_render_data_steward",
         "widget_render_data_agreement",
-        "widget_render_agreement_evidence",
     }
 
     assert expected_names <= set(fabricops_kit.__all__)
@@ -408,7 +407,6 @@ widget_modules = [
     "fabricops_kit.widgets.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules",
     "fabricops_kit.widgets.widget_enrich_table_metadata",
-    "fabricops_kit.widgets.widget_render_agreement_evidence",
     "fabricops_kit.widgets.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward",
     "fabricops_kit.widgets.widget_review_guardrail_governance",

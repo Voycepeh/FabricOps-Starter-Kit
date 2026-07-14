@@ -192,7 +192,7 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
     source["custom_fields"][0]["options"].append("B")
 
     assert config.data_steward_widget["custom_fields"][0]["options"] == ["A"]
-    assert "data_agreement_evidence" in config.metadata_tables
+    assert "data_agreement_evidence" not in config.metadata_tables
     assert {"recipient", "business_purpose"}.issubset(set(config.data_agreement_widget["visible_columns"]))
     assert not any(field.startswith("approved_usage_") for field in config.data_agreement_widget["visible_columns"])
     with pytest.raises(ValueError, match="paths must be a non-empty mapping"):
@@ -827,12 +827,7 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
     assert "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow" not in rows
-    assert (
-        rows["fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow"][
-            "function_type"
-        ]
-        == "private_function"
-    )
+    assert "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
     public_functions = {row["qualified_name"]: row for row in flow_data["public_functions"]}
     assert (

@@ -74,7 +74,6 @@ METADATA_FIELD_DESCRIPTIONS = {
 }
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
-    "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
     "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
     "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
@@ -1371,7 +1370,7 @@ def generate_release_function_reference_pages(
     rows = sorted(data["public_functions"], key=lambda row: str(row.get("function_name", "")).lower())
     output_dir.mkdir(parents=True, exist_ok=True)
     for old_page in output_dir.glob("*.md"):
-        old_page.unlink()
+        old_page.unlink(missing_ok=True)
     paths: list[Path] = []
     index_lines = [
         f"# Function reference for {release_version}",
@@ -2636,7 +2635,6 @@ ROLE_TAGS_BY_NAME = {
     "_setup_metadata_table_registry": ["internal_adapter", "metadata_registry_write_adapter"],
     "_detect_nested_metadata_delta_folders": ["internal_validator", "storage_guardrail_validator"],
     "_list_data_stewards": ["internal_resolver", "data_steward_resolver"],
-    "widget_render_agreement_evidence": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_agreement": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_render_data_steward": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_author_dq_rules": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
@@ -4021,7 +4019,6 @@ def _metadata_managed_by(table_name: str, column_name: str) -> str:
     table_owners = {
         "METADATA_DATA_ACCESS": "External access inventory",
         "METADATA_DATA_AGREEMENT": "Agreement widget",
-        "METADATA_DATA_AGREEMENT_EVIDENCE": "Agreement evidence widget",
         "METADATA_DATA_CATALOGUE": "Catalogue evidence writers",
         "METADATA_DATA_LINEAGE_TABLE": "Pipeline lineage writer",
         "METADATA_DATA_STEWARD": "Data steward widget",
@@ -4048,7 +4045,6 @@ def _metadata_table_purpose(table_name: str) -> str:
     purposes = {
         "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
         "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
-        "METADATA_DATA_AGREEMENT_EVIDENCE": "Supporting agreement files and related metadata captured during agreement intake.",
         "METADATA_DATA_CATALOGUE": "Observed table and column profiles used for catalogue review and runtime comparisons.",
         "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage rows written by pipeline runs.",
         "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
@@ -4984,7 +4980,7 @@ def main() -> None:
     # Legacy callable pages are outside this generator's output contract.
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
-        generated_page.unlink()
+        generated_page.unlink(missing_ok=True)
     update_generated_artifact_metadata(
         artifact_key="individual_function_reference_pages",
         label="Individual function reference pages",

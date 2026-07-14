@@ -50,13 +50,13 @@ FabricOps notebooks do not pass state through notebook memory or informal handov
 <div class="metadata-flow-card">
 <strong><a href="../guided-demo/run-environment-setup/"><code>00_env_config</code></a></strong>
 <p>Creates the <a href="../reference/metadata/">metadata foundation</a>.</p>
-<p>Writes or validates the 12 <a href="../reference/metadata/">metadata tables</a> used by the workflow.</p>
+<p>Writes or validates the <a href="../reference/metadata/">metadata tables</a> used by the workflow.</p>
 </div>
 
 <div class="metadata-flow-card">
 <strong><a href="../guided-demo/create-agreement/"><code>01_agreement</code></a></strong>
 <p>Captures <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and <a href="../reference/metadata/metadata_data_steward/">steward context</a>.</p>
-<p>Writes to <a href="../reference/metadata/">agreement metadata tables</a>, including <a href="../reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="../reference/metadata/metadata_data_steward/">steward context</a>, <a href="../reference/metadata/metadata_data_agreement/">approved usage</a>, and supporting <a href="../reference/metadata/metadata_data_agreement_evidence/">agreement files</a>.</p>
+<p>Writes to <a href="../reference/metadata/">agreement metadata tables</a>, including <a href="../reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="../reference/metadata/metadata_data_steward/">steward context</a>, and approved usage details captured on the agreement record.</p>
 </div>
 
 <div class="metadata-flow-card">

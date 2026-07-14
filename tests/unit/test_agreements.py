@@ -11,9 +11,6 @@ import pytest
 import fabricops_kit.widgets.shared as agreement
 import fabricops_kit.widgets.widget_render_data_agreement as agreement_widget
 import fabricops_kit.widgets.widget_render_data_steward as steward_widget
-import importlib
-
-evidence = importlib.import_module("fabricops_kit.widgets.widget_render_agreement_evidence")
 from tests.helpers import agreement_config, agreement_row, steward_row
 
 pytestmark = pytest.mark.unit
@@ -26,7 +23,6 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     steward_fields = agreement.get_widget_visible_fields(config, "data_steward_widget")
     agreement_fields = agreement.get_widget_visible_fields(config, "data_agreement_widget")
 
-    assert set(agreement.DATA_AGREEMENT_EVIDENCE_FIELDS).issuperset({"agreement_id", "agreement_version", "file_path"})
     assert "recipient" in agreement_fields
     assert not any(field.startswith("approved_usage_") for field in agreement_fields)
     assert "custom_fields_json" not in steward_fields + agreement_fields
@@ -63,8 +59,8 @@ def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypa
     assert all(write["env"] == "dev" for write in writes)
 
 
-def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monkeypatch):
-    """Verify agreement validation and evidence path parsing fail before writes."""
+def test_agreement_validation_fails_before_writes(monkeypatch):
+    """Verify agreement validation fails before writes."""
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
     monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
     monkeypatch.setattr(steward_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("invalid data should not be written"))
@@ -73,11 +69,6 @@ def test_agreement_validation_and_evidence_path_parsing_fail_before_writes(monke
         steward_widget._create_or_update_data_steward(spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_name=""))
     with pytest.raises(ValueError, match="recipient"):
         agreement_widget._create_or_update_data_agreement(spark=object(), config=agreement_config(), env="dev", values=agreement_row(recipient=""))
-
-    references = evidence._prepare_evidence_file_references("- Files/fabricops/evidence/a.pdf\n* Files/fabricops/evidence/b.docx\n")
-    assert [item["file_name"] for item in references] == ["a.pdf", "b.docx"]
-    with pytest.raises(ValueError, match="Files/"):
-        evidence._prepare_evidence_file_references("Files/fabricops/evidence/a.pdf\n/tmp/local.pdf")
 
 
 def test_stale_agreement_modules_are_removed_and_not_imported():

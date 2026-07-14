@@ -30,7 +30,7 @@ REQUIRED_TERMS = {
     "notebook registry", "notebook template", "agreement selection", "guardrail target selection", "profile mode", "static_data",
     "changing_data", "skip", "active pending governance review", "self-approved", "governance-approved",
     "superseded", "activation_state", "review_state", "run summary", "guardrail result", "lineage relationship",
-    "data contract", "data agreement", "data steward", "agreement evidence", "ownership", "business meaning",
+    "data contract", "data agreement", "data steward", "ownership", "business meaning",
     "usage context", "sensitivity", "classification", "governance review", "approval", "rejection", "replacement",
     "deactivation", "lifecycle", "audit", "metadata", "evidence", "review history", "support readiness",
     "Microsoft Fabric", "workspace", "Governance workspace", "Engineering Dev workspace", "Engineering Prod workspace",

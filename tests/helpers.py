@@ -45,7 +45,7 @@ def framework_config() -> FrameworkConfig:
 
 def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> SimpleNamespace:
     """Return agreement config."""
-    from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+    from fabricops_kit.widgets.shared import DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
 
     return SimpleNamespace(
         path_config=SimpleNamespace(paths={"dev": {"metadata": store("lakehouse", name="lh_metadata_dev")}}),
@@ -54,7 +54,6 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
             or {
                 "data_steward": DATA_STEWARD_TABLE,
                 "data_agreement": DATA_AGREEMENT_TABLE,
-                "data_agreement_evidence": DATA_AGREEMENT_EVIDENCE_TABLE,
             },
             data_steward_widget={
                 "visible_columns": ["steward_name", "steward_role", "contact", "effective_from", "effective_to"],

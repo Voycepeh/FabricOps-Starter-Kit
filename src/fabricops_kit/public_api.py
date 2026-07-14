@@ -18,7 +18,6 @@ SUPPORTED_PUBLIC_API = (
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-    "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.pipeline.profile_dataframe",
