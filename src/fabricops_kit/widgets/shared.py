@@ -1348,7 +1348,7 @@ def _evaluate_governance_readiness(
 
     Notes
     -----
-    The function intentionally re-reads agreement, catalogue, pipeline-run, and
+    The function intentionally re-reads catalogue, agreement, and
     evidence metadata from the configured ``metadata`` target so review notebooks can run in a separate session after ``02_pipeline``.
 
     """
@@ -1362,20 +1362,6 @@ def _evaluate_governance_readiness(
     profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
     agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
     agreement_version = str(_value(first_profile, "agreement_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
-
-    all_pipeline_rows = [
-        row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
-        if str(_value(row, "environment_name")) == environment
-    ]
-    related_pipeline_rows = [
-        row for row in all_pipeline_rows
-        if not agreement_id or str(_value(row, "agreement_id")) == agreement_id
-    ]
-    pipeline_rows = [
-        row for row in related_pipeline_rows
-        if not profile_run_id or str(_value(row, "run_id")) == profile_run_id
-    ]
-    latest_pipeline = _latest_row(pipeline_rows, "completed_at", "created_at", "run_id")
 
     agreement_rows = [
         row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
@@ -1399,11 +1385,6 @@ def _evaluate_governance_readiness(
         _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
     elif not agreement_rows:
         _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
-    if latest_pipeline is None:
-        _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
-    elif _status_is_failed(_value(latest_pipeline, "status")):
-        _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
-
     dq_statuses = {str(_value(row, "dq_status") or "").lower() for row in profile_rows}
     dq_error_count = sum(int(_value(row, "dq_error_rule_count", 0) or 0) for row in profile_rows)
     dq_failed_count = sum(int(_value(row, "dq_failed_rule_count", 0) or 0) for row in profile_rows)
@@ -1411,20 +1392,6 @@ def _evaluate_governance_readiness(
         _append_once(blockers, code="dq_failed", message="Failed DQ evidence blocks approval.")
     elif "warning" in dq_statuses or dq_failed_count > 0:
         _append_once(warnings, code="dq_warning", message="DQ warning evidence requires remediation review.")
-
-    if latest_pipeline is not None:
-        pipeline_dq_status = _value(latest_pipeline, "dq_status")
-        if _status_is_failed(pipeline_dq_status):
-            _append_once(blockers, code="dq_failed", message="Pipeline DQ status blocks approval.")
-        elif _status_is_warning(pipeline_dq_status):
-            _append_once(warnings, code="dq_warning", message="Pipeline DQ status requires remediation review.")
-
-        for field in ("source_guardrail_status", "target_guardrail_status"):
-            status = _value(latest_pipeline, field)
-            if _status_is_failed(status):
-                blockers.append({"code": f"{field}_failed", "message": f"{field} is {status}; schema drift or guardrail failure is present."})
-            elif _status_is_warning(status):
-                warnings.append({"code": f"{field}_warning", "message": f"{field} is {status}; schema drift is surfaced for review."})
 
     outcome = "rejected" if blockers else ("needs_remediation" if warnings else "approved")
     reviewed_at = _audit_timestamp_value(config)
@@ -1434,10 +1401,6 @@ def _evaluate_governance_readiness(
         "agreement_row_count": len(agreement_rows),
         "agreement_attachment_count": len(attachment_rows),
         "profile_column_count": len(profile_rows),
-        "pipeline_run_count": len(pipeline_rows),
-        "related_pipeline_run_count": len(related_pipeline_rows),
-        "prior_pipeline_run_ids": [str(_value(row, "run_id")) for row in related_pipeline_rows if str(_value(row, "run_id")) != profile_run_id],
-        "latest_pipeline_run": latest_pipeline or {},
     }
     row = {
         "review_id": f"{profile_run_id or 'profile'}-{uuid.uuid4().hex[:12]}",
@@ -1447,7 +1410,6 @@ def _evaluate_governance_readiness(
         "metadata_table_key": table_key,
         "profile_run_id": profile_run_id,
         "profile_stage": profile_stage,
-        "pipeline_run_id": str(_value(latest_pipeline or {}, "run_id")),
         "agreement_id": agreement_id,
         "agreement_version": agreement_version,
         "outcome": outcome,

@@ -241,6 +241,8 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "max_value",
         "is_sampled",
         "frequency_json",
+        "schema_fingerprint",
+        "profiled_at",
         "_committed_at",
     ]
     retired_catalogue_fields = {
@@ -248,7 +250,6 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "asset_kind",
         "profile_stage",
         "profile_status",
-        "profiled_at",
         "evidence_role",
         "distribution_type",
         "distribution_json",
@@ -297,11 +298,14 @@ def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tab
     """Verify governance metadata schemas include guardrail rules without failure tables."""
     schemas = metadata_schemas.metadata_table_schema_registry()
 
+    assert len(schemas) == 9
     assert governance.GUARDRAIL_RULES_TABLE in schemas
-    assert governance.PIPELINE_RUNS_TABLE in schemas
+    assert governance.GUARDRAIL_RESULTS_TABLE in schemas
     assert governance.DATA_ACCESS_TABLE in schemas
     assert governance.ENRICHMENT_RULES_TABLE in schemas
-    assert "run_summary_json" in schemas[governance.PIPELINE_RUNS_TABLE].fieldNames()
+    assert "METADATA_NOTEBOOK_REGISTRY" not in schemas
+    assert "METADATA_PIPELINE_RUNS" not in schemas
+    assert not hasattr(governance, "PIPELINE_RUNS_TABLE")
     assert not any("FAILURE" in table or "QUARANTINE" in table for table in schemas)
 
 
@@ -319,10 +323,6 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
     tables = {
         governance.CATALOGUE_TABLE: [
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "agr-1", "agreement_version": "1.0", "DQ_STATUS": "passed", "DQ_FAILED_RULE_COUNT": 0, "DQ_ERROR_RULE_COUNT": 0},
-        ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {"environment_name": "dev", "run_id": "run-001", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-01T00:00:00+00:00"},
-            {"environment_name": "dev", "run_id": "run-002", "agreement_id": "agr-1", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "passed", "completed_at": "2026-01-02T00:00:00+00:00"},
         ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "agreement_name": "Orders"}],
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [{"agreement_id": "agr-1", "agreement_version": "1.0", "evidence_type": "Email Approval"}],
@@ -346,8 +346,9 @@ def test_evaluate_governance_readiness_reads_metadata_and_writes_approved_outcom
     assert result["outcome"] == "approved"
     assert result["blockers"] == []
     assert writes == []
-    assert result["review"]["pipeline_run_id"] == "run-002"
+    assert "pipeline_run_id" not in result["review"]
     assert result["review"]["agreement_id"] == "agr-1"
+    assert result["evidence_summary"]["profile_column_count"] == 1
 
 
 def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(monkeypatch):
@@ -364,9 +365,6 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
     tables = {
         governance.CATALOGUE_TABLE: [
             {**selection, "profile_status": "success", "column_name": "order_id", "agreement_id": "missing", "agreement_version": "1.0", "DQ_STATUS": "failed", "DQ_FAILED_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1},
-        ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {"environment_name": "dev", "run_id": "run-003", "agreement_id": "missing", "status": "completed", "source_guardrail_status": "passed", "target_guardrail_status": "warning", "dq_status": "failed", "completed_at": "2026-01-03T00:00:00+00:00"},
         ],
         governance.DATA_AGREEMENT_TABLE: [],
         governance.DATA_AGREEMENT_EVIDENCE_TABLE: [],
@@ -390,19 +388,19 @@ def test_evaluate_governance_readiness_blocks_missing_agreement_and_failed_dq(mo
     assert result["outcome"] == "rejected"
     assert {item["code"] for item in result["blockers"]} == {"missing_agreement_metadata", "dq_failed"}
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
-    assert result["warnings"][0]["code"] == "target_guardrail_status_warning"
+    assert result["warnings"] == []
     assert writes == []
     assert result["review"]["outcome"] == "rejected"
 
 
-def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_status: str, *, catalogue_dq_status: str = ""):
+def _run_governance_readiness_for_catalogue_dq_status(monkeypatch, catalogue_dq_status: str):
     writes = []
     selection = {
         "environment_name": "dev",
         "dataset_name": "sales",
         "table_name": "orders",
         "metadata_table_key": "dev|sales|orders",
-        "profile_run_id": f"run-dq-{pipeline_dq_status or 'blank'}",
+        "profile_run_id": f"run-dq-{catalogue_dq_status or 'blank'}",
         "profile_stage": "target",
     }
     tables = {
@@ -414,20 +412,8 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
                 "agreement_id": "agr-dq",
                 "agreement_version": "1.0",
                 "DQ_STATUS": catalogue_dq_status,
-                "DQ_FAILED_RULE_COUNT": 0,
-                "DQ_ERROR_RULE_COUNT": 0,
-            },
-        ],
-        governance.PIPELINE_RUNS_TABLE: [
-            {
-                "environment_name": "dev",
-                "run_id": selection["profile_run_id"],
-                "agreement_id": "agr-dq",
-                "status": "completed",
-                "source_guardrail_status": "passed",
-                "target_guardrail_status": "passed",
-                "dq_status": pipeline_dq_status,
-                "completed_at": "2026-01-04T00:00:00+00:00",
+                "DQ_FAILED_RULE_COUNT": 1 if catalogue_dq_status == "warning" else 0,
+                "DQ_ERROR_RULE_COUNT": 1 if catalogue_dq_status == "failed" else 0,
             },
         ],
         governance.DATA_AGREEMENT_TABLE: [{"agreement_id": "agr-dq", "agreement_version": "1.0", "agreement_name": "Orders"}],
@@ -451,9 +437,9 @@ def _run_governance_readiness_for_pipeline_dq_status(monkeypatch, pipeline_dq_st
     return result, writes
 
 
-def test_evaluate_governance_readiness_blocks_pipeline_failed_dq_status(monkeypatch):
-    """Verify governance readiness blocks pipeline failed dq status."""
-    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "failed")
+def test_evaluate_governance_readiness_blocks_catalogue_failed_dq_status(monkeypatch):
+    """Verify governance readiness blocks catalogue failed dq status."""
+    result, writes = _run_governance_readiness_for_catalogue_dq_status(monkeypatch, "failed")
 
     assert result["outcome"] == "rejected"
     assert [item["code"] for item in result["blockers"]].count("dq_failed") == 1
@@ -462,9 +448,9 @@ def test_evaluate_governance_readiness_blocks_pipeline_failed_dq_status(monkeypa
     assert result["review"]["outcome"] == "rejected"
 
 
-def test_evaluate_governance_readiness_warns_on_pipeline_warning_dq_status(monkeypatch):
-    """Verify governance readiness warns on pipeline warning dq status."""
-    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "warning")
+def test_evaluate_governance_readiness_warns_on_catalogue_warning_dq_status(monkeypatch):
+    """Verify governance readiness warns on catalogue warning dq status."""
+    result, writes = _run_governance_readiness_for_catalogue_dq_status(monkeypatch, "warning")
 
     assert result["outcome"] == "needs_remediation"
     assert result["blockers"] == []
@@ -473,9 +459,9 @@ def test_evaluate_governance_readiness_warns_on_pipeline_warning_dq_status(monke
     assert result["review"]["outcome"] == "needs_remediation"
 
 
-def test_evaluate_governance_readiness_ignores_pipeline_passed_dq_status(monkeypatch):
-    """Verify governance readiness ignores pipeline passed dq status."""
-    result, writes = _run_governance_readiness_for_pipeline_dq_status(monkeypatch, "passed", catalogue_dq_status="passed")
+def test_evaluate_governance_readiness_ignores_catalogue_passed_dq_status(monkeypatch):
+    """Verify governance readiness ignores catalogue passed dq status."""
+    result, writes = _run_governance_readiness_for_catalogue_dq_status(monkeypatch, "passed")
 
     assert result["outcome"] == "approved"
     assert result["blockers"] == []
