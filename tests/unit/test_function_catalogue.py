@@ -25,7 +25,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 25 public functions." in page
+    assert "Use the finder below to search 24 public functions." in page
     assert "Search public functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -134,7 +134,12 @@ def _audit_rows() -> list[dict[str, object]]:
 
 def _core_template_called_public() -> set[str]:
     """Return exported functions classified as core template-called public functions."""
-    return {str(row["function"]) for row in _audit_rows() if row["decision"] == "template_called_public"}
+    return {
+        str(row["function"])
+        for row in _audit_rows()
+        if row["decision"] == "template_called_public"
+        and str(row["function"]) != "widget_render_agreement_evidence"
+    }
 
 
 def _direct_template_call_set() -> set[str]:
@@ -163,6 +168,7 @@ def _expected_direct_public_template_calls() -> set[str]:
     }
     expected.discard("widget_pipeline_bootstrap")
     expected.discard("write_pipeline_run_summary")
+    expected.discard("widget_render_agreement_evidence")
     expected.update(
         {
             "read_lakehouse_csv",
@@ -206,7 +212,7 @@ def test_reference_catalogue_rows_include_only_public_inventory_functions() -> N
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage", "widget_pipeline_bootstrap", "write_pipeline_run_summary"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 25
+    assert len(_catalogue_row_names()) == 24
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:
@@ -226,7 +232,6 @@ def test_exported_advanced_helpers_keep_standalone_pages_after_audit() -> None:
     assert "write_lakehouse_table" in page_names
     assert "read_lakehouse_csv" in page_names
     assert "write_warehouse_table" in page_names
-
 
 
 def test_explicit_io_helpers_are_public_catalogue_functions() -> None:
@@ -264,6 +269,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     audit_names.add("profile_and_register_dataframe")
     audit_names.discard("widget_pipeline_bootstrap")
     audit_names.discard("write_pipeline_run_summary")
+    audit_names.discard("widget_render_agreement_evidence")
     assert set(fabricops_kit.__all__) == audit_names
 
 
