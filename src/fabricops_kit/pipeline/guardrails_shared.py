@@ -17,7 +17,7 @@ from typing import Any
 from uuid import uuid4
 
 from fabricops_kit.config.shared import get_current_audit_timestamp
-from fabricops_kit.pipeline.shared import profile_dataframe_core
+from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
 from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
 
@@ -33,7 +33,7 @@ _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
 _ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
-GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
+GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 DQ_RULE_TYPES = [
     "not_null",
     "null_rate_below",
@@ -772,7 +772,7 @@ def enforce_profile_behavior(
     catalogue_df=None,
     current_profile=None,
     write_results: bool = True,
-    rules_table: str = "METADATA_GUARDRAIL_RULES",
+    rules_table: str = "METADATA_GUARDRAIL",
     rules_df=None,
 ) -> dict:
     """Enforce profile behavior guardrails using catalogue evidence as baseline.
@@ -784,7 +784,7 @@ def enforce_profile_behavior(
     dataframe : Any
         Spark DataFrame being checked.
     metadata_table : str
-        Metadata catalogue table, normally ``METADATA_DATA_CATALOGUE``.
+        Metadata profiled evidence table, normally ``METADATA_DATA_PROFILED``.
     dataset_name : str
         Dataset identifier used for rule and baseline lookup.
     table_name : str
@@ -815,14 +815,14 @@ def enforce_profile_behavior(
     env : str, optional
         Environment key used with ``config`` for configured metadata routing.
     catalogue_df : DataFrame or iterable of mappings, optional
-        Preloaded ``METADATA_DATA_CATALOGUE`` evidence.
+        Preloaded ``METADATA_DATA_PROFILED`` evidence.
     current_profile : DataFrame or iterable of mappings, optional
         Current profile evidence for static mode.
     write_results : bool, default=True
         Whether to append runtime outcome rows to
         ``METADATA_GUARDRAIL_RESULTS`` when ``config`` and ``env`` are
         supplied.
-    rules_table : str, default="METADATA_GUARDRAIL_RULES"
+    rules_table : str, default="METADATA_GUARDRAIL"
         Metadata table used to load approved profile behavior rules when
         ``rules_df`` is not supplied.
     rules_df : DataFrame or iterable of mappings, optional
@@ -833,13 +833,13 @@ def enforce_profile_behavior(
     -------
     dict
         Standard guardrail result plus catalogue profile evidence and comparison
-        details suitable for ``METADATA_DATA_CATALOGUE`` and
+        details suitable for ``METADATA_DATA_PROFILED`` and
         ``METADATA_GUARDRAIL_RESULTS``.
 
     Notes
     -----
     Baselines are never reset here. Current profile evidence is compared to the
-    previous accepted or passed catalogue evidence. Intentional blocked changes
+    previous accepted or passed profiled evidence. Intentional blocked changes
     should be reviewed in governance or handled by superseding/resetting the
     relevant guardrail rule.
 
@@ -891,8 +891,8 @@ def enforce_profile_behavior(
     effective_exclude_columns = _guardrail_exclude_columns(exclude_columns)
     if mode == "static_data":
         if current_profile is None:
-            from fabricops_kit.pipeline.shared import profile_dataframe_core
-            current_profile = profile_dataframe_core(dataframe, table_name, exclude_columns=effective_exclude_columns, config=config)
+            from fabricops_kit.pipeline.shared import build_profile_dataframe
+            current_profile = build_profile_dataframe(dataframe, exclude_columns=effective_exclude_columns)
         payload = _profile_payload_from_profile(current_profile, dataframe=dataframe, watermark_column="", watermark_value="__FULL_TABLE__")
         evidence_rows.append({"watermark_column": "", "watermark_value": "__FULL_TABLE__", "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
     else:
@@ -901,10 +901,10 @@ def enforce_profile_behavior(
         if not hasattr(dataframe, "filter") or not hasattr(dataframe, "select"):
             raise ValueError("changing_data profile behavior requires a Spark-like DataFrame")
         values = [row[0] for row in dataframe.select(watermark_column).distinct().collect()]
-        from fabricops_kit.pipeline.shared import profile_dataframe_core
+        from fabricops_kit.pipeline.shared import build_profile_dataframe
         for value in sorted(values, key=lambda item: str(item)):
             group_df = dataframe.filter(dataframe[watermark_column] == value)
-            group_profile = profile_dataframe_core(group_df, table_name, exclude_columns=effective_exclude_columns, config=config)
+            group_profile = build_profile_dataframe(group_df, exclude_columns=effective_exclude_columns)
             payload = _profile_payload_from_profile(group_profile, dataframe=group_df, watermark_column=watermark_column, watermark_value=_string_value(value))
             evidence_rows.append({"watermark_column": watermark_column, "watermark_value": _string_value(value), "row_count": payload.get("row_count"), "profile_payload_json": _json_dumps_stable(payload), "profile_hash": _profile_hash(payload)})
 
@@ -925,11 +925,11 @@ def enforce_profile_behavior(
     if not previous:
         status = "baseline_created"
         can_continue = True
-        message = "No previous accepted profile_behavior evidence was available; current profile establishes the catalogue baseline."
+        message = "No previous accepted profile_behavior evidence was available; current profile establishes the profiled baseline."
     elif differences:
         status = "failed" if normalized_severity == "blocking" else "warning"
         can_continue = normalized_severity == "warning"
-        message = "Profile behavior changed versus previous accepted catalogue evidence. Review and approve the change in governance, or supersede/reset the relevant guardrail rule if intentional."
+        message = "Profile behavior changed versus previous accepted profiled evidence. Review and approve the change in governance, or supersede/reset the relevant guardrail rule if intentional."
     else:
         status = "passed"
         can_continue = True
@@ -1410,7 +1410,7 @@ def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
 def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
     """Read current DQ guardrail rules from the configured metadata target."""
     schema = configured_lakehouse_schema(config, env, "metadata")
-    frame = read_lakehouse_table_core(GUARDRAIL_RULES_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
+    frame = read_lakehouse_table_core(GUARDRAIL_TABLE, target="metadata", schema=schema, spark_session=spark_session, context={"config": config, "env": env})
     if "guardrail_type" in set(getattr(frame, "columns", [])):
         _, F, _ = _spark_sql_helpers()
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
@@ -1438,7 +1438,7 @@ def _run_active_dq_guardrail(
         Runtime configuration containing the configured metadata lakehouse
         route from ``00_env_config``.
     env : str
-        Environment name used to read ``METADATA_GUARDRAIL_RULES`` from the
+        Environment name used to read ``METADATA_GUARDRAIL`` from the
         configured metadata target.
     dataset_name : str
         Dataset identifier used with ``table_name`` to scope active DQ guardrail rules
@@ -1468,7 +1468,7 @@ def _run_active_dq_guardrail(
     Notes
     -----
     This v1 guardrail reads active DQ guardrail rules from
-    ``METADATA_GUARDRAIL_RULES`` via the configured metadata route and writes the aggregate runtime
+    ``METADATA_GUARDRAIL`` via the configured metadata route and writes the aggregate runtime
     outcome to ``METADATA_GUARDRAIL_RESULTS`` when result writing is enabled. It
     does not quarantine rows, write row-level failure metadata, filter invalid
     rows, send alerts, or partially write targets.
@@ -1509,7 +1509,7 @@ def _prepare_dq_profile_input_rows(*, profile_df=None, df=None, table_name: str,
     if (profile_df is None) == (df is None):
         raise ValueError("Provide exactly one of profile_df or df.")
     if profile_df is None:
-        profile_df = profile_dataframe_core(df, table_name=table_name, config=config)
+        profile_df = build_profile_dataframe(df)
     cols = set(profile_df.columns)
     if {"column_name", "data_type", "row_count", "null_count", "distinct_count"}.issubset(cols):
         return profile_df

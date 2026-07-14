@@ -218,7 +218,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         approved_by="reviewer@example.com",
     )
 
-    assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_RULES_TABLE]
+    assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_TABLE]
     assert writes[0][1].collect()[0]["guardrail_type"] == "dq"
     loaded = dq_runtime._load_active_dq_rules(writes[0][1], table_name="orders")
 
@@ -552,7 +552,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},
@@ -565,7 +565,7 @@ def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(
     )
 
     assert result == {"orders": "written"}
-    assert writes[0][2:4] == ("metadata", "METADATA_DATA_CATALOGUE")
+    assert writes[0][2:4] == ("metadata", "METADATA_DATA_PROFILED")
     assert writes[0][4]["mode"] == "append"
     assert "stability_status" not in writes[0][0].columns
     assert "freshness_status" not in writes[0][0].columns
@@ -587,7 +587,7 @@ def test_write_catalogue_evidence_writes_explicit_fabric_store_target(spark_sess
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "open")], "id int, status string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
     definitions = {
         "explicit": {
             "dataset_name": "sales",
@@ -620,7 +620,7 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 
     monkeypatch.setattr(pipeline_shared, "write_lakehouse_table_core", lambda *args, **kwargs: None)
     df = spark_session.createDataFrame([(1,)], "id int")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     with pytest.raises(KeyError):
         pipeline_shared.write_catalogue_evidence(
@@ -673,7 +673,7 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
         lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)),
     )
     df = spark_session.createDataFrame([(1, "2026-06-14"), (2, "2026-06-15")], "id int, business_date string")
-    profile_df = profile_dataframe(df, "orders")
+    profile_df = profile_dataframe(df)
 
     result = pipeline_shared.write_catalogue_evidence(
         {"orders": profile_df},

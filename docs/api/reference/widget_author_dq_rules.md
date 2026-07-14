@@ -90,7 +90,7 @@ Notebook-facing state, records, display rows, or persisted metadata rows produce
 
 ### Return interpretation
 
-The widget returns mutable preview records; approved saves write guardrail rule intent to METADATA_GUARDRAIL_RULES.
+The widget returns mutable preview records; approved saves write guardrail rule intent to METADATA_GUARDRAIL.
 
 ## Raises / Errors
 
@@ -122,9 +122,15 @@ No related guides documented.
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.1.0 |
+
 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

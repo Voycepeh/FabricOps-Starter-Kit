@@ -115,6 +115,12 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 | Contract risk | Live |
 | Live-critical dependencies | 14 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.1.0 |
+
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
@@ -138,5 +144,5 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

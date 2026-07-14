@@ -44,8 +44,6 @@ nav:
       - Enrichment Rules: reference/metadata/metadata_enrichment_rules.md
       - Guardrail Results: reference/metadata/metadata_guardrail_results.md
       - Guardrail Rules: reference/metadata/metadata_guardrail_rules.md
-      - Notebook Registry: reference/metadata/metadata_notebook_registry.md
-      - Pipeline Runs: reference/metadata/metadata_pipeline_runs.md
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md

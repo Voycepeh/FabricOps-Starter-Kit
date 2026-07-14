@@ -86,197 +86,110 @@ def is_min_max_supported_type(data_type: str) -> bool:
     )
 
 
-def _numeric_bin_edges(df, column_name: str, *, bin_count: int = 10) -> list[float]:
-    values = df.select(column_name).where(f"`{column_name}` is not null")
-    try:
-        quantiles = values.approxQuantile(column_name, [i / bin_count for i in range(bin_count + 1)], 0.01)
-    except Exception:
-        return []
-    edges: list[float] = []
-    for value in quantiles:
-        if value is not None and (not edges or float(value) > edges[-1]):
-            edges.append(float(value))
-    return edges if len(edges) >= 2 else []
 
 
-def _build_numeric_distribution(df, column_name: str, edges: list[float]) -> dict[str, list[float] | list[int]] | None:
+PROFILE_DATAFRAME_COLUMNS = [
+    "COLUMN_NAME",
+    "DATA_TYPE",
+    "ROW_COUNT",
+    "NON_NULL_COUNT",
+    "NULL_COUNT",
+    "NULL_PERCENT",
+    "DISTINCT_COUNT",
+    "DISTINCT_PERCENT",
+    "MEAN",
+    "STDDEV",
+    "MIN_VALUE",
+    "PERCENTILE_25",
+    "MEDIAN",
+    "PERCENTILE_75",
+    "MAX_VALUE",
+]
+
+
+def _profile_column_expr(name: str):
+    """Return a safely quoted Spark column expression."""
     from pyspark.sql import functions as F
 
-    cleaned_edges: list[float] = []
-    for edge in edges:
-        value = float(edge)
-        if not cleaned_edges or value > cleaned_edges[-1]:
-            cleaned_edges.append(value)
-    if len(cleaned_edges) < 2:
-        return None
-
-    bucket_expr = None
-    numeric_value = F.col(column_name).cast("double")
-    for index, (lower, upper) in enumerate(zip(cleaned_edges[:-1], cleaned_edges[1:])):
-        if index == 0:
-            condition = numeric_value < F.lit(upper)
-        elif index == len(cleaned_edges) - 2:
-            condition = numeric_value >= F.lit(lower)
-        else:
-            condition = (numeric_value >= F.lit(lower)) & (numeric_value < F.lit(upper))
-        bucket_expr = F.when(condition, F.lit(index)) if bucket_expr is None else bucket_expr.when(condition, F.lit(index))
-
-    bucketed = df.where(F.col(column_name).isNotNull()).select(bucket_expr.alias("_profile_bucket"))
-    rows = bucketed.where(F.col("_profile_bucket").isNotNull()).groupBy("_profile_bucket").count().collect()
-    counts = [0 for _ in range(len(cleaned_edges) - 1)]
-    for row in rows:
-        bucket = int(row["_profile_bucket"])
-        if 0 <= bucket < len(counts):
-            counts[bucket] = int(row["count"])
-    return {"bin_edges": cleaned_edges, "bin_counts": counts}
+    return F.col(f"`{name.replace('`', '``')}`")
 
 
-def _build_categorical_distribution(
-    df,
-    column_name: str,
-    *,
-    top_n: int = 20,
-    categories: list[str] | set[str] | tuple[str, ...] | None = None,
-) -> dict[str, Any] | None:
+def _profile_percent_expr(numerator, denominator):
+    """Return a rounded percentage expression protected against zero rows."""
     from pyspark.sql import functions as F
 
-    non_null = df.where(F.col(column_name).isNotNull())
-    total_count = int(non_null.agg(F.count(F.lit(1)).alias("total_count")).collect()[0]["total_count"])
-    if total_count == 0:
-        return None
-
-    if categories is not None:
-        selected_categories = [str(category) for category in categories]
-        if not selected_categories:
-            return {"category_counts": {}, "other_count": total_count, "new_categories": []}
-        grouped = non_null.groupBy(F.col(column_name).cast("string").alias("_profile_category")).count()
-        rows = grouped.where(F.col("_profile_category").isin(selected_categories)).collect()
-        category_counts = {category: 0 for category in selected_categories}
-        for row in rows:
-            category_counts[str(row["_profile_category"])] = int(row["count"])
-        kept_count = int(sum(category_counts.values()))
-        new_rows = grouped.where(~F.col("_profile_category").isin(selected_categories)).orderBy(F.col("count").desc(), F.col("_profile_category").asc()).limit(top_n).collect()
-        return {
-            "category_counts": category_counts,
-            "other_count": max(total_count - kept_count, 0),
-            "new_categories": [str(row["_profile_category"]) for row in new_rows],
-        }
-
-    grouped = non_null.groupBy(F.col(column_name).cast("string").alias("_profile_category")).count().orderBy(F.col("count").desc(), F.col("_profile_category").asc())
-    rows = grouped.limit(top_n).collect()
-    if not rows:
-        return None
-    category_counts = {str(row["_profile_category"]): int(row["count"]) for row in rows}
-    return {"category_counts": category_counts, "other_count": max(total_count - int(sum(category_counts.values())), 0)}
+    return F.when(denominator == 0, F.lit(0.0)).otherwise(F.round((numerator.cast("double") / denominator.cast("double")) * F.lit(100.0), 3))
 
 
-def build_distribution_summaries(
-    df,
-    eligible_columns: list[str],
-    dtype_map: dict[str, str],
-    *,
-    include_distributions: bool,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None,
-    distribution_bin_edges: dict[str, list[float]] | None,
-    categorical_categories: dict[str, list[str]] | None,
-    categorical_top_n: int,
-) -> dict[str, tuple[str, dict[str, Any]]]:
-    """Build optional numeric and categorical distribution summaries."""
-    if not include_distributions:
-        return {}
-
-    selected = set(distribution_columns) if distribution_columns is not None else set(eligible_columns)
-    summaries: dict[str, tuple[str, dict[str, Any]]] = {}
-    for column_name in eligible_columns:
-        if column_name not in selected:
-            continue
-        lowered_type = (dtype_map[column_name] or "").lower()
-        if any(token in lowered_type for token in ("tinyint", "smallint", "int", "bigint", "float", "double", "decimal")):
-            edges = (distribution_bin_edges or {}).get(column_name) or _numeric_bin_edges(df, column_name)
-            distribution = _build_numeric_distribution(df, column_name, edges)
-            if distribution is not None:
-                summaries[column_name] = ("numeric", distribution)
-        elif any(token in lowered_type for token in ("string", "char", "varchar", "boolean")):
-            distribution = _build_categorical_distribution(df, column_name, top_n=categorical_top_n, categories=(categorical_categories or {}).get(column_name))
-            if distribution is not None:
-                summaries[column_name] = ("categorical", distribution)
-    return summaries
-
-
-def profile_dataframe_core(
-    df,
-    table_name: str,
-    *,
-    exclude_columns=None,
-    run_timestamp_timezone: str | None = None,
-    config: Any = None,
-    include_distributions: bool = False,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None = None,
-    distribution_bin_edges: dict[str, list[float]] | None = None,
-    categorical_categories: dict[str, list[str]] | None = None,
-    categorical_top_n: int = 20,
-):
-    """Build canonical DQ-ready profiling rows from a Spark DataFrame."""
+def build_profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = True):
+    """Return structural and statistical profile rows for a Spark DataFrame."""
     from pyspark.sql import functions as F
+    from pyspark.sql.types import DateType, NumericType, StringType, TimestampType
 
-    run_timestamp_timezone = get_audit_timezone(config=config, timezone_name=run_timestamp_timezone)
     eligible_columns = resolve_profiled_columns(df, exclude_columns=exclude_columns)
     if not eligible_columns:
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
 
-    dtype_map = dict(df.dtypes)
-    row_count = int(df.count())
-    distributions = build_distribution_summaries(
-        df,
-        eligible_columns,
-        dtype_map,
-        include_distributions=include_distributions,
-        distribution_columns=distribution_columns,
-        distribution_bin_edges=distribution_bin_edges,
-        categorical_categories=categorical_categories,
-        categorical_top_n=categorical_top_n,
-    )
+    fields = {field.name: field for field in df.schema.fields}
+    distinct_fn = F.approx_count_distinct if approximate_distinct else F.count_distinct
+    agg_exprs = [F.count(F.lit(1)).cast("long").alias("__ROW_COUNT")]
 
-    agg_exprs = []
     for column_name in eligible_columns:
-        agg_exprs.append(F.sum(F.col(column_name).isNull().cast("int")).alias(f"{column_name}_NULL_COUNT"))
-        agg_exprs.append(F.countDistinct(F.col(column_name)).alias(f"{column_name}_DISTINCT_COUNT"))
-        if is_min_max_supported_type(dtype_map[column_name]):
-            agg_exprs.append(F.min(F.col(column_name)).alias(f"{column_name}_MIN"))
-            agg_exprs.append(F.max(F.col(column_name)).alias(f"{column_name}_MAX"))
+        col = _profile_column_expr(column_name)
+        data_type = fields[column_name].dataType
+        prefix = f"__{column_name}__"
+        agg_exprs.extend([
+            F.count(col).cast("long").alias(f"{prefix}NON_NULL_COUNT"),
+            F.sum(col.isNull().cast("long")).cast("long").alias(f"{prefix}NULL_COUNT"),
+            distinct_fn(col).cast("long").alias(f"{prefix}DISTINCT_COUNT"),
+        ])
+        if isinstance(data_type, NumericType):
+            agg_exprs.extend([
+                F.avg(col).cast("double").alias(f"{prefix}MEAN"),
+                F.stddev_samp(col).cast("double").alias(f"{prefix}STDDEV"),
+                F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
+                F.percentile_approx(col, [0.25, 0.5, 0.75]).alias(f"{prefix}PERCENTILES"),
+                F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
+            ])
+        elif isinstance(data_type, DateType | TimestampType | StringType):
+            agg_exprs.extend([
+                F.min(col).cast("string").alias(f"{prefix}MIN_VALUE"),
+                F.max(col).cast("string").alias(f"{prefix}MAX_VALUE"),
+            ])
 
     agg_df = df.agg(*agg_exprs)
-    denominator = F.lit(row_count if row_count > 0 else 1).cast("double")
-
+    row_count = F.col("__ROW_COUNT")
     rows = []
     for column_name in eligible_columns:
-        select_exprs = [
-            F.lit(table_name).alias("TABLE_NAME"),
-            build_audit_timestamp_expr(timezone_name=run_timestamp_timezone).alias("RUN_TIMESTAMP"),
+        data_type = fields[column_name].dataType
+        prefix = f"__{column_name}__"
+        non_null_count = F.coalesce(F.col(f"{prefix}NON_NULL_COUNT"), F.lit(0)).cast("long")
+        null_count = F.coalesce(F.col(f"{prefix}NULL_COUNT"), F.lit(0)).cast("long")
+        distinct_count = F.coalesce(F.col(f"{prefix}DISTINCT_COUNT"), F.lit(0)).cast("long")
+        percentile = F.col(f"{prefix}PERCENTILES") if isinstance(data_type, NumericType) else None
+        supports_min_max = isinstance(data_type, NumericType | DateType | TimestampType | StringType)
+        rows.append(agg_df.select(
             F.lit(column_name).alias("COLUMN_NAME"),
-            F.lit(dtype_map[column_name]).alias("DATA_TYPE"),
-            F.lit(row_count).cast("long").alias("ROW_COUNT"),
-            F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("long").alias("NULL_COUNT"),
-            F.round((F.coalesce(F.col(f"{column_name}_NULL_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("NULL_PERCENT"),
-            F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("long").alias("DISTINCT_COUNT"),
-            F.round((F.coalesce(F.col(f"{column_name}_DISTINCT_COUNT"), F.lit(0)).cast("double") / denominator) * 100, 3).alias("DISTINCT_PERCENT"),
-            F.col(f"{column_name}_MIN").cast("string").alias("MIN_VALUE") if f"{column_name}_MIN" in agg_df.columns else F.lit(None).cast("string").alias("MIN_VALUE"),
-            F.col(f"{column_name}_MAX").cast("string").alias("MAX_VALUE") if f"{column_name}_MAX" in agg_df.columns else F.lit(None).cast("string").alias("MAX_VALUE"),
-        ]
-        if include_distributions:
-            distribution_type, distribution_payload = distributions.get(column_name, (None, None))
-            select_exprs.extend(
-                [
-                    F.lit(distribution_type).cast("string").alias("DISTRIBUTION_TYPE"),
-                    F.lit(json.dumps(distribution_payload, sort_keys=True) if distribution_payload is not None else None).cast("string").alias("DISTRIBUTION_JSON"),
-                ]
-            )
-        rows.append(agg_df.select(*select_exprs))
+            F.lit(data_type.simpleString()).alias("DATA_TYPE"),
+            row_count.cast("long").alias("ROW_COUNT"),
+            non_null_count.alias("NON_NULL_COUNT"),
+            null_count.alias("NULL_COUNT"),
+            _profile_percent_expr(null_count, row_count).alias("NULL_PERCENT"),
+            distinct_count.alias("DISTINCT_COUNT"),
+            _profile_percent_expr(distinct_count, row_count).alias("DISTINCT_PERCENT"),
+            (F.col(f"{prefix}MEAN") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("MEAN"),
+            (F.col(f"{prefix}STDDEV") if isinstance(data_type, NumericType) else F.lit(None).cast("double")).alias("STDDEV"),
+            (F.col(f"{prefix}MIN_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MIN_VALUE"),
+            (percentile.getItem(0).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_25"),
+            (percentile.getItem(1).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("MEDIAN"),
+            (percentile.getItem(2).cast("double") if percentile is not None else F.lit(None).cast("double")).alias("PERCENTILE_75"),
+            (F.col(f"{prefix}MAX_VALUE") if supports_min_max else F.lit(None).cast("string")).alias("MAX_VALUE"),
+        ))
 
     out = rows[0]
-    for next_row in rows[1:]:
-        out = out.unionByName(next_row)
-    return out
+    for row in rows[1:]:
+        out = out.unionByName(row)
+    return out.select(*PROFILE_DATAFRAME_COLUMNS)
 
 from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail
 from fabricops_kit.pipeline.guardrails_shared import (
@@ -287,9 +200,9 @@ from fabricops_kit.pipeline.guardrails_shared import (
     _check_schema_runtime,
     _check_schema_rule_runtime,
 )
+PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
-METADATA_PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 
 
@@ -902,14 +815,13 @@ def _run_table_guardrails_workflow(
         ``df``, and ``expected_schema``. Optional keys such as
         ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``,
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
-        ``distribution_columns``, and ``exclude_columns`` control the guardrail
-        behavior.
+        and ``exclude_columns`` control the guardrail behavior.
     run_id : str, optional
         Current pipeline run identifier. When omitted, the active context from
-        :func:`widget_pipeline_bootstrap` is used.
+        an active pipeline context is used.
     spark_session : Any, optional
         Spark session used by profile behavior and DQ helpers. When omitted,
-        the active context from :func:`widget_pipeline_bootstrap` is used.
+        the active context from an active pipeline context is used.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -954,7 +866,7 @@ def _run_table_guardrails_workflow(
         agreement_id = agreement_id or active.agreement_id
         agreement_version = agreement_version or active.agreement_version
     if spark_session is None:
-        raise ValueError("spark_session is required unless widget_pipeline_bootstrap has established an active context.")
+        raise ValueError("spark_session is required unless an active pipeline context is established.")
     if not run_id:
         raise ValueError("run_id is required for in-memory profile grouping; use the active pipeline context or pass a real run_id.")
     normalized_mode = str(mode or "profile").lower().strip()
@@ -979,16 +891,11 @@ def _run_table_guardrails_workflow(
         stage = table_config.get("stage", "target")
         dataframe = table_config["df"]
 
-        profiles[table_key] = profile_dataframe_core(
+        profiles[table_key] = build_profile_dataframe(
             dataframe,
-            table_name=table_name,
             # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
             # and unions those defaults with any table-specific exclude_columns.
             exclude_columns=table_config.get("exclude_columns"),
-            include_distributions=True,
-            distribution_columns=table_config.get("distribution_columns"),
-            config=config,
-            run_timestamp_timezone=table_config.get("run_timestamp_timezone"),
         )
 
         guardrail_rules_df = table_config.get("guardrail_rules_df")
@@ -1044,7 +951,7 @@ def _run_table_guardrails_workflow(
             env=env,
             current_profile=profiles[table_key],
             write_results=table_config.get("write_profile_behavior_results", True),
-            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL_RULES"),
+            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
             rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
         )
 
@@ -1171,10 +1078,10 @@ def write_catalogue_evidence(
     freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
     stability_results: Mapping[str, Mapping[str, Any]] | None = None,
     dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    metadata_table: str = CATALOGUE_TABLE,
+    metadata_table: str = PROFILED_TABLE,
     mode: str = "append",
 ) -> dict[str, str]:
-    """Write observed profile evidence to the metadata data catalogue.
+    """Write observed profile evidence to the metadata profiled evidence.
 
     Parameters
     ----------
@@ -1193,8 +1100,8 @@ def write_catalogue_evidence(
         Governance context added to each catalogue row.
     schema_results, freshness_results, stability_results, dq_results : mapping, optional
         Runtime guardrail results are accepted by this writer but are not
-        written to ``METADATA_DATA_CATALOGUE``.
-    metadata_table : str, default="METADATA_DATA_CATALOGUE"
+        written to ``METADATA_DATA_PROFILED``.
+    metadata_table : str, default="METADATA_DATA_PROFILED"
         Metadata table to append.
     mode : str, default="append"
         Physical write mode for catalogue evidence.
@@ -1281,284 +1188,3 @@ def write_catalogue_evidence(
             )
         statuses[name] = "written"
     return statuses
-
-
-def _write_pipeline_lineage_workflow(
-    *,
-    spark: Any,
-    context: dict[str, Any] | None = None,
-    source_definitions: Mapping[str, Mapping[str, Any]],
-    target_definitions: Mapping[str, Mapping[str, Any]],
-    relationships: list[Mapping[str, Any]] | None = None,
-    dataset_name: str = "",
-    agreement_id: str = "",
-    agreement_version: str = "",
-    metadata_table: str = LINEAGE_TABLE,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Write many-to-many source-to-target lineage evidence.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession
-        Spark session used to create lineage rows.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    source_definitions, target_definitions : mapping
-        Source and target definitions keyed by alias.
-    relationships : list of mapping, optional
-        Many-to-many lineage relationships. Each item may contain ``sources``,
-        ``targets``, ``operation``, and ``description``. When omitted, every
-        source is linked to every target.
-    dataset_name, agreement_id, agreement_version : str, optional
-        Governance context embedded in lineage payloads.
-    metadata_table : str, default="METADATA_DATA_LINEAGE_TABLE"
-        Metadata lineage table.
-    mode : str, default="append"
-        Write mode for lineage evidence.
-
-    Returns
-    -------
-    dict[str, Any]
-        Status, row count, and written rows.
-
-    """
-    config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = _runtime_audit_fields(config, env, resolved_context)
-    if relationships is None:
-        relationships = [
-            {
-                "sources": list(source_definitions),
-                "targets": list(target_definitions),
-                "operation": "pipeline_transform",
-                "description": "User-defined pipeline transformation.",
-            }
-        ]
-    rows: list[dict[str, Any]] = []
-    sequence = 0
-    for relationship in relationships:
-        for source_alias in relationship.get("sources", []):
-            for target_alias in relationship.get("targets", []):
-                sequence += 1
-                source_table = _definition_name(str(source_alias), source_definitions[str(source_alias)])
-                target_table = _definition_name(str(target_alias), target_definitions[str(target_alias)])
-                payload = {
-                    "agreement_id": agreement_id,
-                    "agreement_version": agreement_version,
-                                                "source_alias": source_alias,
-                    "target_alias": target_alias,
-                    "operation": relationship.get("operation", "pipeline_transform"),
-                    "description": relationship.get("description", ""),
-                }
-                rows.append(
-                    {
-                        "lineage_id": f"{audit['_activity_id']}_{sequence}",
-                        "dataset_name": dataset_name
-                        or str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
-                            "source_table": source_table,
-                        "target_table": target_table,
-                        "source_table_key": _build_metadata_table_key(
-                            env,
-                            str(source_definitions[str(source_alias)].get("dataset_name") or source_table),
-                            source_table,
-                        ),
-                        "target_table_key": _build_metadata_table_key(
-                            env,
-                            str(target_definitions[str(target_alias)].get("dataset_name") or target_table),
-                            target_table,
-                        ),
-                        "transformation_steps_json": json.dumps(payload, default=str, sort_keys=True),
-                        **audit,
-                    }
-                )
-    if rows:
-        write_lakehouse_table_core(
-            spark.createDataFrame([coerce_metadata_row_types(metadata_table, row) for row in rows]),
-            metadata_table,
-            target="metadata",
-            schema=configured_lakehouse_schema(config, env, "metadata"),
-            context=resolved_context,
-            mode=mode,
-        )
-    return {"status": "written" if rows else "skipped", "row_count": len(rows), "rows": rows}
-
-
-def _write_pipeline_run_summary_workflow(
-    *,
-    spark: Any | None = None,
-    context: dict[str, Any] | None = None,
-    agreement_id: str = "",
-    agreement_version: str = "",
-    notebook_type: str = "02_pipeline",
-    started_at: str | None = None,
-    completed_at: str | None = None,
-    status: str = "completed",
-    source_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    target_definitions: Mapping[str, Mapping[str, Any]] | None = None,
-    source_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_schema_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_freshness_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_stability_results: Mapping[str, Mapping[str, Any]] | None = None,
-    source_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    target_dq_results: Mapping[str, Mapping[str, Any]] | None = None,
-    lineage_status: str = "not_run",
-    catalogue_status: str = "not_run",
-    message: str = "",
-    source_guardrail_results: Mapping[str, Any] | None = None,
-    target_guardrail_results: Mapping[str, Any] | None = None,
-    target_write_status: Mapping[str, Any] | None = None,
-    lineage_result: Mapping[str, Any] | None = None,
-    metadata_table: str = METADATA_PIPELINE_RUNS_TABLE,
-    mode: str = "append",
-) -> dict[str, Any]:
-    """Write a pipeline runtime summary to metadata.
-
-    Parameters
-    ----------
-    spark : pyspark.sql.SparkSession, optional
-        Spark session used to create the one-row summary DataFrame. When omitted,
-        the active context from :func:`widget_pipeline_bootstrap` is used.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    agreement_id, agreement_version, notebook_type : str, optional
-        Agreement and notebook registry context.
-    started_at, completed_at : str, optional
-        Runtime timestamps. Defaults to current UTC time when omitted.
-    status : str, default="completed"
-        Overall pipeline status.
-    source_definitions, target_definitions : mapping, optional
-        Dataset definitions used to compute source and target counts.
-    source_schema_results, target_schema_results, source_freshness_results, target_freshness_results, source_stability_results, target_stability_results, source_dq_results, target_dq_results : mapping, optional
-        Guardrail result dictionaries included in the JSON summary.
-    lineage_status, catalogue_status, message : str, optional
-        Evidence write statuses and support message.
-    source_guardrail_results, target_guardrail_results : mapping, optional
-        Template-facing guardrail result bundles returned by
-        :func:`run_table_guardrails`. When supplied, schema, freshness, profile
-        behavior, DQ, catalogue, and status fields are derived automatically.
-    target_write_status, lineage_result : mapping, optional
-        Template-facing write and lineage outcomes included in the run summary.
-    metadata_table : str, default="METADATA_PIPELINE_RUNS"
-        Metadata table that stores runtime summaries.
-    mode : str, default="append"
-        Write mode for the runtime summary row.
-
-    Returns
-    -------
-    dict[str, Any]
-        The summary row that was written.
-
-    Notes
-    -----
-    The row is written via ``write_lakehouse_table(..., metadata_table,
-    target="metadata", context=resolved_context, mode="append")`` so runtime
-    evidence never relies on a default attached lakehouse.
-
-    """
-    from ..widgets.shared import pipeline_active_context
-
-    active = pipeline_active_context()
-    if active is not None:
-        context = context if context is not None else active.context
-        spark = spark if spark is not None else active.spark_session
-        agreement_id = agreement_id or active.agreement_id
-        agreement_version = agreement_version or active.agreement_version
-        notebook_type = notebook_type or active.notebook_type
-        started_at = started_at or active.pipeline_started_at
-        source_definitions = source_definitions or active.source_definitions
-        target_definitions = target_definitions or active.target_definitions
-    if spark is None:
-        raise ValueError("spark is required unless widget_pipeline_bootstrap has established an active context.")
-
-    source_guardrail_results = source_guardrail_results or {}
-    target_guardrail_results = target_guardrail_results or {}
-    source_schema_results = source_schema_results or source_guardrail_results.get("schema_results")
-    target_schema_results = target_schema_results or target_guardrail_results.get("schema_results")
-    source_freshness_results = source_freshness_results or source_guardrail_results.get("freshness_results")
-    target_freshness_results = target_freshness_results or target_guardrail_results.get("freshness_results")
-    source_stability_results = source_stability_results or source_guardrail_results.get("stability_results")
-    target_stability_results = target_stability_results or target_guardrail_results.get("stability_results")
-    source_dq_results = source_dq_results or source_guardrail_results.get("dq_results")
-    target_dq_results = target_dq_results or target_guardrail_results.get("dq_results")
-    source_definitions = source_definitions or source_guardrail_results.get("evidence_definitions")
-    target_definitions = target_definitions or target_guardrail_results.get("evidence_definitions")
-    if lineage_result is not None:
-        lineage_status = str(lineage_result.get("status", lineage_status))
-    if source_guardrail_results or target_guardrail_results:
-        if status == "completed":
-            status = (
-                "succeeded"
-                if all(
-                    bool(result.get("can_continue", True))
-                    for result in (source_guardrail_results, target_guardrail_results)
-                )
-                else "failed"
-            )
-        if catalogue_status == "not_run" and any(
-            result.get("catalogue_status") for result in (source_guardrail_results, target_guardrail_results)
-        ):
-            catalogue_status = "written"
-    if target_write_status and not message:
-        message = json.dumps({"target_write_status": target_write_status}, default=str, sort_keys=True)
-
-    config, env, resolved_context = resolve_fabric_context(context=context)
-    audit = _runtime_audit_fields(config, env, resolved_context)
-    completed = _timestamp_value(completed_at, config=config)
-    if not started_at:
-        raise ValueError("started_at is required for pipeline run summaries; pass the pipeline bootstrap start time or an explicit runtime start timestamp.")
-    started = _timestamp_value(started_at, config=config)
-    sources = source_definitions or {}
-    targets = target_definitions or {}
-    source_guardrail_status = _summary_status(
-        {**(source_schema_results or {}), **(source_freshness_results or {}), **(source_stability_results or {})}
-    )
-    target_guardrail_status = _summary_status(
-        {**(target_schema_results or {}), **(target_freshness_results or {}), **(target_stability_results or {})}
-    )
-    dq_status = _summary_status({**(source_dq_results or {}), **(target_dq_results or {})})
-    run_summary = {
-        "source_schema_results": source_schema_results or {},
-        "target_schema_results": target_schema_results or {},
-        "source_freshness_results": source_freshness_results or {},
-        "target_freshness_results": target_freshness_results or {},
-        "source_stability_results": source_stability_results or {},
-        "target_stability_results": target_stability_results or {},
-        "source_dq_results": source_dq_results or {},
-        "target_dq_results": target_dq_results or {},
-        "source_tables": [_definition_name(name, definition) for name, definition in sources.items()],
-        "target_tables": [_definition_name(name, definition) for name, definition in targets.items()],
-        "target_write_status": dict(target_write_status or {}),
-        "lineage_result": dict(lineage_result or {}),
-    }
-    row = {
-        "agreement_id": agreement_id,
-        "agreement_version": agreement_version,
-        "notebook_type": notebook_type,
-        "environment_name": env,
-        "started_at": started,
-        "completed_at": completed,
-        "status": status,
-        "source_count": len(sources),
-        "target_count": len(targets),
-        "source_guardrail_status": source_guardrail_status,
-        "target_guardrail_status": target_guardrail_status,
-        "dq_status": dq_status,
-        "lineage_status": lineage_status,
-        "catalogue_status": catalogue_status,
-        "message": message,
-        "run_summary_json": json.dumps(run_summary, default=str, sort_keys=True),
-        **audit,
-    }
-    write_lakehouse_table_core(
-        spark.createDataFrame([coerce_metadata_row_types(metadata_table, row)]),
-        metadata_table,
-        target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        context=resolved_context,
-        mode=mode,
-    )
-    return row

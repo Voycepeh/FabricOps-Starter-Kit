@@ -124,7 +124,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     """Verify guardrail schemas keep rules/results and use catalogue profile evidence."""
     schemas = metadata_schemas.metadata_table_schema_registry()
 
-    assert governance_authoring.GUARDRAIL_RULES_TABLE in schemas
+    assert governance_authoring.GUARDRAIL_TABLE in schemas
     assert governance_authoring.GUARDRAIL_RESULTS_TABLE in schemas
     assert "METADATA_GUARDRAIL_PROFILES" not in schemas
     assert "METADATA_GUARDRAIL_BASELINE_EVENTS" not in schemas
@@ -132,17 +132,19 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert ["schema", "freshness", "profile_behavior", "dq"] == ["schema", "freshness", "profile_behavior", "dq"]
     assert "governance_approved" in governance_authoring.GUARDRAIL_REVIEW_STATUSES
     assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
-        set(schemas[governance_authoring.GUARDRAIL_RULES_TABLE].fieldNames())
+        set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
     )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
+    profiled_fields = set(schemas["METADATA_DATA_PROFILED"].fieldNames())
+    assert {"store_type", "metadata_table_key", "metadata_column_key", "schema_fingerprint"}.issubset(catalogue_fields)
     assert {
-        "watermark_column",
-        "watermark_value",
-        "profile_hash",
-        "profile_payload_json",
         "row_count",
+        "non_null_count",
         "null_percent",
-    }.issubset(catalogue_fields)
+        "distinct_percent",
+        "frequency_json",
+    }.issubset(profiled_fields)
+    assert {"profile_role", "watermark_column", "watermark_value", "profile_hash", "profile_payload_json"}.isdisjoint(catalogue_fields)
     assert {
         "baseline_status",
         "source_schema_check",
@@ -295,7 +297,7 @@ def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monk
 
     result = governance._run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
-    assert reads == [("dev", "metadata", governance.GUARDRAIL_RULES_TABLE, {"schema": None, "spark_session": spark_session})]
+    assert reads == [("dev", "metadata", governance.GUARDRAIL_TABLE, {"schema": None, "spark_session": spark_session})]
     assert result["status"] == "failed"
     assert result["can_continue"] is False
     assert len(result["checks"]) == 1

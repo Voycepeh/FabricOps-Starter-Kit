@@ -10,7 +10,8 @@
 | `agreement_version` | `string` | No | Agreement widget | Canonical agreement version associated with the row. |
 | `agreement_name` | `string` | No | Agreement widget | Metadata Data Agreement field `agreement_name`. |
 | `domain` | `string` | No | Agreement widget | Metadata Data Agreement field `domain`. |
-| `steward_id` | `string` | No | Agreement widget | Metadata Data Agreement field `steward_id`. |
+| `provider_steward_id` | `string` | No | Agreement widget | Metadata Data Agreement field `provider_steward_id`. |
+| `recipient_steward_id` | `string` | No | Agreement widget | Metadata Data Agreement field `recipient_steward_id`. |
 | `recipient` | `string` | No | Agreement widget | Metadata Data Agreement field `recipient`. |
 | `start_date` | `date` | No | Agreement widget | Metadata Data Agreement field `start_date`. |
 | `expiry_date` | `date` | No | Agreement widget | Metadata Data Agreement field `expiry_date`. |
@@ -28,5 +29,3 @@
 ## Related function reference
 
 - [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
-- [`widget_pipeline_bootstrap`](../../api/reference/widget_pipeline_bootstrap.md)
-- [`write_pipeline_run_summary`](../../api/reference/write_pipeline_run_summary.md)

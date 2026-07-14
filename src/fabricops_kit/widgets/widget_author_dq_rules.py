@@ -206,7 +206,7 @@ def _dq_rule_authoring_widget_workflow(
             message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save."
             return records
         _governance_review._write_rule_records(records, config=config, env=env, spark_session=spark_session)
-        message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL_RULES.</b>"
+        message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
         return records
 
     def save_batch(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:

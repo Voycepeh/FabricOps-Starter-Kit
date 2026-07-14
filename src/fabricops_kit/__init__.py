@@ -29,10 +29,10 @@ from .io import (
 from .pipeline import (
     display_guardrail_results,
     prepare_pipeline_table_configs,
+    profile_and_register_dataframe,
     profile_dataframe,
+    profile_frequency_distribution,
     run_table_guardrails,
-    write_pipeline_lineage,
-    write_pipeline_run_summary,
 )
 
 CONFIG_EXPORTS = (
@@ -59,19 +59,18 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "profile_and_register_dataframe",
     "profile_dataframe",
+    "profile_frequency_distribution",
     "display_guardrail_results",
     "prepare_pipeline_table_configs",
     "run_table_guardrails",
-    "write_pipeline_lineage",
-    "write_pipeline_run_summary",
 )
 
 WIDGET_EXPORTS = (
     "widget_render_data_steward",
     "widget_render_data_agreement",
     "widget_render_agreement_evidence",
-    "widget_pipeline_bootstrap",
     "widget_select_guardrail_target",
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",

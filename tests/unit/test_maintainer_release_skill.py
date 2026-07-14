@@ -42,6 +42,16 @@ def test_release_skill_exists_and_is_canonical_source() -> None:
     assert GUIDE.read_text(encoding="utf-8") == sync_maintainer_release_guide.rendered_doc()
 
 
+def test_agent_only_release_task_structure_stays_out_of_human_guide() -> None:
+    """Verify agent-only release task structure is not published in the human guide."""
+    skill = SKILL.read_text(encoding="utf-8")
+    guide = GUIDE.read_text(encoding="utf-8")
+    assert "## Agent task structure" in skill
+    assert "## Agent task structure" not in guide
+    assert "## Minimum maintainer workflow" in skill
+    assert "## Minimum maintainer workflow" in guide
+
+
 def test_maintainer_navigation_contains_only_two_pages() -> None:
     """Verify MkDocs exposes only the two intended maintainer pages."""
     mkdocs = MKDOCS.read_text(encoding="utf-8")

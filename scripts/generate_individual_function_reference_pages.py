@@ -73,10 +73,10 @@ METADATA_FIELD_DESCRIPTIONS = {
     "bypassed_at": "Timestamp captured when governance review is intentionally bypassed.",
 }
 METADATA_RELATED_FUNCTIONS = {
-    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement", "widget_pipeline_bootstrap", "write_pipeline_run_summary"],
+    "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_AGREEMENT_EVIDENCE": ["widget_render_agreement_evidence"],
     "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
-    "METADATA_DATA_LINEAGE_TABLE": ["write_pipeline_lineage"],
+    "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT_RULES": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
@@ -85,8 +85,6 @@ METADATA_RELATED_FUNCTIONS = {
         "widget_author_dq_rules",
         "widget_review_guardrail_governance",
     ],
-    "METADATA_NOTEBOOK_REGISTRY": ["widget_pipeline_bootstrap"],
-    "METADATA_PIPELINE_RUNS": ["widget_pipeline_bootstrap", "write_pipeline_run_summary"],
 }
 
 
@@ -197,10 +195,6 @@ PARAMETER_DISPLAY_TYPES = {
         "default_settings": "Mapping[str, Any] | PipelineTableConfig",
     },
     "run_table_guardrails": {
-        "source_definitions": "list[PipelineTableConfig]",
-        "target_definitions": "list[PipelineTableConfig]",
-    },
-    "write_pipeline_lineage": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
     },
@@ -1490,6 +1484,15 @@ def _contract_impact_lines(row: dict[str, Any], *, docs_metadata: dict[str, Any]
         f"| Live-critical dependencies | {_dash(row.get('live_critical_dependency_count', 0))} |",
         "",
     ]
+    history = [item for item in row.get("release_history") or [] if isinstance(item, dict)]
+    if history:
+        lines.extend(["### Release history", "", "| Status | Version |", "| --- | --- |"])
+        for item in history:
+            history_status = str(item.get("status") or "").strip().title() or "—"
+            version = _dash(item.get("version"))
+            lines.append(f"| {html_escape(history_status)} | {html_escape(version)} |")
+        lines.append("")
+
     deps = [str(dep) for dep in row.get("live_critical_dependencies") or []]
     if status == "Live" and deps:
         lines.extend(["### Live-critical dependencies", "", '<ul class="reference-compact-list">'])
@@ -4025,8 +4028,6 @@ def _metadata_managed_by(table_name: str, column_name: str) -> str:
         "METADATA_ENRICHMENT_RULES": "Enrichment and governance widgets",
         "METADATA_GUARDRAIL_RESULTS": "Pipeline guardrail writers",
         "METADATA_GUARDRAIL_RULES": "Guardrail authoring and governance widgets",
-        "METADATA_NOTEBOOK_REGISTRY": "Notebook registration workflow",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summary writer",
     }
     return table_owners.get(table_name, "FabricOps workflow")
 
@@ -4054,8 +4055,6 @@ def _metadata_table_purpose(table_name: str) -> str:
         "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
         "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
         "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
-        "METADATA_NOTEBOOK_REGISTRY": "Active notebook registration records linking notebooks to agreement, environment, dataset, and pipeline context.",
-        "METADATA_PIPELINE_RUNS": "Pipeline run summaries for execution, guardrail, lineage, and catalogue status.",
     }
     return purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
 

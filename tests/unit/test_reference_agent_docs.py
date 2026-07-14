@@ -674,7 +674,7 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     assert "Approve, reject, replace, deactivate" in governance_review
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
-    assert "[`write_pipeline_lineage`](../../api/reference/write_pipeline_lineage.md)" in lineage_table
+    assert "[`profile_and_register_dataframe`](../../api/reference/profile_and_register_dataframe.md)" in lineage_table
 
 
 def test_metadata_reference_overview_renders_model_diagram() -> None:
@@ -747,7 +747,7 @@ def test_template_called_callable_parameters_render_as_api_table() -> None:
 
     assert "| Parameter | Type | Required | Description |" in parameters
     assert "| `df` |" in parameters
-    assert "| `table_name` |" in parameters
+    assert "| `approximate_distinct` |" in parameters
 
 
 def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> None:
@@ -1845,8 +1845,7 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
-        "write_pipeline_lineage": "src/fabricops_kit/pipeline/write_pipeline_lineage.py",
-        "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
+        "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
     }
 
     for function_name, expected_path in expected_paths.items():
@@ -1876,7 +1875,7 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
-        "write_pipeline_lineage": "src/fabricops_kit/pipeline/write_pipeline_lineage.py",
+        "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
         "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
@@ -1907,7 +1906,7 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
         "prepare_pipeline_table_configs",
         "profile_dataframe",
         "run_table_guardrails",
-        "write_pipeline_lineage",
+        "profile_and_register_dataframe",
         "write_pipeline_run_summary",
     }
 
@@ -1955,14 +1954,14 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
             "fabricops_kit.pipeline.prepare_pipeline_table_configs",
             "fabricops_kit.pipeline.profile_dataframe",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.write_pipeline_lineage",
+            "fabricops_kit.pipeline.profile_and_register_dataframe",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
         "fabricops_kit.pipeline.profile_dataframe": {
             "fabricops_kit.pipeline.display_guardrail_results",
             "fabricops_kit.pipeline.prepare_pipeline_table_configs",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.write_pipeline_lineage",
+            "fabricops_kit.pipeline.profile_and_register_dataframe",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
     }

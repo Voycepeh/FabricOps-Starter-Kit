@@ -9,29 +9,28 @@
 
 ## Call-flow summary
 
-- Downstream callables: 12
-- Shared helpers: 7
-- Private helpers: 5
+- Downstream callables: 4
+- Shared helpers: 2
+- Private helpers: 2
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Preview call flow</a>
 
-Profile a source or target DataFrame for schema, quality, and catalogue evidence.
+Profile a Spark DataFrame for structural and statistical exploration.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_dataframe.py:10`
+`fabricops_kit/pipeline/profile_dataframe.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L10-L65">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L34">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `99_explore`
+**Used in notebooks:** `99_explore`
 
 ## Usage notes
 
@@ -45,18 +44,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def profile_dataframe(
-    df,
-    table_name: str,
-    exclude_columns=None,
-    run_timestamp_timezone: str | None=None,
-    config: Any=None,
-    include_distributions: bool=False,
-    distribution_columns: list[str] | set[str] | tuple[str, ...] | None=None,
-    distribution_bin_edges: dict[str, list[float]] | None=None,
-    categorical_categories: dict[str, list[str]] | None=None,
-    categorical_top_n: int=20,
-):
+def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=True)
 ```
 
 </div>
@@ -66,7 +54,7 @@ def profile_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profile_rows_df = profile_dataframe(df, table_name="orders", include_distributions=True, distribution_columns=["status"] )
+profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])
 ```
 
 </div>
@@ -75,16 +63,9 @@ profile_rows_df = profile_dataframe(df, table_name="orders", include_distributio
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `df` | `Any` | Yes | Spark DataFrame to profile. |
-| `table_name` | `str` | Yes | Logical table name written into each profile row. |
-| `exclude_columns` | `list[str] or set[str]` | No | Additional columns to skip, on top of standard technical columns. |
-| `run_timestamp_timezone` | `str \| None` | No | Explicit IANA time zone used for profile evidence timestamps. |
-| `config` | `Any` | No | Framework-like configuration carrying audit settings. |
-| `include_distributions` | `bool` | No | Whether to include distribution metadata. |
-| `distribution_columns` | `list[str] \| set[str] \| tuple[str, ...] \| None` | No | Columns to profile with distributions. |
-| `distribution_bin_edges` | `dict[str, list[float]] \| None` | No | Explicit numeric bin edges by column. |
-| `categorical_categories` | `dict[str, list[str]] \| None` | No | Explicit categorical values by column. |
-| `categorical_top_n` | `int` | No | Maximum categorical values to include when inferred. |
+| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile. |
+| `exclude_columns` | `list[str] or set[str]` | No | Additional caller-selected columns to skip after standard FabricOps technical-column exclusions are applied. |
+| `approximate_distinct` | `bool` | No | When True, use Spark ``approx_count_distinct`` for per-column cardinality. When False, use exact ``count_distinct``. |
 
 ## Returns
 
@@ -92,7 +73,7 @@ Spark DataFrame containing one profile row per eligible business column.
 
 ### Return interpretation
 
-Each returned profile row describes one table or column metric. Downstream governance and guardrail helpers use those rows as evidence.
+Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.
 
 ## Raises / Errors
 
@@ -125,9 +106,15 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Preview | 0.1.0 |
+
 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

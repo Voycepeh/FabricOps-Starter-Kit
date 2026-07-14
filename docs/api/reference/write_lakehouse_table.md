@@ -127,6 +127,12 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 | Contract risk | Live |
 | Live-critical dependencies | 17 |
 
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.1.0 |
+
 ### Live-critical dependencies
 
 <ul class="reference-compact-list">
@@ -153,5 +159,5 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 10 Jul 2026, 2:29 AM SGT
-    Call-flow data generated: 10 Jul 2026, 2:29 AM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
+    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

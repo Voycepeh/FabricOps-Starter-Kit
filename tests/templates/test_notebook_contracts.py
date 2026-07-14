@@ -118,3 +118,19 @@ def test_template_notebook_fabricops_public_references_exist(notebook_path: Path
 
     assert not missing, f"Missing fabricops_kit public references in {notebook_path.name}: {missing}"
 
+
+
+def test_02_pipeline_uses_cloneable_profile_registration_block():
+    """Verify 02_pipeline exposes one short cloneable profile registration call pattern."""
+    source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
+
+    assert "profile_and_register_dataframe" in source
+    assert "profile_role=\\\"source\\\"" in source
+    assert "profile_role=\\\"target\\\"" in source
+    assert "Clone this block once for every DataFrame" in source
+    assert "frequency_json" not in source
+    assert "metadata_table_key" not in source
+    assert "metadata_column_key" not in source
+    assert "profiled_at" not in source
+    assert "registers catalogue evidence only" in source
+    assert "follow-up lineage PR will automatically record that role" in source

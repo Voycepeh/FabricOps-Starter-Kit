@@ -149,11 +149,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_pipeline_bootstrap',
-  'visibility': 'public',
-  'module_summary': 'Owns the pipeline bootstrap widget and active runtime context setup.',
-  'sidebar_group': '3. Data engineer',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_select_guardrail_target',
   'visibility': 'public',
   'module_summary': 'Owns the guardrail target selection widget workflow.',
@@ -232,16 +227,12 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                    'configs, transform logic, target writes, lineage relationships, and pipeline '
                    'naming visible while package helpers handle reusable config enrichment, '
                    'guardrails, and evidence plumbing.',
-  'segments': [{'symbols': ['widget_pipeline_bootstrap',
-                            'read_warehouse_table',
+  'segments': [{'symbols': ['read_warehouse_table',
                             'read_warehouse_query',
                             'read_lakehouse_table',
                             'prepare_pipeline_table_configs',
-                            'profile_dataframe',
                             'run_table_guardrails',
                             'write_lakehouse_table',
-                            'write_pipeline_lineage',
-                            'write_pipeline_run_summary',
                             'display_guardrail_results',
                             'widget_select_guardrail_target',
                             'widget_author_schema_freshness_profile_rules',
@@ -273,8 +264,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'write_lakehouse_table',
                             'write_warehouse_table',
                             'profile_dataframe',
-                            'widget_browse_metadata_catalogue',
-                            'widget_pipeline_bootstrap'],
+                            'widget_browse_metadata_catalogue'],
                 'title': 'Exploration'}],
   'template_path': 'templates/notebooks/99_explore.ipynb'},
  {'notebook_key': 'example_pipeline_demo',
@@ -595,42 +585,6 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
-  'module': 'widgets.shared',
-  'function_type': 'callable',
-  'summary_override': 'Return the agreement selected by widget_pipeline_bootstrap.',
-  'symbol_name': 'get_selected_agreement',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Agreement selection',
-  'use_when': 'Use after widget_pipeline_bootstrap(select_agreement=True) to retrieve the selected agreement '
-              'record for pipeline logic and evidence binding.',
-  'do_not_use_when': 'Do not use before running widget_pipeline_bootstrap(select_agreement=True), or as a '
-                     'substitute for querying all agreement metadata.',
-  'parameters': 'No required parameters; reads the current in-memory widget selection state.',
-  'returns': 'Selected agreement dictionary for the active notebook session.',
-  'raises': 'Raises an error when no agreement has been selected in the current session.',
-  'side_effects': 'Reads session/widget state only; it does not write metadata, tables, or files.',
-  'fabric_context': 'Depends on a prior widget_pipeline_bootstrap(select_agreement=True) call in the same notebook session '
-                    'and agreement metadata loaded via 00_env_config routing.',
-  'ai_verification': 'Verify the returned agreement has the expected dataset/table identifiers '
-                     'before using it to drive reads, writes, or governance evidence.',
-  'preferred_example': 'agreement = get_selected_agreement()\n'
-                       'dataset_name = agreement["dataset_name"]',
-  'related_functions': ['widget_pipeline_bootstrap'],
-  'expanded_purpose': 'Returns the agreement chosen by widget_pipeline_bootstrap so downstream cells '
-                      'can pass consistent agreement identifiers to pipeline helpers.',
-  'when_to_use': 'Use after rendering and completing widget_pipeline_bootstrap when code needs the '
-                 'selected agreement values.',
-  'glossary_terms': ['notebook template'],
-  'return_interpretation': 'A returned dictionary contains the selected agreement fields. A '
-                           'missing value means the selector has not been completed in the current '
-                           'notebook state.',
-  'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
-                            'The user has not selected an agreement.',
-                            'Notebook state was reset.',
-                            'The selected row is no longer present in metadata.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates-implementation-guide/index.md'}]},
- {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
   'summary_override': 'Read a Delta table from a configured Fabric lakehouse target.',
@@ -884,17 +838,14 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Profile a source or target DataFrame for schema, quality, and catalogue '
-                      'evidence.',
+  'summary_override': 'Profile a Spark DataFrame for structural and statistical exploration.',
   'symbol_name': 'profile_dataframe',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Profiling',
-  'use_when': 'Use to create schema, null, distinct, min/max, and optional distribution evidence '
-              'from a Spark DataFrame.',
+  'use_when': 'Use to create schema, row-count, null, distinct, min/max, and numeric statistic profiles from a Spark DataFrame.',
   'do_not_use_when': 'Do not use as a data-quality enforcement step or as a persistence helper; it '
                      'builds profile rows but does not approve governance evidence.',
-  'parameters': 'df, table_name, optional exclude_columns, timezone, distribution options, bin '
-                'edges, category baselines, and top-N settings.',
+  'parameters': 'df, optional exclude_columns, and approximate_distinct.',
   'returns': 'Spark DataFrame containing one profile row per eligible business column.',
   'raises': 'Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.',
   'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write '
@@ -903,17 +854,14 @@ PUBLIC_SYMBOL_DOCS = [
                     'governance review workflows that need profiles.',
   'ai_verification': 'Verify the profile row count matches expected business columns and inspect '
                      'key schema/profile fields before writing evidence.',
-  'preferred_example': 'profile_rows_df = profile_dataframe(df, table_name="orders", '
-                       'include_distributions=True, distribution_columns=["status"] )',
+  'preferred_example': 'profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])',
   'related_functions': ['enforce_profile_behavior', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, '
-                      'row counts, nulls, distinct counts, and optional summary values.',
+                      'row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
   'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table '
                  'needs reproducible profiles.',
   'glossary_terms': ['evidence', 'source data', 'target table'],
-  'return_interpretation': 'Each returned profile row describes one table or column metric. '
-                           'Downstream governance and guardrail helpers use those rows as '
-                           'evidence.',
+  'return_interpretation': 'Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.',
   'common_failure_causes': ['The DataFrame is empty or missing expected columns.',
                             'Requested statistics are unsupported for a column type.',
                             'Spark actions fail while computing counts or summaries.',
@@ -922,6 +870,59 @@ PUBLIC_SYMBOL_DOCS = [
                       'path': '../../guided-demo/run-pipeline.md'},
                      {'title': 'Governance Review',
                       'path': '../../guided-demo/review-guardrails.md'}]},
+ {'kind': 'function',
+  'module': 'pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Profile top-N value frequencies for selected Spark DataFrame columns.',
+  'symbol_name': 'profile_frequency_distribution',
+  'template_notebook': '02_pipeline / optional 99_explore',
+  'template_segment': 'Profiling',
+  'use_when': 'Use to inspect value frequencies on exactly the Spark DataFrame supplied by the caller.',
+  'do_not_use_when': 'Do not use as a sampling helper, metadata writer, or data-quality enforcement step.',
+  'parameters': 'df, optional columns, and top_n.',
+  'returns': 'Spark DataFrame containing ranked top-N value frequencies per profiled column.',
+  'raises': 'Raises ValueError when top_n is not positive or requested columns do not exist.',
+  'side_effects': 'Computes frequency aggregations on the provided DataFrame; it does not write metadata, tables, or files.',
+  'fabric_context': 'Use after the caller has intentionally selected the exact DataFrame rows to profile.',
+  'ai_verification': 'Verify requested columns and top_n match the intended exploration scope.',
+  'preferred_example': 'frequency_df = profile_frequency_distribution(df, columns=["status"], top_n=10)',
+  'related_functions': ['profile_dataframe'],
+  'expanded_purpose': 'Calculates deterministic top-N value frequencies with counts, percentages, ranks, and profiled row counts for selected scalar columns.',
+  'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
+  'glossary_terms': ['source data', 'distinct value'],
+  'return_interpretation': 'Each returned row describes one retained value for one source column.',
+  'common_failure_causes': ['Requested columns are missing.',
+                            'top_n is not greater than zero.',
+                            'Spark actions fail while computing frequency counts.'],
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/run-pipeline.md'}]},
+ {'kind': 'function',
+  'module': 'pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identities to METADATA_DATA_CATALOGUE.',
+  'symbol_name': 'profile_and_register_dataframe',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Profiling',
+  'use_when': 'Use when any DataFrame should be profiled and registered as physical-asset profiling evidence and catalogue identity with one cloneable call.',
+  'do_not_use_when': 'Do not use for lineage registration, guardrail execution, or automatic sampling; those are separate workflows.',
+  'parameters': 'df, profile_role, environment_name, store_type, layer, table_name, optional schema_name, optional frequency_columns, frequency_top_n, and is_sampled.',
+  'returns': 'Detailed Spark DataFrame appended to METADATA_DATA_PROFILED.',
+  'raises': 'Raises ValueError for unsupported profile_role, unsupported store_type, or empty required identity fields; lower-level profiling validation is preserved.',
+  'side_effects': 'Appends detailed profiling evidence to METADATA_DATA_PROFILED, upserts derived identities to METADATA_DATA_CATALOGUE, and writes lineage evidence through the configured metadata lakehouse.',
+  'fabric_context': 'Requires 00_env_config so the canonical metadata lakehouse route is available.',
+  'ai_verification': 'Verify the physical asset identity, execution participation role, optional frequency columns, and append-only profiled evidence write and catalogue identity upsert before running; the role is not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE.',
+  'preferred_example': 'profiled_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")',
+  'related_functions': ['profile_dataframe', 'profile_frequency_distribution', 'run_table_guardrails'],
+  'expanded_purpose': 'Orchestrates DataFrame profiling, optional top-N frequency evidence, canonical profiled schema mapping, catalogue identity derivation, deterministic key creation, and append-only profiled evidence registration and catalogue identity upsert while accepting profile_role as execution participation context. The role is validated but not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE; automatic lineage registration follows separately.',
+  'when_to_use': 'Use in 02_pipeline once for each DataFrame that should produce profiled evidence and catalogue identity. Pass profile_role as execution participation context; automatic lineage registration follows separately and will record the role outside the catalogue.',
+  'glossary_terms': ['evidence', 'source data', 'target table'],
+  'return_interpretation': 'The returned rows are exactly the catalogue snapshot submitted to the metadata writer for the supplied DataFrame.',
+  'common_failure_causes': ['00_env_config has not been run.',
+                            'profile_role or store_type is unsupported.',
+                            'Required physical identity inputs are blank.',
+                            'Requested frequency columns are missing from the DataFrame.'],
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -969,7 +970,7 @@ PUBLIC_SYMBOL_DOCS = [
   'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted '
-                      'catalogue profiles.',
+                      'profiled evidence.',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
@@ -979,7 +980,7 @@ PUBLIC_SYMBOL_DOCS = [
                       'approved baseline, the function returns a failed guardrail result so the '
                       'pipeline can stop before writing data.',
   'use_when': 'Use in 02_pipeline to enforce profile_mode expectations against previous accepted '
-              'catalogue profiles.',
+              'profiled evidence.',
   'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously '
                  'approved profile behavior pattern. It is especially useful when full-table '
                  'static data changes unexpectedly or when a previous watermark group changes or '
@@ -1029,7 +1030,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'The configured dataset or table name does not match catalogue '
                             'evidence.',
                             'The configured stage does not match the accepted evidence.',
-                            'The metadata lakehouse or catalogue profile table cannot be read.',
+                            'The metadata lakehouse or profiled evidence table cannot be read.',
                             'The accepted evidence is missing required profile behavior fields.',
                             'The current profile_mode value is invalid or unsupported.',
                             'The accepted evidence is stale or incomplete.'],
@@ -1042,7 +1043,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'stability_result = enforce_profile_behavior(\n'
                        '    spark=spark,\n'
                        '    dataframe=df,\n'
-                       '    metadata_table="METADATA_DATA_CATALOGUE",\n'
+                       '    metadata_table="METADATA_DATA_PROFILED",\n'
                        '    dataset_name="sales_orders",\n'
                        '    table_name="orders_raw",\n'
                        '    stage="target",\n'
@@ -1137,28 +1138,6 @@ PUBLIC_SYMBOL_DOCS = [
                      {'title': 'Pipeline Execution',
                       'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
-  'module': 'widgets.widget_pipeline_bootstrap',
-  'function_type': 'callable',
-  'summary_override': 'Bootstrap a guided pipeline notebook run and store runtime defaults.',
-  'symbol_name': 'widget_pipeline_bootstrap',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'runtime context setup / pipeline bootstrap',
-  'use_when': 'Use near the top of 02_pipeline to resolve run, agreement, notebook, and pipeline defaults without repeating runtime plumbing.',
-  'do_not_use_when': 'Do not use when an advanced custom notebook needs to pass every runtime parameter explicitly to lower-level helpers.',
-  'parameters': 'notebook_type, select_agreement, register_notebook, read_only, and optional runtime overrides.',
-  'returns': 'Internal runtime context object with run_id, pipeline_name, notebook identity, agreement identity, and Spark context for downstream defaults. The concrete context class is internal and not a primary public API.',
-  'side_effects': 'Stores active in-memory context for the current notebook session; renders agreement selection when select_agreement=True and registers only when register_notebook=True.',
-  'fabric_context': 'Defaults to RUN_CONTEXT, spark, and METADATA_SCHEMA from 00_env_config.',
-  'ai_verification': 'Verify delivery notebooks use register_notebook=True and read-only exploration notebooks use register_notebook=False with read_only=True.',
-  'preferred_example': 'PIPELINE = widget_pipeline_bootstrap(notebook_type="02_pipeline", select_agreement=True, register_notebook=True)',
-  'related_functions': ['run_table_guardrails', 'write_pipeline_run_summary'],
-  'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
-  'when_to_use': 'Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.',
-  'glossary_terms': ['notebook template', 'data agreement', 'metadata lakehouse'],
-  'return_interpretation': 'The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.',
-  'common_failure_causes': ['RUN_CONTEXT is unavailable.', 'spark is unavailable.', 'No agreement exists when select_agreement=True.', 'The user has not selected an agreement.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates-implementation-guide/index.md'}, {'title': 'Pipeline Execution', 'path': '../../guided-demo/run-pipeline.md'}]},
- {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
   'summary_override': 'Run profiling, schema, freshness, profile behavior, DQ, and catalogue '
@@ -1215,7 +1194,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook '
                 'context, and optional guardrail results.',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
-  'side_effects': 'Writes METADATA_DATA_CATALOGUE through the configured metadata lakehouse '
+  'side_effects': 'Writes METADATA_DATA_PROFILED through the configured metadata lakehouse '
                   'target.',
   'related_functions': ['profile_dataframe', 'write_lakehouse_table'],
   'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to '
@@ -1237,68 +1216,6 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Write many-to-many source-to-target lineage evidence.',
-  'symbol_name': 'write_pipeline_lineage',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Lineage evidence',
-  'use_when': 'Use after target writes to persist lineage relationships tied to agreement and '
-              'notebook registry context.',
-  'parameters': 'spark, config, env, run_id, source_definitions, target_definitions, '
-                'relationships, and governance context.',
-  'returns': 'Status, row count, and lineage rows.',
-  'side_effects': 'Writes METADATA_DATA_LINEAGE_TABLE through the configured metadata lakehouse '
-                  'target.',
-  'related_functions': ['write_catalogue_evidence', 'write_pipeline_run_summary'],
-  'expanded_purpose': 'Persists lineage records for a pipeline run so source tables, target '
-                      'tables, and transformation steps remain traceable.',
-  'when_to_use': 'Use near the end of 02_pipeline after transformations and target config '
-                 'resolution have produced lineage-ready records.',
-  'glossary_terms': ['source data', 'target table', 'evidence', 'metadata lakehouse'],
-  'return_interpretation': 'A successful result indicates lineage rows were prepared for metadata '
-                           'persistence; review returned counts against expected transformation '
-                           'steps.',
-  'common_failure_causes': ['Lineage records are empty or malformed.',
-                            'run_id, source, or target identifiers are missing.',
-                            'The metadata table cannot be written.',
-                            'Audit fields cannot be resolved from configuration.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates-implementation-guide/index.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../reference/metadata.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Write one pipeline runtime summary row to metadata.',
-  'symbol_name': 'write_pipeline_run_summary',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Runtime summary',
-  'use_when': 'Use at the end of 02_pipeline to store operational run evidence in '
-              'METADATA_PIPELINE_RUNS.',
-  'parameters': 'spark, config, env, run_id, agreement context, source/target definitions, '
-                'guardrail results, and evidence statuses.',
-  'returns': 'Runtime summary row that was written.',
-  'side_effects': 'Writes METADATA_PIPELINE_RUNS through the configured metadata lakehouse target.',
-  'related_functions': ['write_catalogue_evidence',
-                        'write_pipeline_lineage',
-                        'write_lakehouse_table'],
-  'expanded_purpose': 'Writes a compact run-level summary that ties pipeline name, agreement '
-                      'context, guardrail results, lineage, and write outcomes together.',
-  'when_to_use': 'Use at the end of 02_pipeline when downstream operators need one metadata record '
-                 'describing the run outcome.',
-  'glossary_terms': ['guardrails', 'can_continue', 'evidence', 'metadata lakehouse'],
-  'return_interpretation': 'The returned summary shows what run metadata was assembled or written. '
-                           'Compare status and guardrail counts with expected pipeline outcomes.',
-  'common_failure_causes': ['Required run identifiers are missing.',
-                            'Guardrail result structures are malformed.',
-                            'Metadata routing is unavailable.',
-                            'The configured summary table cannot be written.'],
-  'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/run-pipeline.md'},
-                     {'title': 'Metadata Tables',
-                      'path': '../../reference/metadata.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
   'summary_override': 'Evaluate freshness using an active metadata-backed freshness guardrail '
                       'rule.',
   'symbol_name': 'enforce_freshness_rule',
@@ -1313,7 +1230,7 @@ PUBLIC_SYMBOL_DOCS = [
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
-  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL_RULES '
+  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
                  'should determine the freshness column and maximum lag.',
   'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring '
                      'and governance review widgets for lifecycle changes.',
@@ -1366,11 +1283,11 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
   'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
   'related_functions': ['widget_select_guardrail_target', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or catalogue profiles.',
+  'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or profiled evidence.',
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
   'do_not_use_when': 'Do not use to author DQ rules or enforcement intent; use the guardrail authoring and review widgets for enforceable DQ behavior.',
   'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
-  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.',
+  'return_interpretation': 'The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT.',
   'common_failure_causes': ['The selected guardrail target has no column-level evidence.',
                             'Configured custom fields omit a field name.',
                             'Metadata lakehouse writes cannot be routed through 00_env_config.']},
@@ -1389,7 +1306,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders an interactive selector that reads catalogue profiles, '
+  'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
   'when_to_use': 'Use at the start of 02_pipeline authoring or 03_governance review when a user '
@@ -1400,7 +1317,7 @@ PUBLIC_SYMBOL_DOCS = [
   'return_interpretation': 'The returned state includes environment, dataset, table, metadata '
                            'keys, profile rows, existing rules, and governance policy values for '
                            'downstream widgets.',
-  'common_failure_causes': ['METADATA_DATA_CATALOGUE has no profiles.',
+  'common_failure_causes': ['METADATA_DATA_PROFILED has no profiles.',
                             'The selected table lacks metadata identity fields.',
                             'Metadata tables cannot be read.',
                             'ipywidgets is unavailable.']},
@@ -1426,7 +1343,7 @@ PUBLIC_SYMBOL_DOCS = [
                  'self-approved rules, submit proposed rules, or bypass approval with a required '
                  'reason.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
-                     'intent only to METADATA_GUARDRAIL_RULES when saving.',
+                     'intent only to METADATA_GUARDRAIL when saving.',
   'glossary_terms': ['guardrails', 'profile behavior', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget state exposes controls, preview records, and save actions '
                            'that produce append-only guardrail rule rows under the table policy.',
@@ -1445,7 +1362,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for agreement, metadata table, Spark session, and context parameters.',
   'returns': 'Mutable widget state whose dataframe key contains the currently filtered Spark DataFrame.',
   'related_functions': ['read_lakehouse_table', 'profile_dataframe'],
-  'expanded_purpose': 'Reads METADATA_DATA_CATALOGUE from the configured metadata target, lets users choose a logical FabricStore target, and exposes catalogue rows for the selected table.',
+  'expanded_purpose': 'Reads METADATA_DATA_PROFILED from the configured metadata target, lets users choose a logical FabricStore target, and exposes profiled rows for the selected table.',
   'when_to_use': 'Use in 99_explore when notebook authors need searchable, read-only catalogue evidence filtered by the active agreement context.',
   'do_not_use_when': 'Do not use for writing metadata, approving rules, or enforcing guardrails.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'notebook template'],
@@ -1478,7 +1395,7 @@ PUBLIC_SYMBOL_DOCS = [
   'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
-                           'METADATA_GUARDRAIL_RULES.',
+                           'METADATA_GUARDRAIL.',
   'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
                             'Rule suggestions cannot be parsed.',
                             'Bypass reason is missing when bypass is requested.',
@@ -1723,7 +1640,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                      'The caller lacks write permission.']},
  'profile_dataframe': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, '
                                            'including schema, row counts, nulls, distinct counts, '
-                                           'and optional summary values.',
+                                           'numeric statistics, and supported min/max values.',
                        'when_to_use': 'Use during exploration, governance review, or guardrail '
                                       'preparation when a table needs reproducible profile '
                                       'evidence.',
@@ -1739,6 +1656,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                  'summaries.',
                                                  'Excluded columns remove fields needed for '
                                                  'review.']},
+ 'profile_frequency_distribution': {'expanded_purpose': 'Calculates deterministic top-N value frequencies with counts, percentages, ranks, and profiled row counts for selected scalar columns.',
+                                    'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
+                                    'glossary_terms': ['source data', 'distinct value'],
+                                    'return_interpretation': 'Each returned row describes one retained value for one source column.',
+                                    'common_failure_causes': ['Requested columns are missing.',
+                                                              'top_n is not greater than zero.',
+                                                              'Spark actions fail while computing frequency counts.']},
  'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column '
                                            'is recent enough for the configured maximum lag before '
                                            'pipeline writes continue.',
@@ -1845,14 +1769,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                               'differ from expected dictionaries.',
                                                               'Defaults in CONFIG do not match the '
                                                               'notebook environment.']},
- 'widget_pipeline_bootstrap': {'expanded_purpose': 'Resolves runtime and agreement context once so template notebooks can call guardrail and summary helpers with concise defaults.',
-                        'when_to_use': 'Use near the top of 02_pipeline or read-only exploration notebooks that need agreement-aware runtime defaults.',
-                        'glossary_terms': ['notebook template', 'data agreement', 'metadata lakehouse'],
-                        'return_interpretation': 'The returned context can be assigned to PIPELINE for target config and lineage fields while downstream helpers read the same active defaults automatically. The concrete context class is internal and not a primary public API.',
-                        'common_failure_causes': ['RUN_CONTEXT is unavailable.',
-                                                  'spark is unavailable.',
-                                                  'No agreement exists when select_agreement=True.',
-                                                  'The user has not selected an agreement.']},
  'run_table_guardrails': {'expanded_purpose': 'Coordinates profiling, schema, freshness, profile '
                                               'behavior, DQ, and evidence checks for a '
                                               'group of pipeline table configs.',
@@ -1893,53 +1809,12 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'target schema.',
                                                         'The caller lacks metadata write '
                                                         'permission.']},
- 'write_pipeline_lineage': {'expanded_purpose': 'Persists lineage records for a pipeline run so '
-                                                'source tables, target tables, and transformation '
-                                                'steps remain traceable.',
-                            'when_to_use': 'Use near the end of 02_pipeline after transformations '
-                                           'and target config resolution have produced '
-                                           'lineage-ready records.',
-                            'glossary_terms': ['source data',
-                                               'target table',
-                                               'evidence',
-                                               'metadata lakehouse'],
-                            'return_interpretation': 'A successful result indicates lineage rows '
-                                                     'were prepared for metadata persistence; '
-                                                     'review returned counts against expected '
-                                                     'transformation steps.',
-                            'common_failure_causes': ['Lineage records are empty or malformed.',
-                                                      'run_id, source, or target identifiers are '
-                                                      'missing.',
-                                                      'The metadata table cannot be written.',
-                                                      'Audit fields cannot be resolved from '
-                                                      'configuration.']},
- 'write_pipeline_run_summary': {'expanded_purpose': 'Writes a compact run-level summary that ties '
-                                                    'pipeline name, agreement context, guardrail '
-                                                    'results, lineage, and write outcomes '
-                                                    'together.',
-                                'when_to_use': 'Use at the end of 02_pipeline when downstream '
-                                               'operators need one metadata record describing the '
-                                               'run outcome.',
-                                'glossary_terms': ['guardrails',
-                                                   'can_continue',
-                                                   'evidence',
-                                                   'metadata lakehouse'],
-                                'return_interpretation': 'The returned summary shows what run '
-                                                         'metadata was assembled or written. '
-                                                         'Compare status and guardrail counts with '
-                                                         'expected pipeline outcomes.',
-                                'common_failure_causes': ['Required run identifiers are missing.',
-                                                          'Guardrail result structures are '
-                                                          'malformed.',
-                                                          'Metadata routing is unavailable.',
-                                                          'The configured summary table cannot be '
-                                                          'written.']},
 
  'enforce_freshness_rule': {'expanded_purpose': 'Evaluates freshness using a metadata-backed '
                                                 'guardrail rule so active freshness intent from '
                                                 'governance is enforced during pipeline execution.',
                             'when_to_use': 'Use in 02_pipeline when active freshness rules from '
-                                           'METADATA_GUARDRAIL_RULES should determine the '
+                                           'METADATA_GUARDRAIL should determine the '
                                            'freshness column and maximum lag.',
                             'do_not_use_when': 'Do not use to create or review freshness rules; '
                                                'use the guardrail authoring and governance review '
@@ -1975,7 +1850,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                          'The caller expects debug internals while '
                                                          'using summary mode.']},
  'widget_select_guardrail_target': {'expanded_purpose': 'Renders an interactive selector that '
-                                                        'reads catalogue profiles, '
+                                                        'reads profiled evidence, '
                                                         'existing guardrail rules, and table '
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
@@ -1996,7 +1871,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                              'existing rules, and governance '
                                                              'policy values for downstream '
                                                              'widgets.',
-                                    'common_failure_causes': ['METADATA_DATA_CATALOGUE has no '
+                                    'common_failure_causes': ['METADATA_DATA_PROFILED has no '
                                                               'profiles.',
                                                               'The selected table lacks metadata '
                                                               'identity fields.',
@@ -2018,7 +1893,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                      'evidence or '
                                                                      'runtime outcomes; it writes '
                                                                      'rule intent only to '
-                                                                     'METADATA_GUARDRAIL_RULES '
+                                                                     'METADATA_GUARDRAIL '
                                                                      'when saving.',
                                                   'glossary_terms': ['guardrails',
                                                                      'profile behavior',
@@ -2058,7 +1933,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'return_interpretation': 'The widget returns mutable preview records '
                                                      'and draft suggestions; approved saves '
                                                      'write guardrail rule intent to '
-                                                     'METADATA_GUARDRAIL_RULES.',
+                                                     'METADATA_GUARDRAIL.',
                             'common_failure_causes': ['Rule parameters are invalid for the '
                                                       'selected DQ type.',
                                                       'Rule suggestions cannot be parsed.',
@@ -2091,24 +1966,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                   'Unsupported governance action '
                                                                   'is selected.',
                                                                   'The metadata target cannot be '
-                                                                  'written.']},
- 'get_selected_agreement': {'expanded_purpose': 'Returns the agreement chosen by '
-                                                'widget_pipeline_bootstrap so downstream cells can '
-                                                'pass consistent agreement identifiers to pipeline '
-                                                'helpers.',
-                            'when_to_use': 'Use after rendering and completing '
-                                           'widget_pipeline_bootstrap when code needs the selected '
-                                           'agreement values.',
-                            'glossary_terms': ['notebook template'],
-                            'return_interpretation': 'A returned dictionary contains the selected '
-                                                     'agreement fields. A missing value means the '
-                                                     'selector has not been completed in the '
-                                                     'current notebook state.',
-                            'common_failure_causes': ['widget_pipeline_bootstrap(select_agreement=True) has not been run.',
-                                                      'The user has not selected an agreement.',
-                                                      'Notebook state was reset.',
-                                                      'The selected row is no longer present in '
-                                                      'metadata.']}}
+                                                                  'written.']},}
 
 RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                      'path': '../../notebook-templates-implementation-guide/index.md'},
@@ -2163,17 +2021,7 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
                                'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
-                               'path': '../../reference/metadata.md'}],
- 'write_pipeline_lineage': [{'title': 'Templates',
-                             'path': '../../notebook-templates-implementation-guide/index.md'},
-                            {'title': 'Metadata Tables',
-                             'path': '../../reference/metadata.md'}],
- 'write_pipeline_run_summary': [{'title': 'Pipeline Execution',
-                                 'path': '../../guided-demo/run-pipeline.md'},
-                                {'title': 'Metadata Tables',
-                                 'path': '../../reference/metadata.md'}],
- 'get_selected_agreement': [{'title': 'Templates',
-                             'path': '../../notebook-templates-implementation-guide/index.md'}]}
+                               'path': '../../reference/metadata.md'}],}
 
 
 

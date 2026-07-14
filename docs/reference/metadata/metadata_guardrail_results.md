@@ -6,8 +6,11 @@
 
 | Column | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
+| `guardrail_result_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_result_id`. |
+| `guardrail_rule_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `guardrail_rule_id`. |
 | `result_id` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `result_id`. |
 | `rule_key` | `string` | No | Pipeline guardrail writers | Metadata Guardrail Results field `rule_key`. |
+| `metadata_table_key` | `string` | Yes | Pipeline guardrail writers | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `environment_name`. |
 | `dataset_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `dataset_name`. |
 | `table_name` | `string` | Yes | Pipeline guardrail writers | Metadata Guardrail Results field `table_name`. |

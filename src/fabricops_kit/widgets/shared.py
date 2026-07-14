@@ -192,8 +192,9 @@ AGREEMENT_EVIDENCE_TYPES = ["Signed Agreement", "Email Approval", "Policy Docume
 WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
 FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "evidence_type": "Evidence Type"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-ENRICHMENT_RULES_TABLE = "METADATA_ENRICHMENT_RULES"
-GUARDRAIL_RULES_TABLE = "METADATA_GUARDRAIL_RULES"
+PROFILED_TABLE = "METADATA_DATA_PROFILED"
+ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
+GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 GUARDRAIL_REVIEW_STATUSES = ["draft", "pending_governance_review", "active_pending_governance_review", "self_approved", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
@@ -201,8 +202,7 @@ ACTIVATION_STATES = ["active", "pending", "inactive"]
 REVIEW_STATES = ["draft", "pending_governance_review", "active_pending_governance_review", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
 SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "03_governance"]
 CREATED_BY_ROLES = ["engineering", "governance", "system"]
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE_TABLE"
-PIPELINE_RUNS_TABLE = "METADATA_PIPELINE_RUNS"
+LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
@@ -257,10 +257,10 @@ def _get_selected_agreement_state() -> dict[str, Any] | None:
 
 
 def get_selected_agreement() -> dict[str, Any]:
-    """Return the agreement selected by ``widget_pipeline_bootstrap``."""
+    """Return the agreement selected by the active agreement-selection state."""
     selected = _get_selected_agreement_state()
     if not selected:
-        raise RuntimeError("No agreement selected. Run widget_pipeline_bootstrap(select_agreement=True) first.")
+        raise RuntimeError("No agreement selected. Run the agreement selection workflow first.")
     return selected
 
 
@@ -661,12 +661,12 @@ def build_enrichment_rule_records(
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
 ) -> list[dict[str, Any]]:
-    """Build append-only ``METADATA_ENRICHMENT_RULES`` rows.
+    """Build append-only ``METADATA_ENRICHMENT`` rows.
 
     Parameters
     ----------
     profile_rows : list of dict
-        Selected ``METADATA_DATA_CATALOGUE`` column evidence.
+        Selected ``METADATA_DATA_PROFILED`` column evidence.
     reviewed_rows : list of dict
         Enrichment payload rows to persist when ``commit`` is true.
     state : Mapping[str, Any], optional
@@ -689,7 +689,7 @@ def build_enrichment_rule_records(
     Returns
     -------
     list of dict
-        Rows ready to append to ``METADATA_ENRICHMENT_RULES``.
+        Rows ready to append to ``METADATA_ENRICHMENT``.
 
     """
     profile, resolved_actor, now, audit = _approved_review_context(profile_rows, config=config, env=env, approved_by=actor)
@@ -762,11 +762,11 @@ def build_enrichment_rule_records(
     return rows
 
 def _write_table_metadata_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
-    """Append descriptive enrichment intent only to ``METADATA_ENRICHMENT_RULES``."""
+    """Append descriptive enrichment intent only to ``METADATA_ENRICHMENT``."""
     if records:
         write_lakehouse_table_core(
-            spark_session.createDataFrame([coerce_metadata_row_types(ENRICHMENT_RULES_TABLE, record) for record in records]),
-            ENRICHMENT_RULES_TABLE,
+            spark_session.createDataFrame([coerce_metadata_row_types(ENRICHMENT_TABLE, record) for record in records]),
+            ENRICHMENT_TABLE,
             target="metadata",
             schema=configured_lakehouse_schema(config, env, "metadata"),
             context={"config": config, "env": env},
@@ -898,7 +898,7 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
     Parameters
     ----------
     rule : mapping
-        Existing rule row from ``METADATA_GUARDRAIL_RULES``.
+        Existing rule row from ``METADATA_GUARDRAIL``.
     action : str
         One of ``approve``, ``approve_and_activate``, ``reject``, ``replace``,
         ``deactivate``, or legacy ``supersede``.
@@ -951,7 +951,7 @@ def apply_governance_enrichment_action(record: Mapping[str, Any], action: str, *
     Parameters
     ----------
     record : mapping
-        Existing enrichment row from ``METADATA_ENRICHMENT_RULES``.
+        Existing enrichment row from ``METADATA_ENRICHMENT``.
     action : str
         One of ``approve``, ``approve_and_activate``, ``reject``, ``replace``,
         ``deactivate``, legacy ``supersede``, or ``clear_post_review``.
@@ -1006,7 +1006,7 @@ def load_rule_review_history(rows: Iterable[Mapping[str, Any]], *, metadata_tabl
     Parameters
     ----------
     rows : iterable of mapping
-        Rows from ``METADATA_ENRICHMENT_RULES`` or ``METADATA_GUARDRAIL_RULES``.
+        Rows from ``METADATA_ENRICHMENT`` or ``METADATA_GUARDRAIL``.
     metadata_table_key, metadata_column_key, table_name, column_name : str, optional
         Optional filters for the selected table or column.
 
@@ -1048,11 +1048,11 @@ def load_rule_review_history(rows: Iterable[Mapping[str, Any]], *, metadata_tabl
     return history
 
 def _write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
-    """Append records to ``METADATA_ENRICHMENT_RULES``."""
+    """Append records to ``METADATA_ENRICHMENT``."""
     _write_table_metadata_enrichment_records(records, config=config, env=env, spark_session=spark_session)
 
 def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str, rule_type: str, column_name: str = "", parameters: Mapping[str, Any] | None = None, severity: str = "warning", description: str = "", policy: Mapping[str, Any] | None = None, bypass_reason: str = "", actor: str | None = None, action: str = "submit", source_notebook_type: str = "02_pipeline", created_by_role: str = "engineering", config: Any = None) -> dict[str, Any]:
-    """Build one ``METADATA_GUARDRAIL_RULES`` record for widget save actions."""
+    """Build one ``METADATA_GUARDRAIL`` record for widget save actions."""
     env = str(state.get("environment_name") or "")
     dataset = str(state.get("dataset_name") or "")
     table = str(state.get("table_name") or "")
@@ -1069,7 +1069,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     committed_at = _audit_timestamp_value(config)
     actor_value = _resolve_action_by(actor)
     pending = lifecycle.get("review_state") == "pending_governance_review"
-    return {"rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
+    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""
@@ -1127,12 +1127,12 @@ def _rule_params(rule: Mapping[str, Any]) -> dict[str, Any]:
         return {}
 
 def _write_rule_records(records: list[dict[str, Any]], *, config: Any, env: str, spark_session: Any) -> None:
-    """Append rule records to ``METADATA_GUARDRAIL_RULES``."""
+    """Append rule records to ``METADATA_GUARDRAIL``."""
     if not records:
         return
     write_lakehouse_table_core(
-        spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_RULES_TABLE, record) for record in records]),
-        GUARDRAIL_RULES_TABLE,
+        spark_session.createDataFrame([coerce_metadata_row_types(GUARDRAIL_TABLE, record) for record in records]),
+        GUARDRAIL_TABLE,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
         context={"config": config, "env": env},
@@ -1288,7 +1288,7 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
 
 def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any], *, spark_session: Any) -> list[dict[str, Any]]:
     """Load column rows for the selected latest successful profile run."""
-    rows = _coerce_rows(read_lakehouse_table_core(CATALOGUE_TABLE, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
+    rows = _coerce_rows(read_lakehouse_table_core(PROFILED_TABLE, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, spark_session=spark_session))
     selection_identity = _catalogue_physical_identity(selection)
     filtered = []
     for row in rows:
@@ -1301,7 +1301,7 @@ def load_catalogue_profile_rows(config: Any, env: str, selection: dict[str, Any]
         ):
             filtered.append(row)
     if not filtered:
-        raise ValueError("The selected successful profile has no column rows in METADATA_DATA_CATALOGUE.")
+        raise ValueError("The selected successful profile has no column rows in METADATA_DATA_PROFILED.")
     return filtered
 
 def _latest_row(rows: list[dict[str, Any]], *order_fields: str) -> dict[str, Any] | None:
@@ -1364,19 +1364,9 @@ def _evaluate_governance_readiness(
     agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")
     agreement_version = str(_value(first_profile, "agreement_version") or _value(first_profile, "AGREEMENT_CONTRACT_VERSION") or "")
 
-    all_pipeline_rows = [
-        row for row in _read_metadata_rows(config, env, PIPELINE_RUNS_TABLE, spark_session=spark_session)
-        if str(_value(row, "environment_name")) == environment
-    ]
-    related_pipeline_rows = [
-        row for row in all_pipeline_rows
-        if not agreement_id or str(_value(row, "agreement_id")) == agreement_id
-    ]
-    pipeline_rows = [
-        row for row in related_pipeline_rows
-        if not profile_run_id or str(_value(row, "run_id")) == profile_run_id
-    ]
-    latest_pipeline = _latest_row(pipeline_rows, "completed_at", "created_at", "run_id")
+    pipeline_rows: list[dict[str, Any]] = []
+    related_pipeline_rows: list[dict[str, Any]] = []
+    latest_pipeline = None
 
     agreement_rows = [
         row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_TABLE, spark_session=spark_session)
@@ -1400,11 +1390,6 @@ def _evaluate_governance_readiness(
         _append_once(blockers, code="missing_agreement_id", message="Catalogue evidence is not linked to an agreement.")
     elif not agreement_rows:
         _append_once(blockers, code="missing_agreement_metadata", message="No matching agreement metadata row was found.")
-    if latest_pipeline is None:
-        _append_once(blockers, code="missing_pipeline_run", message="No matching pipeline run summary was found.")
-    elif _status_is_failed(_value(latest_pipeline, "status")):
-        _append_once(blockers, code="pipeline_failed", message="Latest pipeline run did not complete successfully.")
-
     dq_statuses = {str(_value(row, "dq_status") or "").lower() for row in profile_rows}
     dq_error_count = sum(int(_value(row, "dq_error_rule_count", 0) or 0) for row in profile_rows)
     dq_failed_count = sum(int(_value(row, "dq_failed_rule_count", 0) or 0) for row in profile_rows)
@@ -1491,11 +1476,11 @@ def record_table_governance(
         Spark session used to create DataFrames for metadata writes.
     enrichment_reviews : list of dict, optional
         Human-reviewed enrichment payload rows. Committed rows are written only
-        to ``METADATA_ENRICHMENT_RULES``.
+        to ``METADATA_ENRICHMENT``.
     guardrail_rule_reviews : list of dict, optional
         Human-reviewed guardrail rule rows. DQ rows use
         ``review_status="governance_approved"`` and are written only to
-        ``METADATA_GUARDRAIL_RULES``.
+        ``METADATA_GUARDRAIL``.
     approved_by : str, optional
         Reviewer identity to stamp on records. When omitted, runtime defaults
         are used.
@@ -1549,8 +1534,8 @@ def record_table_governance(
         approved_by=approved_by,
     )
     writes = {
-        ENRICHMENT_RULES_TABLE: enrichment_records,
-        GUARDRAIL_RULES_TABLE: [dict(record, guardrail_type=record.get("guardrail_type") or "dq") for record in guardrail_records],
+        ENRICHMENT_TABLE: enrichment_records,
+        GUARDRAIL_TABLE: [dict(record, guardrail_type=record.get("guardrail_type") or "dq") for record in guardrail_records],
     }
     for table_name, records in writes.items():
         if records:

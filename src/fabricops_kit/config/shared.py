@@ -635,23 +635,12 @@ def _get_active_metadata_tables(config: Any | dict[str, Any]) -> list[str]:
     """Return the canonical active metadata tables prepared by ``00_env_config``.
 
     The active registry is intentionally source-driven: agreement tables come
-    from ``DataAgreementConfig``, notebook registry from ``widgets.notebook_registry``, and
-    governance/pipeline tables from the governance schema registry.
+    from ``DataAgreementConfig`` and governance/runtime tables from the schema registry.
     ``METADATA_DATA_ACCESS`` is part of the active setup registry for public-safe access context. Governance review history is derived from append-only enrichment and guardrail rule rows, not a separate review table.
     """
-    normalized = validate_framework_config(config)
-    from fabricops_kit.widgets.shared import DATA_AGREEMENT_EVIDENCE_TABLE, DATA_AGREEMENT_TABLE, DATA_STEWARD_TABLE
+    validate_framework_config(config)
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-    from fabricops_kit.widgets.notebook_registry import NOTEBOOK_REGISTRY_TABLE
-
-    metadata_tables = normalized.data_agreement_config.metadata_tables or {}
-    tables = [
-        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)),
-        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
-        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
-        NOTEBOOK_REGISTRY_TABLE,
-        *metadata_table_schema_registry().keys(),
-    ]
+    tables = list(metadata_table_schema_registry().keys())
     out: list[str] = []
     for table in tables:
         table_name = str(table or "").strip()

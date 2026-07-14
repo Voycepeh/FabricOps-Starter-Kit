@@ -3,6 +3,7 @@
 # Live public functions carry the supported compatibility guarantee for the
 # current release line. Importability alone does not imply Live support.
 SUPPORTED_PUBLIC_API = (
+    "fabricops_kit.config.setup_notebook.setup_notebook",
     "fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv",
     "fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel",
     "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
@@ -17,11 +18,12 @@ SUPPORTED_PUBLIC_API = (
 # the supported compatibility surface until promoted in a future release.
 PREVIEW_PUBLIC_API = (
     "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-    "fabricops_kit.config.setup_notebook.setup_notebook",
     "fabricops_kit.widgets.widget_render_agreement_evidence.widget_render_agreement_evidence",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.pipeline.profile_dataframe",
+    "fabricops_kit.pipeline.profile_frequency_distribution",
+    "fabricops_kit.pipeline.profile_and_register_dataframe",
     "fabricops_kit.widgets.widget_browse_metadata_catalogue.widget_browse_metadata_catalogue",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
@@ -31,9 +33,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.display_guardrail_results",
     "fabricops_kit.pipeline.prepare_pipeline_table_configs",
     "fabricops_kit.pipeline.run_table_guardrails",
-    "fabricops_kit.widgets.widget_pipeline_bootstrap.widget_pipeline_bootstrap",
-    "fabricops_kit.pipeline.write_pipeline_lineage",
-    "fabricops_kit.pipeline.write_pipeline_run_summary",
 )
 
 RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API

@@ -73,5 +73,7 @@ def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypa
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
-    with pytest.raises(ValueError, match=r"METADATA_DATA_STEWARD is missing required column\(s\): .*effective_from"):
-        setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
+    assert result["status"] == "partial_failure"
+    assert result["failed_tables"] == ["METADATA_DATA_STEWARD"]
+    assert "effective_from" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]

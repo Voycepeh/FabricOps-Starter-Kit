@@ -507,10 +507,10 @@ def test_lakehouse_table_read_with_explicit_schema_uses_schema_physical_path():
     spark = _Spark()
 
     io.read_lakehouse_table(
-        "METADATA_GUARDRAIL_RULES", target="metadata", schema="METADATA", spark_session=spark, context=context
+        "METADATA_GUARDRAIL", target="metadata", schema="METADATA", spark_session=spark, context=context
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL"
     assert ("load", expected_path) in spark.read.calls
     assert spark.table_calls == []
 
@@ -523,7 +523,7 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
 
     io.write_lakehouse_table(
         frame,
-        "METADATA_GUARDRAIL_RULES",
+        "METADATA_GUARDRAIL",
         target="metadata",
         schema="METADATA",
         mode="overwrite",
@@ -532,7 +532,7 @@ def test_lakehouse_table_write_with_explicit_schema_uses_schema_physical_path():
         context=context,
     )
 
-    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL_RULES"
+    expected_path = "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/METADATA/METADATA_GUARDRAIL"
     assert ("save", expected_path) in frame.write.calls
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
@@ -547,7 +547,7 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     io.read_lakehouse_table("orders", target="source", schema="src", spark_session=spark, context=context)
     io.write_lakehouse_table(
         frame,
-        "METADATA_GUARDRAIL_RULES",
+        "METADATA_GUARDRAIL",
         target="metadata",
         schema="meta",
         mode="overwrite",
@@ -563,13 +563,13 @@ def test_lakehouse_schema_enabled_target_routes_paths_and_identifiers_from_confi
     ) in spark.read.calls
     assert (
         "save",
-        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL_RULES",
+        "abfss://dev-metadata-workspace@onelake.dfs.fabric.microsoft.com/dev-metadata-item/Tables/meta/METADATA_GUARDRAIL",
     ) in frame.write.calls
     from fabricops_kit.io.shared import _resolve_lakehouse_table_identifier
 
     assert (
-        _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL_RULES", "meta")
-        == "meta.METADATA_GUARDRAIL_RULES"
+        _resolve_lakehouse_table_identifier(metadata_store, "METADATA_GUARDRAIL", "meta")
+        == "meta.METADATA_GUARDRAIL"
     )
 
 
