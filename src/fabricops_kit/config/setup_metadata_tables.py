@@ -238,6 +238,7 @@ def setup_metadata_tables(
     records, profile records, lineage events, access assignments, enrichment
     records, guardrail rules, or guardrail results; those are populated by
     their respective FabricOps workflows.
+
     """
     normalized = validate_framework_config(config)
     metadata_store = get_store(config=normalized, env=env, target="metadata")
