@@ -29,7 +29,18 @@ def test_reference_generator_change_requires_reference_generation() -> None:
     """Reference generator changes require individual reference page freshness."""
     names = _selected_names("scripts/generate_individual_function_reference_pages.py")
 
-    assert names == {"individual function reference pages"}
+    assert names == {"individual function reference pages", "metadata reference pages"}
+
+
+def test_metadata_schema_change_requires_metadata_reference_generation() -> None:
+    """Metadata schema changes include the scoped metadata check alongside source-owned checks."""
+    names = _selected_names("src/fabricops_kit/config/metadata_schemas.py")
+
+    assert names == {
+        "public call-flow architecture contract",
+        "individual function reference pages",
+        "metadata reference pages",
+    }
 
 
 def test_reference_check_includes_all_generator_owned_surfaces() -> None:
@@ -38,6 +49,14 @@ def test_reference_check_includes_all_generator_owned_surfaces() -> None:
         "docs/api/reference",
         "docs/reference/index.md",
         "docs/reference/function-call-graph.md",
+    )
+
+
+def test_metadata_reference_check_is_scoped_to_metadata_surfaces() -> None:
+    """Metadata freshness checks should stay scoped to metadata docs only."""
+    assert validation.METADATA_REFERENCE_CHECK.diff_paths == (
+        "docs/reference/metadata.md",
+        "docs/reference/metadata",
     )
 
 
@@ -61,6 +80,7 @@ def test_mixed_change_triggers_all_directly_affected_checks() -> None:
     assert names == {
         "public call-flow architecture contract",
         "individual function reference pages",
+        "metadata reference pages",
         "public call-flow dashboard HTML",
     }
 

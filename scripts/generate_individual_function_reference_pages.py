@@ -53,6 +53,20 @@ AUDIT_FIELD_DESCRIPTIONS = {
 
 METADATA_FIELD_DESCRIPTIONS = {
     "agreement_version": "Canonical agreement version associated with the row.",
+    "agreement_id": "Stable identifier for the agreement lifecycle.",
+    "agreement_name": "Human-readable name for the agreement.",
+    "domain": "Business domain recorded for the metadata row.",
+    "recipient": "Recipient recorded for the agreement or access context.",
+    "provider_steward_id": "Steward identifier recorded for the provider side of the agreement.",
+    "recipient_steward_id": "Steward identifier recorded for the recipient side of the agreement.",
+    "business_purpose": "Business purpose recorded for the agreement or access request.",
+    "steward_id": "Stable identifier for the steward row.",
+    "steward_name": "Human-readable steward name.",
+    "steward_role": "Configured steward role captured for the row.",
+    "contact": "Contact detail captured for the steward record.",
+    "effective_from": "Date when the record becomes effective.",
+    "effective_to": "Date when the record stops being effective.",
+    "is_active": "Whether the row is currently active.",
     "metadata_table_key": (
         "Stable governed data asset key that identifies a table across environment, dataset, "
         "and table context."
@@ -61,6 +75,74 @@ METADATA_FIELD_DESCRIPTIONS = {
         "Stable governed data asset key that identifies a column across environment, dataset, "
         "table, and column context."
     ),
+    "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
+    "environment_name": "Environment name recorded for the metadata row.",
+    "store_type": "Configured Fabric store type recorded for the profiled dataset.",
+    "layer": "Configured data layer recorded for the profiled dataset.",
+    "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
+    "table_name": "Physical table name recorded for the metadata row.",
+    "column_name": "Physical column name recorded for the metadata row.",
+    "data_type": "Stable data type label recorded for the column.",
+    "contract_id": "Stable identifier for the contract row.",
+    "contract_version": "Version recorded for the contract row.",
+    "contract_status": "Lifecycle status recorded for the contract row.",
+    "contract_payload_json": "Serialized contract payload stored for the row.",
+    "lineage_event_id": "Deterministic runtime lineage event identifier.",
+    "activity_id": "Runtime Fabric activity identifier captured for the lineage row.",
+    "notebook_id": "Fabric notebook identifier captured for the lineage row.",
+    "notebook_name": "Fabric notebook name captured for the lineage row.",
+    "workspace_id": "Fabric workspace identifier captured for the lineage row.",
+    "workspace_name": "Fabric workspace name captured for the lineage row.",
+    "profile_role": "Whether the profiled dataset participated as a source or target.",
+    "profiled_at": "Timestamp when the dataset profile snapshot was captured.",
+    "committed_by": "Actor recorded on the lineage row before standard runtime audit fields are appended.",
+    "metadata_lakehouse_name": "Configured metadata lakehouse name captured on the lineage row.",
+    "user_principal": "User principal recorded for the access row.",
+    "role_name": "Role name recorded for the access row.",
+    "permission": "Permission recorded for the access row.",
+    "access_purpose": "Reason the access row exists.",
+    "approval_status": "Approval status recorded for the access row.",
+    "access_scope": "Scope of the recorded access entry.",
+    "table_id": "Identifier for the accessed table or object.",
+    "granted_date": "Date when access was granted.",
+    "expires_at": "Timestamp when access expires.",
+    "approved_by": "Actor who approved the access row.",
+    "approved_at": "Timestamp when the access row was approved.",
+    "notes": "Free-text notes recorded for the row.",
+    "row_count": "Observed total row count in the profiled dataset snapshot.",
+    "non_null_count": "Observed non-null value count for the column.",
+    "null_count": "Observed null value count for the column.",
+    "null_percent": "Observed null percentage for the column.",
+    "distinct_count": "Observed distinct value count for the column.",
+    "distinct_percent": "Observed distinct percentage for the column.",
+    "mean_value": "Observed mean value for numeric columns when available.",
+    "stddev_value": "Observed standard deviation for numeric columns when available.",
+    "min_value": "Observed minimum value captured as text.",
+    "percentile_25_value": "Observed 25th percentile for numeric columns when available.",
+    "median_value": "Observed median value for numeric columns when available.",
+    "percentile_75_value": "Observed 75th percentile for numeric columns when available.",
+    "max_value": "Observed maximum value captured as text.",
+    "is_sampled": "Whether the profiled dataset snapshot was sampled.",
+    "frequency_json": "Serialized top-value frequency distribution for the column when requested.",
+    "guardrail_rule_id": "Stable identifier for the guardrail rule row.",
+    "rule_key": "Stable key used to group lifecycle versions of the same guardrail or enrichment rule.",
+    "rule_id": "Rule identity stored by the authoring workflow.",
+    "dataset_name": "Dataset name recorded for the metadata row.",
+    "guardrail_type": "Guardrail family recorded for the row.",
+    "rule_type": "Specific rule type recorded within the guardrail family.",
+    "rule_parameters_json": "Serialized rule parameters stored for the guardrail row.",
+    "severity": "Severity recorded for the guardrail intent or result.",
+    "description": "Human-readable description stored for the rule.",
+    "activation_state": "Lifecycle activation state recorded for the row.",
+    "review_status": "Review status recorded for the row.",
+    "review_state": "Review state recorded for the row.",
+    "created_by_role": "Author role recorded for the row.",
+    "author_role": "Detailed author role recorded for the guardrail row.",
+    "suggestion_json": "Serialized suggested rule payload captured during authoring.",
+    "action_type": "Authoring or governance action type recorded for the row.",
+    "source_notebook_type": "Notebook type that authored or reviewed the row.",
+    "activation_reason": "Human-readable reason for activating the row.",
+    "activated_by": "Actor who activated the row.",
     "started_at": "Pipeline bootstrap timestamp captured when the pipeline context is initialized.",
     "completed_at": (
         "Timestamp captured when the pipeline run summary is written. Pipeline duration is derived "
@@ -69,17 +151,58 @@ METADATA_FIELD_DESCRIPTIONS = {
     "status": "Pipeline run status recorded with the run summary.",
     "submitted_at": "Timestamp populated during a real submission into pending governance review.",
     "reviewed_at": "Timestamp captured when a governance reviewer records a review decision.",
+    "reviewed_by": "Actor who recorded the governance review decision.",
+    "review_decision": "Governance decision recorded for the row.",
+    "review_comment": "Reviewer comment recorded for the row.",
     "activated_at": "Timestamp captured when a rule or enrichment record becomes active.",
+    "approval_required": "Whether governance approval is required before activation.",
+    "approval_bypassed": "Whether the row bypassed normal governance approval.",
+    "requires_governance_review": "Whether the row still requires governance review.",
+    "requires_post_review": "Whether the row requires review after immediate activation.",
+    "governance_mode": "Governance mode recorded for the selected table.",
+    "approval_policy": "Approval policy recorded for the selected table.",
+    "submitted_by": "Actor who submitted the row for governance review.",
     "bypassed_at": "Timestamp captured when governance review is intentionally bypassed.",
+    "bypassed_by": "Actor who bypassed governance review.",
+    "bypass_reason": "Reason recorded when governance review was bypassed.",
+    "superseded_by_rule_key": "Rule key that supersedes the current guardrail row.",
+    "supersedes_rule_id": "Rule identifier superseded by the current row.",
+    "guardrail_result_id": "Stable identifier for the runtime guardrail result row.",
+    "result_id": "Stable identifier for the runtime result payload.",
+    "reason": "Human-readable runtime reason recorded for the guardrail outcome.",
+    "expected_value_json": "Serialized expected value payload for the guardrail outcome.",
+    "actual_value_json": "Serialized actual value payload for the guardrail outcome.",
+    "result_payload_json": "Serialized full runtime result payload written for the guardrail outcome.",
+    "enrichment_rule_id": "Stable identifier for the enrichment rule row.",
+    "enrichment_rule_version": "Version recorded for the enrichment rule row.",
+    "enrichment_rule_key": "Stable key used to group lifecycle versions of the same enrichment rule.",
+    "enrichment_scope": "Whether the enrichment row applies to a table or column.",
+    "enrichment_type": "Enrichment type recorded for the row.",
+    "enrichment_payload_json": "Serialized enrichment payload stored for the row.",
+    "business_name": "Business-friendly name recorded for the table or column.",
+    "business_description": "Business description recorded for the table or column.",
+    "business_meaning": "Business meaning recorded for the table or column.",
+    "column_description": "Column description recorded by the enrichment workflow.",
+    "classification": "Classification recorded for the table or column.",
+    "sensitivity_label": "Sensitivity label recorded for the table or column.",
+    "pii_flag": "Whether the table or column is marked as containing PII.",
+    "pii_type": "PII type recorded for the table or column.",
+    "data_domain": "Business data domain recorded for the row.",
+    "data_owner": "Business owner recorded for the row.",
+    "data_steward": "Business steward recorded for the row.",
+    "usage_notes": "Usage notes recorded for the row.",
+    "quality_notes": "Quality notes recorded for the row.",
+    "supersedes_enrichment_rule_id": "Enrichment rule identifier superseded by the current row.",
 }
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
-    "METADATA_DATA_CATALOGUE": ["profile_dataframe", "widget_enrich_table_metadata"],
-    "METADATA_DATA_LINEAGE_TABLE": ["profile_and_register_dataframe"],
+    "METADATA_DATA_CATALOGUE": ["profile_and_register_dataframe", "widget_enrich_table_metadata"],
+    "METADATA_DATA_PROFILED": ["profile_and_register_dataframe", "widget_select_guardrail_target"],
+    "METADATA_DATA_LINEAGE": ["profile_and_register_dataframe"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
-    "METADATA_ENRICHMENT_RULES": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
+    "METADATA_ENRICHMENT": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
-    "METADATA_GUARDRAIL_RULES": [
+    "METADATA_GUARDRAIL": [
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
         "widget_review_guardrail_governance",
@@ -818,6 +941,27 @@ def parse_metadata_reference_overview() -> list[str]:
     if not intro or not caption or not diagram:
         raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
     return [intro, "", caption, "", diagram]
+
+
+def parse_metadata_reference_contract() -> tuple[dict[str, str], dict[str, dict[str, list[Any]]]]:
+    """Parse metadata table purpose and column-owner contracts."""
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    table_purposes = namespace.get("METADATA_TABLE_PURPOSES", {})
+    column_owners = namespace.get("METADATA_COLUMN_OWNERS", {})
+    if not isinstance(table_purposes, dict) or not isinstance(column_owners, dict):
+        raise RuntimeError("Metadata reference contract must define METADATA_TABLE_PURPOSES and METADATA_COLUMN_OWNERS dictionaries")
+    purposes = {str(key): str(value).strip() for key, value in table_purposes.items()}
+    normalized_owners: dict[str, dict[str, list[Any]]] = {}
+    for table_name, owner_map in column_owners.items():
+        if not isinstance(owner_map, dict):
+            raise RuntimeError(f"METADATA_COLUMN_OWNERS[{table_name!r}] must be a dictionary")
+        normalized_table = {}
+        for column_name, owners in owner_map.items():
+            if not isinstance(owners, list) or not owners:
+                raise RuntimeError(f"METADATA_COLUMN_OWNERS[{table_name!r}][{column_name!r}] must be a non-empty list")
+            normalized_table[str(column_name)] = list(owners)
+        normalized_owners[str(table_name)] = normalized_table
+    return purposes, normalized_owners
 
 
 def _source_usage_path(source_path: str) -> str:
@@ -4010,57 +4154,120 @@ def _metadata_table_title(table_name: str) -> str:
     return table_name.replace("_", " ").title()
 
 
-def _metadata_managed_by(table_name: str, column_name: str) -> str:
-    """Return the workflow owner label for a generated metadata column row."""
-    if column_name in AUDIT_FIELD_DESCRIPTIONS:
-        if table_name == "METADATA_DATA_ACCESS":
-            return "Future access widget"
-        return "Runtime audit context"
-    table_owners = {
-        "METADATA_DATA_ACCESS": "External access inventory",
-        "METADATA_DATA_AGREEMENT": "Agreement widget",
-        "METADATA_DATA_CATALOGUE": "Catalogue evidence writers",
-        "METADATA_DATA_LINEAGE_TABLE": "Pipeline lineage writer",
-        "METADATA_DATA_STEWARD": "Data steward widget",
-        "METADATA_ENRICHMENT_RULES": "Enrichment and governance widgets",
-        "METADATA_GUARDRAIL_RESULTS": "Pipeline guardrail writers",
-        "METADATA_GUARDRAIL_RULES": "Guardrail authoring and governance widgets",
-    }
-    return table_owners.get(table_name, "FabricOps workflow")
+def _metadata_owner_specs(
+    table_name: str,
+    column_name: str,
+    column_owners: dict[str, dict[str, list[Any]]],
+) -> list[Any]:
+    """Return structured owner specs for one metadata column."""
+    owner_map = column_owners.get(table_name)
+    if owner_map is None:
+        raise RuntimeError(f"Missing METADATA_COLUMN_OWNERS entry for {table_name}")
+    if column_name in AUDIT_FIELD_DESCRIPTIONS and "__audit__" in owner_map:
+        return owner_map["__audit__"]
+    if column_name in owner_map:
+        return owner_map[column_name]
+    if "__default__" in owner_map:
+        return owner_map["__default__"]
+    raise RuntimeError(f"Missing metadata owner mapping for {table_name}.{column_name}")
+
+
+def _render_metadata_owner(
+    owner: Any,
+    *,
+    public_callable_set: set[str],
+) -> str:
+    """Render one metadata owner as public link, code reference, or fallback label."""
+    if isinstance(owner, str):
+        if owner.startswith(f"{PACKAGE_NAME}."):
+            module_name, callable_name = owner.rsplit(".", 1)
+            source_path = ROOT / "src" / Path(*module_name.split(".")).with_suffix(".py")
+            if not source_path.exists():
+                raise RuntimeError(f"Metadata owner source module does not exist: {owner}")
+            module_tree = ast.parse(source_path.read_text(encoding="utf-8"))
+            if not any(
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == callable_name
+                for node in module_tree.body
+            ):
+                raise RuntimeError(f"Metadata owner callable does not exist in source: {owner}")
+        simple_name = owner.rsplit(".", 1)[-1]
+        if simple_name in public_callable_set:
+            return f"[`{simple_name}`](../../api/reference/{simple_name}.md)"
+        return f"`{owner}`"
+    if isinstance(owner, dict):
+        label = str(owner.get("label", "")).strip()
+        reason = str(owner.get("reason", "")).strip()
+        if not label or not reason:
+            raise RuntimeError("Metadata owner label entries must define non-empty label and reason values.")
+        return label
+    raise RuntimeError(f"Unsupported metadata owner entry: {owner!r}")
+
+
+def _metadata_managed_by(
+    table_name: str,
+    column_name: str,
+    *,
+    column_owners: dict[str, dict[str, list[Any]]],
+    public_callable_set: set[str],
+) -> str:
+    """Return rendered metadata owner text for a generated metadata column row."""
+    rendered = []
+    seen = set()
+    for owner in _metadata_owner_specs(table_name, column_name, column_owners):
+        text = _render_metadata_owner(owner, public_callable_set=public_callable_set)
+        if text not in seen:
+            seen.add(text)
+            rendered.append(text)
+    return ", ".join(rendered)
 
 
 def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
-    if table_name == "METADATA_PIPELINE_RUNS" and column_name == "_activity_id":
-        return "Canonical execution identity for the pipeline run."
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
+    if column_name.endswith("_json"):
+        return f"JSON payload stored for `{column_name}`."
+    if column_name.endswith("_id"):
+        return f"Identifier stored for `{column_name}`."
+    if column_name.endswith("_name"):
+        return f"Human-readable name stored for `{column_name}`."
+    if column_name.endswith("_at"):
+        return f"Timestamp stored for `{column_name}`."
+    if column_name.endswith("_date"):
+        return f"Date stored for `{column_name}`."
+    if column_name.startswith("is_") or column_name.startswith("requires_"):
+        return f"Boolean state recorded for `{column_name}`."
     return f"{_metadata_table_title(table_name)} field `{column_name}`."
 
 
-def _metadata_table_purpose(table_name: str) -> str:
+def _metadata_table_purpose(table_name: str, table_purposes: dict[str, str]) -> str:
     """Return generated metadata table purpose text."""
-    purposes = {
-        "METADATA_DATA_ACCESS": "Externally collected access inventory for workspace, object, schema, and table access review.",
-        "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
-        "METADATA_DATA_CATALOGUE": "Observed table and column profiles used for catalogue review and runtime comparisons.",
-        "METADATA_DATA_LINEAGE_TABLE": "Source-to-target lineage rows written by pipeline runs.",
-        "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
-        "METADATA_ENRICHMENT_RULES": "Append-only enrichment and business metadata intent authored and reviewed through governance workflows.",
-        "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
-        "METADATA_GUARDRAIL_RULES": "Approved or pending schema, freshness, profile behavior, and DQ guardrail intent.",
-    }
-    return purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
+    return table_purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
 
 
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
-    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry, metadata_table_schema_rows
+    from fabricops_kit.config.metadata_schemas import (
+        CANONICAL_METADATA_TABLES,
+        metadata_table_schema_registry,
+        metadata_table_schema_rows,
+    )
 
     METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     registry = metadata_table_schema_registry()
+    canonical_tables = list(CANONICAL_METADATA_TABLES)
+    missing_tables = [table_name for table_name in canonical_tables if table_name not in registry]
+    if missing_tables:
+        raise RuntimeError(
+            "metadata_table_schema_registry() is missing canonical metadata tables: "
+            + ", ".join(missing_tables)
+        )
+    table_purposes, column_owners = parse_metadata_reference_contract()
+    public_callable_set = public_callable_names()
+    for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
+        generated_page.unlink(missing_ok=True)
     index_lines = [
         "# List of Metadata Tables",
         "",
@@ -4069,9 +4276,9 @@ def generate_metadata_reference_pages() -> None:
         "<div class=\"grid cards\" markdown>",
         "",
     ]
-    for table_name in registry:
+    for table_name in canonical_tables:
         slug = table_name.lower()
-        purpose = _metadata_table_purpose(table_name)
+        purpose = _metadata_table_purpose(table_name, table_purposes)
         index_lines.extend([
             f"-   **[{table_name}](metadata/{slug}.md)**",
             "",
@@ -4086,25 +4293,16 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
-            "| Column | Data type | Nullable | Managed by | Description |",
-            "| --- | --- | --- | --- | --- |",
+            "| Column | Data type | Managed by | Description |",
+            "| --- | --- | --- | --- |",
         ]
         for row in rows:
             column = str(row["name"])
-            nullable = "Yes" if bool(row["nullable"]) else "No"
-            if table_name == "METADATA_DATA_ACCESS" and column in AUDIT_FIELD_DESCRIPTIONS:
-                nullable = "Yes"
             lines.append(
-                f"| `{column}` | `{row['type']}` | {nullable} | "
-                f"{_metadata_managed_by(table_name, column)} | {_metadata_field_description(table_name, column)} |"
+                f"| `{column}` | `{row['type']}` | "
+                f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
+                f"{_metadata_field_description(table_name, column)} |"
             )
-        if table_name == "METADATA_PIPELINE_RUNS":
-            lines.extend([
-                "",
-                "## Execution identity",
-                "",
-                "`_activity_id` is the canonical execution identity. `started_at` comes from pipeline bootstrap, `completed_at` is captured when the run summary is written, and duration is derived from their difference.",
-            ])
         related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
         if related_functions:
             lines.extend(["", "## Related function reference", ""])

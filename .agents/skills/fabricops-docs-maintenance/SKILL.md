@@ -35,6 +35,7 @@ Update the canonical destination for the classification instead of creating anot
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
 - Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates-implementation-guide/`, `docs/maintainer/`, and `docs/releases/`.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
+- `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.
 - Existing images under `docs/assets/` before deleting or replacing them.
 
 ## Implementation workflow
@@ -49,6 +50,9 @@ Update the canonical destination for the classification instead of creating anot
 8. Do not touch the homepage or documentation navigation unless the task explicitly requires it or a moved page would break navigation.
 9. Update `mkdocs.yml` only when navigation, page paths, or included docs files actually change.
 10. For generated callable documentation, update source docstrings or metadata instead of editing generated pages directly.
+11. For metadata reference work, inspect `metadata_schemas.py` and the generator first, update schema/ownership source metadata, regenerate, and never manually fix an individual metadata page.
+12. Metadata schema pages must not document Spark nullability and must use exact column-level writer ownership rather than generic component labels.
+13. Run the metadata-page freshness validation for explicitly scoped metadata generator/reference work and commit only `docs/reference/metadata.md` plus `docs/reference/metadata/*.md`.
 
 ## Constraints
 

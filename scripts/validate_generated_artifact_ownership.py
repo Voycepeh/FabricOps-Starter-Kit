@@ -38,6 +38,14 @@ REFERENCE_CHECK = ArtifactCheck(
         "docs/reference/function-call-graph.md",
     ),
 )
+METADATA_REFERENCE_CHECK = ArtifactCheck(
+    name="metadata reference pages",
+    command=(sys.executable, "scripts/generate_individual_function_reference_pages.py"),
+    diff_paths=(
+        "docs/reference/metadata.md",
+        "docs/reference/metadata",
+    ),
+)
 DASHBOARD_CHECK = ArtifactCheck(
     name="public call-flow dashboard HTML",
     command=(sys.executable, "scripts/generate_public_function_call_flows_dashboard.py"),
@@ -82,6 +90,16 @@ def owns_dashboard_html(path: str) -> bool:
     } or _is_under(path, "dashboard") or _is_under(path, "frontend")
 
 
+def owns_metadata_reference_pages(path: str) -> bool:
+    """Return whether a path owns generated metadata reference page freshness."""
+    return path in {
+        "src/fabricops_kit/config/metadata_schemas.py",
+        "scripts/generate_individual_function_reference_pages.py",
+        "scripts/reference_docs_metadata.py",
+        "docs/reference/metadata.md",
+    } or _is_under(path, "docs/reference/metadata")
+
+
 def select_checks(changed_paths: Iterable[str]) -> tuple[ArtifactCheck, ...]:
     """Select generated artifact checks owned by the changed paths."""
     paths = tuple(dict.fromkeys(path.strip().lstrip("./") for path in changed_paths if path.strip()))
@@ -90,6 +108,8 @@ def select_checks(changed_paths: Iterable[str]) -> tuple[ArtifactCheck, ...]:
         checks.append(CALL_FLOW_CHECK)
     if any(owns_individual_reference_pages(path) for path in paths):
         checks.append(REFERENCE_CHECK)
+    if any(owns_metadata_reference_pages(path) for path in paths):
+        checks.append(METADATA_REFERENCE_CHECK)
     if any(owns_dashboard_html(path) for path in paths):
         checks.append(DASHBOARD_CHECK)
     return tuple(checks)

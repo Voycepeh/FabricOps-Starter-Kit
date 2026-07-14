@@ -116,6 +116,348 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "profiling, guardrail, lineage, and pipeline-run evidence."
 )
 
+METADATA_TABLE_PURPOSES = {
+    "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
+    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
+    "METADATA_DATA_CONTRACT": "Contract rows reserved for implemented data contract lifecycle evidence.",
+    "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
+    "METADATA_DATA_PROFILED": "Detailed per-column profiling evidence captured from a profiled dataset snapshot.",
+    "METADATA_DATA_LINEAGE": "Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.",
+    "METADATA_DATA_ACCESS": "Access-review rows reserved for implemented metadata access evidence.",
+    "METADATA_ENRICHMENT": "Append-only enrichment intent and approved business context for governed tables and columns.",
+    "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
+    "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
+}
+
+_UNTRACED_SCHEMA_OWNER = {
+    "label": "Implemented schema registry only",
+    "reason": "The schema is canonical in metadata_schemas.py, but no current src/fabricops_kit writer was traced for this field.",
+}
+
+_UNTRACED_AGREEMENT_STEWARD_OWNER = {
+    "label": "No traced writer in current agreement workflow",
+    "reason": "The current agreement widget writes steward_id, while the implemented schema exposes provider_steward_id and recipient_steward_id.",
+}
+
+METADATA_COLUMN_OWNERS = {
+    "METADATA_DATA_STEWARD": {
+        "__default__": [
+            "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "steward_id": [
+            "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
+        ],
+        "effective_from": [
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.shared.parse_iso_date",
+        ],
+        "effective_to": [
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.shared.parse_iso_date",
+        ],
+        "is_active": [
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.shared.active_steward",
+        ],
+        "custom_fields_json": [
+            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
+            "fabricops_kit.widgets.shared.serialize_custom_fields",
+        ],
+    },
+    "METADATA_DATA_AGREEMENT": {
+        "__default__": [
+            "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "agreement_id": [
+            "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_render_data_agreement._generate_agreement_id",
+        ],
+        "agreement_version": [
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.widget_render_data_agreement._next_minor_version",
+        ],
+        "provider_steward_id": [_UNTRACED_AGREEMENT_STEWARD_OWNER],
+        "recipient_steward_id": [_UNTRACED_AGREEMENT_STEWARD_OWNER],
+        "start_date": [
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.shared.parse_iso_date",
+        ],
+        "expiry_date": [
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.shared.parse_iso_date",
+        ],
+        "custom_fields_json": [
+            "fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement",
+            "fabricops_kit.widgets.shared.serialize_custom_fields",
+        ],
+    },
+    "METADATA_DATA_CONTRACT": {
+        "__default__": [_UNTRACED_SCHEMA_OWNER],
+        "__audit__": [_UNTRACED_SCHEMA_OWNER],
+    },
+    "METADATA_DATA_CATALOGUE": {
+        "__default__": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._catalogue_dataframe_from_profiled",
+        ],
+        "__audit__": ["fabricops_kit.pipeline.profile_and_register_dataframe._audit_literal_columns"],
+        "metadata_table_key": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._metadata_table_key",
+        ],
+        "metadata_column_key": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._metadata_column_key",
+        ],
+        "schema_fingerprint": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._schema_fingerprint",
+        ],
+    },
+    "METADATA_DATA_PROFILED": {
+        "__default__": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+        ],
+        "__audit__": ["fabricops_kit.pipeline.profile_and_register_dataframe._audit_literal_columns"],
+        "metadata_table_key": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._metadata_table_key",
+        ],
+        "metadata_column_key": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._metadata_column_key",
+        ],
+        "schema_fingerprint": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._schema_fingerprint",
+        ],
+        "frequency_json": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._frequency_json_dataframe",
+        ],
+        "profiled_at": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._audit_literal_columns",
+        ],
+    },
+    "METADATA_DATA_LINEAGE": {
+        "__default__": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "lineage_event_id": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._lineage_event_id",
+        ],
+        "activity_id": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "notebook_id": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "notebook_name": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "workspace_id": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "workspace_name": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "metadata_table_key": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._metadata_table_key",
+        ],
+        "schema_fingerprint": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._schema_fingerprint",
+        ],
+        "profiled_at": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._canonical_profiled_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+        ],
+        "committed_by": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+        "metadata_lakehouse_name": [
+            "fabricops_kit.pipeline.profile_and_register_dataframe._write_lineage_participation",
+            "fabricops_kit.config.audit.build_runtime_audit_fields",
+        ],
+    },
+    "METADATA_DATA_ACCESS": {
+        "__default__": [_UNTRACED_SCHEMA_OWNER],
+        "__audit__": [_UNTRACED_SCHEMA_OWNER],
+    },
+    "METADATA_ENRICHMENT": {
+        "__default__": [
+            "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "metadata_table_key": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._approved_column_identity",
+        ],
+        "metadata_column_key": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._approved_column_identity",
+        ],
+        "enrichment_rule_key": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.config.metadata_keys._build_dq_rule_key",
+        ],
+        "enrichment_payload_json": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "business_name": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "business_description": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "business_meaning": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "column_description": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "classification": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "sensitivity_label": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "pii_flag": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "pii_type": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "data_domain": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "data_owner": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "data_steward": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "usage_notes": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "quality_notes": [
+            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
+        ],
+        "reviewed_by": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "reviewed_at": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "review_decision": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "review_comment": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+    },
+    "METADATA_GUARDRAIL": {
+        "__default__": [
+            "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+            "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "guardrail_rule_id": [
+            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
+            "fabricops_kit.widgets.shared._build_dq_rule_records",
+        ],
+        "rule_key": [
+            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
+            "fabricops_kit.widgets.shared._build_dq_rule_records",
+            "fabricops_kit.config.metadata_keys._build_dq_rule_key",
+        ],
+        "metadata_column_key": [
+            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
+            "fabricops_kit.widgets.shared._build_dq_rule_records",
+        ],
+        "metadata_table_key": [
+            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
+            "fabricops_kit.widgets.shared._build_dq_rule_records",
+        ],
+        "rule_parameters_json": [
+            "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection",
+            "fabricops_kit.widgets.shared._build_dq_rule_records",
+        ],
+        "reviewed_by": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "reviewed_at": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "review_decision": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+        "review_comment": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
+            "fabricops_kit.widgets.shared.record_table_governance",
+        ],
+    },
+    "METADATA_GUARDRAIL_RESULTS": {
+        "__default__": [
+            "fabricops_kit.pipeline.run_table_guardrails.run_table_guardrails",
+            "fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row",
+        ],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "guardrail_result_id": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "guardrail_rule_id": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "result_id": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "rule_key": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "metadata_table_key": [
+            "fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row",
+            "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+        ],
+        "expected_value_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "actual_value_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+        "result_payload_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+    },
+}
+
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,

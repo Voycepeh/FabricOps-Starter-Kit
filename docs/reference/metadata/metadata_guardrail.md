@@ -1,62 +1,68 @@
 # METADATA_GUARDRAIL
 
-**Purpose:** Metadata Guardrail metadata table.
+**Purpose:** Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.
 
 ## Implemented schema
 
-| Column | Data type | Nullable | Managed by | Description |
-| --- | --- | --- | --- | --- |
-| `guardrail_rule_id` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `guardrail_rule_id`. |
-| `rule_key` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `rule_key`. |
-| `rule_id` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `rule_id`. |
-| `metadata_column_key` | `string` | Yes | FabricOps workflow | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
-| `metadata_table_key` | `string` | Yes | FabricOps workflow | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `environment_name` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `environment_name`. |
-| `dataset_name` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `dataset_name`. |
-| `table_name` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `table_name`. |
-| `column_name` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `column_name`. |
-| `guardrail_type` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `guardrail_type`. |
-| `rule_type` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `rule_type`. |
-| `rule_parameters_json` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `rule_parameters_json`. |
-| `severity` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `severity`. |
-| `description` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `description`. |
-| `activation_state` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `activation_state`. |
-| `is_active` | `boolean` | Yes | FabricOps workflow | Metadata Guardrail field `is_active`. |
-| `review_status` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `review_status`. |
-| `review_state` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `review_state`. |
-| `created_by_role` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `created_by_role`. |
-| `author_role` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `author_role`. |
-| `suggestion_json` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `suggestion_json`. |
-| `action_type` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `action_type`. |
-| `source_notebook_type` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `source_notebook_type`. |
-| `activation_reason` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `activation_reason`. |
-| `activated_by` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `activated_by`. |
-| `activated_at` | `timestamp` | Yes | FabricOps workflow | Timestamp captured when a rule or enrichment record becomes active. |
-| `superseded_by_rule_key` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `superseded_by_rule_key`. |
-| `notes` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `notes`. |
-| `approval_required` | `boolean` | Yes | FabricOps workflow | Metadata Guardrail field `approval_required`. |
-| `approval_bypassed` | `boolean` | Yes | FabricOps workflow | Metadata Guardrail field `approval_bypassed`. |
-| `requires_governance_review` | `boolean` | Yes | FabricOps workflow | Metadata Guardrail field `requires_governance_review`. |
-| `requires_post_review` | `boolean` | Yes | FabricOps workflow | Metadata Guardrail field `requires_post_review`. |
-| `bypass_reason` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `bypass_reason`. |
-| `bypassed_by` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `bypassed_by`. |
-| `bypassed_at` | `timestamp` | Yes | FabricOps workflow | Timestamp captured when governance review is intentionally bypassed. |
-| `governance_mode` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `governance_mode`. |
-| `approval_policy` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `approval_policy`. |
-| `submitted_by` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `submitted_by`. |
-| `submitted_at` | `timestamp` | Yes | FabricOps workflow | Timestamp populated during a real submission into pending governance review. |
-| `reviewed_by` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `reviewed_by`. |
-| `reviewed_at` | `timestamp` | Yes | FabricOps workflow | Timestamp captured when a governance reviewer records a review decision. |
-| `review_decision` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `review_decision`. |
-| `review_comment` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `review_comment`. |
-| `supersedes_rule_id` | `string` | Yes | FabricOps workflow | Metadata Guardrail field `supersedes_rule_id`. |
-| `effective_from` | `date` | Yes | FabricOps workflow | Metadata Guardrail field `effective_from`. |
-| `effective_to` | `date` | Yes | FabricOps workflow | Metadata Guardrail field `effective_to`. |
-| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Managed by | Description |
+| --- | --- | --- | --- |
+| `guardrail_rule_id` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable identifier for the guardrail rule row. |
+| `rule_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records`, `fabricops_kit.config.metadata_keys._build_dq_rule_key` | Stable key used to group lifecycle versions of the same guardrail or enrichment rule. |
+| `rule_id` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Rule identity stored by the authoring workflow. |
+| `metadata_column_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `metadata_table_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `environment_name` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Environment name recorded for the metadata row. |
+| `dataset_name` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Dataset name recorded for the metadata row. |
+| `table_name` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Physical table name recorded for the metadata row. |
+| `column_name` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Physical column name recorded for the metadata row. |
+| `guardrail_type` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Guardrail family recorded for the row. |
+| `rule_type` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Specific rule type recorded within the guardrail family. |
+| `rule_parameters_json` | `string` | `fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Serialized rule parameters stored for the guardrail row. |
+| `severity` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Severity recorded for the guardrail intent or result. |
+| `description` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Human-readable description stored for the rule. |
+| `activation_state` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Lifecycle activation state recorded for the row. |
+| `is_active` | `boolean` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Whether the row is currently active. |
+| `review_status` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Review status recorded for the row. |
+| `review_state` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Review state recorded for the row. |
+| `created_by_role` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Author role recorded for the row. |
+| `author_role` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Detailed author role recorded for the guardrail row. |
+| `suggestion_json` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Serialized suggested rule payload captured during authoring. |
+| `action_type` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Authoring or governance action type recorded for the row. |
+| `source_notebook_type` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Notebook type that authored or reviewed the row. |
+| `activation_reason` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Human-readable reason for activating the row. |
+| `activated_by` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Actor who activated the row. |
+| `activated_at` | `timestamp` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Timestamp captured when a rule or enrichment record becomes active. |
+| `superseded_by_rule_key` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Rule key that supersedes the current guardrail row. |
+| `notes` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Free-text notes recorded for the row. |
+| `approval_required` | `boolean` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Whether governance approval is required before activation. |
+| `approval_bypassed` | `boolean` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Whether the row bypassed normal governance approval. |
+| `requires_governance_review` | `boolean` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Whether the row still requires governance review. |
+| `requires_post_review` | `boolean` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Whether the row requires review after immediate activation. |
+| `bypass_reason` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Reason recorded when governance review was bypassed. |
+| `bypassed_by` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Actor who bypassed governance review. |
+| `bypassed_at` | `timestamp` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Timestamp captured when governance review is intentionally bypassed. |
+| `governance_mode` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Governance mode recorded for the selected table. |
+| `approval_policy` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Approval policy recorded for the selected table. |
+| `submitted_by` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Actor who submitted the row for governance review. |
+| `submitted_at` | `timestamp` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Timestamp populated during a real submission into pending governance review. |
+| `reviewed_by` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Actor who recorded the governance review decision. |
+| `reviewed_at` | `timestamp` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Timestamp captured when a governance reviewer records a review decision. |
+| `review_decision` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Governance decision recorded for the row. |
+| `review_comment` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Reviewer comment recorded for the row. |
+| `supersedes_rule_id` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Rule identifier superseded by the current row. |
+| `effective_from` | `date` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Date when the record becomes effective. |
+| `effective_to` | `date` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Date when the record stops being effective. |
+| `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
+
+## Related function reference
+
+- [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md)
+- [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
+- [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
