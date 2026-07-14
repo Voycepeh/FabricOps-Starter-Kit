@@ -120,8 +120,7 @@ def write_warehouse_table(
     ```
 
     The keyed form distributes rows using the specified columns while
-    requesting 32 Spark partitions. It still does not create physical
-    Warehouse partitions.
+    requesting 32 Spark partitions. It still does not create physical Warehouse partitions.
 
     """
     validate_dataframe_writer(df)
