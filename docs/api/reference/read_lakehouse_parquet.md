@@ -144,5 +144,5 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 5:03 PM SGT
-    Call-flow data generated: 14 Jul 2026, 5:02 PM SGT
+    Reference pages generated: 14 Jul 2026, 9:35 PM SGT
+    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
