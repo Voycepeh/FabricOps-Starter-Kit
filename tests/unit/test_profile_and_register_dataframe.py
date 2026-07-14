@@ -22,6 +22,17 @@ from fabricops_kit.pipeline.profile_and_register_dataframe import (
     profile_and_register_dataframe,
 )
 
+AUDIT_COLUMNS = [
+    "_committed_by",
+    "_committed_at",
+    "_workspace_id",
+    "_workspace_name",
+    "_notebook_id",
+    "_notebook_name",
+    "_metadata_lakehouse_name",
+    "_activity_id",
+]
+
 
 def _source_df(spark_session):
     """Return a small Spark source DataFrame."""
@@ -312,7 +323,8 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     assert [(f.name, type(f.dataType).__name__) for f in result.schema.fields] == [
         (f.name, type(f.dataType).__name__) for f in expected_schema.fields
     ]
-    assert {"profile_role", "_committed_by", "_workspace_name", "_activity_id"}.isdisjoint(result.columns)
+    assert "profile_role" not in result.columns
+    assert set(AUDIT_COLUMNS).issubset(result.columns)
     assert [name for name, dtype in result.dtypes if dtype == "timestamp"] == ["profiled_at", "_committed_at"]
 
     rows = {row.column_name: row.asDict() for row in result.collect()}
@@ -342,9 +354,10 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     assert lineage["activity_id"] == "activity-1"
     assert lineage["workspace_id"] == "workspace-1"
     assert lineage["notebook_id"] == "notebook-1"
-    assert "_activity_id" not in lineage
-    assert "_workspace_id" not in lineage
-    assert "_notebook_id" not in lineage
+    assert lineage["_activity_id"] == "activity-1"
+    assert lineage["_workspace_id"] == "workspace-1"
+    assert lineage["_notebook_id"] == "notebook-1"
+    assert lineage["_committed_by"] == "tester"
 
     source_role_result = profile_and_register_dataframe(
         source,
@@ -390,7 +403,14 @@ def test_profiled_schema_matches_detailed_profile_contract_without_profile_role(
         "frequency_json",
         "schema_fingerprint",
         "profiled_at",
+        "_committed_by",
         "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
     ]
     assert "profile_role" not in schema.fieldNames()
 
@@ -410,7 +430,14 @@ def test_catalogue_schema_is_narrow_identity_contract():
         "table_name",
         "column_name",
         "data_type",
+        "_committed_by",
         "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
     ]
     assert {
         "row_count",
@@ -457,7 +484,14 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
         "is_sampled": False,
         "schema_fingerprint": "schema-1",
         "profiled_at": datetime(2026, 1, 1),
+        "_committed_by": "tester",
         "_committed_at": datetime(2026, 1, 1),
+        "_workspace_id": "workspace-1",
+        "_workspace_name": "Workspace One",
+        "_notebook_id": "notebook-1",
+        "_notebook_name": "Notebook One",
+        "_metadata_lakehouse_name": "metadata_lh",
+        "_activity_id": "activity-1",
     }
     rows[0].update(base | {"metadata_column_key": "col-1", "column_name": "id"})
     rows[1].update(base | {"metadata_column_key": "col-1", "column_name": "id", "row_count": 20})
@@ -488,6 +522,14 @@ def test_lineage_schema_is_table_participation_contract():
         "committed_by",
         "environment_name",
         "metadata_lakehouse_name",
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
     ]
     fields = {field.name: field for field in schema.fields}
     assert type(fields["metadata_table_key"].dataType).__name__ == "StringType"
@@ -507,10 +549,6 @@ def test_lineage_schema_is_table_participation_contract():
         "source_metadata_table_key",
         "target_metadata_table_key",
         "transformation_steps_json",
-        "_activity_id",
-        "_workspace_id",
-        "_notebook_id",
-        "_committed_by",
     }
     assert obsolete.isdisjoint(schema.fieldNames())
 
