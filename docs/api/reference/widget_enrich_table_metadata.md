@@ -76,7 +76,7 @@ Widget state containing editable row controls, record builders, and a save callb
 
 ### Return interpretation
 
-The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT_RULES.
+The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT.
 
 ## Raises / Errors
 
@@ -117,5 +117,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
     Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

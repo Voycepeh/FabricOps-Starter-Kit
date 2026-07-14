@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 46
+- Downstream callables: 49
 - Shared helpers: 26
-- Private helpers: 20
+- Private helpers: 23
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Create or validate all FabricOps metadata tables through one setup action.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:50`
+`fabricops_kit/config/setup_metadata_tables.py:67`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L50-L235">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L67-L145">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,6 +50,8 @@ def setup_metadata_tables(
     env: str,
     metadata_schema: str | None=None,
     require_active_steward: bool=False,
+    verbose: bool=True,
+    raise_on_failure: bool=False,
 ) -> dict[str, Any]:
 ```
 
@@ -73,11 +75,13 @@ setup_metadata_tables(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Fabric Spark session used to create and validate metadata tables. |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | Shared ``00_env_config`` configuration containing the metadata target. |
-| `env` | `str` | Yes | Environment key to prepare. |
-| `metadata_schema` | `str \| None` | No | Optional schema name for schema-enabled Fabric Lakehouses. |
-| `require_active_steward` | `bool` | No | Whether setup should fail until ``METADATA_DATA_STEWARD`` contains an active steward row. |
+| `spark` | `Any` | Yes | Not documented yet |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | Not documented yet |
+| `env` | `str` | Yes | Not documented yet |
+| `metadata_schema` | `str \| None` | No | Not documented yet |
+| `require_active_steward` | `bool` | No | Not documented yet |
+| `verbose` | `bool` | No | Not documented yet |
+| `raise_on_failure` | `bool` | No | Not documented yet |
 
 ## Returns
 
@@ -128,5 +132,5 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
     Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

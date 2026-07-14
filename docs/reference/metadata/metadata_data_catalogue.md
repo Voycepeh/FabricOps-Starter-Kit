@@ -8,6 +8,7 @@
 | --- | --- | --- | --- | --- |
 | `metadata_table_key` | `string` | No | Catalogue evidence writers | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `metadata_column_key` | `string` | No | Catalogue evidence writers | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `schema_fingerprint` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `schema_fingerprint`. |
 | `environment_name` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `environment_name`. |
 | `store_type` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `store_type`. |
 | `layer` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `layer`. |
@@ -15,21 +16,6 @@
 | `table_name` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `table_name`. |
 | `column_name` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `column_name`. |
 | `data_type` | `string` | No | Catalogue evidence writers | Metadata Data Catalogue field `data_type`. |
-| `row_count` | `long` | No | Catalogue evidence writers | Metadata Data Catalogue field `row_count`. |
-| `non_null_count` | `long` | No | Catalogue evidence writers | Metadata Data Catalogue field `non_null_count`. |
-| `null_count` | `long` | No | Catalogue evidence writers | Metadata Data Catalogue field `null_count`. |
-| `null_percent` | `double` | No | Catalogue evidence writers | Metadata Data Catalogue field `null_percent`. |
-| `distinct_count` | `long` | No | Catalogue evidence writers | Metadata Data Catalogue field `distinct_count`. |
-| `distinct_percent` | `double` | No | Catalogue evidence writers | Metadata Data Catalogue field `distinct_percent`. |
-| `mean_value` | `double` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `mean_value`. |
-| `stddev_value` | `double` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `stddev_value`. |
-| `min_value` | `string` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `min_value`. |
-| `percentile_25_value` | `double` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `percentile_25_value`. |
-| `median_value` | `double` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `median_value`. |
-| `percentile_75_value` | `double` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `percentile_75_value`. |
-| `max_value` | `string` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `max_value`. |
-| `is_sampled` | `boolean` | No | Catalogue evidence writers | Metadata Data Catalogue field `is_sampled`. |
-| `frequency_json` | `string` | Yes | Catalogue evidence writers | Metadata Data Catalogue field `frequency_json`. |
 | `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
 
 ## Related function reference

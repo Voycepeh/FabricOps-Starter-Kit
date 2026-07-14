@@ -50,7 +50,7 @@ def widget_browse_metadata_catalogue(
     agreement_version: str | None=None,
     target: str='metadata',
     schema: str | None=None,
-    metadata_table: str='METADATA_DATA_CATALOGUE',
+    metadata_table: str='METADATA_DATA_PROFILED',
     spark_session=None,
     context=None,
 ):
@@ -122,5 +122,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
     Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
