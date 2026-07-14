@@ -37,7 +37,6 @@ nav:
       - Overview: reference/metadata.md
       - Data Access: reference/metadata/metadata_data_access.md
       - Data Agreement: reference/metadata/metadata_data_agreement.md
-      - Data Agreement Evidence: reference/metadata/metadata_data_agreement_evidence.md
       - Data Catalogue: reference/metadata/metadata_data_catalogue.md
       - Data Lineage Table: reference/metadata/metadata_data_lineage_table.md
       - Data Steward: reference/metadata/metadata_data_steward.md

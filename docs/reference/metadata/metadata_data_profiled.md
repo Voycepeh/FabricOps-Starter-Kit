@@ -32,4 +32,11 @@
 | `frequency_json` | `string` | Yes | FabricOps workflow | Metadata Data Profiled field `frequency_json`. |
 | `schema_fingerprint` | `string` | No | FabricOps workflow | Metadata Data Profiled field `schema_fingerprint`. |
 | `profiled_at` | `timestamp` | No | FabricOps workflow | Metadata Data Profiled field `profiled_at`. |
+| `_committed_by` | `string` | No | Runtime audit context | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | No | Runtime audit context | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | No | Runtime audit context | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | No | Runtime audit context | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | No | Runtime audit context | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | No | Runtime audit context | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | No | Runtime audit context | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | No | Runtime audit context | Fabric execution activity identifier for the current notebook or pipeline run. |

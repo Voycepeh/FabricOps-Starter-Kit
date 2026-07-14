@@ -176,7 +176,6 @@ def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = 
 
 # Widget-owned helper implementations migrated from data_agreement.py.
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
-DATA_AGREEMENT_EVIDENCE_TABLE = "METADATA_DATA_AGREEMENT_EVIDENCE"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 STANDARD_RUNTIME_AUDIT_COLUMNS = ["_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]
 DATA_STEWARD_VISIBLE_FIELDS = ["steward_name", "steward_role", "contact", "effective_from", "effective_to"]
@@ -185,12 +184,8 @@ DATA_AGREEMENT_VISIBLE_FIELDS = ["agreement_name", "domain", "steward_id", "reci
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "agreement_version"]
 DATA_STEWARD_FIELDS = DATA_STEWARD_BACKEND_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
 DATA_AGREEMENT_FIELDS = DATA_AGREEMENT_GENERATED_FIELDS + DATA_AGREEMENT_VISIBLE_FIELDS + ["custom_fields_json"] + STANDARD_RUNTIME_AUDIT_COLUMNS
-DATA_AGREEMENT_EVIDENCE_FIELDS = ["agreement_id", "agreement_version", "evidence_type", "file_name", "file_path", "mime_type", "file_size", *STANDARD_RUNTIME_AUDIT_COLUMNS]
-AGREEMENT_EVIDENCE_ALLOWED_EXTENSIONS = (".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg")
-AGREEMENT_EVIDENCE_MIME_TYPES = {".pdf": "application/pdf", ".doc": "application/msword", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
-AGREEMENT_EVIDENCE_TYPES = ["Signed Agreement", "Email Approval", "Policy Document", "Supporting Screenshot", "Other"]
 WIDGET_CONFIG_DEFAULTS = {"data_steward_widget": {"visible_columns": DATA_STEWARD_VISIBLE_FIELDS, "custom_fields": []}, "data_agreement_widget": {"visible_columns": DATA_AGREEMENT_VISIBLE_FIELDS, "custom_fields": []}}
-FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer", "evidence_type": "Evidence Type"}
+FIELD_LABELS = {"steward_id": "Steward ID", "steward_name": "Steward Name", "steward_role": "Steward Role", "contact": "Contact", "effective_from": "Effective From", "effective_to": "Effective To", "is_active": "Is Active", "agreement_name": "Agreement Name", "domain": "Domain", "start_date": "Start Date", "expiry_date": "Expiry Date", "business_purpose": "Business Purpose", "recipient": "Recipient / Consumer"}
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
@@ -1373,12 +1368,6 @@ def _evaluate_governance_readiness(
         if agreement_id and str(_value(row, "agreement_id")) == agreement_id
         and (not agreement_version or str(_value(row, "agreement_version")) == agreement_version)
     ]
-    attachment_rows = [
-        row for row in _read_metadata_rows(config, env, DATA_AGREEMENT_EVIDENCE_TABLE, spark_session=spark_session)
-        if agreement_id and str(_value(row, "agreement_id")) == agreement_id
-        and (not agreement_version or str(_value(row, "agreement_version")) == agreement_version)
-    ]
-
     blockers: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
 
@@ -1418,7 +1407,6 @@ def _evaluate_governance_readiness(
     audit = build_runtime_audit_fields(config=config, env=env, committed_by=actor, committed_at=reviewed_at)
     evidence_summary = {
         "agreement_row_count": len(agreement_rows),
-        "agreement_attachment_count": len(attachment_rows),
         "profile_column_count": len(profile_rows),
         "pipeline_run_count": len(pipeline_rows),
         "related_pipeline_run_count": len(related_pipeline_rows),

@@ -70,7 +70,6 @@ PIPELINE_EXPORTS = (
 WIDGET_EXPORTS = (
     "widget_render_data_steward",
     "widget_render_data_agreement",
-    "widget_render_agreement_evidence",
     "widget_select_guardrail_target",
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",

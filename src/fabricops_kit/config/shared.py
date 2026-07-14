@@ -348,7 +348,6 @@ class DataAgreementConfig:
         default_factory=lambda: {
             "data_steward": "METADATA_DATA_STEWARD",
             "data_agreement": "METADATA_DATA_AGREEMENT",
-            "data_agreement_evidence": "METADATA_DATA_AGREEMENT_EVIDENCE",
         }
     )
     data_steward_widget: dict[str, Any] = field(
@@ -707,8 +706,6 @@ def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[st
     """Return the canonical metadata setup registry as table names mapped to schemas."""
     normalized = validate_framework_config(config)
     from fabricops_kit.widgets.shared import (
-        DATA_AGREEMENT_EVIDENCE_FIELDS,
-        DATA_AGREEMENT_EVIDENCE_TABLE,
         DATA_AGREEMENT_FIELDS,
         DATA_AGREEMENT_TABLE,
         DATA_STEWARD_FIELDS,
@@ -724,10 +721,6 @@ def _get_metadata_table_schema_registry(config: Any | dict[str, Any]) -> dict[st
         ),
         str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)): _string_metadata_schema(
             str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), DATA_AGREEMENT_FIELDS
-        ),
-        str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)): _string_metadata_schema(
-            str(metadata_tables.get("data_agreement_evidence", DATA_AGREEMENT_EVIDENCE_TABLE)),
-            DATA_AGREEMENT_EVIDENCE_FIELDS,
         ),
         NOTEBOOK_REGISTRY_TABLE: _string_metadata_schema(NOTEBOOK_REGISTRY_TABLE, NOTEBOOK_REGISTRY_FIELDS),
     }

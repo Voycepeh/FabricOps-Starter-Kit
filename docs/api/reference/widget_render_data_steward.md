@@ -70,7 +70,7 @@ dict[str, Any]
 
 ### Return interpretation
 
-The widget itself is the user interface; saved steward values are available to downstream agreement evidence only after the user completes the widget action.
+The widget itself is the user interface; saved steward values are available to downstream agreement workflows only after the user completes the widget action.
 
 ## Raises / Errors
 
@@ -112,5 +112,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
-    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 5:03 PM SGT
+    Call-flow data generated: 14 Jul 2026, 5:02 PM SGT

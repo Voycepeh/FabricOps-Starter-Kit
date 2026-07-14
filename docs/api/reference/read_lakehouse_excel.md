@@ -145,5 +145,5 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
-    Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 5:03 PM SGT
+    Call-flow data generated: 14 Jul 2026, 5:02 PM SGT
