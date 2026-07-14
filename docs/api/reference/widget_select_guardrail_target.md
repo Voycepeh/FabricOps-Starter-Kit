@@ -78,7 +78,7 @@ Not documented yet
 
 ### Common failure causes
 
-- METADATA_DATA_CATALOGUE has no profiles.
+- METADATA_DATA_PROFILED has no profiles.
 - The selected table lacks metadata identity fields.
 - Metadata tables cannot be read.
 - ipywidgets is unavailable.
@@ -112,5 +112,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
     Call-flow data generated: 13 Jul 2026, 11:33 PM SGT

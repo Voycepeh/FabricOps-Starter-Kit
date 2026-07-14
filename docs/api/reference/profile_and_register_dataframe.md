@@ -9,20 +9,20 @@
 
 ## Call-flow summary
 
-- Downstream callables: 90
-- Shared helpers: 40
-- Private helpers: 48
+- Downstream callables: 125
+- Shared helpers: 48
+- Private helpers: 75
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_and_register_dataframe">Open Preview call flow</a>
 
-Profile and append one DataFrame snapshot to METADATA_DATA_CATALOGUE.
+Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identities to METADATA_DATA_CATALOGUE.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:193`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:294`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L193-L305">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L294-L413">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -65,7 +65,7 @@ def profile_and_register_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-catalogue_profile_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")
+profiled_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")
 ```
 
 </div>
@@ -75,7 +75,7 @@ catalogue_profile_df = profile_and_register_dataframe(df_customer, profile_role=
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. The helper does not sample, re-read, or mutate this DataFrame. |
-| `profile_role` | `{"source", "target"}` | Yes | Execution participation context for the DataFrame in the notebook flow. The validated value is not stored in ``METADATA_DATA_CATALOGUE``; an automatic lineage flow records one table-level runtime participation row. |
+| `profile_role` | `{"source", "target"}` | Yes | Execution participation context for the DataFrame in the notebook flow. The validated value is not stored in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``; an automatic lineage flow records one table-level runtime participation row. |
 | `environment_name` | `str` | Yes | FabricOps environment name to persist with the catalogue snapshot. |
 | `store_type` | `{"lakehouse", "warehouse"}` | Yes | Physical store type for the profiled asset. |
 | `layer` | `str` | Yes | Logical lakehouse or warehouse layer for the profiled asset. |
@@ -83,11 +83,11 @@ catalogue_profile_df = profile_and_register_dataframe(df_customer, profile_role=
 | `schema_name` | `str` | No | Optional physical schema name. Use ``None`` for lakehouse tables without a separate schema. |
 | `frequency_columns` | `sequence of str` | No | Columns to pass to ``profile_frequency_distribution`` for top-N value evidence. ``None`` or an empty sequence skips frequency profiling. |
 | `frequency_top_n` | `int, default=20` | No | Number of ranked values to request from frequency profiling. |
-| `is_sampled` | `bool, default=False` | No | Caller-declared provenance flag persisted in the catalogue snapshot. |
+| `is_sampled` | `bool, default=False` | No | Caller-declared provenance flag persisted in the profiled evidence. |
 
 ## Returns
 
-Final Spark DataFrame appended to METADATA_DATA_CATALOGUE.
+Detailed Spark DataFrame appended to METADATA_DATA_PROFILED.
 
 ### Return interpretation
 
@@ -127,5 +127,5 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 13 Jul 2026, 11:33 PM SGT
+    Reference pages generated: 14 Jul 2026, 1:33 PM SGT
     Call-flow data generated: 13 Jul 2026, 11:33 PM SGT
