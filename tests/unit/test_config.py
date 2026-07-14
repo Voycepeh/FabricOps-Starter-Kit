@@ -669,7 +669,14 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "table_name",
         "column_name",
         "data_type",
+        "_committed_by",
         "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
     ]
     assert profiling_fields.isdisjoint(catalogue_names)
     assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(catalogue_names)
@@ -678,8 +685,8 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
-    assert audit_names & set(catalogue_names) == {"_committed_at"}
-    assert audit_names & set(profiled_names) == {"_committed_at"}
+    assert audit_names.issubset(catalogue_names)
+    assert audit_names.issubset(profiled_names)
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
@@ -940,10 +947,7 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     assert list(registry) == CANONICAL_METADATA_TABLES
     for table_name, schema in registry.items():
         fields = {field.name: type(field.dataType).__name__ for field in schema.fields}
-        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_LINEAGE"}:
-            assert audit_columns & set(fields) <= {"_committed_at"}
-        else:
-            assert audit_columns.issubset(fields)
+        assert audit_columns.issubset(fields)
         sample = {}
         for field_name, type_name in fields.items():
             if type_name == "TimestampType":
@@ -1078,12 +1082,12 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     for table_name, schema in registry.items():
         names = [row["name"] for row in metadata_table_schema_rows(schema)]
         if table_name == "METADATA_DATA_CATALOGUE":
-            assert names[-1:] == ["_committed_at"]
+            assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
             assert timestamp_fields == ["_committed_at"]
         elif table_name == "METADATA_DATA_PROFILED":
-            assert names[-1:] == ["_committed_at"]
-        elif table_name != "METADATA_DATA_LINEAGE":
+            assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
+        else:
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
 
 
@@ -1095,15 +1099,9 @@ def test_metadata_audit_schema_nullability_contract():
     registry = metadata_table_schema_registry()
     for table_name, schema in registry.items():
         fields = {field.name: field for field in schema.fields}
-        if table_name == "METADATA_DATA_LINEAGE":
-            continue
-        expected_audit_names = ["_committed_at"] if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED"} else audit_names
-        for name in expected_audit_names:
+        for name in audit_names:
             assert fields[name].nullable is False, table_name
-        if table_name in {"METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED"}:
-            assert set(audit_names) & set(fields) == {"_committed_at"}
-        else:
-            assert set(audit_names).issubset(fields)
+        assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
     assert access_fields[:14] == [
