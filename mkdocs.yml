@@ -35,14 +35,16 @@ nav:
       - 0.1.0: releases/0.1.0/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
-      - Data Access: reference/metadata/metadata_data_access.md
-      - Data Agreement: reference/metadata/metadata_data_agreement.md
-      - Data Catalogue: reference/metadata/metadata_data_catalogue.md
-      - Data Lineage: reference/metadata/metadata_data_lineage.md
       - Data Steward: reference/metadata/metadata_data_steward.md
+      - Data Agreement: reference/metadata/metadata_data_agreement.md
+      - Data Contract: reference/metadata/metadata_data_contract.md
+      - Data Catalogue: reference/metadata/metadata_data_catalogue.md
+      - Data Profiled: reference/metadata/metadata_data_profiled.md
+      - Data Lineage: reference/metadata/metadata_data_lineage.md
+      - Data Access: reference/metadata/metadata_data_access.md
       - Enrichment: reference/metadata/metadata_enrichment.md
-      - Guardrail Results: reference/metadata/metadata_guardrail_results.md
       - Guardrail: reference/metadata/metadata_guardrail.md
+      - Guardrail Results: reference/metadata/metadata_guardrail_results.md
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
