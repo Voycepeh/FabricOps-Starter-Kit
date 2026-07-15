@@ -1103,7 +1103,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 145,
+      "source_end_line": 310,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_start_line": 67,
       "supports_live_contract": false,
@@ -1126,9 +1126,9 @@
       "qualified_name": "fabricops_kit.config.setup_notebook._get_fabric_runtime_metadata",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 182,
+      "source_end_line": 263,
       "source_path": "src/fabricops_kit/config/setup_notebook.py",
-      "source_start_line": 148,
+      "source_start_line": 229,
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -1154,7 +1154,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 145,
+      "source_end_line": 226,
       "source_path": "src/fabricops_kit/config/setup_notebook.py",
       "source_start_line": 20,
       "supports_live_contract": true,
@@ -1649,7 +1649,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 49,
+      "source_end_line": 104,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
       "source_start_line": 10,
       "supports_live_contract": true,
@@ -1705,7 +1705,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 119,
+      "source_end_line": 210,
       "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
       "source_start_line": 15,
       "supports_live_contract": true,
@@ -1733,7 +1733,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 56,
+      "source_end_line": 100,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 10,
       "supports_live_contract": true,
@@ -1761,7 +1761,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 74,
+      "source_end_line": 91,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
       "source_start_line": 15,
       "supports_live_contract": true,
@@ -1789,7 +1789,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 70,
+      "source_end_line": 87,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
       "source_start_line": 10,
       "supports_live_contract": true,
@@ -2670,7 +2670,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 87,
+      "source_end_line": 230,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 15,
       "supports_live_contract": true,
@@ -2698,7 +2698,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 78,
+      "source_end_line": 209,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 10,
       "supports_live_contract": true,
@@ -4056,7 +4056,7 @@
       "qualified_name": "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 452,
+      "source_end_line": 573,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
       "source_start_line": 330,
       "supports_live_contract": false,
@@ -4084,7 +4084,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 34,
+      "source_end_line": 49,
       "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
       "source_start_line": 8,
       "supports_live_contract": false,
@@ -4147,7 +4147,7 @@
       "qualified_name": "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 123,
+      "source_end_line": 159,
       "source_path": "src/fabricops_kit/pipeline/profile_frequency_distribution.py",
       "source_start_line": 46,
       "supports_live_contract": false,
@@ -8807,7 +8807,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 452,
+          "source_end_line": 573,
           "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
           "source_start_line": 330,
           "supports_live_contract": false,
@@ -10675,7 +10675,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 123,
+          "source_end_line": 159,
           "source_path": "src/fabricops_kit/pipeline/profile_frequency_distribution.py",
           "source_start_line": 46,
           "supports_live_contract": false,
@@ -13582,7 +13582,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 34,
+          "source_end_line": 49,
           "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
           "source_start_line": 8,
           "supports_live_contract": false,
@@ -13740,55 +13740,55 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Execution participation context for the DataFrame in the notebook flow. The validated value is not stored in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``; an automatic lineage flow records one table-level runtime participation row.",
+          "description": "Records whether the profiled asset participated in the notebook activity as an input or an output: ``source`` for an activity input and ``target`` for an activity output. The value is stored in ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``.",
           "name": "profile_role",
           "required": "Yes",
           "type": "{\"source\", \"target\"}"
         },
         {
-          "description": "FabricOps environment name to persist with the catalogue snapshot.",
+          "description": "FabricOps environment context used to resolve the metadata target configuration and persisted environment identity.",
           "name": "environment_name",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Physical store type for the profiled asset.",
+          "description": "Physical store type of the business asset being profiled. This identifies the asset and does not redirect metadata writes to that business store.",
           "name": "store_type",
           "required": "Yes",
           "type": "{\"lakehouse\", \"warehouse\"}"
         },
         {
-          "description": "Logical lakehouse or warehouse layer for the profiled asset.",
+          "description": "Logical lakehouse or warehouse layer of the business asset being profiled. This identifies the asset and does not redirect metadata writes.",
           "name": "layer",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Physical table name for the profiled asset.",
+          "description": "Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes.",
           "name": "table_name",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Optional physical schema name. Use ``None`` for lakehouse tables without a separate schema.",
+          "description": "Optional physical schema name for the business asset. Use ``None`` for lakehouse tables without a separate schema. This identifies the asset and does not redirect metadata writes.",
           "name": "schema_name",
           "required": "No",
           "type": "str, optional"
         },
         {
-          "description": "Columns to pass to ``profile_frequency_distribution`` for top-N value evidence. ``None`` or an empty sequence skips frequency profiling.",
+          "description": "Selected columns that should receive embedded top-value frequency evidence. ``None`` or an empty sequence skips frequency profiling entirely. Requested columns should also be eligible for the main statistical profile.",
           "name": "frequency_columns",
           "required": "No",
           "type": "sequence of str, optional"
         },
         {
-          "description": "Number of ranked values to request from frequency profiling.",
+          "description": "Number of ranked values to retain per selected frequency column.",
           "name": "frequency_top_n",
           "required": "No",
           "type": "int, default=20"
         },
         {
-          "description": "Caller-declared provenance flag persisted in the profiled evidence.",
+          "description": "Caller-declared provenance flag persisted in the profiled evidence only. It does not cause sampling. When ``True``, the supplied DataFrame must already have been sampled by the caller, and all counts and percentages describe that supplied sample.",
           "name": "is_sampled",
           "required": "No",
           "type": "bool, default=False"
@@ -13800,7 +13800,7 @@
         "architecture_violation"
       ],
       "qualified_name": "fabricops_kit.pipeline.profile_and_register_dataframe.profile_and_register_dataframe",
-      "raises_documentation": "ValueError\n    If profile role, store type, or required physical identity inputs are invalid.",
+      "raises_documentation": "ValueError\n    If profile role, store type, or required physical identity inputs are invalid.\nRuntimeError\n    If lineage registration fails after profile and catalogue registration\n    succeed.",
       "refactor_signals": [
         {
           "evidence": [
@@ -13820,7 +13820,7 @@
               "function_name": "profile_frequency_distribution",
               "function_type": "public_dependency",
               "qualified_name": "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution",
-              "source_end_line": 123,
+              "source_end_line": 159,
               "source_path": "src/fabricops_kit/pipeline/profile_frequency_distribution.py",
               "source_start_line": 46,
               "violation_details": [
@@ -13835,7 +13835,7 @@
               "function_name": "profile_dataframe",
               "function_type": "public_dependency",
               "qualified_name": "fabricops_kit.pipeline.profile_dataframe.profile_dataframe",
-              "source_end_line": 34,
+              "source_end_line": 49,
               "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
               "source_start_line": 8,
               "violation_details": [
@@ -13854,19 +13854,19 @@
       "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
       "release_history": [],
       "release_versions": [],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Detailed profiled DataFrame appended to ``METADATA_DATA_PROFILED``.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing one canonical profiling record for each\n    eligible column in the supplied DataFrame. This is the same DataFrame\n    appended to ``METADATA_DATA_PROFILED`` and includes physical asset\n    identity, statistical metrics, optional frequency JSON, schema\n    identity, sampling provenance, and runtime audit fields. The function\n    does not return the generated catalogue rows or lineage event.",
       "scope": 54,
       "signals": [
         "large_width_or_depth",
         "architecture_violation"
       ],
       "signature": "def profile_and_register_dataframe(df, *, profile_role, environment_name, store_type, layer, table_name, schema_name=None, frequency_columns=None, frequency_top_n=20, is_sampled=False)",
-      "source_end_line": 452,
+      "source_end_line": 573,
       "source_path": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
       "source_start_line": 330,
-      "summary": "Profile evidence, catalogue identities, and lineage for one DataFrame.",
+      "summary": "Profile a supplied Spark DataFrame and register its metadata evidence.",
       "transitive_function_count": 54,
-      "usage_notes": "Metadata writes route through the configured ``metadata`` target from\n``00_env_config``. Detailed profiling evidence is appended to\n``METADATA_DATA_PROFILED`` and distinct catalogue identities are upserted\nto ``METADATA_DATA_CATALOGUE`` before lineage registration. Guardrail\nexecution is a separate workflow.",
+      "usage_notes": "Processing flow:\n\n1. Run ``profile_dataframe(df)`` to produce one statistical profile row per\n   eligible input column.\n2. When ``frequency_columns`` is provided, run\n   ``profile_frequency_distribution`` over those columns using\n   ``frequency_top_n``.\n3. Convert the multiple frequency rows for each column into one\n   deterministic JSON document.\n4. Left-join that JSON to the statistical profile on\n   ``profile_dataframe.COLUMN_NAME = profile_frequency_distribution.COLUMN_NAME``.\n5. Append the detailed profile rows to ``METADATA_DATA_PROFILED``.\n6. Derive and upsert physical column identities into\n   ``METADATA_DATA_CATALOGUE``.\n7. Upsert one table-level source or target participation event into\n   ``METADATA_DATA_LINEAGE``.\n8. Return the detailed Spark DataFrame written to\n   ``METADATA_DATA_PROFILED``.\n\nFrequency join behavior:\n\n- The statistical profile is the left side of the join, so every eligible\n  statistical profile row remains in the returned result.\n- Only columns listed in ``frequency_columns`` receive ``frequency_json``.\n  Other profiled columns receive null for ``frequency_json``.\n- ``frequency_columns=None`` or an empty sequence skips frequency profiling\n  entirely.\n- Frequency values are ordered deterministically by rank.\n\nExample ``frequency_json`` structure:\n\n.. code-block:: json\n\n   {\n     \"profiled_row_count\": 1000,\n     \"profiled_non_null_count\": 995,\n     \"values\": [\n       {\n         \"value\": \"Active\",\n         \"count\": 700,\n         \"percent\": 70.0,\n         \"rank\": 1\n       }\n     ]\n   }\n\n``METADATA_DATA_PROFILED`` receives one appended row per eligible input\nDataFrame column. Repeated executions create additional profiling\nsnapshots, and the returned DataFrame is the same detailed DataFrame\nappended to this table. Its logical field groups are:\n\n- Identity fields: ``metadata_table_key``, ``metadata_column_key``,\n  ``environment_name``, ``store_type``, ``layer``, ``schema_name``,\n  ``table_name``, ``column_name``, ``data_type``.\n- Statistical fields: ``row_count``, ``non_null_count``, ``null_count``,\n  ``null_percent``, ``distinct_count``, ``distinct_percent``,\n  ``mean_value``, ``stddev_value``, ``min_value``,\n  ``percentile_25_value``, ``median_value``, ``percentile_75_value``,\n  ``max_value``.\n- Frequency and provenance fields: ``is_sampled``, ``frequency_json``,\n  ``schema_fingerprint``, ``profiled_at``.\n- Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,\n  ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,\n  ``_metadata_lakehouse_name``, ``_activity_id``.\n\n``metadata_table_key`` is a deterministic identity derived from\nenvironment, store type, layer, schema, and table name.\n``metadata_column_key`` is derived from the table key and column name.\n``schema_fingerprint`` identifies the observed Spark schema.\n\n``METADATA_DATA_CATALOGUE`` stores physical table and column identities,\nnot profiling measurements. The function derives catalogue rows from the\ndetailed profile and upserts ``metadata_table_key``,\n``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,\n``store_type``, ``layer``, ``schema_name``, ``table_name``,\n``column_name``, ``data_type``, and the standard audit fields using\n``metadata_table_key + metadata_column_key + schema_fingerprint`` as the\nidempotent identity. Reprofiling the same column under the same schema\nupdates the existing identity, while a changed schema fingerprint can\ncreate a new catalogue snapshot.\n\n``METADATA_DATA_LINEAGE`` stores one table-level lineage participation row\nper function call. Key lineage fields include ``lineage_event_id``,\n``activity_id``, ``notebook_id``, ``notebook_name``, ``workspace_id``,\n``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,\n``profile_role``, ``profiled_at``, ``committed_by``,\n``environment_name``, ``metadata_lakehouse_name``, and the standard audit\nfields. ``lineage_event_id`` is deterministically derived from\n``activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and\n``profile_role``.\n\nProfile and catalogue registration occur before lineage registration. If\nlineage registration fails after those writes succeed, the function raises\na ``RuntimeError`` explaining that profile and catalogue registration\nsucceeded but lineage registration failed. Guardrail execution is a\nseparate workflow.",
       "width": 13
     },
     {
@@ -13913,7 +13913,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 34,
+          "source_end_line": 49,
           "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
           "source_start_line": 8,
           "supports_live_contract": false,
@@ -14094,14 +14094,14 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame with one row per eligible source column and the\n    documented profiling columns.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame containing one profiling row for each column in the\n    input DataFrame, excluding FabricOps technical columns and any columns\n    supplied through ``exclude_columns``. Returned columns are\n    ``COLUMN_NAME`` (input column name), ``DATA_TYPE`` (Spark data type),\n    ``ROW_COUNT`` (rows in ``df``), ``NON_NULL_COUNT`` (non-null values),\n    ``NULL_COUNT`` (null values), ``NULL_PERCENT`` (null percentage),\n    ``DISTINCT_COUNT`` (distinct value count), ``DISTINCT_PERCENT``\n    (distinct value percentage), ``MEAN`` (numeric average), ``STDDEV``\n    (numeric sample standard deviation), ``MIN_VALUE`` (minimum value as a\n    string when supported), ``PERCENTILE_25`` (25th percentile for numeric\n    columns), ``MEDIAN`` (50th percentile for numeric columns),\n    ``PERCENTILE_75`` (75th percentile for numeric columns), and\n    ``MAX_VALUE`` (maximum value as a string when supported).",
       "scope": 4,
       "signals": [],
       "signature": "def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=True)",
-      "source_end_line": 34,
+      "source_end_line": 49,
       "source_path": "src/fabricops_kit/pipeline/profile_dataframe.py",
       "source_start_line": 8,
-      "summary": "Return structural and statistical profile rows for a Spark DataFrame.",
+      "summary": "Calculate column-level profiling statistics for a Spark DataFrame.",
       "transitive_function_count": 4,
       "usage_notes": "",
       "width": 1
@@ -14143,7 +14143,7 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 123,
+          "source_end_line": 159,
           "source_path": "src/fabricops_kit/pipeline/profile_frequency_distribution.py",
           "source_start_line": 46,
           "supports_live_contract": false,
@@ -14265,13 +14265,13 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Source columns to profile. By default, eligible non-technical scalar columns are selected.",
+          "description": "Source columns to profile. When supplied, each named column is profiled. When omitted, eligible non-technical scalar columns are selected automatically. Array, map, struct, and binary columns are excluded from automatic selection.",
           "name": "columns",
           "required": "No",
           "type": "list[str] or set[str] or tuple[str, ...], optional"
         },
         {
-          "description": "Maximum ranked values to retain per source column.",
+          "description": "Maximum ranked frequency rows to retain per profiled column. This limits returned result size only; it does not sample the DataFrame or avoid counting all distinct values before ranking them. To return every distinct value, supply a sufficiently large positive ``top_n``.",
           "name": "top_n",
           "required": "No",
           "type": "int"
@@ -14285,16 +14285,16 @@
       "refactor_summary": "No refactor signals detected.",
       "release_history": [],
       "release_versions": [],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame containing one row per retained top value per profiled\n    source column.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing up to ``top_n`` ranked frequency rows for\n    each selected input column. Each row represents one distinct value,\n    including null, and contains its count, percentage, rank, source data\n    type, total profiled row count, and non-null count. Returned columns\n    are ``COLUMN_NAME`` (profiled input column name), ``DATA_TYPE`` (Spark\n    data type of the input column), ``VALUE`` (distinct value converted to\n    a string; null remains null), ``FREQUENCY_COUNT`` (number of input rows\n    containing the value), ``FREQUENCY_PERCENT`` (percentage of all\n    supplied DataFrame rows containing the value), ``FREQUENCY_RANK``\n    (rank within the profiled column ordered by descending frequency),\n    ``PROFILED_ROW_COUNT`` (total number of rows in the supplied\n    DataFrame), and ``PROFILED_NON_NULL_COUNT`` (number of non-null rows\n    for the profiled column).",
       "scope": 3,
       "signals": [],
       "signature": "def profile_frequency_distribution(df, *, columns=None, top_n: int=20)",
-      "source_end_line": 123,
+      "source_end_line": 159,
       "source_path": "src/fabricops_kit/pipeline/profile_frequency_distribution.py",
       "source_start_line": 46,
-      "summary": "Return top-N value frequencies for selected Spark DataFrame columns.",
+      "summary": "Calculate exact value frequencies for selected Spark DataFrame columns.",
       "transitive_function_count": 3,
-      "usage_notes": "",
+      "usage_notes": "The function performs an exact Spark grouped count over the supplied\nDataFrame for every selected column. ``top_n`` limits the returned rows,\nnot the cost of grouping all distinct values. For large DataFrames,\nexplicitly select useful categorical or low-to-medium-cardinality columns\nand generally avoid identifiers, UUIDs, timestamps, free-text fields, and\ncolumns where most values are unique. For exploratory analysis, callers may\npass a manually filtered or sampled DataFrame; when they do, the returned\ncounts and percentages describe that filtered or sampled input rather than\nthe original full DataFrame.",
       "width": 3
     },
     {
@@ -14342,7 +14342,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 49,
+          "source_end_line": 104,
           "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
           "source_start_line": 10,
           "supports_live_contract": true,
@@ -14959,13 +14959,13 @@
       "max_depth": 4,
       "parameters": [
         {
-          "description": "CSV file or folder path resolved by the Fabric resolver.",
+          "description": "Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area.",
           "name": "relative_path",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Logical lakehouse target from ``00_env_config``.",
+          "description": "Logical Lakehouse target from ``00_env_config``. It is not necessarily the literal physical Lakehouse name.",
           "name": "target",
           "required": "No",
           "type": "str"
@@ -14977,13 +14977,13 @@
           "type": "object, optional"
         },
         {
-          "description": "Whether the first row contains column names.",
+          "description": "Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``.",
           "name": "header",
           "required": "No",
           "type": "bool"
         },
         {
-          "description": "Active Fabric context override. **options Additional Spark CSV reader options forwarded to Spark's CSV reader.",
+          "description": "Active Fabric context override. **options Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them.",
           "name": "context",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -15004,16 +15004,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the CSV path.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing the CSV file or compatible CSV\n    files found at the resolved Lakehouse ``Files`` path. Column types\n    follow Spark CSV reader behavior and generally remain strings unless\n    schema inference or other schema handling is explicitly requested.",
       "scope": 14,
       "signals": [],
       "signature": "def read_lakehouse_csv(relative_path: str, *, target: str='source', spark_session=None, header: bool=True, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 49,
+      "source_end_line": 104,
       "source_path": "src/fabricops_kit/io/read_lakehouse_csv.py",
       "source_start_line": 10,
-      "summary": "Read a CSV file from a configured Fabric-resolved path through Spark.",
+      "summary": "Resolve CSV data in a Lakehouse Files path and return a lazy Spark DataFrame.",
       "transitive_function_count": 14,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions.",
+      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's CSV reader with the supplied\noptions. Calling this function constructs a Spark read plan, and the file\nscan occurs when a downstream action executes, such as ``display``,\n``count``, ``collect``, or a DataFrame write. The function does not\nimmediately load the complete file into notebook memory.\n\nCompact examples:\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", target=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers/\", target=\"source\")``\n\n``df = read_lakehouse_csv(\"incoming/customers.csv\", target=\"source\", inferSchema=True)``\n\n``df = read_lakehouse_csv(\"incoming/orders.csv\", target=\"source\", header=True, inferSchema=True, sep=\",\", encoding=\"UTF-8\", mode=\"PERMISSIVE\")``\n\nWhen a folder path is supplied, Spark reads compatible CSV files from that\npath into one DataFrame according to Spark CSV reader behavior. FabricOps\ndoes not manually loop through or append files.\n\nThe function sets the ``header`` option and forwards the caller's CSV\noptions. It does not automatically infer data types. Unless the caller\nrequests schema inference or another schema strategy, Spark CSV columns are\ngenerally read as strings. ``inferSchema=True`` can be passed through\n``**options`` when inference is desired.\n\nThis function does not convert CSV data into a Delta table, write, move,\nrename, or delete source files, register metadata, profile the returned\nDataFrame, remove duplicate rows, standardize column names, infer schema\nunless requested through Spark options, validate that every CSV file in a\nfolder has identical structure, apply custom malformed-record handling\nbeyond the supplied Spark CSV options, or automatically cache or persist\nthe returned DataFrame.",
       "width": 3
     },
     {
@@ -15815,7 +15815,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 119,
+          "source_end_line": 210,
           "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
           "source_start_line": 15,
           "supports_live_contract": true,
@@ -16543,19 +16543,19 @@
       "max_depth": 4,
       "parameters": [
         {
-          "description": "Parquet file path resolved by the Fabric resolver. Root-level files such as ``customers.parquet`` and nested paths such as ``input/customers.parquet`` are supported.",
+          "description": "Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported.",
           "name": "relative_path",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Logical lakehouse target from ``00_env_config``.",
+          "description": "Logical Lakehouse target from ``00_env_config``.",
           "name": "target",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Whether to print read and timestamp-conversion fallback progress.",
+          "description": "Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data.",
           "name": "verbose",
           "required": "No",
           "type": "bool"
@@ -16567,7 +16567,7 @@
           "type": "object, optional"
         },
         {
-          "description": "Active Fabric context override. **options Additional Spark Parquet reader options forwarded to every original and timestamp-converted fallback read attempt.",
+          "description": "Active Fabric context override. **options Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options.",
           "name": "context",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -16576,7 +16576,7 @@
       "public_import_path": "fabricops_kit.read_lakehouse_parquet",
       "public_signals": [],
       "qualified_name": "fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "RuntimeError\n    When neither the original path nor the ``_tsus`` fallback path can be\n    read successfully.",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -16588,16 +16588,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the Parquet path.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame backed by either the original resolved Parquet path\n    or the compatible ``_tsus`` fallback path. Before returning, the\n    function executes a one-row Spark action to verify that the selected\n    data can be decoded.",
       "scope": 14,
       "signals": [],
       "signature": "def read_lakehouse_parquet(relative_path: str, *, target: str='source', verbose: bool=True, spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 119,
+      "source_end_line": 210,
       "source_path": "src/fabricops_kit/io/read_lakehouse_parquet.py",
       "source_start_line": 15,
-      "summary": "Read a Parquet file from a configured Fabric-resolved path through Spark.",
+      "summary": "Read Parquet data from the configured Lakehouse ``Files`` area through Spark.",
       "transitive_function_count": 14,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Files path from\n``00_env_config`` and then delegates to Spark's Parquet reader. If Spark\ncannot read the original path because of timestamp precision issues, the\nexisting ``_tsus`` fallback conversion path is attempted with the same\nreader options.",
+      "usage_notes": "Normal read flow:\n\n``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``\n\nSpark reads are normally lazy, but this function deliberately executes\n``limit(1).collect()`` before returning. The validation action confirms\nthat Spark can decode at least one row. The function is therefore not a\npurely lazy reader, but it does not collect the entire dataset to the\ndriver.\n\n``target`` is a logical Lakehouse target from ``00_env_config`` and\n``relative_path`` is resolved under the configured Lakehouse ``Files``\narea. Root-level and nested paths are supported. The resolved location is\nconceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:\n\n``df = read_lakehouse_parquet(\"customers.parquet\", target=\"source\")``\n\n``df = read_lakehouse_parquet(\"incoming/2026/customers.parquet\", target=\"source\")``\n\nDerived ``_tsus`` fallback naming:\n\n- ``customers.parquet`` becomes ``customers_tsus.parquet``.\n- ``incoming/2026/customers.parquet`` becomes\n  ``incoming/2026_tsus/customers.parquet``.\n\nThe function does not replace the original file.\n\nThe fallback begins after any exception from the original Spark read or\nvalidation action. The current implementation does not first confirm that\nthe original failure is definitely timestamp-related. It then attempts the\n``_tsus`` path. If that path is missing, it performs one single-file\nconversion and retries. If both original and fallback reads fail, the\nfunction raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,\nmount, or conversion errors may appear in verbose output before the final\n``RuntimeError``.\n\nThe compatibility copy is produced by reading the original Parquet file\nwith pandas and PyArrow, then rewriting it as a new Parquet file using\nmicrosecond timestamp precision with ``coerce_timestamps=\"us\"`` and\ntruncated timestamps allowed. The compatibility copy may lose\nsub-microsecond timestamp precision because nanosecond timestamps are\ncoerced to microseconds.\n\nSpark may normally read a Parquet file or compatible dataset path, but the\nautomatic conversion helper is designed for one local Parquet file. It is\nnot a distributed folder conversion workflow, and large or multi-file\nremediation should be handled as a separate conversion pipeline.\n\nThe normal Spark read uses the resolved configured ABFSS path. The\nconversion fallback assumes the file is also accessible through the\nnotebook's default attached Lakehouse mount under\n``/lakehouse/default/Files/``. A configured target may resolve correctly\nfor Spark reading while still being unavailable to the local fallback\nmount, in which case fallback conversion can fail.\n\nCompact reader-option example:\n\n``df = read_lakehouse_parquet(\"incoming/events.parquet\", target=\"source\", mergeSchema=True)``\n\nThis function does not read a managed Delta table, register Parquet data as\na Lakehouse table, replace or modify the original Parquet file, convert\nevery file in a Parquet folder, perform a distributed timestamp\nconversion, guarantee that the original failure was timestamp-related,\npreserve nanosecond precision in the converted copy, delete or refresh an\nexisting ``_tsus`` copy, register metadata, profile the returned\nDataFrame, or automatically cache or persist the returned DataFrame.",
       "width": 4
     },
     {
@@ -16645,7 +16645,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 56,
+          "source_end_line": 100,
           "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
           "source_start_line": 10,
           "supports_live_contract": true,
@@ -17303,13 +17303,13 @@
           "type": "str"
         },
         {
-          "description": "Logical lakehouse target from ``00_env_config``.",
+          "description": "Logical Lakehouse target from ``00_env_config``, such as ``source`` or ``unified``. FabricOps resolves this target to the configured physical Lakehouse and Delta table path.",
           "name": "target",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Optional schema override for schema-enabled lakehouses.",
+          "description": "Optional schema override for schema-enabled Lakehouses. Supply it separately from ``table_name``: use ``schema=\"sales\"`` and ``table_name=\"orders\"`` rather than ``table_name=\"sales.orders\"``. This is normally omitted for Lakehouses without schemas.",
           "name": "schema",
           "required": "No",
           "type": "str | None"
@@ -17321,7 +17321,7 @@
           "type": "object, optional"
         },
         {
-          "description": "Active Fabric context override. **options Additional Spark Delta reader options forwarded to ``DataFrameReader``.",
+          "description": "Active Fabric context override. **options Additional Spark Delta ``DataFrameReader`` options forwarded to the Delta reader. These options do not provide FabricOps-level filtering or projection.",
           "name": "context",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -17342,16 +17342,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded from the configured Delta table path.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A lazy Spark DataFrame representing all rows and columns in the\n    resolved Lakehouse Delta table. The data is evaluated when a downstream\n    Spark action runs.",
       "scope": 16,
       "signals": [],
       "signature": "def read_lakehouse_table(table_name: str, *, target: str='source', schema: str | None=None, spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 56,
+      "source_end_line": 100,
       "source_path": "src/fabricops_kit/io/read_lakehouse_table.py",
       "source_start_line": 10,
-      "summary": "Read a Delta table from a Fabric lakehouse.",
+      "summary": "Resolve a configured Lakehouse Delta table and return a Spark DataFrame.",
       "transitive_function_count": 16,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options.",
+      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta reader with any\nsupplied reader options. Filtering and column selection are applied later\nthrough normal Spark DataFrame operations. Conceptual examples:\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\")``\n\n``df = read_lakehouse_table(table_name=\"orders\", target=\"source\", schema=\"sales\")``\n\n``orders_df = read_lakehouse_table(table_name=\"sales_orders\", target=\"source\")``\n\n``recent_orders_df = orders_df.select(\"order_id\", \"customer_id\", \"order_date\", \"amount\").where(\"order_date >= '2026-01-01'\")``\n\n``read_lakehouse_table`` itself does not accept filtering or projection\narguments, but Spark may push compatible downstream filters and\nprojections into the Delta scan during execution.\n\nThis function does not read through the Warehouse SQL connector, execute a\nSQL query, write or copy the table, register metadata, create the table,\nmutate the source table, or automatically cache or persist the returned\nDataFrame.",
       "width": 3
     },
     {
@@ -17399,7 +17399,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 74,
+          "source_end_line": 91,
           "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
           "source_start_line": 15,
           "supports_live_contract": true,
@@ -17900,7 +17900,7 @@
       "max_depth": 4,
       "parameters": [
         {
-          "description": "SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric warehouse connector.",
+          "description": "Read-only SQL ``SELECT`` statement, or a CTE beginning with ``WITH`` and ending in a ``SELECT``, to execute through the Fabric Warehouse SQL serving engine.",
           "name": "query",
           "required": "Yes",
           "type": "str"
@@ -17939,16 +17939,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame returned by the SQL serving engine.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing exactly the rows and columns returned by\n    the supplied Warehouse SQL query.",
       "scope": 12,
       "signals": [],
       "signature": "def read_warehouse_query(query: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 74,
+      "source_end_line": 91,
       "source_path": "src/fabricops_kit/io/read_warehouse_query.py",
       "source_start_line": 15,
-      "summary": "Read warehouse rows with SQL pushdown.",
+      "summary": "Execute a read-only Warehouse SQL query and return the query result.",
       "transitive_function_count": 12,
-      "usage_notes": "FabricOps resolves the configured Warehouse target, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured target\nidentifies the warehouse database/artifact.",
+      "usage_notes": "FabricOps resolves the configured Warehouse target, sets the Fabric\nconnector database to that warehouse artifact, and delegates the read-only\nSQL text to the Fabric Warehouse Spark connector for pushdown. Query callers\ncan use two-part names such as ``dbo.orders`` when the configured target\nidentifies the warehouse database/artifact. Conceptual example:\n\n``df = read_warehouse_query(\"\"\"SELECT DepartmentId, DepartmentName FROM dbo.DimDepartment WHERE IsActive = 1\"\"\")``\n\nThat query returns only the selected columns, filters rows in the\nWarehouse engine, and transfers only the resulting dataset to Spark.",
       "width": 4
     },
     {
@@ -17996,7 +17996,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 70,
+          "source_end_line": 87,
           "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
           "source_start_line": 10,
           "supports_live_contract": true,
@@ -18611,19 +18611,19 @@
       "max_depth": 4,
       "parameters": [
         {
-          "description": "Warehouse schema name.",
+          "description": "Physical Warehouse schema name for the source table.",
           "name": "schema",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Warehouse table name.",
+          "description": "Physical Warehouse table name for the source table.",
           "name": "table_name",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Logical warehouse target from ``00_env_config``.",
+          "description": "Logical Warehouse configuration name from ``00_env_config``. This identifies the configured Warehouse target, while ``schema`` and ``table_name`` identify the physical Warehouse table.",
           "name": "target",
           "required": "No",
           "type": "str"
@@ -18656,16 +18656,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "pyspark.sql.DataFrame\n    Spark DataFrame loaded through the Fabric warehouse connector.",
+      "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing all rows and columns returned from the\n    resolved Warehouse table.",
       "scope": 15,
       "signals": [],
       "signature": "def read_warehouse_table(schema: str, table_name: str, *, target: str='warehouse', spark_session=None, context: dict[str, Any] | None=None, **options)",
-      "source_end_line": 70,
+      "source_end_line": 87,
       "source_path": "src/fabricops_kit/io/read_warehouse_table.py",
       "source_start_line": 10,
-      "summary": "Read a full table from a Microsoft Fabric warehouse.",
+      "summary": "Read every row and every column from a Microsoft Fabric Warehouse table.",
       "transitive_function_count": 15,
-      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Use this full-table read\nfor small tables, lookup tables, smoke tests, or intentional full extracts;\nprefer ``read_warehouse_query`` for large Warehouse sources so filters and\nprojections run before Spark receives rows.",
+      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. Conceptual example:\n\n``df = read_warehouse_table(schema=\"dbo\", table_name=\"DimDepartment\")``\n\nUse ``read_warehouse_query`` instead when you need selected columns, row\nfiltering, aggregation, joins, row limits, or other caller-controlled SQL\npushdown before Spark receives rows.",
       "width": 3
     },
     {
@@ -33724,7 +33724,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 145,
+          "source_end_line": 310,
           "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
           "source_start_line": 67,
           "supports_live_contract": false,
@@ -35541,43 +35541,43 @@
       "max_depth": 5,
       "parameters": [
         {
-          "description": "Not documented yet",
+          "description": "Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables.",
           "name": "spark",
           "required": "Yes",
           "type": "Any"
         },
         {
-          "description": "Not documented yet",
+          "description": "FabricOps configuration used to resolve the selected environment and logical ``metadata`` target.",
           "name": "config",
           "required": "Yes",
           "type": "FrameworkConfig | dict[str, Any]"
         },
         {
-          "description": "Not documented yet",
+          "description": "Environment whose configured metadata lakehouse should be initialized or validated.",
           "name": "env",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Not documented yet",
+          "description": "Optional explicit schema for schema-enabled metadata lakehouses. When omitted, the configured metadata store schema is used where applicable.",
           "name": "metadata_schema",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Not documented yet",
+          "description": "When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record.",
           "name": "require_active_steward",
           "required": "No",
           "type": "bool"
         },
         {
-          "description": "Not documented yet",
+          "description": "Controls whether the concise per-table setup summary is printed.",
           "name": "verbose",
           "required": "No",
           "type": "bool"
         },
         {
-          "description": "Not documented yet",
+          "description": "When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation.",
           "name": "raise_on_failure",
           "required": "No",
           "type": "bool"
@@ -35586,7 +35586,7 @@
       "public_import_path": "fabricops_kit.setup_metadata_tables",
       "public_signals": [],
       "qualified_name": "fabricops_kit.config.setup_metadata_tables.setup_metadata_tables",
-      "raises_documentation": "Not documented yet",
+      "raises_documentation": "ValueError\n    If the configuration is invalid, the resolved ``metadata`` target is\n    not a lakehouse, or ``require_active_steward=True`` and no active\n    steward rows exist after setup.\nRuntimeError\n    If ``raise_on_failure=True`` and one or more metadata tables fail\n    creation or validation after all tables have been processed.",
       "refactor_signals": [],
       "refactor_summary": "No refactor signals detected.",
       "release_history": [
@@ -35598,16 +35598,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "Not documented yet",
+      "returns_documentation": "dict[str, Any]\n    A dictionary summarizing the completed metadata lakehouse setup,\n    including the resolved metadata schema, canonical tables checked,\n    tables created, existing tables successfully validated, failed tables,\n    per-table messages, active steward readiness, fully qualified table\n    names, and overall setup status. Key fields are ``status``,\n    ``data_agreement``, ``governance``, ``tables``, ``table_results``,\n    ``metadata_schema``, ``fully_qualified_tables``, ``created_tables``,\n    ``validated_tables``, ``failed_tables``, ``created_or_checked_tables``,\n    ``warnings``, ``active_metadata_tables``, and\n    ``active_metadata_table_count``.\n\n    ``status`` is ``\"ready\"`` when no table failures occur,\n    ``\"partial_failure\"`` when some tables succeed and some fail, and\n    ``\"failed\"`` when all table operations fail. ``data_agreement``\n    summarizes steward, agreement, and contract readiness. ``governance``\n    summarizes the remaining metadata tables. Active steward readiness\n    depends on whether active steward rows already exist.",
       "scope": 33,
       "signals": [],
       "signature": "def setup_metadata_tables(*, spark: Any, config: FrameworkConfig | dict[str, Any], env: str, metadata_schema: str | None=None, require_active_steward: bool=False, verbose: bool=True, raise_on_failure: bool=False) -> dict[str, Any]",
-      "source_end_line": 145,
+      "source_end_line": 310,
       "source_path": "src/fabricops_kit/config/setup_metadata_tables.py",
       "source_start_line": 67,
-      "summary": "Prepare and validate all FabricOps metadata tables for an environment.",
+      "summary": "Bootstrap the FabricOps metadata lakehouse for one environment.",
       "transitive_function_count": 33,
-      "usage_notes": "",
+      "usage_notes": "Setup flow:\n\n1. Validate the supplied FabricOps configuration.\n2. Resolve the selected environment and its logical ``metadata`` target.\n3. Verify that the resolved metadata target is a lakehouse.\n4. Resolve the metadata schema from ``metadata_schema`` or the configured\n   metadata store.\n5. Load the canonical metadata table schema registry.\n6. Attempt to read each canonical metadata table.\n7. When a table is missing, create an empty Spark DataFrame using its\n   canonical schema.\n8. Write that empty DataFrame to the metadata lakehouse using overwrite\n   mode to create the table.\n9. Read the created table again.\n10. Validate required column names and physical Spark data types.\n11. Continue processing the remaining tables when one table fails.\n12. Count existing active steward records.\n13. Return overall, data-agreement, governance, and per-table setup\n    results.\n\nCanonical tables created or validated from\n``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,\n``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,\n``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,\n``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,\n``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and\n``METADATA_GUARDRAIL_RESULTS``.\n\nCanonical schema intent:\n\n- ``METADATA_DATA_STEWARD`` stores ``steward_id``, ``steward_name``,\n  ``steward_role``, ``contact``, ``effective_from``, ``effective_to``,\n  ``is_active``, ``custom_fields_json``, and the standard audit fields.\n- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,\n  ``agreement_version``, ``agreement_name``, ``domain``,\n  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,\n  ``start_date``, ``expiry_date``, ``business_purpose``,\n  ``custom_fields_json``, and the standard audit fields.\n- ``METADATA_DATA_CONTRACT`` stores ``contract_id``, ``agreement_id``,\n  ``metadata_table_key``, ``schema_fingerprint``, ``contract_version``,\n  ``contract_status``, ``effective_from``, ``effective_to``,\n  ``contract_payload_json``, and the standard audit fields.\n- ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,\n  ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,\n  ``store_type``, ``layer``, ``schema_name``, ``table_name``,\n  ``column_name``, ``data_type``, and the standard audit fields.\n- ``METADATA_DATA_PROFILED`` stores ``metadata_table_key``,\n  ``metadata_column_key``, ``environment_name``, ``store_type``, ``layer``,\n  ``schema_name``, ``table_name``, ``column_name``, ``data_type``,\n  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,\n  ``distinct_count``, ``distinct_percent``, ``mean_value``,\n  ``stddev_value``, ``min_value``, ``percentile_25_value``,\n  ``median_value``, ``percentile_75_value``, ``max_value``,\n  ``is_sampled``, ``frequency_json``, ``schema_fingerprint``,\n  ``profiled_at``, and the standard audit fields.\n- ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,\n  ``notebook_id``, ``notebook_name``, ``workspace_id``,\n  ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,\n  ``profile_role``, ``profiled_at``, ``committed_by``,\n  ``environment_name``, ``metadata_lakehouse_name``, and the standard\n  audit fields.\n- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,\n  approval, expiry, table and column identity, and audit information.\n- ``METADATA_ENRICHMENT`` stores business metadata enrichment,\n  classification, sensitivity, ownership, governance review, activation,\n  effective dates, and audit information.\n- ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,\n  parameters, severity, lifecycle, governance review, approval, effective\n  dates, and audit information.\n- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,\n  status, continuation decision, expected and actual values, result\n  payload, and audit information.\n\nStandard audit fields are ``_committed_by``, ``_committed_at``,\n``_workspace_id``, ``_workspace_name``, ``_notebook_id``,\n``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.\n\nExisting tables are validated for required canonical column names and\ncompatible Spark data types. Nullability is not part of this validation.\nExisting tables are not automatically overwritten merely because they\nalready exist. Missing columns or incompatible types mark that table as\nfailed, processing continues for remaining metadata tables, and\n``raise_on_failure=True`` raises only after all tables have been processed\nwhen failures exist.\n\nA missing table is created by writing an empty Spark DataFrame with the\ncanonical schema. This creates the physical metadata table structure but\ndoes not populate business metadata records. The function does not\nautomatically create steward records, agreements, contracts, catalogue\nrecords, profile records, lineage events, access assignments, enrichment\nrecords, guardrail rules, or guardrail results; those are populated by\ntheir respective FabricOps workflows.",
       "width": 10
     },
     {
@@ -35654,7 +35654,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 145,
+          "source_end_line": 226,
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
           "source_start_line": 20,
           "supports_live_contract": true,
@@ -35688,9 +35688,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 182,
+          "source_end_line": 263,
           "source_path": "src/fabricops_kit/config/setup_notebook.py",
-          "source_start_line": 148,
+          "source_start_line": 229,
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -35971,37 +35971,37 @@
       "max_depth": 3,
       "parameters": [
         {
-          "description": "Framework configuration object or compatible mapping. The setup flow validates required sections and configured Fabric targets before running readiness checks.",
+          "description": "Full FabricOps framework configuration used to resolve environments and target stores.",
           "name": "config",
           "required": "Yes",
           "type": "FrameworkConfig | dict[str, Any]"
         },
         {
-          "description": "Environment key used to resolve target paths.",
+          "description": "Environment section selected for target resolution.",
           "name": "env",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Target names that must resolve for ``env``. Defaults to ``[\"Source\", \"Unified\"]``.",
+          "description": "Logical Fabric target names the notebook requires before execution can proceed. Defaults to ``[\"Source\", \"Unified\"]``.",
           "name": "required_targets",
           "required": "No",
           "type": "list[str] | None"
         },
         {
-          "description": "Explicit notebook name used for runtime metadata and naming checks.",
+          "description": "Explicit notebook name override used for runtime metadata and naming validation.",
           "name": "notebook_name",
           "required": "No",
           "type": "str | None"
         },
         {
-          "description": "Prefix used when a Fabric runtime run identifier is unavailable.",
+          "description": "Prefix used only when no Fabric runtime run identifier is available.",
           "name": "run_id_prefix",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Notebook name used when neither ``notebook_name`` nor Fabric runtime context provides one.",
+          "description": "Notebook name used only when neither ``notebook_name`` nor Fabric runtime notebook context provides one.",
           "name": "local_fallback_name",
           "required": "No",
           "type": "str | None"
@@ -36022,16 +36022,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "NotebookSetupContext\n    Validated runtime context with resolved paths, smoke-check results,\n    runtime metadata, and overall readiness status.",
+      "returns_documentation": "NotebookSetupContext\n    A ``NotebookSetupContext`` containing the selected environment,\n    resolved Fabric stores, runtime and user identity, startup validation\n    results, generated or detected run ID, and overall readiness status.\n    Returned fields are ``run_id`` (generated or detected run identifier),\n    ``notebook_name`` (resolved notebook name), ``workspace_name``\n    (resolved workspace name when available), ``user_name`` (resolved user\n    identity), ``environment`` (selected environment key), ``paths``\n    (requested target names mapped to resolved Fabric store objects),\n    ``validation_results`` (startup check results), ``runtime_metadata``\n    (best-effort runtime metadata), and ``readiness_status`` (overall\n    readiness outcome).",
       "scope": 7,
       "signals": [],
       "signature": "def setup_notebook(config: FrameworkConfig | dict[str, Any], env: str='Sandbox', required_targets: list[str] | None=None, notebook_name: str | None=None, run_id_prefix: str='run', local_fallback_name: str | None=None) -> NotebookSetupContext",
-      "source_end_line": 145,
+      "source_end_line": 226,
       "source_path": "src/fabricops_kit/config/setup_notebook.py",
       "source_start_line": 20,
-      "summary": "Run consolidated FabricOps startup for delivery and optional support notebooks.",
+      "summary": "Validate notebook startup configuration and resolve required Fabric targets.",
       "transitive_function_count": 7,
-      "usage_notes": "Validation and smoke checks are local to notebook startup. This helper does\nnot provision Fabric resources or persist metadata.",
+      "usage_notes": "Startup flow:\n\n1. Validate the supplied FabricOps framework configuration.\n2. Resolve the selected environment.\n3. Resolve every target listed in ``required_targets``.\n4. Default ``required_targets`` to ``[\"Source\", \"Unified\"]`` when\n   omitted.\n5. Collect Fabric notebook runtime information when available.\n6. Generate a fallback run ID when the Fabric runtime does not provide one.\n7. Check whether a Spark session is available.\n8. Check whether Fabric runtime context is readable.\n9. Validate that each required target contains the necessary store\n   identity fields.\n10. Validate the notebook name against supported FabricOps notebook naming\n    patterns.\n11. Return an overall readiness status.\n\nSupported notebook naming patterns currently include ``00_env_config``,\n``01_agreement`` and suffixed variants, ``02_pipeline`` and suffixed\nvariants, ``03_governance`` and suffixed variants, and ``99_explore`` and\nsuffixed variants.\n\nEach resolved target contains the configured Fabric store identity needed\nby downstream functions, such as workspace identity, Fabric item identity,\nstore name, store kind, and derived path information where applicable.\n``setup.paths`` maps each requested target name to its resolved Fabric\nstore configuration. Conceptual example:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Source\", \"Unified\", \"Warehouse\"])``\n\n``source_store = setup.paths[\"Source\"]``\n\n``warehouse_store = setup.paths[\"Warehouse\"]``\n\n``readiness_status`` is ``\"ready\"`` when every check is ``pass``,\n``warn``, or ``skipped``, and ``\"not_ready\"`` when any check fails. The\nfunction returns this status to the caller and does not automatically stop\nnotebook execution merely because readiness is ``\"not_ready\"``. Caller-side\nenforcement is optional but recommended for delivery notebooks. Conceptual\npattern:\n\n``setup = setup_notebook(CONFIG, env=\"Development\", required_targets=[\"Source\", \"Unified\"])``\n\n``if setup.readiness_status != \"ready\": raise RuntimeError(\"FabricOps notebook setup is not ready.\")``\n\nRuntime metadata is collected on a best-effort basis and includes notebook\nname, workspace name and ID, user name and ID, current run ID, whether the\nexecution is pipeline-driven, whether the execution is interactive, whether\nthe execution is a reference run, and whether Fabric runtime context is\navailable. Local or non-Fabric execution may produce warnings or skipped\nchecks rather than failing automatically.\n\nValidation and smoke checks are local to notebook startup. This helper does\nnot read business data, write business data, persist metadata, provision\nworkspaces, lakehouses, or warehouses, create missing Fabric resources,\nmutate the supplied configuration, globally attach setup context to all\ndownstream calls, or automatically stop notebook execution on failed\nreadiness checks.",
       "width": 4
     },
     {
@@ -60571,7 +60571,7 @@
       "depth": 4,
       "direct_call_count": 4,
       "discontinued_in": null,
-      "examples": "Not documented yet",
+      "examples": "Small DataFrames normally do not need explicit repartitioning.\n\n```python\n# Small lookup or reference table.\n# Keep the DataFrame's existing Spark partitioning.\nwrite_lakehouse_table(\n    country_lookup_df,\n    table_name=\"country_lookup\",\n    target=\"unified\",\n    schema=UNIFIED_SCHEMA,\n    mode=\"overwrite\",\n)\n```\n\nFor a large fact dataset containing millions of rows, you can increase\nSpark write parallelism before the write while also physically\npartitioning the Delta table by commonly filtered date columns.\n\n```python\n# Large fact dataset containing millions of rows.\n# Repartition into more Spark tasks before writing, while physically\n# partitioning the Delta table by commonly filtered date columns.\nwrite_lakehouse_table(\n    orders_df,\n    table_name=\"orders\",\n    target=\"unified\",\n    schema=UNIFIED_SCHEMA,\n    mode=\"append\",\n    repartition_by=(32, \"order_year\", \"order_month\"),\n    partition_by=[\"order_year\", \"order_month\"],\n)\n```\n\n``repartition_by=(32, \"order_year\", \"order_month\")`` is equivalent to\n``orders_df.repartition(32, \"order_year\", \"order_month\")``. Spark can\nprocess and write those partitions concurrently, subject to the available\nexecutors and Fabric capacity. ``partition_by=[\"order_year\",\n\"order_month\"]`` creates the physical Delta directory partitioning. The\nvalue ``32`` is illustrative and should be benchmarked rather than treated\nas a universal recommendation.\n\nWhen physical Delta partitioning is not required, you can increase Spark\nwrite parallelism without changing the destination table layout.\n\n```python\nwrite_lakehouse_table(\n    events_df,\n    table_name=\"events\",\n    target=\"unified\",\n    schema=UNIFIED_SCHEMA,\n    mode=\"append\",\n    repartition_by=32,\n)\n```\n\nThis increases the number of Spark partitions before the write without\nphysically partitioning the destination Delta table.",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -60608,7 +60608,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 87,
+          "source_end_line": 230,
           "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
           "source_start_line": 15,
           "supports_live_contract": true,
@@ -61297,43 +61297,43 @@
           "type": "pyspark.sql.DataFrame"
         },
         {
-          "description": "Lakehouse table name. Pass schemas with ``schema`` rather than as a qualified name.",
+          "description": "Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``.",
           "name": "table_name",
           "required": "Yes",
           "type": "str"
         },
         {
-          "description": "Logical lakehouse target from ``00_env_config``.",
+          "description": "Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area.",
           "name": "target",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Optional schema override for schema-enabled lakehouses.",
+          "description": "Optional schema override for schema-enabled Lakehouses.",
           "name": "schema",
           "required": "No",
           "type": "str or None, default=None"
         },
         {
-          "description": "Spark write mode: ``append``, ``overwrite``, ``errorifexists``, or ``ignore``.",
+          "description": "Spark Delta write mode. ``append`` adds rows to the existing destination or creates it when absent. Rerunning the same input can create duplicate rows. No business-key matching, deduplication, or idempotency check is performed. ``overwrite`` replaces the destination data according to Spark Delta writer behavior and should be treated as destructive. ``errorifexists`` fails when the destination already exists. ``ignore`` skips the write when the destination already exists. This function does not perform a Delta ``MERGE``, upsert, update-on-match, delete-on-missing, or key-based deduplication.",
           "name": "mode",
           "required": "No",
           "type": "str, default=\"append\""
         },
         {
-          "description": "Column or columns used to physically partition the Delta table.",
+          "description": "Column or columns used to create physical Delta table partitions in storage. Use this for stable, commonly filtered, relatively low-cardinality columns such as year or month when that layout improves downstream reads. ``partition_by`` affects the physical Delta table layout rather than Spark execution parallelism. High-cardinality partition columns can create excessive folders and small files, and the function does not inspect or reconcile an existing table's partition layout before writing.",
           "name": "partition_by",
           "required": "No",
           "type": "str or list[str], optional"
         },
         {
-          "description": "Optional repartitioning before write.",
+          "description": "Optional repartitioning applied to the Spark DataFrame before the write. This changes the Spark partition distribution and can increase Spark write parallelism by creating additional partitions that Spark may process concurrently, subject to available cluster resources and destination throughput. Small DataFrames normally do not need explicit repartitioning. Large datasets, including workloads with millions of rows, may benefit when partition counts are tuned for data volume, row width, skew, file sizes, and available Fabric Spark capacity. Millions of rows is an example workload size rather than a hard threshold. Row count alone is not sufficient for tuning. Excessive repartitioning can add shuffle cost, scheduler overhead, and many small files. ``repartition_by=32`` is equivalent to ``df.repartition(32)``. ``repartition_by=\"department\"`` is equivalent to ``df.repartition(\"department\")``. ``repartition_by=[\"year\", \"month\"]`` is equivalent to ``df.repartition(\"year\", \"month\")``. ``repartition_by=(32, \"year\", \"month\")`` is equivalent to ``df.repartition(32, \"year\", \"month\")``. Repartitioning changes the DataFrame used for the write but does not mutate the caller's original DataFrame binding.",
           "name": "repartition_by",
           "required": "No",
           "type": "int, str, list, or tuple, optional"
         },
         {
-          "description": "Additional Spark Delta ``DataFrameWriter`` options forwarded before saving the configured Lakehouse Tables path.",
+          "description": "Additional Spark Delta ``DataFrameWriter`` options forwarded before saving the configured Lakehouse ``Tables`` path, such as ``mergeSchema``, ``overwriteSchema``, and other standard Delta writer options supported by the active Spark runtime. FabricOps forwards these options and does not validate their compatibility.",
           "name": "options",
           "required": "No",
           "type": "dict, optional"
@@ -61366,16 +61366,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "None\n    The DataFrame is written to the configured Delta table path.",
+      "returns_documentation": "None\n    The function performs the Spark Delta write before returning.",
       "scope": 17,
       "signals": [],
       "signature": "def write_lakehouse_table(df, table_name: str, *, target: str='unified', schema=None, mode='append', partition_by=None, repartition_by=None, options=None, verbose=True, context=None)",
-      "source_end_line": 87,
+      "source_end_line": 230,
       "source_path": "src/fabricops_kit/io/write_lakehouse_table.py",
       "source_start_line": 15,
-      "summary": "Write a Spark DataFrame to a Fabric lakehouse Delta table.",
+      "summary": "Resolve a configured Lakehouse table and write the DataFrame to its Delta path.",
       "transitive_function_count": 17,
-      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta writer with any\nsupplied writer options.",
+      "usage_notes": "FabricOps resolves the configured Lakehouse Tables path from\n``00_env_config`` and then delegates to Spark's Delta writer with any\nsupplied writer options. ``repartition_by`` affects Spark execution before\nthe write, while ``partition_by`` affects the physical Delta table layout\non storage. The function triggers a Spark write job, does not return a\nlazy write plan, and returns ``None`` only after the write completes or\nSpark raises an error. It may create the Delta destination when it does\nnot already exist, subject to Spark write behavior and the selected mode.\n\nThe function does not automatically validate the DataFrame against a data\ncontract, match business keys, add missing columns, reorder columns, cast\nincompatible types, reconcile schema differences, enable schema evolution,\nvalidate nullability, or check existing partition columns. Schema\nevolution or overwrite-schema behavior depends on supplied Spark Delta\nwriter options where supported.\n\nThis function only writes the DataFrame. It does not automatically\nregister catalogue metadata, register lineage, profile the table, execute\nguardrails, validate a data contract, apply access governance, or create\nstewardship or agreement records.\n\nComparison:\n\n| Function | Destination | Write mechanism | Physical partitioning |\n| --- | --- | --- | --- |\n| ``write_lakehouse_table`` | Lakehouse ``Tables`` Delta path | Native Spark Delta writer | Supported through ``partition_by`` |\n| ``write_warehouse_table`` | Fabric Warehouse table | Fabric Warehouse Spark connector | Not created by this function |\n\nBoth functions default to append behavior, both can duplicate rows when\nthe same data is published repeatedly, neither performs merge or upsert\nlogic, and repartitioning affects Spark execution in both functions.",
       "width": 4
     },
     {
@@ -61386,7 +61386,7 @@
       "depth": 4,
       "direct_call_count": 3,
       "discontinued_in": null,
-      "examples": "Not documented yet",
+      "examples": "Small serving tables normally do not need explicit repartitioning.\n\n```python\n# Small curated serving table.\n# Keep the DataFrame's existing Spark partitioning.\nwrite_warehouse_table(\n    department_summary_df,\n    schema=\"reporting\",\n    table_name=\"department_summary\",\n    target=\"warehouse\",\n    mode=\"overwrite\",\n)\n```\n\nFor a large serving dataset containing millions of rows, increase Spark\nwrite parallelism before publishing through the Fabric Warehouse\nconnector.\n\n```python\n# Large serving dataset containing millions of rows.\n# Increase Spark write parallelism before publishing through the\n# Fabric Warehouse connector.\nwrite_warehouse_table(\n    order_serving_df,\n    schema=\"reporting\",\n    table_name=\"orders\",\n    target=\"warehouse\",\n    mode=\"append\",\n    repartition_by=32,\n)\n```\n\n``repartition_by=32`` is equivalent to repartitioning the DataFrame before\nthe connector write with ``order_serving_df.repartition(32)``.\n\n```python\nwrite_warehouse_table(\n    order_serving_df,\n    schema=\"reporting\",\n    table_name=\"orders\",\n    target=\"warehouse\",\n    mode=\"append\",\n    repartition_by=(32, \"order_year\", \"order_month\"),\n)\n```\n\nThe keyed form distributes rows using the specified columns while\nrequesting 32 Spark partitions. It still does not create physical Warehouse partitions.",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
@@ -61423,7 +61423,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 78,
+          "source_end_line": 209,
           "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
           "source_start_line": 10,
           "supports_live_contract": true,
@@ -62051,25 +62051,25 @@
           "type": "str"
         },
         {
-          "description": "Logical warehouse target from ``00_env_config``.",
+          "description": "Logical Warehouse target from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. The connector destination is conceptually ``<warehouse_name>.<schema>.<table_name>`` and is not a native Delta path write.",
           "name": "target",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Spark writer mode supported by the Fabric connector.",
+          "description": "Value passed directly to Spark's ``DataFrameWriter`` and then applied through the Fabric Warehouse connector. Supported destination behavior can depend on the connector, destination table state, and active Fabric runtime. ``append`` adds rows to the destination. Rerunning the same publication may duplicate rows. ``overwrite`` requests replacement behavior through the connector and should be treated as destructive. This function does not execute SQL ``MERGE``, perform an upsert, match business keys, deduplicate records, or provide idempotent publication.",
           "name": "mode",
           "required": "No",
           "type": "str"
         },
         {
-          "description": "Optional repartitioning before write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table.",
+          "description": "Optional repartitioning applied to the Spark DataFrame before the Fabric connector write. This controls Spark write parallelism and does not create a physically partitioned Warehouse table. Small serving tables normally do not need explicit repartitioning. Repartitioning can increase Spark write parallelism by creating additional partitions that Spark may process concurrently, subject to available cluster resources and destination throughput. Large publications, including workloads with millions of rows, may benefit when partition counts are tuned for data volume, row width, skew, available Spark resources, connector behavior, and Fabric capacity. Millions of rows is an example workload size rather than a hard threshold, and row count alone is not sufficient for tuning. Too many partitions may reduce performance or increase connector overhead. ``repartition_by=32`` is equivalent to ``df.repartition(32)``. ``repartition_by=\"department\"`` is equivalent to ``df.repartition(\"department\")``. ``repartition_by=[\"year\", \"month\"]`` is equivalent to ``df.repartition(\"year\", \"month\")``. ``repartition_by=(32, \"year\", \"month\")`` is equivalent to ``df.repartition(32, \"year\", \"month\")``. Repartitioning affects Spark execution and connector parallelism. It does not create physical Warehouse table partitions.",
           "name": "repartition_by",
           "required": "No",
           "type": "int, str, list, or tuple, optional"
         },
         {
-          "description": "Additional Fabric Warehouse Spark connector writer options. Required Fabric connector options are always set from ``00_env_config``.",
+          "description": "Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved Workspace ID, Warehouse item ID, or other destination identity settings.",
           "name": "options",
           "required": "No",
           "type": "dict[str, Any] | None"
@@ -62096,16 +62096,16 @@
       "release_versions": [
         "0.1.0"
       ],
-      "returns_documentation": "None\n    The DataFrame is written through the Fabric warehouse connector.",
+      "returns_documentation": "None\n    The function performs the Fabric Warehouse connector write before\n    returning.",
       "scope": 15,
       "signals": [],
       "signature": "def write_warehouse_table(df, schema: str, table_name: str, *, target: str='warehouse', mode: str='append', repartition_by=None, options: dict[str, Any] | None=None, context: dict[str, Any] | None=None)",
-      "source_end_line": 78,
+      "source_end_line": 209,
       "source_path": "src/fabricops_kit/io/write_warehouse_table.py",
       "source_start_line": 10,
-      "summary": "Write a Spark DataFrame to a Microsoft Fabric warehouse table.",
+      "summary": "Resolve a configured Warehouse table and publish the DataFrame through the connector.",
       "transitive_function_count": 15,
-      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. ``options`` are passed to\nthe underlying ``DataFrameWriter`` after required Fabric connector options.",
+      "usage_notes": "FabricOps resolves the configured Warehouse target and table name, then\ndelegates to the Fabric Warehouse Spark connector. ``options`` are passed to\nthe underlying ``DataFrameWriter`` after required Fabric connector options.\nWarehouse ``repartition_by`` affects Spark execution before publication and\ndoes not physically partition the Warehouse table.\n\nThe function requires Microsoft Fabric Spark and the\n``com.microsoft.spark.fabric`` Warehouse connector. It is not expected to\nwork in a generic local Spark environment without that connector.\n\nThe connector write is executed before the function returns. The function\ndoes not return a lazy publication plan. It returns ``None`` after\nsuccessful publication or raises an underlying Spark or connector error.\n\nTable creation, replacement, and schema handling are delegated to the\nFabric Warehouse connector. The function does not independently issue\nWarehouse DDL, pre-create schemas or tables, or verify whether the caller\nhas permissions to create or overwrite the destination.\n\nThe function does not prevalidate Warehouse column names,\nSQL-compatible data types, destination column order, nullability, string\nlengths, decimal precision or scale, existing destination schema, or\nprimary keys or constraints. Any incompatibility is handled by Spark and\nthe Fabric connector.\n\nThis function does not automatically register catalogue metadata,\nregister lineage, execute guardrails, validate a contract, validate\npublication approval, apply access governance, create a semantic model, or\nrefresh Power BI content.\n\nComparison:\n\n| Function | Destination | Write mechanism | Physical partitioning |\n| --- | --- | --- | --- |\n| ``write_lakehouse_table`` | Lakehouse ``Tables`` Delta path | Native Spark Delta writer | Supported through ``partition_by`` |\n| ``write_warehouse_table`` | Fabric Warehouse table | Fabric Warehouse Spark connector | Not created by this function |\n\nBoth functions default to append behavior, both can duplicate rows when\nthe same data is published repeatedly, neither performs merge or upsert\nlogic, and repartitioning affects Spark execution in both functions.",
       "width": 3
     }
   ],

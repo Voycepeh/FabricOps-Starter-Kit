@@ -18,12 +18,29 @@
 
 Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.
 
+<div class="reference-docstring-intro" markdown="1">
+
+Use ``read_lakehouse_parquet`` for Parquet files stored under the
+Lakehouse ``Files`` area. Use ``read_lakehouse_table`` for managed Delta
+tables stored under the Lakehouse ``Tables`` area.
+
+This function reads from the Lakehouse ``Files`` area, not a managed Delta
+table in the ``Tables`` area. FabricOps resolves the logical target and
+relative path through configuration, attempts a normal Spark Parquet read
+first, forces a small Spark action to verify that the data can actually be
+decoded, falls back to a derived ``_tsus`` path when the original read
+fails, may create a converted Parquet copy with microsecond timestamp
+precision when the fallback path is missing, and returns a Spark DataFrame
+backed by either the original path or the fallback path.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/io/read_lakehouse_parquet.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L119">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_parquet.py#L15-L210">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -71,11 +88,11 @@ df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_ses
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | Parquet file path resolved by the Fabric resolver. Root-level files such as ``customers.parquet`` and nested paths such as ``input/customers.parquet`` are supported. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
-| `verbose` | `bool` | No | Whether to print read and timestamp-conversion fallback progress. |
+| `relative_path` | `str` | Yes | Parquet file path resolved underneath the configured Lakehouse ``Files`` area. Root-level files such as ``customers.parquet`` and nested paths such as ``incoming/2026/customers.parquet`` are supported. |
+| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. |
+| `verbose` | `bool` | No | Whether to print operational progress for original path attempts, original read success or failure, ``_tsus`` path attempts, conversion attempts, and fallback success or failure. It does not change the resulting data. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Parquet reader options forwarded to every original and timestamp-converted fallback read attempt. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark Parquet reader options forwarded to Spark's Parquet reader for the original path read, the existing ``_tsus`` path read, and the read after conversion. Representative options include ``mergeSchema``, ``recursiveFileLookup``, ``pathGlobFilter``, ``modifiedBefore``, and ``modifiedAfter``. FabricOps does not interpret these options. |
 
 ## Returns
 
@@ -95,6 +112,79 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 - The file is not valid Parquet.
 - The configured lakehouse target is unavailable.
 - The caller lacks read permission.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Normal read flow:
+
+``Configured Lakehouse Files path -> Spark Parquet read -> df.limit(1).collect() -> Return DataFrame when decoding succeeds``
+
+Spark reads are normally lazy, but this function deliberately executes
+``limit(1).collect()`` before returning. The validation action confirms
+that Spark can decode at least one row. The function is therefore not a
+purely lazy reader, but it does not collect the entire dataset to the
+driver.
+
+``target`` is a logical Lakehouse target from ``00_env_config`` and
+``relative_path`` is resolved under the configured Lakehouse ``Files``
+area. Root-level and nested paths are supported. The resolved location is
+conceptually ``<configured lakehouse>/Files/<relative_path>``. Examples:
+
+``df = read_lakehouse_parquet("customers.parquet", target="source")``
+
+``df = read_lakehouse_parquet("incoming/2026/customers.parquet", target="source")``
+
+Derived ``_tsus`` fallback naming:
+
+- ``customers.parquet`` becomes ``customers_tsus.parquet``.
+- ``incoming/2026/customers.parquet`` becomes
+  ``incoming/2026_tsus/customers.parquet``.
+
+The function does not replace the original file.
+
+The fallback begins after any exception from the original Spark read or
+validation action. The current implementation does not first confirm that
+the original failure is definitely timestamp-related. It then attempts the
+``_tsus`` path. If that path is missing, it performs one single-file
+conversion and retries. If both original and fallback reads fail, the
+function raises ``RuntimeError``. Underlying Spark, pandas, PyArrow, path,
+mount, or conversion errors may appear in verbose output before the final
+``RuntimeError``.
+
+The compatibility copy is produced by reading the original Parquet file
+with pandas and PyArrow, then rewriting it as a new Parquet file using
+microsecond timestamp precision with ``coerce_timestamps="us"`` and
+truncated timestamps allowed. The compatibility copy may lose
+sub-microsecond timestamp precision because nanosecond timestamps are
+coerced to microseconds.
+
+Spark may normally read a Parquet file or compatible dataset path, but the
+automatic conversion helper is designed for one local Parquet file. It is
+not a distributed folder conversion workflow, and large or multi-file
+remediation should be handled as a separate conversion pipeline.
+
+The normal Spark read uses the resolved configured ABFSS path. The
+conversion fallback assumes the file is also accessible through the
+notebook's default attached Lakehouse mount under
+``/lakehouse/default/Files/``. A configured target may resolve correctly
+for Spark reading while still being unavailable to the local fallback
+mount, in which case fallback conversion can fail.
+
+Compact reader-option example:
+
+``df = read_lakehouse_parquet("incoming/events.parquet", target="source", mergeSchema=True)``
+
+This function does not read a managed Delta table, register Parquet data as
+a Lakehouse table, replace or modify the original Parquet file, convert
+every file in a Parquet folder, perform a distributed timestamp
+conversion, guarantee that the original failure was timestamp-related,
+preserve nanosecond precision in the converted copy, delete or refresh an
+existing ``_tsus`` copy, register metadata, profile the returned
+DataFrame, or automatically cache or persist the returned DataFrame.
+
+</div>
 
 ## See also
 
@@ -144,5 +234,5 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

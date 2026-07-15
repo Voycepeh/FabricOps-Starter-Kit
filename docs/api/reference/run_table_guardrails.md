@@ -17,6 +17,14 @@
 
 Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
 
+<div class="reference-docstring-intro" markdown="1">
+
+Runtime outcomes remain separated for ``"schema"``, ``"freshness"``, and
+``"dq"`` result-table writes while the owning workflow performs the
+orchestration through ``_write_guardrail_result_row``.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
@@ -132,5 +140,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

@@ -17,12 +17,20 @@
 
 Profile a Spark DataFrame for structural and statistical exploration.
 
+<div class="reference-docstring-intro" markdown="1">
+
+The returned profile includes row and null counts, null percentages,
+distinct counts and percentages, numeric summary statistics, and minimum
+and maximum values for each included input column.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/pipeline/profile_dataframe.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L34">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L49">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -116,5 +124,5 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

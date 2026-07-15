@@ -17,12 +17,28 @@
 
 Create or validate all FabricOps metadata tables through one setup action.
 
+<div class="reference-docstring-intro" markdown="1">
+
+Create any missing canonical FabricOps metadata Delta tables and validate
+the schemas of metadata tables that already exist. The function resolves
+the configured ``metadata`` target for the selected environment, requires
+that target to be a lakehouse, creates missing metadata tables as empty
+Delta tables using the canonical FabricOps Spark schemas, validates
+existing metadata tables against the required canonical column names and
+Spark data types, and returns a setup report describing the completed
+metadata lakehouse setup work.
+
+The returned dictionary is not the main operation. It summarizes the
+result of the physical metadata table creation and validation work.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/config/setup_metadata_tables.py:67`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L67-L145">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L67-L310">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -75,13 +91,13 @@ setup_metadata_tables(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Not documented yet |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | Not documented yet |
-| `env` | `str` | Yes | Not documented yet |
-| `metadata_schema` | `str \| None` | No | Not documented yet |
-| `require_active_steward` | `bool` | No | Not documented yet |
-| `verbose` | `bool` | No | Not documented yet |
-| `raise_on_failure` | `bool` | No | Not documented yet |
+| `spark` | `Any` | Yes | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | FabricOps configuration used to resolve the selected environment and logical ``metadata`` target. |
+| `env` | `str` | Yes | Environment whose configured metadata lakehouse should be initialized or validated. |
+| `metadata_schema` | `str \| None` | No | Optional explicit schema for schema-enabled metadata lakehouses. When omitted, the configured metadata store schema is used where applicable. |
+| `require_active_steward` | `bool` | No | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
+| `verbose` | `bool` | No | Controls whether the concise per-table setup summary is printed. |
+| `raise_on_failure` | `bool` | No | When ``True``, raise a ``RuntimeError`` after processing all tables if any table failed creation or validation. |
 
 ## Returns
 
@@ -101,6 +117,105 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 - Spark cannot create or inspect metadata tables through the configured ABFSS paths.
 - The selected environment does not include metadata routing.
 - The caller lacks permission to create or update metadata tables.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Setup flow:
+
+1. Validate the supplied FabricOps configuration.
+2. Resolve the selected environment and its logical ``metadata`` target.
+3. Verify that the resolved metadata target is a lakehouse.
+4. Resolve the metadata schema from ``metadata_schema`` or the configured
+   metadata store.
+5. Load the canonical metadata table schema registry.
+6. Attempt to read each canonical metadata table.
+7. When a table is missing, create an empty Spark DataFrame using its
+   canonical schema.
+8. Write that empty DataFrame to the metadata lakehouse using overwrite
+   mode to create the table.
+9. Read the created table again.
+10. Validate required column names and physical Spark data types.
+11. Continue processing the remaining tables when one table fails.
+12. Count existing active steward records.
+13. Return overall, data-agreement, governance, and per-table setup
+    results.
+
+Canonical tables created or validated from
+``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
+``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
+``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
+``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
+``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
+``METADATA_GUARDRAIL_RESULTS``.
+
+Canonical schema intent:
+
+- ``METADATA_DATA_STEWARD`` stores ``steward_id``, ``steward_name``,
+  ``steward_role``, ``contact``, ``effective_from``, ``effective_to``,
+  ``is_active``, ``custom_fields_json``, and the standard audit fields.
+- ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,
+  ``agreement_version``, ``agreement_name``, ``domain``,
+  ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
+  ``start_date``, ``expiry_date``, ``business_purpose``,
+  ``custom_fields_json``, and the standard audit fields.
+- ``METADATA_DATA_CONTRACT`` stores ``contract_id``, ``agreement_id``,
+  ``metadata_table_key``, ``schema_fingerprint``, ``contract_version``,
+  ``contract_status``, ``effective_from``, ``effective_to``,
+  ``contract_payload_json``, and the standard audit fields.
+- ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
+  ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
+  ``store_type``, ``layer``, ``schema_name``, ``table_name``,
+  ``column_name``, ``data_type``, and the standard audit fields.
+- ``METADATA_DATA_PROFILED`` stores ``metadata_table_key``,
+  ``metadata_column_key``, ``environment_name``, ``store_type``, ``layer``,
+  ``schema_name``, ``table_name``, ``column_name``, ``data_type``,
+  ``row_count``, ``non_null_count``, ``null_count``, ``null_percent``,
+  ``distinct_count``, ``distinct_percent``, ``mean_value``,
+  ``stddev_value``, ``min_value``, ``percentile_25_value``,
+  ``median_value``, ``percentile_75_value``, ``max_value``,
+  ``is_sampled``, ``frequency_json``, ``schema_fingerprint``,
+  ``profiled_at``, and the standard audit fields.
+- ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
+  ``notebook_id``, ``notebook_name``, ``workspace_id``,
+  ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
+  ``profile_role``, ``profiled_at``, ``committed_by``,
+  ``environment_name``, ``metadata_lakehouse_name``, and the standard
+  audit fields.
+- ``METADATA_DATA_ACCESS`` stores access scope, role, permission,
+  approval, expiry, table and column identity, and audit information.
+- ``METADATA_ENRICHMENT`` stores business metadata enrichment,
+  classification, sensitivity, ownership, governance review, activation,
+  effective dates, and audit information.
+- ``METADATA_GUARDRAIL`` stores guardrail rule identity, scope,
+  parameters, severity, lifecycle, governance review, approval, effective
+  dates, and audit information.
+- ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,
+  status, continuation decision, expected and actual values, result
+  payload, and audit information.
+
+Standard audit fields are ``_committed_by``, ``_committed_at``,
+``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
+``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
+
+Existing tables are validated for required canonical column names and
+compatible Spark data types. Nullability is not part of this validation.
+Existing tables are not automatically overwritten merely because they
+already exist. Missing columns or incompatible types mark that table as
+failed, processing continues for remaining metadata tables, and
+``raise_on_failure=True`` raises only after all tables have been processed
+when failures exist.
+
+A missing table is created by writing an empty Spark DataFrame with the
+canonical schema. This creates the physical metadata table structure but
+does not populate business metadata records. The function does not
+automatically create steward records, agreements, contracts, catalogue
+records, profile records, lineage events, access assignments, enrichment
+records, guardrail rules, or guardrail results; those are populated by
+their respective FabricOps workflows.
+
+</div>
 
 ## See also
 
@@ -132,5 +247,5 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

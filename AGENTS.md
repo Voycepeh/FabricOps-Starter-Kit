@@ -46,25 +46,29 @@ Use the relevant workflow skill:
 
 `AGENTS.md` is the repository-wide contract. Skills provide focused procedures and must not override it.
 
-## Public contracts and lifecycle
+## Backward compatibility and public contracts
 
-Backward compatibility applies to Live public callables and externally consumed data contracts. It does not require preserving private or shared implementation structure.
+Backward compatibility applies to supported public callables and externally consumed data contracts. It does not require preserving private or shared implementation structure.
 
-For a Live callable, preserve the observable contract unless the task explicitly authorizes a breaking change:
+For a Live public callable, preserve its observable contract unless the task explicitly authorizes a breaking change:
 
 - public import path and exported name
 - parameter names, order, defaults, and accepted inputs
 - return type, schema, shape, and documented meaning
-- persisted outputs and side effects
+- side effects and persisted outputs
 - exceptions and normal failure behaviour
 
-An unchanged signature alone does not prove compatibility. Verify behaviour, accepted inputs, returns, side effects, persisted outputs, and failures.
+The internal implementation may be replaced completely. Private helpers, non-exported shared helpers, helper filenames, helper call chains, internal imports, and internal algorithms may be renamed, moved, merged, split, inlined, rewritten, deleted, or otherwise replaced without changing the supported public contract.
 
-Preview callables do not have Live backward-compatibility guarantees. Preserve only behaviour required by the task and relevant tests unless the callable is being promoted or frozen.
+Do not preserve obsolete internal wrappers, aliases, adapters, resolver layers, or transitional shims unless the task explicitly requests migration support.
+
+An unchanged function signature alone does not prove backward compatibility. Verify observable behaviour, accepted inputs, return contracts, side effects, persisted outputs, and failure behaviour.
+
+Preview callables are not covered by Live backward-compatibility guarantees. Preserve only behaviour required by the task and relevant tests unless the callable is being promoted or frozen.
 
 Discontinued callables do not imply current support. Preserve historical behaviour only when explicitly required.
 
-When breaking cleanup is authorized, identify changed public contracts in the PR summary and do not add compatibility layers unless requested.
+When breaking cleanup is authorized, Clearly identify every changed public contract in the PR summary and do not add compatibility layers unless requested.
 
 ## Function architecture
 
@@ -90,7 +94,9 @@ For a new public callable:
 
 Do not add `public.py`, `models.py`, `classes.py`, adapter or resolver files, or compatibility shims unless explicitly approved.
 
-For Fabric IO, public owner files live under `src/fabricops_kit/io/` and reusable IO helpers live in `src/fabricops_kit/io/shared.py`. Avoid wrapper-on-wrapper layers and remove obsolete compatibility code after migration.
+### Fabric IO callable file pattern
+
+For Fabric IO, public owner files live under `src/fabricops_kit/io/`, and reusable IO helpers live in `src/fabricops_kit/io/shared.py`. Avoid wrapper-on-wrapper layers and remove obsolete compatibility code after migration.
 
 ## Public call-flow architecture contract
 

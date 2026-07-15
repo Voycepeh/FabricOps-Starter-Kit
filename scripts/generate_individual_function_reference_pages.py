@@ -394,6 +394,40 @@ def _docstring_sections(doc: str | None) -> dict[str, str]:
     return {key: "\n".join(value).strip() for key, value in sections.items() if "\n".join(value).strip()}
 
 
+def _docstring_intro(doc: str | None) -> str:
+    """Return docstring content that appears before the first NumPy-style section."""
+    if not doc:
+        return ""
+    lines = doc.strip().splitlines()
+    intro_lines: list[str] = []
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
+        next_line = lines[index + 1].strip() if index + 1 < len(lines) else ""
+        if line and next_line and set(next_line) <= {"-"} and len(next_line) >= 3:
+            break
+        intro_lines.append(lines[index].rstrip())
+        index += 1
+    return "\n".join(intro_lines).strip()
+
+
+def _extended_docstring_intro(doc: str | None) -> str:
+    """Return intro content without duplicating the first summary sentence."""
+    intro = _docstring_intro(doc)
+    if not intro:
+        return ""
+    summary = first_sentence(doc)
+    if not summary:
+        return intro
+    if intro == summary:
+        return ""
+    intro_lines = intro.splitlines()
+    if intro_lines and intro_lines[0].strip() == summary:
+        trimmed = "\n".join(intro_lines[1:]).strip()
+        return trimmed
+    return intro
+
+
 def _parameter_doc_metadata(parameters_section: str) -> dict[str, dict[str, str]]:
     """Return first-paragraph NumPy-style parameter docs keyed by parameter name."""
     docs: dict[str, dict[str, Any]] = {}
@@ -514,12 +548,14 @@ def parse_module(path: Path) -> dict[str, Any]:
     doc_sections: dict[str, dict[str, str]] = {}
     source_locations: dict[str, dict[str, int]] = {}
     parameters: dict[str, list[dict[str, str]]] = {}
+    doc_intro: dict[str, str] = {}
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             doc = ast.get_docstring(node)
             functions[node.name] = first_sentence(doc)
             signatures[node.name] = _signature_from_node(node)
             sections = _docstring_sections(doc)
+            doc_intro[node.name] = _extended_docstring_intro(doc)
             doc_sections[node.name] = sections
             source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
             parameters[node.name] = _parameter_rows_from_node(node, sections.get("parameters", ""))
@@ -536,6 +572,7 @@ def parse_module(path: Path) -> dict[str, Any]:
             classes[node.name] = first_sentence(doc)
             signatures[node.name] = _signature_from_node(node)
             sections = _docstring_sections(doc)
+            doc_intro[node.name] = _extended_docstring_intro(doc)
             doc_sections[node.name] = sections
             source_locations[node.name] = {"start_line": node.lineno, "end_line": getattr(node, "end_lineno", node.lineno)}
             for child in node.body:
@@ -546,6 +583,7 @@ def parse_module(path: Path) -> dict[str, Any]:
                 functions[method_name] = first_sentence(method_doc)
                 signatures[method_name] = _signature_from_node(child)
                 method_sections = _docstring_sections(method_doc)
+                doc_intro[method_name] = _extended_docstring_intro(method_doc)
                 doc_sections[method_name] = method_sections
                 source_locations[method_name] = {
                     "start_line": child.lineno,
@@ -584,6 +622,7 @@ def parse_module(path: Path) -> dict[str, Any]:
         "calls": calls,
         "used_by": used_by,
         "signatures": signatures,
+        "doc_intro": doc_intro,
         "doc_sections": doc_sections,
         "source_locations": source_locations,
         "parameters": parameters,
@@ -5222,6 +5261,7 @@ def main() -> None:
         used_by = [u for u in raw_used_by if not _hide_from_public_relationships(u)] if node["exported"] else raw_used_by
         metadata = docs_metadata.get(short_name, {})
         module_info = module_data[module_name]
+        doc_intro = module_info.get("doc_intro", {}).get(short_name, "")
         doc_sections = module_info.get("doc_sections", {}).get(short_name, {})
         signature = module_info.get("signatures", {}).get(short_name, "")
         summary = metadata.get("summary_override") or ""
@@ -5289,6 +5329,16 @@ def main() -> None:
                 usage_note_by_path_prefix=usage_note_by_path_prefix,
                 usage_note_by_function=usage_note_by_function,
             )
+            doc_intro_lines = (
+                [*_reference_markdown_block(doc_intro, class_name="reference-docstring-intro"), ""]
+                if doc_intro
+                else []
+            )
+            notes_lines = (
+                ["## Notes", "", *_reference_markdown_block(doc_sections.get("notes", ""), class_name="reference-docstring-notes"), ""]
+                if doc_sections.get("notes", "")
+                else []
+            )
             usage_guidance_lines = ["## Usage notes", "", usage_notes, ""] if usage_notes else []
             related_guide_lines = _render_related_guides(list(metadata.get("related_guides", [])))
             see_also_lines = related_guide_lines if related_guide_lines else ["## See also", "", "No related guides documented.", ""]
@@ -5315,6 +5365,7 @@ def main() -> None:
                 *call_flow_lines,
                 purpose,
                 "",
+                *doc_intro_lines,
                 *_source_card_lines(source_path=source_path, source_start_line=source_start_line, source_ref=source_ref, short_name=short_name),
                 "",
                 *page_chip_lines,
@@ -5354,6 +5405,7 @@ def main() -> None:
                 rendered_raises,
                 "",
                 *common_failure_cause_lines,
+                *notes_lines,
                 *see_also_lines,
             ]
         else:
