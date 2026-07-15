@@ -387,7 +387,8 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
     def frequency(df, *, columns, top_n):
         calls["frequency"] += 1
         calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n, "df_is_source": df is source}
-        return _frequency_df(spark_session)
+        quoted_columns = ", ".join(repr(column) for column in columns)
+        return _frequency_df(spark_session).where(f"COLUMN_NAME in ({quoted_columns})")
 
     monkeypatch.setattr(module, "profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
@@ -404,10 +405,18 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
     assert calls == {
         "profile": 1,
         "frequency": 1,
-        "frequency_kwargs": {"columns": ["customer_type", "country"], "top_n": None, "df_is_source": True},
+        "frequency_kwargs": {"columns": ["customer_type"], "top_n": None, "df_is_source": True},
     }
     rows = {row.column_name: row.asDict() for row in result.collect()}
     assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+    country_skip = json.loads(rows["country"]["frequency_json"])
+    assert country_skip == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 100.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
 
 
 def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold(spark_session, monkeypatch, registered):
