@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from typing import Any, Sequence
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -91,12 +92,13 @@ def _skipped_frequency_json_dataframe(profile_df, *, scalar_columns: Sequence[st
 
     non_null_count = F.col("NON_NULL_COUNT").cast("double")
     distinct_count = F.col("DISTINCT_COUNT").cast("double")
+    raw_cardinality_percent = (distinct_count / non_null_count) * 100
     cardinality_percent = F.when(non_null_count == 0, F.lit(None).cast("double")).otherwise(
-        F.round((distinct_count / non_null_count) * 100, 3)
+        F.round(raw_cardinality_percent, 3)
     )
     threshold = F.lit(None if threshold_percent is None else float(threshold_percent)).cast("double")
     no_non_null = F.col("NON_NULL_COUNT").cast("long") == F.lit(0)
-    high_cardinality = (F.lit(threshold_percent is not None)) & (cardinality_percent > threshold)
+    high_cardinality = (F.lit(threshold_percent is not None)) & (raw_cardinality_percent > threshold)
     reason = F.when(no_non_null, F.lit("no_non_null_values")).otherwise(F.lit("high_cardinality"))
     message = F.when(
         no_non_null,
@@ -133,12 +135,10 @@ def _automatic_frequency_columns(profile_df, *, scalar_columns: Sequence[str], t
 
     non_null_count = F.col("NON_NULL_COUNT").cast("double")
     distinct_count = F.col("DISTINCT_COUNT").cast("double")
-    cardinality_percent = F.when(non_null_count == 0, F.lit(None).cast("double")).otherwise(
-        F.round((distinct_count / non_null_count) * 100, 3)
-    )
+    raw_cardinality_percent = (distinct_count / non_null_count) * 100
     eligible = profile_df.where(F.col("COLUMN_NAME").isin(list(scalar_columns))).where(F.col("NON_NULL_COUNT").cast("long") > 0)
     if threshold_percent is not None:
-        eligible = eligible.where(cardinality_percent <= F.lit(float(threshold_percent)))
+        eligible = eligible.where(raw_cardinality_percent <= F.lit(float(threshold_percent)))
     return [row.COLUMN_NAME for row in eligible.select("COLUMN_NAME").collect()]
 
 
@@ -644,8 +644,10 @@ def profile_and_register_dataframe(
     normalized_table = _require_non_empty_string(table_name, "table_name")
     normalized_schema = None if schema_name is None else _require_non_empty_string(schema_name, "schema_name")
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
-    if frequency_max_distinct_percent is not None and not 0.0 <= frequency_max_distinct_percent <= 100.0:
-        raise ValueError("frequency_max_distinct_percent must be between 0.0 and 100.0 when supplied.")
+    if frequency_max_distinct_percent is not None and (
+        not math.isfinite(frequency_max_distinct_percent) or not 0.0 <= frequency_max_distinct_percent <= 100.0
+    ):
+        raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     config, env, context = resolve_fabric_context(env=normalized_environment)
     profile_df = profile_dataframe(df)

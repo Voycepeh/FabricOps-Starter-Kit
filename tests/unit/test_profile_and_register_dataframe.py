@@ -218,10 +218,10 @@ def test_profile_and_register_dataframe_rejects_invalid_required_inputs(spark_se
         profile_and_register_dataframe(_source_df(spark_session), **params)
 
 
-@pytest.mark.parametrize("threshold", [-0.1, 100.1])
+@pytest.mark.parametrize("threshold", [-0.1, 100.1, float("nan"), float("inf"), -float("inf")])
 def test_profile_and_register_dataframe_rejects_invalid_frequency_threshold(spark_session, registered, threshold):
     """Verify automatic frequency threshold validation fails clearly."""
-    with pytest.raises(ValueError, match="frequency_max_distinct_percent must be between 0.0 and 100.0"):
+    with pytest.raises(ValueError, match="frequency_max_distinct_percent must be finite and between 0.0 and 100.0"):
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
@@ -408,6 +408,56 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
     }
     rows = {row.column_name: row.asDict() for row in result.collect()}
     assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+
+
+def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold(spark_session, monkeypatch, registered):
+    """Verify a column just above 80% is skipped even when display percentage rounds to 80.0."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = spark_session.createDataFrame([(1, 1), (2, 2)], "at_threshold long, just_above long")
+    profile_schema = "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string"
+    profile_rows = spark_session.createDataFrame(
+        [
+            ("at_threshold", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_000, 80.0, None, None, "1", None, None, None, "800000"),
+            ("just_above", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_004, 80.0004, None, None, "1", None, None, None, "800004"),
+        ],
+        profile_schema,
+    )
+    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None}
+
+    def profile(df):
+        calls["profile"] += 1
+        return profile_rows
+
+    def frequency(df, *, columns, top_n):
+        calls["frequency"] += 1
+        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n}
+        return spark_session.createDataFrame(
+            [("at_threshold", "bigint", "1", 1, 100.0, 1, 1_000_000, 1_000_000)],
+            "COLUMN_NAME string, DATA_TYPE string, VALUE string, FREQUENCY_COUNT long, FREQUENCY_PERCENT double, FREQUENCY_RANK int, PROFILED_ROW_COUNT long, PROFILED_NON_NULL_COUNT long",
+        )
+
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="threshold_rounding",
+    )
+
+    assert calls == {"profile": 1, "frequency": 1, "frequency_kwargs": {"columns": ["at_threshold"], "top_n": None}}
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert "values" in json.loads(rows["at_threshold"]["frequency_json"])
+    assert json.loads(rows["just_above"]["frequency_json"]) == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 80.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
 
 
 def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(spark_session, monkeypatch, registered):
