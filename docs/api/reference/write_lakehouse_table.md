@@ -10,8 +10,8 @@
 
 ## Call-flow summary
 
-- Downstream callables: 17
-- Shared helpers: 9
+- Downstream callables: 18
+- Shared helpers: 10
 - Private helpers: 8
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=write_lakehouse_table">Open Live contract call flow</a>
@@ -20,22 +20,33 @@ Write a Spark DataFrame to a configured Fabric lakehouse Delta table.
 
 <div class="reference-docstring-intro" markdown="1">
 
-The function performs an immediate Spark write using the selected write
-mode and optional execution and storage partitioning settings. Lakehouse
-Delta is optimized for FabricOps PySpark processing and reuse. Prefer this
-callable for repeated PySpark processing and reusable intermediate,
-Unified, Product, and metadata Delta outputs that will be read repeatedly
-by Spark. Publish selected serving outputs to Warehouse separately when
-SQL serving is required.
+``write_lakehouse_table`` writes a Spark DataFrame to a Fabric lakehouse
+table using the configured FabricOps target, schema, table name, and write
+settings. It supports Spark-side repartitioning before the write so large
+datasets can be processed by multiple Spark tasks concurrently.
+
+The function also supports physical Delta table partitioning when
+``partition_by`` is supplied. Spark execution repartitioning and Delta
+table partitioning solve different problems and should not be treated as
+interchangeable.
+
+Use this function after a pipeline DataFrame has been prepared and passed
+the required validation or guardrail checks. For small datasets, use the
+default write path without forcing repartitioning. For large datasets,
+including datasets containing millions of rows, use ``repartition_by``
+when additional Spark write parallelism is needed. Use ``partition_by``
+only when the persisted Delta table should be physically organized by
+stable, commonly filtered columns. Do not add physical partitions merely to
+make one write faster.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/write_lakehouse_table.py:15`
+`fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L15-L230">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L285">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,9 +61,7 @@ SQL serving is required.
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
-
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
+Parallel processing is Spark distributed execution over DataFrame partitions, not Python threading, multiprocessing, parallel submission of separate tables, or a separate orchestration helper. repartition_by changes Spark execution partitions for the current write; partition_by changes the persisted Delta layout.
 
 
 ## Signature
@@ -80,63 +89,77 @@ def write_lakehouse_table(
 
 <div class="reference-example-usage" markdown="1">
 
-Small DataFrames normally do not need explicit repartitioning.
+Small lookup table without explicit repartitioning:
 
-```python
-# Small lookup or reference table.
-# Keep the DataFrame's existing Spark partitioning.
-write_lakehouse_table(
-    country_lookup_df,
-    table_name="country_lookup",
-    target="unified",
-    schema=UNIFIED_SCHEMA,
-    mode="overwrite",
-)
-```
+>>> write_lakehouse_table(
+...     small_lookup_df,
+...     "COUNTRY_REGION_MAPPING",
+...     target="data",
+...     schema=DATA_SCHEMA,
+...     mode="overwrite",
+... )
 
-For a large fact dataset containing millions of rows, you can increase
-Spark write parallelism before the write while also physically
-partitioning the Delta table by commonly filtered date columns.
+A small lookup table generally does not need explicit repartitioning.
+Forcing many Spark partitions for a small dataset can create unnecessary
+shuffle work and many small output files.
 
-```python
-# Large fact dataset containing millions of rows.
-# Repartition into more Spark tasks before writing, while physically
-# partitioning the Delta table by commonly filtered date columns.
-write_lakehouse_table(
-    orders_df,
-    table_name="orders",
-    target="unified",
-    schema=UNIFIED_SCHEMA,
-    mode="append",
-    repartition_by=(32, "order_year", "order_month"),
-    partition_by=["order_year", "order_month"],
-)
-```
+Integer repartitioning for a large dataset:
 
-``repartition_by=(32, "order_year", "order_month")`` is equivalent to
-``orders_df.repartition(32, "order_year", "order_month")``. Spark can
-process and write those partitions concurrently, subject to the available
-executors and Fabric capacity. ``partition_by=["order_year",
-"order_month"]`` creates the physical Delta directory partitioning. The
-value ``32`` is illustrative and should be benchmarked rather than treated
-as a universal recommendation.
+>>> write_lakehouse_table(
+...     large_df,
+...     "STUDENT_ENROLMENT_CURATED",
+...     target="data",
+...     schema=DATA_SCHEMA,
+...     mode="overwrite",
+...     repartition_by=32,
+... )
 
-When physical Delta partitioning is not required, you can increase Spark
-write parallelism without changing the destination table layout.
+The DataFrame is shuffled into 32 Spark partitions before the Delta write.
+This is appropriate only when the dataset is large enough to benefit from
+additional parallel tasks.
 
-```python
-write_lakehouse_table(
-    events_df,
-    table_name="events",
-    target="unified",
-    schema=UNIFIED_SCHEMA,
-    mode="append",
-    repartition_by=32,
-)
-```
+Column-based repartitioning:
 
-This increases the number of Spark partitions before the write without
-physically partitioning the destination Delta table.
+>>> write_lakehouse_table(
+...     large_df,
+...     "STUDENT_ENROLMENT_CURATED",
+...     target="data",
+...     schema=DATA_SCHEMA,
+...     mode="overwrite",
+...     repartition_by=["academic_year", "semester"],
+... )
+
+Combined Spark repartitioning and physical Delta partitioning:
+
+>>> write_lakehouse_table(
+...     large_df,
+...     "STUDENT_ENROLMENT_CURATED",
+...     target="data",
+...     schema=DATA_SCHEMA,
+...     mode="overwrite",
+...     repartition_by=32,
+...     partition_by=["academic_year"],
+... )
+
+Here, Spark first creates 32 execution partitions to distribute the write
+work. The resulting Delta table is physically partitioned by
+``academic_year``. The number of Spark execution partitions is not the same
+thing as the number of physical table partition values.
+
+Large historical dataset pattern:
+
+>>> write_lakehouse_table(
+...     enrolment_df,
+...     "STUDENT_ENROLMENT_HISTORY",
+...     target="data",
+...     schema=DATA_SCHEMA,
+...     mode="overwrite",
+...     repartition_by=48,
+...     partition_by=["academic_year"],
+... )
+
+This pattern is intended for a large historical dataset containing millions
+of rows. The value ``48`` is an example, not a universal recommendation.
 
 </div>
 
@@ -144,20 +167,20 @@ physically partitioning the destination Delta table.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. |
+| `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to write. When ``repartition_by`` is provided, the function creates a repartitioned DataFrame for the write; it does not mutate the original DataFrame object. |
 | `table_name` | `str` | Yes | Lakehouse table name. Supply ``schema`` and ``table_name`` separately; do not pass a qualified name such as ``schema.table`` through ``table_name``. |
 | `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. FabricOps resolves the selected environment, workspace, Lakehouse item, optional schema, table name, and OneLake Delta path under the Lakehouse ``Tables`` area. |
 | `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. |
-| `mode` | `str, default="append"` | No | Spark Delta write mode. ``append`` adds rows to the existing destination or creates it when absent. Rerunning the same input can create duplicate rows. No business-key matching, deduplication, or idempotency check is performed. ``overwrite`` replaces the destination data according to Spark Delta writer behavior and should be treated as destructive. ``errorifexists`` fails when the destination already exists. ``ignore`` skips the write when the destination already exists. This function does not perform a Delta ``MERGE``, upsert, update-on-match, delete-on-missing, or key-based deduplication. |
-| `partition_by` | `str or list[str]` | No | Column or columns used to create physical Delta table partitions in storage. Use this for stable, commonly filtered, relatively low-cardinality columns such as year or month when that layout improves downstream reads. ``partition_by`` affects the physical Delta table layout rather than Spark execution parallelism. High-cardinality partition columns can create excessive folders and small files, and the function does not inspect or reconcile an existing table's partition layout before writing. |
-| `repartition_by` | `int, str, list, or tuple` | No | Optional repartitioning applied to the Spark DataFrame before the write. This changes the Spark partition distribution and can increase Spark write parallelism by creating additional partitions that Spark may process concurrently, subject to available cluster resources and destination throughput. Small DataFrames normally do not need explicit repartitioning. Large datasets, including workloads with millions of rows, may benefit when partition counts are tuned for data volume, row width, skew, file sizes, and available Fabric Spark capacity. Millions of rows is an example workload size rather than a hard threshold. Row count alone is not sufficient for tuning. Excessive repartitioning can add shuffle cost, scheduler overhead, and many small files. ``repartition_by=32`` is equivalent to ``df.repartition(32)``. ``repartition_by="department"`` is equivalent to ``df.repartition("department")``. ``repartition_by=["year", "month"]`` is equivalent to ``df.repartition("year", "month")``. ``repartition_by=(32, "year", "month")`` is equivalent to ``df.repartition(32, "year", "month")``. Repartitioning changes the DataFrame used for the write but does not mutate the caller's original DataFrame binding. |
-| `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options forwarded before saving the configured Lakehouse ``Tables`` path, such as ``mergeSchema``, ``overwriteSchema``, and other standard Delta writer options supported by the active Spark runtime. FabricOps forwards these options and does not validate their compatibility. |
+| `mode` | `{"append", "overwrite", "errorifexists", "ignore"}, default="append"` | No | Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. |
+| `partition_by` | `str or list[str] or tuple[str, ...]` | No | Optional column name or collection of columns used to physically partition the persisted Delta table. This controls the table's stored layout and is separate from Spark execution repartitioning. Use columns with appropriate cardinality and stable downstream filtering value. |
+| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning instruction applied immediately before the write. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes rows by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. Repartitioning triggers a shuffle and should be used deliberately for large, under-partitioned, or skewed datasets. |
+| `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
 
 ## Returns
 
-None; the DataFrame is written to the configured Lakehouse Delta table path.
+None. The function validates routing and write settings, optionally repartitions the DataFrame, performs the Spark Delta write, and returns after the write completes or Spark raises an error.
 
 ### Return interpretation
 
@@ -169,46 +192,112 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 
 ### Common failure causes
 
-- Guardrails were skipped before a target write.
-- The target lakehouse is not configured for the environment.
-- The write mode is unsupported for the destination.
-- The caller lacks write permission or Spark cannot create the table.
+- Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.
+- Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.
+- Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-FabricOps resolves the configured Lakehouse Tables path from
-``00_env_config`` and then delegates to Spark's Delta writer with any
-supplied writer options. ``repartition_by`` affects Spark execution before
-the write, while ``partition_by`` affects the physical Delta table layout
-on storage. The function triggers a Spark write job, does not return a
-lazy write plan, and returns ``None`` only after the write completes or
-Spark raises an error. It may create the Delta destination when it does
-not already exist, subject to Spark write behavior and the selected mode.
+Parallel processing and write concurrency
+    Spark writes DataFrame partitions concurrently across available
+    executors. ``write_lakehouse_table`` can repartition the input
+    DataFrame before writing, allowing the caller to influence how many
+    Spark tasks participate in the write and how records are distributed
+    between those tasks.
 
-The function does not automatically validate the DataFrame against a data
-contract, match business keys, add missing columns, reorder columns, cast
-incompatible types, reconcile schema differences, enable schema evolution,
-validate nullability, or check existing partition columns. Schema
-evolution or overwrite-schema behavior depends on supplied Spark Delta
-writer options where supported.
+    This is distributed Spark execution, not Python thread-level
+    concurrency. The function does not start multiple Python writers and
+    does not submit the same table write several times.
 
-This function only writes the DataFrame. It does not automatically
-register catalogue metadata, register lineage, profile the table, execute
-guardrails, validate a data contract, apply access governance, or create
-stewardship or agreement records.
+    Repartitioning can improve throughput when the existing DataFrame has
+    too few partitions, poorly distributed partitions, or severe data
+    skew. It also introduces a Spark shuffle, so increasing the partition
+    count does not automatically make every write faster.
 
-Comparison:
+Integer repartitioning
+    Passing a positive integer to ``repartition_by`` redistributes the
+    DataFrame into that number of Spark partitions before writing by
+    calling ``df.repartition(number)``. Spark can then schedule up to that
+    many partition-writing tasks, subject to available executor capacity
+    and Spark/Delta writer behaviour.
 
-| Function | Destination | Write mechanism | Physical partitioning |
-| --- | --- | --- | --- |
-| ``write_lakehouse_table`` | Lakehouse ``Tables`` Delta path | Native Spark Delta writer | Supported through ``partition_by`` |
-| ``write_warehouse_table`` | Fabric Warehouse table | Fabric Warehouse Spark connector | Not created by this function |
+Column-based repartitioning
+    Passing a column name, string-only list, or string-only tuple repartitions
+    the DataFrame by the selected values before writing by calling
+    ``df.repartition(*columns)``.
+    Rows with the same partitioning key are routed consistently according
+    to Spark's hash partitioning. Column-based repartitioning can help
+    distribute a large write using meaningful keys, but low-cardinality or
+    heavily skewed keys can create unbalanced partitions. This does not
+    physically partition the stored Delta table unless ``partition_by`` is
+    also supplied. A list or tuple such as ``(32, "academic_year",
+    "semester")`` calls ``df.repartition(32, "academic_year",
+    "semester")`` and controls both Spark task count and distribution keys
+    for the current write.
 
-Both functions default to append behavior, both can duplicate rows when
-the same data is published repeatedly, neither performs merge or upsert
-logic, and repartitioning affects Spark execution in both functions.
+Repartitioning versus physical Delta partitioning
+
+    | Setting | Affects | Purpose | Persisted in table layout |
+    | --- | --- | --- | --- |
+    | ``repartition_by`` | Spark DataFrame before writing | Controls task parallelism and row distribution during the write | No |
+    | ``partition_by`` | Delta table files and folders | Organizes stored data by selected columns for pruning and maintenance | Yes |
+
+    ``repartition_by`` changes the DataFrame's Spark execution partitions
+    before the write. It affects how Spark performs the current operation
+    but does not define the long-term physical partition columns of the
+    Delta table.
+
+    ``partition_by`` defines the physical Delta table partition layout. It
+    should be selected based on query patterns, cardinality, data volume,
+    and file-management considerations rather than being used as a general
+    concurrency switch.
+
+    Both options may be used together when the execution distribution and
+    persisted Delta layout intentionally serve different requirements.
+
+Implementation sequence
+    The function validates the DataFrame writer, validates the table
+    identity and write mode, resolves the lakehouse target and optional
+    schema, validates ``repartition_by``, calls ``df.repartition(number)``
+    for a positive integer, ``df.repartition(*columns)`` for a column
+    name/list/tuple, or ``df.repartition(number, *columns)`` when a list or
+    tuple begins with a positive integer, passes the resulting DataFrame to
+    the Delta writer,
+    applies ``partition_by`` only to the physical Delta write
+    configuration, executes the selected write mode, and returns ``None``.
+
+Performance notes
+    The existing number of DataFrame partitions may already be
+    appropriate. Check the workload before forcing repartitioning. Too few
+    partitions can underuse available Spark executors and produce very
+    large individual write tasks. Too many partitions can increase shuffle
+    overhead and create excessive small files. Repartitioning by a skewed
+    column may concentrate a large proportion of records in only a few
+    tasks. Physical Delta partitioning with high-cardinality columns can
+    create excessive directories and small files. Repartitioning improves
+    the opportunity for concurrent Spark task execution but does not
+    override cluster capacity, lakehouse service limits, locking
+    behaviour, or concurrent-operation constraints.
+
+Errors and edge cases
+    ``repartition_by`` rejects zero or negative integers, missing columns
+    when DataFrame columns are available, unsupported types, empty lists or
+    tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,
+    append-versus-overwrite conflicts, insufficient permissions,
+    concurrent writes to the same target table, partial or failed Delta
+    commits, empty DataFrames, small-file risk, and Spark shuffle failures
+    are handled by Spark/Delta or the configured Fabric runtime. The
+    function does not make simultaneous independent writes to the same
+    table safe.
+
+Side effects
+    This function performs a physical Delta table write and triggers Spark
+    execution. Depending on the selected mode, it may create, append to,
+    replace, or overwrite the target table. ``repartition_by`` triggers a
+    shuffle before the write. ``partition_by`` affects the persisted Delta
+    layout.
 
 </div>
 
@@ -229,7 +318,7 @@ logic, and repartitioning affects Spark execution in both functions.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 17 |
+| Live-critical dependencies | 18 |
 
 ### Release history
 
@@ -252,6 +341,7 @@ logic, and repartitioning affects Spark execution in both functions.
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
@@ -263,5 +353,5 @@ logic, and repartitioning affects Spark execution in both functions.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
-    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
+    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

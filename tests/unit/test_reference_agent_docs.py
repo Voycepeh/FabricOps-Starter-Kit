@@ -239,16 +239,11 @@ def test_setup_metadata_tables_reference_uses_keyword_only_example() -> None:
     assert "spark_session=spark" not in _section_text(text, "Example usage")
     example = _section_text(text, "Example usage")
     assert 'class="reference-example-usage"' in example
-    assert (
-        """```python
-setup_metadata_tables(
-    spark=spark,
-    config=CONFIG,
-    env="Sandbox",
-)
-```"""
-        in example
-    )
+    assert "setup_result = setup_metadata_tables" in example
+    assert "spark=spark" in example
+    assert "config=CONFIG" in example
+    assert "env=ENVIRONMENT_NAME" in example
+    assert "metadata_schema=METADATA_SCHEMA" in example
 
 
 def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatch) -> None:
@@ -268,18 +263,19 @@ def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatc
     warehouse_page = (tmp_path / "api" / "reference" / "write_warehouse_table.md").read_text(encoding="utf-8")
 
     lakehouse_example = _section_text(lakehouse_page, "Example usage")
-    assert "country_lookup" in lakehouse_example
-    assert "millions of rows" in lakehouse_example
-    assert 'repartition_by=(32, "order_year", "order_month")' in lakehouse_example
-    assert 'partition_by=["order_year", "order_month"]' in lakehouse_example
-    assert 'orders_df.repartition(32, "order_year", "order_month")' in lakehouse_example
+    assert "COUNTRY_REGION_MAPPING" in lakehouse_example
+    assert "millions of rows" in _normalize_whitespace(lakehouse_example)
+    assert "repartition_by=32" in lakehouse_example
+    assert 'repartition_by=["academic_year", "semester"]' in lakehouse_example
+    assert 'partition_by=["academic_year"]' in lakehouse_example
 
     warehouse_example = _section_text(warehouse_page, "Example usage")
-    assert "department_summary" in warehouse_example
-    assert "millions of rows" in warehouse_example
+    assert "DIM_DEPARTMENT" in warehouse_example
+    assert "FACT_TRANSACTIONS" in warehouse_example
+    assert "millions of rows" in _normalize_whitespace(warehouse_page)
     assert "repartition_by=32" in warehouse_example
-    assert "order_serving_df.repartition(32)" in warehouse_example
-    assert "does not create physical Warehouse partitions" in warehouse_example
+    assert "repartition_by=48" in warehouse_example
+    assert "does not create physical Warehouse table partitions" in _normalize_whitespace(warehouse_page)
 
 
 def test_docstring_intro_and_notes_are_extracted_without_summary_duplication() -> None:
@@ -327,14 +323,15 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     warehouse_page = (tmp_path / "api" / "reference" / "write_warehouse_table.md").read_text(encoding="utf-8")
     profile_page = (tmp_path / "api" / "reference" / "profile_dataframe.md").read_text(encoding="utf-8")
 
-    assert "Write a DataFrame to a configured Fabric warehouse target." in warehouse_page
-    assert warehouse_page.count("Write a DataFrame to a configured Fabric warehouse target.") == 1
-    assert "The function performs an immediate connector write using the selected mode" in warehouse_page
-    assert "## Notes" in warehouse_page
-    assert "does not execute SQL ``MERGE``" in warehouse_page
-    assert "does not create physical Warehouse table partitions" in warehouse_page
+    normalized_warehouse_page = _normalize_whitespace(warehouse_page)
+    assert "writes a Spark DataFrame to a Fabric Warehouse" in normalized_warehouse_page
+    assert warehouse_page.count("``write_warehouse_table`` writes a Spark DataFrame to a Fabric Warehouse") == 1
+    assert "Parallel processing and write concurrency" in warehouse_page
+    assert "Spark distributed processing" in warehouse_page
+    assert "does not create physical Warehouse table partitions" in normalized_warehouse_page
+    assert "does not implement a separate temporary staging cleanup step" in normalized_warehouse_page
     notes = _section_text(warehouse_page, "Notes")
-    assert "| Function | Destination | Write mechanism | Physical partitioning |" in notes
+    assert "No ``partition_by`` for Warehouse" in notes
     assert "## Parameters" in warehouse_page
     assert "## Returns" in warehouse_page
     assert "## Raises / Errors" in warehouse_page
@@ -685,7 +682,9 @@ def test_setup_notebook_reference_uses_human_first_source_documentation() -> Non
     assert "View on GitHub" in text
     assert text.count('<div class="reference-source-card" markdown="1">') == 1
     assert "## Example usage" in text
-    assert "context = setup_notebook" in _section_text(text, "Example usage")
+    example = _section_text(text, "Example usage")
+    assert "CONTEXT = setup_notebook" in example
+    assert "required_targets=" in example
     for marker in ("## Signature", "## Parameters", "## Returns"):
         assert marker in text
     assert "## AI / machine-readable metadata" not in text

@@ -88,7 +88,7 @@ def read_lakehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df_orders = read_lakehouse_table("orders", target="source", schema=SOURCE_SCHEMA, spark_session=spark)
+catalogue_df = read_lakehouse_table("METADATA_DATA_CATALOGUE", target="metadata", schema=METADATA_SCHEMA, spark_session=spark)
 ```
 
 </div>
@@ -105,7 +105,7 @@ df_orders = read_lakehouse_table("orders", target="source", schema=SOURCE_SCHEMA
 
 ## Returns
 
-Spark DataFrame loaded from the configured Lakehouse Delta table path.
+Spark DataFrame containing the current rows and columns of the resolved lakehouse table. The DataFrame preserves the table Spark schema and remains lazy until an action is executed.
 
 ### Return interpretation
 
@@ -117,10 +117,10 @@ Raises ValueError for unsafe names or non-lakehouse targets and RuntimeError whe
 
 ### Common failure causes
 
-- The target or table name is misspelled.
-- The selected environment does not define the requested lakehouse target.
-- Spark cannot access the table.
-- The caller lacks permission to read the lakehouse.
+- The target cannot be resolved or is not a lakehouse.
+- The table is not found, exists under another lakehouse or schema, or the schema argument is incorrect.
+- The caller lacks read permissions or no Spark session is available.
+- Spark Delta read failures may be deferred until an action evaluates the DataFrame.
 
 ## Notes
 
@@ -200,5 +200,5 @@ DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
-    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
+    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

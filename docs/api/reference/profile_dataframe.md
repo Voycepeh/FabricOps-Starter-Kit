@@ -62,7 +62,7 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=Tr
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])
+profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"], approximate_distinct=True)
 ```
 
 </div>
@@ -77,11 +77,11 @@ profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])
 
 ## Returns
 
-Spark DataFrame containing one profile row per eligible business column.
+Spark DataFrame with one profiling row per eligible input column and columns COLUMN_NAME, DATA_TYPE, ROW_COUNT, NON_NULL_COUNT, NULL_COUNT, NULL_PERCENT, DISTINCT_COUNT, DISTINCT_PERCENT, MEAN, STDDEV, MIN_VALUE, PERCENTILE_25, MEDIAN, PERCENTILE_75, and MAX_VALUE.
 
 ### Return interpretation
 
-Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.
+Each returned row describes one eligible source column, not one input record. Counts and percentages describe exactly the DataFrame supplied by the caller.
 
 ## Raises / Errors
 
@@ -89,10 +89,10 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 ### Common failure causes
 
-- The DataFrame is empty or missing expected columns.
-- Requested statistics are unsupported for a column type.
-- Spark actions fail while computing counts or summaries.
-- Excluded columns remove fields needed for review.
+- No eligible non-technical columns remain after exclusions.
+- Unsupported complex types or Spark expression limitations can prevent specific statistics.
+- Exact distinct counts are more expensive when approximate_distinct is False.
+- Spark actions can fail while computing counts, summaries, or percentiles.
 
 ## See also
 
@@ -124,5 +124,5 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
-    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
+    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT
