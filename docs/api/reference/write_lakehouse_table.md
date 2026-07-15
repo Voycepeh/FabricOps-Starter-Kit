@@ -46,7 +46,7 @@ make one write faster.
 
 `fabricops_kit/io/write_lakehouse_table.py:16`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L277">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L16-L285">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -173,7 +173,7 @@ of rows. The value ``48`` is an example, not a universal recommendation.
 | `schema` | `str or None` | No | Optional schema override for schema-enabled Lakehouses. |
 | `mode` | `{"append", "overwrite", "errorifexists", "ignore"}, default="append"` | No | Controls how the target table is written. ``append`` adds rows, ``overwrite`` may replace existing table data and should be selected explicitly, ``errorifexists`` fails when the destination exists, and ``ignore`` skips the write when the destination exists. |
 | `partition_by` | `str or list[str] or tuple[str, ...]` | No | Optional column name or collection of columns used to physically partition the persisted Delta table. This controls the table's stored layout and is separate from Spark execution repartitioning. Use columns with appropriate cardinality and stable downstream filtering value. |
-| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning instruction applied immediately before the write. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes rows by those keys. Repartitioning triggers a shuffle and should be used deliberately for large, under-partitioned, or skewed datasets. |
+| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark repartitioning instruction applied immediately before the write. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes rows by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. Repartitioning triggers a shuffle and should be used deliberately for large, under-partitioned, or skewed datasets. |
 | `options` | `dict` | No | Additional Spark Delta ``DataFrameWriter`` options passed to the underlying write operation, such as ``mergeSchema`` or ``overwriteSchema`` where supported by the active Spark runtime. FabricOps forwards these options and does not claim schema evolution unless the supplied Spark/Delta option supports it. |
 | `verbose` | `bool, default=True` | No | Whether to print the resolved output path before writing. |
 | `context` | `dict[str, Any]` | No | Active Fabric context override. |
@@ -192,7 +192,7 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 
 ### Common failure causes
 
-- Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, or missing repartition columns.
+- Zero or negative repartition counts, unsupported repartition_by types, empty lists/tuples, non-string column values after any leading partition count, or missing repartition columns.
 - Invalid partition_by columns, schema mismatch, append-versus-overwrite conflicts, or unintended destructive overwrite.
 - Insufficient write permissions, concurrent writes to the same target table, partial or failed Delta commits, empty DataFrame handling, small-file risk, or Spark shuffle failure.
 
@@ -224,14 +224,18 @@ Integer repartitioning
     and Spark/Delta writer behaviour.
 
 Column-based repartitioning
-    Passing a column name, list, or tuple repartitions the DataFrame by the
-    selected values before writing by calling ``df.repartition(*columns)``.
+    Passing a column name, string-only list, or string-only tuple repartitions
+    the DataFrame by the selected values before writing by calling
+    ``df.repartition(*columns)``.
     Rows with the same partitioning key are routed consistently according
     to Spark's hash partitioning. Column-based repartitioning can help
     distribute a large write using meaningful keys, but low-cardinality or
     heavily skewed keys can create unbalanced partitions. This does not
     physically partition the stored Delta table unless ``partition_by`` is
-    also supplied.
+    also supplied. A list or tuple such as ``(32, "academic_year",
+    "semester")`` calls ``df.repartition(32, "academic_year",
+    "semester")`` and controls both Spark task count and distribution keys
+    for the current write.
 
 Repartitioning versus physical Delta partitioning
 
@@ -257,8 +261,10 @@ Implementation sequence
     The function validates the DataFrame writer, validates the table
     identity and write mode, resolves the lakehouse target and optional
     schema, validates ``repartition_by``, calls ``df.repartition(number)``
-    for a positive integer or ``df.repartition(*columns)`` for a column
-    name/list/tuple, passes the resulting DataFrame to the Delta writer,
+    for a positive integer, ``df.repartition(*columns)`` for a column
+    name/list/tuple, or ``df.repartition(number, *columns)`` when a list or
+    tuple begins with a positive integer, passes the resulting DataFrame to
+    the Delta writer,
     applies ``partition_by`` only to the physical Delta write
     configuration, executes the selected write mode, and returns ``None``.
 
@@ -277,8 +283,8 @@ Performance notes
 
 Errors and edge cases
     ``repartition_by`` rejects zero or negative integers, missing columns
-    when DataFrame columns are available, unsupported types, and empty
-    lists or tuples. Invalid ``partition_by`` columns, schema mismatch,
+    when DataFrame columns are available, unsupported types, empty lists or
+    tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,
     append-versus-overwrite conflicts, insufficient permissions,
     concurrent writes to the same target table, partial or failed Delta
     commits, empty DataFrames, small-file risk, and Spark shuffle failures
@@ -347,5 +353,5 @@ Side effects
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 10:54 PM SGT
-    Call-flow data generated: 15 Jul 2026, 10:54 PM SGT
+    Reference pages generated: 15 Jul 2026, 11:42 PM SGT
+    Call-flow data generated: 15 Jul 2026, 11:41 PM SGT

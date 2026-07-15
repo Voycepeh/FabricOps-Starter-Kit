@@ -78,8 +78,10 @@ def write_lakehouse_table(
         Optional Spark repartitioning instruction applied immediately before
         the write. A positive integer controls the number of Spark execution
         partitions. A column name or collection of column names redistributes
-        rows by those keys. Repartitioning triggers a shuffle and should be
-        used deliberately for large, under-partitioned, or skewed datasets.
+        rows by those keys. A list or tuple beginning with a positive integer
+        supplies both the partition count and the distribution columns.
+        Repartitioning triggers a shuffle and should be used deliberately for
+        large, under-partitioned, or skewed datasets.
     options : dict, optional
         Additional Spark Delta ``DataFrameWriter`` options passed to the
         underlying write operation, such as ``mergeSchema`` or
@@ -122,14 +124,18 @@ def write_lakehouse_table(
         and Spark/Delta writer behaviour.
 
     Column-based repartitioning
-        Passing a column name, list, or tuple repartitions the DataFrame by the
-        selected values before writing by calling ``df.repartition(*columns)``.
+        Passing a column name, string-only list, or string-only tuple repartitions
+        the DataFrame by the selected values before writing by calling
+        ``df.repartition(*columns)``.
         Rows with the same partitioning key are routed consistently according
         to Spark's hash partitioning. Column-based repartitioning can help
         distribute a large write using meaningful keys, but low-cardinality or
         heavily skewed keys can create unbalanced partitions. This does not
         physically partition the stored Delta table unless ``partition_by`` is
-        also supplied.
+        also supplied. A list or tuple such as ``(32, "academic_year",
+        "semester")`` calls ``df.repartition(32, "academic_year",
+        "semester")`` and controls both Spark task count and distribution keys
+        for the current write.
 
     Repartitioning versus physical Delta partitioning
 
@@ -155,8 +161,10 @@ def write_lakehouse_table(
         The function validates the DataFrame writer, validates the table
         identity and write mode, resolves the lakehouse target and optional
         schema, validates ``repartition_by``, calls ``df.repartition(number)``
-        for a positive integer or ``df.repartition(*columns)`` for a column
-        name/list/tuple, passes the resulting DataFrame to the Delta writer,
+        for a positive integer, ``df.repartition(*columns)`` for a column
+        name/list/tuple, or ``df.repartition(number, *columns)`` when a list or
+        tuple begins with a positive integer, passes the resulting DataFrame to
+        the Delta writer,
         applies ``partition_by`` only to the physical Delta write
         configuration, executes the selected write mode, and returns ``None``.
 
@@ -175,8 +183,8 @@ def write_lakehouse_table(
 
     Errors and edge cases
         ``repartition_by`` rejects zero or negative integers, missing columns
-        when DataFrame columns are available, unsupported types, and empty
-        lists or tuples. Invalid ``partition_by`` columns, schema mismatch,
+        when DataFrame columns are available, unsupported types, empty lists or
+        tuples, and non-string column values after any leading partition count. Invalid ``partition_by`` columns, schema mismatch,
         append-versus-overwrite conflicts, insufficient permissions,
         concurrent writes to the same target table, partial or failed Delta
         commits, empty DataFrames, small-file risk, and Spark shuffle failures

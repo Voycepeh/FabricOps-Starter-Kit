@@ -45,7 +45,7 @@ or when physical Delta partitioning is required.
 
 `fabricops_kit/io/write_warehouse_table.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L236">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_warehouse_table.py#L15-L244">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -145,7 +145,7 @@ and Warehouse ingestion limits.
 | `table_name` | `str` | Yes | Warehouse table name. |
 | `target` | `str` | No | Logical Warehouse target from ``00_env_config``. FabricOps resolves the logical target, workspace ID, Warehouse item ID, Warehouse database name, schema, and table name. |
 | `mode` | `str` | No | Requested Warehouse write behaviour passed to the Fabric Warehouse Spark connector. ``append`` adds rows and can duplicate repeated publications. ``overwrite`` requests replacement behaviour and should be treated as destructive. Other supported modes are passed through to Spark/connector semantics. |
-| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
+| `repartition_by` | `int or str or list[str] or tuple[str, ...]` | No | Optional Spark-side repartitioning applied before the Warehouse connector is invoked. A positive integer controls the number of Spark execution partitions. A column name or collection of column names redistributes records by those keys. A list or tuple beginning with a positive integer supplies both the partition count and the distribution columns. This controls Spark processing for the current write and does not configure the Warehouse table's physical design. |
 | `options` | `dict[str, Any] \| None` | No | Additional Fabric Warehouse Spark connector writer options. FabricOps sets the resolved Workspace ID and Warehouse item ID before applying caller options, then forwards caller options to the connector writer. Do not pass custom options that replace the resolved destination identity settings. |
 | `context` | `dict[str, Any] \| None` | No | Active Fabric context override. |
 
@@ -163,9 +163,9 @@ Raises configuration, Spark connector, or warehouse write errors when the target
 
 ### Common failure causes
 
-- Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, or empty lists/tuples.
+- Zero or negative repartition counts, missing repartition columns, unsupported repartition_by value types, empty lists/tuples, or non-string column values after any leading partition count.
 - Schema or table not found, unsupported write mode, authentication or connector failure, Warehouse permission failure, or unsupported Spark-to-Warehouse type conversion.
-- Connector staging or cleanup failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one.
+- Connector-managed transfer or staging failure, transaction or lock conflict, empty DataFrame behaviour, large transfer timeout/resource exhaustion, or accidentally writing the original DataFrame instead of the repartitioned one.
 
 ## Notes
 
@@ -194,10 +194,14 @@ Integer repartitioning
     limits.
 
 Column-based repartitioning
-    Passing a column name, list, or tuple repartitions the Spark DataFrame
-    by the selected keys before the Warehouse connector receives it by
-    calling ``df.repartition(*columns)``. This affects only Spark-side row
-    distribution for the current write. It does not declare Warehouse
+    Passing a column name, string-only list, or string-only tuple repartitions
+    the Spark DataFrame by the selected keys before the Warehouse connector
+    receives it by calling ``df.repartition(*columns)``. A list or tuple
+    such as ``(32, "academic_year", "semester")`` calls
+    ``df.repartition(32, "academic_year", "semester")`` and controls both
+    Spark task count and distribution keys for the current write. This
+    affects only Spark-side row distribution for the current write. It does
+    not declare Warehouse
     partitions, indexes, distribution keys, clustered columns, or any other
     physical Warehouse design.
 
@@ -210,8 +214,10 @@ No ``partition_by`` for Warehouse
 
 Implementation sequence
     The function validates the DataFrame writer, validates
-    ``repartition_by``, repartitions the Spark DataFrame by count or
-    columns when requested, resolves the Warehouse connection and table
+    ``repartition_by``, calls ``df.repartition(number)`` for a positive
+    integer, ``df.repartition(*columns)`` for a column name/list/tuple, or
+    ``df.repartition(number, *columns)`` when a list or tuple begins with a
+    positive integer, resolves the Warehouse connection and table
     identity, passes the repartitioned DataFrame into the Warehouse write
     connector, executes the requested connector write mode, and returns
     ``None``. The current implementation delegates transfer to the Fabric
@@ -239,11 +245,12 @@ Concurrency safety clarification
 
 Errors and edge cases
     ``repartition_by`` rejects zero or negative integers, missing columns
-    when DataFrame columns are available, unsupported value types, and
-    empty lists or tuples. Schema or table not found, unsupported write
-    modes, authentication failure, connector failure, Warehouse permission
-    failure, unsupported Spark-to-Warehouse type conversion, staging or
-    cleanup failure from the connector, transaction or lock conflicts,
+    when DataFrame columns are available, unsupported value types, empty lists or
+    tuples, and non-string column values after any leading partition count.
+    Schema or table not found, unsupported write modes, authentication
+    failure, connector failure, Warehouse permission failure, unsupported
+    Spark-to-Warehouse type conversion, connector-managed transfer or
+    staging failure, transaction or lock conflicts,
     empty DataFrames, large transfer timeout or resource exhaustion, and
     accidental use of the original DataFrame after repartitioning are
     handled by Spark, the Fabric connector, or Warehouse runtime errors.
@@ -307,5 +314,5 @@ Side effects
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 10:54 PM SGT
-    Call-flow data generated: 15 Jul 2026, 10:54 PM SGT
+    Reference pages generated: 15 Jul 2026, 11:42 PM SGT
+    Call-flow data generated: 15 Jul 2026, 11:41 PM SGT

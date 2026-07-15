@@ -9,8 +9,8 @@
 
 ## Call-flow summary
 
-- Downstream callables: 49
-- Shared helpers: 26
+- Downstream callables: 50
+- Shared helpers: 27
 - Private helpers: 23
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open Preview call flow</a>
@@ -245,5 +245,5 @@ their respective FabricOps workflows.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
-    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
+    Reference pages generated: 15 Jul 2026, 11:42 PM SGT
+    Call-flow data generated: 15 Jul 2026, 11:41 PM SGT

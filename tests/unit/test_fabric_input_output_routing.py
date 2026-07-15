@@ -435,6 +435,7 @@ def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeyp
         ("academic_year", ("academic_year",)),
         (["academic_year", "faculty"], ("academic_year", "faculty")),
         (("academic_year", "faculty"), ("academic_year", "faculty")),
+        ((8, "academic_year", "faculty"), (8, "academic_year", "faculty")),
     ],
 )
 def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
@@ -489,6 +490,8 @@ def test_write_lakehouse_table_docstring_examples_cover_small_and_large_writes()
     assert 'partition_by=["academic_year"]' in doc
     assert "df.repartition(number)" in doc
     assert "df.repartition(*columns)" in doc
+    assert "df.repartition(number, *columns)" in doc
+    assert 'df.repartition(32, "academic_year", "semester")' in " ".join(doc.split())
 
 
 def test_write_warehouse_table_docstring_examples_cover_small_and_large_writes():
@@ -1147,6 +1150,7 @@ def test_write_lakehouse_table_repartition_contract(monkeypatch):
         ("academic_year", ("academic_year",)),
         (["academic_year", "semester"], ("academic_year", "semester")),
         (("academic_year", "semester"), ("academic_year", "semester")),
+        ((32, "academic_year", "semester"), (32, "academic_year", "semester")),
     ]:
         frame = _TrackedFrame()
         owner.write_lakehouse_table(
@@ -1177,7 +1181,7 @@ def test_write_lakehouse_table_repartition_contract(monkeypatch):
     assert writes[-1]["partition_by"] == ["academic_year"]
     assert writes[-1]["df"].repartition_args == (32,)
 
-    for invalid in (0, -1, [], (), {"academic_year"}, (32, "academic_year")):
+    for invalid in (0, -1, [], (), {"academic_year"}, (32, 7), (0, "academic_year")):
         with pytest.raises(ValueError, match="repartition_by"):
             owner.write_lakehouse_table(
                 _TrackedFrame(), "orders", target="data", repartition_by=invalid, verbose=False
@@ -1227,6 +1231,7 @@ def test_write_warehouse_table_repartition_contract(monkeypatch):
         ("academic_year", ("academic_year",)),
         (["academic_year", "semester"], ("academic_year", "semester")),
         (("academic_year", "semester"), ("academic_year", "semester")),
+        ((32, "academic_year", "semester"), (32, "academic_year", "semester")),
     ]:
         frame = _TrackedFrame()
         owner.write_warehouse_table(
@@ -1243,7 +1248,7 @@ def test_write_warehouse_table_repartition_contract(monkeypatch):
         assert writes[-1]["df"].repartition_args == expected
         assert writes[-1]["options"] == {"batchsize": "5000"}
 
-    for invalid in (0, -1, [], (), {"academic_year"}, (32, "academic_year")):
+    for invalid in (0, -1, [], (), {"academic_year"}, (32, 7), (0, "academic_year")):
         with pytest.raises(ValueError, match="repartition_by"):
             owner.write_warehouse_table(_TrackedFrame(), "dbo", "orders", target="warehouse", repartition_by=invalid)
     with pytest.raises(ValueError, match="do not exist"):

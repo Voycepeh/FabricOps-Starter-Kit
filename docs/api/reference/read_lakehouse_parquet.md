@@ -235,5 +235,5 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
-    Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
+    Reference pages generated: 15 Jul 2026, 11:42 PM SGT
+    Call-flow data generated: 15 Jul 2026, 11:41 PM SGT

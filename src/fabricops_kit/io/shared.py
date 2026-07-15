@@ -257,14 +257,26 @@ def repartition_dataframe_for_write(df, repartition_by):
         if repartition_by <= 0:
             raise ValueError("repartition_by integer partition count must be greater than zero.")
         return df.repartition(repartition_by)
+    partition_count = None
     if isinstance(repartition_by, str):
         columns = [repartition_by]
     elif isinstance(repartition_by, (list, tuple)):
         if not repartition_by:
             raise ValueError("repartition_by column list or tuple must not be empty.")
-        if not all(isinstance(column, str) for column in repartition_by):
-            raise ValueError("repartition_by list or tuple values must be column names.")
-        columns = list(repartition_by)
+        values = list(repartition_by)
+        if isinstance(values[0], bool):
+            raise ValueError("repartition_by partition count must be a positive integer when supplied.")
+        if isinstance(values[0], int):
+            partition_count = values.pop(0)
+            if partition_count <= 0:
+                raise ValueError("repartition_by integer partition count must be greater than zero.")
+            if not values:
+                return df.repartition(partition_count)
+        if not all(isinstance(column, str) for column in values):
+            raise ValueError(
+                "repartition_by list or tuple values must be column names, optionally preceded by a positive integer."
+            )
+        columns = values
     else:
         raise ValueError(
             "repartition_by must be a positive integer, column name, or non-empty list/tuple of column names."
@@ -278,6 +290,8 @@ def repartition_dataframe_for_write(df, repartition_by):
         missing = [column for column in normalized_columns if column not in available_columns]
         if missing:
             raise ValueError(f"repartition_by column(s) do not exist in df: {', '.join(missing)}.")
+    if partition_count is not None:
+        return df.repartition(partition_count, *normalized_columns)
     return df.repartition(*normalized_columns)
 
 
