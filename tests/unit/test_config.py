@@ -653,7 +653,6 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "profiled_at",
     }
