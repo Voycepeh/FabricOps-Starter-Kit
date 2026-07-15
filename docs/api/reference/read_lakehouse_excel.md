@@ -96,6 +96,17 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 - The workbook layout does not match expected headers.
 - The configured lakehouse target cannot be read.
 
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+FabricOps resolves the configured Lakehouse Files path from
+``00_env_config``, reads the workbook binary through Spark, parses it with
+``pandas.read_excel``, and converts the pandas DataFrame back to a Spark
+DataFrame.
+
+</div>
+
 ## See also
 
 - [Templates](../../notebook-templates-implementation-guide/index.md)
@@ -145,5 +156,5 @@ Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors 
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

@@ -18,12 +18,28 @@
 
 Read a CSV file from a configured Fabric-resolved path through Spark CSV.
 
+<div class="reference-docstring-intro" markdown="1">
+
+Use ``read_lakehouse_csv`` for CSV data stored under the Lakehouse
+``Files`` area. Use ``read_lakehouse_table`` for managed Delta tables
+stored under the Lakehouse ``Tables`` area.
+
+This function reads from the Lakehouse ``Files`` area, not a managed Delta
+table in the ``Tables`` area. It can resolve either a single CSV file path
+or a folder path, applies the ``header`` setting, forwards all additional
+CSV reader options directly to Spark, and returns a lazy Spark DataFrame.
+The resolved location is conceptually
+``<configured lakehouse>/Files/<relative_path>``, which FabricOps maps to
+the corresponding ABFSS path before delegating to Spark.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/io/read_lakehouse_csv.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L49">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/read_lakehouse_csv.py#L10-L104">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -71,11 +87,11 @@ df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spar
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `relative_path` | `str` | Yes | CSV file or folder path resolved by the Fabric resolver. |
-| `target` | `str` | No | Logical lakehouse target from ``00_env_config``. |
+| `relative_path` | `str` | Yes | Relative CSV file or folder path resolved underneath the configured Lakehouse ``Files`` area. |
+| `target` | `str` | No | Logical Lakehouse target from ``00_env_config``. It is not necessarily the literal physical Lakehouse name. |
 | `spark_session` | `object` | No | Spark session to use instead of the notebook global ``spark``. |
-| `header` | `bool` | No | Whether the first row contains column names. |
-| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options forwarded to Spark's CSV reader. |
+| `header` | `bool` | No | Whether Spark should treat the first row as column names. When ``header=True``, the first row is used as column names. When ``header=False``, the first row is treated as data and Spark typically creates generic column names such as ``_c0``, ``_c1``, and ``_c2``. |
+| `context` | `dict[str, Any] \| None` | No | Active Fabric context override. **options Additional Spark CSV reader options passed directly to Spark's CSV reader, such as ``inferSchema``, ``sep``, ``quote``, ``escape``, ``encoding``, ``multiLine``, ``dateFormat``, ``timestampFormat``, ``nullValue``, ``mode``, and ``recursiveFileLookup``. FabricOps does not interpret or transform these options beyond forwarding them. |
 
 ## Returns
 
@@ -95,6 +111,47 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 - CSV options do not match the file shape.
 - Spark cannot access the file.
 - The selected environment is missing the source lakehouse target.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+FabricOps resolves the configured Lakehouse Files path from
+``00_env_config`` and then delegates to Spark's CSV reader with the supplied
+options. Calling this function constructs a Spark read plan, and the file
+scan occurs when a downstream action executes, such as ``display``,
+``count``, ``collect``, or a DataFrame write. The function does not
+immediately load the complete file into notebook memory.
+
+Compact examples:
+
+``df = read_lakehouse_csv("incoming/customers.csv", target="source")``
+
+``df = read_lakehouse_csv("incoming/customers/", target="source")``
+
+``df = read_lakehouse_csv("incoming/customers.csv", target="source", inferSchema=True)``
+
+``df = read_lakehouse_csv("incoming/orders.csv", target="source", header=True, inferSchema=True, sep=",", encoding="UTF-8", mode="PERMISSIVE")``
+
+When a folder path is supplied, Spark reads compatible CSV files from that
+path into one DataFrame according to Spark CSV reader behavior. FabricOps
+does not manually loop through or append files.
+
+The function sets the ``header`` option and forwards the caller's CSV
+options. It does not automatically infer data types. Unless the caller
+requests schema inference or another schema strategy, Spark CSV columns are
+generally read as strings. ``inferSchema=True`` can be passed through
+``**options`` when inference is desired.
+
+This function does not convert CSV data into a Delta table, write, move,
+rename, or delete source files, register metadata, profile the returned
+DataFrame, remove duplicate rows, standardize column names, infer schema
+unless requested through Spark options, validate that every CSV file in a
+folder has identical structure, apply custom malformed-record handling
+beyond the supplied Spark CSV options, or automatically cache or persist
+the returned DataFrame.
+
+</div>
 
 ## See also
 
@@ -144,5 +201,5 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 1:23 AM SGT
+    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
