@@ -82,7 +82,7 @@ def setup_notebook(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Unified"], notebook_name="00_env_config")
+CONTEXT = setup_notebook(CONFIG, env=ENVIRONMENT_NAME, required_targets=["Source", "Unified", "metadata"])
 ```
 
 </div>
@@ -100,11 +100,11 @@ context = setup_notebook(CONFIG, env="Sandbox", required_targets=["Source", "Uni
 
 ## Returns
 
-NotebookSetupContext with resolved configuration paths, runtime metadata, smoke-check results, and readiness status.
+NotebookSetupContext with run_id, notebook_name, workspace_name, user_name, environment, paths, validation_results, runtime_metadata, and readiness_status.
 
 ### Return interpretation
 
-A ready context means required targets resolved and runtime checks passed. Review validation messages before running downstream cells when readiness is not successful.
+A ready context means required targets resolved and startup checks did not fail. Review validation_results when readiness_status is not ready before running downstream notebook cells.
 
 ## Raises / Errors
 
@@ -112,10 +112,12 @@ ValueError for invalid configuration sections, missing required paths, or unreso
 
 ### Common failure causes
 
-- The environment name is not present in CONFIG.
-- Required targets are missing from path configuration.
-- Fabric runtime metadata is unavailable and no local fallback was provided.
-- Configured lakehouse or warehouse targets cannot be resolved.
+- Missing required configuration sections or target names.
+- No active Spark session, which is reported as a warning for local fallback mode.
+- Fabric notebook runtime utilities are unavailable outside Fabric.
+- Workspace, lakehouse, warehouse, or notebook context cannot be resolved.
+- Invalid target names or required store identity fields.
+- Explicit notebook_name or local_fallback_name is needed when automatic Fabric context is not available.
 
 ## Notes
 
@@ -224,5 +226,5 @@ readiness checks.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

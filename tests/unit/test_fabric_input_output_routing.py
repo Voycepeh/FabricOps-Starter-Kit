@@ -434,7 +434,7 @@ def test_write_warehouse_table_repartition_none_preserves_original_frame(monkeyp
         (8, (8,)),
         ("academic_year", ("academic_year",)),
         (["academic_year", "faculty"], ("academic_year", "faculty")),
-        ((8, "academic_year"), (8, "academic_year")),
+        (("academic_year", "faculty"), ("academic_year", "faculty")),
     ],
 )
 def test_write_warehouse_table_repartition_by_parity_writes_repartitioned_frame(
@@ -482,12 +482,13 @@ def test_write_lakehouse_table_docstring_examples_cover_small_and_large_writes()
     doc = inspect.getdoc(write_lakehouse_table)
 
     assert doc is not None
-    assert "country_lookup" in doc
+    assert "COUNTRY_REGION_MAPPING" in doc
     assert "millions of rows" in doc
-    assert 'repartition_by=(32, "order_year", "order_month")' in doc
-    assert 'partition_by=["order_year", "order_month"]' in doc
-    assert 'orders_df.repartition(32, "order_year", "order_month")' in doc
-    assert "physical Delta directory partitioning" in doc
+    assert "repartition_by=32" in doc
+    assert 'repartition_by=["academic_year", "semester"]' in doc
+    assert 'partition_by=["academic_year"]' in doc
+    assert "df.repartition(number)" in doc
+    assert "df.repartition(*columns)" in doc
 
 
 def test_write_warehouse_table_docstring_examples_cover_small_and_large_writes():
@@ -498,12 +499,12 @@ def test_write_warehouse_table_docstring_examples_cover_small_and_large_writes()
     normalized = " ".join(doc.split()) if doc else ""
 
     assert doc is not None
-    assert "department_summary" in doc
+    assert "DIM_DEPARTMENT" in doc
     assert "millions of rows" in doc
     assert "repartition_by=32" in doc
-    assert "order_serving_df.repartition(32)" in doc
-    assert "does not physically partition the Warehouse table" in normalized
-    assert "does not create physical Warehouse partitions" in normalized
+    assert "df.repartition(number)" in doc
+    assert "df.repartition(*columns)" in doc
+    assert "does not create physical Warehouse table partitions" in normalized
 
 
 def test_legacy_io_facade_module_is_deleted():
@@ -1097,3 +1098,159 @@ def test_migrated_io_owner_files_do_not_import_private_helpers():
         tree = ast.parse((owner_dir / f"{helper_name}.py").read_text(encoding="utf-8"))
         imported_names = [alias.name for node in tree.body if isinstance(node, ast.ImportFrom) for alias in node.names]
         assert not any(name.startswith("_") for name in imported_names)
+
+
+class _TrackedFrame:
+    """Minimal Spark-like DataFrame that records repartition usage."""
+
+    def __init__(self, name="original", columns=None):
+        self.name = name
+        self.columns = list(columns or ["academic_year", "semester", "status"])
+        self.write = _Writer()
+        self.repartition_calls = []
+
+    def repartition(self, *args):
+        self.repartition_calls.append(args)
+        child = _TrackedFrame(name=f"{self.name}.repartitioned", columns=self.columns)
+        child.parent = self
+        child.repartition_args = args
+        return child
+
+
+def test_write_lakehouse_table_repartition_contract(monkeypatch):
+    """Verify lakehouse writes use supported repartition forms before Delta writes."""
+    import importlib
+
+    owner = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
+    store = _store("data", "lakehouse", "lh_data_dev")
+    writes = []
+    monkeypatch.setattr(
+        owner,
+        "resolve_configured_lakehouse_table",
+        lambda target, table_name, schema, *, context=None: (store, table_name, schema, "resolved://lakehouse/table"),
+    )
+    monkeypatch.setattr(
+        owner,
+        "write_delta_path",
+        lambda df, path, *, mode, partition_by=None, options=None: writes.append(
+            {"df": df, "path": path, "mode": mode, "partition_by": partition_by, "options": options}
+        ),
+    )
+
+    original = _TrackedFrame()
+    owner.write_lakehouse_table(original, "orders", target="data", mode="overwrite", verbose=False)
+    assert original.repartition_calls == []
+    assert writes[-1]["df"] is original
+
+    for repartition_by, expected in [
+        (32, (32,)),
+        ("academic_year", ("academic_year",)),
+        (["academic_year", "semester"], ("academic_year", "semester")),
+        (("academic_year", "semester"), ("academic_year", "semester")),
+    ]:
+        frame = _TrackedFrame()
+        owner.write_lakehouse_table(
+            frame,
+            "orders",
+            target="data",
+            mode="overwrite",
+            partition_by=["academic_year"],
+            repartition_by=repartition_by,
+            verbose=False,
+        )
+        assert frame.repartition_calls == [expected]
+        assert writes[-1]["df"] is not frame
+        assert writes[-1]["df"].repartition_args == expected
+        assert writes[-1]["partition_by"] == ["academic_year"]
+
+    frame = _TrackedFrame()
+    owner.write_lakehouse_table(
+        frame,
+        "orders",
+        target="data",
+        mode="overwrite",
+        partition_by=["academic_year"],
+        repartition_by=32,
+        verbose=False,
+    )
+    assert frame.repartition_calls == [(32,)]
+    assert writes[-1]["partition_by"] == ["academic_year"]
+    assert writes[-1]["df"].repartition_args == (32,)
+
+    for invalid in (0, -1, [], (), {"academic_year"}, (32, "academic_year")):
+        with pytest.raises(ValueError, match="repartition_by"):
+            owner.write_lakehouse_table(
+                _TrackedFrame(), "orders", target="data", repartition_by=invalid, verbose=False
+            )
+    with pytest.raises(ValueError, match="do not exist"):
+        owner.write_lakehouse_table(
+            _TrackedFrame(columns=["academic_year"]),
+            "orders",
+            target="data",
+            repartition_by="missing_column",
+            verbose=False,
+        )
+
+
+def test_write_warehouse_table_repartition_contract(monkeypatch):
+    """Verify warehouse writes pass the repartitioned DataFrame to the connector."""
+    import importlib
+
+    owner = importlib.import_module("fabricops_kit.io.write_warehouse_table")
+    store = _store("warehouse", "warehouse", "wh_data_dev")
+    writes = []
+    monkeypatch.setattr(
+        owner,
+        "resolve_configured_warehouse_table",
+        lambda target, schema, table_name, *, context=None: (
+            store,
+            schema,
+            table_name,
+            f"{store.name}.{schema}.{table_name}",
+        ),
+    )
+    monkeypatch.setattr(
+        owner,
+        "write_warehouse_synapsesql",
+        lambda df, store, sql, *, mode, options=None: writes.append(
+            {"df": df, "store": store, "sql": sql, "mode": mode, "options": options}
+        ),
+    )
+
+    original = _TrackedFrame()
+    owner.write_warehouse_table(original, "dbo", "orders", target="warehouse", mode="append")
+    assert original.repartition_calls == []
+    assert writes[-1]["df"] is original
+
+    for repartition_by, expected in [
+        (32, (32,)),
+        ("academic_year", ("academic_year",)),
+        (["academic_year", "semester"], ("academic_year", "semester")),
+        (("academic_year", "semester"), ("academic_year", "semester")),
+    ]:
+        frame = _TrackedFrame()
+        owner.write_warehouse_table(
+            frame,
+            "dbo",
+            "orders",
+            target="warehouse",
+            mode="append",
+            repartition_by=repartition_by,
+            options={"batchsize": "5000"},
+        )
+        assert frame.repartition_calls == [expected]
+        assert writes[-1]["df"] is not frame
+        assert writes[-1]["df"].repartition_args == expected
+        assert writes[-1]["options"] == {"batchsize": "5000"}
+
+    for invalid in (0, -1, [], (), {"academic_year"}, (32, "academic_year")):
+        with pytest.raises(ValueError, match="repartition_by"):
+            owner.write_warehouse_table(_TrackedFrame(), "dbo", "orders", target="warehouse", repartition_by=invalid)
+    with pytest.raises(ValueError, match="do not exist"):
+        owner.write_warehouse_table(
+            _TrackedFrame(columns=["academic_year"]),
+            "dbo",
+            "orders",
+            target="warehouse",
+            repartition_by="missing_column",
+        )

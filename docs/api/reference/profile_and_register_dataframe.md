@@ -78,7 +78,7 @@ def profile_and_register_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profiled_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")
+profiled_df = profile_and_register_dataframe(source_df, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="student_enrolment", frequency_columns=["enrolment_status"], frequency_top_n=10)
 ```
 
 </div>
@@ -100,11 +100,11 @@ profiled_df = profile_and_register_dataframe(df_customer, profile_role="source",
 
 ## Returns
 
-Detailed Spark DataFrame appended to METADATA_DATA_PROFILED.
+Spark DataFrame containing the canonical detailed profiling rows appended to METADATA_DATA_PROFILED, including physical asset identity, statistical metrics, optional frequency_json, schema fingerprint, sampling provenance, and runtime audit fields.
 
 ### Return interpretation
 
-The returned rows are exactly the catalogue snapshot submitted to the metadata writer for the supplied DataFrame.
+The returned rows are the detailed profile evidence for eligible columns. Catalogue rows and lineage participation are written as side effects and are not returned.
 
 ## Raises / Errors
 
@@ -112,10 +112,11 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 
 ### Common failure causes
 
-- 00_env_config has not been run.
-- profile_role or store_type is unsupported.
-- Required physical identity inputs are blank.
-- Requested frequency columns are missing from the DataFrame.
+- profile_role must be source or target and store_type must be lakehouse or warehouse.
+- environment_name, layer, or table_name is blank, or schema_name is blank when supplied.
+- The configured metadata target cannot be resolved or written.
+- Requested frequency columns are missing or expensive to group.
+- If lineage registration fails after profile and catalogue writes succeed, RuntimeError is raised and earlier writes remain completed.
 
 ## Notes
 
@@ -243,5 +244,5 @@ separate workflow.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

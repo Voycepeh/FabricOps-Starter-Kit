@@ -245,6 +245,42 @@ def read_csv_path(spark_obj, path: str, *, header: bool, options: dict[str, Any]
     return reader.csv(path)
 
 
+def repartition_dataframe_for_write(df, repartition_by):
+    """Return ``df`` or a repartitioned DataFrame for a write operation."""
+    if repartition_by is None:
+        return df
+    if isinstance(repartition_by, bool):
+        raise ValueError(
+            "repartition_by must be a positive integer, column name, or non-empty list/tuple of column names."
+        )
+    if isinstance(repartition_by, int):
+        if repartition_by <= 0:
+            raise ValueError("repartition_by integer partition count must be greater than zero.")
+        return df.repartition(repartition_by)
+    if isinstance(repartition_by, str):
+        columns = [repartition_by]
+    elif isinstance(repartition_by, (list, tuple)):
+        if not repartition_by:
+            raise ValueError("repartition_by column list or tuple must not be empty.")
+        if not all(isinstance(column, str) for column in repartition_by):
+            raise ValueError("repartition_by list or tuple values must be column names.")
+        columns = list(repartition_by)
+    else:
+        raise ValueError(
+            "repartition_by must be a positive integer, column name, or non-empty list/tuple of column names."
+        )
+
+    normalized_columns = [column.strip() for column in columns]
+    if any(not column for column in normalized_columns):
+        raise ValueError("repartition_by column names must be non-empty strings.")
+    available_columns = list(getattr(df, "columns", []) or [])
+    if available_columns:
+        missing = [column for column in normalized_columns if column not in available_columns]
+        if missing:
+            raise ValueError(f"repartition_by column(s) do not exist in df: {', '.join(missing)}.")
+    return df.repartition(*normalized_columns)
+
+
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:
     """Write a DataFrame to a Delta path through Spark."""
     writer = df.write.mode(mode).format("delta")
@@ -305,15 +341,7 @@ def write_lakehouse_table_core(
         target, table_name, schema, context=context
     )
     normalized_mode = normalize_write_mode(mode)
-    if repartition_by is not None:
-        if isinstance(repartition_by, (list, tuple)):
-            df = (
-                df.repartition(*repartition_by)
-                if not (repartition_by and isinstance(repartition_by[0], int))
-                else df.repartition(repartition_by[0], *repartition_by[1:])
-            )
-        else:
-            df = df.repartition(repartition_by)
+    df = repartition_dataframe_for_write(df, repartition_by)
     if verbose:
         print(f"Writing Lakehouse table to {path}")
     write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=options)

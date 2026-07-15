@@ -78,11 +78,7 @@ def setup_metadata_tables(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-setup_metadata_tables(
-    spark=spark,
-    config=CONFIG,
-    env="Sandbox",
-)
+setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME, metadata_schema=METADATA_SCHEMA)
 ```
 
 </div>
@@ -101,11 +97,11 @@ setup_metadata_tables(
 
 ## Returns
 
-Setup result describing metadata table creation or validation status.
+dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schema, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, and active metadata counts.
 
 ### Return interpretation
 
-The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.
+Use the returned status and per-table results to confirm that the physical metadata layer is ready. The function is primarily used for table-creation and validation side effects, not for registering business datasets.
 
 ## Raises / Errors
 
@@ -113,10 +109,12 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 
 ### Common failure causes
 
-- The configured metadata lakehouse ABFSS path is missing or invalid.
-- Spark cannot create or inspect metadata tables through the configured ABFSS paths.
-- The selected environment does not include metadata routing.
-- The caller lacks permission to create or update metadata tables.
+- Missing or invalid metadata target configuration.
+- Spark or Fabric lakehouse context is unavailable.
+- The caller lacks permission to create or inspect metadata tables.
+- An existing table is missing a canonical field or has an incompatible Spark field type.
+- Nullability and field order are not validated; required field names and Spark data types are validated.
+- One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
 
 ## Notes
 
@@ -247,5 +245,5 @@ their respective FabricOps workflows.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

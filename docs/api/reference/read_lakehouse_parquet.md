@@ -79,7 +79,7 @@ def read_lakehouse_parquet(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_session=spark)
+source_df = read_lakehouse_parquet("Files/curated/student_enrolment/", target="source", spark_session=spark)
 ```
 
 </div>
@@ -96,11 +96,11 @@ df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_ses
 
 ## Returns
 
-Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.
+Spark DataFrame backed by the selected Parquet file or folder. One DataFrame row represents one source record; partition columns may be added by Spark when reading partitioned folders.
 
 ### Return interpretation
 
-The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.
+The function verifies decodability with a one-row Spark action before returning, then downstream transformations remain normal Spark DataFrame operations.
 
 ## Raises / Errors
 
@@ -108,10 +108,11 @@ Raises ValueError for invalid relative paths and Spark/read errors when the Parq
 
 ### Common failure causes
 
-- The Parquet path is missing or misspelled.
-- The file is not valid Parquet.
-- The configured lakehouse target is unavailable.
-- The caller lacks read permission.
+- The path is missing, inaccessible, empty, corrupt, or not Parquet.
+- Schemas are incompatible across files unless Spark options such as mergeSchema are appropriate.
+- Schema merging can be expensive on large partitioned folders.
+- The configured target cannot be resolved or read.
+- Failures can occur during the initial validation action or later Spark evaluation.
 
 ## Notes
 
@@ -234,5 +235,5 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

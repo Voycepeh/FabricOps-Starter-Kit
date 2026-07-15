@@ -78,7 +78,7 @@ def read_lakehouse_csv(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spark_session=spark)
+source_df = read_lakehouse_csv("Files/inbound/student_enrolment/*.csv", target="source", header=True, inferSchema=True, spark_session=spark)
 ```
 
 </div>
@@ -95,11 +95,11 @@ df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spar
 
 ## Returns
 
-Spark DataFrame loaded from the Fabric-resolved CSV path.
+Spark DataFrame representing rows parsed from the selected CSV file or files. Columns and data types depend on the supplied schema and CSV reader options.
 
 ### Return interpretation
 
-The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.
+The returned DataFrame is a normal lazy Spark DataFrame until an action such as count, display, collect, or write is executed.
 
 ## Raises / Errors
 
@@ -107,10 +107,11 @@ Raises ValueError for invalid file paths and configuration/Spark errors when the
 
 ### Common failure causes
 
-- The file path is wrong or outside the configured Fabric target.
-- CSV options do not match the file shape.
-- Spark cannot access the file.
-- The selected environment is missing the source lakehouse target.
+- The lakehouse target or Files path cannot be resolved.
+- The path is missing or the caller lacks read permission.
+- Malformed rows, inconsistent files in a folder, absent headers, or empty files do not match the requested Spark CSV options.
+- Schema inference can produce unexpected types; an explicit schema can mismatch source values.
+- Some Spark failures appear only when a downstream action evaluates the DataFrame.
 
 ## Notes
 
@@ -201,5 +202,5 @@ the returned DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

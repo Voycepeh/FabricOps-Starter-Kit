@@ -63,9 +63,7 @@ Lakehouse Delta before Spark transformations.
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
-
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
+Apply selective filters, projections, joins, and aggregations in the SQL query where practical so the Warehouse processes them before rows are transferred into Spark. Avoid SELECT * for very large tables when only a subset of fields is required.
 
 
 ## Signature
@@ -89,7 +87,7 @@ def read_warehouse_query(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_warehouse_query("SELECT order_id, status FROM dbo.orders WHERE status = 'OPEN'", spark_session=spark)
+active_students_df = read_warehouse_query("SELECT student_id, programme_code, enrolment_status FROM dbo.student_enrolment WHERE enrolment_status = 'Active'", target="warehouse", spark_session=spark)
 ```
 
 </div>
@@ -105,7 +103,7 @@ df = read_warehouse_query("SELECT order_id, status FROM dbo.orders WHERE status 
 
 ## Returns
 
-Spark DataFrame returned by the Fabric warehouse connector.
+Spark DataFrame containing the rows and columns produced by the Warehouse query. The output schema is determined by the SQL projection and Warehouse result types.
 
 ### Return interpretation
 
@@ -117,10 +115,10 @@ Raises ValueError for blank or non-SELECT SQL and RuntimeError when the Fabric c
 
 ### Common failure causes
 
-- The SQL is blank or not a SELECT/CTE.
-- The warehouse target is not configured.
-- The Fabric connector is unavailable.
-- The caller lacks warehouse read permission.
+- Invalid, blank, or non-read-only SQL.
+- Unknown tables or columns, unresolved Warehouse connection, or permission failure.
+- Unsupported Warehouse-to-Spark type conversion.
+- Very large result transfers can be slow or fail; empty result sets are successful DataFrames with zero rows.
 
 ## Notes
 
@@ -185,5 +183,5 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

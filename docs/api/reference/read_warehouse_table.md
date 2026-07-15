@@ -67,9 +67,7 @@ table because notebook cells can hit runtime limits.
 
 ## Usage notes
 
-These IO helpers exist because Fabric notebooks can only attach to one lakehouse or warehouse at a time. Use them when a notebook needs a supported and repeatable way to read from or write to the configured Fabric store.
-
-They keep IO behavior consistent across Starter Kit notebooks and avoid ad hoc connection logic.
+A complete-table read may transfer a large dataset from the Warehouse into Spark. Use read_warehouse_query when the workload can be reduced through SQL projection, filtering, joins, or aggregation.
 
 
 ## Signature
@@ -94,7 +92,7 @@ def read_warehouse_table(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-df = read_warehouse_table(schema="dbo", table="orders", spark_session=spark)
+student_df = read_warehouse_table("dbo", "student_enrolment", target="warehouse", spark_session=spark)
 ```
 
 </div>
@@ -111,7 +109,7 @@ df = read_warehouse_table(schema="dbo", table="orders", spark_session=spark)
 
 ## Returns
 
-Spark DataFrame loaded from the configured warehouse table.
+Spark DataFrame containing the rows and columns of the resolved Warehouse table.
 
 ### Return interpretation
 
@@ -123,10 +121,10 @@ Raises configuration, Spark SQL, or warehouse-read errors when the target/table 
 
 ### Common failure causes
 
-- The warehouse target is not configured.
-- The table or SQL text is invalid.
-- Warehouse connector context is unavailable.
-- The caller lacks warehouse read permission.
+- The Warehouse connection cannot be resolved.
+- The schema or table is not found, the caller lacks permission, or identifiers are invalid.
+- The table contains unsupported data types for transfer to Spark.
+- Complete-table reads may transfer large datasets; an empty table returns a valid zero-row DataFrame.
 
 ## Notes
 
@@ -192,5 +190,5 @@ pushdown before Spark receives rows.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT

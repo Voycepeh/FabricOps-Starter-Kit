@@ -66,7 +66,7 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int=20)
 <div class="reference-example-usage" markdown="1">
 
 ```python
-frequency_df = profile_frequency_distribution(df, columns=["status"], top_n=10)
+frequency_df = profile_frequency_distribution(source_df, columns=["enrolment_status", "programme_code"], top_n=10)
 ```
 
 </div>
@@ -81,7 +81,7 @@ frequency_df = profile_frequency_distribution(df, columns=["status"], top_n=10)
 
 ## Returns
 
-Spark DataFrame containing ranked top-N value frequencies per profiled column.
+Spark DataFrame containing up to top_n ranked frequency rows per profiled column. Null is included as a value and non-null counts are reported separately.
 
 ### Return interpretation
 
@@ -93,9 +93,10 @@ Raises ValueError when top_n is not positive or requested columns do not exist.
 
 ### Common failure causes
 
-- Requested columns are missing.
 - top_n is not greater than zero.
-- Spark actions fail while computing frequency counts.
+- Requested columns are missing.
+- No eligible scalar columns are available when columns is omitted.
+- High-cardinality columns require expensive grouped counts before the top-N limit is applied.
 
 ## Notes
 
@@ -136,5 +137,5 @@ the original full DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 15 Jul 2026, 2:26 PM SGT
+    Reference pages generated: 15 Jul 2026, 10:30 PM SGT
     Call-flow data generated: 14 Jul 2026, 9:32 PM SGT
