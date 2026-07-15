@@ -259,7 +259,6 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "profiled_at",
         "agreement_id",

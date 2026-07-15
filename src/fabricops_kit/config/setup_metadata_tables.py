@@ -199,7 +199,7 @@ def setup_metadata_tables(
       ``distinct_count``, ``distinct_percent``, ``mean_value``,
       ``stddev_value``, ``min_value``, ``percentile_25_value``,
       ``median_value``, ``percentile_75_value``, ``max_value``,
-      ``is_sampled``, ``frequency_json``, ``schema_fingerprint``,
+      ``frequency_json``, ``schema_fingerprint``,
       ``profiled_at``, and the standard audit fields.
     - ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
       ``notebook_id``, ``notebook_name``, ``workspace_id``,

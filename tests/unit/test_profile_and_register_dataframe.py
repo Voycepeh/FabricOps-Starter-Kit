@@ -133,9 +133,10 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
         "schema_name",
         "frequency_columns",
         "frequency_top_n",
-        "is_sampled",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty
+    assert parameters["frequency_top_n"].default is None
+    assert str(parameters["frequency_top_n"].annotation) == "int | None"
 
 
 @pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
@@ -181,11 +182,11 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
         store_type=store_type,
         layer="silver",
         table_name="customers_clean",
-        is_sampled=True,
     )
 
-    rows = result.select("store_type", "schema_name", "is_sampled").distinct().collect()
-    assert [(row.store_type, row.schema_name, row.is_sampled) for row in rows] == [(store_type.strip().lower(), None, True)]
+    rows = result.select("store_type", "schema_name").distinct().collect()
+    assert [(row.store_type, row.schema_name) for row in rows] == [(store_type.strip().lower(), None)]
+    assert "is_sampled" not in result.columns
 
 
 @pytest.mark.parametrize(
@@ -214,9 +215,8 @@ def test_profile_and_register_dataframe_rejects_invalid_required_inputs(spark_se
         profile_and_register_dataframe(_source_df(spark_session), **params)
 
 
-@pytest.mark.parametrize("frequency_columns", [None, []])
-def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark_session, monkeypatch, registered, frequency_columns):
-    """Verify no frequency profiling occurs for None or empty frequency columns."""
+def test_profile_and_register_dataframe_skips_frequency_for_empty_columns(spark_session, monkeypatch, registered):
+    """Verify no frequency profiling occurs for an explicit empty frequency column list."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
     calls = {"profile": 0, "frequency": 0, "df": None}
@@ -241,8 +241,7 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
         store_type="lakehouse",
         layer="raw",
         table_name="customers",
-        frequency_columns=frequency_columns,
-        is_sampled=False,
+        frequency_columns=[],
     )
 
     assert calls == {"profile": 1, "frequency": 0, "df": source}
@@ -250,6 +249,59 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
     assert "profiled_at" in result.columns
     assert result.where("frequency_json is not null").count() == 0
     assert result.count() == 3
+
+
+def test_profile_and_register_dataframe_default_and_explicit_frequency_json_integration(spark_session, registered):
+    """Verify default full frequency JSON, selected columns, top_n, and empty skip semantics."""
+    source = spark_session.createDataFrame(
+        [(i, "A" if i % 2 == 0 else "B", "US" if i % 3 == 0 else "GB") for i in range(25)],
+        "id long, customer_type string, country string",
+    )
+
+    default_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+    )
+    default_rows = {row.column_name: row.asDict() for row in default_result.collect()}
+    assert set(default_rows) == {"id", "customer_type", "country"}
+    assert all(default_rows[name]["frequency_json"] is not None for name in default_rows)
+    id_frequency = json.loads(default_rows["id"]["frequency_json"])
+    assert len(id_frequency["values"]) == 25
+    assert id_frequency["profiled_row_count"] == 25
+    assert id_frequency["profiled_non_null_count"] == 25
+
+    selected_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=["customer_type"],
+        frequency_top_n=1,
+    )
+    selected_rows = {row.column_name: row.asDict() for row in selected_result.collect()}
+    assert selected_rows["id"]["frequency_json"] is None
+    assert selected_rows["country"]["frequency_json"] is None
+    selected_frequency = json.loads(selected_rows["customer_type"]["frequency_json"])
+    assert len(selected_frequency["values"]) == 1
+    assert selected_frequency["values"][0] == {"value": "A", "count": 13, "percent": 52.0, "rank": 1}
+
+    skipped_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=[],
+    )
+    assert skipped_result.where("frequency_json is not null").count() == 0
+    assert skipped_result.count() == 3
 
 
 def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(spark_session, monkeypatch, registered):
@@ -291,7 +343,6 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
         table_name="customers_clean",
         frequency_columns=("customer_type", "country"),
         frequency_top_n=5,
-        is_sampled=True,
     )
 
     assert calls == {
@@ -334,7 +385,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     assert [value["rank"] for value in customer_frequency["values"]] == [1, 2]
     assert [value["value"] for value in customer_frequency["values"]] == ["A", "B"]
     assert [value["value"] for value in country_frequency["values"]] == ["US", None]
-    assert rows["country"]["is_sampled"] is True
+    assert "is_sampled" not in rows["country"]
 
     expected_table_key = _metadata_table_key("dev", "warehouse", "silver", "dbo", "customers_clean")
     assert {row["metadata_table_key"] for row in rows.values()} == {expected_table_key}
@@ -399,7 +450,6 @@ def test_profiled_schema_matches_detailed_profile_contract_without_profile_role(
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "schema_fingerprint",
         "profiled_at",
@@ -453,7 +503,6 @@ def test_catalogue_schema_is_narrow_identity_contract():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "profiled_at",
     }.isdisjoint(schema.fieldNames())
@@ -481,7 +530,6 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
         "null_percent": 0.0,
         "distinct_count": 10,
         "distinct_percent": 100.0,
-        "is_sampled": False,
         "schema_fingerprint": "schema-1",
         "profiled_at": datetime(2026, 1, 1),
         "_committed_by": "tester",

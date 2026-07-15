@@ -73,13 +73,14 @@ def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_finge
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def _frequency_json_dataframe(df, frequency_columns: Sequence[str] | None, frequency_top_n: int):
+def _frequency_json_dataframe(df, frequency_columns: Sequence[str] | None, frequency_top_n: int | None):
     """Return per-column deterministic frequency JSON evidence."""
     from pyspark.sql import functions as F
 
-    if not frequency_columns:
+    if frequency_columns is not None and len(frequency_columns) == 0:
         return None
-    frequency_df = profile_frequency_distribution(df, columns=frequency_columns, top_n=frequency_top_n)
+    selected_columns = None if frequency_columns is None else list(frequency_columns)
+    frequency_df = profile_frequency_distribution(df, columns=selected_columns, top_n=frequency_top_n)
     value_struct = F.struct(
         F.col("FREQUENCY_RANK").cast("int").alias("rank"),
         F.col("VALUE").alias("value"),
@@ -138,8 +139,7 @@ def _canonical_profiled_dataframe(
     schema_name: str | None,
     table_name: str,
     frequency_columns: Sequence[str] | None,
-    frequency_top_n: int,
-    is_sampled: bool,
+    frequency_top_n: int | None,
 ):
     """Return profile rows mapped to the detailed profiled schema."""
     from pyspark.sql import functions as F
@@ -196,7 +196,6 @@ def _canonical_profiled_dataframe(
         F.col("median_value"),
         F.col("percentile_75_value"),
         F.col("max_value"),
-        F.lit(bool(is_sampled)).cast("boolean").alias("is_sampled"),
         F.col("frequency_json").cast("string"),
         F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
         audit_columns["_committed_at"].alias("profiled_at"),
@@ -337,14 +336,13 @@ def profile_and_register_dataframe(
     table_name,
     schema_name=None,
     frequency_columns=None,
-    frequency_top_n=20,
-    is_sampled=False,
+    frequency_top_n: int | None = None,
 ):
     """Profile a supplied Spark DataFrame and register its metadata evidence.
 
     The function profiles the supplied DataFrame exactly as provided by the
-    caller, then registers column-level statistics, optional top-value
-    frequencies, physical catalogue identities, and one table-level runtime
+    caller, then registers column-level statistics, full default frequency
+    distributions, physical catalogue identities, and one table-level runtime
     lineage participation event in the configured FabricOps metadata lakehouse.
     The original business DataFrame is not written by this function, and the
     function does not sample, re-read, or mutate the supplied DataFrame. All
@@ -381,26 +379,22 @@ def profile_and_register_dataframe(
         lakehouse tables without a separate schema. This identifies the asset
         and does not redirect metadata writes.
     frequency_columns : sequence of str, optional
-        Selected columns that should receive embedded top-value frequency
-        evidence. ``None`` or an empty sequence skips frequency profiling
-        entirely. Requested columns should also be eligible for the main
-        statistical profile.
-    frequency_top_n : int, default=20
-        Number of ranked values to retain per selected frequency column.
-    is_sampled : bool, default=False
-        Caller-declared provenance flag persisted in the profiled evidence
-        only. It does not cause sampling. When ``True``, the supplied DataFrame
-        must already have been sampled by the caller, and all counts and
-        percentages describe that supplied sample.
-
+        Selected columns that should receive embedded frequency evidence. ``None``
+        profiles all eligible non-technical scalar columns. An empty sequence
+        skips frequency profiling entirely and persists null ``frequency_json``
+        for every statistical profile row. Requested columns should also be
+        eligible for the main statistical profile.
+    frequency_top_n : int or None, optional
+        Optional number of ranked values to retain per selected frequency
+        column. ``None`` retains every distinct value.
     Returns
     -------
     pyspark.sql.DataFrame
         A Spark DataFrame containing one canonical profiling record for each
         eligible column in the supplied DataFrame. This is the same DataFrame
         appended to ``METADATA_DATA_PROFILED`` and includes physical asset
-        identity, statistical metrics, optional frequency JSON, schema
-        identity, sampling provenance, and runtime audit fields. The function
+        identity, statistical metrics, frequency JSON where enabled, schema
+        identity, and runtime audit fields. The function
         does not return the generated catalogue rows or lineage event.
 
     Raises
@@ -417,9 +411,9 @@ def profile_and_register_dataframe(
 
     1. Run ``profile_dataframe(df)`` to produce one statistical profile row per
        eligible input column.
-    2. When ``frequency_columns`` is provided, run
-       ``profile_frequency_distribution`` over those columns using
-       ``frequency_top_n``.
+    2. Run ``profile_frequency_distribution`` with all eligible frequency
+       columns by default, selected columns when ``frequency_columns`` is a
+       non-empty sequence, or skip it when ``frequency_columns=[]``.
     3. Convert the multiple frequency rows for each column into one
        deterministic JSON document.
     4. Left-join that JSON to the statistical profile on
@@ -436,10 +430,12 @@ def profile_and_register_dataframe(
 
     - The statistical profile is the left side of the join, so every eligible
       statistical profile row remains in the returned result.
-    - Only columns listed in ``frequency_columns`` receive ``frequency_json``.
-      Other profiled columns receive null for ``frequency_json``.
-    - ``frequency_columns=None`` or an empty sequence skips frequency profiling
-      entirely.
+    - ``frequency_columns=None`` profiles all eligible non-technical scalar
+      columns and returns complete frequency JSON by default.
+    - Only columns listed in a non-empty ``frequency_columns`` sequence receive
+      ``frequency_json``; other profiled columns receive null.
+    - ``frequency_columns=[]`` skips frequency profiling entirely.
+    - ``frequency_top_n`` restricts embedded values only when supplied.
     - Frequency values are ordered deterministically by rank.
 
     Example ``frequency_json`` structure:
@@ -472,8 +468,8 @@ def profile_and_register_dataframe(
       ``mean_value``, ``stddev_value``, ``min_value``,
       ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
       ``max_value``.
-    - Frequency and provenance fields: ``is_sampled``, ``frequency_json``,
-      ``schema_fingerprint``, ``profiled_at``.
+    - Frequency and runtime fields: ``frequency_json``, ``schema_fingerprint``,
+      ``profiled_at``.
     - Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
       ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
       ``_metadata_lakehouse_name``, ``_activity_id``.
@@ -503,6 +499,12 @@ def profile_and_register_dataframe(
     fields. ``lineage_event_id`` is deterministically derived from
     ``activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
     ``profile_role``.
+
+    Each profiling record describes the exact DataFrame supplied during the
+    notebook activity. If a caller deliberately filters or samples before
+    calling this function, that transformation should be represented through
+    notebook lineage or a future explicit profiling-scope model rather than a
+    manually maintained Boolean.
 
     Profile and catalogue registration occur before lineage registration. If
     lineage registration fails after those writes succeed, the function raises
@@ -535,7 +537,6 @@ def profile_and_register_dataframe(
         table_name=normalized_table,
         frequency_columns=selected_frequency_columns,
         frequency_top_n=frequency_top_n,
-        is_sampled=is_sampled,
     )
     write_lakehouse_table_core(
         profiled_df,
