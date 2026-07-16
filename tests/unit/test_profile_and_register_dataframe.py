@@ -316,6 +316,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     assert selected_frequency["source_row_count"] == 25
     assert selected_frequency["profiled_row_count"] == 25
     assert selected_frequency["profiled_non_null_count"] == 25
+    assert selected_frequency["sampling_requested"] is False
     assert selected_frequency["sampling_applied"] is False
     assert selected_frequency["sampling_method"] is None
     assert selected_frequency["sampling_seed"] is None
@@ -906,23 +907,24 @@ def test_profile_and_register_dataframe_samples_only_frequency_input(spark_sessi
         layer="raw",
         table_name="customers",
         frequency_columns=["segment"],
-        frequency_sample_rows=5,
+        frequency_sample_rows=10,
         frequency_sample_seed=7,
     )
 
     rows = {row.column_name: row.asDict() for row in result.collect()}
     frequency_json = json.loads(rows["segment"]["frequency_json"])
     assert calls["profile_is_source"] is True
-    assert calls["frequency_count"] == 5
-    assert len(calls["frequency_ids"]) == 5
+    assert 0 < calls["frequency_count"] <= 10
+    assert len(calls["frequency_ids"]) == calls["frequency_count"]
     assert calls["schema_df_is_source"] and all(calls["schema_df_is_source"])
     assert rows["segment"]["row_count"] == 20
     assert frequency_json["source_row_count"] == 20
-    assert frequency_json["profiled_row_count"] == 5
+    assert 0 < frequency_json["profiled_row_count"] <= 10
+    assert frequency_json["sampling_requested"] is True
     assert frequency_json["sampling_applied"] is True
-    assert frequency_json["sampling_method"] == "random_limit"
+    assert frequency_json["sampling_method"] == "bernoulli_limit"
     assert frequency_json["sampling_seed"] == 7
-    assert frequency_json["requested_sample_rows"] == 5
+    assert frequency_json["requested_sample_rows"] == 10
 
 
 def test_frequency_profile_source_dataframe_is_deterministic_and_bounded(spark_session):
@@ -930,15 +932,60 @@ def test_frequency_profile_source_dataframe_is_deterministic_and_bounded(spark_s
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
     source = spark_session.createDataFrame([(i,) for i in range(100)], "id long")
 
-    first = [row.id for row in module._frequency_profile_source_dataframe(source, sample_rows=10, sample_seed=42).orderBy("id").collect()]
-    second = [row.id for row in module._frequency_profile_source_dataframe(source, sample_rows=10, sample_seed=42).orderBy("id").collect()]
-    different = [row.id for row in module._frequency_profile_source_dataframe(source, sample_rows=10, sample_seed=99).orderBy("id").collect()]
-    oversized = module._frequency_profile_source_dataframe(source, sample_rows=200, sample_seed=42).count()
+    first_df, first_metadata = module._frequency_profile_source_dataframe(
+        source, source_row_count=100, sample_rows=20, sample_seed=42
+    )
+    second_df, second_metadata = module._frequency_profile_source_dataframe(
+        source, source_row_count=100, sample_rows=20, sample_seed=42
+    )
+    different_df, different_metadata = module._frequency_profile_source_dataframe(
+        source, source_row_count=100, sample_rows=20, sample_seed=99
+    )
+    oversized_df, oversized_metadata = module._frequency_profile_source_dataframe(
+        source, source_row_count=100, sample_rows=200, sample_seed=42
+    )
+    first = [row.id for row in first_df.orderBy("id").collect()]
+    second = [row.id for row in second_df.orderBy("id").collect()]
+    different = [row.id for row in different_df.orderBy("id").collect()]
 
+    assert first_metadata == second_metadata
+    assert first_metadata["sampling_requested"] is True
+    assert first_metadata["sampling_applied"] is True
+    assert first_metadata["sampling_method"] == "bernoulli_limit"
+    assert different_metadata["sampling_seed"] == 99
+    assert oversized_metadata["sampling_requested"] is True
+    assert oversized_metadata["sampling_applied"] is False
+    assert oversized_df is source
     assert first == second
     assert first != different
-    assert len(first) == 10
-    assert oversized == 100
+    assert 0 < len(first) <= 20
+
+
+def test_profile_and_register_dataframe_records_requested_but_unapplied_sampling(spark_session, registered):
+    """Verify sampling metadata distinguishes requested sampling from actual row reduction."""
+    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(10)], "id long, segment string")
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=["segment"],
+        frequency_sample_rows=100,
+        frequency_sample_seed=7,
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    frequency_json = json.loads(rows["segment"]["frequency_json"])
+    assert frequency_json["source_row_count"] == 10
+    assert frequency_json["profiled_row_count"] == 10
+    assert frequency_json["sampling_requested"] is True
+    assert frequency_json["sampling_applied"] is False
+    assert frequency_json["sampling_method"] is None
+    assert frequency_json["sampling_seed"] == 7
+    assert frequency_json["requested_sample_rows"] == 100
 
 
 def test_profile_and_register_dataframe_does_not_sample_when_frequency_columns_empty(spark_session, monkeypatch, registered):

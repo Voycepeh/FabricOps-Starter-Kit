@@ -90,13 +90,25 @@ def _validate_frequency_sample_seed(value: Any) -> int:
     return value
 
 
-def _frequency_profile_source_dataframe(df, *, sample_rows: int | None, sample_seed: int):
-    """Return the Spark DataFrame used only for frequency profiling."""
-    if sample_rows is None:
-        return df
-    from pyspark.sql import functions as F
+def _frequency_profile_source_dataframe(df, *, source_row_count: int | None, sample_rows: int | None, sample_seed: int):
+    """Return the DataFrame and metadata used only for frequency profiling."""
+    sampling_requested = sample_rows is not None
+    sampling_applied = bool(sampling_requested and source_row_count is not None and sample_rows < source_row_count)
+    metadata = {
+        "source_row_count": source_row_count,
+        "sampling_requested": sampling_requested,
+        "sampling_applied": sampling_applied,
+        "sampling_method": "bernoulli_limit" if sampling_applied else None,
+        "sampling_seed": sample_seed if sampling_requested else None,
+        "requested_sample_rows": sample_rows,
+    }
+    if not sampling_applied or source_row_count is None or source_row_count <= 0:
+        return df, metadata
 
-    return df.orderBy(F.rand(sample_seed)).limit(sample_rows)
+    fraction = min(1.0, (sample_rows / source_row_count) * 1.5)
+    sampled_df = df.sample(withReplacement=False, fraction=fraction, seed=sample_seed).limit(sample_rows).persist()
+    sampled_df.count()
+    return sampled_df, metadata
 
 
 def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
@@ -202,13 +214,15 @@ def _frequency_json_dataframe(
 
     frequency_json_df = None
     if selected_columns:
-        frequency_source_df = _frequency_profile_source_dataframe(
+        source_row_count_row = profile_df.select(F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT")).first()
+        source_row_count = None if source_row_count_row is None else source_row_count_row.SOURCE_ROW_COUNT
+        frequency_source_df, sampling_metadata = _frequency_profile_source_dataframe(
             source_df,
+            source_row_count=source_row_count,
             sample_rows=frequency_sample_rows,
             sample_seed=frequency_sample_seed,
         )
-        source_row_count = profile_df.select(F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT"))
-        frequency_df = profile_frequency_distribution(frequency_source_df, columns=selected_columns, top_n=frequency_top_n).crossJoin(source_row_count)
+        frequency_df = profile_frequency_distribution(frequency_source_df, columns=selected_columns, top_n=frequency_top_n)
         value_struct = F.struct(
             F.col("FREQUENCY_RANK").cast("int").alias("rank"),
             F.col("VALUE").alias("value"),
@@ -228,13 +242,14 @@ def _frequency_json_dataframe(
         frequency_json_df = frequency_df.groupBy("COLUMN_NAME").agg(
             F.to_json(
                 F.struct(
-                    F.first("SOURCE_ROW_COUNT", ignorenulls=True).cast("long").alias("source_row_count"),
+                    F.lit(sampling_metadata["source_row_count"]).cast("long").alias("source_row_count"),
                     F.first("PROFILED_ROW_COUNT", ignorenulls=True).cast("long").alias("profiled_row_count"),
                     F.first("PROFILED_NON_NULL_COUNT", ignorenulls=True).cast("long").alias("profiled_non_null_count"),
-                    F.lit(frequency_sample_rows is not None).alias("sampling_applied"),
-                    F.lit("random_limit" if frequency_sample_rows is not None else None).cast("string").alias("sampling_method"),
-                    F.lit(frequency_sample_seed if frequency_sample_rows is not None else None).cast("int").alias("sampling_seed"),
-                    F.lit(frequency_sample_rows).cast("long").alias("requested_sample_rows"),
+                    F.lit(sampling_metadata["sampling_requested"]).alias("sampling_requested"),
+                    F.lit(sampling_metadata["sampling_applied"]).alias("sampling_applied"),
+                    F.lit(sampling_metadata["sampling_method"]).cast("string").alias("sampling_method"),
+                    F.lit(sampling_metadata["sampling_seed"]).cast("int").alias("sampling_seed"),
+                    F.lit(sampling_metadata["requested_sample_rows"]).cast("long").alias("requested_sample_rows"),
                     values.alias("values"),
                 ),
                 options={"ignoreNullFields": "false"},
@@ -557,10 +572,10 @@ def profile_and_register_dataframe(
         table metadata, column metadata, and lineage registration still use the
         complete supplied DataFrame.
     frequency_sample_seed : int, default=42
-        Deterministic random-limit ordering seed used only when
-        ``frequency_sample_rows`` is supplied. The seed makes selection
-        deterministic for the same input execution plan. Boolean values are not
-        accepted.
+        Deterministic Spark sampling seed used only when
+        ``frequency_sample_rows`` is supplied and less than the complete source
+        row count. The seed makes selection deterministic for the same input
+        execution plan. Boolean values are not accepted.
 
     Returns
     -------
@@ -644,10 +659,12 @@ def profile_and_register_dataframe(
       threshold. Other profiled columns receive null.
     - ``frequency_columns=[]`` skips frequency profiling entirely and persists
       null ``frequency_json`` for every row.
-    - ``frequency_sample_rows`` is disabled by default. When supplied, it
-      applies only to generated frequency evidence; frequency counts and
-      percentages describe the sampled frequency input, while
-      ``source_row_count`` records the complete DataFrame row count.
+    - ``frequency_sample_rows`` is disabled by default. When supplied below the
+      complete DataFrame row count, it applies only to generated frequency
+      evidence; frequency counts and percentages describe the sampled frequency
+      input, while ``source_row_count`` records the complete DataFrame row
+      count. Requests greater than or equal to the complete row count are
+      recorded as requested but not applied.
     - ``frequency_top_n`` restricts embedded values only when supplied. It
       limits output rows after grouped counts are calculated and does not
       reduce grouping cost.
@@ -661,6 +678,7 @@ def profile_and_register_dataframe(
          "source_row_count": 1000,
          "profiled_row_count": 1000,
          "profiled_non_null_count": 995,
+         "sampling_requested": false,
          "sampling_applied": false,
          "sampling_method": null,
          "sampling_seed": null,
@@ -739,7 +757,8 @@ def profile_and_register_dataframe(
     Statistical profiling records describe the complete DataFrame supplied
     during the notebook activity. If ``frequency_sample_rows`` is supplied,
     only generated frequency evidence is sampled and its JSON records the
-    complete source row count, profiled frequency row count, requested sample
+    complete source row count, profiled frequency row count, whether sampling
+    was requested, whether it reduced the row population, requested sample
     size, method, and seed. If a caller deliberately filters or samples before
     calling this function, that transformation should be represented through
     notebook lineage or a future explicit profiling-scope model rather than a
