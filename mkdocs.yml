@@ -27,13 +27,10 @@ nav:
       - Run IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
       - Register Agreement: guided-demo/create-agreement.md
       - Run a Data Pipeline: guided-demo/run-pipeline.md
-      - Run a Data Pipeline with Guardrails: guided-demo/run-pipeline-with-guardrails.md
       - Review Governance: guided-demo/review-guardrails.md
+      - Run a Data Pipeline with Guardrails: guided-demo/run-pipeline-with-guardrails.md
       - Explore Metadata: guided-demo/explore-metadata-outputs.md
   - Templates: notebook-templates-implementation-guide/index.md
-  - Releases:
-      - Overview: releases/index.md
-      - 0.1.0: releases/0.1.0/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
       - Data Steward: reference/metadata/metadata_data_steward.md
@@ -46,7 +43,6 @@ nav:
       - Enrichment: reference/metadata/metadata_enrichment.md
       - Guardrail: reference/metadata/metadata_guardrail.md
       - Guardrail Results: reference/metadata/metadata_guardrail_results.md
-  - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
       - not_null: reference/dq-rules/not-null.md
@@ -72,7 +68,12 @@ nav:
       - required_when: reference/dq-rules/required-when.md
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
+  - List of Functions: reference/index.md
+  - Releases:
+      - Overview: releases/index.md
+      - 0.1.0: releases/0.1.0/index.md
   - FabricOps Maintainer:
+      - Product Narrative: maintainer/product-narrative.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
 

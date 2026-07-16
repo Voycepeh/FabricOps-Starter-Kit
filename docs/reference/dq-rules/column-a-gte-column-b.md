@@ -32,7 +32,7 @@ severity: error
 description: "Example approved metadata rule for column_a_gte_column_b."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 

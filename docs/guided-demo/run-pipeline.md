@@ -24,7 +24,7 @@ read source
 ```
 
 1. Open `02_pipeline` after environment and agreement setup.
-2. Review the source and target configuration.
+2. Review the source and target table settings.
 3. Read the source DataFrame from the configured Fabric source target.
 4. Profile and register the source DataFrame with `profile_and_register_dataframe(...)`.
 5. Apply visible transformation logic in notebook cells.
@@ -33,6 +33,8 @@ read source
 8. Review the metadata evidence created by the run.
 
 A source profiling call uses `profile_role="source"`. A target profiling call uses `profile_role="target"`. Each profile-and-register step writes profile evidence, catalogue identity, schema fingerprint evidence, and one lineage participation event for the DataFrame supplied to that call.
+
+After governance review, the guarded workflow can load schema, freshness, profile behavior, and active DQ rules for the selected source or target before making continuation decisions.
 
 ## Minimal profiling example
 
@@ -346,6 +348,6 @@ The current model stores schema snapshots rather than an explicit parent-child s
 | `METADATA_DATA_PROFILED` | 2 appended rows | Statistical and frequency evidence per column. |
 | `METADATA_DATA_LINEAGE` | 1 upserted row per source or target call | Runtime table participation evidence. |
 
-Next, continue to [Run a Data Pipeline with Guardrails](run-pipeline-with-guardrails.md).
+Next, continue to [Review Governance](review-guardrails.md) to enrich the observed metadata and approve guardrail intent before enforcement.
 
 See also: [Templates](../notebook-templates-implementation-guide/index.md) and [List of DQ Rules](../reference/dq-rules/index.md).

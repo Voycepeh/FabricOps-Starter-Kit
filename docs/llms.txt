@@ -1,43 +1,42 @@
 # FabricOps Starter Kit
 
-> FabricOps Starter Kit helps teams build governed, quality-checked, Microsoft Fabric notebook workflows with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
+> FabricOps (Fabric Operations) is a plug-and-play, lightweight starter kit that helps governance, data engineering, and AI and BI analytics teams adopt a standardized Microsoft Fabric notebook workflow.
 
-Use this file as a concise navigation map for documentation and automation workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/guided-demo/` is available as `/guided-demo.md`.
+Use this file as a concise navigation map for documentation and automation workflows. Follow the same reader journey as the human documentation instead of treating individual reference pages as standalone product explanations.
 
-## Get Started
+## Start with the product story
 
-- [Guided Demo](guided-demo.md): First path through the starter workflow and key concepts.
-- [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md): Fabric workspace, published release wheel upload, notebook attachment, import smoke test, and first runtime readiness.
+- [Documentation Home](index.md): Why FabricOps exists, who it supports, what is included, and the recommended learning path.
+- [How FabricOps Works](how-fabricops-works.md): How the package, notebook templates, roles, Fabric items, and metadata tables work together.
+- [Guided Demo](guided-demo.md): Canonical execution path from Fabric setup through guarded pipeline execution and metadata inspection.
 
-## Architecture
+## Guided Demo sequence
 
-- [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
-- [List of Metadata Tables](reference/metadata.md): Metadata table responsibilities and governance evidence model.
-- [Pipeline Execution](guided-demo/run-pipeline.md): Runtime pipeline flow, guardrails, DQ enforcement, and profile behaviour.
-- [Metadata Dashboard](notebook-templates-implementation-guide/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
+- [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md): Prepare the workspace, Fabric data items, Environment, release wheel, and copied notebooks.
+- [Run Environment Setup](guided-demo/run-environment-setup.md): Configure shared runtime values and the metadata target with `00_env_config`.
+- [Run IO and Profiling Demo](guided-demo/run-io-and-profiling-demo.md): Validate configured Lakehouse and Warehouse routes with `99_explore`.
+- [Register Agreement](guided-demo/create-agreement.md): Record steward and agreement context with `01_agreement`.
+- [Run a Data Pipeline](guided-demo/run-pipeline.md): Record catalogue, profile, and lineage evidence with `02_pipeline`.
+- [Review Governance](guided-demo/review-guardrails.md): Enrich observed metadata and approve executable guardrail intent with `03_governance`.
+- [Run a Data Pipeline with Guardrails](guided-demo/run-pipeline-with-guardrails.md): Evaluate active approved rules against fresh data.
+- [Explore Metadata](guided-demo/explore-metadata-outputs.md): Trace agreement, catalogue, profile, lineage, enrichment, guardrail, and result evidence.
 
-## Notebook flow
+## Build with the starter kit
 
-- [Templates](notebook-templates-implementation-guide/index.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
-- [Environment Config](guided-demo/run-environment-setup.md): Runtime configuration and metadata target setup for `00_env_config`.
-- [Agreement Setup](guided-demo/create-agreement.md): Agreement and steward context setup for governed runs.
-
-## Metadata and contracts
-
-- [Data Quality and Governance](guided-demo/review-guardrails.md): Review flows for column context, classification, DQ rules, and governance evidence.
-- [DQ Rules Reference](reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
-
-## API reference
-
-- [Function Reference](reference.md): Public callable reference generated from source docstrings and metadata.
+- [Notebook Templates](notebook-templates-implementation-guide/index.md): Download links, notebook responsibilities, and the maintained workflow sequence.
+- [Function Reference](reference/index.md): Generated public callable catalogue and links to individual function contracts.
+- [Metadata Table Reference](reference/metadata.md): Implemented metadata responsibilities, relationships, schemas, and writer ownership.
+- [DQ Rule Reference](reference/dq-rules/index.md): Supported rule types, parameters, examples, and runtime behavior.
+- [Releases](releases/index.md): Version-specific function and metadata lifecycle contracts and downloadable assets.
 
 ## Handover and maintenance
 
-- [Release Guide](maintainer/index.md): Maintainer checklist for release curation, lifecycle decisions, generators, build assets, and GitHub publishing.
-- [Public API & Architecture](maintainer/public-api-architecture.md): Maintainer reference for supported API boundaries, call-flow contracts, generated references, and dashboard review.
+- [Product Narrative](maintainer/product-narrative.md): Canonical messaging, scope, terminology, and page ownership.
+- [Release Guide](maintainer/index.md): Maintainer procedure for release curation, lifecycle decisions, generation, validation, and publishing.
+- [Public API & Architecture](maintainer/public-api-architecture.md): Supported API boundaries, call-flow contracts, generated references, and dashboard review.
 - [Contributing](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/CONTRIBUTING.md): Contribution workflow and expectations.
-- [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Repository-level overview and navigation.
+- [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Concise repository entry point and published documentation links.
 
-## Markdown navigation
+## Navigation rule
 
-- This static navigation file and Markdown page variants support deterministic documentation ingestion.
+Use the canonical detailed page for each topic. Do not copy architecture into the README, execution steps into the documentation home page, or hand-maintained function details into generated API reference pages.

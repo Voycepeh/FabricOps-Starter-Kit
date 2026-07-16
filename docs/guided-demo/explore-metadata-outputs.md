@@ -11,6 +11,6 @@ Use generated reference pages, `99_explore`, or dashboard-internal pages to insp
 
 ## Expected evidence
 
-Users can trace agreement context, catalogue profiles, guardrail rules, runtime results, lineage, and pipeline summaries without relying on hidden notebook state. `99_explore` creates no required production metadata; its normal outputs are ad hoc notebook displays.
+Users can trace steward and agreement context, catalogue identities, profile evidence, lineage participation, enrichment, guardrail intent, and runtime guardrail results without relying on hidden notebook state. `99_explore` creates no required production metadata; its normal outputs are ad hoc notebook displays.
 
 See also: [List of Functions](../reference/index.md).

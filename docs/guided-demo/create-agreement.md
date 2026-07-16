@@ -11,12 +11,12 @@ The visible widget configuration comes from `DATA_AGREEMENT_CONFIG` in `00_env_c
 
 ## Expected evidence
 
-The configured metadata target receives steward and agreement rows. `02_pipeline` later selects the agreement so pipeline summary, lineage, guardrail, and run evidence can be tied back to ownership and purpose.
+The configured metadata target receives steward and agreement rows. `02_pipeline` later selects the agreement so catalogue, profile, lineage, and guardrail evidence can be tied back to ownership and purpose.
 
 | Intake step | Metadata written |
 | ----------- | ---------------- |
 | Data steward intake | `METADATA_DATA_STEWARD` rows with steward identity, lifecycle fields, optional custom fields, and audit columns. |
 | Agreement intake | `METADATA_DATA_AGREEMENT` rows with agreement identity, contract version, selected steward context, usage fields, optional custom fields, and audit columns. |
-Next, continue to [Run Pipeline](run-pipeline.md).
+Next, continue to [Run a Data Pipeline](run-pipeline.md).
 
 See also: [List of Metadata Tables](../reference/metadata.md) and [List of Functions](../reference/index.md).

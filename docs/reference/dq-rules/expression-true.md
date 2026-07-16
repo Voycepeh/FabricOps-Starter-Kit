@@ -32,7 +32,7 @@ severity: error
 description: "Example approved metadata rule for expression_true."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -61,7 +61,7 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 - This is not a custom Python plugin rule and does not add a `custom_expression` alias.
 - Only trusted reviewers should approve expression rules because the expression is more flexible than named rule types.
-- Actual enforcement depends on active approved rows with `guardrail_type="dq"` in `METADATA_GUARDRAIL_RULES`.
+- Actual enforcement depends on active approved rows with `guardrail_type="dq"` in `METADATA_GUARDRAIL`.
 
 ## Related rules
 

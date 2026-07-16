@@ -1,14 +1,14 @@
 # Review Guardrails
 
-Run `03_governance` to review enrichment and guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
+Run `03_governance` after the first pipeline has created observed catalogue and profile evidence. Governance review enriches that evidence, records guardrail decisions, and keeps approved intent separate from runtime outcomes. Existing guardrail results can provide additional review context when available.
 
 ![FabricOps governance review](../assets/fabricops-goverance-review.png)
 
 ## What to do
 
-1. Open `03_governance` after pipeline profile and guardrail evidence exists.
+1. Open `03_governance` after pipeline catalogue and profile evidence exists.
 2. Select the governed table context from current catalogue evidence.
-3. Review schema, freshness, profile behavior, DQ, runtime result context, and enrichment records.
+3. Review schema, freshness, profile behavior, DQ, available runtime result context, and enrichment records.
 4. Add or refine business descriptions, classifications, stewardship context, review notes, and guardrail fields exposed by the widgets.
 5. Approve, reject, replace, deactivate, or request follow-up using the review widgets.
 6. Rerun `02_pipeline` when you want active guardrails enforced against fresh data.
@@ -30,6 +30,6 @@ Active guardrail records can be consumed by `02_pipeline`. Draft, pending, rejec
 
 Guardrail and enrichment review decisions are appended to their metadata tables, and active rules become available to runtime enforcement. Future `02_pipeline` runs depend on these active records to evaluate approved expectations.
 
-Next, continue to [Explore Metadata Outputs](explore-metadata-outputs.md).
+Next, continue to [Run a Data Pipeline with Guardrails](run-pipeline-with-guardrails.md) so the active approved rules are evaluated against fresh data.
 
 See also: [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md) and [List of DQ Rules](../reference/dq-rules/index.md).

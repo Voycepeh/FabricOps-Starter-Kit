@@ -97,4 +97,4 @@ A guarded run produces the normal pipeline evidence plus guardrail results:
 
 The additional behavior is that continuation may be denied before unsafe publication.
 
-Next, continue to [Review Governance](review-guardrails.md).
+Next, continue to [Explore Metadata Outputs](explore-metadata-outputs.md) to trace the observed evidence, approved intent, and runtime outcomes together.

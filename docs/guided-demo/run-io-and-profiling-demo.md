@@ -1,29 +1,25 @@
-# Run exploration notebook template 
+# Run IO and Profiling Demo
 
-## Why this exists
+Use `99_explore` to confirm that FabricOps can read, write, and profile data through the Fabric targets configured by `00_env_config`.
 
-Fabric notebooks allow you to attach a Lakehouse or Warehouse and kind of drag and drop the table or files you want to read quickly through the native UI.
+This smoke test runs before agreement registration. It proves that the shared environment, Fabric Environment, Lakehouse and Warehouse routes, and public IO helpers are working before the governed workflow begins writing project evidence.
 
-However there is a technical limitation as per writing 2026 July a notebook can only attach a single warehouse/lakehouse to it.
+## Why this step exists
 
-The problem surfaces when you needs to work across more than one Lakehouse or Warehouse, or when users do not have broad item-level access but are expected to work through approved table, schema, or configured target access.
+Microsoft Fabric makes it easy to attach a data item and insert quick read code through the notebook interface. A reusable project workflow still needs consistent access when notebooks work across several configured Lakehouse and Warehouse targets or when users should work only through approved routes.
 
-FabricOps standardizes that access pattern. Instead of relying on whichever item is attached to the notebook, the IO helpers resolve the configured Lakehouse or Warehouse target from `00_env_config`. Users call the same functions every time, and the notebook can read or write through the approved target without hardcoding paths, switching attachments, or rethinking the access pattern.
+FabricOps standardizes that access pattern. IO helpers resolve the named target from `CONFIG` and `FABRIC_CONTEXT`, so notebook code uses the same function pattern without hardcoded workspace paths or assumptions about the attached default item.
 
-## Key idea
-
-Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Warehouse target from `CONFIG` and `FABRIC_CONTEXT`. Users call the same helper functions every time, using the configured targets prepared in `00_env_config`.
-
-## Key functions that support this notebook flow
+## Functions demonstrated
 
 | Helper | What it demonstrates |
 | --- | --- |
 | `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_parquet` | Read raw files from configured Lakehouse Files. |
-| `write_lakehouse_table`, `read_lakehouse_table` | Write and read Delta tables through configured Lakehouse Tables. |
-| `write_warehouse_table`, `read_warehouse_table`, `read_warehouse_query` | Write and read Warehouse tables through configured Warehouse targets. |
-| `profile_dataframe` | Profile a Spark dataframe returned from either Lakehouse or Warehouse reads. |
+| `write_lakehouse_table`, `read_lakehouse_table` | Write and read Delta tables through a configured Lakehouse target. |
+| `write_warehouse_table`, `read_warehouse_table`, `read_warehouse_query` | Write and read through a configured Warehouse target. |
+| `profile_dataframe` | Produce one structural and statistical profile row per eligible input column. |
 
-## 1. Download the demo dataset which consist of 
+## 1. Download the demo files
 
 | File | Used for |
 | --- | --- |
@@ -31,35 +27,50 @@ Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Wareh
 | [`products.xlsx`](../assets/demo-data/io-profile/products.xlsx) | Excel file-read smoke test with product reference data. |
 | [`customers.parquet`](../assets/demo-data/io-profile/customers.parquet) | Parquet file-read smoke test with customer attributes. |
 
-## 2. Upload these files into your source lakehouse root files section
-![Upload](../assets/fabric-example-99_upload_files.png)
-![Upload 2](../assets/fabric-example-99_upload_files(2).png)
+## 2. Upload the files to the source Lakehouse
 
-## 3. Open`99_explore` remember to attach the environment if not done yet
+Upload all three files to the root of the **Files** section in the source Lakehouse configured by `00_env_config`.
 
-This notebook will proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
+![Upload demo files to the Fabric Lakehouse](../assets/fabric-example-99_upload_files.png)
 
-![Start](../assets/fabric-example-99_start.png)
+![Confirm the uploaded demo files](../assets/fabric-example-99_upload_files(2).png)
 
-## 4.  
+## 3. Open `99_explore`
 
-## Why Spark
+Open the copied `99_explore` notebook and attach the same Fabric Environment used by `00_env_config`.
 
-Spark lets the same pattern work for small files and larger datasets. The demo starts with simple CSV, Excel, and Parquet files, then uses `spark.range` and repartitioning to show that the same IO pattern can scale to larger parallel processing workloads.
+Confirm that the notebook imports `fabricops_kit` and receives the active `CONFIG` and `FABRIC_CONTEXT` values before running the IO cells.
 
-The notebook defaults are intentionally modest. Increase `ROW_COUNT` only after the basic run passes in your Fabric capacity.
+![Start the 99_explore smoke test](../assets/fabric-example-99_start.png)
 
-## Expected evidence
+## 4. Run the smoke test
+
+Run the notebook sections in order:
+
+1. Read the CSV, Excel, and Parquet files from the configured source Lakehouse.
+2. Write and read back the demonstration Lakehouse table.
+3. Write and read back the demonstration Warehouse table when a Warehouse target is configured.
+4. Run `profile_dataframe` on the returned Spark DataFrames.
+5. Review the final PASS summary.
+
+Keep the default row-count and repartition settings for the first run. Increase them only after the basic smoke test passes within your Fabric capacity.
+
+## Why Spark is used
+
+The same helper pattern can support small files and larger datasets. The demonstration starts with compact public-safe files, then uses Spark and repartitioning examples to show how the pattern can scale to parallel processing workloads.
+
+## Expected result
 
 You should see:
 
-1. CSV, Excel, and Parquet dataframes displayed.
+1. CSV, Excel, and Parquet DataFrames displayed.
 2. A Lakehouse table created and read back.
-3. A Warehouse table created and read back.
-4. Profile rows generated from the Lakehouse read dataframe.
-5. Profile rows generated from the Warehouse read dataframe.
-6. A final PASS summary table.
+3. A Warehouse table created and read back when that target is configured.
+4. Profile rows generated from the returned Spark DataFrames.
+5. A final PASS summary confirming the configured routes and helpers worked.
 
-## Notes
+This smoke test does not write required governed workflow state. Its purpose is to validate configuration and helper behavior before agreement registration.
 
-This smoke test intentionally does not call metadata setup. It is designed to run after `00_env_config` and before agreement registration so teams can confirm configured IO targets and profiling behavior independently from metadata table creation.
+Next, continue to [Register Agreement](create-agreement.md).
+
+See also: [Function Reference](../reference/index.md) for the IO and profiling callable details.

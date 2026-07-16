@@ -1,6 +1,6 @@
-# DQ rule reference
+# DQ Rule Reference
 
-FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL_RULES`, and `run_table_guardrails` evaluates the active approved rules during later `02_pipeline` runs.
+FabricOps supports **23 native DQ rule types** for metadata-driven checks. Reviewers approve these rules in Governance Review, FabricOps stores them as `guardrail_type="dq"` rows in `METADATA_GUARDRAIL`, and `run_table_guardrails` evaluates the active approved rules during later `02_pipeline` runs.
 
 FabricOps uses one canonical DQ rule vocabulary. It does **not** require Great Expectations or dbt at runtime, and it does not expose one Python callable per rule. Rules are metadata: choose the rule type, provide the required parameters, approve the row, and let the pipeline load the approved metadata.
 
@@ -10,7 +10,7 @@ For the Governance Review operating model, see [Governance Review](../../guided-
 
 Each rule below shows:
 
-- **Rule**: the `rule_type` value to store in `METADATA_GUARDRAIL_RULES` for rows with `guardrail_type="dq"`.
+- **Rule**: the `rule_type` value to store in `METADATA_GUARDRAIL` for rows with `guardrail_type="dq"`.
 - **When to use it**: the plain-language reason a reviewer would approve the rule.
 - **Required parameters**: the minimum fields that must be present in the rule JSON. Most rules also include `rule_type`, `severity`, and a description in the approved metadata row.
 - **Example JSON**: a small public-safe example that can be adapted in `03_governance`.
@@ -96,4 +96,11 @@ Set `severity="error"` when a failure should block unsafe or misleading output. 
 
 ## Runtime behavior
 
-`METADATA_GUARDRAIL_RULES` is append-only for DQ rows. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `run_table_guardrails` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.
+`METADATA_GUARDRAIL` is append-only for DQ rows. Create, update, deactivate, and reactivate actions add new metadata rows instead of deleting history. During a pipeline run, `run_table_guardrails` resolves the newest version of each rule, keeps only active approved rules, evaluates them, and records the DQ outcome as guardrail evidence.
+
+## Where this fits in the workflow
+
+- Use [Review Governance](../../guided-demo/review-guardrails.md) to review and activate rule intent.
+- Use [Run a Data Pipeline with Guardrails](../../guided-demo/run-pipeline-with-guardrails.md) to evaluate active rules and make continuation decisions.
+- Use [`run_table_guardrails`](../../api/reference/run_table_guardrails.md) for the callable contract and implementation example.
+- Use [Metadata Table Reference](../metadata.md) for the separation between `METADATA_GUARDRAIL` intent and `METADATA_GUARDRAIL_RESULTS` outcomes.
