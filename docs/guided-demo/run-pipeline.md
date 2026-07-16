@@ -16,13 +16,11 @@ Guardrail enforcement is covered separately in [Run a Data Pipeline with Guardra
 ## Recommended flow
 
 ```text
-read
-→ profile source
+read source
+→ profile and register source evidence
 → transform
-→ profile target
-→ write
-→ register catalogue evidence
-→ register lineage evidence
+→ profile and register target evidence
+→ write target
 ```
 
 1. Open `02_pipeline` after environment and agreement setup.
@@ -34,12 +32,12 @@ read
 7. Write the target output to the configured Fabric target.
 8. Review the metadata evidence created by the run.
 
-A source profiling call uses `profile_role="source"`. A target profiling call uses `profile_role="target"`. The same helper records the statistical profile, catalogue identity snapshot, schema fingerprint, and one table-level participation event for the DataFrame supplied to that call.
+A source profiling call uses `profile_role="source"`. A target profiling call uses `profile_role="target"`. Each profile-and-register step writes profile evidence, catalogue identity, schema fingerprint evidence, and one lineage participation event for the DataFrame supplied to that call.
 
 ## Minimal profiling example
 
 ```python
-from fabricops_kit.pipeline import profile_and_register_dataframe
+from fabricops_kit import profile_and_register_dataframe
 
 profiled_df = profile_and_register_dataframe(
     df,
@@ -123,15 +121,15 @@ profiled_df = profile_and_register_dataframe(
 )
 ```
 
-For this illustrative two-column DataFrame, the call records:
+For the first observation of this illustrative schema and activity, the call records:
 
-| Metadata table | Rows created | Purpose |
-| -------------- | ------------ | ------- |
-| `METADATA_DATA_CATALOGUE` | 2 rows, one for `customer_id` and one for `status` | Physical table and column identity snapshots. |
-| `METADATA_DATA_PROFILED` | 2 rows, one statistical profile row per column | Statistical and frequency evidence per column. |
-| `METADATA_DATA_LINEAGE` | 1 row | Table-level source participation evidence. |
+| Metadata table | Rows written or upserted | Purpose |
+| -------------- | ------------------------ | ------- |
+| `METADATA_DATA_CATALOGUE` | 2 rows, one for `customer_id` and one for `status` | Physical table and column identity snapshots, idempotently upserted by `metadata_table_key + metadata_column_key + schema_fingerprint`. |
+| `METADATA_DATA_PROFILED` | 2 appended rows, one statistical profile row per column | Statistical and frequency evidence per column. |
+| `METADATA_DATA_LINEAGE` | 1 row | Table-level source participation evidence, idempotently upserted by `lineage_event_id`. |
 
-Generated key values are intentionally not shown here. Treat values such as `metadata_table_key`, `metadata_column_key`, and `schema_fingerprint` as stable identifiers produced by FabricOps from the observed context and schema.
+Generated key values are intentionally not shown here. Treat values such as `metadata_table_key`, `metadata_column_key`, and `schema_fingerprint` as stable identifiers produced by FabricOps from the observed context and schema. Later identical catalogue and lineage observations may update existing rows, while `METADATA_DATA_PROFILED` remains append-oriented run evidence.
 
 ## Frequency evidence per column
 
@@ -263,11 +261,11 @@ The current model stores schema snapshots rather than an explicit parent-child s
 
 ## Summary
 
-| Metadata table | Rows created for a two-column DataFrame | Purpose |
-| -------------- | --------------------------------------- | ------- |
-| `METADATA_DATA_CATALOGUE` | 2 | Physical table and column identity snapshots. |
-| `METADATA_DATA_PROFILED` | 2 | Statistical and frequency evidence per column. |
-| `METADATA_DATA_LINEAGE` | 1 per source or target call | Runtime table participation evidence. |
+| Metadata table | Rows written or upserted for a two-column DataFrame | Purpose |
+| -------------- | ------------------------------------------------ | ------- |
+| `METADATA_DATA_CATALOGUE` | 2 upserted rows | Physical table and column identity snapshots. |
+| `METADATA_DATA_PROFILED` | 2 appended rows | Statistical and frequency evidence per column. |
+| `METADATA_DATA_LINEAGE` | 1 upserted row per source or target call | Runtime table participation evidence. |
 
 Next, continue to [Run a Data Pipeline with Guardrails](run-pipeline-with-guardrails.md).
 
