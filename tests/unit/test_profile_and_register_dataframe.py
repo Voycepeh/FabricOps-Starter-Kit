@@ -134,6 +134,7 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
+        "frequency_profile_df",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty
     assert parameters["frequency_top_n"].default is None
@@ -311,8 +312,10 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     assert selected_rows["country"]["frequency_json"] is None
     selected_frequency = json.loads(selected_rows["id"]["frequency_json"])
     assert len(selected_frequency["values"]) == 25
+    assert selected_frequency["source_row_count"] == 25
     assert selected_frequency["profiled_row_count"] == 25
     assert selected_frequency["profiled_non_null_count"] == 25
+    assert selected_frequency["frequency_scope"] == "full_source"
 
     unbounded_result = profile_and_register_dataframe(
         source,
@@ -828,3 +831,191 @@ def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, mo
             table_name="customers",
         )
     assert [write["table_name"] for write in registered] == [PROFILED_TABLE]
+
+
+def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_for_frequency(
+    spark_session, monkeypatch, registered
+):
+    """Verify a caller frequency DataFrame affects only frequency evidence."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(20)], "id long, segment string")
+    frequency_source = spark_session.createDataFrame([(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string")
+    calls = {"profile_is_source": None, "frequency_df_is_frequency_source": None, "schema_df_is_source": []}
+    original_schema_fingerprint = module._schema_fingerprint
+    original_frequency_distribution = module.profile_frequency_distribution
+
+    def schema_fingerprint(df):
+        calls["schema_df_is_source"].append(df is source)
+        return original_schema_fingerprint(df)
+
+    def profile(df):
+        calls["profile_is_source"] = df is source
+        return spark_session.createDataFrame(
+            [
+                ("id", "bigint", 20, 20, 0, 0.0, 20, 100.0, None, None, "0", None, None, None, "19"),
+                ("segment", "string", 20, 20, 0, 0.0, 2, 10.0, None, None, "A", None, None, None, "B"),
+            ],
+            "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string",
+        )
+
+    def frequency(df, *, columns, top_n):
+        calls["frequency_df_is_frequency_source"] = df is frequency_source
+        return original_frequency_distribution(df, columns=columns, top_n=top_n)
+
+    monkeypatch.setattr(module, "_schema_fingerprint", schema_fingerprint)
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=["segment"],
+        frequency_profile_df=frequency_source,
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    frequency_json = json.loads(rows["segment"]["frequency_json"])
+    assert calls["profile_is_source"] is True
+    assert calls["frequency_df_is_frequency_source"] is True
+    assert calls["schema_df_is_source"] and all(calls["schema_df_is_source"])
+    assert rows["segment"]["row_count"] == 20
+    assert frequency_json["source_row_count"] == 20
+    assert frequency_json["profiled_row_count"] == 3
+    assert frequency_json["profiled_non_null_count"] == 3
+    assert frequency_json["frequency_scope"] == "caller_provided"
+    assert [value["value"] for value in frequency_json["values"]] == ["A", "B"]
+    assert {write["table_name"] for write in registered} == {PROFILED_TABLE, CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"}
+    assert registered[1]["df"].select("table_name").distinct().collect()[0].table_name == "customers"
+
+
+def test_profile_and_register_dataframe_default_frequency_scope_uses_full_source(spark_session, registered):
+    """Verify omitting frequency_profile_df preserves full-source frequency profiling."""
+    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(8)], "id long, segment string")
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=["segment"],
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    frequency_json = json.loads(rows["segment"]["frequency_json"])
+    assert frequency_json["source_row_count"] == 8
+    assert frequency_json["profiled_row_count"] == 8
+    assert frequency_json["profiled_non_null_count"] == 8
+    assert frequency_json["frequency_scope"] == "full_source"
+
+
+def test_profile_and_register_dataframe_frequency_profile_df_missing_selected_column_raises(spark_session, registered):
+    """Verify caller-provided frequency DataFrames must contain selected frequency columns."""
+    source = spark_session.createDataFrame([(1, "A")], "id long, segment string")
+    frequency_source = spark_session.createDataFrame([(1, "extra")], "id long, extra string")
+
+    with pytest.raises(ValueError, match="frequency_profile_df is missing selected frequency columns: segment"):
+        profile_and_register_dataframe(
+            source,
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+            frequency_columns=["segment"],
+            frequency_profile_df=frequency_source,
+        )
+
+
+def test_profile_and_register_dataframe_empty_frequency_columns_does_not_validate_frequency_profile_df(
+    spark_session, monkeypatch, registered
+):
+    """Verify frequency_columns=[] skips frequency profiling without touching caller frequency input."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    calls = {"validate": 0, "frequency": 0}
+
+    def validate(*_args, **_kwargs):
+        calls["validate"] += 1
+        raise AssertionError("frequency_profile_df should not be validated")
+
+    def frequency(*_args, **_kwargs):
+        calls["frequency"] += 1
+        raise AssertionError("frequency profiling should not run")
+
+    monkeypatch.setattr(module, "_validate_frequency_profile_dataframe", validate)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        _source_df(spark_session),
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=[],
+        frequency_profile_df=object(),
+    )
+
+    assert calls == {"validate": 0, "frequency": 0}
+    assert result.where("frequency_json is not null").count() == 0
+
+
+def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_with_frequency_profile_df(
+    spark_session, monkeypatch, registered
+):
+    """Verify automatic cardinality filtering still uses the full statistical profile."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = _source_df(spark_session)
+    frequency_source = spark_session.createDataFrame([("A", "US"), ("B", "GB")], "customer_type string, country string")
+    calls = {"frequency_columns": None}
+
+    def profile(df):
+        assert df is source
+        return _profile_df(spark_session)
+
+    original_frequency_distribution = module.profile_frequency_distribution
+
+    def frequency(df, *, columns, top_n):
+        assert df is frequency_source
+        calls["frequency_columns"] = columns
+        return original_frequency_distribution(df, columns=columns, top_n=top_n)
+
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_profile_df=frequency_source,
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert calls["frequency_columns"] == ["customer_type"]
+    assert json.loads(rows["customer_type"]["frequency_json"])["frequency_scope"] == "caller_provided"
+    assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+
+
+def test_validate_frequency_profile_dataframe_rejects_incompatible_session():
+    """Verify safely detectable incompatible Spark sessions fail clearly."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+
+    class FakeSchema:
+        fields = []
+
+    class FakeDataFrame:
+        schema = FakeSchema()
+
+        def __init__(self, session):
+            self.sparkSession = session
+
+    with pytest.raises(ValueError, match="frequency_profile_df must use the same Spark session as df"):
+        module._validate_frequency_profile_dataframe(FakeDataFrame(object()), FakeDataFrame(object()), [])

@@ -74,6 +74,28 @@ def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_finge
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
+
+def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
+    """Return the frequency DataFrame after validating caller-provided scope."""
+    if frequency_profile_df is None:
+        return source_df, "full_source"
+
+    source_session = getattr(source_df, "sparkSession", None)
+    frequency_session = getattr(frequency_profile_df, "sparkSession", None)
+    if source_session is not None and frequency_session is not None and source_session is not frequency_session:
+        raise ValueError("frequency_profile_df must use the same Spark session as df.")
+
+    fields = getattr(getattr(frequency_profile_df, "schema", None), "fields", None)
+    if fields is None:
+        raise ValueError("frequency_profile_df must be a Spark DataFrame-like object with a schema.")
+
+    available_columns = {field.name for field in fields}
+    missing_columns = [column for column in selected_columns if column not in available_columns]
+    if missing_columns:
+        raise ValueError(f"frequency_profile_df is missing selected frequency columns: {', '.join(missing_columns)}")
+
+    return frequency_profile_df, "caller_provided"
+
 def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
     """Return candidate columns whose Spark types are scalar frequency types."""
     from pyspark.sql.types import ArrayType, BinaryType, MapType, StructType
@@ -143,7 +165,8 @@ def _automatic_frequency_columns(profile_df, *, scalar_columns: Sequence[str], t
 
 
 def _frequency_json_dataframe(
-    df,
+    source_df,
+    frequency_profile_df,
     profile_df,
     frequency_columns: Sequence[str] | None,
     frequency_top_n: int | None,
@@ -158,7 +181,7 @@ def _frequency_json_dataframe(
     explicit_columns = None if frequency_columns is None else list(frequency_columns)
     if explicit_columns is None:
         profiled_columns = [row.COLUMN_NAME for row in profile_df.select("COLUMN_NAME").collect()]
-        scalar_columns = _scalar_frequency_columns(df, profiled_columns)
+        scalar_columns = _scalar_frequency_columns(source_df, profiled_columns)
         selected_columns = _automatic_frequency_columns(
             profile_df,
             scalar_columns=scalar_columns,
@@ -175,7 +198,17 @@ def _frequency_json_dataframe(
 
     frequency_json_df = None
     if selected_columns:
-        frequency_df = profile_frequency_distribution(df, columns=selected_columns, top_n=frequency_top_n)
+        source_row_count_df = profile_df.select(
+            F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT")
+        )
+        frequency_source_df, frequency_scope = _validate_frequency_profile_dataframe(
+            source_df,
+            frequency_profile_df,
+            selected_columns,
+        )
+        frequency_df = profile_frequency_distribution(
+            frequency_source_df, columns=selected_columns, top_n=frequency_top_n
+        ).crossJoin(source_row_count_df)
         value_struct = F.struct(
             F.col("FREQUENCY_RANK").cast("int").alias("rank"),
             F.col("VALUE").alias("value"),
@@ -195,8 +228,10 @@ def _frequency_json_dataframe(
         frequency_json_df = frequency_df.groupBy("COLUMN_NAME").agg(
             F.to_json(
                 F.struct(
+                    F.first("SOURCE_ROW_COUNT", ignorenulls=True).cast("long").alias("source_row_count"),
                     F.first("PROFILED_ROW_COUNT", ignorenulls=True).cast("long").alias("profiled_row_count"),
                     F.first("PROFILED_NON_NULL_COUNT", ignorenulls=True).cast("long").alias("profiled_non_null_count"),
+                    F.lit(frequency_scope).cast("string").alias("frequency_scope"),
                     values.alias("values"),
                 ),
                 options={"ignoreNullFields": "false"},
@@ -240,6 +275,7 @@ def _canonical_profiled_dataframe(
     frequency_columns: Sequence[str] | None,
     frequency_top_n: int | None,
     frequency_max_distinct_percent: float | None,
+    frequency_profile_df: Any,
 ):
     """Return profile rows mapped to the detailed profiled schema."""
     from pyspark.sql import functions as F
@@ -247,7 +283,14 @@ def _canonical_profiled_dataframe(
 
     metadata_table_key = _metadata_table_key(environment_name, store_type, layer, schema_name, table_name)
     column_key_udf = F.udf(lambda column_name: _metadata_column_key(metadata_table_key, column_name), T.StringType())
-    frequency_df = _frequency_json_dataframe(source_df, profile_df, frequency_columns, frequency_top_n, frequency_max_distinct_percent)
+    frequency_df = _frequency_json_dataframe(
+        source_df,
+        frequency_profile_df,
+        profile_df,
+        frequency_columns,
+        frequency_top_n,
+        frequency_max_distinct_percent,
+    )
     schema_fingerprint = _schema_fingerprint(source_df)
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
 
@@ -438,6 +481,7 @@ def profile_and_register_dataframe(
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
+    frequency_profile_df=None,
 ):
     """Profile a supplied Spark DataFrame and save its metadata records.
 
@@ -498,6 +542,15 @@ def profile_and_register_dataframe(
         and ``100.0`` when supplied. ``None`` disables the high-cardinality
         threshold; all-null automatic columns still receive structured skipped
         JSON. Explicit ``frequency_columns`` selections override this threshold.
+    frequency_profile_df : pyspark.sql.DataFrame, optional
+        Optional caller-provided Spark DataFrame to use only for frequency
+        distribution calculation. ``None`` preserves full-source frequency
+        profiling. When supplied, it must contain every selected frequency
+        column, may contain extra columns, and must use a compatible Spark
+        session when this can be determined. The caller is responsible for
+        preparing, persisting, refreshing, and governing this DataFrame; this
+        function does not verify whether it is random, representative, sampled,
+        persisted, or otherwise suitable for the caller's purpose.
 
     Returns
     -------
@@ -521,8 +574,8 @@ def profile_and_register_dataframe(
     -----
     Processing flow:
 
-    1. Run ``profile_dataframe(df)`` to produce one statistical profile row per
-       eligible input column.
+    1. Run ``profile_dataframe(df)`` against the complete supplied DataFrame to
+       produce one statistical profile row per eligible input column.
     2. Use that statistical profile to choose automatic frequency columns
        when ``frequency_columns=None``: eligible scalar columns at or below
        ``frequency_max_distinct_percent`` are profiled, high-cardinality
@@ -581,7 +634,14 @@ def profile_and_register_dataframe(
       threshold. Other profiled columns receive null.
     - ``frequency_columns=[]`` skips frequency profiling entirely and persists
       null ``frequency_json`` for every row.
-    - ``frequency_top_n`` restricts embedded values only when supplied.
+    - ``frequency_profile_df=None`` profiles frequencies against the complete
+      supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
+      frequency counts, percentages, ranks, profiled row counts, and profiled
+      non-null counts describe that caller-provided DataFrame, while
+      ``source_row_count`` records the complete source DataFrame row count.
+    - ``frequency_top_n`` restricts embedded values only when supplied. It
+      limits output rows after grouped counts are calculated and does not
+      reduce grouping cost.
     - Frequency values are ordered deterministically by rank.
 
     Example ``frequency_json`` structure:
@@ -589,8 +649,10 @@ def profile_and_register_dataframe(
     .. code-block:: json
 
        {
+         "source_row_count": 1000,
          "profiled_row_count": 1000,
          "profiled_non_null_count": 995,
+         "frequency_scope": "full_source",
          "values": [
            {
              "value": "Active",
@@ -662,11 +724,13 @@ def profile_and_register_dataframe(
       records.
     - ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
-    Each profiling record describes the exact DataFrame supplied during the
-    notebook activity. If a caller deliberately filters or samples before
-    calling this function, that transformation should be represented through
-    notebook lineage or a future explicit profiling-scope model rather than a
-    manually maintained Boolean.
+    Statistical profiling records describe the complete DataFrame supplied
+    during the notebook activity. If ``frequency_profile_df`` is supplied,
+    only generated frequency evidence uses that DataFrame and its JSON records
+    ``frequency_scope="caller_provided"``. The function does not claim or
+    verify that the caller-provided DataFrame is sampled, random,
+    representative, persisted, or governed; those responsibilities stay with
+    the upstream ingestion or notebook workflow.
 
     Profile and catalogue registration occur before lineage registration. If
     lineage registration fails after those writes succeed, the function raises
@@ -704,6 +768,7 @@ def profile_and_register_dataframe(
         frequency_columns=selected_frequency_columns,
         frequency_top_n=frequency_top_n,
         frequency_max_distinct_percent=frequency_max_distinct_percent,
+        frequency_profile_df=frequency_profile_df,
     )
     write_lakehouse_table_core(
         profiled_df,
