@@ -49,20 +49,27 @@ profiled_df = profile_and_register_dataframe(
 )
 ```
 
-For very large DataFrames, users can explicitly limit only the rows used for frequency grouping while keeping the main profile and metadata registration based on the full supplied DataFrame:
+For very large DataFrames, callers can prepare a separate DataFrame for frequency grouping while keeping the main profile and metadata registration based on the full supplied DataFrame:
 
 ```python
+sample_df = full_df.sample(
+    withReplacement=False,
+    fraction=0.1,
+    seed=42,
+)
+
 profiled_df = profile_and_register_dataframe(
-    df,
+    full_df,
     profile_role="source",
     environment_name="dev",
     store_type="lakehouse",
     layer="raw",
     table_name="customers",
-    frequency_sample_rows=100_000,
-    frequency_sample_seed=42,
+    frequency_profile_df=sample_df,
 )
 ```
+
+`profile_and_register_dataframe()` does not create, sample, limit, or validate the representativeness of `frequency_profile_df`. The caller prepares that DataFrame before calling the function. When `frequency_profile_df` is omitted, the full supplied DataFrame is also used for frequency profiling, preserving the previous behavior.
 
 This is a conceptual example. Use the source and target values configured by your `00_env_config`, agreement context, and `02_pipeline` notebook cells.
 
@@ -148,28 +155,39 @@ Generated key values are intentionally not shown here. Treat values such as `met
 
 ## Frequency evidence per column
 
-Frequency evidence is embedded in the `frequency_json` field of each `METADATA_DATA_PROFILED` row. By default, frequency distributions use the complete DataFrame. For very large DataFrames, users can explicitly limit only the rows used for frequency grouping with `frequency_sample_rows`.
+Frequency evidence is embedded in the `frequency_json` field of each `METADATA_DATA_PROFILED` row. By default, frequency distributions use the complete supplied DataFrame. For very large DataFrames, callers may pass `frequency_profile_df` as an alternate input for frequency counts and percentages only.
 
-This does not sample the entire profiling operation:
+The main DataFrame remains the authoritative dataset for profiling and metadata registration:
+
+```text
+full_df
+→ full statistical profile
+→ schema fingerprint
+→ catalogue registration
+→ lineage registration
+→ high-cardinality eligibility decision
+
+frequency_profile_df
+→ frequency counts and percentages only
+```
 
 | Evidence or calculation | Data used |
 | ----------------------- | --------- |
-| Statistical profile | Always calculated from the full supplied DataFrame. |
-| Schema fingerprint | Always calculated from the full supplied DataFrame schema. |
-| Catalogue and lineage | Always registered from the full supplied DataFrame context. |
-| Frequency distribution | Uses the full supplied DataFrame by default, or an explicit deterministic sample when requested. |
+| Statistical profile | Always calculated from `full_df`, the main supplied DataFrame. |
+| Schema fingerprint | Always calculated from the `full_df` schema. |
+| Catalogue and lineage | Always registered from the `full_df` context. |
+| Frequency distribution | Uses `full_df` when `frequency_profile_df` is omitted, or uses the caller-supplied `frequency_profile_df` when provided. |
 
-For a suitable low-cardinality column such as `status` with no sampling requested, the embedded JSON can look like this:
+`profile_and_register_dataframe()` does not create, sample, limit, or validate the representativeness of `frequency_profile_df`. If you want sampled frequency counts, create that sampled DataFrame in notebook code before calling `profile_and_register_dataframe()`.
+
+For a suitable low-cardinality column such as `status` when the full DataFrame is used for frequency profiling, the embedded JSON can look like this:
 
 ```json
 {
   "source_row_count": 4,
   "profiled_row_count": 4,
   "profiled_non_null_count": 4,
-  "sampling_applied": false,
-  "sampling_method": null,
-  "sampling_seed": null,
-  "requested_sample_rows": null,
+  "external_frequency_dataframe_used": false,
   "values": [
     {
       "value": "Active",
@@ -187,17 +205,14 @@ For a suitable low-cardinality column such as `status` with no sampling requeste
 }
 ```
 
-With explicit sampling, the frequency payload records the source row count, sampled row count, sampling method, seed, and requested sample size:
+When a caller supplies `frequency_profile_df`, the frequency payload can show that an external frequency DataFrame was used. Counts and percentages describe that frequency DataFrame, while source row count and the main metadata evidence still describe `full_df`:
 
 ```json
 {
   "source_row_count": 10000000,
   "profiled_row_count": 100000,
   "profiled_non_null_count": 99500,
-  "sampling_applied": true,
-  "sampling_method": "deterministic_random_limit",
-  "sampling_seed": 42,
-  "requested_sample_rows": 100000,
+  "external_frequency_dataframe_used": true,
   "values": [
     {
       "value": "Active",
@@ -209,21 +224,18 @@ With explicit sampling, the frequency payload records the source row count, samp
 }
 ```
 
-Sampling is opt-in. The default remains full-data frequency profiling. When sampling is requested, the same seed provides reproducible selection for the same input execution conditions. Sampling is performed once per orchestrator call, and all eligible frequency columns use that same sampled DataFrame instead of taking repeated independent samples by column.
-
 Automatic frequency selection uses the statistical profile that has already been calculated from the full supplied DataFrame. This keeps notebook orchestration safe by avoiding full frequency profiling for automatic columns above the default high-cardinality threshold.
 
 Conceptually, the order is:
 
 ```text
-full-data statistical profile
-→ determine automatic eligible columns
-→ skip columns above the cardinality threshold
-→ optionally sample rows
-→ calculate frequency distributions for remaining columns
+profile full_df
+→ calculate full-data distinct percentage
+→ determine eligible frequency columns
+→ calculate frequency distributions using frequency_profile_df when supplied
 ```
 
-A high-cardinality column does not become eligible merely because a sample contains fewer distinct values.
+A sampled or filtered frequency DataFrame cannot make a full-data high-cardinality column automatically eligible.
 
 Key behavior:
 
