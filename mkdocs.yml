@@ -26,7 +26,8 @@ nav:
       - Run Environment Setup: guided-demo/run-environment-setup.md
       - Run IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
       - Register Agreement: guided-demo/create-agreement.md
-      - Run Example Pipeline Demo and Pipeline: guided-demo/run-pipeline.md
+      - Run a Data Pipeline: guided-demo/run-pipeline.md
+      - Run a Data Pipeline with Guardrails: guided-demo/run-pipeline-with-guardrails.md
       - Review Governance: guided-demo/review-guardrails.md
       - Explore Metadata: guided-demo/explore-metadata-outputs.md
   - Templates: notebook-templates-implementation-guide/index.md
