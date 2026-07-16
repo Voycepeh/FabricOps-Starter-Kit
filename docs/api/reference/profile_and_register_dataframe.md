@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 142
+- Downstream callables: 143
 - Shared helpers: 53
-- Private helpers: 87
+- Private helpers: 88
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_and_register_dataframe">Open Preview call flow</a>
 
@@ -35,9 +35,9 @@ configured in ``00_env_config`` for the selected environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:429`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:472`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L429-L741">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L472-L806">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,6 +70,7 @@ def profile_and_register_dataframe(
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
+    frequency_profile_df=None,
 ):
 ```
 
@@ -80,7 +81,7 @@ def profile_and_register_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profiled_df = profile_and_register_dataframe(source_df, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="student_enrolment")
+profiled_df = profile_and_register_dataframe(source_df, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="student_enrolment", frequency_profile_df=profile_sample_df)
 ```
 
 </div>
@@ -99,14 +100,15 @@ profiled_df = profile_and_register_dataframe(source_df, profile_role="source", e
 | `frequency_columns` | `sequence of str` | No | Selected columns that should receive embedded frequency evidence. ``None`` profiles all eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and persists null ``frequency_json`` for every statistical profile row. Requested columns should also be eligible for the main statistical profile. |
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold receive structured skipped JSON instead of generated frequencies. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns still receive structured skipped JSON. Explicit ``frequency_columns`` selections override this threshold. |
+| `frequency_profile_df` | `pyspark.sql.DataFrame` | No | Optional caller-provided Spark DataFrame to use only for frequency distribution calculation. ``None`` preserves full-source frequency profiling. When supplied, it must contain every selected frequency column, may contain extra columns, and must use a compatible Spark session when this can be determined. The caller is responsible for preparing, persisting, refreshing, and governing this DataFrame; this function does not verify whether it is random, representative, sampled, persisted, or otherwise suitable for the caller's purpose. |
 
 ## Returns
 
-Spark DataFrame containing one detailed profiling row for each eligible column appended to METADATA_DATA_PROFILED, including stable table and column IDs, statistical metrics, frequency_json where enabled, schema fingerprint, and runtime audit fields.
+Spark DataFrame containing one detailed profiling row for each eligible column appended to METADATA_DATA_PROFILED, including stable table and column IDs, complete-DataFrame statistical metrics, frequency_json where enabled, schema fingerprint, and runtime audit fields.
 
 ### Return interpretation
 
-The returned rows are the detailed profile results for eligible columns. Catalogue rows and source or target activity records are saved as side effects and are not returned.
+The returned rows are the detailed profile results for eligible columns. Statistical metrics always describe the complete supplied DataFrame. Frequency counts and percentages describe the complete source by default or the caller-provided frequency_profile_df when supplied; frequency_json discloses source_row_count, profiled_row_count, profiled_non_null_count, and frequency_scope. Catalogue rows and source or target activity records are saved as side effects and are not returned.
 
 ## Raises / Errors
 
@@ -116,8 +118,9 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 
 - profile_role must be source or target and store_type must be lakehouse or warehouse.
 - environment_name, layer, or table_name is blank, or schema_name is blank when supplied.
+- frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.
 - The configured metadata target cannot be resolved or written.
-- Requested frequency columns are missing or expensive to group.
+- Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost.
 - If lineage registration fails after profile and catalogue writes succeed, RuntimeError is raised and earlier writes remain completed.
 
 ## Notes
@@ -126,8 +129,8 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 
 Processing flow:
 
-1. Run ``profile_dataframe(df)`` to produce one statistical profile row per
-   eligible input column.
+1. Run ``profile_dataframe(df)`` against the complete supplied DataFrame to
+   produce one statistical profile row per eligible input column.
 2. Use that statistical profile to choose automatic frequency columns
    when ``frequency_columns=None``: eligible scalar columns at or below
    ``frequency_max_distinct_percent`` are profiled, high-cardinality
@@ -186,7 +189,14 @@ Frequency join behavior:
   threshold. Other profiled columns receive null.
 - ``frequency_columns=[]`` skips frequency profiling entirely and persists
   null ``frequency_json`` for every row.
-- ``frequency_top_n`` restricts embedded values only when supplied.
+- ``frequency_profile_df=None`` profiles frequencies against the complete
+  supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
+  frequency counts, percentages, ranks, profiled row counts, and profiled
+  non-null counts describe that caller-provided DataFrame, while
+  ``source_row_count`` records the complete source DataFrame row count.
+- ``frequency_top_n`` restricts embedded values only when supplied. It
+  limits output rows after grouped counts are calculated and does not
+  reduce grouping cost.
 - Frequency values are ordered deterministically by rank.
 
 Example ``frequency_json`` structure:
@@ -194,8 +204,10 @@ Example ``frequency_json`` structure:
 .. code-block:: json
 
    {
+     "source_row_count": 1000,
      "profiled_row_count": 1000,
      "profiled_non_null_count": 995,
+     "frequency_scope": "full_source",
      "values": [
        {
          "value": "Active",
@@ -267,11 +279,13 @@ What FabricOps saves:
   records.
 - ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
-Each profiling record describes the exact DataFrame supplied during the
-notebook activity. If a caller deliberately filters or samples before
-calling this function, that transformation should be represented through
-notebook lineage or a future explicit profiling-scope model rather than a
-manually maintained Boolean.
+Statistical profiling records describe the complete DataFrame supplied
+during the notebook activity. If ``frequency_profile_df`` is supplied,
+only generated frequency evidence uses that DataFrame and its JSON records
+``frequency_scope="caller_provided"``. The function does not claim or
+verify that the caller-provided DataFrame is sampled, random,
+representative, persisted, or governed; those responsibilities stay with
+the upstream ingestion or notebook workflow.
 
 Profile and catalogue registration occur before lineage registration. If
 lineage registration fails after those writes succeed, the function raises
