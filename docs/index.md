@@ -1,92 +1,53 @@
-<div class="fabricops-landing" markdown="1">
+# FabricOps documentation
 
-# FabricOps Starter Kit
+FabricOps connects governance, data engineering, and AI or BI analytics through one standardized Microsoft Fabric workflow.
 
-FabricOps Starter Kit is a lightweight starter kit for data teams working in Microsoft Fabric.
+Governance defines ownership, agreements, enrichment, and guardrails. Engineering develops pipelines and captures metadata evidence. Approved pipelines are promoted to Production, where they provide stable and governed data products for downstream AI and BI consumption.
 
-It brings together reusable notebook templates, helper functions, metadata tables, guardrails, and guided demos so Fabric notebook projects can start with a clearer structure.
+**Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data**
 
-Teams can configure workspaces, run pipelines, track lineage, review data quality checks, and maintain pipeline run history without building every support piece from scratch.
+## Understand FabricOps
 
-<section class="fabricops-delivery-model" aria-labelledby="fabricops-workflow-model-heading" markdown="1">
+- [What is FabricOps?](#what-is-fabricops)
+- [How FabricOps works](how-fabricops-works.md)
+- [Architecture and workspace setup](how-fabricops-works.md#three-workspace-setup)
 
-## How FabricOps connects data teams { #fabricops-workflow-model-heading }
+## Get started
 
-<p class="fabricops-architecture-image">
-  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
-</p>
+- [Installation](guided-demo/setup-fabric-artifacts.md#4-upload-and-install-the-fabricops-wheel)
+- [Workspace configuration](guided-demo/setup-fabric-artifacts.md)
+- [Guided demo](guided-demo.md)
 
-FabricOps helps governance, engineering, and analytics teams work from the same notebook flow.
+## Use the workflow
 
-Governance reviews agreement context, enrichment, and pipeline guardrail results.
-Engineering configures the environment, runs notebooks, and writes metadata tables.
-Analysts and data scientists consume trusted outputs for BI, AI, and exploration.
+- [`00_env_config`](notebook-templates-implementation-guide/index.md#00_env_config)
+- [`01_agreement`](notebook-templates-implementation-guide/index.md#01_agreement)
+- [`02_pipeline`](notebook-templates-implementation-guide/index.md#02_pipeline)
+- [`03_review`](notebook-templates-implementation-guide/index.md#03_governance)
+- [`99_explore`](notebook-templates-implementation-guide/index.md#99_explore)
+- [Production promotion](how-fabricops-works.md#engineering-production-workspace)
 
-The shared metadata tables act as the handoff layer.
-They record what was agreed, what ran, what passed, and what is ready for review.
-They abstract the important but tedious work into a simplified plug and play workflow that makes handover easy, even for new team members.
+## Understand the metadata
 
-</section>
+- [Metadata model](reference/metadata.md)
+- [Data Steward](reference/metadata/metadata_data_steward.md)
+- [Data Agreement](reference/metadata/metadata_data_agreement.md)
+- [Data Contract](reference/metadata/metadata_data_contract.md)
+- [Data Catalogue](reference/metadata/metadata_data_catalogue.md)
+- [Data Profiled](reference/metadata/metadata_data_profiled.md)
+- [Lineage](reference/metadata/metadata_data_lineage.md)
+- [Enrichment](reference/metadata/metadata_enrichment.md)
+- [Guardrail](reference/metadata/metadata_guardrail.md)
+- [Guardrail Results](reference/metadata/metadata_guardrail_results.md)
 
-## Choose where to begin
+## What is FabricOps?
 
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="guided-demo/">
-    <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Build the wheel, set up Fabric artifacts, and run the first smoke test.</span>
-  </a>
-  <a class="fabricops-landing-card" href="how-fabricops-works/">
-    <span class="fabricops-landing-card__title">How FabricOps Works</span>
-    <span class="fabricops-landing-card__body">Understand the operating model and metadata flow.</span>
-  </a>
-  <a class="fabricops-landing-card" href="releases/">
-    <span class="fabricops-landing-card__title">Releases</span>
-    <span class="fabricops-landing-card__body">See current and past releases and download plug-and-play assets.</span>
-  </a>
-</div>
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
 
-## Features and assets
+- Governance
+- Data engineering
+- AI and BI analytics
 
-Explore the current FabricOps product surface, including Live and Preview capabilities. See [Releases](releases/) for version-specific supported functions and downloadable assets.
+It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
 
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
-    <span class="fabricops-landing-card__title">5 main notebook templates</span>
-    <span class="fabricops-landing-card__body">With step by step guide in guide in implementation guide.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>24</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body"><!-- FABRICOPS_CALLABLE_RECORD_COUNT -->Helper functions support the notebook templates and demo workflows, with supporting private functions, classes, and internal methods kept behind the scenes<!-- /FABRICOPS_CALLABLE_RECORD_COUNT -->.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/dq-rules/">
-    <span class="fabricops-landing-card__title">23 Data quality rule types</span>
-    <span class="fabricops-landing-card__body">Suggested by AI and enforced in pipeline guardrails.</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>10</strong><span>metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Stores data about agreements, catalogue entries, lineage, guardrail results, notebook registry entries, and pipeline runs.</span>
-  </a>
-</div>
-
-## For maintainers
-
-FabricOps Starter Kit includes maintainer tooling to keep the project clean, explainable, and safe to refactor as it grows. Use the Public Function Call Flows Dashboard to review public API architecture, inspect the selected callable inventory, and export focused cleanup packets.
-
-<div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="assets/public-function-call-flows-dashboard.html">
-    <span class="fabricops-landing-card__title">Public Function Call Flows Dashboard</span>
-    <span class="fabricops-landing-card__body">Review the public API shape, callable relationships, chain depth, fan out, source Python files, and architecture signals.</span>
-    <span class="fabricops-landing-card__meta">Open Public Function Call Flows Dashboard</span>
-  </a>
-
-  <a class="fabricops-landing-card" href="function-call-graph/">
-    <span class="fabricops-landing-card__title">Function Call Graph Guide</span>
-    <span class="fabricops-landing-card__body">Read about the architecture and the motivation behind the function call graph dashboard.</span>
-    <span class="fabricops-landing-card__meta">Open Function Call Graph Guide</span>
-  </a>
-</div>
-
-<p><small>Function metrics are generated from the selected callable inventory data.</small></p>
+FabricOps consists of a Python package, standardized Python notebook templates, a shared metadata model, a guided demo, and technical documentation. Together, these components build essential metadata and governance processes directly into engineering pipelines and provide downstream AI and BI consumers with a stable, governed, and reusable data foundation.

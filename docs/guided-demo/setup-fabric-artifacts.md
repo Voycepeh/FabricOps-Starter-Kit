@@ -50,8 +50,6 @@ Use the `.whl` file attached to the GitHub Release you want to demo. Repository 
 6. Save or publish the Environment so Fabric applies the library change.
 7. Restart notebook sessions after changing the Environment if Fabric prompts you or if sessions were already running.
 
-![Fabric custom wheel install example](../assets/fabric-example-install-custom-whl.png)
-
 !!! tip "Use the wheel artifact"
     Upload the release `.whl`, not a `.zip`, the `.tar.gz` source distribution, `uv.lock`, or the repository folder.
 
@@ -66,8 +64,6 @@ Download or copy editable notebook templates from the GitHub [`templates/noteboo
 | `02_pipeline` | Runs governed source-to-target processing, profiles data, evaluates guardrails, writes outputs, and records run evidence. |
 | `03_governance` | Reviews observed metadata, enrichment intent, and guardrail intent. |
 | `99_explore` | Supports optional read-only discovery or troubleshooting. |
-
-![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
 
 ## Expected result
 

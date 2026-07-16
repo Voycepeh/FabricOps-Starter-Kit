@@ -1,78 +1,70 @@
-# How FabricOps Works
+# How FabricOps works
 
-FabricOps Starter Kit gives data teams a guided starting point for Microsoft Fabric notebook projects. The workflow starts with environment setup, captures agreement context, runs pipelines with guardrails, writes metadata for catalogue, lineage, checks, notebook registry, and pipeline runs, then supports governance review and troubleshooting.
+FabricOps works through a three-workspace setup:
 
-This overview explains how the starter kit works: the workspace setup, the role workflow, how metadata moves between notebooks, and what FabricOps abstracts. For practical instructions about which notebook to open and run, use the [Templates](../notebook-templates-implementation-guide/).
+1. Governance workspace
+2. Engineering Development workspace
+3. Engineering Production workspace
 
-## Workspace Operating Model
+The Governance workspace defines ownership, agreements, enrichment, and guardrails.
 
-![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
+The Engineering Development workspace is where pipelines are developed, tested, profiled, and reviewed.
 
-*Figure: FabricOps operates as a governed notebook workflow across workspace configuration, Lakehouse/Warehouse targets, shared metadata, runtime guardrails, and review.*
+The Engineering Production workspace contains promoted and stable pipelines that run on a recurring basis and produce trusted data for downstream AI and BI consumption.
 
-FabricOps Starter Kit assumes Microsoft Fabric is the execution runtime and GitHub is the source of truth for reusable project assets. The operating model keeps the moving parts visible:
+Together, these workspaces create one connected workflow:
 
-| Component | Responsibility | FabricOps handoff |
-| --- | --- | --- |
-| Workspace | Hosts notebooks, Lakehouses/Warehouses, runtime identity, and interactive execution. | `00_env_config` captures workspace/runtime context and validates configured targets. |
-| Source target | Lakehouse, Warehouse, files, or other configured input location. | `02_pipeline` reads through configured IO helpers rather than hardcoded paths. |
-| Metadata target | Dedicated metadata Lakehouse/schema for `METADATA_*` tables. | Every notebook reads or writes workflow context through the configured `metadata` route. |
-| Target output | Curated Lakehouse/Warehouse table or file output. | `02_pipeline` writes only after guardrails allow continuation. |
-| Governance review | Human review of rules, enrichment, and lifecycle state. | `03_governance` appends review decisions instead of mutating away history. |
-| Dashboard/reporting | Visibility over current state and run history. | Dashboard pages consume metadata tables; they do not become the source of truth. |
+**Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data**
 
-The model is intentionally notebook-first for handover. Junior engineers can open the active notebook, see what it owns, then inspect the metadata table it writes. Governance users can review metadata tables without reverse-engineering cell order from a previous run.
+## Shared environment configuration
 
-## Role workflow
+Every workspace contains a single `00_env_config` notebook template. This is the central configuration notebook where shared information required by the other workflows is stored for downstream use. The relevant `00_env_config` notebook runs at the start of every other FabricOps notebook template.
 
-![FabricOps role workflow](assets/fabricops-role-workflow.png)
+Each workspace has its own copy because the Governance, Development, and Production environments may use different workspace IDs, lakehouses, warehouses, and configuration values.
 
-The role workflow keeps implementation and review responsibilities clear without requiring every user to understand every notebook line by line:
+## Three-workspace setup
 
-1. Project owners, engineers, or workspace administrators run `00_env_config` to establish runtime configuration and metadata routing.
-2. Governance users, data stewards, project owners, or supporting engineers run `01_agreement` to record approved steward and agreement context.
-3. Engineers, analyst engineers, or data scientists run `02_pipeline` to execute governed source-to-target pipeline work under the selected agreement context.
-4. Governance users, stewards, reviewers, or supporting engineers run `03_governance` to review rules, enrichment, approvals, rejections, replacements, deactivations, and lifecycle decisions.
-5. Dashboard and reference pages read shared metadata and source-generated docs so current state, history, and implementation details remain visible.
+### Governance workspace
 
-<div class="cta-center">
-  <a class="md-button md-button--primary" href="../notebook-templates-implementation-guide/">
-    Open Templates
-  </a>
-</div>
+The Governance workspace contains `00_env_config`, `01_agreement`, `03_review`, and a manually created metadata lakehouse. It defines ownership and agreements, reviews and enriches the data catalogue, defines guardrails, and creates the data contract that provides governance approval to promote a pipeline.
 
-## How metadata moves between notebooks
+### Engineering Development workspace
 
-FabricOps notebooks do not pass state through notebook memory or informal handover notes. They share state through metadata tables, so each notebook can continue from the configuration, agreement context, pipeline run details, and review decisions written by earlier steps.
+The Engineering Development workspace contains `00_env_config`, Development versions of `02_pipeline`, `99_explore`, and Development lakehouses or warehouses. It is intended for development, testing, profiling, review, and one-off analysis. FabricOps standardizes the operating workflow without forcing every team to adopt one fixed data architecture.
 
-<div class="metadata-flow-grid">
+The `02_pipeline` template adds statistical profiling, frequency tables, schema evolution tracking, lineage registration, catalogue registration, guardrail enforcement, guardrail result capture, and standardized Fabric input and output operations around a reusable PySpark pipeline.
 
-<div class="metadata-flow-card">
-<strong><a href="../guided-demo/run-environment-setup/"><code>00_env_config</code></a></strong>
-<p>Creates the <a href="../reference/metadata/">metadata foundation</a>.</p>
-<p>Writes or validates the <a href="../reference/metadata/">metadata tables</a> used by the workflow.</p>
-</div>
+The `99_explore` template supports one-off exploration and analysis. Important or reusable findings should eventually move into a proper `02_pipeline` workflow, while important one-off analyses should be preserved when future reproducibility is required.
 
-<div class="metadata-flow-card">
-<strong><a href="../guided-demo/create-agreement/"><code>01_agreement</code></a></strong>
-<p>Captures <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and <a href="../reference/metadata/metadata_data_steward/">steward context</a>.</p>
-<p>Writes to <a href="../reference/metadata/">agreement metadata tables</a>, including <a href="../reference/metadata/metadata_data_agreement/">agreement records</a>, <a href="../reference/metadata/metadata_data_steward/">steward context</a>, and approved usage details captured on the agreement record.</p>
-</div>
+### Engineering Production workspace
 
-<div class="metadata-flow-card">
-<strong><a href="../guided-demo/run-pipeline/"><code>02_pipeline</code></a></strong>
-<p>Runs governed source-to-target pipeline execution.</p>
-<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a> and configuration metadata.</p>
-<p>Writes <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>, and <a href="../reference/metadata/metadata_data_catalogue/">output table records</a>.</p>
-</div>
+The Engineering Production workspace contains `00_env_config`, promoted and stable `02_pipeline` notebooks, Production lakehouses or warehouses, and full Production datasets and outputs.
 
-<div class="metadata-flow-card">
-<strong><a href="../guided-demo/review-guardrails/"><code>03_governance</code></a></strong>
-<p>Reviews and approves governed outputs.</p>
-<p>Reads <a href="../reference/metadata/metadata_data_agreement/">agreement</a>, <a href="../reference/metadata/metadata_data_catalogue/">catalogue profiles</a>, <a href="../reference/metadata/metadata_guardrail_results/">DQ results</a>, <a href="../reference/metadata/metadata_guardrail_results/">drift results</a>, and <a href="../reference/metadata/metadata_data_lineage_table/">lineage</a>.</p>
-<p>Writes <a href="../reference/metadata/metadata_guardrail_rules/">review decisions</a>, <a href="../reference/metadata/metadata_guardrail_rules/">approval state</a>, <a href="../reference/metadata/metadata_guardrail_rules/">rule outcomes</a>, <a href="../reference/metadata/metadata_enrichment_rules/">enrichment decisions</a>, <a href="../reference/metadata/metadata_enrichment_rules/">lifecycle decisions</a>, and production handover state.</p>
-</div>
+It mirrors the relevant Engineering Development setup but contains only deployed and stable pipelines that need to run on a recurring basis. All promoted `02_pipeline` notebooks should be tied to a data contract. Production is where full data loads and long-term storage should take place.
 
-</div>
+## AI and BI analytics consumption
 
-Dashboard and reference pages consume metadata to show current state, history, and implementation details; they are not writers in the notebook workflow.
+The stable data products generated in the Engineering Production workspace provide the base for downstream AI and BI consumption, including Power BI reports and semantic models, AI and machine-learning workloads, agents, applications, file exports, and other analytics or engineering products.
+
+A separate consumption workspace is an optional extension, rather than a mandatory part of the initial three-workspace setup, when an organisation's scale, access, ownership, compute, or release requirements justify it.
+
+## The complete FabricOps workflow
+
+1. Configure the Governance, Engineering Development, and Engineering Production workspaces through their respective `00_env_config` notebooks.
+2. Create the metadata lakehouse and initialize the required metadata tables.
+3. Use `01_agreement` to create data stewards and establish a data agreement.
+4. Use `99_explore` to understand the data and investigate the required pipeline logic.
+5. Use `02_pipeline` in Development to ingest, transform, profile, catalogue, and write the data.
+6. Capture profiling, schema, catalogue, and lineage evidence automatically.
+7. Use `03_review` to review the catalogue, enrich the metadata, and define guardrails.
+8. Re-run `02_pipeline` to consume and enforce the approved enrichment and guardrails.
+9. Review the resulting evidence and guardrail results.
+10. Use `01_agreement` to create a data contract tied to the agreement and pipeline.
+11. Promote the approved `02_pipeline` notebook from Development to Production.
+12. Run the stable Production pipeline on its required schedule.
+13. Allow AI, BI, and other data consumers to use the trusted Production data product.
+14. Preserve important one-off analyses when future reproducibility is required.
+
+FabricOps therefore connects governance, engineering, and analytics through one standardized Microsoft Fabric workflow.
+
+For the detailed approved terminology and responsibilities behind this overview, see the [canonical product narrative](maintainers/product-narrative.md).

@@ -10,13 +10,17 @@ Open the copied `00_env_config` template after uploading the template notebooks 
 
 Attach the Environment to every template notebook unless your workspace already has a default Environment with the FabricOps library installed. Restart the notebook session after attachment or library changes so the runtime loads the published Environment.
 
-![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
+![Microsoft Fabric notebook Environment menu with a published FabricOps Environment selected](../assets/fabric-example-set-notebook-environment.png)
+
+*Select the published FabricOps Environment from the notebook toolbar before running the workspace's `00_env_config` notebook.*
 
 ## 3. Set runtime configuration
 
 Review the visible `RUNTIME_CONFIG` values. These control notebook naming, validation behavior, required target checks, schema defaults, timezone handling, and audit values that helpers write with metadata rows.
 
-![Runtime config](../assets/fabric-example-00_config_runtime_config.png)
+![The runtime configuration cell defining audit timezone, Lakehouse schema routing, and validation mode](../assets/fabric-example-00_config_runtime_config.png)
+
+*Review environment-specific runtime values before the shared configuration is consumed by downstream notebook templates.*
 
 ## 4. Set path configuration
 
@@ -24,23 +28,17 @@ Update `ENV_PATHS` for the active environment. Each logical target, such as `sou
 
 Metadata operations must use the configured `metadata` target from `00_env_config`; do not rely on the notebook's attached or default Lakehouse for `METADATA_*` tables.
 
-![Path config](../assets/fabric-example-00_config_paths.png)
-
 ## 5. Review widget-specific configuration
 
 Edit `DATA_AGREEMENT_CONFIG` and `GOVERNANCE_CONFIG` only where the demo or your team needs different dropdown values, visible columns, or reusable custom fields. Custom steward, agreement, and governance fields are stored in JSON metadata columns; they do not create new physical metadata table columns.
-
-![Widget config](../assets/fabric-example-00_config_widgets_config_setup.png)
 
 ## 6. Create or validate metadata tables
 
 Run the metadata setup cell once for the configured metadata target, then freeze or leave the cell unchanged for routine demo runs. The setup validates required environment keys and creates or validates the metadata tables needed by agreement, pipeline, governance, lineage, and run evidence.
 
-![Setup Metadata Tables](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
+![The metadata setup call using the shared Spark session, configured environment, metadata schema, and FabricOps configuration](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
 
-Completed creation of the tables:
-
-![Metadata Tables Done](../assets/fabric-example-00_config_metadata_tables_setup.png)
+*Run the setup call against the configured Governance metadata target to initialize or validate the metadata tables required by the installed release.*
 
 ## Expected result
 

@@ -32,14 +32,14 @@ Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Wareh
 | [`customers.parquet`](../assets/demo-data/io-profile/customers.parquet) | Parquet file-read smoke test with customer attributes. |
 
 ## 2. Upload these files into your source lakehouse root files section
-![Upload](../assets/fabric-example-99_upload_files.png)
-![Upload 2](../assets/fabric-example-99_upload_files(2).png)
+
+![Microsoft Fabric Lakehouse menu showing the Upload files action for the source Lakehouse Files area](../assets/fabric-example-99_upload_files.png)
+
+*In the Engineering Development workspace, choose **Upload files** from the source Lakehouse and add the three demo files to its root Files area.*
 
 ## 3. Open`99_explore` remember to attach the environment if not done yet
 
-This notebook will proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
-
-![Start](../assets/fabric-example-99_start.png)
+This notebook proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
 
 ## 4.  
 

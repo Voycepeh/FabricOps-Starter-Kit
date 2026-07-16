@@ -2,7 +2,9 @@
 
 Run `03_governance` to review enrichment and guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
 
-![FabricOps governance review](../assets/fabricops-goverance-review.png)
+**Lifecycle stage:** Review and enrich the catalogue → Enforce guardrails.
+
+The previous governance-review diagram has been removed because it used obsolete notebook and metadata-table names and presented AI-assisted suggestions as an implemented part of the workflow. The steps below describe the implemented review flow.
 
 ## What to do
 

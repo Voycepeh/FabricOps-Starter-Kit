@@ -2,9 +2,9 @@
 
 FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
 
-The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
+The metadata lifecycle begins with steward, agreement, and contract context. Development pipelines then record observed catalogue, profile, and lineage evidence. Governance reads that evidence and records enrichment and guardrail intent. Later pipeline runs enforce active guardrails and write their runtime outcomes separately to `METADATA_GUARDRAIL_RESULTS`.
 
-![FabricOps metadata model](../assets/fabricops-metadata-model.png)
+The previous metadata-model image has been removed because its table names and relationships no longer match the implemented schema registry. Use the generated table pages below as the current technical reference; a replacement lifecycle diagram should be produced in a separate visual-assets PR from the canonical schema source.
 
 <div class="grid cards" markdown>
 

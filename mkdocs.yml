@@ -75,6 +75,7 @@ nav:
   - FabricOps Maintainer:
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
+      - Canonical Product Narrative: maintainers/product-narrative.md
 
 markdown_extensions:
   - admonition
