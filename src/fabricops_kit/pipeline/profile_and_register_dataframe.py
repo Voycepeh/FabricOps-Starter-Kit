@@ -198,14 +198,17 @@ def _frequency_json_dataframe(
 
     frequency_json_df = None
     if selected_columns:
-        source_row_count_row = profile_df.select(F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT")).first()
-        source_row_count = None if source_row_count_row is None else source_row_count_row.SOURCE_ROW_COUNT
+        source_row_count_df = profile_df.select(
+            F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT")
+        )
         frequency_source_df, frequency_scope = _validate_frequency_profile_dataframe(
             source_df,
             frequency_profile_df,
             selected_columns,
         )
-        frequency_df = profile_frequency_distribution(frequency_source_df, columns=selected_columns, top_n=frequency_top_n)
+        frequency_df = profile_frequency_distribution(
+            frequency_source_df, columns=selected_columns, top_n=frequency_top_n
+        ).crossJoin(source_row_count_df)
         value_struct = F.struct(
             F.col("FREQUENCY_RANK").cast("int").alias("rank"),
             F.col("VALUE").alias("value"),
@@ -225,7 +228,7 @@ def _frequency_json_dataframe(
         frequency_json_df = frequency_df.groupBy("COLUMN_NAME").agg(
             F.to_json(
                 F.struct(
-                    F.lit(source_row_count).cast("long").alias("source_row_count"),
+                    F.first("SOURCE_ROW_COUNT", ignorenulls=True).cast("long").alias("source_row_count"),
                     F.first("PROFILED_ROW_COUNT", ignorenulls=True).cast("long").alias("profiled_row_count"),
                     F.first("PROFILED_NON_NULL_COUNT", ignorenulls=True).cast("long").alias("profiled_non_null_count"),
                     F.lit(frequency_scope).cast("string").alias("frequency_scope"),
