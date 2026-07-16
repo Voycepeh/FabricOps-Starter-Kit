@@ -134,8 +134,7 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
-        "frequency_sample_rows",
-        "frequency_sample_seed",
+        "frequency_profile_df",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty
     assert parameters["frequency_top_n"].default is None
@@ -316,11 +315,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     assert selected_frequency["source_row_count"] == 25
     assert selected_frequency["profiled_row_count"] == 25
     assert selected_frequency["profiled_non_null_count"] == 25
-    assert selected_frequency["sampling_requested"] is False
-    assert selected_frequency["sampling_applied"] is False
-    assert selected_frequency["sampling_method"] is None
-    assert selected_frequency["sampling_seed"] is None
-    assert selected_frequency["requested_sample_rows"] is None
+    assert selected_frequency["frequency_scope"] == "full_source"
 
     unbounded_result = profile_and_register_dataframe(
         source,
@@ -838,41 +833,14 @@ def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, mo
     assert [write["table_name"] for write in registered] == [PROFILED_TABLE]
 
 
-@pytest.mark.parametrize("sample_rows", [0, -1, 1.5, "100", True, False])
-def test_profile_and_register_dataframe_rejects_invalid_frequency_sample_rows(spark_session, registered, sample_rows):
-    """Verify frequency sample row validation rejects non-positive and non-integer values."""
-    with pytest.raises(ValueError, match="frequency_sample_rows must be a positive integer"):
-        profile_and_register_dataframe(
-            _source_df(spark_session),
-            profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
-            table_name="customers",
-            frequency_sample_rows=sample_rows,
-        )
-
-
-@pytest.mark.parametrize("sample_seed", [1.5, "42", True, False])
-def test_profile_and_register_dataframe_rejects_invalid_frequency_sample_seed(spark_session, registered, sample_seed):
-    """Verify frequency sample seed validation rejects non-integer values."""
-    with pytest.raises(ValueError, match="frequency_sample_seed must be an integer"):
-        profile_and_register_dataframe(
-            _source_df(spark_session),
-            profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
-            table_name="customers",
-            frequency_sample_seed=sample_seed,
-        )
-
-
-def test_profile_and_register_dataframe_samples_only_frequency_input(spark_session, monkeypatch, registered):
-    """Verify full statistics use the source DataFrame while frequency receives only the sampled input."""
+def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_for_frequency(
+    spark_session, monkeypatch, registered
+):
+    """Verify a caller frequency DataFrame affects only frequency evidence."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
     source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(20)], "id long, segment string")
-    calls = {"profile_is_source": None, "frequency_count": None, "frequency_ids": None, "schema_df_is_source": []}
+    frequency_source = spark_session.createDataFrame([(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string")
+    calls = {"profile_is_source": None, "frequency_df_is_frequency_source": None, "schema_df_is_source": []}
     original_schema_fingerprint = module._schema_fingerprint
     original_frequency_distribution = module.profile_frequency_distribution
 
@@ -891,8 +859,7 @@ def test_profile_and_register_dataframe_samples_only_frequency_input(spark_sessi
         )
 
     def frequency(df, *, columns, top_n):
-        calls["frequency_count"] = df.count()
-        calls["frequency_ids"] = [row.id for row in df.select("id").orderBy("id").collect()]
+        calls["frequency_df_is_frequency_source"] = df is frequency_source
         return original_frequency_distribution(df, columns=columns, top_n=top_n)
 
     monkeypatch.setattr(module, "_schema_fingerprint", schema_fingerprint)
@@ -907,63 +874,27 @@ def test_profile_and_register_dataframe_samples_only_frequency_input(spark_sessi
         layer="raw",
         table_name="customers",
         frequency_columns=["segment"],
-        frequency_sample_rows=10,
-        frequency_sample_seed=7,
+        frequency_profile_df=frequency_source,
     )
 
     rows = {row.column_name: row.asDict() for row in result.collect()}
     frequency_json = json.loads(rows["segment"]["frequency_json"])
     assert calls["profile_is_source"] is True
-    assert 0 < calls["frequency_count"] <= 10
-    assert len(calls["frequency_ids"]) == calls["frequency_count"]
+    assert calls["frequency_df_is_frequency_source"] is True
     assert calls["schema_df_is_source"] and all(calls["schema_df_is_source"])
     assert rows["segment"]["row_count"] == 20
     assert frequency_json["source_row_count"] == 20
-    assert 0 < frequency_json["profiled_row_count"] <= 10
-    assert frequency_json["sampling_requested"] is True
-    assert frequency_json["sampling_applied"] is True
-    assert frequency_json["sampling_method"] == "bernoulli_limit"
-    assert frequency_json["sampling_seed"] == 7
-    assert frequency_json["requested_sample_rows"] == 10
+    assert frequency_json["profiled_row_count"] == 3
+    assert frequency_json["profiled_non_null_count"] == 3
+    assert frequency_json["frequency_scope"] == "caller_provided"
+    assert [value["value"] for value in frequency_json["values"]] == ["A", "B"]
+    assert {write["table_name"] for write in registered} == {PROFILED_TABLE, CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"}
+    assert registered[1]["df"].select("table_name").distinct().collect()[0].table_name == "customers"
 
 
-def test_frequency_profile_source_dataframe_is_deterministic_and_bounded(spark_session):
-    """Verify Spark-native frequency sampling is deterministic, seed-sensitive, and non-expanding."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    source = spark_session.createDataFrame([(i,) for i in range(100)], "id long")
-
-    first_df, first_metadata = module._frequency_profile_source_dataframe(
-        source, source_row_count=100, sample_rows=20, sample_seed=42
-    )
-    second_df, second_metadata = module._frequency_profile_source_dataframe(
-        source, source_row_count=100, sample_rows=20, sample_seed=42
-    )
-    different_df, different_metadata = module._frequency_profile_source_dataframe(
-        source, source_row_count=100, sample_rows=20, sample_seed=99
-    )
-    oversized_df, oversized_metadata = module._frequency_profile_source_dataframe(
-        source, source_row_count=100, sample_rows=200, sample_seed=42
-    )
-    first = [row.id for row in first_df.orderBy("id").collect()]
-    second = [row.id for row in second_df.orderBy("id").collect()]
-    different = [row.id for row in different_df.orderBy("id").collect()]
-
-    assert first_metadata == second_metadata
-    assert first_metadata["sampling_requested"] is True
-    assert first_metadata["sampling_applied"] is True
-    assert first_metadata["sampling_method"] == "bernoulli_limit"
-    assert different_metadata["sampling_seed"] == 99
-    assert oversized_metadata["sampling_requested"] is True
-    assert oversized_metadata["sampling_applied"] is False
-    assert oversized_df is source
-    assert first == second
-    assert first != different
-    assert 0 < len(first) <= 20
-
-
-def test_profile_and_register_dataframe_records_requested_but_unapplied_sampling(spark_session, registered):
-    """Verify sampling metadata distinguishes requested sampling from actual row reduction."""
-    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(10)], "id long, segment string")
+def test_profile_and_register_dataframe_default_frequency_scope_uses_full_source(spark_session, registered):
+    """Verify omitting frequency_profile_df preserves full-source frequency profiling."""
+    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(8)], "id long, segment string")
 
     result = profile_and_register_dataframe(
         source,
@@ -973,31 +904,51 @@ def test_profile_and_register_dataframe_records_requested_but_unapplied_sampling
         layer="raw",
         table_name="customers",
         frequency_columns=["segment"],
-        frequency_sample_rows=100,
-        frequency_sample_seed=7,
     )
 
     rows = {row.column_name: row.asDict() for row in result.collect()}
     frequency_json = json.loads(rows["segment"]["frequency_json"])
-    assert frequency_json["source_row_count"] == 10
-    assert frequency_json["profiled_row_count"] == 10
-    assert frequency_json["sampling_requested"] is True
-    assert frequency_json["sampling_applied"] is False
-    assert frequency_json["sampling_method"] is None
-    assert frequency_json["sampling_seed"] == 7
-    assert frequency_json["requested_sample_rows"] == 100
+    assert frequency_json["source_row_count"] == 8
+    assert frequency_json["profiled_row_count"] == 8
+    assert frequency_json["profiled_non_null_count"] == 8
+    assert frequency_json["frequency_scope"] == "full_source"
 
 
-def test_profile_and_register_dataframe_does_not_sample_when_frequency_columns_empty(spark_session, monkeypatch, registered):
-    """Verify an explicit empty frequency column list bypasses frequency sampling work."""
+def test_profile_and_register_dataframe_frequency_profile_df_missing_selected_column_raises(spark_session, registered):
+    """Verify caller-provided frequency DataFrames must contain selected frequency columns."""
+    source = spark_session.createDataFrame([(1, "A")], "id long, segment string")
+    frequency_source = spark_session.createDataFrame([(1, "extra")], "id long, extra string")
+
+    with pytest.raises(ValueError, match="frequency_profile_df is missing selected frequency columns: segment"):
+        profile_and_register_dataframe(
+            source,
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+            frequency_columns=["segment"],
+            frequency_profile_df=frequency_source,
+        )
+
+
+def test_profile_and_register_dataframe_empty_frequency_columns_does_not_validate_frequency_profile_df(
+    spark_session, monkeypatch, registered
+):
+    """Verify frequency_columns=[] skips frequency profiling without touching caller frequency input."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    calls = {"sample_helper": 0}
+    calls = {"validate": 0, "frequency": 0}
 
-    def sample_helper(*_args, **_kwargs):
-        calls["sample_helper"] += 1
-        raise AssertionError("frequency sampling should not be planned")
+    def validate(*_args, **_kwargs):
+        calls["validate"] += 1
+        raise AssertionError("frequency_profile_df should not be validated")
 
-    monkeypatch.setattr(module, "_frequency_profile_source_dataframe", sample_helper)
+    def frequency(*_args, **_kwargs):
+        calls["frequency"] += 1
+        raise AssertionError("frequency profiling should not run")
+
+    monkeypatch.setattr(module, "_validate_frequency_profile_dataframe", validate)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
         _source_df(spark_session),
@@ -1007,8 +958,64 @@ def test_profile_and_register_dataframe_does_not_sample_when_frequency_columns_e
         layer="raw",
         table_name="customers",
         frequency_columns=[],
-        frequency_sample_rows=1,
+        frequency_profile_df=object(),
     )
 
-    assert calls == {"sample_helper": 0}
+    assert calls == {"validate": 0, "frequency": 0}
     assert result.where("frequency_json is not null").count() == 0
+
+
+def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_with_frequency_profile_df(
+    spark_session, monkeypatch, registered
+):
+    """Verify automatic cardinality filtering still uses the full statistical profile."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = _source_df(spark_session)
+    frequency_source = spark_session.createDataFrame([("A", "US"), ("B", "GB")], "customer_type string, country string")
+    calls = {"frequency_columns": None}
+
+    def profile(df):
+        assert df is source
+        return _profile_df(spark_session)
+
+    original_frequency_distribution = module.profile_frequency_distribution
+
+    def frequency(df, *, columns, top_n):
+        assert df is frequency_source
+        calls["frequency_columns"] = columns
+        return original_frequency_distribution(df, columns=columns, top_n=top_n)
+
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_profile_df=frequency_source,
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert calls["frequency_columns"] == ["customer_type"]
+    assert json.loads(rows["customer_type"]["frequency_json"])["frequency_scope"] == "caller_provided"
+    assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+
+
+def test_validate_frequency_profile_dataframe_rejects_incompatible_session():
+    """Verify safely detectable incompatible Spark sessions fail clearly."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+
+    class FakeSchema:
+        fields = []
+
+    class FakeDataFrame:
+        schema = FakeSchema()
+
+        def __init__(self, session):
+            self.sparkSession = session
+
+    with pytest.raises(ValueError, match="frequency_profile_df must use the same Spark session as df"):
+        module._validate_frequency_profile_dataframe(FakeDataFrame(object()), FakeDataFrame(object()), [])
