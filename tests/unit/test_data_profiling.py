@@ -98,7 +98,7 @@ def test_profile_dataframe_approximate_default_and_public_signature():
     assert root_profile_dataframe is profile_dataframe
     assert root_frequency is profile_frequency_distribution
     assert str(inspect.signature(profile_dataframe)) == "(df, *, exclude_columns=None, approximate_distinct: 'bool' = True)"
-    assert str(inspect.signature(profile_frequency_distribution)) == "(df, *, columns=None, top_n: 'int' = 20)"
+    assert str(inspect.signature(profile_frequency_distribution)) == "(df, *, columns=None, top_n: 'int | None' = None)"
 
 
 def test_profile_dataframe_date_timestamp_complex_and_empty_behavior(spark_session):
@@ -154,17 +154,40 @@ def test_profile_frequency_distribution_requested_columns_top_n_ranking_and_perc
     assert rows[0]["PROFILED_NON_NULL_COUNT"] == 4
 
 
-def test_profile_frequency_distribution_default_scalar_selection_and_rank_reset(spark_session):
-    """Verify defaults exclude complex columns and rank independently per column."""
-    df = spark_session.createDataFrame(
-        [Row(status="open", flag=True, tags=["a"], attrs={"k": "v"}, nested=Row(a=1), blob=bytes([1])), Row(status="closed", flag=True, tags=["b"], attrs={"k": "w"}, nested=Row(a=2), blob=bytes([2]))]
-    )
+def test_profile_frequency_distribution_default_scalar_selection_all_values_and_rank_reset(spark_session):
+    """Verify default full scalar profiling, exclusions, nulls, and per-column ranks."""
+    rows_in = [
+        Row(status="open" if i % 2 == 0 else "closed", code=i, flag=True, _pipeline_run_id="run", tags=["a"], attrs={"k": "v"}, nested=Row(a=1), blob=bytes([1]))
+        for i in range(25)
+    ]
+    rows_in.append(Row(status=None, code=25, flag=False, _pipeline_run_id="run", tags=["b"], attrs={"k": "w"}, nested=Row(a=2), blob=bytes([2])))
+    df = spark_session.createDataFrame(rows_in)
 
-    rows = [row.asDict() for row in profile_frequency_distribution(df, top_n=1).collect()]
+    rows = [row.asDict() for row in profile_frequency_distribution(df).collect()]
 
-    assert {row["COLUMN_NAME"] for row in rows} == {"status", "flag"}
-    assert {row["FREQUENCY_RANK"] for row in rows} == {1}
-    assert {row["VALUE"] for row in rows} == {"closed", "true"}
+    assert {row["COLUMN_NAME"] for row in rows} == {"status", "code", "flag"}
+    assert sum(1 for row in rows if row["COLUMN_NAME"] == "code") == 26
+    status_rows = sorted((row for row in rows if row["COLUMN_NAME"] == "status"), key=lambda row: row["FREQUENCY_RANK"])
+    assert [(row["VALUE"], row["FREQUENCY_COUNT"], row["FREQUENCY_PERCENT"], row["FREQUENCY_RANK"]) for row in status_rows] == [
+        ("open", 13, 50.0, 1),
+        ("closed", 12, 46.154, 2),
+        (None, 1, 3.846, 3),
+    ]
+    assert {row["PROFILED_ROW_COUNT"] for row in rows} == {26}
+    assert {row["PROFILED_NON_NULL_COUNT"] for row in status_rows} == {25}
+    assert sorted(row["FREQUENCY_RANK"] for row in rows if row["COLUMN_NAME"] == "code") == list(range(1, 27))
+
+
+def test_profile_frequency_distribution_explicit_top_n_still_limits_each_column(spark_session):
+    """Verify explicit top_n limits output per profiled column."""
+    df = spark_session.createDataFrame([(i, "x" if i % 2 == 0 else "y") for i in range(10)], ["code", "status"])
+
+    rows = [row.asDict() for row in profile_frequency_distribution(df, top_n=3).collect()]
+
+    assert {row["COLUMN_NAME"] for row in rows} == {"code", "status"}
+    assert sum(1 for row in rows if row["COLUMN_NAME"] == "code") == 3
+    assert sum(1 for row in rows if row["COLUMN_NAME"] == "status") == 2
+    assert max(row["FREQUENCY_RANK"] for row in rows) == 3
 
 
 def test_profile_frequency_distribution_validation_and_empty_schema(spark_session):
@@ -173,6 +196,8 @@ def test_profile_frequency_distribution_validation_and_empty_schema(spark_sessio
 
     with pytest.raises(ValueError, match="top_n must be greater than zero"):
         profile_frequency_distribution(df, top_n=0)
+    with pytest.raises(ValueError, match="top_n must be greater than zero"):
+        profile_frequency_distribution(df, top_n=-1)
     with pytest.raises(ValueError, match="Requested columns do not exist"):
         profile_frequency_distribution(df, columns=["missing"])
 

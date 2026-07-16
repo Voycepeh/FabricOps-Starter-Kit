@@ -133,9 +133,13 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
         "schema_name",
         "frequency_columns",
         "frequency_top_n",
-        "is_sampled",
+        "frequency_max_distinct_percent",
     ]
     assert parameters["profile_role"].default is inspect.Parameter.empty
+    assert parameters["frequency_top_n"].default is None
+    assert str(parameters["frequency_top_n"].annotation) == "int | None"
+    assert parameters["frequency_max_distinct_percent"].default == 80.0
+    assert str(parameters["frequency_max_distinct_percent"].annotation) == "float | None"
 
 
 @pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
@@ -181,11 +185,11 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
         store_type=store_type,
         layer="silver",
         table_name="customers_clean",
-        is_sampled=True,
     )
 
-    rows = result.select("store_type", "schema_name", "is_sampled").distinct().collect()
-    assert [(row.store_type, row.schema_name, row.is_sampled) for row in rows] == [(store_type.strip().lower(), None, True)]
+    rows = result.select("store_type", "schema_name").distinct().collect()
+    assert [(row.store_type, row.schema_name) for row in rows] == [(store_type.strip().lower(), None)]
+    assert "is_sampled" not in result.columns
 
 
 @pytest.mark.parametrize(
@@ -214,9 +218,23 @@ def test_profile_and_register_dataframe_rejects_invalid_required_inputs(spark_se
         profile_and_register_dataframe(_source_df(spark_session), **params)
 
 
-@pytest.mark.parametrize("frequency_columns", [None, []])
-def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark_session, monkeypatch, registered, frequency_columns):
-    """Verify no frequency profiling occurs for None or empty frequency columns."""
+@pytest.mark.parametrize("threshold", [-0.1, 100.1, float("nan"), float("inf"), -float("inf")])
+def test_profile_and_register_dataframe_rejects_invalid_frequency_threshold(spark_session, registered, threshold):
+    """Verify automatic frequency threshold validation fails clearly."""
+    with pytest.raises(ValueError, match="frequency_max_distinct_percent must be finite and between 0.0 and 100.0"):
+        profile_and_register_dataframe(
+            _source_df(spark_session),
+            profile_role="source",
+            environment_name="dev",
+            store_type="lakehouse",
+            layer="raw",
+            table_name="customers",
+            frequency_max_distinct_percent=threshold,
+        )
+
+
+def test_profile_and_register_dataframe_skips_frequency_for_empty_columns(spark_session, monkeypatch, registered):
+    """Verify no frequency profiling occurs for an explicit empty frequency column list."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
     calls = {"profile": 0, "frequency": 0, "df": None}
@@ -241,8 +259,7 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
         store_type="lakehouse",
         layer="raw",
         table_name="customers",
-        frequency_columns=frequency_columns,
-        is_sampled=False,
+        frequency_columns=[],
     )
 
     assert calls == {"profile": 1, "frequency": 0, "df": source}
@@ -250,6 +267,206 @@ def test_profile_and_register_dataframe_skips_frequency_when_not_requested(spark
     assert "profiled_at" in result.columns
     assert result.where("frequency_json is not null").count() == 0
     assert result.count() == 3
+
+
+def test_profile_and_register_dataframe_default_and_explicit_frequency_json_integration(spark_session, registered):
+    """Verify default threshold, explicit columns, disabled threshold, and empty skip semantics."""
+    source = spark_session.createDataFrame(
+        [(i, "A" if i % 2 == 0 else "B", "US" if i % 3 == 0 else "GB") for i in range(25)],
+        "id long, customer_type string, country string",
+    )
+
+    default_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+    )
+    default_rows = {row.column_name: row.asDict() for row in default_result.collect()}
+    assert set(default_rows) == {"id", "customer_type", "country"}
+    id_skip = json.loads(default_rows["id"]["frequency_json"])
+    assert id_skip == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 100.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
+    assert "values" in json.loads(default_rows["customer_type"]["frequency_json"])
+    assert "values" in json.loads(default_rows["country"]["frequency_json"])
+
+    selected_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=["id"],
+    )
+    selected_rows = {row.column_name: row.asDict() for row in selected_result.collect()}
+    assert selected_rows["customer_type"]["frequency_json"] is None
+    assert selected_rows["country"]["frequency_json"] is None
+    selected_frequency = json.loads(selected_rows["id"]["frequency_json"])
+    assert len(selected_frequency["values"]) == 25
+    assert selected_frequency["profiled_row_count"] == 25
+    assert selected_frequency["profiled_non_null_count"] == 25
+
+    unbounded_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_max_distinct_percent=None,
+    )
+    unbounded_rows = {row.column_name: row.asDict() for row in unbounded_result.collect()}
+    assert len(json.loads(unbounded_rows["id"]["frequency_json"])["values"]) == 25
+
+    skipped_result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+        frequency_columns=[],
+    )
+    assert skipped_result.where("frequency_json is not null").count() == 0
+    assert skipped_result.count() == 3
+
+
+def test_profile_and_register_dataframe_threshold_boundary_and_all_null_json(spark_session, registered):
+    """Verify automatic 80% boundary, high-cardinality skip JSON, and all-null skip JSON."""
+    source = spark_session.createDataFrame(
+        [(i % 8, i % 9, None) for i in range(10)],
+        "at_threshold int, above_threshold int, all_null string",
+    )
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="thresholds",
+    )
+
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert "values" in json.loads(rows["at_threshold"]["frequency_json"])
+    assert json.loads(rows["above_threshold"]["frequency_json"]) == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 90.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
+    assert json.loads(rows["all_null"]["frequency_json"]) == {
+        "status": "skipped",
+        "reason": "no_non_null_values",
+        "distinct_percent": None,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because the column contains no non-null values.",
+    }
+
+
+def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_selection(spark_session, monkeypatch, registered):
+    """Verify automatic selection uses one profile pass and one frequency call."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = _source_df(spark_session)
+    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None}
+
+    def profile(df):
+        calls["profile"] += 1
+        assert df is source
+        return _profile_df(spark_session)
+
+    def frequency(df, *, columns, top_n):
+        calls["frequency"] += 1
+        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n, "df_is_source": df is source}
+        quoted_columns = ", ".join(repr(column) for column in columns)
+        return _frequency_df(spark_session).where(f"COLUMN_NAME in ({quoted_columns})")
+
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="customers",
+    )
+
+    assert calls == {
+        "profile": 1,
+        "frequency": 1,
+        "frequency_kwargs": {"columns": ["customer_type"], "top_n": None, "df_is_source": True},
+    }
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+    country_skip = json.loads(rows["country"]["frequency_json"])
+    assert country_skip == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 100.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
+
+
+def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold(spark_session, monkeypatch, registered):
+    """Verify a column just above 80% is skipped even when display percentage rounds to 80.0."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    source = spark_session.createDataFrame([(1, 1), (2, 2)], "at_threshold long, just_above long")
+    profile_schema = "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string"
+    profile_rows = spark_session.createDataFrame(
+        [
+            ("at_threshold", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_000, 80.0, None, None, "1", None, None, None, "800000"),
+            ("just_above", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_004, 80.0004, None, None, "1", None, None, None, "800004"),
+        ],
+        profile_schema,
+    )
+    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None}
+
+    def profile(df):
+        calls["profile"] += 1
+        return profile_rows
+
+    def frequency(df, *, columns, top_n):
+        calls["frequency"] += 1
+        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n}
+        return spark_session.createDataFrame(
+            [("at_threshold", "bigint", "1", 1, 100.0, 1, 1_000_000, 1_000_000)],
+            "COLUMN_NAME string, DATA_TYPE string, VALUE string, FREQUENCY_COUNT long, FREQUENCY_PERCENT double, FREQUENCY_RANK int, PROFILED_ROW_COUNT long, PROFILED_NON_NULL_COUNT long",
+        )
+
+    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+
+    result = profile_and_register_dataframe(
+        source,
+        profile_role="source",
+        environment_name="dev",
+        store_type="lakehouse",
+        layer="raw",
+        table_name="threshold_rounding",
+    )
+
+    assert calls == {"profile": 1, "frequency": 1, "frequency_kwargs": {"columns": ["at_threshold"], "top_n": None}}
+    rows = {row.column_name: row.asDict() for row in result.collect()}
+    assert "values" in json.loads(rows["at_threshold"]["frequency_json"])
+    assert json.loads(rows["just_above"]["frequency_json"]) == {
+        "status": "skipped",
+        "reason": "high_cardinality",
+        "distinct_percent": 80.0,
+        "threshold_percent": 80.0,
+        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
+    }
 
 
 def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(spark_session, monkeypatch, registered):
@@ -291,7 +508,6 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
         table_name="customers_clean",
         frequency_columns=("customer_type", "country"),
         frequency_top_n=5,
-        is_sampled=True,
     )
 
     assert calls == {
@@ -334,7 +550,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     assert [value["rank"] for value in customer_frequency["values"]] == [1, 2]
     assert [value["value"] for value in customer_frequency["values"]] == ["A", "B"]
     assert [value["value"] for value in country_frequency["values"]] == ["US", None]
-    assert rows["country"]["is_sampled"] is True
+    assert "is_sampled" not in rows["country"]
 
     expected_table_key = _metadata_table_key("dev", "warehouse", "silver", "dbo", "customers_clean")
     assert {row["metadata_table_key"] for row in rows.values()} == {expected_table_key}
@@ -399,7 +615,6 @@ def test_profiled_schema_matches_detailed_profile_contract_without_profile_role(
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "schema_fingerprint",
         "profiled_at",
@@ -453,7 +668,6 @@ def test_catalogue_schema_is_narrow_identity_contract():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "is_sampled",
         "frequency_json",
         "profiled_at",
     }.isdisjoint(schema.fieldNames())
@@ -481,7 +695,6 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
         "null_percent": 0.0,
         "distinct_count": 10,
         "distinct_percent": 100.0,
-        "is_sampled": False,
         "schema_fingerprint": "schema-1",
         "profiled_at": datetime(2026, 1, 1),
         "_committed_by": "tester",
