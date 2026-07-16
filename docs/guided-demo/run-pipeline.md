@@ -49,6 +49,21 @@ profiled_df = profile_and_register_dataframe(
 )
 ```
 
+For very large DataFrames, users can explicitly limit only the rows used for frequency grouping while keeping the main profile and metadata registration based on the full supplied DataFrame:
+
+```python
+profiled_df = profile_and_register_dataframe(
+    df,
+    profile_role="source",
+    environment_name="dev",
+    store_type="lakehouse",
+    layer="raw",
+    table_name="customers",
+    frequency_sample_rows=100_000,
+    frequency_sample_seed=42,
+)
+```
+
 This is a conceptual example. Use the source and target values configured by your `00_env_config`, agreement context, and `02_pipeline` notebook cells.
 
 ## What the pipeline records
@@ -133,12 +148,28 @@ Generated key values are intentionally not shown here. Treat values such as `met
 
 ## Frequency evidence per column
 
-Frequency evidence is embedded in the `frequency_json` field of each `METADATA_DATA_PROFILED` row. For a suitable low-cardinality column such as `status`, the embedded JSON can look like this:
+Frequency evidence is embedded in the `frequency_json` field of each `METADATA_DATA_PROFILED` row. By default, frequency distributions use the complete DataFrame. For very large DataFrames, users can explicitly limit only the rows used for frequency grouping with `frequency_sample_rows`.
+
+This does not sample the entire profiling operation:
+
+| Evidence or calculation | Data used |
+| ----------------------- | --------- |
+| Statistical profile | Always calculated from the full supplied DataFrame. |
+| Schema fingerprint | Always calculated from the full supplied DataFrame schema. |
+| Catalogue and lineage | Always registered from the full supplied DataFrame context. |
+| Frequency distribution | Uses the full supplied DataFrame by default, or an explicit deterministic sample when requested. |
+
+For a suitable low-cardinality column such as `status` with no sampling requested, the embedded JSON can look like this:
 
 ```json
 {
+  "source_row_count": 4,
   "profiled_row_count": 4,
   "profiled_non_null_count": 4,
+  "sampling_applied": false,
+  "sampling_method": null,
+  "sampling_seed": null,
+  "requested_sample_rows": null,
   "values": [
     {
       "value": "Active",
@@ -156,7 +187,43 @@ Frequency evidence is embedded in the `frequency_json` field of each `METADATA_D
 }
 ```
 
-Automatic frequency selection uses the statistical profile that has already been calculated. This keeps notebook orchestration safe by avoiding full frequency profiling for automatic columns above the default high-cardinality threshold.
+With explicit sampling, the frequency payload records the source row count, sampled row count, sampling method, seed, and requested sample size:
+
+```json
+{
+  "source_row_count": 10000000,
+  "profiled_row_count": 100000,
+  "profiled_non_null_count": 99500,
+  "sampling_applied": true,
+  "sampling_method": "deterministic_random_limit",
+  "sampling_seed": 42,
+  "requested_sample_rows": 100000,
+  "values": [
+    {
+      "value": "Active",
+      "count": 74000,
+      "percent": 74.37,
+      "rank": 1
+    }
+  ]
+}
+```
+
+Sampling is opt-in. The default remains full-data frequency profiling. When sampling is requested, the same seed provides reproducible selection for the same input execution conditions. Sampling is performed once per orchestrator call, and all eligible frequency columns use that same sampled DataFrame instead of taking repeated independent samples by column.
+
+Automatic frequency selection uses the statistical profile that has already been calculated from the full supplied DataFrame. This keeps notebook orchestration safe by avoiding full frequency profiling for automatic columns above the default high-cardinality threshold.
+
+Conceptually, the order is:
+
+```text
+full-data statistical profile
+→ determine automatic eligible columns
+→ skip columns above the cardinality threshold
+→ optionally sample rows
+→ calculate frequency distributions for remaining columns
+```
+
+A high-cardinality column does not become eligible merely because a sample contains fewer distinct values.
 
 Key behavior:
 
