@@ -19,11 +19,11 @@ def run_table_guardrails(
     mode: str = "profile",
     stop_on_failure: bool | None = None,
 ) -> dict[str, Any]:
-    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
+    """Run approved checks for configured source or target tables.
 
-    Runtime outcomes remain separated for ``"schema"``, ``"freshness"``, and
-    ``"dq"`` result-table writes while the owning workflow performs the
-    orchestration through ``_write_guardrail_result_row``.
+    Runs schema, freshness, profile-change, and DQ checks for each prepared
+    table configuration, saves runtime outcomes where configured, and returns
+    whether the notebook can continue.
     """
     return _run_table_guardrails_workflow(
         table_configs,

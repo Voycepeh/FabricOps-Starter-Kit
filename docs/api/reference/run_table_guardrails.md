@@ -15,13 +15,13 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open Preview call flow</a>
 
-Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails for table configs.
+Run approved table checks and return whether the pipeline may continue.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Runtime outcomes remain separated for ``"schema"``, ``"freshness"``, and
-``"dq"`` result-table writes while the owning workflow performs the
-orchestration through ``_write_guardrail_result_row``.
+Runs schema, freshness, profile-change, and DQ checks for each prepared
+table configuration, saves runtime outcomes where configured, and returns
+whether the notebook can continue.
 
 </div>
 
@@ -73,7 +73,7 @@ def run_table_guardrails(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, stop_on_failure=True)
+source_guardrail_results = run_table_guardrails(SOURCE_TABLES, run_id=RUN_ID, context={"config": CONFIG, "env": ENV}, spark_session=spark, stop_on_failure=True)
 ```
 
 </div>
@@ -82,15 +82,15 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, config=CONFIG, en
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_configs` | `list[dict[str, Any]]` | Yes | Not documented yet |
-| `run_id` | `str \| None` | No | Not documented yet |
-| `context` | `dict[str, Any] \| None` | No | Not documented yet |
-| `spark_session` | `Any \| None` | No | Not documented yet |
-| `agreement_id` | `str` | No | Not documented yet |
-| `agreement_version` | `str` | No | Not documented yet |
-| `table_role` | `str` | No | Not documented yet |
-| `mode` | `str` | No | Not documented yet |
-| `stop_on_failure` | `bool \| None` | No | Not documented yet |
+| `table_configs` | `list[dict[str, Any]]` | Yes | Prepared source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings. Call prepare_pipeline_table_configs first when starting from notebook-editable source or target definitions. |
+| `run_id` | `str \| None` | No | Pipeline run identifier written with saved results and used to group in-memory profiles. Omit only when an active pipeline context already provides it. |
+| `context` | `dict[str, Any] \| None` | No | FabricOps runtime context, usually {"config": CONFIG, "env": ENV}. Omit when 00_env_config or an active pipeline context already provides the context. |
+| `spark_session` | `Any \| None` | No | Spark session used for profiling, metadata reads, DQ checks, and result writes. Omit only when an active pipeline context already provides it. |
+| `agreement_id` | `str` | No | Optional data agreement identifier to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed. |
+| `agreement_version` | `str` | No | Optional data agreement version to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed. |
+| `table_role` | `str` | No | Optional role for the supplied configurations, usually "source" or "target". Use it when the active pipeline context should remember these definitions for summaries. |
+| `mode` | `str` | No | Run mode. "profile" is the default review-oriented mode; "enforce" defaults stop_on_failure to True so blocking failures stop the notebook. |
+| `stop_on_failure` | `bool \| None` | No | Whether to stop notebook execution after all table checks have been collected when any table has a blocking failure. Omit to use the default for mode. |
 
 ## Returns
 
@@ -98,11 +98,11 @@ Guardrail result bundle with profiles, schema results, freshness results, stabil
 
 ### Return interpretation
 
-The result groups each guardrail outcome and a summary DataFrame. If any blocking result has can_continue false, stop before writing data.
+Review per-table profiles, schema results, freshness results, profile-behavior results, DQ results, catalogue status, the overall summary, can_continue, and failed_tables. True can_continue means no blocking guardrail result requires the pipeline to stop. False means the notebook should stop before writing the affected output.
 
 ## Raises / Errors
 
-Not documented yet
+Raises ValueError when required runtime context such as spark_session or run_id is missing, when mode is unsupported, or when table configs are invalid. With stop_on_failure=True, raises or exits after all checks are collected if blocking failures exist.
 
 ### Common failure causes
 
@@ -140,5 +140,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

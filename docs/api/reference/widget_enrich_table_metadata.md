@@ -80,7 +80,7 @@ The returned state can be inspected in tests or notebooks; invoking save appends
 
 ## Raises / Errors
 
-Not documented yet
+Raises validation, widget, Spark, or metadata routing errors when selected target state is incomplete or the configured metadata lakehouse cannot be written.
 
 ### Common failure causes
 
@@ -117,5 +117,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

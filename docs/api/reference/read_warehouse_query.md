@@ -33,7 +33,7 @@ than native Delta access.
 
 ``read_warehouse_table`` is equivalent to a full-table ``SELECT *`` read.
 ``read_warehouse_query`` provides caller-controlled SQL pushdown. For large
-or repeated PySpark processing, materialize the filtered result into the
+or repeated PySpark processing, save the filtered result into the
 Source Lakehouse as Delta and continue from ``read_lakehouse_table``.
 
 Rule-of-thumb sizing guidance: small filtered or narrow slices under
@@ -183,5 +183,5 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

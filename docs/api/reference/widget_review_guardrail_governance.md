@@ -76,7 +76,7 @@ The widget returns controls, current rule history, and action helpers that write
 
 ## Raises / Errors
 
-Not documented yet
+Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.
 
 ### Common failure causes
 
@@ -114,5 +114,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT
