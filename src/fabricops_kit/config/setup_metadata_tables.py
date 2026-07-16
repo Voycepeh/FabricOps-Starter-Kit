@@ -74,19 +74,19 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Bootstrap the FabricOps metadata lakehouse for one environment.
+    """Create or check the FabricOps metadata tables for one environment.
 
-    Create any missing canonical FabricOps metadata Delta tables and validate
-    the schemas of metadata tables that already exist. The function resolves
-    the configured ``metadata`` target for the selected environment, requires
-    that target to be a lakehouse, creates missing metadata tables as empty
-    Delta tables using the canonical FabricOps Spark schemas, validates
-    existing metadata tables against the required canonical column names and
-    Spark data types, and returns a setup report describing the completed
-    metadata lakehouse setup work.
+    Creates any FabricOps metadata tables that are missing and checks that
+    existing tables have the required columns and Spark data types. The
+    function finds the metadata lakehouse configured for the selected
+    environment, creates missing tables as empty Delta tables, leaves valid
+    existing tables in place, reports invalid existing tables as failed, and
+    returns a setup report.
 
-    The returned dictionary is not the main operation. It summarizes the
-    result of the physical metadata table creation and validation work.
+    This function prepares the metadata table structures only. It does not
+    create business metadata records such as stewards, agreements, catalogue
+    rows, profiles, lineage events, enrichment records, guardrail rules, or
+    guardrail results.
 
     Parameters
     ----------
@@ -94,8 +94,8 @@ def setup_metadata_tables(
         Spark session used to create empty schema DataFrames and read or write
         the metadata lakehouse tables.
     config : FrameworkConfig | dict[str, Any]
-        FabricOps configuration used to resolve the selected environment and
-        logical ``metadata`` target.
+        FabricOps configuration used to find the selected environment and its
+        metadata lakehouse.
     env : str
         Environment whose configured metadata lakehouse should be initialized
         or validated.
@@ -117,7 +117,7 @@ def setup_metadata_tables(
     -------
     dict[str, Any]
         A dictionary summarizing the completed metadata lakehouse setup,
-        including the resolved metadata schema, canonical tables checked,
+        including the resolved metadata schema, metadata tables checked,
         tables created, existing tables successfully validated, failed tables,
         per-table messages, active steward readiness, fully qualified table
         names, and overall setup status. Key fields are ``status``,
@@ -149,14 +149,14 @@ def setup_metadata_tables(
     Setup flow:
 
     1. Validate the supplied FabricOps configuration.
-    2. Resolve the selected environment and its logical ``metadata`` target.
-    3. Verify that the resolved metadata target is a lakehouse.
+    2. Find the metadata lakehouse configured for the selected environment.
+    3. Verify that the metadata target is a lakehouse.
     4. Resolve the metadata schema from ``metadata_schema`` or the configured
        metadata store.
-    5. Load the canonical metadata table schema registry.
-    6. Attempt to read each canonical metadata table.
+    5. Load the required FabricOps table definitions.
+    6. Attempt to read each required metadata table.
     7. When a table is missing, create an empty Spark DataFrame using its
-       canonical schema.
+       required FabricOps table structure.
     8. Write that empty DataFrame to the metadata lakehouse using overwrite
        mode to create the table.
     9. Read the created table again.
@@ -166,7 +166,7 @@ def setup_metadata_tables(
     13. Return overall, data-agreement, governance, and per-table setup
         results.
 
-    Canonical tables created or validated from
+    Metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
     ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
@@ -174,7 +174,7 @@ def setup_metadata_tables(
     ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
     ``METADATA_GUARDRAIL_RESULTS``.
 
-    Canonical schema intent:
+    Detailed table contents:
 
     - ``METADATA_DATA_STEWARD`` stores ``steward_id``, ``steward_name``,
       ``steward_role``, ``contact``, ``effective_from``, ``effective_to``,
@@ -223,7 +223,7 @@ def setup_metadata_tables(
     ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
-    Existing tables are validated for required canonical column names and
+    Existing tables are validated for required column names and
     compatible Spark data types. Nullability is not part of this validation.
     Existing tables are not automatically overwritten merely because they
     already exist. Missing columns or incompatible types mark that table as
@@ -232,7 +232,7 @@ def setup_metadata_tables(
     when failures exist.
 
     A missing table is created by writing an empty Spark DataFrame with the
-    canonical schema. This creates the physical metadata table structure but
+    required FabricOps table structure. This creates the metadata table structure but
     does not populate business metadata records. The function does not
     automatically create steward records, agreements, contracts, catalogue
     records, profile records, lineage events, access assignments, enrichment

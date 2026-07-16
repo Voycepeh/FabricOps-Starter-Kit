@@ -15,16 +15,17 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_frequency_distribution">Open Preview call flow</a>
 
-Profile top-N value frequencies for selected Spark DataFrame columns.
+Profile exact value frequencies for eligible Spark DataFrame columns.
 
 <div class="reference-docstring-intro" markdown="1">
 
 The function profiles the complete DataFrame exactly as supplied by the
-caller and does not perform sampling internally. It returns up to ``top_n``
-most frequent values for each selected column, includes null as a frequency
-value, converts returned values to their string representation, and
-calculates ``FREQUENCY_PERCENT`` from the total number of rows in the
-supplied DataFrame. Rankings are calculated independently for each
+caller and does not perform sampling internally. By default, all
+eligible non-technical scalar columns are selected and every distinct
+value is returned for each selected column, including null. Returned
+values are converted to their string representation,
+``FREQUENCY_PERCENT`` is calculated from the total number of rows in the
+supplied DataFrame, and rankings are calculated independently for each
 profiled column.
 
 </div>
@@ -34,7 +35,7 @@ profiled column.
 
 `fabricops_kit/pipeline/profile_frequency_distribution.py:46`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_frequency_distribution.py#L46-L159">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_frequency_distribution.py#L46-L163">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -56,7 +57,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def profile_frequency_distribution(df, *, columns=None, top_n: int=20)
+def profile_frequency_distribution(df, *, columns=None, top_n: int | None=None)
 ```
 
 </div>
@@ -66,7 +67,7 @@ def profile_frequency_distribution(df, *, columns=None, top_n: int=20)
 <div class="reference-example-usage" markdown="1">
 
 ```python
-frequency_df = profile_frequency_distribution(source_df, columns=["enrolment_status", "programme_code"], top_n=10)
+frequency_df = profile_frequency_distribution(source_df)
 ```
 
 </div>
@@ -77,11 +78,11 @@ frequency_df = profile_frequency_distribution(source_df, columns=["enrolment_sta
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. |
 | `columns` | `list[str] or set[str] or tuple[str, ...]` | No | Source columns to profile. When supplied, each named column is profiled. When omitted, eligible non-technical scalar columns are selected automatically. Array, map, struct, and binary columns are excluded from automatic selection. |
-| `top_n` | `int` | No | Maximum ranked frequency rows to retain per profiled column. This limits returned result size only; it does not sample the DataFrame or avoid counting all distinct values before ranking them. To return every distinct value, supply a sufficiently large positive ``top_n``. |
+| `top_n` | `int \| None` | No | Optional maximum ranked frequency rows to retain per profiled column. ``None`` returns every distinct value. A positive integer restricts output size only; it does not sample the DataFrame or avoid counting all distinct values before ranking them. |
 
 ## Returns
 
-Spark DataFrame containing up to top_n ranked frequency rows per profiled column. Null is included as a value and non-null counts are reported separately.
+Spark DataFrame containing ranked frequency rows per profiled column. Null is included as a value, non-null counts are reported separately, and top_n restricts output only when supplied.
 
 ### Return interpretation
 
@@ -89,22 +90,24 @@ Each returned row describes one retained value for one source column.
 
 ## Raises / Errors
 
-Raises ValueError when top_n is not positive or requested columns do not exist.
+Raises ValueError when supplied top_n is not positive or requested columns do not exist.
 
 ### Common failure causes
 
-- top_n is not greater than zero.
+- top_n is not greater than zero when supplied.
 - Requested columns are missing.
 - No eligible scalar columns are available when columns is omitted.
-- High-cardinality columns require expensive grouped counts before the top-N limit is applied.
+- High-cardinality columns can produce expensive full frequency output; top_n limits only returned rows when supplied.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
 The function performs an exact Spark grouped count over the supplied
-DataFrame for every selected column. ``top_n`` limits the returned rows,
-not the cost of grouping all distinct values. For large DataFrames,
+DataFrame for every selected column. ``top_n`` optionally limits the
+returned rows, not the cost of grouping all distinct values. Full
+frequency output may be expensive for identifiers, timestamps, free text,
+and other high-cardinality columns. For large DataFrames,
 explicitly select useful categorical or low-to-medium-cardinality columns
 and generally avoid identifiers, UUIDs, timestamps, free-text fields, and
 columns where most values are unique. For exploratory analysis, callers may
@@ -137,5 +140,5 @@ the original full DataFrame.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

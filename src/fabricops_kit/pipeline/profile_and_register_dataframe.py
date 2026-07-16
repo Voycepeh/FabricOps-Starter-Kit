@@ -439,16 +439,18 @@ def profile_and_register_dataframe(
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
 ):
-    """Profile a supplied Spark DataFrame and register its metadata evidence.
+    """Profile a supplied Spark DataFrame and save its metadata records.
 
-    The function profiles the supplied DataFrame exactly as provided by the
-    caller, then registers column-level statistics, threshold-guarded default
-    frequency evidence, physical catalogue identities, and one table-level runtime
-    lineage participation event in the configured FabricOps metadata lakehouse.
-    The original business DataFrame is not written by this function, and the
-    function does not sample, re-read, or mutate the supplied DataFrame. All
-    metadata writes are routed to the configured ``metadata`` target resolved
-    from ``00_env_config``.
+    The notebook supplies a Spark DataFrame and the table identity that the
+    DataFrame represents. FabricOps calculates one profiling result row for
+    each eligible column, saves a new profiling snapshot, creates stable table
+    and column IDs, updates or adds catalogue records, records whether the
+    table was used as an input or produced as an output, and returns the
+    profiling result to the notebook.
+
+    The original business DataFrame is not written, sampled, re-read, or
+    changed by this function. All metadata writes go to the metadata lakehouse
+    configured in ``00_env_config`` for the selected environment.
 
     Parameters
     ----------
@@ -462,8 +464,8 @@ def profile_and_register_dataframe(
         ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
         ``METADATA_DATA_CATALOGUE``.
     environment_name : str
-        FabricOps environment context used to resolve the metadata target
-        configuration and persisted environment identity.
+        FabricOps environment context used to find the configured metadata
+        lakehouse and persist the environment identity.
     store_type : {"lakehouse", "warehouse"}
         Physical store type of the business asset being profiled. This
         identifies the asset and does not redirect metadata writes to that
@@ -532,13 +534,33 @@ def profile_and_register_dataframe(
        deterministic JSON document.
     4. Left-join that JSON to the statistical profile on
        ``profile_dataframe.COLUMN_NAME = profile_frequency_distribution.COLUMN_NAME``.
-    5. Append the detailed profile rows to ``METADATA_DATA_PROFILED``.
-    6. Derive and upsert physical column identities into
-       ``METADATA_DATA_CATALOGUE``.
-    7. Upsert one table-level source or target participation event into
-       ``METADATA_DATA_LINEAGE``.
+    5. Save a new profiling snapshot to ``METADATA_DATA_PROFILED``.
+    6. Create stable table and column IDs, then update matching catalogue
+       records or add new records in ``METADATA_DATA_CATALOGUE``.
+    7. Record whether the table was used as an input or produced as an output
+       in ``METADATA_DATA_LINEAGE``.
     8. Return the detailed Spark DataFrame written to
        ``METADATA_DATA_PROFILED``.
+
+    User-facing workflow:
+
+    Supplied DataFrame
+        ↓
+    Calculate column statistics and value frequencies
+        ↓
+    Save a new profiling snapshot
+    ``METADATA_DATA_PROFILED``
+        ↓
+    Create stable table and column IDs
+        ↓
+    Update existing catalogue records or add new ones
+    ``METADATA_DATA_CATALOGUE``
+        ↓
+    Record whether the table was used as an input or output
+        ↓
+    ``METADATA_DATA_LINEAGE``
+        ↓
+    Return the profiling result to the notebook
 
     Frequency join behavior:
 
@@ -598,24 +620,30 @@ def profile_and_register_dataframe(
       ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
       ``_metadata_lakehouse_name``, ``_activity_id``.
 
-    ``metadata_table_key`` is a deterministic identity derived from
-    environment, store type, layer, schema, and table name.
-    ``metadata_column_key`` is derived from the table key and column name.
-    ``schema_fingerprint`` identifies the observed Spark schema.
+    ``METADATA_DATA_PROFILED`` saves a new profiling snapshot. One row is
+    saved for each eligible DataFrame column. Earlier profiling snapshots are
+    retained.
 
-    ``METADATA_DATA_CATALOGUE`` stores physical table and column identities,
-    not profiling measurements. The function derives catalogue rows from the
-    detailed profile and upserts ``metadata_table_key``,
-    ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
-    ``store_type``, ``layer``, ``schema_name``, ``table_name``,
-    ``column_name``, ``data_type``, and the standard audit fields using
-    ``metadata_table_key + metadata_column_key + schema_fingerprint`` as the
-    idempotent identity. Reprofiling the same column under the same schema
-    updates the existing identity, while a changed schema fingerprint can
-    create a new catalogue snapshot.
+    ``METADATA_DATA_CATALOGUE`` stores table and column records, not profiling
+    measurements. FabricOps creates a stable ID for the table and each column,
+    then checks whether the same table, column, and schema already exist. If a
+    matching record exists, it is updated. Otherwise, a new record is added.
+    Matching uses ``metadata_table_key + metadata_column_key +
+    schema_fingerprint``:
 
-    ``METADATA_DATA_LINEAGE`` stores one table-level lineage participation row
-    per function call. Key lineage fields include ``lineage_event_id``,
+    - ``metadata_table_key``: stable ID for the table.
+    - ``metadata_column_key``: stable ID for a column within that table.
+    - ``schema_fingerprint``: identifier for the DataFrame structure observed
+      during profiling.
+
+    A changed ``schema_fingerprint`` represents a newly observed table
+    structure and can create a new catalogue snapshot.
+
+    ``METADATA_DATA_LINEAGE`` records whether the table was used as an input
+    or produced as an output during the current notebook activity. A
+    ``profile_role="source"`` value means the DataFrame was used as an input.
+    A ``profile_role="target"`` value means the DataFrame was produced as an
+    output. Key lineage fields include ``lineage_event_id``,
     ``activity_id``, ``notebook_id``, ``notebook_name``, ``workspace_id``,
     ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
     ``profile_role``, ``profiled_at``, ``committed_by``,
@@ -623,6 +651,16 @@ def profile_and_register_dataframe(
     fields. ``lineage_event_id`` is deterministically derived from
     ``activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
     ``profile_role``.
+
+    What the notebook receives: a Spark DataFrame containing one profiling
+    result row for each eligible column.
+
+    What FabricOps saves:
+
+    - ``METADATA_DATA_PROFILED``: a new profiling snapshot.
+    - ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
+      records.
+    - ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
     Each profiling record describes the exact DataFrame supplied during the
     notebook activity. If a caller deliberately filters or samples before

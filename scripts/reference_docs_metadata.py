@@ -811,7 +811,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'config.setup_metadata_tables',
   'function_type': 'callable',
-  'summary_override': 'Create or validate all FabricOps metadata tables through one setup action.',
+  'summary_override': 'Create missing FabricOps metadata tables and check existing table columns and Spark data types.',
   'symbol_name': 'setup_metadata_tables',
   'template_notebook': '00_env_config',
   'template_segment': 'Environment bootstrap',
@@ -867,6 +867,8 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use in 01_agreement when collecting or updating data steward details before '
                  'creating a data agreement.',
   'glossary_terms': ['notebook template'],
+  'returns': 'Notebook widget state or rendered widget result used to save steward details to METADATA_DATA_STEWARD.',
+  'raises': 'Raises widget, validation, or metadata routing errors when required steward fields are missing or the metadata table cannot be written.',
   'return_interpretation': 'The widget itself is the user interface; saved steward values are '
                            'available to downstream agreement workflows only after the user '
                            'completes the widget action.',
@@ -889,6 +891,8 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use in 01_agreement after steward context exists and before pipeline or '
                  'governance notebooks need an approved agreement selection.',
   'glossary_terms': ['notebook template'],
+  'returns': 'Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.',
+  'raises': 'Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.',
   'return_interpretation': 'The rendered widget collects agreement input; downstream helpers can '
                            'only use the agreement after the user saves valid values.',
   'common_failure_causes': ['ipywidgets is not available in the runtime.',
@@ -1212,17 +1216,17 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Profile detailed evidence to METADATA_DATA_PROFILED and upsert catalogue identities to METADATA_DATA_CATALOGUE.',
+  'summary_override': 'Profile a Spark DataFrame, save a profiling snapshot, update catalogue records, and record source or target activity.',
   'symbol_name': 'profile_and_register_dataframe',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profiling',
-  'use_when': 'Use when any DataFrame should be profiled and registered as physical-asset profiling evidence and catalogue identity with one cloneable call.',
-  'do_not_use_when': 'Do not use for lineage registration, guardrail execution, or automatic sampling; those are separate workflows.',
+  'use_when': 'Use when a notebook needs to profile a source or target DataFrame and save the FabricOps metadata records that describe that observed table.',
+  'do_not_use_when': 'Do not use to write the business DataFrame itself, run guardrails, or sample the input data.',
   'parameters': 'df, profile_role, environment_name, store_type, layer, table_name, optional schema_name, optional frequency_columns, frequency_top_n, and frequency_max_distinct_percent.',
-  'returns': 'Detailed Spark DataFrame appended to METADATA_DATA_PROFILED.',
+  'returns': 'Spark DataFrame containing one profiling result row for each eligible column in the supplied DataFrame.',
   'raises': 'Raises ValueError for unsupported profile_role, unsupported store_type, or empty required identity fields; lower-level profiling validation is preserved.',
-  'side_effects': 'Appends detailed profiling evidence to METADATA_DATA_PROFILED, upserts derived identities to METADATA_DATA_CATALOGUE, and writes lineage evidence through the configured metadata lakehouse.',
-  'fabric_context': 'Requires 00_env_config so the canonical metadata lakehouse route is available.',
+  'side_effects': 'Saves a new profiling snapshot to METADATA_DATA_PROFILED, updates or adds table and column records in METADATA_DATA_CATALOGUE, and records source or target activity in METADATA_DATA_LINEAGE.',
+  'fabric_context': 'Requires 00_env_config so FabricOps can find the metadata lakehouse configured for the selected environment.',
   'ai_verification': 'Verify the physical asset identity, execution participation role, optional frequency columns, frequency threshold, and append-only profiled evidence write and catalogue identity upsert before running; the role is not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE.',
   'preferred_example': 'profiled_df = profile_and_register_dataframe(df_customer, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="customer")',
   'related_functions': ['profile_dataframe', 'profile_frequency_distribution', 'run_table_guardrails'],
@@ -1422,9 +1426,9 @@ PUBLIC_SYMBOL_DOCS = [
               'standard config fields or add target audit columns.',
   'do_not_use_when': 'Do not use for ad hoc reads or writes outside the pipeline table-config '
                      'pattern.',
-  'parameters': 'table_configs, default_settings, table_role, and role-specific context such as '
-                'run_id/pipeline_name for targets.',
+  'parameters': {'table_configs': 'List of source or target table configuration dictionaries supplied by the notebook.', 'default_settings': 'Default settings to apply when an individual table config omits them.', 'table_role': 'Use "source" for input tables or "target" for output tables so FabricOps can apply the right required fields.', 'run_id': 'Optional run identifier used for target audit fields.', 'pipeline_name': 'Optional pipeline name used for target audit fields.'},
   'returns': 'Enriched table configs and a dictionary keyed by table key.',
+  'raises': 'Raises ValueError when required configuration fields are missing, table_role is unsupported, or target audit columns cannot be added.',
   'side_effects': 'Source role validates pre-loaded DataFrames. Target role adds FabricOps audit '
                   'columns to target DataFrames.',
   'fabric_context': 'Source DataFrames should be loaded directly in the notebook with existing '
@@ -1453,8 +1457,7 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Run profiling, schema, freshness, profile behavior, DQ, and catalogue '
-                      'guardrails for table configs.',
+  'summary_override': 'Run approved table checks and return whether the pipeline may continue.',
   'symbol_name': 'run_table_guardrails',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail orchestration',
@@ -1462,11 +1465,19 @@ PUBLIC_SYMBOL_DOCS = [
               'guardrails before writes while keeping per-table results separated.',
   'do_not_use_when': 'Do not use as a replacement for individual helper calls when debugging one '
                      'specific guardrail interactively.',
-  'parameters': 'table_configs plus context, run_id, spark_session, and agreement/notebook '
-                'context.',
+  'parameters': {'table_configs': 'Prepared source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings. Call prepare_pipeline_table_configs first when starting from notebook-editable source or target definitions.',
+                 'run_id': 'Pipeline run identifier written with saved results and used to group in-memory profiles. Omit only when an active pipeline context already provides it.',
+                 'context': 'FabricOps runtime context, usually {"config": CONFIG, "env": ENV}. Omit when 00_env_config or an active pipeline context already provides the context.',
+                 'spark_session': 'Spark session used for profiling, metadata reads, DQ checks, and result writes. Omit only when an active pipeline context already provides it.',
+                 'agreement_id': 'Optional data agreement identifier to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed.',
+                 'agreement_version': 'Optional data agreement version to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed.',
+                 'table_role': 'Optional role for the supplied configurations, usually "source" or "target". Use it when the active pipeline context should remember these definitions for summaries.',
+                 'mode': 'Run mode. "profile" is the default review-oriented mode; "enforce" defaults stop_on_failure to True so blocking failures stop the notebook.',
+                 'stop_on_failure': 'Whether to stop notebook execution after all table checks have been collected when any table has a blocking failure. Omit to use the default for mode.'},
   'returns': 'Guardrail result bundle with profiles, schema results, freshness results, stability '
              'results, DQ results, catalogue status, evidence definitions, summary, can_continue, '
              'and failed_tables.',
+  'raises': 'Raises ValueError when required runtime context such as spark_session or run_id is missing, when mode is unsupported, or when table configs are invalid. With stop_on_failure=True, raises or exits after all checks are collected if blocking failures exist.',
   'side_effects': 'Profiles DataFrames, reads stability/DQ metadata through configured metadata '
                   'routing, writes evidence, and may update table config DataFrames with '
                   'DQ annotations.',
@@ -1475,11 +1486,12 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify stop_on_failure=True is used before transformation or writes when '
                      'blocking guardrails should stop execution.',
   'preferred_example': 'source_guardrail_results = run_table_guardrails(SOURCE_TABLES, '
-                       'config=CONFIG, env=ENV, run_id=RUN_ID, spark_session=spark, '
-                       'stop_on_failure=True)',
+                       'run_id=RUN_ID, context={"config": CONFIG, "env": ENV}, '
+                       'spark_session=spark, stop_on_failure=True)',
   'related_functions': ['prepare_pipeline_table_configs', 'write_catalogue_evidence'],
-  'expanded_purpose': 'Coordinates profiling, schema, freshness, profile behavior, DQ, and '
-                      'evidence checks for a group of pipeline table configs.',
+  'expanded_purpose': 'Runs the approved checks for each configured source or target table. It '
+                      'can check schema, data freshness, profile changes, and data-quality rules, '
+                      'then returns a combined result showing whether the pipeline may continue.',
   'when_to_use': 'Use in 02_pipeline before transformations or writes when table configs should be '
                  'validated by the standard guardrail sequence.',
   'glossary_terms': ['guardrails',
@@ -1487,8 +1499,11 @@ PUBLIC_SYMBOL_DOCS = [
                      'source data',
                      'target table',
                      'evidence'],
-  'return_interpretation': 'The result groups each guardrail outcome and a summary DataFrame. If '
-                           'any blocking result has can_continue false, stop before writing data.',
+  'return_interpretation': 'Review per-table profiles, schema results, freshness results, '
+                           'profile-behavior results, DQ results, catalogue status, the overall '
+                           'summary, can_continue, and failed_tables. True can_continue means no '
+                           'blocking guardrail result requires the pipeline to stop. False means '
+                           'the notebook should stop before writing the affected output.',
   'common_failure_causes': ['One of the table configs is incomplete.',
                             'A schema, freshness, profile behavior, or DQ check fails.',
                             'Approved metadata evidence cannot be read.',
@@ -1536,10 +1551,10 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Guardrail enforcement',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
+  'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: "summary" for the main outcome table, "detailed" for detailed rows, or "debug" for raw nested values.', 'spark_session': 'Optional Spark session used to convert display rows to Spark DataFrames when available.'},
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
@@ -1565,10 +1580,9 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Guardrail display',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
-             'the helper.',
+  'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: summary, detailed, or debug.', 'spark_session': 'Optional Spark session used to build Spark DataFrames for display rows.'},
+  'returns': 'Display-friendly summary rows, detailed rows, debug data, or Spark DataFrames depending on mode and Spark availability.',
+  'raises': 'Raises ValueError when mode is unsupported or the result bundle cannot be displayed.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Returns summary, detailed, or debug guardrail display output so Fabric '
                       'notebooks show readable tables by default while preserving raw result '
@@ -1595,6 +1609,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use in 03_governance after widget_select_guardrail_target to enrich selected catalogue columns with descriptive business context, sensitivity, PII, and configured custom metadata.',
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
   'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when selected target state is incomplete or the configured metadata lakehouse cannot be written.',
   'related_functions': ['widget_select_guardrail_target', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Builds one editable enrichment row per selected profiled catalogue column and writes reviewed descriptive metadata without writing guardrail rules, guardrail results, or profiled evidence.',
   'when_to_use': 'Use when governance reviewers need to enrich business context, sensitivity labels, PII classifications, and organization-specific fields for a selected profiled table.',
@@ -1618,6 +1633,7 @@ PUBLIC_SYMBOL_DOCS = [
                 'record parameters accepted by this helper.',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
@@ -1648,6 +1664,7 @@ PUBLIC_SYMBOL_DOCS = [
                 'record parameters accepted by this helper.',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders interactive controls for authoring schema, freshness, and '
                       'profile-behavior guardrail rule intent while applying the selected table '
@@ -1674,6 +1691,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use in exploration notebooks to browse observed catalogue evidence by logical FabricStore target and table.',
   'parameters': 'See the source docstring for agreement, metadata table, Spark session, and context parameters.',
   'returns': 'Mutable widget state whose dataframe key contains the currently filtered Spark DataFrame.',
+  'raises': 'Raises widget, Spark, or metadata routing errors when catalogue metadata cannot be read or required selector inputs are invalid.',
   'related_functions': ['read_lakehouse_table', 'profile_dataframe'],
   'expanded_purpose': 'Reads METADATA_DATA_PROFILED from the configured metadata target, lets users choose a logical FabricStore target, and exposes profiled rows for the selected table.',
   'when_to_use': 'Use in 99_explore when notebook authors need searchable, read-only catalogue evidence filtered by the active agreement context.',
@@ -1698,6 +1716,7 @@ PUBLIC_SYMBOL_DOCS = [
                 'record parameters accepted by this helper.',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders manual DQ authoring controls that produce editable '
                       'guardrail rule intent rows under the selected table governance policy.',
@@ -1729,6 +1748,7 @@ PUBLIC_SYMBOL_DOCS = [
                 'record parameters accepted by this helper.',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders governance review controls for reviewing '
                       'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
@@ -1754,7 +1774,7 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "returns": "dict[str, Any] setup report after all managed metadata tables have been created or validated, including status, metadata_schema, fully_qualified_tables, created_tables, validated_tables, failed_tables, table_results, data_agreement, governance, and active metadata counts.",
         "side_effects": "Performs metadata-layer table creation and schema validation in the configured metadata lakehouse. Missing tables are created as empty Delta tables; existing tables are validated and are not silently accepted when incompatible.",
         "return_interpretation": "Use the returned status and per-table results to confirm that the physical metadata layer is ready. The function is primarily used for table-creation and validation side effects, not for registering business datasets.",
-        "common_failure_causes": ["Missing or invalid metadata target configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing table is missing a canonical field or has an incompatible Spark field type.", "Nullability and field order are not validated; required field names and Spark data types are validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
+        "common_failure_causes": ["Missing or invalid metadata target configuration.", "Spark or Fabric lakehouse context is unavailable.", "The caller lacks permission to create or inspect metadata tables.", "An existing table is missing a required field or has an incompatible Spark field type.", "Nullability and field order are not validated; required field names and Spark data types are validated.", "One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables."],
         "preferred_example": "setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT_NAME, metadata_schema=METADATA_SCHEMA)",
     },
     "setup_notebook": {
@@ -1845,10 +1865,10 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "preferred_example": 'frequency_df = profile_frequency_distribution(source_df)',
     },
     "profile_and_register_dataframe": {
-        "expanded_purpose": "Profiles the supplied Spark DataFrame exactly as provided, appends detailed profile evidence to METADATA_DATA_PROFILED, upserts physical table and column identities into METADATA_DATA_CATALOGUE, writes one table-level lineage participation event to METADATA_DATA_LINEAGE through the configured metadata lakehouse, and applies an automatic 80% distinct-per-non-null safeguard to default frequency JSON generation.",
+        "expanded_purpose": "Profiles the supplied Spark DataFrame exactly as provided, saves a new snapshot to METADATA_DATA_PROFILED, updates matching table and column records or adds new ones in METADATA_DATA_CATALOGUE, records source or target activity in METADATA_DATA_LINEAGE through the configured metadata lakehouse, and applies an automatic 80% distinct-per-non-null safeguard to default frequency JSON generation.",
         "when_to_use": "Use once for each source or target DataFrame that should produce persisted profiling evidence and catalogue identity in a pipeline run. Use profile_dataframe alone when you only need an in-memory profile. Pass explicit frequency_columns to override the default high-cardinality safeguard, [] to disable frequency evidence, or frequency_max_distinct_percent=None to disable automatic threshold filtering.",
-        "returns": "Spark DataFrame containing the canonical detailed profiling rows appended to METADATA_DATA_PROFILED, including physical asset identity, statistical metrics, frequency_json where enabled, schema fingerprint, and runtime audit fields.",
-        "return_interpretation": "The returned rows are the detailed profile evidence for eligible columns. Catalogue rows and lineage participation are written as side effects and are not returned.",
+        "returns": "Spark DataFrame containing one detailed profiling row for each eligible column appended to METADATA_DATA_PROFILED, including stable table and column IDs, statistical metrics, frequency_json where enabled, schema fingerprint, and runtime audit fields.",
+        "return_interpretation": "The returned rows are the detailed profile results for eligible columns. Catalogue rows and source or target activity records are saved as side effects and are not returned.",
         "common_failure_causes": ["profile_role must be source or target and store_type must be lakehouse or warehouse.", "environment_name, layer, or table_name is blank, or schema_name is blank when supplied.", "The configured metadata target cannot be resolved or written.", "Requested frequency columns are missing or expensive to group.", "If lineage registration fails after profile and catalogue writes succeed, RuntimeError is raised and earlier writes remain completed."],
         "preferred_example": 'profiled_df = profile_and_register_dataframe(source_df, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="student_enrolment")',
     },
@@ -2063,7 +2083,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                  'summaries.',
                                                  'Excluded columns remove fields needed for '
                                                  'review.']},
- 'profile_frequency_distribution': {'expanded_purpose': 'Calculates deterministic exact value frequencies with counts, percentages, ranks, and profiled row counts for selected scalar columns.',
+ 'profile_frequency_distribution': {'expanded_purpose': 'Calculates exact value frequencies for selected scalar columns, including counts, percentages using the profiled row count as the denominator, ranks, and the total profiled row count.',
                                     'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
                                     'glossary_terms': ['source data', 'distinct value'],
                                     'return_interpretation': 'Each returned row describes one retained value for one source column.',
@@ -2235,7 +2255,9 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'The max lag parameter is invalid.',
                                                       'No active freshness rule matches the table.',
                                                       'Metadata evidence cannot be read.']},
- 'display_guardrail_results': {'expanded_purpose': 'Returns summary, detailed, or debug guardrail '
+ 'display_guardrail_results': {'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: summary, detailed, or debug.', 'spark_session': 'Optional Spark session used to build Spark DataFrames for display rows.'},
+                               'raises': 'Raises ValueError when mode is unsupported or the result bundle cannot be displayed.',
+                               'expanded_purpose': 'Returns summary, detailed, or debug guardrail '
                                                    'display output so Fabric notebooks show '
                                                    'readable tables by default while preserving '
                                                    'raw result bundles for developers.',

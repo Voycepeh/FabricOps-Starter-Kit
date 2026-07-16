@@ -806,7 +806,12 @@ def _run_table_guardrails_workflow(
     mode: str = "profile",
     stop_on_failure: bool | None = None,
 ) -> dict[str, Any]:
-    """Run profiling, schema, freshness, profile behavior, DQ, and catalogue guardrails.
+    """Run approved checks for configured source or target tables.
+
+    Runs the approved checks for each configured source or target table. It
+    can check the schema, data freshness, profile changes, and data-quality
+    rules, then returns a combined result showing whether the pipeline may
+    continue.
 
     Parameters
     ----------
@@ -823,8 +828,10 @@ def _run_table_guardrails_workflow(
         Spark session used by profile behavior and DQ helpers. When omitted,
         the active context from an active pipeline context is used.
     context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
+        Advanced override for the active Fabric context. Pass a dictionary
+        such as ``{"config": CONFIG, "env": ENV}`` when no active pipeline
+        context exists. When omitted, the helper uses ``FABRIC_CONTEXT``
+        initialized by ``00_env_config``.
     agreement_id, agreement_version : str, optional
         Governance agreement context written with catalogue evidence. Omitted
         values are resolved from the active pipeline context when available.
@@ -849,6 +856,28 @@ def _run_table_guardrails_workflow(
 
     Notes
     -----
+    User-facing workflow:
+
+    Prepared table configurations
+        ↓
+    Load the approved guardrail rules
+        ↓
+    Run schema, freshness, profile and DQ checks
+        ↓
+    Save each guardrail outcome
+    ``METADATA_GUARDRAIL_RESULTS``
+        ↓
+    Combine the table results
+        ↓
+    Return whether the pipeline can continue
+
+    The returned bundle includes per-table profiles, schema results, freshness
+    results, profile-behavior results, DQ results, catalogue status, an
+    overall summary, ``can_continue``, and failed tables. ``can_continue=True``
+    means no blocking guardrail result requires the pipeline to stop.
+    ``can_continue=False`` means the notebook should stop before writing the
+    affected output.
+
     This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
     results before reporting blocking failures. DQ results that return an
     annotated DataFrame update the corresponding table config ``df`` in place

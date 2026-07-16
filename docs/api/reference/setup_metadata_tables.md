@@ -15,21 +15,21 @@
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open Preview call flow</a>
 
-Create or validate all FabricOps metadata tables through one setup action.
+Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Create any missing canonical FabricOps metadata Delta tables and validate
-the schemas of metadata tables that already exist. The function resolves
-the configured ``metadata`` target for the selected environment, requires
-that target to be a lakehouse, creates missing metadata tables as empty
-Delta tables using the canonical FabricOps Spark schemas, validates
-existing metadata tables against the required canonical column names and
-Spark data types, and returns a setup report describing the completed
-metadata lakehouse setup work.
+Creates any FabricOps metadata tables that are missing and checks that
+existing tables have the required columns and Spark data types. The
+function finds the metadata lakehouse configured for the selected
+environment, creates missing tables as empty Delta tables, leaves valid
+existing tables in place, reports invalid existing tables as failed, and
+returns a setup report.
 
-The returned dictionary is not the main operation. It summarizes the
-result of the physical metadata table creation and validation work.
+This function prepares the metadata table structures only. It does not
+create business metadata records such as stewards, agreements, catalogue
+rows, profiles, lineage events, enrichment records, guardrail rules, or
+guardrail results.
 
 </div>
 
@@ -88,7 +88,7 @@ setup_result = setup_metadata_tables(spark=spark, config=CONFIG, env=ENVIRONMENT
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `spark` | `Any` | Yes | Spark session used to create empty schema DataFrames and read or write the metadata lakehouse tables. |
-| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | FabricOps configuration used to resolve the selected environment and logical ``metadata`` target. |
+| `config` | `FrameworkConfig \| dict[str, Any]` | Yes | FabricOps configuration used to find the selected environment and its metadata lakehouse. |
 | `env` | `str` | Yes | Environment whose configured metadata lakehouse should be initialized or validated. |
 | `metadata_schema` | `str \| None` | No | Optional explicit schema for schema-enabled metadata lakehouses. When omitted, the configured metadata store schema is used where applicable. |
 | `require_active_steward` | `bool` | No | When ``True``, raise if ``METADATA_DATA_STEWARD`` contains no active steward rows after setup. This option does not create a steward record. |
@@ -112,7 +112,7 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 - Missing or invalid metadata target configuration.
 - Spark or Fabric lakehouse context is unavailable.
 - The caller lacks permission to create or inspect metadata tables.
-- An existing table is missing a canonical field or has an incompatible Spark field type.
+- An existing table is missing a required field or has an incompatible Spark field type.
 - Nullability and field order are not validated; required field names and Spark data types are validated.
 - One table can fail while later tables are still processed; raise_on_failure raises only after processing all tables.
 
@@ -123,14 +123,14 @@ Raises configuration, Spark, or storage errors when metadata routing or table pr
 Setup flow:
 
 1. Validate the supplied FabricOps configuration.
-2. Resolve the selected environment and its logical ``metadata`` target.
-3. Verify that the resolved metadata target is a lakehouse.
+2. Find the metadata lakehouse configured for the selected environment.
+3. Verify that the metadata target is a lakehouse.
 4. Resolve the metadata schema from ``metadata_schema`` or the configured
    metadata store.
-5. Load the canonical metadata table schema registry.
-6. Attempt to read each canonical metadata table.
+5. Load the required FabricOps table definitions.
+6. Attempt to read each required metadata table.
 7. When a table is missing, create an empty Spark DataFrame using its
-   canonical schema.
+   required FabricOps table structure.
 8. Write that empty DataFrame to the metadata lakehouse using overwrite
    mode to create the table.
 9. Read the created table again.
@@ -140,7 +140,7 @@ Setup flow:
 13. Return overall, data-agreement, governance, and per-table setup
     results.
 
-Canonical tables created or validated from
+Metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
 ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
@@ -148,7 +148,7 @@ Canonical tables created or validated from
 ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
 ``METADATA_GUARDRAIL_RESULTS``.
 
-Canonical schema intent:
+Detailed table contents:
 
 - ``METADATA_DATA_STEWARD`` stores ``steward_id``, ``steward_name``,
   ``steward_role``, ``contact``, ``effective_from``, ``effective_to``,
@@ -173,7 +173,7 @@ Canonical schema intent:
   ``distinct_count``, ``distinct_percent``, ``mean_value``,
   ``stddev_value``, ``min_value``, ``percentile_25_value``,
   ``median_value``, ``percentile_75_value``, ``max_value``,
-  ``is_sampled``, ``frequency_json``, ``schema_fingerprint``,
+  ``frequency_json``, ``schema_fingerprint``,
   ``profiled_at``, and the standard audit fields.
 - ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
   ``notebook_id``, ``notebook_name``, ``workspace_id``,
@@ -197,7 +197,7 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
-Existing tables are validated for required canonical column names and
+Existing tables are validated for required column names and
 compatible Spark data types. Nullability is not part of this validation.
 Existing tables are not automatically overwritten merely because they
 already exist. Missing columns or incompatible types mark that table as
@@ -206,7 +206,7 @@ failed, processing continues for remaining metadata tables, and
 when failures exist.
 
 A missing table is created by writing an empty Spark DataFrame with the
-canonical schema. This creates the physical metadata table structure but
+required FabricOps table structure. This creates the metadata table structure but
 does not populate business metadata records. The function does not
 automatically create steward records, agreements, contracts, catalogue
 records, profile records, lineage events, access assignments, enrichment
@@ -245,5 +245,5 @@ their respective FabricOps workflows.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

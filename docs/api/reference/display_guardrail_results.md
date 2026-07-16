@@ -61,13 +61,13 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `result_bundle` | `Mapping[str, Any]` | Yes | Not documented yet |
-| `mode` | `str` | No | Not documented yet |
-| `spark_session` | `Any \| None` | No | Not documented yet |
+| `result_bundle` | `Mapping[str, Any]` | Yes | Guardrail result bundle returned by run_table_guardrails. |
+| `mode` | `str` | No | Display mode: summary, detailed, or debug. |
+| `spark_session` | `Any \| None` | No | Optional Spark session used to build Spark DataFrames for display rows. |
 
 ## Returns
 
-Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.
+Display-friendly summary rows, detailed rows, debug data, or Spark DataFrames depending on mode and Spark availability.
 
 ### Return interpretation
 
@@ -75,7 +75,7 @@ Summary and detailed modes return display-friendly rows or Spark DataFrames; deb
 
 ## Raises / Errors
 
-Not documented yet
+Raises ValueError when mode is unsupported or the result bundle cannot be displayed.
 
 ### Common failure causes
 
@@ -113,5 +113,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

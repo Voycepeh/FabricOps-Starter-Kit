@@ -65,8 +65,7 @@ Example usage not documented yet.
 
 ## Returns
 
-dict[str, Any]
-    Rendered controls, including read-only generated-identifier context.
+Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.
 
 ### Return interpretation
 
@@ -74,7 +73,7 @@ The rendered widget collects agreement input; downstream helpers can only use th
 
 ## Raises / Errors
 
-Not documented yet
+Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.
 
 ### Common failure causes
 
@@ -112,5 +111,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

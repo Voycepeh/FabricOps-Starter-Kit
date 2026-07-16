@@ -85,7 +85,7 @@ The returned state updates as selectors change; read state["dataframe"] for the 
 
 ## Raises / Errors
 
-Not documented yet
+Raises widget, Spark, or metadata routing errors when catalogue metadata cannot be read or required selector inputs are invalid.
 
 ### Common failure causes
 
@@ -122,5 +122,5 @@ No related guides documented.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

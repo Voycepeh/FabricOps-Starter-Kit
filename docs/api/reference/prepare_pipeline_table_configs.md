@@ -69,11 +69,11 @@ SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = prepare_pipeline_table_configs(SOURCE_TABL
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_configs` | `list[PipelineTableConfig]` | Yes | Not documented yet |
-| `default_settings` | `Mapping[str, Any] \| PipelineTableConfig` | Yes | Not documented yet |
-| `table_role` | `str` | Yes | Not documented yet |
-| `run_id` | `str` | No | Not documented yet |
-| `pipeline_name` | `str` | No | Not documented yet |
+| `table_configs` | `list[PipelineTableConfig]` | Yes | List of source or target table configuration dictionaries supplied by the notebook. |
+| `default_settings` | `Mapping[str, Any] \| PipelineTableConfig` | Yes | Default settings to apply when an individual table config omits them. |
+| `table_role` | `str` | Yes | Use "source" for input tables or "target" for output tables so FabricOps can apply the right required fields. |
+| `run_id` | `str` | No | Optional run identifier used for target audit fields. |
+| `pipeline_name` | `str` | No | Optional pipeline name used for target audit fields. |
 
 ## Returns
 
@@ -85,7 +85,7 @@ The returned configs are enriched copies keyed for downstream helpers. Confirm e
 
 ## Raises / Errors
 
-Not documented yet
+Raises ValueError when required configuration fields are missing, table_role is unsupported, or target audit columns cannot be added.
 
 ### Common failure causes
 
@@ -124,5 +124,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

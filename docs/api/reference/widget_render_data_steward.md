@@ -65,8 +65,7 @@ Example usage not documented yet.
 
 ## Returns
 
-dict[str, Any]
-    Rendered widget controls keyed for notebook customization.
+Notebook widget state or rendered widget result used to save steward details to METADATA_DATA_STEWARD.
 
 ### Return interpretation
 
@@ -74,7 +73,7 @@ The widget itself is the user interface; saved steward values are available to d
 
 ## Raises / Errors
 
-Not documented yet
+Raises widget, validation, or metadata routing errors when required steward fields are missing or the metadata table cannot be written.
 
 ### Common failure causes
 
@@ -112,5 +111,5 @@ Not documented yet
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 12:56 AM SGT
+    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT
