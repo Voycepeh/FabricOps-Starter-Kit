@@ -104,7 +104,7 @@ def setup_notebook(
 
     Supported notebook naming patterns currently include ``00_env_config``,
     ``01_agreement`` and suffixed variants, ``02_pipeline`` and suffixed
-    variants, ``03_governance`` and suffixed variants, and ``99_explore`` and
+    variants, ``03_review`` and suffixed variants, and ``99_explore`` and
     suffixed variants.
 
     Each resolved target contains the configured Fabric store identity needed
@@ -195,7 +195,7 @@ def setup_notebook(
             r"^00_env_config$",
             r"^01_agreement(?:_[a-z0-9_]+)?$",
             r"^02_pipeline(?:_[a-z0-9_]+)?$",
-            r"^03_governance(?:_[a-z0-9_]+)?$",
+            r"^03_review(?:_[a-z0-9_]+)?$",
             r"^99_explore(?:_[a-z0-9_]+)?$",
         ]
         naming_errors = [] if any(re.match(pattern, normalized_name) for pattern in patterns) else [

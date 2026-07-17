@@ -6,6 +6,8 @@ FabricOps works through a three-workspace setup:
 2. Engineering Development workspace
 3. Engineering Production workspace
 
+![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
+
 The Governance workspace defines ownership, agreements, enrichment, and guardrails.
 
 The Engineering Development workspace is where pipelines are developed, tested, profiled, and reviewed.
@@ -13,6 +15,8 @@ The Engineering Development workspace is where pipelines are developed, tested, 
 The Engineering Production workspace contains promoted and stable pipelines that run on a recurring basis and produce trusted data for downstream AI and BI consumption.
 
 Together, these workspaces create one connected workflow:
+
+![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data
 
@@ -133,6 +137,8 @@ A standard pipeline normally:
 3. Writes the data
 
 The FabricOps template adds standardized governance and metadata activities around this engineering workflow.
+
+![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
 These activities include:
 

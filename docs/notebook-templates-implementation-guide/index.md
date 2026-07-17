@@ -18,7 +18,7 @@ Notebook templates are maintained as a living track independently from FabricOps
 | 2 | `01_agreement` | [Create Agreement](../guided-demo/create-agreement.md) |
 | 3 | `example_pipeline_demo` | [Run Pipeline](../guided-demo/run-pipeline.md#seed-demo-source-data-with-example_pipeline_demo) |
 | 4 | `02_pipeline` | [Run Pipeline](../guided-demo/run-pipeline.md#run-02_pipeline) |
-| 5 | `03_governance` | [Review Guardrails](../guided-demo/review-guardrails.md) |
+| 5 | `03_review` | [Review Guardrails](../guided-demo/review-guardrails.md) |
 | Optional | `99_explore` | [Explore Metadata Outputs](../guided-demo/explore-metadata-outputs.md) |
 
 <div class="template-card-grid" markdown="1">
@@ -55,7 +55,7 @@ Runs source-to-target processing under an agreement, profiles data, evaluates gu
 
 <div class="template-card" markdown="1">
 
-## [`03_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_governance.ipynb)
+## [`03_review`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_review.ipynb)
 
 Supports enrichment review, guardrail review, lifecycle decisions, and promotion-readiness assessment based on observed metadata and runtime evidence.
 

@@ -227,7 +227,7 @@ Use a concise decision table like this:
 | `widget_pipeline_bootstrap` | Function | Preview | Source changed or maintainer-scoped | Ask whether to keep Preview or promote to Live. |
 | `METADATA_PIPELINE_RUNS` | Metadata table | Live | Schema fingerprint changed | Keep Live; confirm release notes and compatibility. |
 | `accepted_values` | DQ rule | Not present | New | Ask Preview or Live. |
-| `03_governance` | Template | Live | Changed where detectable | Keep Live; confirm update wording. |
+| `03_review` | Template | Live | Changed where detectable | Keep Live; confirm update wording. |
 
 Lifecycle status is not change classification:
 

@@ -73,7 +73,7 @@ nav:
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
   - FabricOps Maintainer:
-      - Product Narrative: maintainers/product-narrative.md
+      - Product Narrative: maintainer/product-narrative.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
 

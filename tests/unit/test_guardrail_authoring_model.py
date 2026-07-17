@@ -712,7 +712,7 @@ def test_formal_review_context_and_lifecycles():
     try:
         governance_review.apply_governance_rule_action(pending, "approve", source_notebook_type="02_pipeline")
     except PermissionError as exc:
-        assert "03_governance" in str(exc)
+        assert "03_review" in str(exc)
     else:
         raise AssertionError("02_pipeline formal review was not blocked")
 
@@ -774,11 +774,11 @@ def test_authoring_widgets_stamp_02_and_03_sources(monkeypatch):
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required"}
 
     engineering = widget_author_dq_rules(state, selected_columns=["order_id"])["build_batch_records"](action="submit")[0]
-    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="03_governance", created_by_role="governance")["build_batch_records"](action="submit")[0]
+    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="03_review", created_by_role="governance")["build_batch_records"](action="submit")[0]
 
     assert engineering["source_notebook_type"] == "02_pipeline"
     assert engineering["created_by_role"] == "engineering"
-    assert governance["source_notebook_type"] == "03_governance"
+    assert governance["source_notebook_type"] == "03_review"
     assert governance["created_by_role"] == "governance"
 
 

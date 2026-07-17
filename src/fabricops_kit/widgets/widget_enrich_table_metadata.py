@@ -69,7 +69,7 @@ def _table_metadata_enrichment_widget_workflow(
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+    source_notebook_type : {"02_pipeline", "03_review"}, default="02_pipeline"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="engineering"
         Role stamped on authored records.

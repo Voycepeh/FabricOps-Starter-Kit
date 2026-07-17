@@ -18,7 +18,7 @@ def test_governance_review_page_frames_metadata_control_panel():
 
     for required_term in (
         "02_pipeline",
-        "03_governance",
+        "03_review",
         "METADATA_DATA_CATALOGUE",
         "METADATA_GUARDRAIL",
         "METADATA_GUARDRAIL_RESULTS",
@@ -30,7 +30,7 @@ def test_governance_review_page_frames_metadata_control_panel():
     assert any(
         phrase in normalized
         for phrase in (
-            "03_governance` lets reviewers",
+            "03_review` lets reviewers",
             "guardrail decisions",
             "records governance decisions",
             "reviews table governance",
