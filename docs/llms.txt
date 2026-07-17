@@ -1,43 +1,14 @@
-# FabricOps Starter Kit
+# FabricOps Starter Kit documentation navigation
 
-> FabricOps Starter Kit helps teams build governed, quality-checked, Microsoft Fabric notebook workflows with reusable helpers, notebook templates, metadata-backed contracts, data quality checks, lineage, and handover evidence.
+Use these pages in order. This file is a navigation surface for AI agents and documentation tooling; the linked pages own the product narrative, workflow, and technical detail.
 
-Use this file as a concise navigation map for documentation and automation workflows. The human-readable documentation is also published with Markdown variants where possible; for example, `/guided-demo/` is available as `/guided-demo.md`.
+1. [Product overview](index.md): What FabricOps is, who it supports, what it includes, and where to go next.
+2. [How FabricOps Works](how-fabricops-works.md): Three-workspace architecture, notebook responsibilities, metadata handoffs, production promotion, and consumption.
+3. [Guided Demo](guided-demo.md): Canonical step-by-step execution order for what to create, configure, open, run, and inspect.
+4. [Notebook Templates](notebook-templates-implementation-guide/index.md): Notebook responsibilities, downloads, and implementation handoff.
+5. [Metadata Reference](reference/metadata.md): Metadata table purposes, schemas, and ownership.
+6. [DQ Rule Reference](reference/dq-rules.md): Supported data-quality rule types and parameters.
+7. [Function Reference](reference.md): Public callable behaviour and implementation detail.
+8. [Maintainer documentation](maintainer/index.md): Release and repository maintenance guidance. The [canonical product narrative](maintainer/product-narrative.md) owns approved terminology and product meaning.
 
-## Get Started
-
-- [Guided Demo](guided-demo.md): First path through the starter workflow and key concepts.
-- [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md): Fabric workspace, published release wheel upload, notebook attachment, import smoke test, and first runtime readiness.
-
-## Architecture
-
-- [How FabricOps Works](how-fabricops-works.md): Overview of the governed Fabric notebook operating model.
-- [List of Metadata Tables](reference/metadata.md): Metadata table responsibilities and governance evidence model.
-- [Pipeline Execution](guided-demo/run-pipeline.md): Runtime pipeline flow, guardrails, DQ enforcement, and profile behaviour.
-- [Metadata Dashboard](notebook-templates-implementation-guide/metadata-dashboard.md): Operational visibility over metadata and governance outputs.
-
-## Notebook flow
-
-- [Templates](notebook-templates-implementation-guide/index.md): Responsibilities of `00_env_config`, agreement, pipeline, governance, and exploration notebooks.
-- [Environment Config](guided-demo/run-environment-setup.md): Runtime configuration and metadata target setup for `00_env_config`.
-- [Agreement Setup](guided-demo/create-agreement.md): Agreement and steward context setup for governed runs.
-
-## Metadata and contracts
-
-- [Data Quality and Governance](guided-demo/review-guardrails.md): Review flows for column context, classification, DQ rules, and governance evidence.
-- [DQ Rules Reference](reference/dq-rules.md): Supported rule types, parameters, examples, and enforcement expectations.
-
-## API reference
-
-- [Function Reference](reference.md): Public callable reference generated from source docstrings and metadata.
-
-## Handover and maintenance
-
-- [Release Guide](maintainer/index.md): Maintainer checklist for release curation, lifecycle decisions, generators, build assets, and GitHub publishing.
-- [Public API & Architecture](maintainer/public-api-architecture.md): Maintainer reference for supported API boundaries, call-flow contracts, generated references, and dashboard review.
-- [Contributing](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/CONTRIBUTING.md): Contribution workflow and expectations.
-- [Repository README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md): Repository-level overview and navigation.
-
-## Markdown navigation
-
-- This static navigation file and Markdown page variants support deterministic documentation ingestion.
+The repository [README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md) provides repository-level orientation. The [Public API & Architecture guide](maintainer/public-api-architecture.md) documents the supported callable boundary and call-flow contracts.

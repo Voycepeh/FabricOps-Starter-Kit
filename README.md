@@ -30,9 +30,17 @@ By standardizing these workflows, FabricOps ensures that essential metadata and 
 
 **Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data**
 
-## Start here
+## Recommended reading order
 
-- [Documentation home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-- [How FabricOps works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
-- [Guided demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-- [Function reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+1. [Documentation Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+2. [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
+3. [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+4. [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
+5. [Metadata Table Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/)
+6. [DQ Rule Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/)
+7. [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+
+## More resources
+
+- [Releases](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
+- [Maintainer Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)

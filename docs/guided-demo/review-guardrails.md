@@ -6,7 +6,7 @@ Run `03_review` to review enrichment and guardrail intent before relying on acti
 
 ## What to do
 
-1. Open `03_review` after pipeline profile and guardrail evidence exists.
+1. Open `03_review` after pipeline profile and catalogue evidence exists.
 2. Select the governed table context from current catalogue evidence.
 3. Review schema, freshness, profile behavior, DQ, runtime result context, and enrichment records.
 4. Add or refine business descriptions, classifications, stewardship context, review notes, and guardrail fields exposed by the widgets.

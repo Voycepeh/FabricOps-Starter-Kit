@@ -128,7 +128,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
 
     ui = widgets.VBox([
         widgets.HTML("<h3>Governance policy, enrichment review, and guardrail review</h3>"),
-        widgets.HTML("<p>03_review owns the standard governance review workflow. Review enrichment intent from METADATA_ENRICHMENT and guardrail rule intent from METADATA_GUARDRAIL with the same lifecycle controls.</p>"),
+        widgets.HTML("<p>03_governance owns the standard governance review workflow. Review enrichment intent from METADATA_ENRICHMENT and guardrail rule intent from METADATA_GUARDRAIL with the same lifecycle controls.</p>"),
         widgets.HTML("<p><b>Filters:</b> Enrichment requests · Guardrail requests · Bypass pending review · Active approved · Rejected · Superseded · View approval logs.</p>"),
         status,
         widgets.HTML("<h4>Proposed, bypassed, and active records requiring governance decisions</h4>"),

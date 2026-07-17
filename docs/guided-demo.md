@@ -1,49 +1,70 @@
 # FabricOps Guided Demo
 
-Use this walkthrough to run the FabricOps Starter Kit demo from workspace setup through metadata inspection. It is the canonical user guide for configuring and running the template notebooks: what to open, what to edit, what to run, and what metadata to expect.
+The Guided Demo is the canonical step-by-step execution guide for FabricOps. It explains what to create, configure, open, run, and inspect from initial workspace setup through trusted Production output.
 
-Use [Templates](notebook-templates-implementation-guide/index.md) only as the lightweight notebook overview and download entry point. The [API Reference](reference/index.md) remains the source for reusable functions and classes.
+Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates-implementation-guide/index.md) as the notebook download and implementation handoff.
 
-## Overview
+## Execution sequence
 
-The guided demo shows how the starter kit works with deterministic order and customer source data. You start from an already published FabricOps release, create Fabric runtime items, configure shared routes, capture an agreement, generate demo source tables, run the pipeline, enrich metadata, review guardrails, and inspect the metadata outputs.
+### 1. Set up the required Fabric workspaces and artifacts
 
-Keep the default demo values for your first run so the notebooks and expected metadata rows line up.
+Create the Governance, Engineering Development, and Engineering Production workspaces and the required Fabric artifacts. Follow [Set Up Fabric Artifacts](guided-demo/setup-fabric-artifacts.md).
 
-| Default | Value |
-| ------- | ----- |
-| Source schema | `DemoTest` |
-| Generated source table prefix | `demo_` |
-| Happy path source tables | `demo_src_orders_happy` and `demo_src_customers_happy` |
-| Default unified outputs | `demo_unified_orders_enriched` and `demo_unified_orders_summary` |
+### 2. Configure `00_env_config`
 
-## Run sequence
+Configure and run the relevant `00_env_config` notebook in each workspace so later notebooks use the correct environment, workspace, lakehouse, warehouse, and metadata settings. Follow [Run Environment Setup](guided-demo/run-environment-setup.md).
 
-| Order | Step | What you do | What you should have afterward |
-| ----- | ---- | ----------- | ------------------------------ |
-| 1 | [Setup Fabric Artifacts](guided-demo/setup-fabric-artifacts.md) | Create or choose the Fabric workspace, data items, Environment, published release wheel install, and copied notebooks. | A workspace where copied notebooks can import `fabricops_kit` and route to named runtime targets. |
-| 2 | [Run Environment Setup](guided-demo/run-environment-setup.md) | Run `00_env_config` setup cells. | Shared `CONFIG` and `ENV` values plus registered metadata tables. |
-| 3 | [Register Agreement](guided-demo/create-agreement.md) | Run `01_agreement` to capture owner, purpose, readiness, and supporting files. | Agreement metadata that the pipeline can select. |
-| 4 | [Run Example Pipeline Demo](guided-demo/run-pipeline.md) | Run `example_pipeline_demo` to create deterministic demo source tables and demo-scoped rules. | Demo source data and starter rule intent ready for pipeline execution. |
-| 5 | [Run Pipeline](guided-demo/run-pipeline.md) | Run `02_pipeline`. | Governed outputs, profiles, guardrail outcomes, lineage, and run summaries. |
-| 6 | [Review Governance](guided-demo/review-guardrails.md) | Use governance review widgets to enrich metadata and approve or update guardrail intent, then rerun the pipeline when needed. | Approved rules, enriched metadata, and fresh runtime results from active checks. |
-| 7 | [Explore Metadata](guided-demo/explore-metadata-outputs.md) | Inspect generated metadata reference pages or use `99_explore` for troubleshooting. | Traceable answers about agreements, profiles, rules, lineage, and runs. |
+### 3. Create data stewards and establish a data agreement
 
-## Success criteria
+Open `01_agreement` in Governance, create the data steward records, and establish the data agreement required for the pipeline. Follow [Create Agreement](guided-demo/create-agreement.md).
 
-After the walkthrough, you should be able to answer these questions from metadata rather than notebook memory.
+### 4. Optionally explore the source
 
-| Question | Metadata-backed answer |
-| -------- | ---------------------- |
-| Who owns the data and what is it used for? | Agreement and steward metadata from `01_agreement`. |
-| What was profiled? | Catalogue profiles captured by `02_pipeline`. |
-| Which transformations created the outputs? | Pipeline registration, lineage, output records, and run summaries. |
-| Which expectations were reviewed? | Approved governance rows in `METADATA_GUARDRAIL_RULES` and enrichment review metadata. |
-| Which checks ran during execution? | Runtime outcomes in guardrail results and pipeline run metadata. |
+Use `99_explore` in Engineering Development to understand the source, test assumptions, investigate quality issues, and develop transformation logic. Important reusable logic should move into `02_pipeline`. See [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md).
 
-## Where to go for details
+### 5. Run the initial Development pipeline
 
-- Use this Guided Demo as the maintained execution guide for the template notebooks.
-- Use [Templates](notebook-templates-implementation-guide/index.md) to download notebooks and scan their roles.
-- Use [Metadata Tables](reference/metadata.md) to inspect the shape of stored workflow context.
-- Use [Function Reference](reference/index.md) only when you need helper-level API details.
+Run `02_pipeline` in Engineering Development to ingest, transform, profile, catalogue, and write the data. This initial run creates the observable profile, catalogue, lineage, and output evidence required for governance review. Follow [Run a Data Pipeline](guided-demo/run-pipeline.md).
+
+### 6. Review and enrich the catalogue and define guardrails
+
+After the initial pipeline evidence exists, run `03_review` in Governance. Review and enrich the catalogue, then define the applicable guardrails. Follow [Review Governance](guided-demo/review-guardrails.md).
+
+### 7. Rerun the Development pipeline with enforcement
+
+Rerun `02_pipeline` so it consumes the approved enrichment and guardrails. Based on the configured enforcement behaviour, a guardrail may record an informational result, produce a warning, or stop the pipeline. See [Run a Data Pipeline with Guardrails](guided-demo/run-pipeline-with-guardrails.md).
+
+### 8. Review the resulting evidence
+
+Inspect the updated profiling, catalogue, lineage, and guardrail results produced by the enforced rerun. Use [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md) and the [Metadata Table Reference](reference/metadata.md) to understand the stored evidence.
+
+### 9. Create the data contract
+
+Return to `01_agreement` in Governance and create a data contract tied to the data agreement and the approved pipeline.
+
+### 10. Promote the pipeline to Production
+
+Promote the approved `02_pipeline` notebook from Engineering Development to Engineering Production. All promoted pipelines should be tied to a data contract.
+
+### 11. Run the stable Production pipeline
+
+Run the promoted `02_pipeline` on its required Production schedule so full data loads and long-term outputs are created in the Production lakehouses or warehouses.
+
+### 12. Consume the trusted output
+
+Allow AI, BI, applications, agents, file exports, other engineering pipelines, or other downstream processes to consume the trusted Production data product subject to the appropriate access controls.
+
+## Required lifecycle
+
+**Initial pipeline evidence → Governance review and enrichment → Guardrail definition → Pipeline rerun with enforcement**
+
+Guardrail results from enforcement follow the initial pipeline evidence and governance review. The workflow does not assume that enforceable guardrail results exist before `02_pipeline` has produced observable catalogue and profiling evidence.
+
+## Technical lookup
+
+Use the reference pages for implementation detail rather than duplicating their specifications here:
+
+- [Notebook Templates](notebook-templates-implementation-guide/index.md): notebook responsibilities and downloads
+- [Metadata Table Reference](reference/metadata.md): table purposes, schemas, and ownership
+- [DQ Rule Reference](reference/dq-rules/index.md): supported rule types and parameters
+- [Function Reference](reference/index.md): callable behaviour and implementation detail

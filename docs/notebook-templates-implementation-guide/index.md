@@ -1,6 +1,6 @@
 # Templates
 
-FabricOps Starter Kit provides editable Microsoft Fabric notebook templates for governed, quality-checked notebook workflows. Use this page as the lightweight template landing page: download the notebooks, scan the run order, then follow the Guided Demo for the maintained step-by-step instructions.
+FabricOps Starter Kit provides editable Microsoft Fabric notebook templates for governed, quality-checked notebook workflows. Use this page as the notebook download and implementation handoff: download the notebooks, scan their responsibilities, then follow the [Guided Demo](../guided-demo.md) for the maintained execution instructions. Read [How FabricOps Works](../how-fabricops-works.md) for the architecture and operating model.
 
 ## Tested release records
 

@@ -351,3 +351,7 @@ The complete workflow is:
 14. Preserve important one-off analyses when future reproducibility is required.
 
 FabricOps therefore connects governance, engineering, and analytics through one standardized Microsoft Fabric workflow.
+
+## Run the workflow
+
+Continue to the [Guided Demo](guided-demo.md) for the canonical step-by-step execution guide: what to create, configure, open, run, and inspect.

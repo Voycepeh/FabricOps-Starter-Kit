@@ -373,3 +373,15 @@ The complete workflow is:
 14. Preserve important one-off analyses when future reproducibility is required.
 
 FabricOps therefore connects governance, engineering, and analytics through one standardized Microsoft Fabric workflow.
+
+## Documentation page ownership
+
+- The maintainer narrative owns canonical terminology and product meaning.
+- The README owns repository orientation.
+- The documentation home owns the product introduction and navigation.
+- How FabricOps Works owns the architecture and operating model.
+- The Guided Demo owns execution order.
+- The Templates guide owns notebook responsibilities and downloads.
+- Reference pages own technical lookup information.
+
+Public pages may shorten the canonical narrative but must not introduce a conflicting workflow or terminology.

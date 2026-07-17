@@ -1638,7 +1638,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
-  'when_to_use': 'Use at the start of 02_pipeline authoring or 03_review review when a user '
+  'when_to_use': 'Use at the start of 02_pipeline authoring or 03_review when a user '
                  'must choose which profiled table to work on.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
                      'selector reads metadata and prepares widget state only.',
@@ -2284,7 +2284,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
                                     'when_to_use': 'Use at the start of 02_pipeline authoring or '
-                                                   '03_review review when a user must choose '
+                                                   '03_review when a user must choose '
                                                    'which profiled table to work on.',
                                     'do_not_use_when': 'Do not use for automatic pipeline '
                                                        'enforcement or to write metadata; this '
