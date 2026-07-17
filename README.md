@@ -1,62 +1,38 @@
 # FabricOps Starter Kit
 
-FabricOps Starter Kit helps data teams build Microsoft Fabric notebook solutions with a consistent structure for configuration, data processing, governance, lineage, data quality, and operational handover.
+FabricOps, short for **Fabric Operations**, is a plug-and-play, lightweight starter kit that helps governance, data engineering, and AI or BI analytics teams quickly set up and adopt an out-of-the-box workflow within Microsoft Fabric.
 
-It provides:
+It combines a Python package containing helper and orchestrator functions, standardized Python notebook templates, a shared metadata model, and a guided demo.
 
-- reusable Fabric notebook templates
-- public Python functions for common Fabric operations
-- metadata and governance tables
-- data quality and pipeline run tracking
-- guided examples for implementing the complete workflow
+By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines. This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
 
-<div align="center">
+## Supported roles
 
-[![Open Documentation](https://img.shields.io/badge/Documentation-Open-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-[![Guided Demo](https://img.shields.io/badge/Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-[![Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
+- Governance
+- Data engineering
+- AI and BI analytics
 
-</div>
+## What the starter kit includes
+
+- A Python package containing out-of-the-box helper and orchestrator functions
+- Standardized Python notebook templates that weave these functions into reusable workflows
+- A shared metadata model that connects governance and engineering activities
+- A guided demo to help teams understand and adopt the workflow quickly
+- Technical documentation for the notebook templates, metadata tables, and individual functions
+
+## Three-workspace setup
+
+1. **Governance workspace** defines ownership, agreements, enrichment, and guardrails.
+2. **Engineering Development workspace** is where pipelines are developed, tested, profiled, and reviewed.
+3. **Engineering Production workspace** contains promoted and stable pipelines that produce trusted data for downstream AI and BI consumption.
+
+## Complete workflow
+
+**Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data**
 
 ## Start here
 
-**New to FabricOps**
-
-Follow the [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/) to set up the required Fabric artifacts and implement the notebook workflow.
-
-**Building a Fabric notebook solution**
-
-Use the notebook templates below as the starting structure for your project.
-
-**Maintaining or releasing FabricOps**
-
-Use the [FabricOps Maintainer Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/) for repository maintenance and release preparation.
-
-## Notebook workflow
-
-Download the notebooks and open them directly in Microsoft Fabric for the best experience.
-
-1. [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb)  
-   Configure the Fabric workspace, lakehouses, warehouses, and shared environment settings.
-
-2. [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb)  
-   Define the data agreement and register the governed source.
-
-3. [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb)  
-   Read, transform, validate, and write data through the FabricOps pipeline workflow.
-
-4. [`03_governance`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_governance.ipynb)  
-   Review and publish governance, lineage, data quality, and operational evidence.
-
-5. [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)  
-   Optional utilities for exploring FabricOps metadata and outputs.
-
-## Documentation
-
-The [published documentation site](https://voycepeh.github.io/FabricOps-Starter-Kit/) contains the complete user guides, notebook implementation guidance, metadata reference, public function reference, architecture information, and release documentation.
-
-For AI agents and documentation tooling, FabricOps also publishes an [`llms.txt`](https://voycepeh.github.io/FabricOps-Starter-Kit/llms.txt) navigation file.
-
-## Project status
-
-FabricOps is developed and tested around Microsoft Fabric notebook workflows. See the [release pages](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/) for the functions and capabilities available in each version.
+- [Documentation home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+- [How FabricOps works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
+- [Guided demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+- [Function reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)

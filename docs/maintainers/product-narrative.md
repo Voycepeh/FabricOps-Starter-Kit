@@ -1,4 +1,32 @@
-# How FabricOps works
+# FabricOps canonical product narrative
+
+This document is the source of truth for FabricOps product positioning, terminology, workspace responsibilities, notebook responsibilities, and the end-to-end workflow.
+
+Public-facing documentation may shorten or reorganize this content for its intended audience, but it must not introduce a conflicting product story or change the meaning of the workflow without first updating this document.
+
+## What is FabricOps?
+
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
+
+- Governance
+- Data engineering
+- AI and BI analytics
+
+It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
+
+FabricOps consists of:
+
+- A Python package containing out-of-the-box helper and orchestrator functions
+- Standardized Python notebook templates that weave these functions into reusable workflows
+- A shared metadata model that connects governance and engineering activities
+- A guided demo to help teams understand and adopt the workflow quickly
+- Technical documentation for the notebook templates, metadata tables, and individual functions
+
+By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
+
+This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
+
+## How FabricOps works
 
 FabricOps works through a three-workspace setup:
 
