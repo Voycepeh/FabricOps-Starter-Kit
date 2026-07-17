@@ -32,15 +32,23 @@ By standardizing these workflows, FabricOps ensures that essential metadata and 
 
 ## Recommended reading order
 
-1. [Documentation Home](https://voycepeh.github.io/FabricOps-Starter-Kit/)
-2. [How FabricOps Works](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
-3. [Guided Demo](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
-4. [Notebook Templates](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
-5. [Metadata Table Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/)
-6. [DQ Rule Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/)
-7. [Function Reference](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+<div align="center">
+
+[![1. Documentation Home](https://img.shields.io/badge/1._Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+[![2. How FabricOps Works](https://img.shields.io/badge/2._How_FabricOps-Works-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/how-fabricops-works/)
+[![3. Guided Demo](https://img.shields.io/badge/3._Guided-Demo-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/guided-demo/)
+[![4. Notebook Templates](https://img.shields.io/badge/4._Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
+[![5. Metadata Table Reference](https://img.shields.io/badge/5._Metadata-Table_Reference-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/)
+[![6. DQ Rule Reference](https://img.shields.io/badge/6._DQ_Rule-Reference-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/dq-rules/)
+[![7. Function Reference](https://img.shields.io/badge/7._Function-Reference-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/reference/)
+
+</div>
 
 ## More resources
 
-- [Releases](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
-- [Maintainer Guide](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
+<div align="center">
+
+[![View Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
+[![Maintainer Guide](https://img.shields.io/badge/Maintainer-Guide-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/maintainer/)
+
+</div>
