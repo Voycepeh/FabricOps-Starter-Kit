@@ -6,40 +6,6 @@ FabricOps connects governance, data engineering, and AI or BI analytics through 
 
 Governance defines ownership, agreements, enrichment, and guardrails. Engineering develops pipelines and captures metadata evidence. Approved pipelines are promoted to Production, where they provide stable and governed data products for downstream AI and BI consumption.
 
-<section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
-
-## What is FabricOps? { #what-is-fabricops }
-
-<p class="fabricops-architecture-image">
-  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
-</p>
-
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
-
-- Governance
-- Data engineering
-- AI and BI analytics
-
-It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
-
-</section>
-
-## What is included?
-
-FabricOps consists of:
-
-- A Python package containing out-of-the-box helper and orchestrator functions
-- Standardized Python notebook templates that weave these functions into reusable workflows
-- A shared metadata model that connects governance and engineering activities
-- A guided demo to help teams understand and adopt the workflow quickly
-- Technical documentation for the notebook templates, metadata tables, and individual functions
-
-## What problem does it solve?
-
-By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
-
-This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
-
 ## Choose what to open next
 
 <div class="fabricops-card-grid">
@@ -96,5 +62,41 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__body">Review published releases and their supported assets.</span>
   </a>
 </div>
+
+<section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
+
+## What is FabricOps? { #what-is-fabricops }
+
+<p class="fabricops-architecture-image">
+  <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
+</p>
+
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
+
+- Governance
+- Data engineering
+- AI and BI analytics
+
+It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
+
+</section>
+
+## What is included?
+
+FabricOps consists of:
+
+- A Python package containing out-of-the-box helper and orchestrator functions
+- Standardized Python notebook templates that weave these functions into reusable workflows
+- A shared metadata model that connects governance and engineering activities
+- A guided demo to help teams understand and adopt the workflow quickly
+- Technical documentation for the notebook templates, metadata tables, and individual functions
+
+## What problem does it solve?
+
+By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
+
+This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
+
+
 
 </div>
