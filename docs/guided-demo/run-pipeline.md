@@ -2,6 +2,10 @@
 
 Use `02_pipeline` as the main engineering notebook for a governed FabricOps data pipeline. This journey observes and records what happened: it reads source data, profiles the source, applies visible transformations, profiles the transformed target, writes governed target outputs, and registers metadata and lineage participation evidence.
 
+Before running `02_pipeline`, review the source and target table settings inherited from or defined alongside the notebook configuration.
+
+For an enforced rerun after governance review, confirm how the notebook will evaluate schema, freshness, profile behavior, and active DQ rules.
+
 `02_pipeline` is where users:
 
 - select or use the relevant agreement context created earlier in the guided demo;

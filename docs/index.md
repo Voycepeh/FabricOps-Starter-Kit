@@ -42,6 +42,11 @@ Governance defines ownership, agreements, enrichment, and guardrails. Engineerin
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>24</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
     <span class="fabricops-landing-card__body">Look up callable behaviour and implementation detail.</span>
   </a>
+
+  <a class="fabricops-landing-card" href="function-call-graph/">
+    <span class="fabricops-landing-card__title">Function Call Graph</span>
+    <span class="fabricops-landing-card__body">Understand the manually maintained callable architecture and call-flow review workflow.</span>
+  </a>
 </div>
 
 ## Maintain or release FabricOps
