@@ -52,10 +52,11 @@ def test_agent_only_release_task_structure_stays_out_of_human_guide() -> None:
     assert "## Minimum maintainer workflow" in guide
 
 
-def test_maintainer_navigation_contains_only_two_pages() -> None:
-    """Verify MkDocs exposes only the two intended maintainer pages."""
+def test_maintainer_navigation_contains_intended_pages() -> None:
+    """Verify MkDocs exposes the canonical narrative and maintainer guides."""
     mkdocs = MKDOCS.read_text(encoding="utf-8")
     assert "FabricOps Maintainer:" in mkdocs
+    assert "Product Narrative: maintainer/product-narrative.md" in mkdocs
     assert "Release Guide: maintainer/index.md" in mkdocs
     assert "Public API & Architecture: maintainer/public-api-architecture.md" in mkdocs
     assert "maintainer/overview.md" not in mkdocs

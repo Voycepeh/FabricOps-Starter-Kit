@@ -787,7 +787,7 @@ def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     notebook_paths = [
         Path("templates/notebooks/01_agreement.ipynb"),
         Path("templates/notebooks/02_pipeline.ipynb"),
-        Path("templates/notebooks/03_governance.ipynb"),
+        Path("templates/notebooks/03_review.ipynb"),
         Path("templates/notebooks/99_explore.ipynb"),
         Path("templates/notebooks/example_pipeline_demo.ipynb"),
         Path("templates/notebooks/example_dq_rule_smoke_test.ipynb"),

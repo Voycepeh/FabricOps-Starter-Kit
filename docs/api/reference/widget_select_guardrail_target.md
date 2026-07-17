@@ -28,10 +28,10 @@ Render an interactive target selector for guardrail authoring and governance rev
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">02_pipeline</span>
-<span class="reference-chip">03_governance</span>
+<span class="reference-chip">03_review</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `03_governance`
+**Used in notebooks:** `02_pipeline`, `03_review`
 
 ## Usage notes
 

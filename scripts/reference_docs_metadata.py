@@ -577,8 +577,8 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_review_guardrail_governance'],
                 'title': 'Pipeline run'}],
   'template_path': 'templates/notebooks/02_pipeline.ipynb'},
- {'notebook_key': '03_governance',
-  'notebook_label': '`03_governance`',
+ {'notebook_key': '03_review',
+  'notebook_label': '`03_review`',
   'segment_intro': 'Guardrail governance review using the current supported review widget flow.',
   'segments': [{'symbols': ['widget_select_guardrail_target',
                             'widget_author_schema_freshness_profile_rules',
@@ -586,7 +586,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_enrich_table_metadata',
                             'widget_review_guardrail_governance'],
                 'title': 'Guardrail governance review'}],
-  'template_path': 'templates/notebooks/03_governance.ipynb'},
+  'template_path': 'templates/notebooks/03_review.ipynb'},
  {'notebook_key': '99_explore',
   'notebook_label': '`99_explore`',
   'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
@@ -1604,9 +1604,9 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Render a consolidated column enrichment widget.',
   'symbol_name': 'widget_enrich_table_metadata',
-  'template_notebook': '03_governance',
+  'template_notebook': '03_review',
   'template_segment': 'Guardrail governance review',
-  'use_when': 'Use in 03_governance after widget_select_guardrail_target to enrich selected catalogue columns with descriptive business context, sensitivity, PII, and configured custom metadata.',
+  'use_when': 'Use in 03_review after widget_select_guardrail_target to enrich selected catalogue columns with descriptive business context, sensitivity, PII, and configured custom metadata.',
   'parameters': 'See the source docstring for the selected guardrail state, configuration, environment, and Spark session parameters.',
   'returns': 'Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when selected target state is incomplete or the configured metadata lakehouse cannot be written.',
@@ -1625,7 +1625,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Render an interactive target selector for guardrail authoring and '
                       'governance review.',
   'symbol_name': 'widget_select_guardrail_target',
-  'template_notebook': '02_pipeline / 03_governance',
+  'template_notebook': '02_pipeline / 03_review',
   'template_segment': 'Guardrail authoring',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
@@ -1638,7 +1638,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
-  'when_to_use': 'Use at the start of 02_pipeline authoring or 03_governance review when a user '
+  'when_to_use': 'Use at the start of 02_pipeline authoring or 03_review when a user '
                  'must choose which profiled table to work on.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
                      'selector reads metadata and prepares widget state only.',
@@ -1740,7 +1740,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Render interactive controls for reviewing proposed and bypassed guardrail '
                       'rules.',
   'symbol_name': 'widget_review_guardrail_governance',
-  'template_notebook': '03_governance',
+  'template_notebook': '03_review',
   'template_segment': 'Governance review',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
@@ -1753,7 +1753,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders governance review controls for reviewing '
                       'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
                       'supersede actions.',
-  'when_to_use': 'Use in 03_governance after selecting a guardrail target to perform human review '
+  'when_to_use': 'Use in 03_review after selecting a guardrail target to perform human review '
                  'of enrichment and guardrail rule intent.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or profiles '
                      'generation; it is an interactive governance review widget.',
@@ -2284,7 +2284,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
                                     'when_to_use': 'Use at the start of 02_pipeline authoring or '
-                                                   '03_governance review when a user must choose '
+                                                   '03_review when a user must choose '
                                                    'which profiled table to work on.',
                                     'do_not_use_when': 'Do not use for automatic pipeline '
                                                        'enforcement or to write metadata; this '
@@ -2374,7 +2374,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                             'proposed or bypass-active enrichment and guardrail '
                                                             'rules, and applying approve, reject, '
                                                             'or supersede actions.',
-                                        'when_to_use': 'Use in 03_governance after selecting a '
+                                        'when_to_use': 'Use in 03_review after selecting a '
                                                        'guardrail target to perform human review '
                                                        'of enrichment and guardrail rule intent.',
                                         'do_not_use_when': 'Do not use for automatic pipeline '

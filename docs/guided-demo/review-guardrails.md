@@ -1,12 +1,12 @@
 # Review Guardrails
 
-Run `03_governance` to review enrichment and guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
+Run `03_review` to review enrichment and guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
 
 ![FabricOps governance review](../assets/fabricops-goverance-review.png)
 
 ## What to do
 
-1. Open `03_governance` after pipeline profile and guardrail evidence exists.
+1. Open `03_review` after pipeline profile and catalogue evidence exists.
 2. Select the governed table context from current catalogue evidence.
 3. Review schema, freshness, profile behavior, DQ, runtime result context, and enrichment records.
 4. Add or refine business descriptions, classifications, stewardship context, review notes, and guardrail fields exposed by the widgets.
@@ -15,7 +15,7 @@ Run `03_governance` to review enrichment and guardrail intent before relying on 
 
 ## Review responsibilities
 
-`03_governance` reviews intent; it does not rewrite observed physical evidence. Keep the metadata responsibilities separated:
+`03_review` reviews intent; it does not rewrite observed physical evidence. Keep the metadata responsibilities separated:
 
 | Metadata area | Governance responsibility |
 | ------------- | ------------------------- |

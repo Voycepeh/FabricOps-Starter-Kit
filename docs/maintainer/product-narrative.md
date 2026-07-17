@@ -1,10 +1,32 @@
-# How FabricOps works
+# FabricOps canonical product narrative
 
-<div class="cta-center">
-  <a class="md-button md-button--primary" href="../guided-demo/">Open the Guided Demo</a>
-</div>
+This document is the source of truth for FabricOps product positioning, terminology, workspace responsibilities, notebook responsibilities, and the end-to-end workflow.
 
-![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
+Public-facing documentation may shorten or reorganize this content for its intended audience, but it must not introduce a conflicting product story or change the meaning of the workflow without first updating this document.
+
+## What is FabricOps?
+
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
+
+- Governance
+- Data engineering
+- AI and BI analytics
+
+It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
+
+FabricOps consists of:
+
+- A Python package containing out-of-the-box helper and orchestrator functions
+- Standardized Python notebook templates that weave these functions into reusable workflows
+- A shared metadata model that connects governance and engineering activities
+- A guided demo to help teams understand and adopt the workflow quickly
+- Technical documentation for the notebook templates, metadata tables, and individual functions
+
+By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
+
+This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
+
+## How FabricOps works
 
 FabricOps works through a three-workspace setup:
 
@@ -17,8 +39,6 @@ The Governance workspace defines ownership, agreements, enrichment, and guardrai
 The Engineering Development workspace is where pipelines are developed, tested, profiled, and reviewed.
 
 The Engineering Production workspace contains promoted and stable pipelines that run on a recurring basis and produce trusted data for downstream AI and BI consumption.
-
-![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 Together, these workspaces create one connected workflow:
 
@@ -139,8 +159,6 @@ A standard pipeline normally:
 1. Ingests data
 2. Transforms the data
 3. Writes the data
-
-![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
 The FabricOps template adds standardized governance and metadata activities around this engineering workflow.
 
@@ -355,3 +373,15 @@ The complete workflow is:
 14. Preserve important one-off analyses when future reproducibility is required.
 
 FabricOps therefore connects governance, engineering, and analytics through one standardized Microsoft Fabric workflow.
+
+## Documentation page ownership
+
+- The maintainer narrative owns canonical terminology and product meaning.
+- The README owns repository orientation.
+- The documentation home owns the product introduction and navigation.
+- How FabricOps Works owns the architecture and operating model.
+- The Guided Demo owns execution order.
+- The Templates guide owns notebook responsibilities and downloads.
+- Reference pages own technical lookup information.
+
+Public pages may shorten the canonical narrative but must not introduce a conflicting workflow or terminology.
