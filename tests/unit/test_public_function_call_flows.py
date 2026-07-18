@@ -324,6 +324,50 @@ def test_architecture_violation_type_classification() -> None:
     assert flows.classify_architecture_violation(private, other_private, "private_function", "private_function")["type"] == "Type 5"
     assert flows.classify_architecture_violation(private, shared, "private_function", "shared_function") is None
     assert flows.classify_architecture_violation(shared, info("_same", "src/fabricops_kit/shared.py"), "shared_function", "private_function") is None
+    widget = info("widget_review", "src/fabricops_kit/widgets/review.py")
+    assert flows.classify_architecture_violation(widget, public, "widget_function", "public_dependency") is None
+    assert flows.classify_architecture_violation(public, widget, "public_function", "widget_function", callee_is_public=True)["type"] == "Type 1"
+
+
+def test_widget_function_classification_requires_widget_folder_and_prefix() -> None:
+    """Validate widget classification requires both its package and naming convention."""
+    public_qns: set[str] = set()
+
+    assert flows.function_type(info("widget_review", "src/fabricops_kit/widgets/review.py"), public_qns) == "widget_function"
+    assert flows.function_type(info("widget_review", "src/fabricops_kit/review.py"), public_qns) == "shared_function"
+    assert flows.function_type(info("review", "src/fabricops_kit/widgets/review.py"), public_qns) == "shared_function"
+
+
+def test_widget_to_public_edge_is_visible_and_allowed(tmp_path: Path) -> None:
+    """Validate widget-to-public composition remains in the flow without Type 1."""
+    root = tmp_path
+    pkg = root / "src" / "fabricops_kit"
+    widgets = pkg / "widgets"
+    widgets.mkdir(parents=True)
+    init_path = pkg / "__init__.py"
+    init_path.write_text(
+        "from .widgets.review import widget_review\n"
+        "from .public_target import public_target\n"
+        "__all__ = ['widget_review', 'public_target']\n",
+        encoding="utf-8",
+    )
+    (widgets / "review.py").write_text(
+        "from ..public_target import public_target\n\n"
+        "def widget_review():\n"
+        "    return public_target()\n",
+        encoding="utf-8",
+    )
+    (pkg / "public_target.py").write_text("def public_target():\n    return None\n", encoding="utf-8")
+
+    payload = flows.build_payload(root=root, pkg_dir=pkg, init_path=init_path)
+
+    widget_flow = next(item for item in payload["public_functions"] if item["function_name"] == "widget_review")
+    widget_root = widget_flow["flow"][0]
+    target_edge = next(item for item in widget_flow["flow"] if item["function_name"] == "public_target")
+    assert widget_root["function_type"] == "widget_function"
+    assert target_edge["parent_qualified_name"] == widget_root["qualified_name"]
+    assert target_edge["architecture_violations"] == []
+    assert widget_flow["architecture_violation_count"] == 0
 
 
 def test_private_function_calling_shared_function_is_allowed(tmp_path: Path) -> None:

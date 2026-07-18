@@ -7,7 +7,7 @@ import copy
 from dataclasses import dataclass, field
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -306,6 +306,13 @@ def called_function_qns(info: FunctionInfo, modules: dict[str, ModuleInfo], func
 
 def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None = None) -> str:
     """Classify a discovered function for v2 reporting."""
+    path_parts = PurePosixPath(info.source_path).parts
+    in_widget_package = any(
+        path_parts[index : index + 2] == ("fabricops_kit", "widgets")
+        for index in range(len(path_parts) - 1)
+    )
+    if in_widget_package and info.function_name.startswith("widget_"):
+        return "widget_function"
     if info.qualified_name == root_qn:
         return "public_function"
     if info.qualified_name in public_qns:
@@ -315,13 +322,22 @@ def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None 
     return "shared_function"
 
 
-def classify_architecture_violation(caller: FunctionInfo | None, callee: FunctionInfo, caller_type: str | None, callee_type: str) -> dict[str, str] | None:
+def classify_architecture_violation(
+    caller: FunctionInfo | None,
+    callee: FunctionInfo,
+    caller_type: str | None,
+    callee_type: str,
+    *,
+    callee_is_public: bool | None = None,
+) -> dict[str, str] | None:
     """Return a deterministic architecture violation for one caller/callee edge."""
     if caller is None or caller_type is None:
         return None
     caller_public = caller_type in {"public_function", "public_dependency"}
-    callee_public = callee_type in {"public_function", "public_dependency"}
+    callee_public = callee_is_public if callee_is_public is not None else callee_type in {"public_function", "public_dependency"}
     different_file = caller.source_path != callee.source_path
+    if caller_type == "widget_function" and callee_public:
+        return None
     if caller_public and callee_public:
         return {"type": "Type 1", "detail": ARCHITECTURE_VIOLATION_RULES["Type 1"]}
     if caller_type == "shared_function" and callee_public:
@@ -346,7 +362,13 @@ def build_flow(root_qn: str, modules: dict[str, ModuleInfo], functions: dict[str
         parent_info = functions[parent] if parent else None
         caller_type = function_type(parent_info, public_qns, root_qn) if parent_info else None
         current_type = function_type(info, public_qns, root_qn)
-        violation = classify_architecture_violation(parent_info, info, caller_type, current_type)
+        violation = classify_architecture_violation(
+            parent_info,
+            info,
+            caller_type,
+            current_type,
+            callee_is_public=qn in public_qns,
+        )
         used.add(qn)
         flow.append({
             "depth": depth,
