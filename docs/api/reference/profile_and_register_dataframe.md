@@ -9,7 +9,7 @@
 
 ## Call-flow summary
 
-- Downstream callables: 143
+- Downstream callables: 142
 - Shared helpers: 53
 - Private helpers: 88
 
@@ -129,7 +129,7 @@ Raises ValueError for unsupported profile_role, unsupported store_type, or empty
 
 Processing flow:
 
-1. Run ``profile_dataframe(df)`` against the complete supplied DataFrame to
+1. Build a statistical profile against the complete supplied DataFrame to
    produce one statistical profile row per eligible input column.
 2. Use that statistical profile to choose automatic frequency columns
    when ``frequency_columns=None``: eligible scalar columns at or below
@@ -318,5 +318,5 @@ separate workflow.
 </details>
 
 !!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
+    Reference pages generated: 18 Jul 2026, 9:28 AM SGT
     Call-flow data generated: 16 Jul 2026, 12:56 AM SGT
