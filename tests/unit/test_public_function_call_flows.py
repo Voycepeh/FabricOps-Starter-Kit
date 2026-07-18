@@ -329,13 +329,23 @@ def test_architecture_violation_type_classification() -> None:
     assert flows.classify_architecture_violation(public, widget, "public_function", "widget_function", callee_is_public=True)["type"] == "Type 1"
 
 
-def test_widget_function_classification_requires_widget_folder_and_prefix() -> None:
-    """Validate widget classification requires both its package and naming convention."""
-    public_qns: set[str] = set()
+def test_widget_function_classification_requires_widget_folder_prefix_and_public_export() -> None:
+    """Validate widget classification requires package, naming convention, and public export."""
+    public_widget = info("widget_review", "src/fabricops_kit/widgets/review.py")
+    internal_widget_helper = info("widget_common", "src/fabricops_kit/widgets/shared.py")
+    public_widget_without_prefix = info("review", "src/fabricops_kit/widgets/review.py")
+    public_widget_outside_package = info("widget_review", "src/fabricops_kit/review.py")
 
-    assert flows.function_type(info("widget_review", "src/fabricops_kit/widgets/review.py"), public_qns) == "widget_function"
-    assert flows.function_type(info("widget_review", "src/fabricops_kit/review.py"), public_qns) == "shared_function"
-    assert flows.function_type(info("review", "src/fabricops_kit/widgets/review.py"), public_qns) == "shared_function"
+    public_qns = {
+        public_widget.qualified_name,
+        public_widget_without_prefix.qualified_name,
+        public_widget_outside_package.qualified_name,
+    }
+
+    assert flows.function_type(public_widget, public_qns) == "widget_function"
+    assert flows.function_type(internal_widget_helper, public_qns) == "shared_function"
+    assert flows.function_type(public_widget_without_prefix, public_qns, public_widget_without_prefix.qualified_name) == "public_function"
+    assert flows.function_type(public_widget_outside_package, public_qns, public_widget_outside_package.qualified_name) == "public_function"
 
 
 def test_widget_to_public_edge_is_visible_and_allowed(tmp_path: Path) -> None:

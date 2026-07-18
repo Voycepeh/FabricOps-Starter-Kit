@@ -311,7 +311,11 @@ def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None 
         path_parts[index : index + 2] == ("fabricops_kit", "widgets")
         for index in range(len(path_parts) - 1)
     )
-    if in_widget_package and info.function_name.startswith("widget_"):
+    if (
+        in_widget_package
+        and info.function_name.startswith("widget_")
+        and info.qualified_name in public_qns
+    ):
         return "widget_function"
     if info.qualified_name == root_qn:
         return "public_function"
