@@ -11,8 +11,8 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table, write_lakehouse_table_core
-from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
+from fabricops_kit.pipeline.shared import build_profile_dataframe
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -574,7 +574,7 @@ def profile_and_register_dataframe(
     -----
     Processing flow:
 
-    1. Run ``profile_dataframe(df)`` against the complete supplied DataFrame to
+    1. Build a statistical profile against the complete supplied DataFrame to
        produce one statistical profile row per eligible input column.
     2. Use that statistical profile to choose automatic frequency columns
        when ``frequency_columns=None``: eligible scalar columns at or below
@@ -752,7 +752,7 @@ def profile_and_register_dataframe(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     config, env, context = resolve_fabric_context(env=normalized_environment)
-    profile_df = profile_dataframe(df)
+    profile_df = build_profile_dataframe(df)
     schema_fingerprint = _schema_fingerprint(df)
     profiled_df = _canonical_profiled_dataframe(
         profile_df,

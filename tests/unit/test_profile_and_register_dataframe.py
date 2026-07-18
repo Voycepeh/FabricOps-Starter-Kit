@@ -6,6 +6,7 @@ import importlib
 import inspect
 import json
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -120,6 +121,29 @@ def test_profile_and_register_dataframe_is_public_export():
     assert public_profile_and_register_dataframe is profile_and_register_dataframe
 
 
+def test_profile_and_register_dataframe_imports_shared_profiler_directly():
+    """Verify registration has no dependency on the public profiling wrapper."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+
+    assert module.build_profile_dataframe is not None
+    assert not hasattr(module, "profile_dataframe")
+
+
+def test_profile_registration_call_flow_has_no_public_profiling_edge():
+    """Verify the committed architecture contract records the shared call seam."""
+    payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
+    flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_dataframe")
+    direct_callees = {
+        row["qualified_name"]: row
+        for row in flow["flow"]
+        if row["parent_qualified_name"] == flow["qualified_name"]
+    }
+
+    assert "fabricops_kit.pipeline.profile_dataframe.profile_dataframe" not in direct_callees
+    assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
+    assert "Type 1" not in direct_callees["fabricops_kit.pipeline.shared.build_profile_dataframe"]["violation_types"]
+
+
 def test_profile_and_register_dataframe_signature_requires_profile_role():
     """Verify catalogue registration accepts role as a required API seam."""
     parameters = inspect.signature(profile_and_register_dataframe).parameters
@@ -148,7 +172,7 @@ def test_profile_and_register_dataframe_accepts_source_and_target_roles(spark_se
     """Verify source and target role values are accepted but not persisted."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_dataframe(
         _source_df(spark_session),
         profile_role=role,
@@ -178,7 +202,7 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
     """Verify accepted store types are normalized and persisted."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_dataframe(
         _source_df(spark_session),
         profile_role="target",
@@ -250,7 +274,7 @@ def test_profile_and_register_dataframe_skips_frequency_for_empty_columns(spark_
         raise AssertionError("frequency profiling should not run")
 
     source = _source_df(spark_session)
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
@@ -393,7 +417,7 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
         quoted_columns = ", ".join(repr(column) for column in columns)
         return _frequency_df(spark_session).where(f"COLUMN_NAME in ({quoted_columns})")
 
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
@@ -448,7 +472,7 @@ def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold
             "COLUMN_NAME string, DATA_TYPE string, VALUE string, FREQUENCY_COUNT long, FREQUENCY_PERCENT double, FREQUENCY_RANK int, PROFILED_ROW_COUNT long, PROFILED_NON_NULL_COUNT long",
         )
 
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
@@ -498,7 +522,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
         assert frequency.__module__ == __name__
         return _frequency_df(spark_session)
 
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
@@ -772,7 +796,7 @@ def test_lineage_schema_is_table_participation_contract():
 def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeypatch, registered):
     """Verify failed lineage upserts are not converted to non-idempotent appends."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
 
     def fail_upsert(*, lineage_df, config, env, spark_session):
         raise RuntimeError("merge failed")
@@ -794,7 +818,7 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
 def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monkeypatch, registered):
     """Verify profiled evidence write failure stops before catalogue and lineage registration."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
 
     def fail_profiled(*_args, **_kwargs):
         raise ValueError("profiled boom")
@@ -815,7 +839,7 @@ def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monke
 def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, monkeypatch, registered):
     """Verify failed catalogue upserts are not converted to append writes."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    monkeypatch.setattr(module, "profile_dataframe", lambda df: _profile_df(spark_session))
+    monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
 
     def fail_catalogue_upsert(*, catalogue_df, config, env, spark_session):
         raise RuntimeError("catalogue merge failed")
@@ -863,7 +887,7 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
         return original_frequency_distribution(df, columns=columns, top_n=top_n)
 
     monkeypatch.setattr(module, "_schema_fingerprint", schema_fingerprint)
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
@@ -985,7 +1009,7 @@ def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_wi
         calls["frequency_columns"] = columns
         return original_frequency_distribution(df, columns=columns, top_n=top_n)
 
-    monkeypatch.setattr(module, "profile_dataframe", profile)
+    monkeypatch.setattr(module, "build_profile_dataframe", profile)
     monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
 
     result = profile_and_register_dataframe(
