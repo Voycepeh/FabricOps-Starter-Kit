@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import inspect
 from datetime import date, datetime
 
@@ -29,6 +30,23 @@ PROFILE_COLUMNS = [
     "PERCENTILE_75",
     "MAX_VALUE",
 ]
+
+
+def test_profile_dataframe_delegates_to_shared_profiler(monkeypatch):
+    """Verify the public wrapper passes its inputs to the shared profiler."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_dataframe")
+    source = object()
+    expected = object()
+    calls = []
+
+    def build(df, *, exclude_columns=None, approximate_distinct=True):
+        calls.append((df, exclude_columns, approximate_distinct))
+        return expected
+
+    monkeypatch.setattr(module, "build_profile_dataframe", build)
+
+    assert module.profile_dataframe(source, exclude_columns={"audit"}, approximate_distinct=False) is expected
+    assert calls == [(source, {"audit"}, False)]
 
 FREQUENCY_COLUMNS = [
     "COLUMN_NAME",
