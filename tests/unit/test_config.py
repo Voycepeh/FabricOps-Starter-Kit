@@ -840,13 +840,13 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
         public_functions["fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward"]["flow"][0][
             "function_type"
         ]
-        == "public_function"
+        == "widget_function"
     )
     assert (
         public_functions["fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement"]["flow"][0][
             "function_type"
         ]
-        == "public_function"
+        == "widget_function"
     )
 
 
