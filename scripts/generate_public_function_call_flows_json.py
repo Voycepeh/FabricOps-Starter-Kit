@@ -34,6 +34,7 @@ ARCHITECTURE_VIOLATION_RULES = {
     "Type 5": "Private function calls a private function from another file.",
 }
 PUBLIC_LIFECYCLE_STATUSES = {"live", "preview", "discontinued"}
+PUBLIC_CALLABLE_TYPES = {"public_function", "widget_function"}
 # v1 parity backlog for future focused PRs:
 # TODO: Add JSON/YAML AI refactor packet export.
 # TODO: Add compatibility mode for legacy function-call-graph consumers.
@@ -311,10 +312,11 @@ def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None 
         path_parts[index : index + 2] == ("fabricops_kit", "widgets")
         for index in range(len(path_parts) - 1)
     )
+    is_public = info.qualified_name in public_qns
     if (
-        in_widget_package
+        is_public
+        and in_widget_package
         and info.function_name.startswith("widget_")
-        and info.qualified_name in public_qns
     ):
         return "widget_function"
     if info.qualified_name == root_qn:
@@ -337,8 +339,11 @@ def classify_architecture_violation(
     """Return a deterministic architecture violation for one caller/callee edge."""
     if caller is None or caller_type is None:
         return None
-    caller_public = caller_type in {"public_function", "public_dependency"}
-    callee_public = callee_is_public if callee_is_public is not None else callee_type in {"public_function", "public_dependency"}
+    caller_public = caller_type in PUBLIC_CALLABLE_TYPES or caller_type == "public_dependency"
+    if callee_is_public is not None:
+        callee_public = callee_is_public
+    else:
+        callee_public = callee_type in PUBLIC_CALLABLE_TYPES or callee_type == "public_dependency"
     different_file = caller.source_path != callee.source_path
     if caller_type == "widget_function" and callee_public:
         return None
@@ -878,7 +883,7 @@ def freeze_release_payload(payload: dict[str, Any], *, release_version: str, sou
     live_critical_internal_count = sum(
         1
         for row in frozen["defined_functions"]
-        if row.get("function_type") != "public_function" and row.get("contract_classification") == "live_critical_internal"
+        if row.get("function_type") not in PUBLIC_CALLABLE_TYPES and row.get("contract_classification") == "live_critical_internal"
     )
     frozen["release_contract"] = {
         "release_versions": [release_version],

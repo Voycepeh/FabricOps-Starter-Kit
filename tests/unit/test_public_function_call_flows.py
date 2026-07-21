@@ -477,7 +477,7 @@ def test_dashboard_signal_wording_columns_and_links(tmp_path: Path) -> None:
     assert '<th class="col-select">Select</th><th class="col-small"><button class="sort-button" data-inventory-sort="call_depth" type="button" title="Distance from the selected public callable root.">Call depth</button></th><th class="col-function"><button class="sort-button" data-inventory-sort="function_name" type="button">Function</button></th><th class="col-type"><button class="sort-button" data-inventory-sort="function_type" type="button">Type</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_width" type="button" title="Number of direct package-local calls made by this function.">Width</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_scope" type="button" title="Total downstream functions reached from this function.">Scope</button></th><th class="col-small"><button class="sort-button" data-inventory-sort="function_downstream_depth" type="button" title="Deepest downstream call path from this function.">Depth</button></th><th>Violation</th><th>Inline candidate</th><th>Promote to shared</th><th class="col-file"><button class="sort-button" data-inventory-sort="source_path" type="button">File</button></th>' in html
     assert "function inventoryDownstreamMetrics(flow,qualifiedName)" in html
     assert "function enrichInventoryRows(rows,flow)" in html
-    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}<div>${n.function_type==='public_function'?'':liveImpactChip(n)}</div>" in html
+    assert "<td>${esc(n.call_depth)}</td><td>${functionLink(n)}</td><td>${esc(n.function_type)}<div>${isPublicCallableType(n.function_type)?'':liveImpactChip(n)}</div>" in html
     assert "<td>${esc(n.function_width)}</td><td>${esc(n.function_scope)}</td><td>${esc(n.function_downstream_depth)}</td><td>${violationBadges(n)}" in html
     assert "<td>${n.promote_to_shared_candidate?'Yes':'No'}</td><td>${esc(n.source_path)}</td>" in html
     assert ">Parent</button>" not in html
@@ -611,7 +611,10 @@ def test_dashboard_derives_signals_from_old_shape_payload() -> None:
     assert "new Set(flow.filter(n=>n.parent_qualified_name===root).map(n=>n.qualified_name).filter(Boolean)).size" in html
     assert "derived_scope:scope||f.transitive_function_count||f.scope||0" in html
     assert "derived_depth:depths.length?Math.max(...depths):f.max_depth||f.depth||0" in html
-    assert "pt==='public_function'||pt==='public_dependency'" in html
+    assert "const PUBLIC_CALLABLE_TYPES=new Set(['public_function','widget_function'])" in html
+    assert "callerPublic=isPublicCallableType(pt)||pt==='public_dependency'" in html
+    assert "calleePublic=isPublicCallableType(ct)||ct==='public_dependency'" in html
+    assert "if(pt==='widget_function'&&calleePublic)return null" in html
     assert "return 'Type 1'" in html
     assert "return 'Type 2'" in html
     assert "return 'Type 3'" in html
