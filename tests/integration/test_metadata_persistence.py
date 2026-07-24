@@ -56,7 +56,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     assert result["warnings"] == []
     assert result["active_metadata_tables"] == CANONICAL_METADATA_TABLES
     assert result["created_or_checked_tables"] == CANONICAL_METADATA_TABLES
-    assert reads == [*CANONICAL_METADATA_TABLES, "METADATA_DATA_STEWARD"]
+    # The steward table read during schema validation is reused for readiness checks.
+    assert reads == CANONICAL_METADATA_TABLES
 
 
 def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypatch):
