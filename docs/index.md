@@ -98,8 +98,8 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__body">Follow repository maintenance and release preparation guidance.</span>
   </a>
 
-  <a class="fabricops-landing-card" href="maintainer/product-narrative/">
-    <span class="fabricops-landing-card__title">Canonical Product Narrative</span>
+  <a class="fabricops-landing-card" href="maintainer/product-definition/">
+    <span class="fabricops-landing-card__title">Product Definition</span>
     <span class="fabricops-landing-card__body">Preserve the approved FabricOps terminology, workspace responsibilities, and workflow.</span>
   </a>
 </div>

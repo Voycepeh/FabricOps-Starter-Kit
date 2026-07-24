@@ -1,6 +1,6 @@
 # FabricOps Starter Kit documentation navigation
 
-Use these pages in order. This file is a navigation surface for AI agents and documentation tooling; the linked pages own the product narrative, workflow, and technical detail.
+Use these pages in order. This file is a navigation surface for AI agents and documentation tooling; the linked pages own the product definition, workflow, and technical detail.
 
 1. [Product overview](index.md): What FabricOps is, who it supports, what it includes, and where to go next.
 2. [How FabricOps Works](how-fabricops-works.md): Three-workspace architecture, notebook responsibilities, metadata handoffs, production promotion, and consumption.
@@ -9,6 +9,6 @@ Use these pages in order. This file is a navigation surface for AI agents and do
 5. [Metadata Reference](reference/metadata.md): Metadata table purposes, schemas, and ownership.
 6. [DQ Rule Reference](reference/dq-rules.md): Supported data-quality rule types and parameters.
 7. [Function Reference](reference.md): Public callable behaviour and implementation detail.
-8. [Maintainer documentation](maintainer/index.md): Release and repository maintenance guidance. The [canonical product narrative](maintainer/product-narrative.md) owns approved terminology and product meaning.
+8. [Maintainer documentation](maintainer/index.md): Release and repository maintenance guidance. The [Product Definition](maintainer/product-definition.md) owns canonical terminology, workflow, and product meaning.
 
 The repository [README](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/README.md) provides repository-level orientation. The [Public API & Architecture guide](maintainer/public-api-architecture.md) documents the supported callable boundary and call-flow contracts.

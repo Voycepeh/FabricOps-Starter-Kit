@@ -1,6 +1,6 @@
-# FabricOps canonical product narrative
+# FabricOps product definition
 
-This document is the maintainer-facing source of truth for FabricOps product positioning, terminology, and product decisions. Public-facing documentation may shorten, visualize, or reorganize this content for its intended audience, but it must not introduce a conflicting product story or change the meaning of the workflow without first updating this document.
+This document is the maintainer-facing source of truth for the FabricOps product definition, terminology, operating model, and product decisions. Public-facing documentation may shorten, visualize, or reorganize this content for its intended audience, but it must not introduce a conflicting product story or change the meaning of the workflow without first updating this document.
 
 ## What is FabricOps?
 
@@ -64,7 +64,7 @@ The purpose of this future capability is reproducibility: preserving the noteboo
 
 ## Documentation page ownership
 
-- The maintainer product narrative owns canonical terminology and product meaning.
+- The Product Definition owns canonical terminology, workflow, and product meaning.
 - The README owns repository orientation.
 - The documentation home owns product introduction and navigation.
 - How FabricOps Works owns architecture and the operating model.
@@ -72,4 +72,4 @@ The purpose of this future capability is reproducibility: preserving the noteboo
 - The Guided Demo owns maintained execution instructions.
 - Metadata and function reference pages own detailed technical contracts.
 
-Public pages may shorten the canonical narrative but must not introduce a conflicting workflow or terminology.
+Public pages may shorten the product definition but must not introduce a conflicting workflow or terminology.
