@@ -31,9 +31,9 @@ Inspect only the sources relevant to the task:
 4. Implement only the required source change.
 5. Update exports, docstrings, reference metadata, and tests only when affected.
 6. For a new or modified Live callable, compare the docstring with the implementation and cover behaviour, side effects, return interpretation, failure behaviour, runtime assumptions, and a valid example. Preview callable documentation may remain lighter unless the callable is being promoted.
-7. Regenerate `docs/reference/_data/public-function-call-flows.json` only when the committed architecture contract changes.
-8. Review the diff for unrelated generated artifacts, architecture violations, or compatibility shims.
-9. Report lifecycle, contract impact, changed files, verification, and any separate generated refresh still required.
+7. Regenerate `docs/reference/_data/public-function-call-flows.json` only when the committed architecture contract changes. If the contract changes, retain both the changed call-flow JSON and the corresponding `public_function_call_flows_json` timestamp entry in `docs/reference/_data/generated-artifacts.json`. If the contract does not change, restore timestamp-only noise unless the task explicitly requests a timestamp refresh.
+8. Review the diff for unrelated generated artifacts, architecture violations, compatibility shims, or timestamp-only noise.
+9. Report lifecycle, contract impact, changed files, verification, whether the timestamp manifest was committed alongside an intentional contract refresh, and any separate generated refresh still required.
 
 Follow the architecture, compatibility, generated-artifact, and public-safety rules in `AGENTS.md`; do not restate or override them here.
 
@@ -46,6 +46,7 @@ Change only files required by the task, typically:
 - `scripts/reference_docs_metadata.py` when reference metadata changes
 - targeted tests
 - `docs/reference/_data/public-function-call-flows.json` only when its contract changes
+- `docs/reference/_data/generated-artifacts.json` only for the corresponding `public_function_call_flows_json` timestamp when the call-flow contract intentionally changes or the task explicitly requests a timestamp refresh
 
 Generated individual function pages and dashboard HTML are not normal source-PR outputs.
 
@@ -69,5 +70,6 @@ State:
 - lifecycle and public contract impact
 - files changed
 - whether call-flow JSON was regenerated
+- whether the timestamp manifest was committed alongside an intentional contract refresh, restored as timestamp-only noise, or refreshed by explicit request
 - verification commands and results
 - any separate generated refresh still required

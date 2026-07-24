@@ -114,7 +114,7 @@ Before function-level source changes, inspect the relevant entry for:
 
 Source code, exports, reference metadata, and generators remain authoritative. Do not manually edit the JSON as a fix.
 
-Regenerate and commit the JSON only when a change affects:
+Regenerate and commit the call-flow outputs only when a change affects:
 
 - callable structure
 - source locations
@@ -122,6 +122,8 @@ Regenerate and commit the JSON only when a change affects:
 - helper relationships
 - architecture classification
 - public function flow metrics
+
+When an intentional source change produces a content change in `docs/reference/_data/public-function-call-flows.json`, retain and commit the corresponding `public_function_call_flows_json` timestamp update in `docs/reference/_data/generated-artifacts.json`. This timestamp manifest change is a directly owned output of the call-flow generator, not an unrelated generated artifact. When the call-flow JSON has no content change, do not commit a timestamp-only change unless the task explicitly requests a timestamp refresh. CI determinism checks may preserve or restore timestamps to avoid meaningless validation diffs.
 
 Command:
 
