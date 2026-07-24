@@ -15,27 +15,3 @@ By standardizing these workflows, FabricOps ensures that essential metadata and 
 [![View Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
 
 </div>
-
-## Who this is for?
-
-- Governance
-- Data engineering
-- AI and BI analytics
-
-## What the starter kit includes
-
-- A Python package containing out-of-the-box helper and orchestrator functions
-- Standardized Python notebook templates that weave these functions into reusable workflows
-- A shared metadata model that connects governance and engineering activities
-- A guided demo to help teams understand and adopt the workflow quickly
-- Technical documentation for the notebook templates, metadata tables, and individual functions
-
-## Three-workspace setup
-
-1. **Governance workspace** defines ownership, agreements, enrichment, and guardrails.
-2. **Engineering Development workspace** is where pipelines are developed, tested, profiled, and reviewed.
-3. **Engineering Production workspace** contains promoted and stable pipelines that produce trusted data for downstream AI and BI consumption.
-
-## Complete workflow
-
-**Define governance requirements → Develop the pipeline → Capture metadata evidence → Review and enrich the catalogue → Enforce guardrails → Create a data contract → Promote to production → Consume the trusted data**
