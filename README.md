@@ -8,9 +8,9 @@ By standardizing these workflows, FabricOps ensures that essential metadata and 
 
 <div align="center">
 
-[![Documentation Home](https://img.shields.io/badge/1._Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
+[![Documentation Home](https://img.shields.io/badge/Documentation-Home-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/)
 
-[![Notebook Templates](https://img.shields.io/badge/4._Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
+[![Notebook Templates](https://img.shields.io/badge/Notebook-Templates-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/notebook-templates-implementation-guide/)
 
 [![View Releases](https://img.shields.io/badge/View-Releases-blue?style=for-the-badge)](https://voycepeh.github.io/FabricOps-Starter-Kit/releases/)
 
