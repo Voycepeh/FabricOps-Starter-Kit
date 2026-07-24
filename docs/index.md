@@ -45,7 +45,6 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
 
 ## Quick Links
 
-<div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
     <span class="fabricops-landing-card__body">Understand the three-workspace architecture, notebook responsibilities, metadata handoffs, governance review, production promotion, and downstream consumption.</span>
@@ -60,10 +59,10 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__title">Releases</span>
     <span class="fabricops-landing-card__body">Review published releases and their supported assets.</span>
   </a>
-</div>
 
 ## Technical lookup
 
+<div class="fabricops-card-grid">
 <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
     <span class="fabricops-landing-card__title">Notebook Templates</span>
     <span class="fabricops-landing-card__body">Download the five main notebook templates and understand each notebook's implementation responsibility.</span>
@@ -74,7 +73,6 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__body">Look up callable behaviour and implementation detail.</span>
   </a>
   
-<div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>10</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
     <span class="fabricops-landing-card__body">Look up metadata table purposes, schemas, and ownership.</span>
@@ -84,17 +82,17 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__title">23 data quality rule types</span>
     <span class="fabricops-landing-card__body">Look up supported data quality rule types and parameters.</span>
   </a>
-
 </div>
 
 ## Maintain FabricOps
 
-<div class="fabricops-card-grid">
+
 <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
     <span class="fabricops-landing-card__body">Understand the manually maintained callable architecture and call-flow review workflow.</span>
   </a>
   
+<div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="maintainer/">
     <span class="fabricops-landing-card__title">Maintainer Guide</span>
     <span class="fabricops-landing-card__body">Follow repository maintenance and release preparation guidance.</span>
@@ -104,6 +102,5 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__title">Canonical Product Narrative</span>
     <span class="fabricops-landing-card__body">Preserve the approved FabricOps terminology, workspace responsibilities, and workflow.</span>
   </a>
-
 </div>
 
