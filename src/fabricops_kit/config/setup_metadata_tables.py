@@ -70,16 +70,11 @@ def _result(table_name: str, status: str, message: str, *, error_type: str | Non
     return item
 
 
-def _active_steward_presence(spark: Any, schema: str | None, context: dict[str, Any]) -> int:
+def _active_steward_presence(steward_rows: Any) -> int:
     """Return 1 when any active steward row exists, otherwise 0."""
     try:
-        steward_rows = read_lakehouse_table_core(
-            "METADATA_DATA_STEWARD",
-            target="metadata",
-            schema=schema,
-            spark_session=spark,
-            context=context,
-        )
+        if steward_rows is None:
+            return 0
         if hasattr(steward_rows, "where"):
             steward_rows = steward_rows.where("is_active = true")
         if hasattr(steward_rows, "limit"):
@@ -334,12 +329,9 @@ def setup_metadata_tables(
     failed_tables: list[str] = []
 
     total_tables = len(registry)
-    if verbose:
-        print("FabricOps metadata table setup\n")
+    steward_table = None
 
     for index, (table_name, schema) in enumerate(registry.items(), start=1):
-        if verbose:
-            print(f"[{index}/{total_tables}] Checking {table_name}...")
         try:
             created = False
             try:
@@ -372,6 +364,8 @@ def setup_metadata_tables(
                 missing = [field for field in metadata_table_field_names(schema) if field not in columns]
                 if missing:
                     raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+            if table_name == "METADATA_DATA_STEWARD":
+                steward_table = table
             if created:
                 created_tables.append(table_name)
                 table_results[table_name] = _result(table_name, "created", "Metadata table was created and validated.")
@@ -382,8 +376,6 @@ def setup_metadata_tables(
                 table_results[table_name] = _result(
                     table_name, "validated", "Existing metadata table schema is compatible."
                 )
-                if verbose:
-                    print(f"[{index}/{total_tables}] Validated {table_name}\n")
         except Exception as exc:  # continue after per-table failures
             failed_tables.append(table_name)
             table_results[table_name] = _result(table_name, "failed", f"{exc}", error_type=type(exc).__name__)
@@ -391,7 +383,7 @@ def setup_metadata_tables(
                 print(f"[{index}/{total_tables}] Failed {table_name}")
                 print(f"       {exc}\n")
 
-    active_stewards = _active_steward_presence(spark, resolved_metadata_schema, context)
+    active_stewards = _active_steward_presence(steward_table)
 
     successful = created_tables + validated_tables
     status = "ready" if not failed_tables else ("partial_failure" if successful else "failed")

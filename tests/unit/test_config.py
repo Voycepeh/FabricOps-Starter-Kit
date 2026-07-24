@@ -1256,17 +1256,27 @@ def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monk
     steward = Table(registry["METADATA_DATA_STEWARD"].fieldNames())
     tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
     tables["METADATA_DATA_STEWARD"] = steward
-    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
+    read_counts = {name: 0 for name in registry}
+
+    def read_table(table_name, **_kwargs):
+        read_counts[table_name] += 1
+        return tables[table_name]
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
     output = capsys.readouterr().out
+    total = len(registry)
 
     assert result["status"] == "ready"
     assert result["failed_tables"] == []
     assert result["data_agreement"]["active_steward_count"] == 1
-    assert "FabricOps metadata tables ready (10/10)." in output
+    assert output == f"\nFabricOps metadata tables ready ({total}/{total}).\nActive steward present: Yes\n"
+    assert "Checking" not in output
+    assert "Validated" not in output
     assert "Failed tables:" not in output
     assert "Created tables:" not in output
+    assert read_counts["METADATA_DATA_STEWARD"] == 1
     assert steward.limit_values == [1]
     assert steward.take_values == [1]
 
@@ -1318,9 +1328,11 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
 
     assert result["created_tables"] == names[:2]
     assert created == names[:2]
-    assert f"[1/{len(names)}] Checking {names[0]}..." in output
+    assert "Checking" not in output
+    assert not any(line.startswith("[") and " Validated " in line for line in output.splitlines())
+    assert f"[1/{len(names)}] Created {names[0]}" in output
     assert f"[2/{len(names)}] Created {names[1]}" in output
-    assert "FabricOps metadata setup complete (10/10)." in output
+    assert f"FabricOps metadata setup complete ({len(names)}/{len(names)})." in output
     assert "Created: 2" in output
     assert "Validated: 8" in output
     assert f"- {names[0]}" in output
@@ -1364,8 +1376,11 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     assert result["failed_tables"] == [failed_name]
     assert read_order[: len(names)] == names
     assert "FabricOps metadata setup completed with failures." in output
-    assert "Successful: 9/10" in output
-    assert "Failed: 1/10" in output
+    assert f"[{names.index(failed_name) + 1}/{len(names)}] Failed {failed_name}" in output
+    assert "Checking" not in output
+    assert "Validated" not in output
+    assert f"Successful: {len(names) - 1}/{len(names)}" in output
+    assert f"Failed: 1/{len(names)}" in output
     assert f"- {failed_name}:" in output
     assert "missing required column" in output
 
@@ -1384,7 +1399,7 @@ def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
 
-    with pytest.raises(RuntimeError, match="FabricOps metadata setup failed for 10 table"):
+    with pytest.raises(RuntimeError, match=f"FabricOps metadata setup failed for {len(names)} table"):
         setup_metadata_tables(
             spark=object(), config=framework_config(), env="dev", verbose=False, raise_on_failure=True
         )
