@@ -64,7 +64,7 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
 
 <div class="fabricops-card-grid">
 <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
-    <span class="fabricops-landing-card__title">Notebook Templates</span>
+    <span class="fabricops-landing-card__title">5 Notebook Templates</span>
     <span class="fabricops-landing-card__body">Download the five main notebook templates and understand each notebook's implementation responsibility.</span>
   </a>
 
