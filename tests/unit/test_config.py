@@ -219,8 +219,16 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     class Spark:
         def __init__(self):
@@ -284,8 +292,16 @@ def test_setup_metadata_tables_ready_without_active_steward_when_not_required(mo
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return []
+
         def count(self):
-            return 0
+            raise AssertionError("active steward readiness must not use count")
 
     class Spark:
         def __init__(self):
@@ -316,8 +332,16 @@ def test_setup_metadata_tables_reports_explicit_metadata_schema(monkeypatch):
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     class Spark:
         def __init__(self):
@@ -360,8 +384,16 @@ def test_setup_metadata_tables_reports_configured_metadata_schema(monkeypatch):
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     class Spark:
         def __init__(self):
@@ -395,8 +427,16 @@ def test_setup_metadata_tables_does_not_rewrite_compliant_tables(monkeypatch):
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     def read_table(table_name, **_kwargs):
         return Table(registry[table_name].fieldNames())
@@ -427,8 +467,16 @@ def test_setup_metadata_tables_rejects_existing_tables_missing_canonical_columns
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
     tables["METADATA_DATA_CATALOGUE"] = Table(
@@ -484,8 +532,16 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     def wrong_nullability(schema):
         field_type = type(schema.fields[0])
@@ -499,7 +555,11 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
     tables = {name: Table(schema) for name, schema in registry.items()}
     tables["METADATA_DATA_PROFILED"] = Table(wrong_nullability(registry["METADATA_DATA_PROFILED"]))
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
-    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
+    monkeypatch.setattr(
+        setup_module,
+        "write_lakehouse_table_core",
+        lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
+    )
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "ready"
@@ -525,8 +585,16 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     def wrong_type(schema):
         field_type = type(schema.fields[0])
@@ -540,11 +608,17 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
     tables = {name: Table(schema) for name, schema in registry.items()}
     tables["METADATA_DATA_PROFILED"] = Table(wrong_type(registry["METADATA_DATA_PROFILED"]))
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
-    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"))
+    monkeypatch.setattr(
+        setup_module,
+        "write_lakehouse_table_core",
+        lambda *_args, **_kwargs: pytest.fail("existing metadata tables must not be rewritten"),
+    )
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
     assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
-    assert "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
+    assert (
+        "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
+    )
 
 
 def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
@@ -564,8 +638,16 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
         def where(self, _expr):
             return self
 
+        def limit(self, value):
+            assert value == 1
+            return self
+
+        def take(self, value):
+            assert value == 1
+            return [object()]
+
         def count(self):
-            return 1
+            raise AssertionError("active steward readiness must not use count")
 
     class Spark:
         def createDataFrame(self, rows, schema=None):  # noqa: N802
@@ -626,7 +708,13 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     assert "METADATA_GUARDRAIL_RESULTS" in tables
     assert "METADATA_DATA_PROFILED" in tables
     assert "METADATA_DATA_ACCESS" in tables
-    for legacy in {"METADATA_ENRICHMENT_RULES", "METADATA_GUARDRAIL_RULES", "METADATA_DATA_LINEAGE_TABLE", "METADATA_NOTEBOOK_REGISTRY", "METADATA_PIPELINE_RUNS"}:
+    for legacy in {
+        "METADATA_ENRICHMENT_RULES",
+        "METADATA_GUARDRAIL_RULES",
+        "METADATA_DATA_LINEAGE_TABLE",
+        "METADATA_NOTEBOOK_REGISTRY",
+        "METADATA_PIPELINE_RUNS",
+    }:
         assert legacy not in tables
 
 
@@ -686,6 +774,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     assert audit_names.issubset(catalogue_names)
     assert audit_names.issubset(profiled_names)
+
 
 def test_metadata_registration_validation_reads_configured_metadata_target(monkeypatch):
     """Verify metadata registration validation reads configured metadata target."""
@@ -833,7 +922,9 @@ def test_data_agreement_widget_callable_inventory_roles_are_current():
     flow_data = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     rows = {row["qualified_name"]: row for row in flow_data["defined_functions"]}
     assert "fabricops_kit.widgets.shared.render_maintenance_widget_shared_workflow" not in rows
-    assert "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
+    assert (
+        "fabricops_kit.widgets.widget_render_agreement_evidence._render_agreement_evidence_widget_workflow" not in rows
+    )
     assert "fabricops_kit.widgets.shared._render_agreement_evidence_widget_workflow" not in rows
     public_functions = {row["qualified_name"]: row for row in flow_data["public_functions"]}
     assert (
@@ -918,10 +1009,10 @@ def test_setup_metadata_tables_uses_public_config_validation_helper_only():
 
     assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
     assert "_validate_framework_config" not in source
-    assert (
-        "from .metadata_schemas import CANONICAL_METADATA_TABLES, metadata_schema_type_name, metadata_table_field_names, metadata_table_schema_registry"
-        in source
-    )
+    assert "CANONICAL_METADATA_TABLES" in source
+    assert "metadata_schema_type_name" in source
+    assert "metadata_table_field_names" in source
+    assert "metadata_table_schema_registry" in source
 
 
 def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
@@ -1082,7 +1173,9 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         elif table_name == "METADATA_DATA_PROFILED":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
         else:
-            assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], table_name
+            assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()], (
+                table_name
+            )
 
 
 def test_metadata_audit_schema_nullability_contract():
@@ -1128,3 +1221,205 @@ def test_metadata_writer_sources_do_not_replace_schemas():
             if "metadata" in text.lower() and "overwriteSchema" in text:
                 offenders.append(str(path))
     assert offenders == []
+
+
+def test_setup_metadata_tables_existing_tables_prints_compact_ready_summary(monkeypatch, capsys):
+    """Verify all-valid setup stays compact and uses one-row readiness checks."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, columns, rows=None):
+            self.columns = list(columns)
+            self.rows = rows if rows is not None else [object()]
+            self.limit_values = []
+            self.take_values = []
+
+        def where(self, expr):
+            assert expr == "is_active = true"
+            return self
+
+        def limit(self, value):
+            self.limit_values.append(value)
+            self.rows = self.rows[:value]
+            return self
+
+        def take(self, value):
+            self.take_values.append(value)
+            return self.rows[:value]
+
+        def count(self):
+            raise AssertionError("active steward readiness must not use count")
+
+    steward = Table(registry["METADATA_DATA_STEWARD"].fieldNames())
+    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items()}
+    tables["METADATA_DATA_STEWARD"] = steward
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    output = capsys.readouterr().out
+
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    assert result["data_agreement"]["active_steward_count"] == 1
+    assert "FabricOps metadata tables ready (10/10)." in output
+    assert "Failed tables:" not in output
+    assert "Created tables:" not in output
+    assert steward.limit_values == [1]
+    assert steward.take_values == [1]
+
+
+def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(monkeypatch, capsys):
+    """Verify missing metadata tables are recorded and summarized concisely."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    names = list(registry)
+    missing = set(names[:2])
+    created = []
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def where(self, _expr):
+            return self
+
+        def limit(self, _value):
+            return self
+
+        def take(self, _value):
+            return [object()]
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            assert rows == []
+            return Table(schema.fieldNames())
+
+    tables = {name: Table(schema.fieldNames()) for name, schema in registry.items() if name not in missing}
+
+    def read_table(table_name, **_kwargs):
+        if table_name not in tables:
+            raise RuntimeError(f"{table_name} does not exist")
+        return tables[table_name]
+
+    def write_table(frame, table_name, **_kwargs):
+        created.append(table_name)
+        tables[table_name] = frame
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+    monkeypatch.setattr(setup_module, "write_lakehouse_table_core", write_table)
+
+    result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev")
+    output = capsys.readouterr().out
+
+    assert result["created_tables"] == names[:2]
+    assert created == names[:2]
+    assert f"[1/{len(names)}] Checking {names[0]}..." in output
+    assert f"[2/{len(names)}] Created {names[1]}" in output
+    assert "FabricOps metadata setup complete (10/10)." in output
+    assert "Created: 2" in output
+    assert "Validated: 8" in output
+    assert f"- {names[0]}" in output
+
+
+def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeypatch, capsys):
+    """Verify one table failure does not stop later table processing."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+    names = list(registry)
+    failed_name = "METADATA_DATA_CONTRACT"
+    read_order = []
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def where(self, _expr):
+            return self
+
+        def limit(self, _value):
+            return self
+
+        def take(self, _value):
+            return [object()]
+
+    def read_table(table_name, **_kwargs):
+        read_order.append(table_name)
+        if table_name == failed_name:
+            return Table(["bad_column"])
+        return Table(registry[table_name].fieldNames())
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev")
+    output = capsys.readouterr().out
+
+    assert result["status"] == "partial_failure"
+    assert result["failed_tables"] == [failed_name]
+    assert read_order[: len(names)] == names
+    assert "FabricOps metadata setup completed with failures." in output
+    assert "Successful: 9/10" in output
+    assert "Failed: 1/10" in output
+    assert f"- {failed_name}:" in output
+    assert "missing required column" in output
+
+
+def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted(monkeypatch):
+    """Verify consolidated failure raises after the sequential pass completes."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    names = list(metadata_table_schema_registry())
+    attempted = []
+
+    def read_table(table_name, **_kwargs):
+        attempted.append(table_name)
+        raise ValueError("Delta log is corrupt")
+
+    monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
+
+    with pytest.raises(RuntimeError, match="FabricOps metadata setup failed for 10 table"):
+        setup_metadata_tables(
+            spark=object(), config=framework_config(), env="dev", verbose=False, raise_on_failure=True
+        )
+
+    assert attempted[: len(names)] == names
+
+
+def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
+    """Verify quiet mode prints nothing while still returning details."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
+    registry = metadata_table_schema_registry()
+
+    class Table:
+        def __init__(self, columns):
+            self.columns = list(columns)
+
+        def where(self, _expr):
+            return self
+
+        def limit(self, _value):
+            return self
+
+        def take(self, _value):
+            return []
+
+    monkeypatch.setattr(
+        setup_module,
+        "read_lakehouse_table_core",
+        lambda table_name, **_kwargs: Table(registry[table_name].fieldNames()),
+    )
+
+    result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
+
+    assert capsys.readouterr().out == ""
+    assert result["status"] == "ready"
+    assert result["data_agreement"]["active_steward_count"] == 0
