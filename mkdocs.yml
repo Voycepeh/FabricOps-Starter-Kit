@@ -22,14 +22,16 @@ nav:
   - How FabricOps Works: how-fabricops-works.md
   - Guided Demo:
       - Overview: guided-demo.md
-      - Setup Fabric Artifacts: guided-demo/setup-fabric-artifacts.md
-      - Run Environment Setup: guided-demo/run-environment-setup.md
-      - Run IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
-      - Register Agreement: guided-demo/create-agreement.md
-      - Run a Data Pipeline: guided-demo/run-pipeline.md
-      - Run a Data Pipeline with Guardrails: guided-demo/run-pipeline-with-guardrails.md
-      - Review Governance: guided-demo/review-guardrails.md
-      - Explore Metadata: guided-demo/explore-metadata-outputs.md
+      - Prepare Fabric Artifacts: guided-demo/setup-fabric-artifacts.md
+      - Step 0 - Set Up Environment: guided-demo/run-environment-setup.md
+      - Step 1 - Create Agreement: guided-demo/create-agreement.md
+      - Step 2 - Run Development Pipeline: guided-demo/run-pipeline.md
+      - Step 3 - Review and Define Guardrails: guided-demo/review-guardrails.md
+      - Step 4 - Validate Guardrails: guided-demo/run-pipeline-with-guardrails.md
+      - Step 5 - Create Data Contract: guided-demo/create-data-contract.md
+      - Step 6 - Promote to Production: guided-demo/promote-to-production.md
+      - Optional - Explore Metadata: guided-demo/explore-metadata-outputs.md
+      - Optional - IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
   - Templates: notebook-templates-implementation-guide/index.md
   - Releases:
       - Overview: releases/index.md
@@ -73,7 +75,7 @@ nav:
       - value_when: reference/dq-rules/value-when.md
       - expression_true: reference/dq-rules/expression-true.md
   - FabricOps Maintainer:
-      - Product Narrative: maintainer/product-narrative.md
+      - Product Definition: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md
 

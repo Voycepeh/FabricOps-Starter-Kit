@@ -1,6 +1,6 @@
-# Create Agreement
+# Step 1: Create data stewards and a data agreement
 
-Run `01_agreement` after environment setup to capture steward and agreement context before pipeline execution. This notebook gives later technical evidence an accountable owner, business purpose, and approved usage context.
+Run `01_agreement` in the Governance workspace after Step 0 to capture steward and agreement context before pipeline execution. This notebook gives later technical evidence an accountable owner, business purpose, and approved usage context.
 
 ## What to do
 
@@ -17,6 +17,8 @@ The configured metadata target receives steward and agreement rows. `02_pipeline
 | ----------- | ---------------- |
 | Data steward intake | `METADATA_DATA_STEWARD` rows with steward identity, lifecycle fields, optional custom fields, and audit columns. |
 | Agreement intake | `METADATA_DATA_AGREEMENT` rows with agreement identity, contract version, selected steward context, usage fields, optional custom fields, and audit columns. |
-Next, continue to [Run Pipeline](run-pipeline.md).
+Previous: [Step 0: Set up the operating environment](run-environment-setup.md).
+
+Next, continue to [Step 2: Run the first Development pipeline](run-pipeline.md).
 
 See also: [List of Metadata Tables](../reference/metadata.md) and [List of Functions](../reference/index.md).

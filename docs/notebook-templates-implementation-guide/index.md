@@ -10,16 +10,28 @@ Notebook templates are maintained as a living track independently from FabricOps
   <a href="https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks">Download all template notebooks from this GitHub folder</a>
 </p>
 
-## Notebook sequence
+## FabricOps operating workflow
 
-| Order | Notebook | Guided Demo destination |
-| ----- | -------- | ----------------------- |
-| 1 | `00_env_config` | [Run Environment Setup](../guided-demo/run-environment-setup.md) |
-| 2 | `01_agreement` | [Create Agreement](../guided-demo/create-agreement.md) |
-| 3 | `example_pipeline_demo` | [Run Pipeline](../guided-demo/run-pipeline.md#seed-demo-source-data-with-example_pipeline_demo) |
-| 4 | `02_pipeline` | [Run Pipeline](../guided-demo/run-pipeline.md#run-02_pipeline) |
-| 5 | `03_review` | [Review Guardrails](../guided-demo/review-guardrails.md) |
-| Optional | `99_explore` | [Explore Metadata Outputs](../guided-demo/explore-metadata-outputs.md) |
+The required workflow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production. The same notebook may appear at multiple workflow stages. For example, "02_pipeline" is first used in Engineering Development to perform ETL and create the Data Catalogue, Data Profiled, and Data Lineage metadata. Governance then enriches the catalogue and defines guardrails, after which the pipeline is updated and rerun to enforce those guardrails. Once the related Data Contract is created and signed off, the validated pipeline is promoted to Engineering Production and run on its regular schedule.
+
+| Step | Stage | Workspace | Template | Purpose |
+| ---- | ----- | --------- | -------- | ------- |
+| 0 | Set up the operating environment | Governance, Engineering Development, and Engineering Production | `00_env_config` | Create the Fabric workspaces, create the required lakehouses and warehouses, configure `00_env_config` in every workspace, and create the metadata tables in Governance. |
+| 1 | Governance workflow 1 | Governance | `01_agreement` | Create data stewards and create a data agreement between data stewards. |
+| 2 | Engineering workflow 1 | Engineering Development | `02_pipeline` | Extract, transform, and load data from one data store to another; profile source and target tables; and write data catalogue, data profiled, and data lineage metadata. |
+| 3 | Governance workflow 2 | Governance | `03_review` | Pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality. |
+| 4 | Engineering workflow 2 | Engineering Development | `02_pipeline` | Wire in the guardrail rules defined during review, run the pipeline, and make sure it fails or warns users as configured. |
+| 5 | Governance workflow 3 | Governance | `01_agreement` | Pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract. |
+| 6 | Engineering workflow 3 | Engineering Production | Promoted `02_pipeline` | Promote the `02_pipeline` that was completed in Engineering Development. |
+
+## Guided Demo support notebooks
+
+These notebooks support demos, training, and smoke testing. They are not part of the required production workflow.
+
+| Notebook | Purpose |
+| -------- | ------- |
+| `example_pipeline_demo` | Generates deterministic demo source data and demo-scoped rule intent for the Guided Demo pipeline run. |
+| `example_dq_rule_smoke_test` | Demonstrates supported DQ rule outcomes in a smoke-test context for users learning rule behavior. |
 
 <div class="template-card-grid" markdown="1">
 
@@ -27,9 +39,9 @@ Notebook templates are maintained as a living track independently from FabricOps
 
 ## [`00_env_config`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb)
 
-Centralizes environment, workspace, path, metadata routing, runtime validation, widget configuration, and audit settings so every later notebook uses the same configured targets.
+Centralizes workspace, storage, metadata routing, runtime validation, widget, audit, and package settings so downstream templates use consistent environment-specific configuration.
 
-[Open Guided Demo step](../guided-demo/run-environment-setup.md){ .md-button }
+[Open Step 0](../guided-demo/run-environment-setup.md){ .md-button }
 
 </div>
 
@@ -37,9 +49,11 @@ Centralizes environment, workspace, path, metadata routing, runtime validation, 
 
 ## [`01_agreement`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb)
 
-Captures steward, agreement, business purpose, readiness, and supporting evidence before pipeline execution begins.
+Creates data stewards and establishes the initial data agreement before development begins. After validation and review, it creates the data contract that provides approval for promotion to Production; it does not automatically deploy the notebook.
 
-[Open Guided Demo step](../guided-demo/create-agreement.md){ .md-button }
+[Open Step 1](../guided-demo/create-agreement.md){ .md-button }
+
+[Open Step 5 contract sign-off](../guided-demo/create-data-contract.md){ .md-button }
 
 </div>
 
@@ -47,9 +61,13 @@ Captures steward, agreement, business purpose, readiness, and supporting evidenc
 
 ## [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb)
 
-Runs source-to-target processing under an agreement, profiles data, evaluates guardrails, writes governed outputs, and records lineage and run evidence.
+Provides the reusable PySpark pipeline template for Development validation and promoted Production execution. It ingests, transforms, and writes data; profiles data; registers catalogue and lineage evidence; evaluates and records guardrail results; and consumes approved enrichment and guardrails.
 
-[Open Guided Demo step](../guided-demo/run-pipeline.md#run-02_pipeline){ .md-button }
+[Open Step 2](../guided-demo/run-pipeline.md){ .md-button }
+
+[Open Step 4 guardrail validation](../guided-demo/run-pipeline-with-guardrails.md){ .md-button }
+
+[Open Step 6 promotion](../guided-demo/promote-to-production.md){ .md-button }
 
 </div>
 
@@ -57,9 +75,9 @@ Runs source-to-target processing under an agreement, profiles data, evaluates gu
 
 ## [`03_review`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/03_review.ipynb)
 
-Supports enrichment review, guardrail review, lifecycle decisions, and promotion-readiness assessment based on observed metadata and runtime evidence.
+Allows governance users to review the catalogue and evidence captured by "02_pipeline", add business descriptions and classifications, define or review guardrails, and assess whether the pipeline is ready for validation and approval.
 
-[Open Guided Demo step](../guided-demo/review-guardrails.md){ .md-button }
+[Open Step 3](../guided-demo/review-guardrails.md){ .md-button }
 
 </div>
 
@@ -67,9 +85,9 @@ Supports enrichment review, guardrail review, lifecycle decisions, and promotion
 
 ## [`99_explore`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb)
 
-Provides optional read-only inspection and troubleshooting for metadata, configured data targets, and helper behavior without changing governed workflow state.
+Provides an optional notebook for one-off analysis in Engineering Development: exploring datasets, testing assumptions, investigating data quality, developing transformation logic, producing one-off analytical outputs, and deciding whether work should become a repeatable "02_pipeline". It should not change governed workflow state through agreement, contract, enrichment, or guardrail writes. Important or reusable work should either move into "02_pipeline" or be preserved for reproducibility.
 
-[Open Guided Demo step](../guided-demo/explore-metadata-outputs.md){ .md-button }
+[Open optional exploration](../guided-demo/explore-metadata-outputs.md){ .md-button }
 
 </div>
 
@@ -93,7 +111,7 @@ Generates deterministic demo source tables and demo-scoped rule intent for the G
 
 <div class="template-card" markdown="1">
 
-## [`example_dq`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb)
+## [`example_dq_rule_smoke_test`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/example_dq_rule_smoke_test.ipynb)
 
 Demonstrates supported DQ rule outcomes in a smoke-test context for users learning rule behavior outside the production sequence. It is not a production delivery notebook.
 

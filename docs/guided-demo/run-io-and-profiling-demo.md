@@ -1,4 +1,6 @@
-# Run exploration notebook template 
+# Optional: Run the exploration notebook template
+
+This page is optional demo support and is not part of the required Step 0 through Step 6 production workflow.
 
 ## Why this exists
 

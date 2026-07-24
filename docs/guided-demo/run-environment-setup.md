@@ -1,6 +1,6 @@
-# Run Environment Setup
+# Step 0: Set up the operating environment
 
-Run `00_env_config` first in each Fabric workspace. It is the control panel for the guided demo and for later governed workflows: every downstream notebook depends on its active `ENV`, shared `CONFIG`, Fabric item routes, metadata target, runtime validation choices, widget configuration, and audit settings.
+Run `00_env_config` first in the Governance, Engineering Development, and Engineering Production workspaces. It is the control panel for the guided demo and for later governed workflows: every downstream notebook depends on its active `ENV`, shared `CONFIG`, Fabric item routes, metadata target, runtime validation choices, widget configuration, and audit settings.
 
 ## 1. Open `00_env_config`
 
@@ -32,9 +32,9 @@ Edit `DATA_AGREEMENT_CONFIG` and `GOVERNANCE_CONFIG` only where the demo or your
 
 ![Widget config](../assets/fabric-example-00_config_widgets_config_setup.png)
 
-## 6. Create or validate metadata tables
+## 6. Create or validate metadata tables in Governance
 
-Run the metadata setup cell once for the configured metadata target, then freeze or leave the cell unchanged for routine demo runs. The setup validates required environment keys and creates or validates the metadata tables needed by agreement, pipeline, governance, lineage, and run evidence.
+In the Governance workspace, run the metadata setup cell once for the configured metadata target, then freeze or leave the cell unchanged for routine demo runs. The setup validates required environment keys and creates or validates the metadata tables needed by agreement, pipeline, governance, lineage, and run evidence.
 
 ![Setup Metadata Tables](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
 
@@ -46,4 +46,6 @@ Completed creation of the tables:
 
 After `00_env_config` succeeds, `FABRIC_CONTEXT["env"]` and `FABRIC_CONTEXT["config"]` are available, source/unified/product/metadata targets are validated, and downstream notebooks can safely route agreement, catalogue, guardrail, lineage, pipeline, governance, and enrichment evidence through the configured metadata target.
 
-Next, continue to [Create Agreement](create-agreement.md). If you want to smoke-test configured IO targets before agreement registration, run [Run exploration notebook template](run-io-and-profiling-demo.md).
+Previous: [Prepare Fabric artifacts for Step 0](setup-fabric-artifacts.md).
+
+Next, continue to [Step 1: Create data stewards and a data agreement](create-agreement.md). If you want to smoke-test configured IO targets, [run the optional exploration notebook template](run-io-and-profiling-demo.md) outside the required production workflow.
