@@ -24,19 +24,19 @@ The three workspaces provide separation without creating disconnected handoffs. 
 
 The operating flow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production.
 
-1. **Set up the operating environment** — Create the Fabric workspaces, create the required lakehouses and warehouses, configure a "00_env_config" notebook in every workspace, and create the metadata tables in the Governance workspace.
+0. **Set up the operating environment** — Create the Fabric workspaces, create the required lakehouses and warehouses, configure a "00_env_config" notebook in every workspace, and create the metadata tables in the Governance workspace.
 
-2. **Governance workflow 1** — In the Governance workspace, use "01_agreement" to create data stewards and create a data agreement between data stewards.
+1. **Governance workflow 1** — In the Governance workspace, use "01_agreement" to create data stewards and create a data agreement between data stewards.
 
-3. **Engineering workflow 1** — In the Engineering Development workspace, use "02_pipeline" to extract, transform, and load data from one data store to another. Profile source and target tables, then write data catalogue, data profiled, and data lineage metadata.
+2. **Engineering workflow 1** — In the Engineering Development workspace, use "02_pipeline" to extract, transform, and load data from one data store to another. Profile source and target tables, then write data catalogue, data profiled, and data lineage metadata.
 
-4. **Governance workflow 2** — In the Governance workspace, use "03_review" to pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality.
+3. **Governance workflow 2** — In the Governance workspace, use "03_review" to pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality.
 
-5. **Engineering workflow 2** — In the Engineering Development workspace, use "02_pipeline" to wire in the guardrail rules defined during review, then run the pipeline and make sure it fails or warns users as configured.
+4. **Engineering workflow 2** — In the Engineering Development workspace, use "02_pipeline" to wire in the guardrail rules defined during review, then run the pipeline and make sure it fails or warns users as configured.
 
-6. **Governance workflow 3** — In the Governance workspace, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract.
+5. **Governance workflow 3** — In the Governance workspace, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract.
 
-7. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
+6. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
 
 ## Metadata created through the workflow
 

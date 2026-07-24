@@ -14,15 +14,15 @@ Notebook templates are maintained as a living track independently from FabricOps
 
 The required workflow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production. The same notebook may appear at multiple workflow stages; for example, "02_pipeline" is used in Development first to capture evidence and later to wire in approved guardrails before promotion to Production.
 
-| Stage | Workspace | Template | Purpose |
-| ----- | --------- | -------- | ------- |
-| Set up the operating environment | Governance, Engineering Development, and Engineering Production | `00_env_config` | Create the Fabric workspaces, create the required lakehouses and warehouses, configure `00_env_config` in every workspace, and create the metadata tables in Governance. |
-| Governance workflow 1 | Governance | `01_agreement` | Create data stewards and create a data agreement between data stewards. |
-| Engineering workflow 1 | Engineering Development | `02_pipeline` | Extract, transform, and load data from one data store to another; profile source and target tables; and write data catalogue, data profiled, and data lineage metadata. |
-| Governance workflow 2 | Governance | `03_review` | Pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality. |
-| Engineering workflow 2 | Engineering Development | `02_pipeline` | Wire in the guardrail rules defined during review, run the pipeline, and make sure it fails or warns users as configured. |
-| Governance workflow 3 | Governance | `01_agreement` | Pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract. |
-| Engineering workflow 3 | Engineering Production | Promoted `02_pipeline` | Promote the `02_pipeline` that was completed in Engineering Development. |
+| Step | Stage | Workspace | Template | Purpose |
+| ---- | ----- | --------- | -------- | ------- |
+| 0 | Set up the operating environment | Governance, Engineering Development, and Engineering Production | `00_env_config` | Create the Fabric workspaces, create the required lakehouses and warehouses, configure `00_env_config` in every workspace, and create the metadata tables in Governance. |
+| 1 | Governance workflow 1 | Governance | `01_agreement` | Create data stewards and create a data agreement between data stewards. |
+| 2 | Engineering workflow 1 | Engineering Development | `02_pipeline` | Extract, transform, and load data from one data store to another; profile source and target tables; and write data catalogue, data profiled, and data lineage metadata. |
+| 3 | Governance workflow 2 | Governance | `03_review` | Pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality. |
+| 4 | Engineering workflow 2 | Engineering Development | `02_pipeline` | Wire in the guardrail rules defined during review, run the pipeline, and make sure it fails or warns users as configured. |
+| 5 | Governance workflow 3 | Governance | `01_agreement` | Pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract. |
+| 6 | Engineering workflow 3 | Engineering Production | Promoted `02_pipeline` | Promote the `02_pipeline` that was completed in Engineering Development. |
 
 ## Guided Demo support notebooks
 

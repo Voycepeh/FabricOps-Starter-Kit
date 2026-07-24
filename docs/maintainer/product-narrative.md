@@ -38,15 +38,15 @@ By standardizing these workflows, FabricOps ensures that essential metadata and 
 
 FabricOps shows the operating flow through the three core workspaces only: Governance, Engineering Development, and Engineering Production.
 
-| Stage | Canonical workflow step |
-| ----- | ----------------------- |
-| Set up the operating environment | Create the Fabric workspaces, create the required lakehouses and warehouses, configure "00_env_config" in every workspace, and create the metadata tables in Governance. |
-| Governance workflow 1 | In Governance, use "01_agreement" to create data stewards and create a data agreement between data stewards. |
-| Engineering workflow 1 | In Engineering Development, use "02_pipeline" for ETL between data stores, then profile source and target tables and write data catalogue, data profiled, and data lineage metadata. |
-| Governance workflow 2 | In Governance, use "03_review" to pick from the data catalogue table, add descriptions and classifications, and define guardrails such as schema enforcement and data quality. |
-| Engineering workflow 2 | In Engineering Development, use "02_pipeline" to wire in the guardrail rules and make sure the pipeline fails or warns users as configured. |
-| Governance workflow 3 | In Governance, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get data steward sign-off. |
-| Engineering workflow 3 | In Engineering Production, promote the "02_pipeline" that was completed in Engineering Development. |
+| Step | Stage | Canonical workflow step |
+| ---- | ----- | ----------------------- |
+| 0 | Set up the operating environment | Create the Fabric workspaces, create the required lakehouses and warehouses, configure "00_env_config" in every workspace, and create the metadata tables in Governance. |
+| 1 | Governance workflow 1 | In Governance, use "01_agreement" to create data stewards and create a data agreement between data stewards. |
+| 2 | Engineering workflow 1 | In Engineering Development, use "02_pipeline" for ETL between data stores, then profile source and target tables and write data catalogue, data profiled, and data lineage metadata. |
+| 3 | Governance workflow 2 | In Governance, use "03_review" to pick from the data catalogue table, add descriptions and classifications, and define guardrails such as schema enforcement and data quality. |
+| 4 | Engineering workflow 2 | In Engineering Development, use "02_pipeline" to wire in the guardrail rules and make sure the pipeline fails or warns users as configured. |
+| 5 | Governance workflow 3 | In Governance, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get data steward sign-off. |
+| 6 | Engineering workflow 3 | In Engineering Production, promote the "02_pipeline" that was completed in Engineering Development. |
 
 ## Product components
 
