@@ -20,7 +20,7 @@ Approval and promotion occur only after the Data Contract is signed off in Step 
 
 ## Optional demo support
 
-`99_explore` is optional and outside the required Step 0 through Step 6 production workflow. Use it for disposable one-off analysis, troubleshooting, and inspection when needed. See [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md).
+`99_explore` is optional and outside the required Step 0 through Step 6 production workflow. Use it in Engineering Development for one-off exploration, analysis, troubleshooting, and transformation development. It must not change governed agreement, contract, enrichment, or guardrail state. See [Explore Metadata Outputs](guided-demo/explore-metadata-outputs.md).
 
 `example_pipeline_demo` and other example notebooks support demos, training, and smoke testing. They are not canonical workflow steps and should not be presented as required production work.
 
