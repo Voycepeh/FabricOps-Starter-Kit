@@ -41,7 +41,7 @@ These notebooks support demos, training, and smoke testing. They are not part of
 
 Centralizes workspace, storage, metadata routing, runtime validation, widget, audit, and package settings so downstream templates use consistent environment-specific configuration.
 
-[Open Guided Demo step](../guided-demo/run-environment-setup.md){ .md-button }
+[Open Step 0](../guided-demo/run-environment-setup.md){ .md-button }
 
 </div>
 
@@ -51,7 +51,9 @@ Centralizes workspace, storage, metadata routing, runtime validation, widget, au
 
 Creates data stewards and establishes the initial data agreement before development begins. After validation and review, it creates the data contract that provides approval for promotion to Production; it does not automatically deploy the notebook.
 
-[Open Guided Demo step](../guided-demo/create-agreement.md){ .md-button }
+[Open Step 1](../guided-demo/create-agreement.md){ .md-button }
+
+[Open Step 5 contract sign-off](../guided-demo/create-data-contract.md){ .md-button }
 
 </div>
 
@@ -61,7 +63,11 @@ Creates data stewards and establishes the initial data agreement before developm
 
 Provides the reusable PySpark pipeline template for Development validation and promoted Production execution. It ingests, transforms, and writes data; profiles data; registers catalogue and lineage evidence; evaluates and records guardrail results; and consumes approved enrichment and guardrails.
 
-[Open Guided Demo step](../guided-demo/run-pipeline.md#run-02_pipeline){ .md-button }
+[Open Step 2](../guided-demo/run-pipeline.md){ .md-button }
+
+[Open Step 4 guardrail validation](../guided-demo/run-pipeline-with-guardrails.md){ .md-button }
+
+[Open Step 6 promotion](../guided-demo/promote-to-production.md){ .md-button }
 
 </div>
 
@@ -71,7 +77,7 @@ Provides the reusable PySpark pipeline template for Development validation and p
 
 Allows governance users to review the catalogue and evidence captured by "02_pipeline", add business descriptions and classifications, define or review guardrails, and assess whether the pipeline is ready for validation and approval.
 
-[Open Guided Demo step](../guided-demo/review-guardrails.md){ .md-button }
+[Open Step 3](../guided-demo/review-guardrails.md){ .md-button }
 
 </div>
 
@@ -81,7 +87,7 @@ Allows governance users to review the catalogue and evidence captured by "02_pip
 
 Provides an optional notebook for one-off analysis in Engineering Development: exploring datasets, testing assumptions, investigating data quality, developing transformation logic, producing one-off analytical outputs, and deciding whether work should become a repeatable "02_pipeline". It should not change governed workflow state through agreement, contract, enrichment, or guardrail writes. Important or reusable work should either move into "02_pipeline" or be preserved for reproducibility.
 
-[Open Guided Demo step](../guided-demo/explore-metadata-outputs.md){ .md-button }
+[Open optional exploration](../guided-demo/explore-metadata-outputs.md){ .md-button }
 
 </div>
 

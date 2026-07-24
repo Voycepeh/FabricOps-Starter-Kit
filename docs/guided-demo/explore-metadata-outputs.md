@@ -1,6 +1,6 @@
-# Explore Metadata Outputs
+# Optional: Explore metadata outputs
 
-Use generated reference pages, `99_explore`, or dashboard-internal pages to inspect what the notebooks wrote. `99_explore` is optional and read-only for the governed workflow: use it for discovery, scratch profiling, troubleshooting, or support investigation without changing agreement, pipeline, or governance state.
+Use generated reference pages, `99_explore`, or dashboard-internal pages to inspect what the required Step 0 through Step 6 workflow wrote. `99_explore` is optional and read-only for the governed workflow: use it for discovery, scratch profiling, troubleshooting, or support investigation without changing agreement, pipeline, or governance state.
 
 ## What to do
 
@@ -12,5 +12,7 @@ Use generated reference pages, `99_explore`, or dashboard-internal pages to insp
 ## Expected evidence
 
 Users can trace agreement context, catalogue profiles, guardrail rules, runtime results, lineage, and pipeline summaries without relying on hidden notebook state. `99_explore` creates no required production metadata; its normal outputs are ad hoc notebook displays.
+
+Return to the required workflow through the [Guided Demo overview](../guided-demo.md).
 
 See also: [List of Functions](../reference/index.md).

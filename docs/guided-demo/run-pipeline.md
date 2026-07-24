@@ -1,6 +1,6 @@
-# Run a Data Pipeline
+# Step 2: Run the first Development pipeline
 
-Use `02_pipeline` as the main engineering notebook for a governed FabricOps data pipeline. This journey observes and records what happened: it reads source data, profiles the source, applies visible transformations, profiles the transformed target, writes governed target outputs, and registers metadata and lineage participation evidence.
+Use `02_pipeline` in the Engineering Development workspace as the main engineering notebook for a governed FabricOps data pipeline. This journey observes and records what happened: it reads source data, profiles the source, applies visible transformations, profiles the transformed target, writes governed target outputs, and registers metadata and lineage participation evidence.
 
 Before running `02_pipeline`, review the source and target table settings inherited from or defined alongside the notebook configuration.
 
@@ -15,7 +15,7 @@ For an enforced rerun after governance review, confirm how the notebook will eva
 - write governed target outputs; and
 - automatically register profiling, catalogue, schema, and runtime source and target participation evidence.
 
-Guardrail enforcement is covered separately in [Run a Data Pipeline with Guardrails](run-pipeline-with-guardrails.md).
+Guardrail enforcement happens later in [Step 4: Rerun the Development pipeline with guardrails](run-pipeline-with-guardrails.md), after governance review defines approved guardrails in Step 3.
 
 ## Recommended flow
 
@@ -350,6 +350,8 @@ The current model stores schema snapshots rather than an explicit parent-child s
 | `METADATA_DATA_PROFILED` | 2 appended rows | Statistical and frequency evidence per column. |
 | `METADATA_DATA_LINEAGE` | 1 upserted row per source or target call | Runtime table participation evidence. |
 
-Next, continue to [Run a Data Pipeline with Guardrails](run-pipeline-with-guardrails.md).
+Previous: [Step 1: Create data stewards and a data agreement](create-agreement.md).
+
+Next, continue to [Step 3: Review catalogue evidence and define guardrails](review-guardrails.md).
 
 See also: [Templates](../notebook-templates-implementation-guide/index.md) and [List of DQ Rules](../reference/dq-rules/index.md).

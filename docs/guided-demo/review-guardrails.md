@@ -1,6 +1,6 @@
-# Review Guardrails
+# Step 3: Review catalogue evidence and define guardrails
 
-Run `03_review` to review enrichment and guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
+Run `03_review` in the Governance workspace to review catalogue evidence, add descriptions and classifications, and define guardrail intent before relying on active rules in future pipeline runs. Governance review starts from observed pipeline metadata, records governance decisions, and keeps approved intent separate from runtime outcomes.
 
 ![FabricOps governance review](../assets/fabricops-goverance-review.png)
 
@@ -8,8 +8,8 @@ Run `03_review` to review enrichment and guardrail intent before relying on acti
 
 1. Open `03_review` after pipeline profile and catalogue evidence exists.
 2. Select the governed table context from current catalogue evidence.
-3. Review schema, freshness, profile behavior, DQ, runtime result context, and enrichment records.
-4. Add or refine business descriptions, classifications, stewardship context, review notes, and guardrail fields exposed by the widgets.
+3. Review schema, freshness, profile behavior, data-quality, runtime result context, and enrichment records.
+4. Add or refine business descriptions, classifications, stewardship context, schema enforcement expectations, data-quality guardrails, review notes, and guardrail fields exposed by the widgets.
 5. Approve, reject, replace, deactivate, or request follow-up using the review widgets.
 6. Rerun `02_pipeline` when you want active guardrails enforced against fresh data.
 
@@ -30,6 +30,8 @@ Active guardrail records can be consumed by `02_pipeline`. Draft, pending, rejec
 
 Guardrail and enrichment review decisions are appended to their metadata tables, and active rules become available to runtime enforcement. Future `02_pipeline` runs depend on these active records to evaluate approved expectations.
 
-Next, continue to [Explore Metadata Outputs](explore-metadata-outputs.md).
+Previous: [Step 2: Run the first Development pipeline](run-pipeline.md).
+
+Next, continue to [Step 4: Rerun the Development pipeline with guardrails](run-pipeline-with-guardrails.md).
 
 See also: [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md) and [List of DQ Rules](../reference/dq-rules/index.md).
