@@ -12,7 +12,7 @@ Notebook templates are maintained as a living track independently from FabricOps
 
 ## FabricOps operating workflow
 
-The required workflow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production. The same notebook may appear at multiple workflow stages; for example, "02_pipeline" is used in Development first to capture evidence and later to wire in approved guardrails before promotion to Production.
+The required workflow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production. The same notebook may appear at multiple workflow stages. For example, "02_pipeline" is first used in Engineering Development to perform ETL and create the Data Catalogue, Data Profiled, and Data Lineage metadata. Governance then enriches the catalogue and defines guardrails, after which the pipeline is updated and rerun to enforce those guardrails. Once the related Data Contract is created and signed off, the validated pipeline is promoted to Engineering Production and run on its regular schedule.
 
 | Step | Stage | Workspace | Template | Purpose |
 | ---- | ----- | --------- | -------- | ------- |
