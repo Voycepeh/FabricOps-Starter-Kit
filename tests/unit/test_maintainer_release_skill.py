@@ -22,6 +22,8 @@ REMOVED_MAINTAINER_PATHS = (
     "maintainer/overview",
     "maintainer/release-workflow",
     "maintainer/generators",
+    "docs/maintainer/product-narrative.md",
+    "maintainer/product-narrative",
 )
 
 REQUIRED_GENERATOR_PATHS = (
@@ -53,10 +55,10 @@ def test_agent_only_release_task_structure_stays_out_of_human_guide() -> None:
 
 
 def test_maintainer_navigation_contains_intended_pages() -> None:
-    """Verify MkDocs exposes the canonical narrative and maintainer guides."""
+    """Verify MkDocs exposes the Product Definition and maintainer guides."""
     mkdocs = MKDOCS.read_text(encoding="utf-8")
     assert "FabricOps Maintainer:" in mkdocs
-    assert "Product Narrative: maintainer/product-narrative.md" in mkdocs
+    assert "Product Definition: maintainer/product-definition.md" in mkdocs
     assert "Release Guide: maintainer/index.md" in mkdocs
     assert "Public API & Architecture: maintainer/public-api-architecture.md" in mkdocs
     assert "maintainer/overview.md" not in mkdocs
