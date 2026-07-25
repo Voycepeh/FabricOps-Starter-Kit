@@ -978,9 +978,75 @@ def test_generated_artifact_metadata_preserves_entries_and_formats_sgt(tmp_path:
     )
 
     assert set(payload["artifacts"]) == {"first", "second"}
+    assert set(payload) == {"artifacts", "schema"}
+    assert "last_generated_at_sgt" not in payload
+    assert "last_generated_at_utc" not in payload
     assert payload["artifacts"]["first"]["label"] == "First artifact"
     assert format_sgt_timestamp(datetime(2026, 7, 6, 7, 26, tzinfo=UTC)) == "06 Jul 2026, 3:26 PM SGT"
     assert payload["artifacts"]["second"]["generated_at_sgt"].endswith(" SGT")
+
+
+def test_committed_generated_artifact_manifest_tracks_only_independent_contracts() -> None:
+    """Validate the canonical manifest contains only independently published artifacts."""
+    manifest = json.loads(
+        (flows.ROOT / "docs/reference/_data/generated-artifacts.json").read_text(encoding="utf-8")
+    )
+
+    assert set(manifest) == {"artifacts", "schema"}
+    assert manifest["schema"] == "fabricops_generated_artifact_timestamps_v1"
+    assert set(manifest["artifacts"]) == {
+        "public_function_call_flows_dashboard",
+        "public_function_call_flows_json",
+    }
+
+
+def test_generated_artifact_metadata_canonicalizes_an_old_manifest(tmp_path: Path, monkeypatch) -> None:
+    """Validate a retained-artifact update removes obsolete manifest metadata."""
+    from scripts.generated_artifact_metadata import PRESERVE_TIMESTAMPS_ENV, update_generated_artifact_metadata
+
+    metadata_path = tmp_path / "generated-artifacts.json"
+    dashboard = {
+        "generated_at_sgt": "14 Jul 2026, 9:30 PM SGT",
+        "generated_at_utc": "2026-07-14T13:30:54.894084Z",
+        "generator": "scripts/generate_public_function_call_flows_dashboard.py",
+        "label": "Public function call-flow dashboard",
+        "output_path": "docs/assets/public-function-call-flows-dashboard.html",
+    }
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "schema": "old-schema",
+                "last_generated_at_sgt": "obsolete",
+                "last_generated_at_utc": "obsolete",
+                "artifacts": {
+                    "individual_function_reference_pages": {"generated_at_utc": "obsolete"},
+                    "public_function_call_flows_dashboard": dashboard,
+                    "public_function_call_flows_json": {
+                        "generated_at_sgt": "25 Jul 2026, 10:07 AM SGT",
+                        "generated_at_utc": "2026-07-25T02:07:32.827765Z",
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(PRESERVE_TIMESTAMPS_ENV, "1")
+
+    payload = update_generated_artifact_metadata(
+        "public_function_call_flows_json",
+        "Public function call-flow data",
+        "scripts/generate_public_function_call_flows_json.py",
+        "docs/reference/_data/public-function-call-flows.json",
+        metadata_path=metadata_path,
+    )
+
+    assert set(payload) == {"artifacts", "schema"}
+    assert payload["schema"] == "fabricops_generated_artifact_timestamps_v1"
+    assert set(payload["artifacts"]) == {
+        "public_function_call_flows_dashboard",
+        "public_function_call_flows_json",
+    }
+    assert payload["artifacts"]["public_function_call_flows_dashboard"] == dashboard
 
 
 def test_generated_artifact_metadata_updates_existing_timestamp_in_normal_mode(tmp_path: Path) -> None:

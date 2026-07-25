@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.generated_artifact_metadata import update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -5223,12 +5222,6 @@ def main() -> None:
     # Internal reference pages are outside this generator's output contract.
     for generated_page in CALLABLE_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
-    update_generated_artifact_metadata(
-        artifact_key="individual_function_reference_pages",
-        label="Individual function reference pages",
-        generator="scripts/generate_individual_function_reference_pages.py",
-        output_path="docs/api/reference",
-    )
     for public_flow in dashboard_public_functions:
         short_name = str(public_flow["function_name"])
         node = node_by_public_function_name.get(short_name)

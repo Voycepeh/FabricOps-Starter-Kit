@@ -13,6 +13,7 @@ GENERATED_ARTIFACT_METADATA_PATH = ROOT / "docs" / "reference" / "_data" / "gene
 SCHEMA = "fabricops_generated_artifact_timestamps_v1"
 SINGAPORE_TZ = ZoneInfo("Asia/Singapore")
 PRESERVE_TIMESTAMPS_ENV = "FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS"
+OBSOLETE_ARTIFACT_KEYS = {"individual_function_reference_pages"}
 
 
 def format_sgt_timestamp(value: datetime) -> str:
@@ -71,6 +72,8 @@ def update_generated_artifact_metadata(
     payload = read_generated_artifact_metadata(metadata_path)
     artifacts = payload.setdefault("artifacts", {})
     assert isinstance(artifacts, dict)
+    for obsolete_key in OBSOLETE_ARTIFACT_KEYS:
+        artifacts.pop(obsolete_key, None)
     preserve_timestamps = _preserve_generated_artifact_timestamps()
     preserved_timestamps = _artifact_timestamps(artifacts.get(artifact_key)) if preserve_timestamps else None
     if preserved_timestamps:
@@ -87,13 +90,8 @@ def update_generated_artifact_metadata(
         "generated_at_sgt": generated_at_sgt,
     }
     payload["schema"] = SCHEMA
-    if not (
-        preserve_timestamps
-        and isinstance(payload.get("last_generated_at_utc"), str)
-        and isinstance(payload.get("last_generated_at_sgt"), str)
-    ):
-        payload["last_generated_at_utc"] = generated_at_utc
-        payload["last_generated_at_sgt"] = generated_at_sgt
+    payload.pop("last_generated_at_utc", None)
+    payload.pop("last_generated_at_sgt", None)
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
