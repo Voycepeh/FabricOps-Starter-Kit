@@ -6,7 +6,10 @@ import pytest
 
 import fabricops_kit
 from fabricops_kit.widgets import widget_view_data_contract as public_widget
-from fabricops_kit.widgets.widget_view_data_contract import _options
+from fabricops_kit.widgets.widget_view_data_contract import (
+    _agreement_id_from_context,
+    _options,
+)
 from fabricops_kit.widgets.shared import (
     format_full_value,
     render_expandable_dataframe,
@@ -41,6 +44,39 @@ def test_widget_is_publicly_importable_and_old_export_is_removed():
     assert "widget_browse_metadata_catalogue" not in fabricops_kit.__all__
     with pytest.raises(AttributeError):
         getattr(fabricops_kit, "widget_browse_metadata_catalogue")
+
+
+def test_agreement_context_resolves_records_and_widget_state():
+    """Agreement records and agreement-widget selections resolve the same ID."""
+    assert _agreement_id_from_context({"agreement_id": "agreement-1"}) == "agreement-1"
+
+    class Selected:
+        value = "agreement-2"
+
+    state = {
+        "existing_record": Selected(),
+        "existing_records_by_id": {"agreement-2": {"agreement_id": "agreement-2"}},
+    }
+    assert _agreement_id_from_context(state) == "agreement-2"
+    assert _agreement_id_from_context(None) == ""
+
+
+def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, capsys):
+    """Role notebooks remain executable when the optional widget extra is absent."""
+    import importlib
+
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_data_contract")
+    monkeypatch.setattr(
+        module,
+        "require_ipywidgets",
+        lambda: (_ for _ in ()).throw(ModuleNotFoundError("Install the widget extra.")),
+    )
+    state = public_widget(metadata_id="dataset-1", schema_version="schema-2")
+
+    assert state["metadata_table_key"] == "dataset-1"
+    assert state["schema_fingerprint"] == "schema-2"
+    assert "Install the widget extra" in state["error"]
+    assert "Data contract viewer unavailable" in capsys.readouterr().out
 
 
 def test_full_value_formatter_pretty_prints_json_and_preserves_invalid_text():

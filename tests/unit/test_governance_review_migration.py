@@ -530,7 +530,7 @@ def test_99_explore_uses_metadata_catalogue_widget():
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
     assert "get_latest_metadata_catalogue" not in code
-    assert "widget_browse_metadata_catalogue" in code
+    assert "widget_view_data_contract" in code
     assert "METADATA_DATA_CATALOGUE" not in code
     assert 'F.col("table_name") == source_table_name' not in code
 

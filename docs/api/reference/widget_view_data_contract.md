@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 62
+- Downstream callables: 63
 - Shared helpers: 35
-- Private helpers: 27
+- Private helpers: 28
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
 
@@ -20,17 +20,20 @@ Render the governed data contract for one registered dataset.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_data_contract.py:42`
+`fabricops_kit/widgets/widget_view_data_contract.py:55`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L42-L172">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L55-L234">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">01_agreement</span>
+<span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">03_review</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `01_agreement`, `02_pipeline`, `03_review`, `99_explore`
 
 ## Usage notes
 
@@ -45,6 +48,9 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_view_data_contract(
+    agreement: dict[str, Any] | None=None,
+    metadata_id: str | None=None,
+    schema_version: str | None=None,
     target: str='metadata',
     schema: str | None=None,
     spark_session=None,
@@ -68,6 +74,9 @@ def widget_view_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. Linked data contracts are offered first when canonical contract links already exist. |
+| `metadata_id` | `str \| None` | No | Canonical ``metadata_table_key`` to select initially. |
+| `schema_version` | `str \| None` | No | Canonical ``schema_fingerprint`` to select initially. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
 | `schema` | `str \| None` | No | Metadata lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
@@ -83,7 +92,7 @@ The returned state updates as selectors change; call state["get_views"] to retri
 
 ## Raises / Errors
 
-Raises widget, Spark, or metadata routing errors when catalogue metadata cannot be read or required selector inputs are invalid.
+Raises Spark or metadata routing errors when metadata cannot be read. A missing optional widget dependency returns a non-breaking error state.
 
 ### Common failure causes
 

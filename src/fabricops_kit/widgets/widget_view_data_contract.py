@@ -39,11 +39,40 @@ def _options(rows: list[dict[str, Any]], field: str, selections: dict[str, Any])
     return sorted(values, key=lambda value: str(value or ""))
 
 
-def widget_view_data_contract(*, target: str = "metadata", schema: str | None = None, spark_session=None, context=None):
+def _agreement_id_from_context(agreement: dict[str, Any] | None) -> str:
+    """Resolve an agreement ID from a record or agreement-widget state."""
+    if not agreement:
+        return ""
+    direct = str(agreement.get("agreement_id") or "").strip()
+    if direct:
+        return direct
+    selected = agreement.get("existing_record")
+    selected_value = str(getattr(selected, "value", "") or "").strip()
+    selected_row = (agreement.get("existing_records_by_id") or {}).get(selected_value, {})
+    return str(selected_row.get("agreement_id") or "").strip()
+
+
+def widget_view_data_contract(
+    *,
+    agreement: dict[str, Any] | None = None,
+    metadata_id: str | None = None,
+    schema_version: str | None = None,
+    target: str = "metadata",
+    schema: str | None = None,
+    spark_session=None,
+    context=None,
+):
     """Render the governed metadata surfaces for one registered dataset.
 
     Parameters
     ----------
+    agreement : dict, optional
+        Agreement record or agreement-widget state. Linked data contracts are
+        offered first when canonical contract links already exist.
+    metadata_id : str, optional
+        Canonical ``metadata_table_key`` to select initially.
+    schema_version : str, optional
+        Canonical ``schema_fingerprint`` to select initially.
     target : str, default="metadata"
         Configured FabricStore target containing FabricOps metadata tables.
     schema : str, optional
@@ -75,6 +104,15 @@ def widget_view_data_contract(*, target: str = "metadata", schema: str | None = 
     >>> views["current_contract"].show()
 
     """
+    try:
+        widgets = require_ipywidgets()
+    except ModuleNotFoundError as exc:
+        message = str(exc)
+        print(f"Data contract viewer unavailable: {message}")
+        empty_state: dict[str, Any] = {"error": message, "metadata_table_key": metadata_id, "schema_fingerprint": schema_version}
+        empty_state["get_views"] = lambda: {key: value for key, value in empty_state.items() if key != "get_views"}
+        return empty_state
+
     config, env, resolved = resolve_fabric_context(context=context)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
     catalogue = read_lakehouse_table_core(
@@ -82,7 +120,23 @@ def widget_view_data_contract(*, target: str = "metadata", schema: str | None = 
         spark_session=spark_session, context=runtime_context,
     )
     rows = _catalogue_locations(catalogue, env)
-    widgets = require_ipywidgets()
+    agreement_id = _agreement_id_from_context(agreement)
+    linked_metadata_ids: list[str] = []
+    if agreement_id:
+        from pyspark.sql import functions as F
+
+        contracts = read_lakehouse_table_core(
+            "METADATA_DATA_CONTRACT", target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+        linked_metadata_ids = sorted({
+            str(row["metadata_table_key"])
+            for row in contracts.filter(F.col("agreement_id") == agreement_id)
+            .select("metadata_table_key").distinct().collect()
+            if row["metadata_table_key"]
+        })
+        linked = set(linked_metadata_ids)
+        rows.sort(key=lambda row: (row.get("metadata_table_key") not in linked, str(row.get("table_name") or "")))
     from IPython import display as ip
 
     hierarchy = [
@@ -97,7 +151,8 @@ def widget_view_data_contract(*, target: str = "metadata", schema: str | None = 
     state: dict[str, Any] = {
         "environment_name": env, "store_type": None, "layer": None,
         "schema_name": None, "table_name": None, "metadata_table_key": None,
-        "schema_fingerprint": None,
+        "schema_fingerprint": None, "agreement_id": agreement_id,
+        "linked_metadata_ids": linked_metadata_ids,
     }
 
     def get_views():
@@ -105,22 +160,27 @@ def widget_view_data_contract(*, target: str = "metadata", schema: str | None = 
         return {key: value for key, value in state.items() if key not in {"get_views", "_controls"}}
 
     state["get_views"] = get_views
+    initial_schema_pending = True
 
     def refresh_from(start: int = 0) -> None:
         selections: dict[str, Any] = {}
+        preferred_metadata_id = (metadata_id or (linked_metadata_ids[0] if linked_metadata_ids else None)) if start == 0 else None
+        preferred_row = next((row for row in rows if row.get("metadata_table_key") == preferred_metadata_id), {})
         for index, (field, _label) in enumerate(hierarchy):
             if index < start:
                 selections[field] = controls[field].value
                 continue
             choices = _options(rows, field, selections)
             current = controls[field].value
+            requested = preferred_row.get(field)
             controls[field].options = [(str(value) if value not in {None, ""} else "(default schema)", value) for value in choices]
-            controls[field].value = current if current in choices else (choices[0] if choices else None)
+            controls[field].value = requested if requested in choices else (current if current in choices else (choices[0] if choices else None))
             selections[field] = controls[field].value
         controls_box.children = tuple(control for control in controls.values() if len(control.options) > 1)
         refresh_views()
 
     def refresh_views(*_: Any) -> None:
+        nonlocal initial_schema_pending
         for field, _label in hierarchy:
             state[field] = controls[field].value
         metadata_id = state["metadata_table_key"]
@@ -133,10 +193,12 @@ def widget_view_data_contract(*, target: str = "metadata", schema: str | None = 
             .groupBy("schema_fingerprint").agg(F.max("_committed_at").alias("latest_at"))
             .orderBy(F.col("latest_at").desc_nulls_last()).collect()
         )]
-        selected = version.value if version.value in versions else (versions[0] if versions else None)
+        requested_schema = schema_version if initial_schema_pending else None
+        selected = requested_schema if requested_schema in versions else (version.value if version.value in versions else (versions[0] if versions else None))
         version.options = [((f"{value} (latest)" if index == 0 else str(value)), value) for index, value in enumerate(versions)]
         version.value = selected
         state["schema_fingerprint"] = selected
+        initial_schema_pending = False
         views = get_data_contract_views(
             metadata_id, schema_fingerprint=selected, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,

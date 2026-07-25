@@ -175,6 +175,7 @@ def _expected_direct_public_template_calls() -> set[str]:
             "read_lakehouse_excel",
             "read_lakehouse_parquet",
             "write_warehouse_table",
+            "widget_view_data_contract",
         }
     )
     return expected
