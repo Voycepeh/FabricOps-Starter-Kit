@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 85
-- Shared helpers: 47
-- Private helpers: 38
+- Downstream callables: 64
+- Shared helpers: 35
+- Private helpers: 29
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Render the governed data contract for one registered dataset.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_data_contract.py:90`
+`fabricops_kit/widgets/widget_view_data_contract.py:89`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L90-L325">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L314">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -110,12 +110,10 @@ Raises Spark or metadata routing errors when metadata cannot be read. A missing 
 
 The environment is fixed to the active FabricOps context. Dataset identity
 is the stable ``metadata_table_key``; schema history is selected with the
-canonical ``schema_fingerprint``. Each displayed view collects at most 200
-preview rows. Governance tables are not schema-versioned, so historical
-catalogue schemas are explicitly combined with current enrichment and
-guardrail definitions. CSV, JSON, and Parquet export actions write the
-complete filtered Spark DataFrame as a Spark output directory under a unique
-``Files/fabricops_exports`` location in the configured metadata target.
+canonical ``schema_fingerprint``. Governance tables are not
+schema-versioned, so historical catalogue schemas are explicitly combined
+with current enrichment and guardrail definitions. Each result uses
+Microsoft Fabric's native DataFrame display.
 
 </div>
 

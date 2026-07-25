@@ -10,7 +10,6 @@ from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets.shared import (
     get_data_contract_views,
     get_current_notebook_lineage_scope,
-    render_expandable_dataframe,
     require_ipywidgets,
     widget_common,
 )
@@ -131,18 +130,16 @@ def widget_view_data_contract(
     -------
     dict
         Mutable state containing canonical selections, the displayed Spark
-        DataFrames, expandable preview controls, and a ``get_views`` callable.
+        DataFrames and a ``get_views`` callable.
 
     Notes
     -----
     The environment is fixed to the active FabricOps context. Dataset identity
     is the stable ``metadata_table_key``; schema history is selected with the
-    canonical ``schema_fingerprint``. Each displayed view collects at most 200
-    preview rows. Governance tables are not schema-versioned, so historical
-    catalogue schemas are explicitly combined with current enrichment and
-    guardrail definitions. CSV, JSON, and Parquet export actions write the
-    complete filtered Spark DataFrame as a Spark output directory under a unique
-    ``Files/fabricops_exports`` location in the configured metadata target.
+    canonical ``schema_fingerprint``. Governance tables are not
+    schema-versioned, so historical catalogue schemas are explicitly combined
+    with current enrichment and guardrail definitions. Each result uses
+    Microsoft Fabric's native DataFrame display.
 
     Examples
     --------
@@ -297,24 +294,16 @@ def widget_view_data_contract(
         state.update(views)
         with output:
             output.clear_output(wait=True)
-            viewers = {}
-            export_identity = str(metadata_id)
-            schema_identity = str(selected or "latest")
-            for title, key, filename, preview_columns, expanded_columns in [
-                ("Dataset summary", "summary", f"dataset-summary_{export_identity}_{schema_identity}", None, None),
-                ("Selected schema with current governance metadata", "current_contract", f"data-contract_{export_identity}_{schema_identity}", ["column_name", "data_type", "enrichment_business_meaning", "enrichment_classification", "guardrail_rules_json"], ["guardrail_rules_json"]),
-                ("Data Profiled", "data_profiled", f"data-profiled_{export_identity}", ["profiled_at", "schema_fingerprint", "column_name", "row_count", "null_percent", "distinct_percent"], ["frequency_json"]),
-                ("Guardrail Results", "guardrail_results", f"guardrail-results_{export_identity}", ["_committed_at", "column_name", "rule_type", "status", "can_continue", "severity"], ["reason", "expected_value_json", "actual_value_json", "result_payload_json"]),
-                ("Data Access", "data_access", f"data-access_{export_identity}", ["user_principal", "permission", "access_scope", "approval_status", "approved_at", "expires_at"], None),
-            ]:
-                viewer = render_expandable_dataframe(
-                    state[key], title=title, max_rows=200,
-                    preview_columns=preview_columns, expanded_columns=expanded_columns,
-                    download_filename=filename, download_target=target, context=runtime_context,
-                )
-                viewers[key] = viewer
-                ip.display(viewer["container"])
-            state["viewers"] = viewers
+            ip.display(widgets.HTML("<h3>Dataset summary</h3>"))
+            display(state["summary"])  # noqa: F821  Fabric-native DataFrame rendering.
+            ip.display(widgets.HTML("<h3>Selected schema with current governance metadata</h3>"))
+            display(state["current_contract"])  # noqa: F821  Fabric-native DataFrame rendering.
+            ip.display(widgets.HTML("<h3>Data Profiled</h3>"))
+            display(state["data_profiled"])  # noqa: F821  Fabric-native DataFrame rendering.
+            ip.display(widgets.HTML("<h3>Guardrail Results</h3>"))
+            display(state["guardrail_results"])  # noqa: F821  Fabric-native DataFrame rendering.
+            ip.display(widgets.HTML("<h3>Data Access</h3>"))
+            display(state["data_access"])  # noqa: F821  Fabric-native DataFrame rendering.
 
     for index, (field, _label) in enumerate(hierarchy):
         controls[field].observe(lambda change, i=index: refresh_from(i + 1) if change.get("name") == "value" else None, names="value")

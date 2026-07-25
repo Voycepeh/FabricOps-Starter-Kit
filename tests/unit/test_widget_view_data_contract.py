@@ -15,11 +15,8 @@ from fabricops_kit.widgets.widget_view_data_contract import (
     _pipeline_scope_items,
 )
 from fabricops_kit.widgets.shared import (
-    export_dataframe_to_files,
-    format_full_value,
     get_data_contract_views,
     get_current_notebook_lineage_scope,
-    render_expandable_dataframe,
 )
 
 pytestmark = pytest.mark.unit
@@ -50,6 +47,22 @@ def test_widget_is_publicly_importable_and_old_export_is_removed():
     assert "widget_browse_metadata_catalogue" not in fabricops_kit.__all__
     with pytest.raises(AttributeError):
         getattr(fabricops_kit, "widget_browse_metadata_catalogue")
+
+
+def test_widget_uses_native_dataframe_display_without_custom_viewers():
+    """All assembled sections use Fabric display without custom rendering or exports."""
+    import inspect
+    import fabricops_kit.widgets.shared as shared
+
+    source = inspect.getsource(public_widget)
+    for key in ("summary", "current_contract", "data_profiled", "guardrail_results", "data_access"):
+        assert f'display(state["{key}"])' in source
+    assert "render_expandable_dataframe" not in source
+    for removed_name in (
+        "format_full_value", "_compact_value", "export_dataframe_to_files",
+        "render_expandable_dataframe",
+    ):
+        assert not hasattr(shared, removed_name)
 
 
 def test_agreement_context_resolves_records_and_widget_state():
@@ -111,76 +124,6 @@ def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, 
     assert state["allowed_metadata_ids"] == ["dataset-1"]
     assert "Install the widget extra" in state["error"]
     assert "Data contract viewer unavailable" in capsys.readouterr().out
-
-
-def test_full_value_formatter_pretty_prints_json_and_preserves_invalid_text():
-    """JSON detail is readable while malformed JSON remains inspectable."""
-    assert format_full_value('{"values":["Active","Completed"]}') == (  # noqa: S105
-        '{\n  "values": [\n    "Active",\n    "Completed"\n  ]\n}'
-    )
-    assert format_full_value("{invalid json") == "{invalid json"
-    assert format_full_value(None) == ""
-
-
-def test_expandable_viewer_collects_only_bounded_rows_and_retains_full_values(spark_session):
-    """The compact preview truncates display only and reports bounded history."""
-    pytest.importorskip("ipywidgets")
-    long_json = '{"description":"' + ("x" * 100) + '"}'
-    dataframe = spark_session.createDataFrame(
-        [(1, long_json), (2, '{"status":"ok"}'), (3, "plain text")],
-        "record_id int, payload string",
-    ).orderBy("record_id")
-
-    viewer = render_expandable_dataframe(
-        dataframe, title="History", max_rows=2,
-        preview_columns=["record_id", "payload"], expanded_columns=["payload"],
-    )
-
-    assert viewer["limited"] is True
-    assert len(viewer["rows"]) == 2
-    assert viewer["rows"][0]["payload"] == long_json
-    assert "additional records are not loaded" in viewer["status"].value
-    assert "…" in viewer["preview"].value
-    assert viewer["field_selector"].options[0] == "payload"
-
-
-def test_dataframe_download_writes_complete_source_with_configured_path(monkeypatch):
-    """Exports write the source DataFrame rather than the bounded preview rows."""
-    calls = []
-
-    class Writer:
-        def mode(self, value):
-            calls.append(("mode", value))
-            return self
-
-        def option(self, key, value):
-            calls.append(("option", key, value))
-            return self
-
-        def csv(self, path):
-            calls.append(("csv", path))
-
-    class DataFrame:
-        write = Writer()
-
-        def limit(self, _count):
-            raise AssertionError("downloads must not inherit the preview limit")
-
-    monkeypatch.setattr(
-        "fabricops_kit.widgets.shared.resolve_configured_file_path",
-        lambda target, relative_path, context: (object(), relative_path, f"abfss://metadata/Files/{relative_path}"),
-    )
-
-    exported = export_dataframe_to_files(
-        DataFrame(), filename="data contract/id", file_format="csv",
-        target="metadata", context={"env": "dev"},
-    )
-
-    assert exported["export_name"] == "data-contract-id"
-    assert exported["relative_path"].startswith("Files/fabricops_exports/")
-    assert exported["relative_path"].endswith("/data-contract-id/csv")
-    assert calls[:2] == [("mode", "overwrite"), ("option", "header", True)]
-    assert calls[2][0] == "csv"
 
 
 def test_contract_assembly_preserves_rules_history_and_separate_views(monkeypatch, spark_session):
