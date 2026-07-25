@@ -134,3 +134,13 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "profiled_at" not in source
     assert "registers catalogue evidence only" in source
     assert "follow-up lineage PR will automatically record that role" in source
+
+
+def test_02_pipeline_limits_contract_view_to_configured_pipeline_datasets():
+    """Verify pipeline inspection cannot browse unrelated registered datasets."""
+    source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
+
+    assert 'PIPELINE_METADATA_IDS = {' in source
+    assert '\\"Source\\": None' in source
+    assert '\\"Target\\": None' in source
+    assert 'metadata_ids=PIPELINE_METADATA_IDS' in source
