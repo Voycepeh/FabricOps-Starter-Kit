@@ -63,12 +63,14 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
                 "visible_columns": [
                     "agreement_name",
                     "domain",
-                    "steward_id",
+                    "provider_steward_id",
+                    "recipient_steward_id",
                     "recipient",
                     "start_date",
                     "expiry_date",
                     "business_purpose",
                 ],
+                "approved_usage_options": ["internal", "research", "external"],
                 "custom_fields": [
                     {"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI"]}
                 ],
@@ -81,7 +83,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
 def steward_row(**overrides: Any) -> dict[str, Any]:
     """Return steward row."""
     row = {
-        "steward_id": "steward-001",
+        "steward_id": "11111111-1111-4111-8111-111111111111",
         "steward_name": "Configured Steward",
         "steward_role": "Data Steward",
         "contact": "steward@example.com",
@@ -98,11 +100,14 @@ def agreement_row(**overrides: Any) -> dict[str, Any]:
     row = {
         "agreement_name": "Orders Agreement",
         "domain": "Operations",
-        "steward_id": "steward-001",
+        "provider_steward_id": "11111111-1111-4111-8111-111111111111",
+        "recipient_steward_id": "22222222-2222-4222-8222-222222222222",
         "recipient": "Internal analytics team",
         "start_date": "2026-01-01",
         "expiry_date": "2026-12-31",
         "business_purpose": "Governed reporting",
+        "supporting_documents": [],
+        "approved_usage": ["internal"],
     }
     row.update(overrides)
     return row
