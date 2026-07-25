@@ -84,8 +84,8 @@ DQ rules are governed evidence, not ad hoc notebook checks. They should flow thr
 - Use `docs/assets/public-function-call-flows-dashboard.html` when reviewer exploration or an AI cleanup packet is needed.
 - Use pages in `docs/api/reference/` for notebook authoring guidance.
 - Use the embedded Internal implementation summary on public callable pages for package maintenance; standalone `docs/reference/internal/` pages are disabled by default and should only be used when explicitly generated for maintainer diagnostics.
-- Do not manually edit generated reference files unless source inputs or generator behavior require it.
-- If function-level source changes affect callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics, regenerate the committed architecture contract with `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`. Regenerate individual function reference pages with `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` only for explicitly scoped generated-reference refreshes.
+- Never edit generated reference files manually. Update the authoritative source inputs, reference metadata, or generator and regenerate them.
+- If function-level source changes affect callable structure, source locations, public exports, helper relationships, architecture classification, or public function flow metrics, regenerate the committed architecture contract with `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py`. When a source, docstring, export, call-flow, reference-metadata, or generator change affects generated individual function reference content, regenerate the affected committed pages in the same source PR with `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py`; do not regenerate them when the change cannot affect their content.
 
 ## Workflow
 

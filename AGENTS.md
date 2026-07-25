@@ -133,7 +133,7 @@ PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
 
 ## Generated artifact policy
 
-Keep source changes, generated reference refreshes, dashboard builds, and docs wording changes separate by default.
+Keep dashboard builds and unrelated docs wording changes separate from source changes by default. Generated individual function reference artifacts are validated, committed outputs and belong in the same source PR when that change affects their content.
 
 Source inputs include:
 
@@ -142,14 +142,27 @@ Source inputs include:
 - `scripts/reference_docs_metadata.py`
 - generator source
 
-Ordinary source PRs must not commit generated individual reference pages or dashboard output:
+Ordinary source PRs must regenerate and commit the affected generated individual function reference artifacts when their source change affects generated content:
 
 - `docs/api/reference/*.md`
 - `docs/reference/index.md`
 - `docs/reference/function-call-graph.md`
+
+Typical changes that require regeneration include public callable source changes; docstring changes that affect generated documentation; callable source-location, public export, callable relationship, or call-flow changes; lifecycle, category, usage-note, or example changes in `scripts/reference_docs_metadata.py`; and generator changes that alter these outputs. Do not regenerate or commit the individual reference artifacts when a change cannot affect them.
+
+Generate the individual reference artifacts with:
+
+```bash
+PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+```
+
+Never edit generated pages manually. Update the authoritative source, metadata, or generator and regenerate. After regeneration, run the generator a second time and confirm that it produces no diff.
+
+The dashboard artifact remains separately owned:
+
 - `docs/assets/public-function-call-flows-dashboard.html`
 
-Refresh those only in explicitly scoped generator, reference, dashboard, or docs refresh work. If they become stale after a source PR, mention the required refresh in the PR summary.
+Do not regenerate or commit the dashboard in ordinary backend or source PRs unless the PR directly changes the dashboard frontend or its published output contract.
 
 Metadata schema or column ownership changes must update the canonical schema source first and regenerate only the metadata reference artifacts required by the repository contract.
 
@@ -213,7 +226,8 @@ Choose verification proportional to the change:
 - Run Ruff on the affected files or relevant scope when practical.
 - Use `compileall`, an import check, or another focused syntax check appropriate to the change.
 - Regenerate `public-function-call-flows.json` only when its architecture contract changes.
-- For docstring-only changes, use the smallest syntax or import verification and do not regenerate architecture or individual reference artifacts.
+- For docstring-only changes, use the smallest syntax or import verification, do not regenerate the architecture contract unless it changes, and regenerate the individual reference artifacts when the docstring affects their generated content.
+- When individual reference artifacts are regenerated, run their generator a second time and confirm that it produces no diff.
 - Run dashboard or generator snapshot tests only when those outputs intentionally change.
 
 Before opening a PR, review the diff and confirm:
