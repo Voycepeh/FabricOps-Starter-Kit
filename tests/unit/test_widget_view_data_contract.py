@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from datetime import datetime
+import json
 
 import fabricops_kit
 from fabricops_kit.widgets import widget_view_data_contract as public_widget
@@ -13,8 +15,9 @@ from fabricops_kit.widgets.widget_view_data_contract import (
 )
 from fabricops_kit.widgets.shared import (
     format_full_value,
+    get_data_contract_views,
     render_expandable_dataframe,
-    write_dataframe_download,
+    export_dataframe_to_files,
 )
 
 pytestmark = pytest.mark.unit
@@ -157,12 +160,86 @@ def test_dataframe_download_writes_complete_source_with_configured_path(monkeypa
         lambda target, relative_path, context: (object(), relative_path, f"abfss://metadata/Files/{relative_path}"),
     )
 
-    exported = write_dataframe_download(
+    exported = export_dataframe_to_files(
         DataFrame(), filename="data contract/id", file_format="csv",
         target="metadata", context={"env": "dev"},
     )
 
-    assert exported["filename"] == "data-contract-id.csv"
+    assert exported["export_name"] == "data-contract-id"
     assert exported["relative_path"].startswith("Files/fabricops_exports/")
+    assert exported["relative_path"].endswith("/data-contract-id/csv")
     assert calls[:2] == [("mode", "overwrite"), ("option", "header", True)]
     assert calls[2][0] == "csv"
+
+
+def test_contract_assembly_preserves_rules_history_and_separate_views(monkeypatch, spark_session):
+    """The assembly helper keeps contract grain and every related evidence surface."""
+    old = datetime(2026, 1, 1)
+    new = datetime(2026, 2, 1)
+    tables = {
+        "METADATA_DATA_CATALOGUE": spark_session.createDataFrame(
+            [
+                ("dataset", "c1", "schema-1", "dev", "lakehouse", "raw", "sales", "orders", "id", "long", old),
+                ("dataset", "c2", "schema-1", "dev", "lakehouse", "raw", "sales", "orders", "status", "string", old),
+                ("dataset", "c1", "schema-2", "dev", "lakehouse", "raw", "sales", "orders", "id", "long", new),
+            ],
+            "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, column_name string, data_type string, _committed_at timestamp",
+        ),
+        "METADATA_ENRICHMENT": spark_session.createDataFrame(
+            [("dataset", "c1", "Identifier", new, "orders", "id")],
+            "metadata_table_key string, metadata_column_key string, business_meaning string, _committed_at timestamp, table_name string, column_name string",
+        ),
+        "METADATA_GUARDRAIL": spark_session.createDataFrame(
+            [
+                ("dataset", "c1", "rule-not-null", "g1", "r1", "not_null", "error", True, "active", old, "orders", "id"),
+                ("dataset", "c1", "rule-unique", "g2", "r2", "unique", "warning", True, "active", new, "orders", "id"),
+                ("dataset", "c1", "rule-retired", "g3", "r3", "between", "warning", False, "inactive", new, "orders", "id"),
+            ],
+            "metadata_table_key string, metadata_column_key string, rule_key string, guardrail_rule_id string, rule_id string, rule_type string, severity string, is_active boolean, activation_state string, _committed_at timestamp, table_name string, column_name string",
+        ),
+        "METADATA_DATA_PROFILED": spark_session.createDataFrame(
+            [("dataset", "c1", "schema-1", "id", old, old), ("dataset", "c1", "schema-2", "id", new, new)],
+            "metadata_table_key string, metadata_column_key string, schema_fingerprint string, column_name string, profiled_at timestamp, _committed_at timestamp",
+        ),
+        "METADATA_GUARDRAIL_RESULTS": spark_session.createDataFrame(
+            [("dataset", "old", old), ("dataset", "new", new)],
+            "metadata_table_key string, result_id string, _committed_at timestamp",
+        ),
+        "METADATA_DATA_ACCESS": spark_session.createDataFrame(
+            [("dataset", "reader", old, None, old)],
+            "metadata_table_key string, user_principal string, approved_at timestamp, expires_at timestamp, _committed_at timestamp",
+        ),
+    }
+    monkeypatch.setattr(
+        "fabricops_kit.widgets.shared.read_lakehouse_table_core",
+        lambda name, **_kwargs: tables[name],
+    )
+
+    latest = get_data_contract_views("dataset", spark_session=spark_session)
+    assert latest["summary"].first().schema_fingerprint == "schema-2"
+
+    historical = get_data_contract_views(
+        "dataset", schema_fingerprint="schema-1", spark_session=spark_session,
+    )
+    contract_rows = {row.column_name: row for row in historical["current_contract"].collect()}
+    assert set(contract_rows) == {"id", "status"}
+    assert contract_rows["id"].enrichment_business_meaning == "Identifier"
+    assert contract_rows["status"].enrichment_business_meaning is None
+    rules = json.loads(contract_rows["id"].guardrail_rules_json)
+    assert {rule["rule_type"] for rule in rules} == {"not_null", "unique"}
+    assert json.loads(contract_rows["status"].guardrail_rules_json) == []
+    assert "not schema-versioned" in contract_rows["id"].governance_metadata_scope
+    assert [row.schema_fingerprint for row in historical["data_profiled"].collect()] == ["schema-2", "schema-1"]
+    assert [row.result_id for row in historical["guardrail_results"].collect()] == ["new", "old"]
+    assert historical["data_access"].first().user_principal == "reader"
+
+    for name in ("METADATA_ENRICHMENT", "METADATA_GUARDRAIL", "METADATA_GUARDRAIL_RESULTS", "METADATA_DATA_ACCESS"):
+        tables[name] = tables[name].limit(0)
+    without_related = get_data_contract_views(
+        "dataset", schema_fingerprint="schema-1", spark_session=spark_session,
+    )
+    empty_related_rows = {row.column_name: row for row in without_related["current_contract"].collect()}
+    assert empty_related_rows["id"].enrichment_business_meaning is None
+    assert json.loads(empty_related_rows["id"].guardrail_rules_json) == []
+    assert without_related["guardrail_results"].count() == 0
+    assert without_related["data_access"].count() == 0

@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 431
+- Downstream callables: 432
 - Shared helpers: 122
-- Private helpers: 309
+- Private helpers: 310
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open Preview call flow</a>
 

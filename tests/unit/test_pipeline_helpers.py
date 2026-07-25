@@ -403,6 +403,8 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert result["can_continue"] is False
     assert result["failed_tables"] == ["bad"]
     assert set(result["profiles"]) == {"good", "bad"}
+    assert set(result["metadata_table_keys"]) == {"good", "bad"}
+    assert all(result["metadata_table_keys"].values())
     assert set(result["schema_results"]) == {"good", "bad"}
     assert set(result["freshness_results"]) == {"good", "bad"}
     assert set(result["stability_results"]) == {"good", "bad"}

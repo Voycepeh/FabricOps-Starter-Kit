@@ -156,7 +156,7 @@ def _compact_value(value: Any, max_characters: int = 48) -> str:
     return _html_escape(text)
 
 
-def write_dataframe_download(
+def export_dataframe_to_files(
     dataframe,
     *,
     filename: str,
@@ -174,9 +174,9 @@ def write_dataframe_download(
     if not safe_filename:
         raise ValueError("filename must contain at least one safe character")
     suffix = f".{normalized_format}"
-    if not safe_filename.lower().endswith(suffix):
-        safe_filename = f"{safe_filename}{suffix}"
-    relative_path = f"fabricops_exports/{uuid.uuid4().hex}/{safe_filename}"
+    if safe_filename.lower().endswith(suffix):
+        safe_filename = safe_filename[: -len(suffix)]
+    relative_path = f"fabricops_exports/{uuid.uuid4().hex}/{safe_filename}/{normalized_format}"
     _store, normalized_path, physical_path = resolve_configured_file_path(
         target, relative_path, context=context,
     )
@@ -186,7 +186,7 @@ def write_dataframe_download(
     getattr(writer, normalized_format)(physical_path)
     return {
         "format": normalized_format,
-        "filename": safe_filename,
+        "export_name": safe_filename,
         "relative_path": f"Files/{normalized_path}",
         "physical_path": physical_path,
     }
@@ -237,7 +237,7 @@ def render_expandable_dataframe(
     def download(file_format: str) -> None:
         download_status.value = f"Writing complete {file_format.upper()} export…"
         try:
-            exported = write_dataframe_download(
+            exported = export_dataframe_to_files(
                 dataframe,
                 filename=download_filename or title,
                 file_format=file_format,
@@ -248,14 +248,14 @@ def render_expandable_dataframe(
             download_status.value = f"<b>Export failed:</b> {_html_escape(exc)}"
             return
         download_status.value = (
-            f"Complete {file_format.upper()} export written to "
+            f"Complete {file_format.upper()} Spark output directory written to "
             f"<code>{_html_escape(exported['relative_path'])}</code><br>"
             f"<small>{_html_escape(exported['physical_path'])}</small>"
         )
 
     if download_filename:
         for file_format in ("csv", "json", "parquet"):
-            button = widgets.Button(description=f"Download {file_format.upper()}")
+            button = widgets.Button(description=f"Export {file_format.upper()}")
             button.on_click(lambda _button, value=file_format: download(value))
             download_buttons.append(button)
 
@@ -426,8 +426,57 @@ def get_data_contract_views(
             *[F.col(column).alias(f"{prefix}_{column}") for column in selected.columns if column not in {"metadata_table_key", "metadata_column_key", "table_name", "column_name"}],
         )
 
-    contract = current.join(latest_per_column(enrichment, "enrichment"), ["metadata_table_key", "metadata_column_key"], "left")
-    contract = contract.join(latest_per_column(guardrails, "guardrail"), ["metadata_table_key", "metadata_column_key"], "left")
+    contract_base = current.join(latest_per_column(enrichment, "enrichment"), ["metadata_table_key", "metadata_column_key"], "left")
+
+    rule_identity = F.coalesce(
+        F.when(F.length(F.trim(F.col("rule_key"))) > 0, F.col("rule_key")),
+        F.when(F.length(F.trim(F.col("guardrail_rule_id"))) > 0, F.col("guardrail_rule_id")),
+        F.col("rule_id"),
+    )
+    latest_rules = (
+        guardrails.withColumn("_contract_rule_identity", rule_identity)
+        .withColumn(
+            "_contract_rank",
+            F.row_number().over(
+                Window.partitionBy("metadata_table_key", "metadata_column_key", "_contract_rule_identity")
+                .orderBy(F.col("_committed_at").desc_nulls_last())
+            ),
+        )
+        .filter(F.col("_contract_rank") == 1)
+        .filter(
+            F.coalesce(F.col("is_active"), F.lit(True))
+            & ~F.coalesce(F.col("activation_state").isin("inactive", "superseded"), F.lit(False))
+        )
+        .drop("_contract_rank", "_contract_rule_identity")
+    )
+    rule_fields = [
+        column for column in latest_rules.columns
+        if column not in {"metadata_table_key", "metadata_column_key", "table_name", "column_name"}
+    ]
+    catalogue_alias = contract_base.alias("catalogue")
+    guardrail_alias = latest_rules.alias("guardrail")
+    guardrail_join = (
+        (F.col("catalogue.metadata_table_key") == F.col("guardrail.metadata_table_key"))
+        & (
+            F.col("guardrail.metadata_column_key").isNull()
+            | (F.col("catalogue.metadata_column_key") == F.col("guardrail.metadata_column_key"))
+        )
+    )
+    joined_rules = catalogue_alias.join(guardrail_alias, guardrail_join, "left").select(
+        *[F.col(f"catalogue.`{column}`").alias(column) for column in contract_base.columns],
+        F.when(
+            F.coalesce(
+                F.col("guardrail.rule_key"), F.col("guardrail.guardrail_rule_id"), F.col("guardrail.rule_id"),
+            ).isNotNull(),
+            F.struct(*[F.col(f"guardrail.`{column}`").alias(column) for column in rule_fields]),
+        ).alias("_guardrail_rule"),
+    )
+    contract = joined_rules.groupBy(*contract_base.columns).agg(
+        F.to_json(F.collect_list("_guardrail_rule")).alias("guardrail_rules_json")
+    ).withColumn(
+        "governance_metadata_scope",
+        F.lit("Current governance metadata; enrichment and guardrail tables are not schema-versioned."),
+    )
     profiled = profiled.orderBy(F.col("profiled_at").desc_nulls_last(), F.col("_committed_at").desc_nulls_last())
     results = results.orderBy(F.col("_committed_at").desc_nulls_last())
     access = access.orderBy(F.coalesce(F.col("approved_at"), F.col("expires_at"), F.col("_committed_at")).desc_nulls_last())
@@ -438,6 +487,9 @@ def get_data_contract_views(
     summary = location.select(
         "environment_name", "store_type", "layer", "schema_name", "table_name", "metadata_table_key",
         F.lit(schema_fingerprint).alias("schema_fingerprint"),
+        F.lit("Current governance metadata; enrichment and guardrail tables are not schema-versioned.").alias(
+            "governance_metadata_scope"
+        ),
     ).crossJoin(profile_time).crossJoin(result_time)
     return {
         "summary": summary, "current_contract": contract, "data_profiled": profiled,

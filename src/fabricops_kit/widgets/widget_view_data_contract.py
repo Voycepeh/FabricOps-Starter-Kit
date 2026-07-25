@@ -119,9 +119,11 @@ def widget_view_data_contract(
     The environment is fixed to the active FabricOps context. Dataset identity
     is the stable ``metadata_table_key``; schema history is selected with the
     canonical ``schema_fingerprint``. Each displayed view collects at most 200
-    preview rows. Its CSV, JSON, and Parquet actions write the complete filtered
-    Spark DataFrame to a unique ``Files/fabricops_exports`` location under the
-    configured metadata target; export paths are reported in the widget.
+    preview rows. Governance tables are not schema-versioned, so historical
+    catalogue schemas are explicitly combined with current enrichment and
+    guardrail definitions. CSV, JSON, and Parquet export actions write the
+    complete filtered Spark DataFrame as a Spark output directory under a unique
+    ``Files/fabricops_exports`` location in the configured metadata target.
 
     Examples
     --------
@@ -272,7 +274,7 @@ def widget_view_data_contract(
             schema_identity = str(selected or "latest")
             for title, key, filename, preview_columns, expanded_columns in [
                 ("Dataset summary", "summary", f"dataset-summary_{export_identity}_{schema_identity}", None, None),
-                ("Current data contract", "current_contract", f"data-contract_{export_identity}_{schema_identity}", ["column_name", "data_type", "enrichment_business_meaning", "enrichment_classification", "guardrail_rule_type", "guardrail_severity"], None),
+                ("Selected schema with current governance metadata", "current_contract", f"data-contract_{export_identity}_{schema_identity}", ["column_name", "data_type", "enrichment_business_meaning", "enrichment_classification", "guardrail_rules_json"], ["guardrail_rules_json"]),
                 ("Data Profiled", "data_profiled", f"data-profiled_{export_identity}", ["profiled_at", "schema_fingerprint", "column_name", "row_count", "null_percent", "distinct_percent"], ["frequency_json"]),
                 ("Guardrail Results", "guardrail_results", f"guardrail-results_{export_identity}", ["_committed_at", "column_name", "rule_type", "status", "can_continue", "severity"], ["reason", "expected_value_json", "actual_value_json", "result_payload_json"]),
                 ("Data Access", "data_access", f"data-access_{export_identity}", ["user_principal", "permission", "access_scope", "approval_status", "approved_at", "expires_at"], None),

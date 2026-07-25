@@ -129,7 +129,6 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "profile_role=\\\"target\\\"" in source
     assert "Clone this block once for every DataFrame" in source
     assert "frequency_json" not in source
-    assert "metadata_table_key" not in source
     assert "metadata_column_key" not in source
     assert "profiled_at" not in source
     assert "registers catalogue evidence only" in source
@@ -141,6 +140,6 @@ def test_02_pipeline_limits_contract_view_to_configured_pipeline_datasets():
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
     assert 'PIPELINE_METADATA_IDS = {' in source
-    assert '\\"Source\\": None' in source
-    assert '\\"Target\\": None' in source
+    assert 'source_profile_results[\\"metadata_table_keys\\"]' in source
+    assert 'target_profile_results[\\"metadata_table_keys\\"]' in source
     assert 'metadata_ids=PIPELINE_METADATA_IDS' in source
