@@ -143,3 +143,25 @@ def test_02_pipeline_limits_contract_view_to_current_notebook_lineage():
     assert 'metadata_ids=PIPELINE_METADATA_IDS' not in source
     assert 'source_profile_results[\"metadata_table_keys\"]' not in source
     assert 'target_profile_results[\"metadata_table_keys\"]' not in source
+
+
+@pytest.mark.parametrize(
+    ("notebook_name", "state_name"),
+    [
+        ("01_agreement.ipynb", "agreement_contract_view"),
+        ("02_pipeline.ipynb", "pipeline_contract_view"),
+        ("03_review.ipynb", "review_contract_view"),
+        ("99_explore.ipynb", "data_contract_view"),
+    ],
+)
+def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, state_name):
+    """Each template renders refreshed views in a separate rerunnable cell."""
+    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
+    source = "\n".join("".join(cell.get("source", [])) for cell in notebook.cells)
+
+    assert "Select a dataset and schema above, then rerun this cell" in source
+    assert f'{state_name}["get_views"]()' in source
+    for view_name in (
+        "summary", "current_contract", "data_profiled", "guardrail_results", "data_access",
+    ):
+        assert f'display(contract_views["{view_name}"])' in source

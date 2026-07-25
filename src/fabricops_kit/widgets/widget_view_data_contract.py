@@ -129,8 +129,9 @@ def widget_view_data_contract(
     Returns
     -------
     dict
-        Mutable state containing canonical selections, the displayed Spark
-        DataFrames and a ``get_views`` callable.
+        Mutable state containing canonical selections, the assembled Spark
+        DataFrames and a ``get_views`` callable. The widget does not render the
+        DataFrames; display the returned views in a separate notebook cell.
 
     Notes
     -----
@@ -138,8 +139,8 @@ def widget_view_data_contract(
     is the stable ``metadata_table_key``; schema history is selected with the
     canonical ``schema_fingerprint``. Governance tables are not
     schema-versioned, so historical catalogue schemas are explicitly combined
-    with current enrichment and guardrail definitions. Each result uses
-    Microsoft Fabric's native DataFrame display.
+    with current enrichment and guardrail definitions. After changing a widget
+    selection, rerun the notebook cell that displays ``get_views()`` results.
 
     Examples
     --------
@@ -171,10 +172,48 @@ def widget_view_data_contract(
     runtime_context = {"config": config, "env": env, **(resolved or {})}
     pipeline_scope_source = "explicit_metadata_ids" if restricted_items else "none"
     if pipeline_scope == "current_notebook":
-        lineage_items = get_current_notebook_lineage_scope(
-            target=target, schema=schema, spark_session=spark_session, context=runtime_context,
-        )
+        try:
+            lineage_items = get_current_notebook_lineage_scope(
+                target=target, schema=schema, spark_session=spark_session, context=runtime_context,
+            )
+        except ValueError as exc:
+            message = (
+                "Current-notebook lineage could not be resolved. Ensure 00_env_config has run "
+                "and this notebook has written lineage metadata. "
+                f"{exc}"
+            )
+            print(message)
+            unavailable_state: dict[str, Any] = {
+                "error": message,
+                "metadata_table_key": metadata_id,
+                "schema_fingerprint": schema_version,
+                "selection_mode": "restricted",
+                "allowed_metadata_ids": [],
+                "pipeline_scope_source": "unavailable",
+            }
+            unavailable_state["get_views"] = lambda: {
+                key: value for key, value in unavailable_state.items() if key != "get_views"
+            }
+            return unavailable_state
         restricted_items, pipeline_scope_source = _pipeline_scope_items(lineage_items, restricted_items)
+        if pipeline_scope_source == "empty":
+            message = (
+                "No lineage records were found for this notebook. "
+                "Run the profiling and lineage-writing sections first."
+            )
+            print(message)
+            empty_lineage_state: dict[str, Any] = {
+                "error": message,
+                "metadata_table_key": metadata_id,
+                "schema_fingerprint": schema_version,
+                "selection_mode": "restricted",
+                "allowed_metadata_ids": [],
+                "pipeline_scope_source": "empty",
+            }
+            empty_lineage_state["get_views"] = lambda: {
+                key: value for key, value in empty_lineage_state.items() if key != "get_views"
+            }
+            return empty_lineage_state
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
@@ -213,7 +252,6 @@ def widget_view_data_contract(
     controls = {field: widgets.Dropdown(options=[], **widget_common(widgets, label)) for field, label in hierarchy}
     version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
     controls_box = widgets.VBox([])
-    output = widgets.Output()
     state: dict[str, Any] = {
         "environment_name": env, "store_type": None, "layer": None,
         "schema_name": None, "table_name": None, "metadata_table_key": None,
@@ -267,9 +305,8 @@ def widget_view_data_contract(
             state[field] = controls[field].value
         metadata_id = state["metadata_table_key"]
         if not metadata_id:
-            with output:
-                output.clear_output(wait=True)
-                ip.display(widgets.HTML("<i>No pipeline metadata IDs are configured for this restricted view.</i>"))
+            for key in ("summary", "current_contract", "data_profiled", "guardrail_results", "data_access"):
+                state.pop(key, None)
             return
         selected_location = next((row for row in rows if row.get("metadata_table_key") == metadata_id), {})
         for field in ("environment_name", "store_type", "layer", "schema_name", "table_name"):
@@ -292,23 +329,11 @@ def widget_view_data_contract(
             spark_session=spark_session, context=runtime_context,
         )
         state.update(views)
-        with output:
-            output.clear_output(wait=True)
-            ip.display(widgets.HTML("<h3>Dataset summary</h3>"))
-            display(state["summary"])  # noqa: F821  Fabric-native DataFrame rendering.
-            ip.display(widgets.HTML("<h3>Selected schema with current governance metadata</h3>"))
-            display(state["current_contract"])  # noqa: F821  Fabric-native DataFrame rendering.
-            ip.display(widgets.HTML("<h3>Data Profiled</h3>"))
-            display(state["data_profiled"])  # noqa: F821  Fabric-native DataFrame rendering.
-            ip.display(widgets.HTML("<h3>Guardrail Results</h3>"))
-            display(state["guardrail_results"])  # noqa: F821  Fabric-native DataFrame rendering.
-            ip.display(widgets.HTML("<h3>Data Access</h3>"))
-            display(state["data_access"])  # noqa: F821  Fabric-native DataFrame rendering.
 
     for index, (field, _label) in enumerate(hierarchy):
         controls[field].observe(lambda change, i=index: refresh_from(i + 1) if change.get("name") == "value" else None, names="value")
     version.observe(lambda change: refresh_views() if change.get("name") == "value" and change.get("new") else None, names="value")
     refresh_from()
-    state["_controls"] = {**controls, "schema_fingerprint": version, "output": output}
-    ip.display(widgets.VBox([widgets.HTML("<h2>View data contract</h2>"), controls_box, version, output]))
+    state["_controls"] = {**controls, "schema_fingerprint": version}
+    ip.display(widgets.VBox([widgets.HTML("<h2>View data contract</h2>"), controls_box, version]))
     return state

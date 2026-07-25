@@ -22,7 +22,7 @@ Render the governed data contract for one registered dataset.
 
 `fabricops_kit/widgets/widget_view_data_contract.py:89`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L314">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L339">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -112,8 +112,8 @@ The environment is fixed to the active FabricOps context. Dataset identity
 is the stable ``metadata_table_key``; schema history is selected with the
 canonical ``schema_fingerprint``. Governance tables are not
 schema-versioned, so historical catalogue schemas are explicitly combined
-with current enrichment and guardrail definitions. Each result uses
-Microsoft Fabric's native DataFrame display.
+with current enrichment and guardrail definitions. After changing a widget
+selection, rerun the notebook cell that displays ``get_views()`` results.
 
 </div>
 
