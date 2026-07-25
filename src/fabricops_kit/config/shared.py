@@ -367,12 +367,14 @@ class DataAgreementConfig:
             "visible_columns": [
                 "agreement_name",
                 "domain",
-                "steward_id",
+                "provider_steward_id",
+                "recipient_steward_id",
                 "recipient",
                 "start_date",
                 "expiry_date",
                 "business_purpose",
             ],
+            "approved_usage_options": ["internal", "research", "external"],
             "custom_fields": [],
         }
     )

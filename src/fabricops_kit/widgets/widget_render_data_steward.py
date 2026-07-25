@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-import hashlib
+import uuid
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -156,10 +156,10 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
 
 
-def _generate_steward_id(values: dict[str, Any]) -> str:
-    basis = "|".join(str(values.get(field, "")).strip().lower() for field in ("steward_name", "contact", "effective_from"))
-    digest = hashlib.sha1(basis.encode("utf-8")).hexdigest()[:10]
-    return f"STEW-{digest}"
+def _generate_steward_id() -> str:
+    steward_id = str(uuid.uuid4())
+    uuid.UUID(steward_id)
+    return steward_id
 
 
 def _steward_label(row: dict[str, Any]) -> str:
@@ -183,7 +183,9 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     row["effective_to"] = parse_iso_date(row.get("effective_to"), "effective_to")
     if row["effective_to"] and row["effective_from"] and row["effective_to"] < row["effective_from"]:
         raise ValueError("effective_to must be on or after effective_from.")
-    row["steward_id"] = selected_steward_id or _generate_steward_id(row)
+    if selected_steward_id:
+        uuid.UUID(selected_steward_id)
+    row["steward_id"] = selected_steward_id or _generate_steward_id()
     explicit_active = values.get("is_active")
     row["is_active"] = False if explicit_active not in (None, "") and not to_bool(explicit_active) else bool(active_steward({**row, "is_active": row.get("is_active", "")}, config))
     row["custom_fields_json"] = serialize_custom_fields(custom_fields)
