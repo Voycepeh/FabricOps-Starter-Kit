@@ -97,26 +97,26 @@ def test_new_and_existing_steward_uuid_identity(monkeypatch):
 
 
 def test_agreement_json_validation_and_deterministic_serialization():
-    """Validate and deterministically serialize agreement JSON controls."""
-    documents = agreement_widget._serialize_supporting_documents(
-        [
-            {"label": "Request", "url": "https://example.com/request"},
-            {"label": "", "url": ""},
-            {"label": "Protocol", "url": "http://example.com/protocol"},
-        ]
-    )
-    assert json.loads(documents) == [
-        {"label": "Request", "url": "https://example.com/request"},
-        {"label": "Protocol", "url": "http://example.com/protocol"},
+    """Accept and round-trip mixed supporting-document location types."""
+    rows = [
+        {"label": "Web", "location": "  https://example.com/document  "},
+        {"label": "Relative file", "location": "Files/governance/document.pdf"},
+        {"label": "Table", "location": "Tables/reference_documents"},
+        {"label": "ABFSS", "location": "abfss://container@account.dfs.core.windows.net/path/file.pdf"},
+        {"label": "Absolute", "location": "/workspace/default_lakehouse/Files/document.pdf"},
+        {"label": "", "location": ""},
     ]
-    assert agreement_widget._deserialize_supporting_documents(documents) == json.loads(documents)
+    documents = agreement_widget._serialize_supporting_documents(rows)
+    expected = [{**row, "location": row["location"].strip()} for row in rows[:-1]]
+    assert json.loads(documents) == expected
+    assert agreement_widget._deserialize_supporting_documents(documents) == expected
     assert agreement_widget._serialize_approved_usage(
         ["external", "internal"], ["internal", "research", "external"]
     ) == '["internal","external"]'
-    with pytest.raises(ValueError, match="both a label and a URL"):
-        agreement_widget._serialize_supporting_documents([{"label": "Request", "url": ""}])
-    with pytest.raises(ValueError, match="http"):
-        agreement_widget._serialize_supporting_documents([{"label": "Request", "url": "ftp://example.com/a"}])
+    with pytest.raises(ValueError, match="both a label and a location"):
+        agreement_widget._serialize_supporting_documents([{"label": "Request", "location": ""}])
+    with pytest.raises(ValueError, match="both a label and a location"):
+        agreement_widget._serialize_supporting_documents([{"label": "", "location": "Files/request.pdf"}])
     with pytest.raises(ValueError, match="At least one"):
         agreement_widget._serialize_approved_usage([], ["internal"])
     with pytest.raises(ValueError, match="unconfigured"):
@@ -341,3 +341,18 @@ def test_canonical_agreement_schema_exact_order_and_nullability():
     assert fields["supporting_documents_json"].nullable
     assert not fields["approved_usage_json"].nullable
     assert "steward_id" not in fields
+
+
+def test_canonical_steward_schema_identity_and_existing_order():
+    """Require the steward UUID while preserving all other schema fields."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+
+    schema = metadata_table_schema_registry()[agreement.DATA_STEWARD_TABLE]
+    assert schema.fieldNames() == [
+        "steward_id", "steward_name", "steward_role", "contact", "effective_from",
+        "effective_to", "is_active", "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
+    ]
+    steward_id = schema["steward_id"]
+    assert steward_id.dataType.simpleString() == "string"
+    assert steward_id.nullable is False
+    assert all(field.nullable for field in schema.fields[1:8])

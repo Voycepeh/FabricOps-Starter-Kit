@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import date
 import json
 from typing import Any
-from urllib.parse import urlparse
 import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -114,12 +113,12 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     def _render_document_rows() -> None:
         supporting_documents.children = tuple(row["container"] for row in supporting_document_rows)
 
-    def _add_document_row(label: str = "", url: str = "") -> None:
+    def _add_document_row(label: str = "", location: str = "") -> None:
         label_widget = widgets.Text(value=label, description="Document label")
-        url_widget = widgets.Text(value=url, description="Document URL")
-        remove = widgets.Button(description="Remove link")
-        record = {"label": label_widget, "url": url_widget, "remove": remove}
-        record["container"] = widgets.VBox([label_widget, url_widget, remove])
+        location_widget = widgets.Text(value=location, description="Document location")
+        remove = widgets.Button(description="Remove document")
+        record = {"label": label_widget, "location": location_widget, "remove": remove}
+        record["container"] = widgets.VBox([label_widget, location_widget, remove])
 
         def _remove(_: Any) -> None:
             supporting_document_rows.remove(record)
@@ -129,7 +128,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_document_rows.append(record)
         _render_document_rows()
 
-    add_supporting_document_button = widgets.Button(description="+ Add link")
+    add_supporting_document_button = widgets.Button(description="+ Add document")
     add_supporting_document_button.on_click(lambda _: _add_document_row())
     _add_document_row()
 
@@ -179,7 +178,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         documents = _deserialize_supporting_documents(row.get("supporting_documents_json", "[]")) if row else []
         supporting_document_rows.clear()
         for document in documents:
-            _add_document_row(document["label"], document["url"])
+            _add_document_row(document["label"], document["location"])
         if not documents:
             _add_document_row()
         selected_usage = _deserialize_approved_usage(row.get("approved_usage_json"), usage_options) if row else []
@@ -201,7 +200,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             try:
                 values = {key: to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value for key, widget in form.items()}
                 values["supporting_documents"] = [
-                    {"label": row["label"].value, "url": row["url"].value} for row in supporting_document_rows
+                    {"label": row["label"].value, "location": row["location"].value} for row in supporting_document_rows
                 ]
                 values["approved_usage"] = [option for option, checkbox in approved_usage_checkboxes.items() if checkbox.value]
                 extras = collect_custom_fields(widget_config, custom)
@@ -253,15 +252,12 @@ def _serialize_supporting_documents(rows: list[dict[str, Any]]) -> str:
     documents = []
     for row in rows:
         label = str(row.get("label") or "").strip()
-        url = str(row.get("url") or "").strip()
-        if not label and not url:
+        location = str(row.get("location") or "").strip()
+        if not label and not location:
             continue
-        if not label or not url:
-            raise ValueError("Each supporting document requires both a label and a URL.")
-        parsed = urlparse(url)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-            raise ValueError("Supporting document URLs must be valid http:// or https:// URLs.")
-        documents.append({"label": label, "url": url})
+        if not label or not location:
+            raise ValueError("Each supporting document requires both a label and a location.")
+        documents.append({"label": label, "location": location})
     return json.dumps(documents, separators=(",", ":"), ensure_ascii=False)
 
 
@@ -272,7 +268,7 @@ def _deserialize_supporting_documents(value: Any) -> list[dict[str, str]]:
         raise ValueError("supporting_documents_json must be a JSON list.") from exc
     if not isinstance(documents, list) or any(not isinstance(item, dict) for item in documents):
         raise ValueError("supporting_documents_json must be a JSON list of document objects.")
-    # Apply the same strict shape and URL validation used when saving.
+    # Apply the same strict shape validation used when saving.
     canonical = _serialize_supporting_documents(documents)
     return json.loads(canonical)
 
