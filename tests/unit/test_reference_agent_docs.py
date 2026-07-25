@@ -255,6 +255,8 @@ def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatc
     monkeypatch.setattr(generator, "CALLABLE_REFERENCE_DIR", tmp_path / "api" / "reference")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", tmp_path / "reference" / "metadata.md")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "reference" / "metadata")
+    monkeypatch.setattr(generator, "update_generated_artifact_metadata", lambda **_kwargs: None)
+
     generator.main()
 
     lakehouse_page = (tmp_path / "api" / "reference" / "write_lakehouse_table.md").read_text(encoding="utf-8")
@@ -276,8 +278,8 @@ def test_write_io_reference_pages_render_docstring_examples(tmp_path, monkeypatc
     assert "does not create physical Warehouse table partitions" in _normalize_whitespace(warehouse_page)
 
 
-def test_individual_reference_pages_do_not_update_artifact_manifest(tmp_path, monkeypatch) -> None:
-    """Verify individual reference generation does not modify artifact metadata."""
+def test_individual_reference_pages_ignore_global_freshness_metadata(tmp_path, monkeypatch) -> None:
+    """Verify global artifact timestamps never affect individual callable pages."""
     import scripts.generate_individual_function_reference_pages as generator
 
     monkeypatch.setattr(generator, "REFERENCE_DATA_DIR", tmp_path / "reference-data")
@@ -285,14 +287,26 @@ def test_individual_reference_pages_do_not_update_artifact_manifest(tmp_path, mo
     monkeypatch.setattr(generator, "CALLABLE_REFERENCE_DIR", tmp_path / "api" / "reference")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", tmp_path / "reference" / "metadata.md")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "reference" / "metadata")
-    manifest_path = ROOT / "docs" / "reference" / "_data" / "generated-artifacts.json"
-    manifest_before = manifest_path.read_bytes()
+    metadata_updates = []
+    monkeypatch.setattr(generator, "update_generated_artifact_metadata", lambda **kwargs: metadata_updates.append(kwargs))
+    monkeypatch.setattr(
+        generator,
+        "read_generated_artifact_metadata",
+        lambda: {"artifacts": {"public_function_call_flows_json": {"generated_at_sgt": "Before"}}},
+        raising=False,
+    )
 
     generator.main()
     first_pages = {
         page.name: page.read_text(encoding="utf-8")
         for page in (tmp_path / "api" / "reference").glob("*.md")
     }
+    monkeypatch.setattr(
+        generator,
+        "read_generated_artifact_metadata",
+        lambda: {"artifacts": {"public_function_call_flows_json": {"generated_at_sgt": "After"}}},
+        raising=False,
+    )
     generator.main()
     second_pages = {
         page.name: page.read_text(encoding="utf-8")
@@ -300,8 +314,10 @@ def test_individual_reference_pages_do_not_update_artifact_manifest(tmp_path, mo
     }
 
     assert first_pages == second_pages
-    assert manifest_path.read_bytes() == manifest_before
-    assert not hasattr(generator, "update_generated_artifact_metadata")
+    assert metadata_updates[-1]["artifact_key"] == "individual_function_reference_pages"
+    manifest = json.loads((ROOT / "docs" / "reference" / "_data" / "generated-artifacts.json").read_text())
+    assert "individual_function_reference_pages" in manifest["artifacts"]
+    assert "public_function_call_flows_json" in manifest["artifacts"]
     for page_text in second_pages.values():
         assert "Generated reference freshness" not in page_text
         assert "Reference pages generated:" not in page_text
@@ -346,6 +362,8 @@ def test_write_warehouse_reference_page_renders_docstring_intro_and_notes(tmp_pa
     monkeypatch.setattr(generator, "CALLABLE_REFERENCE_DIR", tmp_path / "api" / "reference")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", tmp_path / "reference" / "metadata.md")
     monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", tmp_path / "reference" / "metadata")
+    monkeypatch.setattr(generator, "update_generated_artifact_metadata", lambda **_kwargs: None)
+
     generator.main()
 
     warehouse_page = (tmp_path / "api" / "reference" / "write_warehouse_table.md").read_text(encoding="utf-8")
