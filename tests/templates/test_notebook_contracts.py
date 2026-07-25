@@ -129,8 +129,17 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "profile_role=\\\"target\\\"" in source
     assert "Clone this block once for every DataFrame" in source
     assert "frequency_json" not in source
-    assert "metadata_table_key" not in source
     assert "metadata_column_key" not in source
     assert "profiled_at" not in source
     assert "registers catalogue evidence only" in source
     assert "follow-up lineage PR will automatically record that role" in source
+
+
+def test_02_pipeline_limits_contract_view_to_current_notebook_lineage():
+    """Verify pipeline inspection uses historical current-notebook lineage scope."""
+    source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
+
+    assert 'pipeline_scope=\\"current_notebook\\"' in source
+    assert 'metadata_ids=PIPELINE_METADATA_IDS' not in source
+    assert 'source_profile_results[\"metadata_table_keys\"]' not in source
+    assert 'target_profile_results[\"metadata_table_keys\"]' not in source

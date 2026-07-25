@@ -945,9 +945,10 @@ def _run_table_guardrails_workflow(
     -------
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, freshness
-        results, profile behavior results, DQ results, catalogue status, evidence definitions, concise
-        ``summary``, ``can_continue``, and ``failed_tables``. Results remain
-        separated by table key and guardrail type.
+        results, profile behavior results, DQ results, catalogue status,
+        evidence definitions, concise ``summary``, ``can_continue``, and
+        ``failed_tables``. Results remain separated by table key and guardrail
+        type.
 
     Notes
     -----

@@ -73,7 +73,7 @@ WIDGET_EXPORTS = (
     "widget_select_guardrail_target",
     "widget_enrich_table_metadata",
     "widget_author_schema_freshness_profile_rules",
-    "widget_browse_metadata_catalogue",
+    "widget_view_data_contract",
     "widget_author_dq_rules",
     "widget_review_guardrail_governance",
 )

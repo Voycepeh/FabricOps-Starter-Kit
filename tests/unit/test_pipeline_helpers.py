@@ -784,4 +784,3 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     assert captured["catalogue"]["agreement_id"] == "agreement-1"
     assert captured["catalogue"]["agreement_version"] == "2"
     assert active.source_definitions["orders"]["fabric_store_target"] == "source"
-
