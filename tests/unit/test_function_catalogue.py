@@ -175,7 +175,6 @@ def _expected_direct_public_template_calls() -> set[str]:
             "read_lakehouse_excel",
             "read_lakehouse_parquet",
             "write_warehouse_table",
-            "widget_browse_metadata_catalogue",
         }
     )
     return expected
@@ -264,7 +263,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
 
     audit_names = {str(row["function"]) for row in _audit_rows() if row["in_root_exports"]}
     audit_names.discard("write_pipeline_lineage")
-    audit_names.add("widget_browse_metadata_catalogue")
+    audit_names.add("widget_view_data_contract")
     audit_names.add("profile_frequency_distribution")
     audit_names.add("profile_and_register_dataframe")
     audit_names.discard("widget_pipeline_bootstrap")

@@ -62,7 +62,7 @@ EXPECTED_V1_CALLABLES = [
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_schema_freshness_profile_rules',
-    'widget_browse_metadata_catalogue',
+    'widget_view_data_contract',
     'widget_author_dq_rules',
     'widget_review_guardrail_governance',
 ]
@@ -81,7 +81,7 @@ def test_widget_public_callables_live_under_widgets_package():
     widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
-        'widget_browse_metadata_catalogue',
+        'widget_view_data_contract',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -106,7 +106,7 @@ def test_widget_modules_do_not_call_public_widget_functions():
     public_widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
-        'widget_browse_metadata_catalogue',
+        'widget_view_data_contract',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',

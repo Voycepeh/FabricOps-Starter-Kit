@@ -131,6 +131,115 @@ def render_searchable_selector(
     return {"container": container, "search": search, "selector": selector, "context": context, "rows_by_value": lookup}
 
 
+def format_full_value(value: Any) -> str:
+    """Return a complete scalar value, pretty-printing valid JSON strings."""
+    if value is None:
+        return ""
+    text = str(value)
+    try:
+        parsed = json.loads(text)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return text
+    return json.dumps(parsed, indent=2, ensure_ascii=False)
+
+
+def _compact_value(value: Any, max_characters: int = 48) -> str:
+    """Return a single-line, HTML-safe preview without changing the full value."""
+    text = " ".join(("" if value is None else str(value)).split())
+    if len(text) > max_characters:
+        text = f"{text[: max_characters - 1]}…"
+    return _html_escape(text)
+
+
+def render_expandable_dataframe(
+    dataframe,
+    *,
+    title: str,
+    max_rows: int = 200,
+    preview_columns: list[str] | None = None,
+    expanded_columns: list[str] | None = None,
+) -> dict[str, Any]:
+    """Render a bounded searchable preview with full-value field inspection.
+
+    Only ``max_rows + 1`` Spark rows are collected. The extra row detects a
+    truncated result without converting an unbounded history table to pandas.
+    """
+    if max_rows < 1:
+        raise ValueError("max_rows must be at least 1")
+    widgets = require_ipywidgets()
+    columns = list(dataframe.columns)
+    selected_preview_columns = [column for column in (preview_columns or columns) if column in columns]
+    prioritized = [column for column in (expanded_columns or []) if column in columns]
+    selected_expanded_columns = [*prioritized, *(column for column in columns if column not in prioritized)]
+    collected = dataframe.limit(max_rows + 1).collect()
+    limited = len(collected) > max_rows
+    rows = [row.asDict(recursive=True) for row in collected[:max_rows]]
+
+    search = widgets.Text(value="", placeholder="Search loaded rows…", **widget_common(widgets, "Search"))
+    row_selector = widgets.Dropdown(options=[], **widget_common(widgets, "Selected row"))
+    field_selector = widgets.Dropdown(options=selected_expanded_columns, **widget_common(widgets, "Detail field"))
+    preview = widgets.HTML()
+    detail = widgets.HTML()
+    status = widgets.HTML(
+        value=(
+            f"Showing the first {len(rows)} matching records; additional records are not loaded."
+            if limited
+            else f"Showing all {len(rows)} matching records."
+        )
+    )
+
+    def matching_indexes() -> list[int]:
+        query = str(search.value or "").strip().lower()
+        if not query:
+            return list(range(len(rows)))
+        return [index for index, row in enumerate(rows) if query in " ".join(str(value or "") for value in row.values()).lower()]
+
+    def render_preview(*_: Any) -> None:
+        indexes = matching_indexes()
+        current = row_selector.value
+        row_selector.options = [
+            (f"Row {index + 1}: " + " | ".join(str(rows[index].get(column) or "")[:40] for column in selected_preview_columns[:3]), index)
+            for index in indexes
+        ]
+        row_selector.value = current if current in indexes else (indexes[0] if indexes else None)
+        header = "".join(f"<th style='text-align:left;padding:6px'>{_html_escape(column)}</th>" for column in selected_preview_columns)
+        body = "".join(
+            "<tr>" + "".join(f"<td style='padding:6px;border-top:1px solid #ddd'>{_compact_value(rows[index].get(column))}</td>" for column in selected_preview_columns) + "</tr>"
+            for index in indexes
+        )
+        preview.value = (
+            "<div style='max-height:320px;overflow:auto'><table style='border-collapse:collapse;width:100%;font-size:12px'>"
+            f"<thead><tr>{header}</tr></thead><tbody>{body}</tbody></table></div>"
+            if indexes
+            else "<i>No loaded rows match the search.</i>"
+        )
+        render_detail()
+
+    def render_detail(*_: Any) -> None:
+        index = row_selector.value
+        field = field_selector.value
+        value = format_full_value(rows[index].get(field)) if index is not None and field else ""
+        detail.value = (
+            f"<b>Selected row details</b><br><b>Column:</b> {_html_escape(field or '')}"
+            "<pre style='max-height:360px;overflow:auto;white-space:pre;word-break:normal;"
+            "border:1px solid #ddd;padding:12px;font-family:monospace'>"
+            f"{_html_escape(value)}</pre>"
+        )
+
+    search.observe(render_preview, names="value")
+    row_selector.observe(render_detail, names="value")
+    field_selector.observe(render_detail, names="value")
+    render_preview()
+    container = widgets.VBox([
+        widgets.HTML(f"<h3>{_html_escape(title)}</h3>"), status, search, preview,
+        row_selector, field_selector, detail,
+    ])
+    return {
+        "container": container, "rows": rows, "limited": limited, "search": search,
+        "row_selector": row_selector, "field_selector": field_selector, "detail": detail,
+    }
+
+
 def render_custom_fields(config: list[dict[str, Any]] | dict[str, Any], *, values: dict[str, Any] | None = None) -> dict[str, Any]:
     """Render organization-specific custom fields from normalized config."""
     widgets = require_ipywidgets()
@@ -202,6 +311,64 @@ DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
+
+
+def get_data_contract_views(
+    metadata_table_key: str,
+    *,
+    schema_fingerprint: str | None = None,
+    target: str = "metadata",
+    schema: str | None = None,
+    spark_session=None,
+    context=None,
+) -> dict[str, Any]:
+    """Assemble separate governed metadata views for a registered dataset."""
+    from pyspark.sql import functions as F
+    from pyspark.sql.window import Window
+
+    def read(name: str):
+        return read_lakehouse_table_core(
+            name, target=target, schema=schema, spark_session=spark_session, context=context,
+        )
+
+    catalogue = read(CATALOGUE_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+    profiled = read(PROFILED_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+    enrichment = read(ENRICHMENT_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+    guardrails = read(GUARDRAIL_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+    results = read(GUARDRAIL_RESULTS_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+    access = read(DATA_ACCESS_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
+
+    if schema_fingerprint is None:
+        latest = catalogue.groupBy("schema_fingerprint").agg(F.max("_committed_at").alias("latest_at")).orderBy(F.col("latest_at").desc_nulls_last()).first()
+        schema_fingerprint = latest["schema_fingerprint"] if latest else None
+    current = catalogue.filter(F.col("schema_fingerprint") == schema_fingerprint) if schema_fingerprint else catalogue.limit(0)
+
+    def latest_per_column(frame, prefix: str):
+        order = F.col("_committed_at").desc_nulls_last()
+        ranked = frame.withColumn("_contract_rank", F.row_number().over(Window.partitionBy("metadata_table_key", "metadata_column_key").orderBy(order)))
+        selected = ranked.filter(F.col("_contract_rank") == 1).drop("_contract_rank")
+        return selected.select(
+            "metadata_table_key", "metadata_column_key",
+            *[F.col(column).alias(f"{prefix}_{column}") for column in selected.columns if column not in {"metadata_table_key", "metadata_column_key", "table_name", "column_name"}],
+        )
+
+    contract = current.join(latest_per_column(enrichment, "enrichment"), ["metadata_table_key", "metadata_column_key"], "left")
+    contract = contract.join(latest_per_column(guardrails, "guardrail"), ["metadata_table_key", "metadata_column_key"], "left")
+    profiled = profiled.orderBy(F.col("profiled_at").desc_nulls_last(), F.col("_committed_at").desc_nulls_last())
+    results = results.orderBy(F.col("_committed_at").desc_nulls_last())
+    access = access.orderBy(F.coalesce(F.col("approved_at"), F.col("expires_at"), F.col("_committed_at")).desc_nulls_last())
+
+    location = current.orderBy(F.col("_committed_at").desc_nulls_last()).limit(1)
+    profile_time = profiled.agg(F.max("profiled_at").alias("latest_profiled_at"))
+    result_time = results.agg(F.max("_committed_at").alias("latest_guardrail_execution_at"))
+    summary = location.select(
+        "environment_name", "store_type", "layer", "schema_name", "table_name", "metadata_table_key",
+        F.lit(schema_fingerprint).alias("schema_fingerprint"),
+    ).crossJoin(profile_time).crossJoin(result_time)
+    return {
+        "summary": summary, "current_contract": contract, "data_profiled": profiled,
+        "guardrail_results": results, "data_access": access,
+    }
 
 
 @dataclass

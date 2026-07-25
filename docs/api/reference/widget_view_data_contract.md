@@ -1,4 +1,4 @@
-# `widget_browse_metadata_catalogue`
+# `widget_view_data_contract`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -9,28 +9,28 @@
 
 ## Call-flow summary
 
-- Downstream callables: 29
-- Shared helpers: 17
-- Private helpers: 12
+- Downstream callables: 48
+- Shared helpers: 27
+- Private helpers: 21
 
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_browse_metadata_catalogue">Open Preview call flow</a>
+<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
 
-Render a searchable metadata catalogue browser.
+Render the governed data contract for one registered dataset.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_browse_metadata_catalogue.py:12`
+`fabricops_kit/widgets/widget_view_data_contract.py:42`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_browse_metadata_catalogue.py#L12-L123">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L42-L166">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">99_explore</span>
+<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
 </p>
 
-**Used in notebooks:** `99_explore`
+**Used in notebooks:** Usage detection may exclude indirect or generated references.
 
 ## Usage notes
 
@@ -44,13 +44,9 @@ They help users write values into the correct underlying metadata tables without
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_browse_metadata_catalogue(
-    agreement: dict | None=None,
-    agreement_id: str | None=None,
-    agreement_version: str | None=None,
+def widget_view_data_contract(
     target: str='metadata',
     schema: str | None=None,
-    metadata_table: str='METADATA_DATA_PROFILED',
     spark_session=None,
     context=None,
 ):
@@ -60,28 +56,30 @@ def widget_browse_metadata_catalogue(
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+>>> state = widget_view_data_contract()
+>>> views = state["get_views"]()
+>>> views["current_contract"].show()
+
+</div>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement` | `dict \| None` | No | Agreement context used as a fallback for agreement and contract filters. |
-| `agreement_id` | `str \| None` | No | Explicit agreement identifier. Takes precedence over ``agreement``. |
-| `agreement_version` | `str \| None` | No | Explicit contract version. Takes precedence over ``agreement``. |
-| `target` | `str` | No | Logical FabricStore target used to read the catalogue table. |
-| `schema` | `str \| None` | No | Optional metadata lakehouse schema override. |
-| `metadata_table` | `str` | No | Metadata catalogue table to read. |
+| `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
+| `schema` | `str \| None` | No | Metadata lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
 | `context` | `object` | No | Active FabricOps context override. |
 
 ## Returns
 
-Mutable widget state whose dataframe key contains the currently filtered Spark DataFrame.
+Mutable widget state containing canonical selections, separate Spark DataFrames, and a get_views callable.
 
 ### Return interpretation
 
-The returned state updates as selectors change; read state["dataframe"] for the currently filtered Spark DataFrame.
+The returned state updates as selectors change; call state["get_views"] to retrieve the selected summary, contract, profiling, results, and access DataFrames.
 
 ## Raises / Errors
 
@@ -92,6 +90,16 @@ Raises widget, Spark, or metadata routing errors when catalogue metadata cannot 
 - No FabricStore targets are configured.
 - The metadata catalogue table does not exist yet.
 - The selected FabricStore target has no catalogue rows.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+The environment is fixed to the active FabricOps context. Dataset identity
+is the stable ``metadata_table_key``; schema history is selected with the
+canonical ``schema_fingerprint``.
+
+</div>
 
 ## See also
 
@@ -111,12 +119,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.1.0 |
 
 
 </details>
