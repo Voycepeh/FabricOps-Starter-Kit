@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 84
+- Downstream callables: 85
 - Shared helpers: 47
-- Private helpers: 37
+- Private helpers: 38
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Render the governed data contract for one registered dataset.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_data_contract.py:78`
+`fabricops_kit/widgets/widget_view_data_contract.py:90`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L78-L310">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L90-L325">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -78,7 +78,7 @@ def widget_view_data_contract(
 | --- | --- | --- | --- |
 | `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. Linked data contracts are offered first when canonical contract links already exist. |
 | `metadata_id` | `str \| None` | No | Canonical ``metadata_table_key`` to select initially. |
-| `metadata_ids` | `Mapping[str, str] \| Sequence[str] \| None` | No | Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``. |
+| `metadata_ids` | `Mapping[str, str] \| Sequence[str] \| None` | No | Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``. When ``pipeline_scope`` is also supplied, these IDs are used only if the current notebook has no matching lineage history. |
 | `pipeline_scope` | `str \| None` | No | Restrict discovery to historical metadata IDs recorded in Data Lineage for the active environment, workspace, and notebook. |
 | `schema_version` | `str \| None` | No | Canonical ``schema_fingerprint`` to select initially. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |

@@ -1692,7 +1692,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_notebook': '99_explore',
   'template_segment': 'View data contract',
   'use_when': 'Use across agreement, pipeline, governance-review, and exploration notebooks for a consistent read-only view of one registered dataset.',
-  'parameters': 'See the source docstring for optional agreement, direct or restricted metadata identities, current-notebook pipeline scope, schema version, metadata target, Spark session, and context parameters.',
+  'parameters': 'See the source docstring for optional agreement, direct or restricted metadata identities, current-notebook pipeline scope with metadata-ID fallback, schema version, metadata target, Spark session, and context parameters.',
   'returns': 'Mutable widget state containing canonical selections, separate Spark DataFrames, and a get_views callable.',
   'raises': 'Raises Spark or metadata routing errors when metadata cannot be read. A missing optional widget dependency returns a non-breaking error state.',
   'related_functions': ['read_lakehouse_table', 'profile_dataframe'],

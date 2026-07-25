@@ -75,6 +75,18 @@ def _normalize_metadata_ids(metadata_ids: Mapping[str, str] | Sequence[str] | No
     return normalized
 
 
+def _pipeline_scope_items(
+    lineage_items: list[tuple[str, str]],
+    fallback_items: list[tuple[str, str]],
+) -> tuple[list[tuple[str, str]], str]:
+    """Prefer historical lineage scope, then caller-supplied restricted IDs."""
+    if lineage_items:
+        return lineage_items, "current_notebook_lineage"
+    if fallback_items:
+        return fallback_items, "metadata_ids_fallback"
+    return [], "empty"
+
+
 def widget_view_data_contract(
     *,
     agreement: dict[str, Any] | None = None,
@@ -98,7 +110,9 @@ def widget_view_data_contract(
         Canonical ``metadata_table_key`` to select initially.
     metadata_ids : mapping or sequence of str, optional
         Canonical dataset identities allowed in restricted mode. Mapping keys
-        become readable role labels, such as ``Source`` and ``Target``.
+        become readable role labels, such as ``Source`` and ``Target``. When
+        ``pipeline_scope`` is also supplied, these IDs are used only if the
+        current notebook has no matching lineage history.
     pipeline_scope : {"current_notebook"}, optional
         Restrict discovery to historical metadata IDs recorded in Data Lineage
         for the active environment, workspace, and notebook.
@@ -139,8 +153,6 @@ def widget_view_data_contract(
     """
     if pipeline_scope not in {None, "current_notebook"}:
         raise ValueError("pipeline_scope must be 'current_notebook' or None")
-    if pipeline_scope and metadata_ids is not None:
-        raise ValueError("Pass either pipeline_scope or metadata_ids, not both")
     restricted_items = _normalize_metadata_ids(metadata_ids)
     restricted_mode = metadata_ids is not None or pipeline_scope is not None
     try:
@@ -160,10 +172,12 @@ def widget_view_data_contract(
 
     config, env, resolved = resolve_fabric_context(context=context)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
+    pipeline_scope_source = "explicit_metadata_ids" if restricted_items else "none"
     if pipeline_scope == "current_notebook":
-        restricted_items = get_current_notebook_lineage_scope(
+        lineage_items = get_current_notebook_lineage_scope(
             target=target, schema=schema, spark_session=spark_session, context=runtime_context,
         )
+        restricted_items, pipeline_scope_source = _pipeline_scope_items(lineage_items, restricted_items)
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
@@ -210,6 +224,7 @@ def widget_view_data_contract(
         "linked_metadata_ids": linked_metadata_ids,
         "selection_mode": "restricted" if restricted_mode else ("direct" if metadata_id else "discovery"),
         "allowed_metadata_ids": [metadata_key for _label, metadata_key in restricted_items],
+        "pipeline_scope_source": pipeline_scope_source,
     }
 
     def get_views():

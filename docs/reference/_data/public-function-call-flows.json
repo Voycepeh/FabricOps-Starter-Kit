@@ -7511,6 +7511,27 @@
       "transitive_live_dependents": []
     },
     {
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "_pipeline_scope_items",
+      "function_type": "private_function",
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "live_since": null,
+      "qualified_name": "fabricops_kit.widgets.widget_view_data_contract._pipeline_scope_items",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 87,
+      "source_path": "src/fabricops_kit/widgets/widget_view_data_contract.py",
+      "source_start_line": 78,
+      "supports_live_contract": false,
+      "transitive_live_dependent_count": 0,
+      "transitive_live_dependents": []
+    },
+    {
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "direct_live_dependent_count": 0,
@@ -7524,9 +7545,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_view_data_contract.widget_view_data_contract",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 310,
+      "source_end_line": 325,
       "source_path": "src/fabricops_kit/widgets/widget_view_data_contract.py",
-      "source_start_line": 78,
+      "source_start_line": 90,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -60322,7 +60343,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 6,
-      "direct_call_count": 11,
+      "direct_call_count": 12,
       "discontinued_in": null,
       "examples": ">>> state = widget_view_data_contract()\n>>> views = state[\"get_views\"]()\n>>> views[\"current_contract\"].show()",
       "files_touched": [
@@ -60355,9 +60376,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 310,
+          "source_end_line": 325,
           "source_path": "src/fabricops_kit/widgets/widget_view_data_contract.py",
-          "source_start_line": 78,
+          "source_start_line": 90,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -63489,6 +63510,38 @@
           "transitive_live_dependents": [],
           "violation_details": [],
           "violation_types": []
+        },
+        {
+          "architecture_violations": [],
+          "call_count_from_parent": 1,
+          "contract_classification": "preview_only_internal",
+          "contract_display": "Preview-only internal",
+          "depth": 1,
+          "direct_live_dependent_count": 0,
+          "direct_live_dependents": [],
+          "discontinued_in": null,
+          "distinct_caller_count": 1,
+          "edge_type": "direct",
+          "function_name": "_pipeline_scope_items",
+          "function_type": "private_function",
+          "inline_candidate": true,
+          "lifecycle_status": "internal",
+          "live_impact_level": "preview_only",
+          "live_since": null,
+          "parent_qualified_name": "fabricops_kit.widgets.widget_view_data_contract.widget_view_data_contract",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.widgets.widget_view_data_contract._pipeline_scope_items",
+          "recursive": false,
+          "release_history": [],
+          "release_versions": [],
+          "source_end_line": 87,
+          "source_path": "src/fabricops_kit/widgets/widget_view_data_contract.py",
+          "source_start_line": 78,
+          "supports_live_contract": false,
+          "transitive_live_dependent_count": 0,
+          "transitive_live_dependents": [],
+          "violation_details": [],
+          "violation_types": []
         }
       ],
       "function_name": "widget_view_data_contract",
@@ -63513,7 +63566,7 @@
           "type": "str | None"
         },
         {
-          "description": "Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``.",
+          "description": "Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``. When ``pipeline_scope`` is also supplied, these IDs are used only if the current notebook has no matching lineage history.",
           "name": "metadata_ids",
           "required": "No",
           "type": "Mapping[str, str] | Sequence[str] | None"
@@ -63566,7 +63619,7 @@
           "evidence": [
             {
               "depth": 6,
-              "width": 11
+              "width": 12
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -63578,18 +63631,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Mutable state containing canonical selections, the displayed Spark\n    DataFrames, expandable preview controls, and a ``get_views`` callable.",
-      "scope": 34,
+      "scope": 35,
       "signals": [
         "large_width_or_depth"
       ],
       "signature": "def widget_view_data_contract(*, agreement: dict[str, Any] | None=None, metadata_id: str | None=None, metadata_ids: Mapping[str, str] | Sequence[str] | None=None, pipeline_scope: str | None=None, schema_version: str | None=None, target: str='metadata', schema: str | None=None, spark_session=None, context=None)",
-      "source_end_line": 310,
+      "source_end_line": 325,
       "source_path": "src/fabricops_kit/widgets/widget_view_data_contract.py",
-      "source_start_line": 78,
+      "source_start_line": 90,
       "summary": "Render the governed metadata surfaces for one registered dataset.",
-      "transitive_function_count": 34,
+      "transitive_function_count": 35,
       "usage_notes": "The environment is fixed to the active FabricOps context. Dataset identity\nis the stable ``metadata_table_key``; schema history is selected with the\ncanonical ``schema_fingerprint``. Each displayed view collects at most 200\npreview rows. Governance tables are not schema-versioned, so historical\ncatalogue schemas are explicitly combined with current enrichment and\nguardrail definitions. CSV, JSON, and Parquet export actions write the\ncomplete filtered Spark DataFrame as a Spark output directory under a unique\n``Files/fabricops_exports`` location in the configured metadata target.",
-      "width": 11
+      "width": 12
     },
     {
       "architecture_violation_count": 0,
@@ -65221,9 +65274,9 @@
   },
   "summary": {
     "defined_but_not_used_count": 50,
-    "defined_function_count": 322,
+    "defined_function_count": 323,
     "public_function_count": 24,
-    "used_function_count": 272
+    "used_function_count": 273
   },
   "used_functions": [
     "fabricops_kit.config.audit._audit_timestamp_value",
@@ -65497,6 +65550,7 @@
     "fabricops_kit.widgets.widget_view_data_contract._catalogue_locations",
     "fabricops_kit.widgets.widget_view_data_contract._normalize_metadata_ids",
     "fabricops_kit.widgets.widget_view_data_contract._options",
+    "fabricops_kit.widgets.widget_view_data_contract._pipeline_scope_items",
     "fabricops_kit.widgets.widget_view_data_contract.widget_view_data_contract"
   ]
 }

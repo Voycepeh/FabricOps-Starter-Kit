@@ -12,6 +12,7 @@ from fabricops_kit.widgets.widget_view_data_contract import (
     _agreement_id_from_context,
     _normalize_metadata_ids,
     _options,
+    _pipeline_scope_items,
 )
 from fabricops_kit.widgets.shared import (
     export_dataframe_to_files,
@@ -80,8 +81,13 @@ def test_restricted_metadata_ids_preserve_roles_order_and_unique_identity():
         _normalize_metadata_ids("source-id")
     with pytest.raises(ValueError, match="pipeline_scope"):
         public_widget(pipeline_scope="all_notebooks")
-    with pytest.raises(ValueError, match="either pipeline_scope or metadata_ids"):
-        public_widget(pipeline_scope="current_notebook", metadata_ids=["source-id"])
+    assert _pipeline_scope_items(
+        [("Source / Target", "history-id")], [("Current source", "current-id")],
+    ) == ([('Source / Target', 'history-id')], "current_notebook_lineage")
+    assert _pipeline_scope_items([], [("Current source", "current-id")]) == (
+        [("Current source", "current-id")], "metadata_ids_fallback",
+    )
+    assert _pipeline_scope_items([], []) == ([], "empty")
 
 
 def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, capsys):
