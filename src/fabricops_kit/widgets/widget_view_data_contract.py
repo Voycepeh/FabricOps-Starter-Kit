@@ -196,6 +196,24 @@ def widget_view_data_contract(
             }
             return unavailable_state
         restricted_items, pipeline_scope_source = _pipeline_scope_items(lineage_items, restricted_items)
+        if pipeline_scope_source == "empty":
+            message = (
+                "No lineage records were found for this notebook. "
+                "Run the profiling and lineage-writing sections first."
+            )
+            print(message)
+            empty_lineage_state: dict[str, Any] = {
+                "error": message,
+                "metadata_table_key": metadata_id,
+                "schema_fingerprint": schema_version,
+                "selection_mode": "restricted",
+                "allowed_metadata_ids": [],
+                "pipeline_scope_source": "empty",
+            }
+            empty_lineage_state["get_views"] = lambda: {
+                key: value for key, value in empty_lineage_state.items() if key != "get_views"
+            }
+            return empty_lineage_state
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,

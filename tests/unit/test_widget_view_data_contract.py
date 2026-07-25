@@ -251,3 +251,35 @@ def test_widget_returns_non_breaking_state_when_lineage_context_is_unavailable(m
     assert "Current-notebook lineage could not be resolved" in state["error"]
     assert state["get_views"]()["error"] == state["error"]
     assert "Ensure 00_env_config has run" in capsys.readouterr().out
+
+
+def test_widget_returns_non_breaking_state_when_notebook_has_no_lineage(monkeypatch, capsys):
+    """A pipeline notebook without lineage receives an explicit empty error state."""
+    import importlib
+
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_data_contract")
+    monkeypatch.setattr(module, "require_ipywidgets", lambda: object())
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda **_kwargs: (
+            object(),
+            "dev",
+            {"workspace_id": "workspace-1", "notebook_id": "notebook-1"},
+        ),
+    )
+    monkeypatch.setattr(module, "get_current_notebook_lineage_scope", lambda **_kwargs: [])
+    monkeypatch.setattr(
+        module,
+        "read_lakehouse_table_core",
+        lambda *_args, **_kwargs: pytest.fail("catalogue must not be read without lineage"),
+    )
+
+    state = public_widget(pipeline_scope="current_notebook")
+
+    assert state["pipeline_scope_source"] == "empty"
+    assert state["allowed_metadata_ids"] == []
+    assert state["selection_mode"] == "restricted"
+    assert "No lineage records were found for this notebook" in state["error"]
+    assert state["get_views"]()["error"] == state["error"]
+    assert "Run the profiling and lineage-writing sections first" in capsys.readouterr().out
