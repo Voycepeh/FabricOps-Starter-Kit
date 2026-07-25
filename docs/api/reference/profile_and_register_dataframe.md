@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 142
-- Shared helpers: 53
-- Private helpers: 88
+- Downstream callables: 140
+- Shared helpers: 54
+- Private helpers: 86
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_and_register_dataframe">Open Preview call flow</a>
 
@@ -35,9 +35,9 @@ configured in ``00_env_config`` for the selected environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:472`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:471`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L472-L806">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L471-L805">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -316,7 +316,3 @@ separate workflow.
 
 
 </details>
-
-!!! info "Generated reference freshness"
-    Reference pages generated: 18 Jul 2026, 9:28 AM SGT
-    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT
