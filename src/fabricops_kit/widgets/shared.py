@@ -11,7 +11,12 @@ from typing import Any, Iterable, Mapping
 import uuid
 
 from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp
-from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+from fabricops_kit.io.shared import (
+    configured_lakehouse_schema,
+    read_lakehouse_table_core,
+    resolve_configured_file_path,
+    write_lakehouse_table_core,
+)
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
@@ -151,6 +156,42 @@ def _compact_value(value: Any, max_characters: int = 48) -> str:
     return _html_escape(text)
 
 
+def write_dataframe_download(
+    dataframe,
+    *,
+    filename: str,
+    file_format: str,
+    target: str = "metadata",
+    context=None,
+) -> dict[str, str]:
+    """Write a complete Spark DataFrame to a configured Lakehouse Files path."""
+    import re
+
+    normalized_format = str(file_format or "").strip().lower()
+    if normalized_format not in {"csv", "json", "parquet"}:
+        raise ValueError("file_format must be one of: csv, json, parquet")
+    safe_filename = re.sub(r"[^A-Za-z0-9._-]+", "-", str(filename or "").strip()).strip("-.")
+    if not safe_filename:
+        raise ValueError("filename must contain at least one safe character")
+    suffix = f".{normalized_format}"
+    if not safe_filename.lower().endswith(suffix):
+        safe_filename = f"{safe_filename}{suffix}"
+    relative_path = f"fabricops_exports/{uuid.uuid4().hex}/{safe_filename}"
+    _store, normalized_path, physical_path = resolve_configured_file_path(
+        target, relative_path, context=context,
+    )
+    writer = dataframe.write.mode("overwrite")
+    if normalized_format == "csv":
+        writer = writer.option("header", True)
+    getattr(writer, normalized_format)(physical_path)
+    return {
+        "format": normalized_format,
+        "filename": safe_filename,
+        "relative_path": f"Files/{normalized_path}",
+        "physical_path": physical_path,
+    }
+
+
 def render_expandable_dataframe(
     dataframe,
     *,
@@ -158,6 +199,9 @@ def render_expandable_dataframe(
     max_rows: int = 200,
     preview_columns: list[str] | None = None,
     expanded_columns: list[str] | None = None,
+    download_filename: str | None = None,
+    download_target: str = "metadata",
+    context=None,
 ) -> dict[str, Any]:
     """Render a bounded searchable preview with full-value field inspection.
 
@@ -187,6 +231,33 @@ def render_expandable_dataframe(
             else f"Showing all {len(rows)} matching records."
         )
     )
+    download_status = widgets.HTML()
+    download_buttons = []
+
+    def download(file_format: str) -> None:
+        download_status.value = f"Writing complete {file_format.upper()} export…"
+        try:
+            exported = write_dataframe_download(
+                dataframe,
+                filename=download_filename or title,
+                file_format=file_format,
+                target=download_target,
+                context=context,
+            )
+        except Exception as exc:
+            download_status.value = f"<b>Export failed:</b> {_html_escape(exc)}"
+            return
+        download_status.value = (
+            f"Complete {file_format.upper()} export written to "
+            f"<code>{_html_escape(exported['relative_path'])}</code><br>"
+            f"<small>{_html_escape(exported['physical_path'])}</small>"
+        )
+
+    if download_filename:
+        for file_format in ("csv", "json", "parquet"):
+            button = widgets.Button(description=f"Download {file_format.upper()}")
+            button.on_click(lambda _button, value=file_format: download(value))
+            download_buttons.append(button)
 
     def matching_indexes() -> list[int]:
         query = str(search.value or "").strip().lower()
@@ -230,13 +301,16 @@ def render_expandable_dataframe(
     row_selector.observe(render_detail, names="value")
     field_selector.observe(render_detail, names="value")
     render_preview()
+    downloads = widgets.HBox(download_buttons) if download_buttons else widgets.HTML()
     container = widgets.VBox([
-        widgets.HTML(f"<h3>{_html_escape(title)}</h3>"), status, search, preview,
+        widgets.HTML(f"<h3>{_html_escape(title)}</h3>"), status, downloads, download_status, search, preview,
         row_selector, field_selector, detail,
     ])
     return {
-        "container": container, "rows": rows, "limited": limited, "search": search,
+        "container": container, "rows": rows, "limited": limited, "status": status,
+        "search": search, "preview": preview,
         "row_selector": row_selector, "field_selector": field_selector, "detail": detail,
+        "download_buttons": download_buttons, "download_status": download_status,
     }
 
 

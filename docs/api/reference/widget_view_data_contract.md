@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 48
-- Shared helpers: 27
-- Private helpers: 21
+- Downstream callables: 62
+- Shared helpers: 35
+- Private helpers: 27
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
 
@@ -22,7 +22,7 @@ Render the governed data contract for one registered dataset.
 
 `fabricops_kit/widgets/widget_view_data_contract.py:42`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L42-L166">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L42-L172">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -97,7 +97,10 @@ Raises widget, Spark, or metadata routing errors when catalogue metadata cannot 
 
 The environment is fixed to the active FabricOps context. Dataset identity
 is the stable ``metadata_table_key``; schema history is selected with the
-canonical ``schema_fingerprint``.
+canonical ``schema_fingerprint``. Each displayed view collects at most 200
+preview rows. Its CSV, JSON, and Parquet actions write the complete filtered
+Spark DataFrame to a unique ``Files/fabricops_exports`` location under the
+configured metadata target; export paths are reported in the widget.
 
 </div>
 

@@ -7,7 +7,11 @@ import pytest
 import fabricops_kit
 from fabricops_kit.widgets import widget_view_data_contract as public_widget
 from fabricops_kit.widgets.widget_view_data_contract import _options
-from fabricops_kit.widgets.shared import format_full_value, render_expandable_dataframe
+from fabricops_kit.widgets.shared import (
+    format_full_value,
+    render_expandable_dataframe,
+    write_dataframe_download,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -65,6 +69,44 @@ def test_expandable_viewer_collects_only_bounded_rows_and_retains_full_values(sp
     assert viewer["limited"] is True
     assert len(viewer["rows"]) == 2
     assert viewer["rows"][0]["payload"] == long_json
-    assert "additional records are not loaded" in viewer["container"].children[1].value
-    assert "…" in viewer["container"].children[3].value
+    assert "additional records are not loaded" in viewer["status"].value
+    assert "…" in viewer["preview"].value
     assert viewer["field_selector"].options[0] == "payload"
+
+
+def test_dataframe_download_writes_complete_source_with_configured_path(monkeypatch):
+    """Exports write the source DataFrame rather than the bounded preview rows."""
+    calls = []
+
+    class Writer:
+        def mode(self, value):
+            calls.append(("mode", value))
+            return self
+
+        def option(self, key, value):
+            calls.append(("option", key, value))
+            return self
+
+        def csv(self, path):
+            calls.append(("csv", path))
+
+    class DataFrame:
+        write = Writer()
+
+        def limit(self, _count):
+            raise AssertionError("downloads must not inherit the preview limit")
+
+    monkeypatch.setattr(
+        "fabricops_kit.widgets.shared.resolve_configured_file_path",
+        lambda target, relative_path, context: (object(), relative_path, f"abfss://metadata/Files/{relative_path}"),
+    )
+
+    exported = write_dataframe_download(
+        DataFrame(), filename="data contract/id", file_format="csv",
+        target="metadata", context={"env": "dev"},
+    )
+
+    assert exported["filename"] == "data-contract-id.csv"
+    assert exported["relative_path"].startswith("Files/fabricops_exports/")
+    assert calls[:2] == [("mode", "overwrite"), ("option", "header", True)]
+    assert calls[2][0] == "csv"
