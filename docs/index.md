@@ -1,4 +1,4 @@
-2<div class="fabricops-landing" markdown="1">
+<div class="fabricops-landing" markdown="1">
 
 # FabricOps documentation
 
