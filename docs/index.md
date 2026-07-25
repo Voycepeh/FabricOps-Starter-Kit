@@ -1,4 +1,4 @@
-<div class="fabricops-landing" markdown="1">
+2<div class="fabricops-landing" markdown="1">
 
 # FabricOps documentation
 
@@ -47,60 +47,59 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
 
   <a class="fabricops-landing-card" href="how-fabricops-works/">
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
-    <span class="fabricops-landing-card__body">Understand the three-workspace architecture, notebook responsibilities, metadata handoffs, governance review, production promotion, and downstream consumption.</span>
+    <span class="fabricops-landing-card__body">Understand the workspace, notebook and metadata architecture, engineering + governance workflow and development production promotion .</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
     <span class="fabricops-landing-card__title">Guided Demo</span>
-    <span class="fabricops-landing-card__body">Follow the canonical step-by-step execution guide for what to create, configure, open, run, and inspect.</span>
+    <span class="fabricops-landing-card__body">Follow the step-by-step guide to setup, configure, and perform the engineering + governance workflow.</span>
   </a>
-  
-<a class="fabricops-landing-card" href="releases/">
+
+  <a class="fabricops-landing-card" href="releases/">
     <span class="fabricops-landing-card__title">Releases</span>
-    <span class="fabricops-landing-card__body">Review published releases and their supported assets.</span>
+    <span class="fabricops-landing-card__body">View published releases and their included assets.</span>
   </a>
 
 ## Technical lookup
 
 <div class="fabricops-card-grid">
-<a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
+  <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
     <span class="fabricops-landing-card__title">5 Notebook Templates</span>
-    <span class="fabricops-landing-card__body">Download the five main notebook templates and understand each notebook's implementation responsibility.</span>
+    <span class="fabricops-landing-card__body">Download the latest notebooks here.</span>
   </a>
 
-<a class="fabricops-landing-card" href="reference/">
+  <a class="fabricops-landing-card" href="reference/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_PUBLIC_FUNCTION_COUNT --><strong>24</strong><span> public callable functions</span><!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT --></span>
-    <span class="fabricops-landing-card__body">Look up callable behaviour and implementation detail.</span>
+    <span class="fabricops-landing-card__body">Search and read the function documentations.</span>
   </a>
-  
+
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>10</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Look up metadata table purposes, schemas, and ownership.</span>
+    <span class="fabricops-landing-card__body">Read every metadata table's purpose, schema, and know which functions write to them .</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
     <span class="fabricops-landing-card__title">23 data quality rule types</span>
-    <span class="fabricops-landing-card__body">Look up supported data quality rule types and parameters.</span>
+    <span class="fabricops-landing-card__body">Explore supported data quality rules that can be used as guardrails.</span>
   </a>
 </div>
 
 ## Maintain FabricOps
 
-
-<a class="fabricops-landing-card" href="function-call-graph/">
+  <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
-    <span class="fabricops-landing-card__body">Understand the manually maintained callable architecture and call-flow review workflow.</span>
+    <span class="fabricops-landing-card__body">Monitor public function architecture violation, their underlying call-flows and nested fucntions within it for optimization and code cleanliness.</span>
   </a>
   
 <div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="maintainer/">
     <span class="fabricops-landing-card__title">Maintainer Guide</span>
-    <span class="fabricops-landing-card__body">Follow repository maintenance and release preparation guidance.</span>
+    <span class="fabricops-landing-card__body">Based of the skills a human readable version of the repository maintenance and release workflow.</span>
   </a>
 
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
     <span class="fabricops-landing-card__title">Product Definition</span>
-    <span class="fabricops-landing-card__body">Preserve the approved FabricOps terminology, workspace responsibilities, and workflow.</span>
+    <span class="fabricops-landing-card__body">The original foundational product terminology, responsibilities, and workflow that i use as truth.</span>
   </a>
 </div>
 
