@@ -143,6 +143,20 @@ def test_profile_registration_call_flow_has_no_public_profiling_edge():
     assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
     assert "Type 1" not in direct_callees["fabricops_kit.pipeline.shared.build_profile_dataframe"]["violation_types"]
 
+    frequency_json = next(
+        row
+        for row in flow["flow"]
+        if row["qualified_name"]
+        == "fabricops_kit.pipeline.profile_and_register_dataframe._frequency_json_dataframe"
+    )
+    frequency_callees = {
+        row["qualified_name"]
+        for row in flow["flow"]
+        if row["parent_qualified_name"] == frequency_json["qualified_name"]
+    }
+    assert "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution" not in frequency_callees
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in frequency_callees
+
 
 def test_profile_and_register_dataframe_signature_requires_profile_role():
     """Verify catalogue registration accepts role as a required API seam."""
@@ -275,7 +289,7 @@ def test_profile_and_register_dataframe_skips_frequency_for_empty_columns(spark_
 
     source = _source_df(spark_session)
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,
@@ -418,7 +432,7 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
         return _frequency_df(spark_session).where(f"COLUMN_NAME in ({quoted_columns})")
 
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,
@@ -473,7 +487,7 @@ def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold
         )
 
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,
@@ -523,7 +537,7 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
         return _frequency_df(spark_session)
 
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,
@@ -866,7 +880,7 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
     frequency_source = spark_session.createDataFrame([(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string")
     calls = {"profile_is_source": None, "frequency_df_is_frequency_source": None, "schema_df_is_source": []}
     original_schema_fingerprint = module._schema_fingerprint
-    original_frequency_distribution = module.profile_frequency_distribution
+    original_frequency_distribution = module.build_frequency_distribution_dataframe
 
     def schema_fingerprint(df):
         calls["schema_df_is_source"].append(df is source)
@@ -888,7 +902,7 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
 
     monkeypatch.setattr(module, "_schema_fingerprint", schema_fingerprint)
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,
@@ -972,7 +986,7 @@ def test_profile_and_register_dataframe_empty_frequency_columns_does_not_validat
         raise AssertionError("frequency profiling should not run")
 
     monkeypatch.setattr(module, "_validate_frequency_profile_dataframe", validate)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         _source_df(spark_session),
@@ -1002,7 +1016,7 @@ def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_wi
         assert df is source
         return _profile_df(spark_session)
 
-    original_frequency_distribution = module.profile_frequency_distribution
+    original_frequency_distribution = module.build_frequency_distribution_dataframe
 
     def frequency(df, *, columns, top_n):
         assert df is frequency_source
@@ -1010,7 +1024,7 @@ def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_wi
         return original_frequency_distribution(df, columns=columns, top_n=top_n)
 
     monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
 
     result = profile_and_register_dataframe(
         source,

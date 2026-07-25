@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.generated_artifact_metadata import read_generated_artifact_metadata, update_generated_artifact_metadata
+from scripts.generated_artifact_metadata import update_generated_artifact_metadata
 PKG_DIR = ROOT / "src" / "fabricops_kit"
 PACKAGE_NAME = "fabricops_kit"
 INIT_PATH = PKG_DIR / "__init__.py"
@@ -208,23 +208,6 @@ METADATA_RELATED_FUNCTIONS = {
     ],
 }
 
-
-def _generated_freshness_note() -> list[str]:
-    """Return markdown lines describing generated reference freshness."""
-    metadata = read_generated_artifact_metadata()
-    artifacts = metadata.get("artifacts", {})
-    if not isinstance(artifacts, dict):
-        artifacts = {}
-    reference_pages = artifacts.get("individual_function_reference_pages", {})
-    call_flow_data = artifacts.get("public_function_call_flows_json", {})
-    reference_generated = reference_pages.get("generated_at_sgt") if isinstance(reference_pages, dict) else None
-    data_generated = call_flow_data.get("generated_at_sgt") if isinstance(call_flow_data, dict) else None
-    return [
-        "",
-        "!!! info \"Generated reference freshness\"",
-        f"    Reference pages generated: {reference_generated or 'Generated timestamp unavailable'}",
-        f"    Call-flow data generated: {data_generated or 'Generated timestamp unavailable'}",
-    ]
 
 def plural_word(count: int, singular: str, plural: str) -> str:
     """Return singular or plural text for a count."""
@@ -5464,7 +5447,6 @@ def main() -> None:
 
         if node["exported"]:
             lines.extend(["", "<details>", "<summary>Maintainer architecture details</summary>", "", *_contract_impact_lines(public_flow, docs_metadata=docs_metadata, public_page_names=set(public_flow_by_name)), "", "</details>"])
-            lines.extend(_generated_freshness_note())
             (CALLABLE_REFERENCE_DIR / f"{short_name}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
         elif generate_internal_pages:
             pass

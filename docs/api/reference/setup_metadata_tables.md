@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 50
+- Downstream callables: 51
 - Shared helpers: 27
-- Private helpers: 23
+- Private helpers: 24
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open Preview call flow</a>
 
@@ -36,9 +36,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:67`
+`fabricops_kit/config/setup_metadata_tables.py:129`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L67-L310">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L442">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -136,9 +136,14 @@ Setup flow:
 9. Read the created table again.
 10. Validate required column names and physical Spark data types.
 11. Continue processing the remaining tables when one table fails.
-12. Count existing active steward records.
+12. Check whether at least one active steward record exists.
 13. Return overall, data-agreement, governance, and per-table setup
     results.
+
+``data_agreement["active_steward_count"]`` is retained for compatibility
+and reports readiness presence: ``1`` when at least one active steward
+exists and ``0`` otherwise. It is not a complete active steward population
+count.
 
 Metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
@@ -243,7 +248,3 @@ their respective FabricOps workflows.
 
 
 </details>
-
-!!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
-    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

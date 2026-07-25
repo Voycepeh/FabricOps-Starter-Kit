@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 3
-- Shared helpers: 1
-- Private helpers: 2
+- Downstream callables: 2
+- Shared helpers: 2
+- Private helpers: 0
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_frequency_distribution">Open Preview call flow</a>
 
@@ -33,9 +33,9 @@ profiled column.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_frequency_distribution.py:46`
+`fabricops_kit/pipeline/profile_frequency_distribution.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_frequency_distribution.py#L46-L163">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_frequency_distribution.py#L8-L72">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -138,7 +138,3 @@ the original full DataFrame.
 
 
 </details>
-
-!!! info "Generated reference freshness"
-    Reference pages generated: 16 Jul 2026, 1:51 PM SGT
-    Call-flow data generated: 16 Jul 2026, 12:56 AM SGT

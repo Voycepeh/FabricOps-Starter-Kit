@@ -11,8 +11,7 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table, write_lakehouse_table_core
-from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
-from fabricops_kit.pipeline.shared import build_profile_dataframe
+from fabricops_kit.pipeline.shared import build_frequency_distribution_dataframe, build_profile_dataframe
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -206,7 +205,7 @@ def _frequency_json_dataframe(
             frequency_profile_df,
             selected_columns,
         )
-        frequency_df = profile_frequency_distribution(
+        frequency_df = build_frequency_distribution_dataframe(
             frequency_source_df, columns=selected_columns, top_n=frequency_top_n
         ).crossJoin(source_row_count_df)
         value_struct = F.struct(
