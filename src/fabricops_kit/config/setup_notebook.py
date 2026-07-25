@@ -251,6 +251,7 @@ def _get_fabric_runtime_metadata(*, notebook_name: str | None, local_fallback_na
 
     return {
         "notebook_name": notebook_name or ctx("currentNotebookName") or local_fallback_name,
+        "notebook_id": ctx("currentNotebookId") or ctx("notebookId"),
         "workspace_name": ctx("currentWorkspaceName"),
         "workspace_id": ctx("currentWorkspaceId"),
         "user_name": ctx("userName") or ctx("userId") or "unknown",

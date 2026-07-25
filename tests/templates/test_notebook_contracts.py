@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Iterable
+import json
 from pathlib import Path
 
 import nbformat
@@ -129,8 +130,37 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "profile_role=\\\"target\\\"" in source
     assert "Clone this block once for every DataFrame" in source
     assert "frequency_json" not in source
-    assert "metadata_table_key" not in source
     assert "metadata_column_key" not in source
     assert "profiled_at" not in source
     assert "registers catalogue evidence only" in source
     assert "follow-up lineage PR will automatically record that role" in source
+
+
+def test_02_pipeline_limits_contract_view_to_current_notebook_lineage():
+    """Verify pipeline inspection uses historical current-notebook lineage scope."""
+    source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
+
+    assert 'pipeline_scope=\\"current_notebook\\"' in source
+    assert 'metadata_ids=PIPELINE_METADATA_IDS' not in source
+    assert 'source_profile_results[\"metadata_table_keys\"]' not in source
+    assert 'target_profile_results[\"metadata_table_keys\"]' not in source
+
+
+def test_role_templates_display_contract_views_in_separate_cells():
+    """Verify every role notebook renders the five state views outside the widget."""
+    for notebook_name in ("01_agreement", "02_pipeline", "03_review", "99_explore"):
+        notebook = json.loads((NOTEBOOK_DIR / f"{notebook_name}.ipynb").read_text(encoding="utf-8"))
+        display_cells = [
+            "".join(cell.get("source", [])).strip()
+            for cell in notebook["cells"]
+            if cell.get("cell_type") == "code" and "display(contract_views[" in "".join(cell.get("source", []))
+        ]
+        assert display_cells == [
+            'display(contract_views["summary"])',
+            'display(contract_views["current_contract"])',
+            'display(contract_views["data_profiled"])',
+            'display(contract_views["guardrail_results"])',
+            'display(contract_views["data_access"])',
+        ]
+        notebook_text = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"])
+        assert "rerun this cell and each display cell below" in notebook_text

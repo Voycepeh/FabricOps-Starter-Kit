@@ -197,7 +197,7 @@ def test_generated_callable_manifest_matches_approved_v1_list():
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
-    assert (APPROVED_V1_CALLABLES - {"widget_browse_metadata_catalogue"}).issubset(manifest_callables)
+    assert (APPROVED_V1_CALLABLES - {"widget_view_data_contract"}).issubset(manifest_callables)
 
 
 def test_notebook_templates_call_only_approved_v1_surface():
@@ -237,8 +237,8 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     called = _template_called_fabricops_functions()
 
-    assert (APPROVED_V1_CALLABLES - {"widget_browse_metadata_catalogue"}).issubset(manifest_callables)
-    assert called <= manifest_callables | {"widget_browse_metadata_catalogue"}
+    assert (APPROVED_V1_CALLABLES - {"widget_view_data_contract"}).issubset(manifest_callables)
+    assert called <= manifest_callables | {"widget_view_data_contract"}
     current_public_callables = set(fabricops_kit.__all__)
     for callable_name in manifest_callables & current_public_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
