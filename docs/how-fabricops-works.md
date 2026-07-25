@@ -1,26 +1,22 @@
 # How FabricOps works
 
-<div class="cta-center">
-  <a class="md-button md-button--primary" href="../guided-demo/">Open the Guided Demo</a>
-</div>
-
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
-
-FabricOps connects governance, data engineering, and AI and BI analytics through governed, quality-checked, Microsoft Fabric notebook workflows. The operating model keeps governance intent, engineering evidence, and production approval connected through shared metadata.
 
 ## The three-workspace operating model
 
-| Workspace | Primary purpose | Main outcome |
+| Workspace | Primary Purpose | Main FabricStores |
 | --------- | --------------- | ------------ |
-| Governance | Define ownership, agreements, enrichment, guardrails, and approval | Governed intent |
-| Engineering Development | Explore, develop, profile, test, and review | Evidence-backed pipeline |
-| Engineering Production | Run approved pipelines and retain trusted outputs | Stable data product |
+| Governance | Data agreement, data contracts and enrichment of data catalogues| Dev and Prod Metadata lakehouses only|
+| Engineering Development | Exploration of data, standard ETL with Guardrails | bronze, silver , gold lakehouse or warehouse|
+| Engineering Production | Promoted ETL pipelines running on scheduled refresh| bronze, silver ,gold lakehouse or warehouse|
 
-The three workspaces provide separation without creating disconnected handoffs. Governance defines the rules and approval context, Development builds and validates the pipeline, and Production runs the approved recurring workflow for downstream AI and BI use.
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-## The governance and engineering loop
+Read this to execute this workflow [Guided Demo](guided-demo/)
+Download the notebooks [Notebook Templates guide](notebook-templates-implementation-guide/) 
+
+## The governance and engineering loop workflow 
 
 The operating flow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production.
 
@@ -38,18 +34,17 @@ The operating flow uses only the three core FabricOps workspaces: Governance, En
 
 6. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
 
-## Metadata created through the workflow
+## Metadata stored supporting the workflow
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-FabricOps metadata is created for four connected purposes:
+FabricOps uses these connected [Metadata Tables](reference/metadata/) to carry governance context through the workflow.
 
-- **Governance intent** records stewards, agreements, intended data use, and approval context.
-- **Engineering evidence** records what the pipeline observed and produced, including catalogue, profiling, schema, lineage, and guardrail outcomes.
-- **Review and control** records business enrichment, classifications, descriptions, and guardrails that the pipeline must respect.
-- **Production approval** connects the validated pipeline, governed dataset, responsible stewards, and expected outputs through a data contract.
+The data catalogue sits at the centre of the model. It identifies each governed dataset and connects its profiling, lineage, access, enrichment, guardrails, and guardrail results.
 
-This model means metadata is captured through the workflow instead of being recreated manually after delivery.
+A data contract then binds the validated catalogue entry to a data agreement, connecting what engineering produced to its approved purpose, owners, and production expectations.
+
+The "02_pipeline" workflow creates and reviews this metadata during exploration. The "03_review" workflow applies the approved controls and produces the repeatable production pipeline.
 
 ## Development and Production
 
@@ -57,21 +52,10 @@ Engineering Development is used for exploration, development, profiling, testing
 
 Engineering Production contains approved, stable, recurring pipelines and durable outputs. All promoted "02_pipeline" notebooks should be tied to a data contract. A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
 
-## PySpark standardization
+Important "99_explore" work should be preserved when reproducibility is required. FabricOps may support an analysis archive or analysis packet in the future, but that should be treated as a future product direction rather than a current implemented production capability.
+
+## Note ! FabricOps uses PySpark mainly 
 
 Spark has startup overhead, and pandas may be better suited to smaller one-off analyses. FabricOps still uses PySpark as the standard for repeatable "02_pipeline" workflows because it supports larger datasets and provides a consistent engineering pattern for maintenance and handover.
 
 This standard does not prevent teams from using pandas or other tools for appropriate exploration. It establishes the repeatable production pipeline pattern.
-
-## Optional consumption and analysis preservation
-
-Smaller implementations may consume Production outputs directly, subject to the appropriate access controls. Larger implementations may introduce a separate consumption workspace when AI, BI, semantic model, access, capacity, or product ownership requirements justify it.
-
-Important "99_explore" work should be preserved when reproducibility is required. FabricOps may support an analysis archive or analysis packet in the future, but that should be treated as a future product direction rather than a current implemented production capability.
-
-## Related documentation
-
-- Use the [Notebook Templates guide](notebook-templates-implementation-guide/) for notebook responsibilities and downloads.
-- Use the [Guided Demo](guided-demo/) for maintained execution instructions.
-- Use the [metadata reference](reference/metadata/) for table-level details.
-- Use the [function reference](reference/) for Python APIs.
