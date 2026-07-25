@@ -14,10 +14,11 @@ from fabricops_kit.widgets.widget_view_data_contract import (
     _options,
 )
 from fabricops_kit.widgets.shared import (
+    export_dataframe_to_files,
     format_full_value,
     get_data_contract_views,
+    get_current_notebook_lineage_scope,
     render_expandable_dataframe,
-    export_dataframe_to_files,
 )
 
 pytestmark = pytest.mark.unit
@@ -77,6 +78,10 @@ def test_restricted_metadata_ids_preserve_roles_order_and_unique_identity():
     ]
     with pytest.raises(TypeError, match="mapping"):
         _normalize_metadata_ids("source-id")
+    with pytest.raises(ValueError, match="pipeline_scope"):
+        public_widget(pipeline_scope="all_notebooks")
+    with pytest.raises(ValueError, match="either pipeline_scope or metadata_ids"):
+        public_widget(pipeline_scope="current_notebook", metadata_ids=["source-id"])
 
 
 def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, capsys):
@@ -243,3 +248,36 @@ def test_contract_assembly_preserves_rules_history_and_separate_views(monkeypatc
     assert json.loads(empty_related_rows["id"].guardrail_rules_json) == []
     assert without_related["guardrail_results"].count() == 0
     assert without_related["data_access"].count() == 0
+
+
+def test_current_notebook_scope_uses_historical_unique_lineage_roles(monkeypatch, spark_session):
+    """Pipeline scope combines roles and excludes other notebook identities."""
+    old = datetime(2026, 1, 1)
+    new = datetime(2026, 2, 1)
+    lineage = spark_session.createDataFrame(
+        [
+            ("dev", "workspace-1", "notebook-1", "customers", "source", old),
+            ("dev", "workspace-1", "notebook-1", "customers", "target", new),
+            ("dev", "workspace-1", "notebook-1", "summary", "target", new),
+            ("dev", "workspace-1", "notebook-2", "other-notebook", "source", new),
+            ("dev", "workspace-2", "notebook-1", "other-workspace", "source", new),
+            ("prod", "workspace-1", "notebook-1", "other-environment", "source", new),
+        ],
+        "environment_name string, workspace_id string, notebook_id string, metadata_table_key string, profile_role string, profiled_at timestamp",
+    )
+    monkeypatch.setattr(
+        "fabricops_kit.widgets.shared.read_lakehouse_table_core",
+        lambda name, **_kwargs: lineage if name == "METADATA_DATA_LINEAGE" else None,
+    )
+
+    scope = get_current_notebook_lineage_scope(
+        spark_session=spark_session,
+        context={
+            "config": object(), "env": "dev",
+            "runtime_metadata": {"workspace_id": "workspace-1", "notebook_id": "notebook-1"},
+        },
+    )
+
+    assert scope == [("Source / Target", "customers"), ("Target", "summary")]
+    with pytest.raises(ValueError, match="workspace and notebook IDs"):
+        get_current_notebook_lineage_scope(context={"config": object(), "env": "dev"})

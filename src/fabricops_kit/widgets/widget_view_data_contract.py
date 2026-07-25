@@ -9,6 +9,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets.shared import (
     get_data_contract_views,
+    get_current_notebook_lineage_scope,
     render_expandable_dataframe,
     require_ipywidgets,
     widget_common,
@@ -79,6 +80,7 @@ def widget_view_data_contract(
     agreement: dict[str, Any] | None = None,
     metadata_id: str | None = None,
     metadata_ids: Mapping[str, str] | Sequence[str] | None = None,
+    pipeline_scope: str | None = None,
     schema_version: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
@@ -97,6 +99,9 @@ def widget_view_data_contract(
     metadata_ids : mapping or sequence of str, optional
         Canonical dataset identities allowed in restricted mode. Mapping keys
         become readable role labels, such as ``Source`` and ``Target``.
+    pipeline_scope : {"current_notebook"}, optional
+        Restrict discovery to historical metadata IDs recorded in Data Lineage
+        for the active environment, workspace, and notebook.
     schema_version : str, optional
         Canonical ``schema_fingerprint`` to select initially.
     target : str, default="metadata"
@@ -132,8 +137,12 @@ def widget_view_data_contract(
     >>> views["current_contract"].show()
 
     """
+    if pipeline_scope not in {None, "current_notebook"}:
+        raise ValueError("pipeline_scope must be 'current_notebook' or None")
+    if pipeline_scope and metadata_ids is not None:
+        raise ValueError("Pass either pipeline_scope or metadata_ids, not both")
     restricted_items = _normalize_metadata_ids(metadata_ids)
-    restricted_mode = metadata_ids is not None
+    restricted_mode = metadata_ids is not None or pipeline_scope is not None
     try:
         widgets = require_ipywidgets()
     except ModuleNotFoundError as exc:
@@ -151,6 +160,10 @@ def widget_view_data_contract(
 
     config, env, resolved = resolve_fabric_context(context=context)
     runtime_context = {"config": config, "env": env, **(resolved or {})}
+    if pipeline_scope == "current_notebook":
+        restricted_items = get_current_notebook_lineage_scope(
+            target=target, schema=schema, spark_session=spark_session, context=runtime_context,
+        )
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,

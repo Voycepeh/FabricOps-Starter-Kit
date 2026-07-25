@@ -946,8 +946,7 @@ def _run_table_guardrails_workflow(
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, freshness
         results, profile behavior results, DQ results, catalogue status,
-        ``metadata_table_keys`` keyed by configured dataset alias, evidence
-        definitions, concise ``summary``, ``can_continue``, and
+        evidence definitions, concise ``summary``, ``can_continue``, and
         ``failed_tables``. Results remain separated by table key and guardrail
         type.
 
@@ -1156,14 +1155,6 @@ def _run_table_guardrails_workflow(
     }
     result = {
         "profiles": profiles,
-        "metadata_table_keys": {
-            name: _build_metadata_table_key(
-                env,
-                str(definition.get("dataset_name") or _definition_name(name, definition)),
-                _definition_name(name, definition),
-            )
-            for name, definition in evidence_definitions.items()
-        },
         "schema_results": schema_results,
         "freshness_results": freshness_results,
         "stability_results": stability_results,

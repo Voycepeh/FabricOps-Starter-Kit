@@ -10,7 +10,7 @@ import json
 from typing import Any, Iterable, Mapping
 import uuid
 
-from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp
+from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     read_lakehouse_table_core,
@@ -385,6 +385,53 @@ DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
 DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
+
+
+def get_current_notebook_lineage_scope(
+    *,
+    target: str = "metadata",
+    schema: str | None = None,
+    spark_session=None,
+    context=None,
+) -> list[tuple[str, str]]:
+    """Return historical dataset roles and IDs for the active pipeline notebook."""
+    from pyspark.sql import functions as F
+
+    config, env, resolved = resolve_fabric_context(context=context)
+    runtime = resolved.get("runtime_metadata") or {}
+    workspace_id = str(resolved.get("workspace_id") or runtime.get("workspace_id") or "").strip()
+    notebook_id = str(resolved.get("notebook_id") or runtime.get("notebook_id") or "").strip()
+    if not workspace_id or not notebook_id:
+        raise ValueError(
+            "pipeline_scope='current_notebook' requires current workspace and notebook IDs from the Fabric runtime context."
+        )
+    lineage = read_lakehouse_table_core(
+        LINEAGE_TABLE, target=target, schema=schema,
+        spark_session=spark_session, context={"config": config, "env": env, **resolved},
+    )
+    scoped = lineage.filter(
+        (F.col("environment_name") == env)
+        & (F.col("workspace_id") == workspace_id)
+        & (F.col("notebook_id") == notebook_id)
+    )
+    rows = (
+        scoped.groupBy("metadata_table_key")
+        .agg(
+            F.max("profiled_at").alias("latest_profiled_at"),
+            F.sort_array(F.collect_set("profile_role")).alias("historical_roles"),
+        )
+        .orderBy(F.col("latest_profiled_at").desc_nulls_last(), F.col("metadata_table_key"))
+        .collect()
+    )
+    return [
+        (
+            " / ".join(str(role).strip().title() for role in row["historical_roles"] if str(role or "").strip())
+            or "Pipeline",
+            str(row["metadata_table_key"]),
+        )
+        for row in rows
+        if str(row["metadata_table_key"] or "").strip()
+    ]
 
 
 def get_data_contract_views(

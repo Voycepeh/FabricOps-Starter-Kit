@@ -135,11 +135,11 @@ def test_02_pipeline_uses_cloneable_profile_registration_block():
     assert "follow-up lineage PR will automatically record that role" in source
 
 
-def test_02_pipeline_limits_contract_view_to_configured_pipeline_datasets():
-    """Verify pipeline inspection cannot browse unrelated registered datasets."""
+def test_02_pipeline_limits_contract_view_to_current_notebook_lineage():
+    """Verify pipeline inspection uses historical current-notebook lineage scope."""
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
-    assert 'PIPELINE_METADATA_IDS = {' in source
-    assert 'source_profile_results[\\"metadata_table_keys\\"]' in source
-    assert 'target_profile_results[\\"metadata_table_keys\\"]' in source
-    assert 'metadata_ids=PIPELINE_METADATA_IDS' in source
+    assert 'pipeline_scope=\\"current_notebook\\"' in source
+    assert 'metadata_ids=PIPELINE_METADATA_IDS' not in source
+    assert 'source_profile_results[\"metadata_table_keys\"]' not in source
+    assert 'target_profile_results[\"metadata_table_keys\"]' not in source
