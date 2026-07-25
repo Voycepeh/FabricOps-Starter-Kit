@@ -16,6 +16,8 @@
 | `start_date` | `date` | `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement`, `fabricops_kit.widgets.shared.parse_iso_date` | Date stored for `start_date`. |
 | `expiry_date` | `date` | `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement`, `fabricops_kit.widgets.shared.parse_iso_date` | Date stored for `expiry_date`. |
 | `business_purpose` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | Business purpose recorded for the agreement or access request. |
+| `supporting_documents_json` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | JSON payload stored for `supporting_documents_json`. |
+| `approved_usage_json` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | JSON payload stored for `approved_usage_json`. |
 | `custom_fields_json` | `string` | `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement`, `fabricops_kit.widgets.shared.serialize_custom_fields` | JSON payload stored for `custom_fields_json`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |

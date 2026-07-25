@@ -9,9 +9,9 @@
 
 ## Call-flow summary
 
-- Downstream callables: 188
-- Shared helpers: 108
-- Private helpers: 80
+- Downstream callables: 194
+- Shared helpers: 106
+- Private helpers: 88
 
 <a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_agreement">Open Preview call flow</a>
 
@@ -20,9 +20,9 @@ Render the standalone data-agreement intake widget.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_render_data_agreement.py:34`
+`fabricops_kit/widgets/widget_render_data_agreement.py:36`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L34-L182">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L36-L229">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
