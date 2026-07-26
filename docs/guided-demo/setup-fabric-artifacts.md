@@ -1,6 +1,6 @@
-# Prepare Fabric artifacts for Step 0
+# Step 0A: Prepare Fabric artifacts
 
-Prepare the Fabric workspaces, lakehouses, warehouses, Environment, wheel, and copied notebooks used by Step 0. Then continue to [Step 0: Set up the operating environment](run-environment-setup.md) to configure and run `00_env_config`.
+Prepare the Fabric workspaces, lakehouses, warehouses, Environment, FabricOps wheel, and copied notebooks required by the operating workflow. Then continue to [Step 0B: Set up the operating environment](run-environment-setup.md) to configure and run `00_env_config`.
 
 ## What you prepare
 
@@ -14,7 +14,7 @@ By the end, your copied notebooks can import `fabricops_kit`, and `00_env_config
 2. Create a new demo workspace, or choose an existing safe workspace for public-safe testing.
 3. Keep item names simple and recognizable so junior users can copy them into `00_env_config`.
 
-For the canonical workflow, create or choose the Governance, Engineering Development, and Engineering Production workspaces. Keep item roles clear so the configured routes remain easy to understand.
+For the canonical governed workflow, create or choose the Governance, Engineering Development, and Engineering Production workspaces. Create one or more Project-Specific Consumer workspaces when approved Production data will be consumed for project-level exploration, AI, or BI use cases.
 
 ## 2. Create or select lakehouses and warehouse
 
@@ -65,7 +65,7 @@ Download or copy editable notebook templates from the GitHub [`templates/noteboo
 | `01_agreement` | Captures steward and agreement metadata. |
 | `02_pipeline` | Runs governed source-to-target processing, profiles data, evaluates guardrails, writes outputs, and records run evidence. |
 | `03_review` | Reviews observed metadata, enrichment intent, and guardrail intent. |
-| `99_explore` | Supports optional read-only discovery or troubleshooting. |
+| `99_explore` | Consumes approved Engineering Production data from a Project-Specific Consumer workspace for exploration, AI, and BI use cases. |
 
 ![Fabric workspace setup example](../assets/fabric-example-workspace-setup.png)
 
@@ -75,4 +75,4 @@ The workspace contains editable copies of the guided demo notebooks, the Fabric 
 
 No FabricOps metadata is required yet. This step prepares the runtime and workspace items that later pages use.
 
-Next, continue to [Step 0: Set up the operating environment](run-environment-setup.md).
+Next, continue to [Step 0B: Set up the operating environment](run-environment-setup.md).
