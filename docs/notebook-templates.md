@@ -1,6 +1,6 @@
 # Notebook Templates
 
-FabricOps provides five editable Microsoft Fabric notebook templates for creating the workspaces, registering governance metadata, running data pipelines, defining guardrails, approving data contracts, and exploring data.
+FabricOps provides five editable Microsoft Fabric notebook templates for configuring the workspaces, registering governance metadata, running data pipelines, defining guardrails, approving data contracts, and exploring data.
 
 [Open all notebook templates on GitHub](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks){ .md-button .md-button--primary }
 
