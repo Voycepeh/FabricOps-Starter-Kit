@@ -1,67 +1,52 @@
-# Optional: Run the exploration notebook template
+# Step 7: Consume approved Production data with FabricOps IO and profiling
 
-This page is optional demo support and is not part of the required Step 0 through Step 6 production workflow.
+Run `99_explore` in a Project-Specific Consumer workspace after approved outputs are available from Engineering Production.
 
-## Why this exists
+This step demonstrates how a consumer team can use FabricOps IO helpers to read approved Lakehouse or Warehouse data through configured targets, inspect the resulting Spark dataframes, and use `profile_dataframe` for project-level exploration, AI, or BI work without modifying or duplicating the governed production pipeline.
 
-Fabric notebooks allow you to attach a Lakehouse or Warehouse and kind of drag and drop the table or files you want to read quickly through the native UI.
+## Consumer workspace boundaries
 
-However there is a technical limitation as per writing 2026 July a notebook can only attach a single warehouse/lakehouse to it.
+- Read approved data from Engineering Production.
+- Keep project-specific analysis, experiments, models, reports, and notebook outputs in the consumer workspace.
+- Do not modify governed agreement, contract, enrichment, guardrail, or production pipeline state.
+- Do not write back into governed Production source, unified, or product stores as part of this walkthrough.
+- Move any preparation that must become stable, recurring, or operational into the governed `02_pipeline` workflow.
 
-The problem surfaces when you needs to work across more than one Lakehouse or Warehouse, or when users do not have broad item-level access but are expected to work through approved table, schema, or configured target access.
+## Why FabricOps IO exists
 
-FabricOps standardizes that access pattern. Instead of relying on whichever item is attached to the notebook, the IO helpers resolve the configured Lakehouse or Warehouse target from `00_env_config`. Users call the same functions every time, and the notebook can read or write through the approved target without hardcoding paths, switching attachments, or rethinking the access pattern.
+Fabric notebooks can attach one Lakehouse or Warehouse, making it convenient to select tables or files through the native UI. A notebook that needs data from another item, however, should not depend on switching attachments, hardcoded paths, or broad item-level access.
 
-## Key idea
-
-Run `00_env_config` once. Then IO helpers resolve the correct Lakehouse or Warehouse target from `CONFIG` and `FABRIC_CONTEXT`. Users call the same helper functions every time, using the configured targets prepared in `00_env_config`.
+FabricOps standardizes this access pattern. Its IO helpers resolve the configured Lakehouse or Warehouse target established through `00_env_config`, so consumers can read through approved targets with consistent function calls even when the target is not the item attached to the notebook.
 
 ## Key functions that support this notebook flow
 
 | Helper | What it demonstrates |
 | --- | --- |
-| `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_parquet` | Read raw files from configured Lakehouse Files. |
-| `write_lakehouse_table`, `read_lakehouse_table` | Write and read Delta tables through configured Lakehouse Tables. |
-| `write_warehouse_table`, `read_warehouse_table`, `read_warehouse_query` | Write and read Warehouse tables through configured Warehouse targets. |
-| `profile_dataframe` | Profile a Spark dataframe returned from either Lakehouse or Warehouse reads. |
+| `read_lakehouse_csv`, `read_lakehouse_excel`, `read_lakehouse_parquet` | Read approved files from a configured Production Lakehouse target when file access is part of the approved interface. |
+| `read_lakehouse_table` | Read approved Delta tables from a configured Engineering Production Lakehouse target. |
+| `read_warehouse_table`, `read_warehouse_query` | Read approved tables or query results from a configured Engineering Production Warehouse target. |
+| `profile_dataframe` | Profile a Spark dataframe returned from an approved Lakehouse or Warehouse read. |
 
-## 1. Download the demo dataset which consist of 
+## What to do
 
-| File | Used for |
-| --- | --- |
-| [`orders.csv`](../assets/demo-data/io-profile/orders.csv) | CSV file-read smoke test with simple order facts. |
-| [`products.xlsx`](../assets/demo-data/io-profile/products.xlsx) | Excel file-read smoke test with product reference data. |
-| [`customers.parquet`](../assets/demo-data/io-profile/customers.parquet) | Parquet file-read smoke test with customer attributes. |
+1. Create or open the Project-Specific Consumer workspace for the relevant project, analytical product, AI use case, or BI use case.
+2. Attach the Fabric Environment containing the FabricOps wheel.
+3. Configure the consumer workspace so `99_explore` can resolve the approved Engineering Production Lakehouse or Warehouse targets.
+4. Open `99_explore`.
+5. Read an approved Production table, file, or query result using the relevant FabricOps IO helper.
+6. Display and inspect the returned Spark dataframe.
+7. Run `profile_dataframe` when a column-level profile is useful for the project.
+8. Keep all project-specific analysis and outputs within the consumer workspace.
+9. Route any transformation that must become stable or recurring back into the governed Engineering Development workflow.
 
-## 2. Upload these files into your source lakehouse root files section
-![Upload](../assets/fabric-example-99_upload_files.png)
-![Upload 2](../assets/fabric-example-99_upload_files(2).png)
+## Expected outcome
 
-## 3. Open`99_explore` remember to attach the environment if not done yet
+The consumer team can read approved Engineering Production data through configured FabricOps targets, inspect it as a Spark dataframe, and generate a project-level profile where needed.
 
-This notebook will proves that FabricOps can read, write, and profile data across configured Lakehouse and Warehouse targets after environment setup.
+The walkthrough does not create or update governed agreement, contract, enrichment, guardrail, lineage, or production pipeline state. Its normal outputs are project-specific analysis, experiments, models, reports, profiles, and notebook displays.
 
-![Start](../assets/fabric-example-99_start.png)
+Previous: [Step 6: Promote the validated pipeline to Production](promote-to-production.md).
 
-## 4.  
+Supporting guide: [Understand FabricOps widgets and metadata outputs](explore-metadata-outputs.md).
 
-## Why Spark
-
-Spark lets the same pattern work for small files and larger datasets. The demo starts with simple CSV, Excel, and Parquet files, then uses `spark.range` and repartitioning to show that the same IO pattern can scale to larger parallel processing workloads.
-
-The notebook defaults are intentionally modest. Increase `ROW_COUNT` only after the basic run passes in your Fabric capacity.
-
-## Expected evidence
-
-You should see:
-
-1. CSV, Excel, and Parquet dataframes displayed.
-2. A Lakehouse table created and read back.
-3. A Warehouse table created and read back.
-4. Profile rows generated from the Lakehouse read dataframe.
-5. Profile rows generated from the Warehouse read dataframe.
-6. A final PASS summary table.
-
-## Notes
-
-This smoke test intentionally does not call metadata setup. It is designed to run after `00_env_config` and before agreement registration so teams can confirm configured IO targets and profiling behavior independently from metadata table creation.
+Return to the [Guided Demo overview](../guided-demo.md).
