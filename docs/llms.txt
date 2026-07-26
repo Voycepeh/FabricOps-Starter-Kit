@@ -5,7 +5,7 @@ Use these pages in order. This file is a navigation surface for AI agents and do
 1. [Product overview](index.md): What FabricOps is, who it supports, what it includes, and where to go next.
 2. [How FabricOps Works](how-fabricops-works.md): Three-workspace architecture, notebook responsibilities, metadata handoffs, production promotion, and consumption.
 3. [Guided Demo](guided-demo.md): Canonical step-by-step execution order for what to create, configure, open, run, and inspect.
-4. [Notebook Templates](notebook-templates-implementation-guide/index.md): Notebook responsibilities, downloads, and implementation handoff.
+4. [Notebook Templates](notebook-templates.md): Notebook responsibilities, downloads, and implementation handoff.
 5. [Metadata Reference](reference/metadata.md): Metadata table purposes, schemas, and ownership.
 6. [DQ Rule Reference](reference/dq-rules.md): Supported data-quality rule types and parameters.
 7. [Function Reference](reference.md): Public callable behaviour and implementation detail.

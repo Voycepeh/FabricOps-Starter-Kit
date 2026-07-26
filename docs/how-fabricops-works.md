@@ -14,7 +14,7 @@
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
 Read this to execute this workflow [Guided Demo](guided-demo/)
-Download the notebooks [Notebook Templates guide](notebook-templates-implementation-guide/) 
+Download the notebooks from [Notebook Templates](notebook-templates.md).
 
 ## The governance and engineering loop workflow 
 

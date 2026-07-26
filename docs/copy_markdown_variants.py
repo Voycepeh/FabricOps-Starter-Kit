@@ -9,9 +9,6 @@ from typing import Any
 
 EXCLUDED_DIRS = {"assets", "javascripts", "stylesheets"}
 ROOT_TEXT_FILES = {"llms.txt"}
-SKIP_SIBLING_INDEX_VARIANTS = {
-    Path("notebook-templates-implementation-guide/index.md"),
-}
 
 
 def _is_public_markdown(path: Path, docs_dir: Path) -> bool:
@@ -52,7 +49,6 @@ def on_post_build(config: Any) -> None:
         if (
             relative_path.name == "index.md"
             and relative_path.parent != Path(".")
-            and relative_path not in SKIP_SIBLING_INDEX_VARIANTS
         ):
             sibling_target = site_dir / relative_path.parent.with_suffix(".md")
             shutil.copy2(source_path, sibling_target)

@@ -143,7 +143,7 @@ pushdown before Spark receives rows.
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 
 
 <details>

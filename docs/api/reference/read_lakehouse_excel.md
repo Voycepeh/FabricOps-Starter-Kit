@@ -109,7 +109,7 @@ DataFrame.
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 
 
 <details>

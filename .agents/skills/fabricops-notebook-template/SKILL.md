@@ -19,7 +19,7 @@ Do not use this skill for package implementation changes unless the notebook tas
 
 - `AGENTS.md`, especially "Notebook template change", "Metadata lakehouse routing", "Public safety and positioning", and generated-artifact rules.
 - Existing notebooks in `templates/notebooks/`.
-- User-facing template guidance in `docs/notebook-templates-implementation-guide/` and relevant guided demo pages in `docs/guided-demo/`.
+- User-facing template guidance in `docs/notebook-templates.md` and relevant guided demo pages in `docs/guided-demo/`.
 - Public API reference pages under `docs/api/reference/` before using a FabricOps callable in a template.
 - `src/fabricops_kit/__init__.py` and public package exports when checking that a template uses public APIs only.
 - Existing notebook template tests under `tests/templates/`.
@@ -56,7 +56,7 @@ Do not describe local structural validation or package/API compatibility validat
 
 ## Expected output
 
-Notebook template changes should be limited to `templates/notebooks/`, directly related template tests under `tests/templates/`, and narrowly scoped docs under `docs/notebook-templates-implementation-guide/` when needed.
+Notebook template changes should be limited to `templates/notebooks/`, directly related template tests under `tests/templates/`, and `docs/notebook-templates.md` when needed.
 
 ## Verification
 

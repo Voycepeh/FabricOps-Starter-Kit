@@ -354,4 +354,4 @@ Previous: [Step 1: Create data stewards and a data agreement](create-agreement.m
 
 Next, continue to [Step 3: Review catalogue evidence and define guardrails](review-guardrails.md).
 
-See also: [Templates](../notebook-templates-implementation-guide/index.md) and [List of DQ Rules](../reference/dq-rules/index.md).
+See also: [Templates](../notebook-templates.md) and [List of DQ Rules](../reference/dq-rules/index.md).

@@ -20,7 +20,7 @@ Do not use this skill to manually maintain generated callable reference pages, r
 Classify the requested content before creating or moving files:
 
 1. Repository landing/navigation: `README.md` or `docs/index.md`.
-2. User implementation guidance: `docs/how-fabricops-works.md` or `docs/notebook-templates-implementation-guide/`.
+2. User implementation guidance: `docs/how-fabricops-works.md` or `docs/notebook-templates.md`.
 3. Guided demonstration: `docs/guided-demo.md` or `docs/guided-demo/`.
 4. Maintainer procedure: `docs/maintainer/`.
 5. Generated API reference: source docstrings, `scripts/reference_docs_metadata.py`, and generated files under `docs/api/reference/` or `docs/reference/`.
@@ -33,7 +33,7 @@ Update the canonical destination for the classification instead of creating anot
 - `AGENTS.md`, especially "Documentation and API reference rules", "Generated reference artifacts and Codex runs", and "What to update when changing X".
 - `README.md` for concise repository navigation.
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
-- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates-implementation-guide/`, `docs/maintainer/`, and `docs/releases/`.
+- Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
 - `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.
 - Existing images under `docs/assets/` before deleting or replacing them.
