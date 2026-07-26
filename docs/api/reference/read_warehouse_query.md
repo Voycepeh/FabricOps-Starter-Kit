@@ -139,7 +139,7 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 
 
 <details>

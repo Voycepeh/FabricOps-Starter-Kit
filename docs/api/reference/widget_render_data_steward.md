@@ -84,7 +84,7 @@ Raises widget, validation, or metadata routing errors when required steward fiel
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 
 
 <details>

@@ -96,7 +96,7 @@ Raises ValueError when required configuration fields are missing, table_role is 
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 - [Pipeline Execution](../../guided-demo/run-pipeline.md)
 
 

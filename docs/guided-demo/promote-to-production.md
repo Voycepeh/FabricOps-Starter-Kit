@@ -20,4 +20,4 @@ Previous: [Step 5: Create the Data Contract and record steward sign-off](create-
 
 You have completed the required Guided Demo workflow. Optional inspection can continue in [Explore Metadata Outputs](explore-metadata-outputs.md).
 
-See also: [How FabricOps Works](../how-fabricops-works.md) and [Notebook Templates](../notebook-templates-implementation-guide/index.md).
+See also: [How FabricOps Works](../how-fabricops-works.md) and [Notebook Templates](../notebook-templates.md).

@@ -2,7 +2,7 @@
 
 The Guided Demo is the canonical step-by-step execution guide for FabricOps. It explains what to create, configure, open, run, and inspect from initial workspace setup through Production promotion.
 
-Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates-implementation-guide/index.md) as the notebook download and implementation handoff.
+Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) as the notebook download and implementation handoff.
 
 ## Required execution sequence
 
@@ -34,7 +34,7 @@ Guardrail results from enforcement follow the initial pipeline evidence and gove
 
 Use the reference pages for implementation detail rather than duplicating their specifications here:
 
-- [Notebook Templates](notebook-templates-implementation-guide/index.md): notebook responsibilities and downloads
+- [Notebook Templates](notebook-templates.md): notebook responsibilities and downloads
 - [Metadata Table Reference](reference/metadata.md): table purposes, schemas, and ownership
 - [DQ Rule Reference](reference/dq-rules/index.md): supported rule types and parameters
 - [Function Reference](reference/index.md): callable behaviour and implementation detail

@@ -186,7 +186,7 @@ readiness checks.
 
 ## See also
 
-- [Templates](../../notebook-templates-implementation-guide/index.md)
+- [Templates](../../notebook-templates.md)
 - [Metadata Tables](../../reference/metadata.md)
 
 

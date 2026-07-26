@@ -63,7 +63,7 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
 ## Technical lookup
 
 <div class="fabricops-card-grid">
-  <a class="fabricops-landing-card" href="notebook-templates-implementation-guide/">
+  <a class="fabricops-landing-card" href="notebook-templates/">
     <span class="fabricops-landing-card__title">5 Notebook Templates</span>
     <span class="fabricops-landing-card__body">Download the latest notebooks here.</span>
   </a>
