@@ -2,13 +2,20 @@
 
 ![FabricOps operating model overview](assets/fabricops-operating-model-overview.png)
 
-## The three-workspace operating model
+## The FabricOps workspace operating model
 
-| Workspace | Primary Purpose | Main FabricStores |
-| --------- | --------------- | ------------ |
-| Governance | Data agreement, data contracts and enrichment of data catalogues| Dev and Prod Metadata lakehouses only|
-| Engineering Development | Exploration of data, standard ETL with Guardrails | bronze, silver , gold lakehouse or warehouse|
-| Engineering Production | Promoted ETL pipelines running on scheduled refresh| bronze, silver ,gold lakehouse or warehouse|
+| Workspace | Primary Purpose | Main Fabric Stores |
+| --------- | --------------- | ------------------ |
+| Governance | Manage data stewards, data agreements, data contracts, catalogue enrichment, and guardrails | Development and Production metadata lakehouses |
+| Engineering Development | Explore data and develop, profile, test, and review repeatable pipelines | Source, unified, and product lakehouses or warehouses |
+| Engineering Production | Run approved and stable production pipelines on the required operational schedule | Production source, unified, and product lakehouses or warehouses |
+| Project-Specific Consumer | Support project-level exploration, AI, and BI consumption without duplicating the production engineering workflow | Consumes approved data from the Engineering Production workspace |
+
+FabricOps uses three shared core workspaces: Governance, Engineering Development, and Engineering Production. These workspaces establish the common governance and engineering workflow used to create, review, approve, and operate data pipelines.
+
+Teams may then create multiple project-specific consumer workspaces for exploration, AI, and BI consumption. Each consumer workspace uses the `99_explore` notebook to read approved data from the Engineering Production workspace into its own project environment.
+
+Consumer workspaces do not reproduce the production pipeline or maintain their own production copies of the source, unified, or product lakehouses. The Engineering Production workspace remains the trusted production source, while consumer teams work independently in workspaces designed for their specific use cases.
 
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
@@ -18,7 +25,7 @@ Download the notebooks from [Notebook Templates](notebook-templates.md).
 
 ## The governance and engineering loop workflow 
 
-The operating flow uses only the three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production.
+The operating flow uses three core FabricOps workspaces: Governance, Engineering Development, and Engineering Production. Once an approved production pipeline is available, multiple project-specific consumer workspaces may consume its outputs for exploration, AI, and BI use cases.
 
 0. **Set up the operating environment** — Create the Fabric workspaces, create the required lakehouses and warehouses, configure a "00_env_config" notebook in every workspace, and create the metadata tables in the Governance workspace.
 
@@ -33,6 +40,8 @@ The operating flow uses only the three core FabricOps workspaces: Governance, En
 5. **Governance workflow 3** — In the Governance workspace, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract.
 
 6. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
+
+7. **Project consumption** — Create one or more project-specific consumer workspaces as required. In each workspace, use `99_explore` to consume approved data from the Engineering Production workspace for project-level exploration, AI development, or BI analysis.
 
 ## Metadata stored supporting the workflow
 
@@ -52,7 +61,11 @@ Engineering Development is used for exploration, development, profiling, testing
 
 Engineering Production contains approved, stable, recurring pipelines and durable outputs. All promoted "02_pipeline" notebooks should be tied to a data contract. A recurring Production pipeline may run on any required operational schedule, including annually, when the process needs to remain stable and repeatable.
 
-Important "99_explore" work should be preserved when reproducibility is required. FabricOps may support an analysis archive or analysis packet in the future, but that should be treated as a future product direction rather than a current implemented production capability.
+Project-specific consumer workspaces provide a separate environment for exploration, AI, and BI consumption. Teams use `99_explore` in their own workspace to consume approved data from the Engineering Production workspace without changing or duplicating the production pipeline.
+
+There may be multiple consumer workspaces, with each workspace aligned to a specific project, analytical product, or business use case. This separation allows consumer teams to work independently while keeping production pipelines, controls, and durable outputs centrally managed.
+
+Important `99_explore` work should be preserved when reproducibility is required. Consumer notebooks support analysis and experimentation, but they should not become an alternative production pipeline. Repeatable data preparation that needs to be operationalised should be incorporated into the governed Engineering Development and Engineering Production workflow.
 
 ## Note ! FabricOps uses PySpark mainly 
 
