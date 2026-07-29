@@ -100,7 +100,11 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     identity_context = widgets.HTML(value=_agreement_identity_text(None))
 
     active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-    active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
+    active_steward_ids = {
+        steward_id
+        for row in active_steward_rows
+        if (steward_id := str(row.get("steward_id") or "").strip())
+    }
     form = {field: standard_widget(field) for field in fields}
     steward_field_selectors: dict[str, dict[str, Any]] = {}
     for field in steward_fields:
@@ -113,6 +117,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             placeholder="Search active stewards...",
             search_fields=["steward_name", "steward_role", "contact", "steward_id"],
             context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact")],
+            empty_label="Select an active data steward",
         )
         steward_field_selectors[field] = selector
         form[field] = selector["selector"]
@@ -159,11 +164,25 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     add_supporting_document_button.on_click(lambda _: _add_document_row())
     _add_document_row()
 
+    steward_prerequisite_message = (
+        "At least two distinct active data stewards are required before an agreement can be saved. "
+        "Create or reactivate another data steward, then select Refresh active stewards."
+    )
+    save = widgets.Button(description="Save Agreement")
     status = widgets.HTML(value="", layout=widgets.Layout(min_height="2.5em", max_height="4em", overflow="auto"))
 
     def _set_status(message: str, *, error: bool = False) -> None:
         colour = "#a4262c" if error else "#107c10"
         status.value = f'<span style="color:{colour}">{message}</span>'
+
+    def _update_steward_prerequisite(*, refreshed: bool = False) -> None:
+        save.disabled = len(active_steward_ids) < 2
+        if save.disabled:
+            _set_status(steward_prerequisite_message, error=True)
+        elif refreshed:
+            _set_status("Active data stewards refreshed.")
+        else:
+            status.value = ""
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
         rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
@@ -173,11 +192,15 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     def _refresh_steward_dropdowns() -> None:
         nonlocal active_steward_rows, active_steward_ids
         active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-        active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
+        active_steward_ids = {
+            steward_id
+            for row in active_steward_rows
+            if (steward_id := str(row.get("steward_id") or "").strip())
+        }
         for field in steward_fields:
             current = str(form[field].value or "")
             form[field].refresh_rows(active_steward_rows, current if current in active_steward_ids else "")
-        _set_status("Active data stewards refreshed.")
+        _update_steward_prerequisite(refreshed=True)
 
     refresh_stewards = widgets.Button(description="Refresh active stewards")
     refresh_stewards.on_click(lambda _: _refresh_steward_dropdowns())
@@ -228,8 +251,6 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
-    save = widgets.Button(description="Save Agreement")
-
     def _save(_: Any) -> None:
         save.disabled = True
         try:
@@ -268,9 +289,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         except Exception as exc:
             _set_status(f"Error: {exc}", error=True)
         finally:
-            save.disabled = False
+            save.disabled = len(active_steward_ids) < 2
 
     save.on_click(_save)
+    _update_steward_prerequisite()
     details_fields = ["agreement_name", "domain", "start_date", "expiry_date", "business_purpose"]
     details = [form[field] for field in details_fields if field in form]
     stewards = [steward_field_selectors[field]["container"] for field in steward_fields]

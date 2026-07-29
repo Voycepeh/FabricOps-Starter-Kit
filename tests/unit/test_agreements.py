@@ -381,6 +381,64 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
     assert "recipient_steward_id" in controls["status"].value
 
 
+@pytest.mark.parametrize(
+    ("stewards", "save_disabled"),
+    [
+        ([], True),
+        ([steward_row()], True),
+        ([steward_row(), steward_row()], True),
+        ([steward_row(), steward_row(steward_id="")], True),
+        ([steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")], False),
+    ],
+)
+def test_agreement_widget_disables_save_until_two_active_stewards_exist(monkeypatch, stewards, save_disabled):
+    """Keep the workflow visible while enforcing its steward prerequisite."""
+    config = agreement_config()
+    monkeypatch.setattr(agreement_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
+    monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: stewards)
+
+    controls = agreement_widget.widget_render_data_agreement(spark=object())
+
+    assert controls["container"] is not None
+    assert controls["save_button"].disabled is save_disabled
+    assert ("At least two distinct active data stewards are required" in controls["status"].value) is save_disabled
+
+
+def test_agreement_widget_refresh_updates_steward_prerequisite(monkeypatch):
+    """Recalculate Save state and preserve only active selections on refresh."""
+    config = agreement_config()
+    active_rows = [steward_row()]
+    second = steward_row(steward_id="22222222-2222-4222-8222-222222222222")
+    monkeypatch.setattr(agreement_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
+    monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: list(active_rows))
+
+    controls = agreement_widget.widget_render_data_agreement(spark=object())
+    active_rows.append(second)
+    controls["provider_steward_selector"].value = steward_row()["steward_id"]
+    controls["recipient_steward_selector"].value = second["steward_id"]
+    controls["refresh_stewards_button"].click_callbacks[0](None)
+
+    assert controls["save_button"].disabled is False
+    assert controls["provider_steward_selector"].value == steward_row()["steward_id"]
+    assert controls["recipient_steward_selector"].value == second["steward_id"]
+
+    active_rows[:] = [second]
+    controls["refresh_stewards_button"].click_callbacks[0](None)
+
+    assert controls["save_button"].disabled is True
+    assert controls["provider_steward_selector"].value == ""
+    assert controls["recipient_steward_selector"].value == second["steward_id"]
+    assert "At least two distinct active data stewards are required" in controls["status"].value
+
+
 def test_widget_architecture_cleanup_contracts_hold():
     """Verify deleted workflow containers and private shared imports stay removed."""
     from pathlib import Path
