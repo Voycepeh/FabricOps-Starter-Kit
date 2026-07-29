@@ -166,7 +166,11 @@ def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = 
     widgets = require_ipywidgets()
     description = field.replace("_", " ").title()
     if options is not None:
-        default_value = value if value in options else (options[0] if options else None)
+        option_values = [
+            option[1] if isinstance(option, tuple) and len(option) == 2 else option
+            for option in options
+        ]
+        default_value = value if value in option_values else (option_values[0] if option_values else None)
         return widgets.Dropdown(options=options, value=default_value, **widget_common(widgets, description))
     if field.endswith("_date") or field in {"effective_from", "effective_to", "start_date", "expiry_date"}:
         return widgets.DatePicker(value=date.fromisoformat(str(value)[:10]) if value else None, **widget_common(widgets, description))

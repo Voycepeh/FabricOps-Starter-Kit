@@ -258,13 +258,47 @@ class _FakeWidgets:
     Textarea = _FakeWidget
     DatePicker = _FakeWidget
     Checkbox = _FakeWidget
-    Dropdown = _FakeWidget
+
+    class Dropdown(_FakeWidget):
+        """Dropdown test double that validates underlying option values."""
+
+        def __init__(self, value=None, options=None, **kwargs):
+            option_values = [
+                option[1] if isinstance(option, tuple) and len(option) == 2 else option
+                for option in (options or [])
+            ]
+            if value is not None and value not in option_values:
+                raise ValueError("dropdown value must match an underlying option value")
+            super().__init__(value=value, options=options, **kwargs)
 
     class Layout:
         """Minimal layout test double."""
 
         def __init__(self, **kwargs):
             self.kwargs = kwargs
+
+
+@pytest.mark.parametrize(
+    ("options", "supplied_value", "expected_value"),
+    [
+        (["Owner", "Steward"], "", "Owner"),
+        ([("Data Owner", "owner"), ("Data Steward", "steward")], "", "owner"),
+        (["Owner", "Steward"], "Steward", "Steward"),
+        ([("Data Owner", "owner"), ("Data Steward", "steward")], "steward", "steward"),
+        ([("Data Owner", "owner"), ("Data Steward", "steward")], "invalid", "owner"),
+        ([], "", None),
+    ],
+)
+def test_standard_widget_selects_underlying_dropdown_option_values(
+    monkeypatch, options, supplied_value, expected_value
+):
+    """Select valid option values and fall back to the first underlying value."""
+    monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
+
+    dropdown = agreement.standard_widget("steward_role", supplied_value, options=options)
+
+    assert dropdown.options == options
+    assert dropdown.value == expected_value
 
 
 def test_public_agreement_and_steward_widgets_render_independent_workflows(monkeypatch):
@@ -290,6 +324,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["recipient_steward_selector"].options
     assert steward_controls["identity_context"] is None
     assert steward_controls["fields"]["steward_role"].options
+    assert steward_controls["fields"]["steward_role"].value == "Data Owner"
 
 
 def test_widget_architecture_cleanup_contracts_hold():
