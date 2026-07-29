@@ -693,9 +693,17 @@ def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str,
     environment = str(_value(profile_row, "environment_name") or review_row.get("environment_name") or env or "")
     dataset = str(_value(profile_row, "dataset_name") or review_row.get("dataset_name") or "")
     table = str(_value(profile_row, "table_name") or review_row.get("table_name") or "")
+    store_type = str(_value(profile_row, "store_type") or review_row.get("store_type") or "lakehouse")
+    layer = str(_value(profile_row, "layer") or review_row.get("layer") or review_row.get("fabric_store_target") or "")
+    schema_name = _value(profile_row, "schema_name", review_row.get("schema_name"))
+    table_key = str(
+        _value(profile_row, "metadata_table_key")
+        or review_row.get("metadata_table_key")
+        or _build_metadata_table_key(store_type, layer, schema_name, table)
+    )
     return {
-        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(environment, dataset, table, col)),
-        "metadata_table_key": str(_value(profile_row, "metadata_table_key") or review_row.get("metadata_table_key") or _build_metadata_table_key(environment, dataset, table)),
+        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(table_key, col)),
+        "metadata_table_key": table_key,
         "environment_name": environment,
         "dataset_name": dataset,
         "table_name": table,
@@ -1216,6 +1224,10 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     env = str(state.get("environment_name") or "")
     dataset = str(state.get("dataset_name") or "")
     table = str(state.get("table_name") or "")
+    table_key = str(state.get("metadata_table_key") or _build_metadata_table_key(
+        state.get("store_type", "lakehouse"), state.get("layer", state.get("fabric_store_target", "")),
+        state.get("schema_name"), table,
+    ))
     rule_id = f"{table}.{column_name or '_table'}.{guardrail_type}.{rule_type}"
     lifecycle = guardrail_authoring_status(
         policy or state,
@@ -1229,7 +1241,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     committed_at = _audit_timestamp_value(config)
     actor_value = _resolve_action_by(actor)
     pending = lifecycle.get("review_state") == "pending_governance_review"
-    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(env, dataset, table, column_name) if column_name else "", "metadata_table_key": str(state.get("metadata_table_key") or _build_metadata_table_key(env, dataset, table)), "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
+    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(table_key, column_name) if column_name else "", "metadata_table_key": table_key, "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""
@@ -1433,7 +1445,7 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
     table = str(_value(row, "table_name"))
     table_key = str(_first_present(row, ["physical_asset_id", "metadata_table_key"], ""))
     if not table_key:
-        table_key = _build_metadata_table_key(env, asset_name, table)
+        table_key = _build_metadata_table_key(asset_kind or "lakehouse", schema_or_layer, _value(row, "schema_name", None), table)
     return {
         "environment_name": env,
         "asset_kind": asset_kind,
@@ -1515,10 +1527,13 @@ def _evaluate_governance_readiness(
     """
     profile_rows = load_catalogue_profile_rows(config, env, selection, spark_session=spark_session)
     first_profile = profile_rows[0]
-    environment = str(_value(first_profile, "environment_name") or selection.get("environment_name") or env)
     dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
     table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
-    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(environment, dataset_name, table_name))
+    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(
+        _value(first_profile, "store_type", selection.get("store_type", "lakehouse")),
+        _value(first_profile, "layer", selection.get("layer", selection.get("fabric_store_target", ""))),
+        _value(first_profile, "schema_name", selection.get("schema_name")), table_name,
+    ))
     profile_run_id = str(_value(first_profile, "profile_run_id") or selection.get("profile_run_id") or "")
     profile_stage = str(_value(first_profile, "profile_stage") or selection.get("profile_stage") or "")
     agreement_id = str(_value(first_profile, "agreement_id") or _value(first_profile, "AGREEMENT_ID") or "")

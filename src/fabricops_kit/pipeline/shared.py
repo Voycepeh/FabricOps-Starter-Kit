@@ -1014,7 +1014,11 @@ def _run_table_guardrails_workflow(
         table_name = _table_name(table_config)
         dataset_name = table_config.get("dataset_name", table_name)
         stage = table_config.get("stage", "target")
+        store_type = str(table_config.get("kind") or table_config.get("target_kind") or "lakehouse")
+        layer = str(table_config.get("layer") or table_config.get("fabric_store_target") or stage)
+        schema_name = table_config.get("schema_name", table_config.get("schema"))
         dataframe = table_config["df"]
+        metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
 
         profiles[table_key] = build_profile_dataframe(
             dataframe,
@@ -1033,7 +1037,7 @@ def _run_table_guardrails_workflow(
                 dataset_name=dataset_name,
                 table_name=table_name,
                 environment_name=env,
-                metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name),
+                metadata_table_key=metadata_table_key,
             )
         else:
             schema_results[table_key] = _check_schema_runtime(
@@ -1049,7 +1053,7 @@ def _run_table_guardrails_workflow(
                 dataset_name=dataset_name,
                 table_name=table_name,
                 environment_name=env,
-                metadata_table_key=_build_metadata_table_key(env, dataset_name, table_name),
+                metadata_table_key=metadata_table_key,
             )
         else:
             freshness_results[table_key] = enforce_freshness(
@@ -1078,6 +1082,9 @@ def _run_table_guardrails_workflow(
             write_results=table_config.get("write_profile_behavior_results", True),
             rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
             rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
+            store_type=store_type,
+            layer=layer,
+            schema_name=schema_name,
         )
 
         if table_config.get("dq_preset", "active_rules") == "skip":
@@ -1096,6 +1103,9 @@ def _run_table_guardrails_workflow(
                 table_name,
                 spark_session=spark_session,
                 write_results=False,
+                store_type=store_type,
+                layer=layer,
+                schema_name=schema_name,
             )
 
         if "dataframe" in dq_results[table_key]:
@@ -1113,6 +1123,9 @@ def _run_table_guardrails_workflow(
                     env=env,
                     dataset_name=dataset_name,
                     table_name=table_name,
+                    store_type=store_type,
+                    layer=layer,
+                    schema_name=schema_name,
                     guardrail_type=guardrail_type,
                     rule_type=str(rule_type or guardrail_type),
                     result=guardrail_result,
@@ -1249,7 +1262,10 @@ def write_catalogue_evidence(
         stage = str(definition.get("stage", "target"))
         stability_result = dict((stability_results or {}).get(name) or {})
         base_evidence = _canonical_catalogue_profile_df(profile_df)
-        metadata_table_key = _build_metadata_table_key(env, dataset_name, table_name)
+        store_type = str(definition.get("kind") or definition.get("target_kind") or "lakehouse")
+        layer = str(definition.get("layer") or definition.get("fabric_store_target") or stage)
+        schema_name = definition.get("schema_name", definition.get("schema"))
+        metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
         profile_evidence_rows = list(stability_result.get("profile_evidence_rows") or [])
         if not profile_evidence_rows:
             profile_evidence_rows = [

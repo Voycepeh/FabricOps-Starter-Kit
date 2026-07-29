@@ -210,11 +210,11 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
         "metadata_table_key": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._metadata_table_key",
+            "fabricops_kit.config.metadata_keys._build_metadata_table_key",
         ],
         "metadata_column_key": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._metadata_column_key",
+            "fabricops_kit.config.metadata_keys._build_metadata_column_key",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -229,11 +229,11 @@ METADATA_COLUMN_OWNERS = {
         "__audit__": ["fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns"],
         "metadata_table_key": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._metadata_table_key",
+            "fabricops_kit.config.metadata_keys._build_metadata_table_key",
         ],
         "metadata_column_key": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-            "fabricops_kit.pipeline.profile_and_register_table._metadata_column_key",
+            "fabricops_kit.config.metadata_keys._build_metadata_column_key",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
@@ -280,7 +280,7 @@ METADATA_COLUMN_OWNERS = {
         ],
         "metadata_table_key": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.pipeline.profile_and_register_table._metadata_table_key",
+            "fabricops_kit.config.metadata_keys._build_metadata_table_key",
         ],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",

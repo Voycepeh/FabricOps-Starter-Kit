@@ -27,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:539`
+`fabricops_kit/pipeline/profile_and_register_table.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L539-L871">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L525-L865">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -233,13 +233,25 @@ retained.
 measurements. FabricOps creates a stable ID for the table and each column,
 then checks whether the same table, column, and schema already exist. If a
 matching record exists, it is updated. Otherwise, a new record is added.
-Matching uses ``metadata_table_key + metadata_column_key +
-schema_fingerprint``:
+Matching uses ``environment_name + metadata_table_key +
+metadata_column_key + schema_fingerprint``:
 
-- ``metadata_table_key``: stable ID for the table.
-- ``metadata_column_key``: stable ID for a column within that table.
-- ``schema_fingerprint``: identifier for the DataFrame structure observed
-  during profiling.
+- ``metadata_table_key``: stable logical table identity shared across
+  environments.
+- ``metadata_column_key``: stable logical column identity shared across
+  environments.
+- ``schema_fingerprint``: deterministic fingerprint of ordered schema
+  content, independent of deployment environment. The current schema
+  contract includes ordered column names and data types; nullability is
+  not currently part of the fingerprint.
+- ``environment_name``: environment-specific catalogue observation.
+
+One logical Data Contract link can therefore govern the same dataset in
+Development and Production, while catalogue and execution observations
+remain separate and promotion checks can compare matching logical keys.
+Existing metadata created with environment-coupled identities must be
+recreated or explicitly migrated; FabricOps does not provide a legacy-key
+compatibility path.
 
 A changed ``schema_fingerprint`` represents a newly observed table
 structure and can create a new catalogue snapshot.

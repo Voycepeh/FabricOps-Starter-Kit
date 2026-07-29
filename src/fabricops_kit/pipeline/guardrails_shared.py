@@ -774,6 +774,9 @@ def enforce_profile_behavior(
     write_results: bool = True,
     rules_table: str = "METADATA_GUARDRAIL",
     rules_df=None,
+    store_type: str = "lakehouse",
+    layer: str = "",
+    schema_name: str | None = None,
 ) -> dict:
     """Enforce profile behavior guardrails using catalogue evidence as baseline.
 
@@ -828,6 +831,13 @@ def enforce_profile_behavior(
     rules_df : DataFrame or iterable of mappings, optional
         Preloaded guardrail rules. When supplied, no rules-table read is
         performed.
+    store_type : str, default="lakehouse"
+        Canonical physical store kind used for logical table identity.
+    layer : str, optional
+        Canonical configured store target used for logical table identity.
+        Defaults to ``stage`` when omitted.
+    schema_name : str, optional
+        Canonical physical schema used for logical table identity.
 
     Returns
     -------
@@ -970,7 +980,12 @@ def enforce_profile_behavior(
     if write_results and config is not None and env is not None:
         try:
             from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
-            _write_guardrail_result_row(spark_session=spark, config=config, env=env, run_id=run_id, dataset_name=dataset_name, table_name=table_name, guardrail_type="profile_behavior", rule_type=mode, result=result, rule_key=rule_key)
+            _write_guardrail_result_row(
+                spark_session=spark, config=config, env=env, run_id=run_id,
+                dataset_name=dataset_name, table_name=table_name,
+                store_type=store_type, layer=layer or stage, schema_name=schema_name,
+                guardrail_type="profile_behavior", rule_type=mode, result=result, rule_key=rule_key,
+            )
         except Exception as exc:
             if not _is_missing_table_error(exc):
                 raise
@@ -1426,6 +1441,9 @@ def _run_active_dq_guardrail(
     spark_session=None,
     run_id: str = "",
     write_results: bool = False,
+    store_type: str = "lakehouse",
+    layer: str = "",
+    schema_name: str | None = None,
 ) -> dict:
     """Enforce active DQ guardrail rules as a simple pipeline guardrail.
 
@@ -1453,6 +1471,12 @@ def _run_active_dq_guardrail(
     write_results : bool, default=False
         Whether to append the aggregate DQ runtime outcome to
         ``METADATA_GUARDRAIL_RESULTS`` when a Spark session is available.
+    store_type : str, default="lakehouse"
+        Canonical physical store kind used for logical table identity.
+    layer : str, optional
+        Canonical configured store target used for logical table identity.
+    schema_name : str, optional
+        Canonical physical schema used for logical table identity.
 
     Returns
     -------
@@ -1494,6 +1518,9 @@ def _run_active_dq_guardrail(
             run_id=run_id,
             dataset_name=dataset_name,
             table_name=table_name,
+            store_type=store_type,
+            layer=layer,
+            schema_name=schema_name,
             guardrail_type="dq",
             rule_type="active_rules",
             result=result,

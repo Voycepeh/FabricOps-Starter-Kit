@@ -635,6 +635,7 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
+    from fabricops_kit.config.metadata_keys import _build_metadata_table_key
     from fabricops_kit.pipeline import metadata_evidence
 
     writes = []
@@ -649,6 +650,9 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
         run_id="run-1",
         dataset_name="sales",
         table_name="orders",
+        store_type="lakehouse",
+        layer="raw",
+        schema_name=None,
         guardrail_type="freshness",
         rule_type="max_age_days",
         result={"status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
@@ -657,9 +661,15 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
+    expected_table_key = _build_metadata_table_key("lakehouse", "raw", None, "orders")
+    assert written_row["metadata_table_key"] == expected_table_key
+    assert written_row["environment_name"] == "dev"
     assert written_row["guardrail_type"] == "freshness"
     assert written_row["status"] == "failed"
     assert written_row["can_continue"] is False
+    assert written_row["severity"] == "blocking"
+    assert written_row["reason"] == "too old"
+    assert written_row["_activity_id"] == "activity-result-001"
 
 def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark_session, monkeypatch):
     """Verify changing-data catalogue writes retain per-watermark baseline fields."""

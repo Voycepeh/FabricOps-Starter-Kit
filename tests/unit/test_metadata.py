@@ -32,12 +32,12 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     """Verify metadata key builders are stable for governance and dq rules."""
-    table_key = metadata_keys._build_metadata_table_key(" DEV ", "Sales", "Orders")
-    column_key = metadata_keys._build_metadata_column_key("dev", "sales", "orders", "Order_ID")
+    table_key = metadata_keys._build_metadata_table_key(" Lakehouse ", "Silver", "dbo", "Orders")
+    column_key = metadata_keys._build_metadata_column_key(table_key, "Order_ID")
     dq_key = metadata_keys._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
 
-    assert table_key == metadata_keys._build_metadata_table_key("dev", "sales", "orders")
-    assert column_key == metadata_keys._build_metadata_column_key("DEV", "SALES", "ORDERS", " order_id ")
+    assert table_key == metadata_keys._build_metadata_table_key("lakehouse", "silver", "DBO", "orders")
+    assert column_key == metadata_keys._build_metadata_column_key(table_key, " order_id ")
     assert dq_key == metadata_keys._build_dq_rule_key("DEV", "SALES", "ORDERS", " order_id_required ")
     assert len({table_key, column_key, dq_key}) == 3
     assert all(len(value) == 64 for value in (table_key, column_key, dq_key))
@@ -251,7 +251,41 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
             run_id="run-1",
             dataset_name="sales",
             table_name="orders",
+            store_type="lakehouse",
+            layer="raw",
+            schema_name=None,
             guardrail_type="schema",
             rule_type="schema",
             result={"status": "failed"},
         )
+
+
+def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_notebookutils):
+    """Verify guardrail evidence and catalogue registration share one key helper."""
+    from fabricops_kit.pipeline import metadata_evidence
+
+    writes = []
+    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
+    spark = FakeSpark()
+    config = framework_config()
+    config.path_config.paths["prod"] = config.path_config.paths["dev"]
+    expected = metadata_keys._build_metadata_table_key("lakehouse", "raw", None, "orders")
+
+    for env in ("dev", "prod"):
+        metadata_evidence._write_guardrail_result_row(
+            spark_session=spark,
+            config=config,
+            env=env,
+            run_id="run-1",
+            dataset_name="sales",
+            table_name="orders",
+            store_type="lakehouse",
+            layer="raw",
+            schema_name=None,
+            guardrail_type="schema",
+            rule_type="strict",
+            result={"status": "passed"},
+        )
+
+    assert [frame.rows[0]["metadata_table_key"] for frame in writes] == [expected, expected]
+    assert [frame.rows[0]["environment_name"] for frame in writes] == ["dev", "prod"]
