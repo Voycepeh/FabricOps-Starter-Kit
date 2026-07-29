@@ -140,7 +140,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'read_warehouse_table',
         'read_warehouse_query',
         'write_warehouse_table',
-    'profile_and_register_dataframe',
+    'profile_and_register_table',
         'profile_dataframe',
         'profile_frequency_distribution',
         'display_guardrail_results',

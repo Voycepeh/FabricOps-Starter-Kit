@@ -535,7 +535,7 @@ def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_sessi
     )
 
 
-def profile_and_register_dataframe(
+def profile_and_register_table(
     df,
     *,
     profile_role,

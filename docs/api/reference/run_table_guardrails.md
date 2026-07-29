@@ -27,11 +27,10 @@ whether the notebook can continue.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">example_dq_rule_smoke_test</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`, `example_dq_rule_smoke_test`
+**Used in notebooks:** `example_dq_rule_smoke_test`
 
 ## Usage notes
 

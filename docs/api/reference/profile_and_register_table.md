@@ -1,4 +1,4 @@
-# `profile_and_register_dataframe`
+# `profile_and_register_table`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -27,17 +27,17 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:538`
+`fabricops_kit/pipeline/profile_and_register_table.py:538`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L538-L870">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L538-L870">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">02_pipeline</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `02_pipeline`
 
 ## Usage notes
 
@@ -51,7 +51,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def profile_and_register_dataframe(
+def profile_and_register_table(
     df,
     profile_role,
     target,
@@ -71,7 +71,7 @@ def profile_and_register_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profiled_df = profile_and_register_dataframe(source_df, profile_role="source", target="source", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)
+profiled_df = profile_and_register_table(source_df, profile_role="source", target="source", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)
 ```
 
 </div>

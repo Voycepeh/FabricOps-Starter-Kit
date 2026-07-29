@@ -22,7 +22,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.pipeline.profile_dataframe",
     "fabricops_kit.pipeline.profile_frequency_distribution",
-    "fabricops_kit.pipeline.profile_and_register_dataframe",
+    "fabricops_kit.pipeline.profile_and_register_table",
     "fabricops_kit.widgets.widget_view_data_contract.widget_view_data_contract",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
