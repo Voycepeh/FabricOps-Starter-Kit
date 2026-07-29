@@ -23,6 +23,7 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     _metadata_column_key,
     _metadata_table_key,
     _resolve_physical_identity,
+    _schema_fingerprint,
     profile_and_register_table,
 )
 
@@ -36,6 +37,51 @@ AUDIT_COLUMNS = [
     "_metadata_lakehouse_name",
     "_activity_id",
 ]
+
+
+def test_logical_table_and_column_keys_are_environment_independent():
+    """Verify logical keys use canonical table coordinates, never runtime context."""
+    dev_key = _metadata_table_key("lakehouse", "silver", "dbo", "orders")
+    prod_key = _metadata_table_key("lakehouse", "silver", "dbo", "orders")
+
+    assert dev_key == prod_key
+    assert dev_key != _metadata_table_key("warehouse", "silver", "dbo", "orders")
+    assert dev_key != _metadata_table_key("lakehouse", "gold", "dbo", "orders")
+    assert dev_key != _metadata_table_key("lakehouse", "silver", "sales", "orders")
+    assert dev_key != _metadata_table_key("lakehouse", "silver", "dbo", "customers")
+    assert _metadata_column_key(dev_key, "Order_ID") == _metadata_column_key(prod_key, " order_id ")
+    assert _metadata_column_key(dev_key, "order_id") != _metadata_column_key(dev_key, "amount")
+    assert _metadata_column_key(dev_key, "order_id") != _metadata_column_key(
+        _metadata_table_key("lakehouse", "silver", "dbo", "customers"), "order_id"
+    )
+
+
+def test_schema_fingerprint_uses_only_existing_ordered_schema_content(spark_session):
+    """Verify schema identity ignores observations while retaining the existing schema rule."""
+    from pyspark.sql import types as T
+
+    base_schema = T.StructType(
+        [T.StructField("order_id", T.LongType(), False), T.StructField("amount", T.DoubleType(), True)]
+    )
+    dev = spark_session.createDataFrame([(1, 1.0)], schema=base_schema)
+    prod = spark_session.createDataFrame([(99, 900.0)], schema=base_schema)
+
+    assert _schema_fingerprint(dev) == _schema_fingerprint(prod)
+    assert _schema_fingerprint(dev) != _schema_fingerprint(
+        spark_session.createDataFrame([(1, 1.0)], "id long, amount double")
+    )
+    assert _schema_fingerprint(dev) != _schema_fingerprint(
+        spark_session.createDataFrame([(1, "1.0")], "order_id long, amount string")
+    )
+    assert _schema_fingerprint(dev) != _schema_fingerprint(
+        spark_session.createDataFrame([(1.0, 1)], "amount double, order_id long")
+    )
+    nullable_only = T.StructType(
+        [T.StructField("order_id", T.LongType(), True), T.StructField("amount", T.DoubleType(), True)]
+    )
+    assert _schema_fingerprint(dev) == _schema_fingerprint(
+        spark_session.createDataFrame([(1, 1.0)], schema=nullable_only)
+    )
 
 
 def _source_df(spark_session):
@@ -714,7 +760,6 @@ def test_profile_and_register_table_builds_frequency_json_and_writes_profiled_an
     expected_schema = "dbo"
     expected_table = "customers_clean"
     expected_table_key = _metadata_table_key(
-        expected_environment,
         expected_store_type,
         expected_layer,
         expected_schema,
@@ -734,7 +779,6 @@ def test_profile_and_register_table_builds_frequency_json_and_writes_profiled_an
     assert rows["country"]["metadata_column_key"] == _metadata_column_key(expected_table_key, "country")
     assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
     assert expected_table_key != _metadata_table_key(
-        expected_environment,
         expected_store_type,
         expected_layer,
         None,
@@ -863,6 +907,7 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
         {name: None for name in schema.fieldNames()},
         {name: None for name in schema.fieldNames()},
         {name: None for name in schema.fieldNames()},
+        {name: None for name in schema.fieldNames()},
     ]
     base = {
         "metadata_table_key": "table-1",
@@ -892,12 +937,14 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
     rows[0].update(base | {"metadata_column_key": "col-1", "column_name": "id"})
     rows[1].update(base | {"metadata_column_key": "col-1", "column_name": "id", "row_count": 20})
     rows[2].update(base | {"metadata_column_key": "col-2", "column_name": "name"})
+    rows[3].update(base | {"environment_name": "prod", "metadata_column_key": "col-1", "column_name": "id"})
     profiled_df = spark_session.createDataFrame(rows, schema=schema)
 
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
 
     assert catalogue_df.columns == CATALOGUE_COLUMNS
-    assert catalogue_df.count() == 2
+    assert catalogue_df.count() == 3
+    assert {row.environment_name for row in catalogue_df.collect()} == {"dev", "prod"}
     assert {row.metadata_column_key for row in catalogue_df.collect()} == {"col-1", "col-2"}
 
 
@@ -958,7 +1005,7 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
         raise RuntimeError("merge failed")
 
     monkeypatch.setattr(module, "_upsert_lineage_event", fail_upsert)
-    expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
+    expected_key = _metadata_table_key("lakehouse", "raw", None, "customers")
     with pytest.raises(
         RuntimeError,
         match=f"Profile and catalogue registration succeeded but lineage registration failed.*{expected_key}.*source",

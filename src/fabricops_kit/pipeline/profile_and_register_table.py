@@ -50,20 +50,18 @@ def _stable_catalogue_key(*parts: Any) -> str:
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def _metadata_table_key(
-    environment_name: str, store_type: str, layer: str, schema_name: str | None, table_name: str
-) -> str:
-    """Return the canonical physical asset key for a catalogue table snapshot."""
-    return _stable_catalogue_key(environment_name, store_type, layer, schema_name, table_name)
+def _metadata_table_key(store_type: str, layer: str, schema_name: str | None, table_name: str) -> str:
+    """Return the environment-independent logical identity for a table."""
+    return _stable_catalogue_key(store_type, layer, schema_name, table_name)
 
 
 def _metadata_column_key(metadata_table_key: str, column_name: str) -> str:
-    """Return the canonical physical asset key for a catalogue column snapshot."""
+    """Return the environment-independent logical identity for a column."""
     return _stable_catalogue_key(metadata_table_key, column_name)
 
 
 def _schema_fingerprint(df: Any) -> str:
-    """Return the deterministic fingerprint for an observed Spark schema."""
+    """Return an environment-independent fingerprint of ordered schema content."""
     fields = [
         {"name": str(field.name).strip(), "type": field.dataType.simpleString()}
         for field in getattr(getattr(df, "schema", None), "fields", [])
@@ -334,7 +332,7 @@ def _canonical_profiled_dataframe(
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
-    metadata_table_key = _metadata_table_key(environment_name, store_type, layer, schema_name, table_name)
+    metadata_table_key = _metadata_table_key(store_type, layer, schema_name, table_name)
     column_key_udf = F.udf(lambda column_name: _metadata_column_key(metadata_table_key, column_name), T.StringType())
     frequency_df = _frequency_json_dataframe(
         source_df,
@@ -433,7 +431,7 @@ def _catalogue_dataframe_from_profiled(profiled_df):
             F.col("_metadata_lakehouse_name").cast("string"),
             F.col("_activity_id").cast("string"),
         )
-        .dropDuplicates(["metadata_table_key", "metadata_column_key", "schema_fingerprint"])
+        .dropDuplicates(["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"])
         .select(*CATALOGUE_COLUMNS)
     )
 
@@ -486,7 +484,7 @@ def _write_lineage_participation(
 
 
 def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
-    """Upsert catalogue identities by table key, column key, and schema fingerprint."""
+    """Upsert environment observations by logical table, column, and schema identity."""
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
@@ -505,7 +503,7 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         target.alias("target")
         .merge(
             catalogue_df.alias("source"),
-            "target.metadata_table_key = source.metadata_table_key AND target.metadata_column_key = source.metadata_column_key AND target.schema_fingerprint = source.schema_fingerprint",
+            "target.environment_name = source.environment_name AND target.metadata_table_key = source.metadata_table_key AND target.metadata_column_key = source.metadata_column_key AND target.schema_fingerprint = source.schema_fingerprint",
         )
         .whenMatchedUpdateAll()
         .whenNotMatchedInsertAll()
@@ -529,7 +527,10 @@ def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_sessi
     target = DeltaTable.forPath(spark_session, path)
     (
         target.alias("target")
-        .merge(lineage_df.alias("source"), "target.lineage_event_id = source.lineage_event_id")
+        .merge(
+            lineage_df.alias("source"),
+            "target.environment_name = source.environment_name AND target.lineage_event_id = source.lineage_event_id",
+        )
         .whenMatchedUpdateAll()
         .whenNotMatchedInsertAll()
         .execute()
@@ -747,13 +748,23 @@ def profile_and_register_table(
     measurements. FabricOps creates a stable ID for the table and each column,
     then checks whether the same table, column, and schema already exist. If a
     matching record exists, it is updated. Otherwise, a new record is added.
-    Matching uses ``metadata_table_key + metadata_column_key +
-    schema_fingerprint``:
+    Matching uses ``environment_name + metadata_table_key +
+    metadata_column_key + schema_fingerprint``:
 
-    - ``metadata_table_key``: stable ID for the table.
-    - ``metadata_column_key``: stable ID for a column within that table.
-    - ``schema_fingerprint``: identifier for the DataFrame structure observed
-      during profiling.
+    - ``metadata_table_key``: stable logical table identity shared across
+      environments.
+    - ``metadata_column_key``: stable logical column identity shared across
+      environments.
+    - ``schema_fingerprint``: deterministic fingerprint of ordered schema
+      content, independent of deployment environment.
+    - ``environment_name``: environment-specific catalogue observation.
+
+    One logical Data Contract link can therefore govern the same dataset in
+    Development and Production, while catalogue and execution observations
+    remain separate and promotion checks can compare matching logical keys.
+    Existing metadata created with environment-coupled identities must be
+    recreated or explicitly migrated; FabricOps does not provide a legacy-key
+    compatibility path.
 
     A changed ``schema_fingerprint`` represents a newly observed table
     structure and can create a new catalogue snapshot.
@@ -846,11 +857,7 @@ def profile_and_register_table(
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
     metadata_table_key = _metadata_table_key(
-        env,
-        normalized_store_type,
-        normalized_target,
-        normalized_schema,
-        normalized_table,
+        normalized_store_type, normalized_target, normalized_schema, normalized_table
     )
     try:
         _write_lineage_participation(
