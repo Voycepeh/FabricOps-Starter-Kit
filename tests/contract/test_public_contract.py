@@ -334,8 +334,12 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert "### Live-critical dependencies" in function_text
     assert function_text.rfind("### Live-critical dependencies") > function_text.find("<summary>Maintainer architecture details</summary>")
     assert '<code>fabricops_kit.config.shared.resolve_fabric_context</code>' in function_text
-    assert "Open Live contract call flow" in function_text
-    assert "../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_csv" in function_text
+    assert "Open Live contract call flow" not in function_text
+    assert "public-function-call-flows-dashboard.html?function=" not in function_text
+    assert "## Call-flow summary" not in function_text
+    assert "Downstream callables:" not in function_text
+    assert "Shared helpers:" not in function_text
+    assert "Private helpers:" not in function_text
     reference_index = (root / "docs" / "reference" / "index.md").read_text(encoding="utf-8")
     assert "Lifecycle" in reference_index
     assert "Live since 0.1.0" in reference_index
