@@ -76,6 +76,7 @@ def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, t
     """Resolve and validate one configured physical table identity."""
     normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     normalized_target = _require_non_empty_string(target, "target").lower()
+    normalized_table = _require_non_empty_string(table_name, "table_name")
     config, env, context = resolve_fabric_context()
     store = get_store(config, env, normalized_target)
     store_kind = str(getattr(store, "kind", "")).strip().lower()
@@ -86,7 +87,7 @@ def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, t
                 f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
                 "pass schema or configure a default schema."
             )
-        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(store, table_name, schema)
+        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(store, normalized_table, schema)
         if getattr(store, "schema_enabled", False) and normalized_schema is None:
             raise ValueError(
                 f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
@@ -100,7 +101,7 @@ def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, t
                 "pass schema or configure a default schema."
             )
         normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
-            store, configured_schema, table_name
+            store, configured_schema, normalized_table
         )
     else:
         raise ValueError(

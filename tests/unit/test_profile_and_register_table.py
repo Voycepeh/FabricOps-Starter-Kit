@@ -708,11 +708,38 @@ def test_profile_and_register_table_builds_frequency_json_and_writes_profiled_an
     assert [value["value"] for value in country_frequency["values"]] == ["US", None]
     assert "is_sampled" not in rows["country"]
 
-    expected_table_key = _metadata_table_key("dev", "warehouse", "silver", "dbo", "customers_clean")
+    expected_environment = "dev"
+    expected_store_type = "lakehouse"
+    expected_layer = "silver"
+    expected_schema = "dbo"
+    expected_table = "customers_clean"
+    expected_table_key = _metadata_table_key(
+        expected_environment,
+        expected_store_type,
+        expected_layer,
+        expected_schema,
+        expected_table,
+    )
     assert {row["metadata_table_key"] for row in rows.values()} == {expected_table_key}
+    assert {
+        (
+            row["environment_name"],
+            row["store_type"],
+            row["layer"],
+            row["schema_name"],
+            row["table_name"],
+        )
+        for row in rows.values()
+    } == {(expected_environment, expected_store_type, expected_layer, expected_schema, expected_table)}
     assert rows["country"]["metadata_column_key"] == _metadata_column_key(expected_table_key, "country")
     assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
-    assert expected_table_key != _metadata_table_key("dev", "warehouse", "silver", None, "customers_clean")
+    assert expected_table_key != _metadata_table_key(
+        expected_environment,
+        expected_store_type,
+        expected_layer,
+        None,
+        expected_table,
+    )
 
     catalogue_rows = registered[1]["df"].collect()
     assert {row.metadata_column_key for row in catalogue_rows} == {row["metadata_column_key"] for row in rows.values()}
@@ -839,8 +866,10 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
     ]
     base = {
         "metadata_table_key": "table-1",
-        "target": "raw",
-        "schema": None,
+        "environment_name": "dev",
+        "store_type": "lakehouse",
+        "layer": "raw",
+        "schema_name": None,
         "table_name": "orders",
         "data_type": "string",
         "row_count": 10,
