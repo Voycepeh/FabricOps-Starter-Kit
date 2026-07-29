@@ -42,10 +42,11 @@ or when physical Delta partitioning is required.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `99_explore`
+**Used in notebooks:** `02_pipeline`, `99_explore`
 
 ## Usage notes
 

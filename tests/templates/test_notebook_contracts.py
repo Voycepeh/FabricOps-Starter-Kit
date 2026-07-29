@@ -120,36 +120,32 @@ def test_template_notebook_fabricops_public_references_exist(notebook_path: Path
 
 
 
-def test_02_pipeline_uses_cloneable_profile_registration_block():
-    """Verify 02_pipeline exposes one short cloneable profile registration call pattern."""
+def test_02_pipeline_presents_the_v02_table_workflow():
+    """Verify 02_pipeline contains only the focused v0.2 table workflow."""
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
-    assert "profile_and_register_dataframe" in source
-    assert "profile_role=\\\"source\\\"" in source
-    assert "profile_role=\\\"target\\\"" in source
-    assert "Clone this block once for every DataFrame" in source
-    assert "frequency_json" not in source
-    assert "metadata_column_key" not in source
-    assert "profiled_at" not in source
-    assert "registers catalogue evidence only" in source
-    assert "follow-up lineage PR will automatically record that role" in source
+    assert "profile_and_register_table" in source
+    assert "profile_and_register_dataframe" not in source
+    assert source.count("# Planned for v0.3.0") == 2
+    assert "read_warehouse_query" in source
+    assert "SELECT * FROM {SOURCE_SCHEMA}.{SOURCE_TABLE_NAME}" in source
+    assert "prepare_pipeline_table_configs" not in source
+    assert "run_table_guardrails" not in source
 
 
-def test_02_pipeline_limits_contract_view_to_current_notebook_lineage():
-    """Verify pipeline inspection uses historical current-notebook lineage scope."""
+def test_02_pipeline_uses_only_the_contract_widget():
+    """Verify the simplified pipeline uses only the requested contract widget."""
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
-    assert 'pipeline_scope=\\"current_notebook\\"' in source
-    assert 'metadata_ids=PIPELINE_METADATA_IDS' not in source
-    assert 'source_profile_results[\"metadata_table_keys\"]' not in source
-    assert 'target_profile_results[\"metadata_table_keys\"]' not in source
+    assert "widget_view_data_contract" in source
+    assert "widget_author_" not in source
+    assert "widget_enrich_" not in source
 
 
 @pytest.mark.parametrize(
     ("notebook_name", "state_name"),
     [
         ("01_agreement.ipynb", "agreement_contract_view"),
-        ("02_pipeline.ipynb", "pipeline_contract_view"),
         ("03_review.ipynb", "review_contract_view"),
         ("99_explore.ipynb", "data_contract_view"),
     ],

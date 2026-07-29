@@ -169,8 +169,11 @@ def _expected_direct_public_template_calls() -> set[str]:
     expected.discard("widget_pipeline_bootstrap")
     expected.discard("write_pipeline_run_summary")
     expected.discard("widget_render_agreement_evidence")
+    expected.discard("display_guardrail_results")
+    expected.discard("prepare_pipeline_table_configs")
     expected.update(
         {
+            "profile_and_register_table",
             "read_lakehouse_csv",
             "read_lakehouse_excel",
             "read_lakehouse_parquet",
@@ -266,7 +269,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     audit_names.discard("write_pipeline_lineage")
     audit_names.add("widget_view_data_contract")
     audit_names.add("profile_frequency_distribution")
-    audit_names.add("profile_and_register_dataframe")
+    audit_names.add("profile_and_register_table")
     audit_names.discard("widget_pipeline_bootstrap")
     audit_names.discard("write_pipeline_run_summary")
     audit_names.discard("widget_render_agreement_evidence")

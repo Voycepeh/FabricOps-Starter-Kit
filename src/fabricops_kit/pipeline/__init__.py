@@ -7,7 +7,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     stop_if_failed,
 )
 from fabricops_kit.pipeline.prepare_pipeline_table_configs import prepare_pipeline_table_configs
-from fabricops_kit.pipeline.profile_and_register_dataframe import profile_and_register_dataframe
+from fabricops_kit.pipeline.profile_and_register_table import profile_and_register_table
 from fabricops_kit.pipeline.profile_dataframe import profile_dataframe
 from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
 from fabricops_kit.pipeline.run_table_guardrails import run_table_guardrails
@@ -18,7 +18,7 @@ __all__ = [
     "enforce_profile_behavior",
     "stop_if_failed",
     "prepare_pipeline_table_configs",
-    "profile_and_register_dataframe",
+    "profile_and_register_table",
     "profile_dataframe",
     "profile_frequency_distribution",
     "run_table_guardrails",

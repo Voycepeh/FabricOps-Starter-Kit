@@ -674,9 +674,9 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
 
 def test_public_callable_description_renders_before_source_and_usage() -> None:
     """Verify public callable content retains its established order."""
-    text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
-    title_index = text.index("# `prepare_pipeline_table_configs`")
-    description_index = text.index("Prepare source or target table configs for 02_pipeline.")
+    text = (API_REFERENCE_DIR / "profile_and_register_table.md").read_text(encoding="utf-8")
+    title_index = text.index("# `profile_and_register_table`")
+    description_index = text.index("Profile a Spark DataFrame, save a profiling snapshot")
     source_index = text.index('<div class="reference-source-card" markdown="1">')
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
@@ -809,13 +809,13 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
 
     assert "metadata setup cell" in environment_config
     assert "DATA_AGREEMENT_CONFIG" in agreement_setup
-    assert "source and target table settings" in pipeline_execution
-    assert "schema, freshness, profile behavior, and active DQ rules" in pipeline_execution
+    assert "define the configured target, schema, and table name once" in pipeline_execution
+    assert "Source and target guardrail execution is planned for v0.3.0" in pipeline_execution
     assert "Select the governed table context" in governance_review
     assert "Approve, reject, replace, deactivate" in governance_review
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
-    assert "[`profile_and_register_dataframe`](../../api/reference/profile_and_register_dataframe.md)" in lineage_table
+    assert "[`profile_and_register_table`](../../api/reference/profile_and_register_table.md)" in lineage_table
 
 
 def test_metadata_reference_overview_renders_model_diagram() -> None:
@@ -1984,7 +1984,7 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
-        "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
+        "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
     }
 
     for function_name, expected_path in expected_paths.items():
@@ -2014,7 +2014,7 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         "prepare_pipeline_table_configs": "src/fabricops_kit/pipeline/prepare_pipeline_table_configs.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
-        "profile_and_register_dataframe": "src/fabricops_kit/pipeline/profile_and_register_dataframe.py",
+        "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
         "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }
 
@@ -2045,7 +2045,7 @@ def test_generated_dashboard_split_pipeline_scopes_are_not_sibling_grouped() -> 
         "prepare_pipeline_table_configs",
         "profile_dataframe",
         "run_table_guardrails",
-        "profile_and_register_dataframe",
+        "profile_and_register_table",
         "write_pipeline_run_summary",
     }
 
@@ -2093,14 +2093,14 @@ def test_generated_public_callable_scope_counts_match_exact_flow_assets() -> Non
             "fabricops_kit.pipeline.prepare_pipeline_table_configs",
             "fabricops_kit.pipeline.profile_dataframe",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_and_register_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_table",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
         "fabricops_kit.pipeline.profile_dataframe": {
             "fabricops_kit.pipeline.display_guardrail_results",
             "fabricops_kit.pipeline.prepare_pipeline_table_configs",
             "fabricops_kit.pipeline.run_table_guardrails",
-            "fabricops_kit.pipeline.profile_and_register_dataframe",
+            "fabricops_kit.pipeline.profile_and_register_table",
             "fabricops_kit.pipeline.write_pipeline_run_summary",
         },
     }
