@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 431
-- Shared helpers: 122
-- Private helpers: 309
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=run_table_guardrails">Open Preview call flow</a>
-
 Run approved table checks and return whether the pipeline may continue.
 
 <div class="reference-docstring-intro" markdown="1">

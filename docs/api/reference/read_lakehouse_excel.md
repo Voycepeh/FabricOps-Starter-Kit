@@ -8,14 +8,6 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-## Call-flow summary
-
-- Downstream callables: 16
-- Shared helpers: 9
-- Private helpers: 7
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_excel">Open Live contract call flow</a>
-
 Read an Excel file from a configured Fabric-resolved path through pandas.read_excel.
 
 <div class="reference-source-card" markdown="1">

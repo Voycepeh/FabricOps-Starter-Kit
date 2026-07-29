@@ -8,14 +8,6 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-## Call-flow summary
-
-- Downstream callables: 18
-- Shared helpers: 10
-- Private helpers: 8
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_lakehouse_parquet">Open Live contract call flow</a>
-
 Read a Parquet path from a configured Fabric-resolved path through Spark Parquet.
 
 <div class="reference-docstring-intro" markdown="1">

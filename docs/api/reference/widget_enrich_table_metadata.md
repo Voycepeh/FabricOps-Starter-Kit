@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 84
-- Shared helpers: 29
-- Private helpers: 55
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_enrich_table_metadata">Open Preview call flow</a>
-
 Render a consolidated column enrichment widget.
 
 <div class="reference-source-card" markdown="1">

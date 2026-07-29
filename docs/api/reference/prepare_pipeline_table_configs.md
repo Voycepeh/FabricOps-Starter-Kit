@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 4
-- Shared helpers: 2
-- Private helpers: 2
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=prepare_pipeline_table_configs">Open Preview call flow</a>
-
 Prepare source or target table configs for 02_pipeline.
 
 <div class="reference-source-card" markdown="1">

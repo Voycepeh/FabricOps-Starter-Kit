@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 51
-- Shared helpers: 27
-- Private helpers: 24
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_metadata_tables">Open Preview call flow</a>
-
 Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
 <div class="reference-docstring-intro" markdown="1">

@@ -525,14 +525,25 @@ def test_callable_pages_show_source_cards_in_public_reference() -> None:
         assert "GitHub source URL:" not in text, page
 
 
-def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
-    """Verify display guardrail results renders one linked helper call tree."""
+def test_callable_pages_omit_call_flow_summaries() -> None:
+    """Verify public callable pages omit call-flow summary content."""
+    callable_pages = sorted(API_REFERENCE_DIR.glob("*.md"))
+
+    assert callable_pages
+    for page in callable_pages:
+        text = page.read_text(encoding="utf-8")
+        assert "## Call-flow summary" not in text, page
+        assert "- Downstream callables:" not in text, page
+        assert "- Shared helpers:" not in text, page
+        assert "- Private helpers:" not in text, page
+        assert "Open Preview call flow" not in text, page
+
+
+def test_display_guardrail_results_uses_public_source_card() -> None:
+    """Verify display guardrail results renders its public source card."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert "## Call-flow summary" in implementation_section
-    assert "- Downstream callables:" in implementation_section
-    assert "Open Preview call flow" in implementation_section
     assert '??? example "View helper source by area"' not in implementation_section
     assert '??? example "Source code"' not in implementation_section
     assert "Implementation helper count: 11" not in text
@@ -543,7 +554,6 @@ def test_display_guardrail_results_uses_one_clickable_call_tree() -> None:
     )
 
     assert "View on GitHub" in implementation_section
-    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def test_dashboard_focus_links_escape_api_reference_route() -> None:
@@ -559,14 +569,11 @@ def test_dashboard_focus_links_escape_api_reference_route() -> None:
             assert "../../../assets/public-function-call-flows-dashboard.html?function=" in text, page
 
 
-def test_display_guardrail_results_lists_nested_private_helpers() -> None:
-    """Verify nested private helpers appear in callable helper chips."""
+def test_display_guardrail_results_omits_internal_helper_details() -> None:
+    """Verify private implementation details stay out of the callable page."""
     text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
     implementation_section = text.split("## See also", 1)[0]
 
-    assert "## Call-flow summary" in implementation_section
-    assert "- Shared helpers:" in implementation_section
-    assert "- Private helpers:" in implementation_section
     assert '??? info "Implementation helpers used:' not in implementation_section
     assert 'class="reference-helper-groups"' not in implementation_section
     assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' not in implementation_section
@@ -575,7 +582,6 @@ def test_display_guardrail_results_lists_nested_private_helpers() -> None:
     assert "```text" not in implementation_section
 
     assert "View on GitHub" in implementation_section
-    assert "public-function-call-flows-dashboard.html?function=display_guardrail_results" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -666,8 +672,8 @@ def test_clickable_call_tree_does_not_link_root_to_nested_self_page() -> None:
         assert f"<code>{slug}(...)</code>" in first_row, page
 
 
-def test_public_callable_call_tree_renders_before_description() -> None:
-    """Verify public callable helper trees appear directly below the title."""
+def test_public_callable_description_renders_before_source_and_usage() -> None:
+    """Verify public callable content retains its established order."""
     text = (API_REFERENCE_DIR / "prepare_pipeline_table_configs.md").read_text(encoding="utf-8")
     title_index = text.index("# `prepare_pipeline_table_configs`")
     description_index = text.index("Prepare source or target table configs for 02_pipeline.")
@@ -675,8 +681,6 @@ def test_public_callable_call_tree_renders_before_description() -> None:
     usage_index = text.index("**Used in notebooks:** `02_pipeline`")
 
     assert title_index < description_index < source_index < usage_index
-    assert "## Call-flow summary" in text
-    assert "Open Preview call flow" in text
 
 
 def test_callable_pages_omit_machine_metadata_from_public_reference() -> None:

@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 4
-- Shared helpers: 2
-- Private helpers: 2
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_dataframe">Open Preview call flow</a>
-
 Profile a Spark DataFrame for structural and statistical exploration.
 
 <div class="reference-docstring-intro" markdown="1">

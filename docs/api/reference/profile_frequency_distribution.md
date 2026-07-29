@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 2
-- Shared helpers: 2
-- Private helpers: 0
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=profile_frequency_distribution">Open Preview call flow</a>
-
 Profile exact value frequencies for eligible Spark DataFrame columns.
 
 <div class="reference-docstring-intro" markdown="1">
