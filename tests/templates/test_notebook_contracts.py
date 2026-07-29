@@ -146,6 +146,7 @@ def test_02_pipeline_uses_only_the_contract_widget():
     ("notebook_name", "state_name"),
     [
         ("01_agreement.ipynb", "agreement_contract_view"),
+        ("02_pipeline.ipynb", "pipeline_contract_view"),
         ("03_review.ipynb", "review_contract_view"),
         ("99_explore.ipynb", "data_contract_view"),
     ],
@@ -155,9 +156,8 @@ def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, sta
     notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook.cells)
 
-    assert "Select a dataset and schema above, then rerun this cell" in source
+    assert "Select a dataset above, then rerun this cell" in source
     assert f'{state_name}["get_views"]()' in source
-    for view_name in (
-        "summary", "current_contract", "data_profiled", "guardrail_results", "data_access",
-    ):
-        assert f'display(contract_views["{view_name}"])' in source
+    assert 'for table_name, frame in metadata_views["tables"].items()' in source
+    assert 'print("Sorted by _committed_at descending")' in source
+    assert "display(frame)" in source
