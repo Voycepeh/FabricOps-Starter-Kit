@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 194
-- Shared helpers: 106
-- Private helpers: 88
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_render_data_agreement">Open Preview call flow</a>
-
 Render the standalone data-agreement intake widget.
 
 <div class="reference-source-card" markdown="1">

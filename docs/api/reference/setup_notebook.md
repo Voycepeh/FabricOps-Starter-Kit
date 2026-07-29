@@ -8,14 +8,6 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-## Call-flow summary
-
-- Downstream callables: 8
-- Shared helpers: 4
-- Private helpers: 4
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=setup_notebook">Open Live contract call flow</a>
-
 Shared environment setup and runtime validation for notebook templates.
 
 <div class="reference-docstring-intro" markdown="1">

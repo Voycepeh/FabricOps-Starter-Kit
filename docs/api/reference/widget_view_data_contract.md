@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 64
-- Shared helpers: 35
-- Private helpers: 29
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_view_data_contract">Open Preview call flow</a>
-
 Render the governed data contract for one registered dataset.
 
 <div class="reference-source-card" markdown="1">

@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 85
-- Shared helpers: 43
-- Private helpers: 42
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=widget_review_guardrail_governance">Open Preview call flow</a>
-
 Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 <div class="reference-source-card" markdown="1">

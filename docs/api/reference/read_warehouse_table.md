@@ -8,14 +8,6 @@
 
 > This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
-## Call-flow summary
-
-- Downstream callables: 15
-- Shared helpers: 8
-- Private helpers: 7
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=read_warehouse_table">Open Live contract call flow</a>
-
 Read a table from a configured Fabric warehouse target.
 
 <div class="reference-docstring-intro" markdown="1">

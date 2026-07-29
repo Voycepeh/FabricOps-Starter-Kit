@@ -5281,20 +5281,6 @@ def main() -> None:
             public_flow = public_flow_by_name.get(short_name, public_flow_by_qn[qn])
             lifecycle_status = _lifecycle_status(public_flow)
             used_in_templates = template_usage_by_symbol.get(short_name, [])
-            downstream_count = len(public_flow.get("flow", [])) - 1
-            shared_helper_count = sum(1 for row in public_flow.get("flow", [])[1:] if row.get("function_type") == "shared_function")
-            private_helper_count = sum(1 for row in public_flow.get("flow", [])[1:] if row.get("function_type") == "private_function")
-            dashboard_url = _dashboard_focus_url(short_name)
-            call_flow_lines = [
-                "## Call-flow summary",
-                "",
-                f"- Downstream callables: {downstream_count}",
-                f"- Shared helpers: {shared_helper_count}",
-                f"- Private helpers: {private_helper_count}",
-                "",
-                f'<a class="reference-source-link" href="{dashboard_url}">{html_escape(_dashboard_link_label(lifecycle_status))}</a>',
-                "",
-            ]
             notebook_usage_chips = [
                 f'<span class="reference-chip">{html_escape(template)}</span>' for template in used_in_templates
             ] or ['<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>']
@@ -5344,7 +5330,6 @@ def main() -> None:
                 f"# `{short_name}`",
                 "",
                 *_lifecycle_header_lines(public_flow),
-                *call_flow_lines,
                 purpose,
                 "",
                 *doc_intro_lines,

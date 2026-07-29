@@ -7,14 +7,6 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-## Call-flow summary
-
-- Downstream callables: 37
-- Shared helpers: 2
-- Private helpers: 35
-
-<a class="reference-source-link" href="../../../assets/public-function-call-flows-dashboard.html?function=display_guardrail_results">Open Preview call flow</a>
-
 Return summary, detailed, or debug guardrail display output for Fabric notebooks.
 
 <div class="reference-source-card" markdown="1">
