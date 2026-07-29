@@ -23,8 +23,9 @@ Guardrail enforcement happens later in [Step 4: Rerun the Development pipeline w
 read source
 → profile and register source evidence
 → transform
+→ write target successfully
+→ read or confirm persisted target
 → profile and register target evidence
-→ write target
 ```
 
 1. Open `02_pipeline` after environment and agreement setup.
@@ -32,8 +33,8 @@ read source
 3. Read the source DataFrame from the configured Fabric source target.
 4. Profile and register the source DataFrame with `profile_and_register_dataframe(...)`.
 5. Apply visible transformation logic in notebook cells.
-6. Profile and register the target DataFrame with `profile_and_register_dataframe(...)`.
-7. Write the target output to the configured Fabric target.
+6. Write the target output to the configured Fabric target.
+7. Read or confirm the persisted target, then profile and register it with `profile_and_register_dataframe(...)`.
 8. Review the metadata evidence created by the run.
 
 A source profiling call uses `profile_role="source"`. A target profiling call uses `profile_role="target"`. Each profile-and-register step writes profile evidence, catalogue identity, schema fingerprint evidence, and one lineage participation event for the DataFrame supplied to that call.
@@ -43,15 +44,53 @@ A source profiling call uses `profile_role="source"`. A target profiling call us
 ```python
 from fabricops_kit import profile_and_register_dataframe
 
+TARGET = "unified"
+SCHEMA = UNIFIED_SCHEMA
+TABLE_NAME = "smoke_test_source_df"
+
+source_df = read_lakehouse_table(
+    table_name=TABLE_NAME,
+    target=TARGET,
+    schema=SCHEMA,
+    spark_session=spark,
+)
+
 profiled_df = profile_and_register_dataframe(
-    df,
+    source_df,
     profile_role="source",
-    environment_name="dev",
-    store_type="lakehouse",
-    layer="raw",
-    table_name="customers",
+    target=TARGET,
+    schema=SCHEMA,
+    table_name=TABLE_NAME,
 )
 ```
+
+
+The configured target supplies the active store type, and its normalized key is recorded as the identity layer. The active environment comes from `00_env_config`; callers cannot provide inconsistent environment, store-type, and layer combinations. The complete physical identity remains `environment_name + store_type + layer + schema_name + table_name`.
+
+The equivalent complete-table Warehouse workflow uses the same profiling call:
+
+```python
+TARGET = "product"
+SCHEMA = PRODUCT_SCHEMA
+TABLE_NAME = "smoke_test_source_df"
+
+source_df = read_warehouse_table(
+    schema=SCHEMA,
+    table_name=TABLE_NAME,
+    target=TARGET,
+    spark_session=spark,
+)
+
+source_profile_df = profile_and_register_dataframe(
+    source_df,
+    profile_role="source",
+    target=TARGET,
+    schema=SCHEMA,
+    table_name=TABLE_NAME,
+)
+```
+
+Use `read_warehouse_query()` for selective or custom SQL ingestion. Do not register its result as the complete profile of one physical source table unless the query genuinely represents that complete table. Query results may be filtered, sampled, joined, or aggregated.
 
 For very large DataFrames, callers can prepare a separate DataFrame for frequency grouping while keeping the main profile and metadata registration based on the full supplied DataFrame:
 
@@ -65,9 +104,8 @@ sample_df = full_df.sample(
 profiled_df = profile_and_register_dataframe(
     full_df,
     profile_role="source",
-    environment_name="dev",
-    store_type="lakehouse",
-    layer="raw",
+    target="source",
+    schema=SOURCE_SCHEMA,
     table_name="customers",
     frequency_profile_df=sample_df,
 )
@@ -140,9 +178,8 @@ df = spark.createDataFrame(
 profiled_df = profile_and_register_dataframe(
     df,
     profile_role="source",
-    environment_name="dev",
-    store_type="lakehouse",
-    layer="raw",
+    target="source",
+    schema=SOURCE_SCHEMA,
     table_name="customers",
 )
 ```

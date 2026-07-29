@@ -20,16 +20,16 @@ profiling result to the notebook.
 
 The original business DataFrame is not written, sampled, re-read, or
 changed by this function. All metadata writes go to the metadata lakehouse
-configured in ``00_env_config`` for the selected environment.
+configured in ``00_env_config`` for the active environment.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_dataframe.py:471`
+`fabricops_kit/pipeline/profile_and_register_dataframe.py:538`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L471-L805">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_dataframe.py#L538-L870">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -54,11 +54,9 @@ For profiling-related pipeline functions, the output captures the important deta
 def profile_and_register_dataframe(
     df,
     profile_role,
-    environment_name,
-    store_type,
-    layer,
+    target,
     table_name,
-    schema_name=None,
+    schema=None,
     frequency_columns=None,
     frequency_top_n: int | None=None,
     frequency_max_distinct_percent: float | None=80.0,
@@ -73,7 +71,7 @@ def profile_and_register_dataframe(
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profiled_df = profile_and_register_dataframe(source_df, profile_role="source", environment_name=ENVIRONMENT_NAME, store_type="lakehouse", layer="raw", table_name="student_enrolment", frequency_profile_df=profile_sample_df)
+profiled_df = profile_and_register_dataframe(source_df, profile_role="source", target="source", schema=SOURCE_SCHEMA, table_name="student_enrolment", frequency_profile_df=profile_sample_df)
 ```
 
 </div>
@@ -84,11 +82,9 @@ profiled_df = profile_and_register_dataframe(source_df, profile_role="source", e
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile exactly as supplied by the caller. The helper does not sample, re-read, or mutate this DataFrame. |
 | `profile_role` | `{"source", "target"}` | Yes | Records whether the profiled asset participated in the notebook activity as an input or an output: ``source`` for an activity input and ``target`` for an activity output. The value is stored in ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or ``METADATA_DATA_CATALOGUE``. |
-| `environment_name` | `str` | Yes | FabricOps environment context used to find the configured metadata lakehouse and persist the environment identity. |
-| `store_type` | `{"lakehouse", "warehouse"}` | Yes | Physical store type of the business asset being profiled. This identifies the asset and does not redirect metadata writes to that business store. |
-| `layer` | `str` | Yes | Logical lakehouse or warehouse layer of the business asset being profiled. This identifies the asset and does not redirect metadata writes. |
+| `target` | `str` | Yes | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. |
 | `table_name` | `str` | Yes | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. |
-| `schema_name` | `str` | No | Optional physical schema name for the business asset. Use ``None`` for lakehouse tables without a separate schema. This identifies the asset and does not redirect metadata writes. |
+| `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
 | `frequency_columns` | `sequence of str` | No | Selected columns that should receive embedded frequency evidence. ``None`` profiles all eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and persists null ``frequency_json`` for every statistical profile row. Requested columns should also be eligible for the main statistical profile. |
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
 | `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold receive structured skipped JSON instead of generated frequencies. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns still receive structured skipped JSON. Explicit ``frequency_columns`` selections override this threshold. |
@@ -104,12 +100,12 @@ The returned rows are the detailed profile results for eligible columns. Statist
 
 ## Raises / Errors
 
-Raises ValueError for unsupported profile_role, unsupported store_type, or empty required identity fields; lower-level profiling validation is preserved.
+Raises ValueError for an unsupported profile_role, unknown target, unsupported configured store kind, or invalid table or schema identity.
 
 ### Common failure causes
 
-- profile_role must be source or target and store_type must be lakehouse or warehouse.
-- environment_name, layer, or table_name is blank, or schema_name is blank when supplied.
+- profile_role must be source or target, or the configured target store kind is unsupported.
+- target or table_name is blank, or a schema-enabled store has no explicit or configured schema.
 - frequency_profile_df is not Spark DataFrame-like, uses an incompatible Spark session, or is missing selected frequency columns.
 - The configured metadata target cannot be resolved or written.
 - Requested frequency columns are missing or expensive to group; frequency_top_n limits returned values only and does not reduce grouping cost.
@@ -278,6 +274,11 @@ only generated frequency evidence uses that DataFrame and its JSON records
 verify that the caller-provided DataFrame is sampled, random,
 representative, persisted, or governed; those responsibilities stay with
 the upstream ingestion or notebook workflow.
+
+The physical identity is the caller-selected configured table identity;
+an arbitrary DataFrame does not prove that table exists. Profile a source
+after a successful complete-table read, and profile a target only after
+its write has succeeded and the persisted target has been confirmed.
 
 Profile and catalogue registration occur before lineage registration. If
 lineage registration fails after those writes succeed, the function raises

@@ -7,9 +7,11 @@ import inspect
 import json
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+from fabricops_kit.config import FabricStore
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.pipeline import profile_and_register_dataframe as public_profile_and_register_dataframe
 from fabricops_kit.pipeline.profile_and_register_dataframe import (
@@ -20,6 +22,7 @@ from fabricops_kit.pipeline.profile_and_register_dataframe import (
     _catalogue_dataframe_from_profiled,
     _metadata_column_key,
     _metadata_table_key,
+    _resolve_physical_identity,
     profile_and_register_dataframe,
 )
 
@@ -84,7 +87,23 @@ def registered(monkeypatch):
         "currentNotebookName": "Notebook One",
         "userName": "tester",
     }
-    monkeypatch.setattr(module, "resolve_fabric_context", lambda env: (resolved_context["config"], env, {**resolved_context, "env": env}))
+    monkeypatch.setattr(
+        module,
+        "resolve_fabric_context",
+        lambda: (resolved_context["config"], resolved_context["env"], resolved_context),
+    )
+    monkeypatch.setattr(
+        module,
+        "get_store",
+        lambda config, env, target: FabricStore(
+            env=env,
+            workspace_id="workspace-1",
+            item_id=f"{target}-1",
+            name=target,
+            kind="warehouse" if target == "warehouse" else "lakehouse",
+            schema="dbo" if target == "warehouse" else None,
+        ),
+    )
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda config, env, target: None)
     monkeypatch.setattr(
         module,
@@ -102,13 +121,33 @@ def registered(monkeypatch):
     )
 
     def write(df, table_name, *, target, schema, context, mode):
-        writes.append({"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode})
+        writes.append(
+            {"df": df, "table_name": table_name, "target": target, "schema": schema, "context": context, "mode": mode}
+        )
 
     def upsert_catalogue(*, catalogue_df, config, env, spark_session):
-        writes.append({"df": catalogue_df, "table_name": CATALOGUE_TABLE, "target": "metadata", "schema": None, "context": {"config": config, "env": env}, "mode": "upsert"})
+        writes.append(
+            {
+                "df": catalogue_df,
+                "table_name": CATALOGUE_TABLE,
+                "target": "metadata",
+                "schema": None,
+                "context": {"config": config, "env": env},
+                "mode": "upsert",
+            }
+        )
 
     def upsert_lineage(*, lineage_df, config, env, spark_session):
-        writes.append({"df": lineage_df, "table_name": "METADATA_DATA_LINEAGE", "target": "metadata", "schema": None, "context": {"config": config, "env": env}, "mode": "upsert"})
+        writes.append(
+            {
+                "df": lineage_df,
+                "table_name": "METADATA_DATA_LINEAGE",
+                "target": "metadata",
+                "schema": None,
+                "context": {"config": config, "env": env},
+                "mode": "upsert",
+            }
+        )
 
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
     monkeypatch.setattr(module, "_upsert_catalogue_identities", upsert_catalogue)
@@ -134,9 +173,7 @@ def test_profile_registration_call_flow_has_no_public_profiling_edge():
     payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_dataframe")
     direct_callees = {
-        row["qualified_name"]: row
-        for row in flow["flow"]
-        if row["parent_qualified_name"] == flow["qualified_name"]
+        row["qualified_name"]: row for row in flow["flow"] if row["parent_qualified_name"] == flow["qualified_name"]
     }
 
     assert "fabricops_kit.pipeline.profile_dataframe.profile_dataframe" not in direct_callees
@@ -146,15 +183,16 @@ def test_profile_registration_call_flow_has_no_public_profiling_edge():
     frequency_json = next(
         row
         for row in flow["flow"]
-        if row["qualified_name"]
-        == "fabricops_kit.pipeline.profile_and_register_dataframe._frequency_json_dataframe"
+        if row["qualified_name"] == "fabricops_kit.pipeline.profile_and_register_dataframe._frequency_json_dataframe"
     )
     frequency_callees = {
         row["qualified_name"]
         for row in flow["flow"]
         if row["parent_qualified_name"] == frequency_json["qualified_name"]
     }
-    assert "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution" not in frequency_callees
+    assert (
+        "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution" not in frequency_callees
+    )
     assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in frequency_callees
 
 
@@ -164,11 +202,9 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
     assert list(parameters) == [
         "df",
         "profile_role",
-        "environment_name",
-        "store_type",
-        "layer",
+        "target",
         "table_name",
-        "schema_name",
+        "schema",
         "frequency_columns",
         "frequency_top_n",
         "frequency_max_distinct_percent",
@@ -181,6 +217,59 @@ def test_profile_and_register_dataframe_signature_requires_profile_role():
     assert str(parameters["frequency_max_distinct_percent"].annotation) == "float | None"
 
 
+def test_resolved_identity_uses_active_environment_and_configured_lakehouse(monkeypatch):
+    """Derive environment, kind, layer, configured schema, and normalized table."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    store = FabricStore("dev", "workspace", "item", "Unified", "lakehouse", True, "dbo")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
+
+    role, target, table, schema, kind, _config, env, _context = _resolve_physical_identity(
+        profile_role=" Source ", target=" Unified ", schema=None, table_name="customers"
+    )
+
+    assert (role, target, table, schema, kind, env) == ("source", "unified", "customers", "dbo", "lakehouse", "dev")
+
+
+def test_resolved_identity_uses_configured_warehouse_default(monkeypatch):
+    """Derive a Warehouse identity and its configured default schema."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    store = FabricStore("dev", "workspace", "item", "Product", "warehouse", schema="sales")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
+
+    identity = _resolve_physical_identity(profile_role="target", target="product", schema=None, table_name="orders")
+
+    assert identity[1:5] == ("product", "orders", "sales", "warehouse")
+
+
+@pytest.mark.parametrize(
+    ("store", "message"),
+    [
+        (SimpleNamespace(kind="warehouse", schema=None), "schema is required for Warehouse"),
+        (SimpleNamespace(kind="lakehouse", schema_enabled=True, schema=None), "schema is required for schema-enabled"),
+        (SimpleNamespace(kind="kusto"), "unsupported store kind 'kusto'"),
+    ],
+)
+def test_resolved_identity_rejects_invalid_configured_store(monkeypatch, store, message):
+    """Fail clearly for missing required schemas and unsupported stores."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {"env": "dev"}))
+    monkeypatch.setattr(module, "get_store", lambda config, env, target: store)
+
+    with pytest.raises(ValueError, match=message):
+        _resolve_physical_identity(profile_role="source", target="source", schema=None, table_name="orders")
+
+
+def test_removed_identity_arguments_are_rejected():
+    """Do not retain compatibility arguments for the breaking API change."""
+    for name in ("environment_name", "store_type", "layer", "schema_name"):
+        with pytest.raises(TypeError, match=name):
+            profile_and_register_dataframe(
+                object(), profile_role="source", target="source", table_name="orders", **{name: "old"}
+            )
+
+
 @pytest.mark.parametrize("role", ["source", "target", " Source ", " TARGET "])
 def test_profile_and_register_dataframe_accepts_source_and_target_roles(spark_session, monkeypatch, registered, role):
     """Verify source and target role values are accepted but not persisted."""
@@ -190,9 +279,7 @@ def test_profile_and_register_dataframe_accepts_source_and_target_roles(spark_se
     result = profile_and_register_dataframe(
         _source_df(spark_session),
         profile_role=role,
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
     )
 
@@ -204,30 +291,33 @@ def test_profile_and_register_dataframe_requires_profile_role(spark_session, reg
     with pytest.raises(TypeError, match="profile_role"):
         profile_and_register_dataframe(
             _source_df(spark_session),
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
         )
 
 
-@pytest.mark.parametrize("store_type", ["lakehouse", "warehouse", " Warehouse "])
-def test_profile_and_register_dataframe_accepts_supported_store_types(spark_session, monkeypatch, registered, store_type):
-    """Verify accepted store types are normalized and persisted."""
+@pytest.mark.parametrize(
+    ("target", "kind", "schema"), [("silver", "lakehouse", None), ("warehouse", "warehouse", "dbo")]
+)
+def test_profile_and_register_dataframe_derives_supported_store_types(
+    spark_session, monkeypatch, registered, target, kind, schema
+):
+    """Verify configured store kinds and target layers are persisted."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
     monkeypatch.setattr(module, "build_profile_dataframe", lambda df: _profile_df(spark_session))
     result = profile_and_register_dataframe(
         _source_df(spark_session),
         profile_role="target",
-        environment_name="dev",
-        store_type=store_type,
-        layer="silver",
+        target=target,
+        schema=schema,
         table_name="customers_clean",
     )
 
-    rows = result.select("store_type", "schema_name").distinct().collect()
-    assert [(row.store_type, row.schema_name) for row in rows] == [(store_type.strip().lower(), None)]
+    rows = result.select("environment_name", "store_type", "layer", "schema_name").distinct().collect()
+    assert [(row.environment_name, row.store_type, row.layer, row.schema_name) for row in rows] == [
+        ("dev", kind, target, schema)
+    ]
     assert "is_sampled" not in result.columns
 
 
@@ -235,21 +325,17 @@ def test_profile_and_register_dataframe_accepts_supported_store_types(spark_sess
     ("kwargs", "message"),
     [
         ({"profile_role": "input"}, "profile_role must be one of"),
-        ({"store_type": "delta"}, "store_type must be one of"),
-        ({"environment_name": ""}, "environment_name must be a non-empty string"),
-        ({"layer": " "}, "layer must be a non-empty string"),
+        ({"target": " "}, "target must be a non-empty string"),
         ({"table_name": ""}, "table_name must be a non-empty string"),
-        ({"schema_name": ""}, "schema_name must be a non-empty string"),
+        ({"schema": ""}, "schema must be a non-empty identifier"),
     ],
 )
 def test_profile_and_register_dataframe_rejects_invalid_required_inputs(spark_session, registered, kwargs, message):
     """Verify invalid store and required string inputs fail clearly."""
     params = {
         "profile_role": "source",
-        "environment_name": "dev",
-        "store_type": "lakehouse",
-        "layer": "raw",
-        "schema_name": None,
+        "target": "raw",
+        "schema": None,
         "table_name": "customers",
     }
     params.update(kwargs)
@@ -264,9 +350,7 @@ def test_profile_and_register_dataframe_rejects_invalid_frequency_threshold(spar
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
             frequency_max_distinct_percent=threshold,
         )
@@ -294,9 +378,7 @@ def test_profile_and_register_dataframe_skips_frequency_for_empty_columns(spark_
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=[],
     )
@@ -318,9 +400,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     default_result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
     )
     default_rows = {row.column_name: row.asDict() for row in default_result.collect()}
@@ -339,9 +419,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     selected_result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=["id"],
     )
@@ -358,9 +436,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     unbounded_result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_max_distinct_percent=None,
     )
@@ -370,9 +446,7 @@ def test_profile_and_register_dataframe_default_and_explicit_frequency_json_inte
     skipped_result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=[],
     )
@@ -390,9 +464,7 @@ def test_profile_and_register_dataframe_threshold_boundary_and_all_null_json(spa
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="thresholds",
     )
 
@@ -414,7 +486,9 @@ def test_profile_and_register_dataframe_threshold_boundary_and_all_null_json(spa
     }
 
 
-def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_selection(spark_session, monkeypatch, registered):
+def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_selection(
+    spark_session, monkeypatch, registered
+):
     """Verify automatic selection uses one profile pass and one frequency call."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
     source = _source_df(spark_session)
@@ -437,9 +511,7 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
     )
 
@@ -460,15 +532,49 @@ def test_profile_and_register_dataframe_reuses_profile_for_automatic_frequency_s
     }
 
 
-def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold(spark_session, monkeypatch, registered):
+def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold(
+    spark_session, monkeypatch, registered
+):
     """Verify a column just above 80% is skipped even when display percentage rounds to 80.0."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
     source = spark_session.createDataFrame([(1, 1), (2, 2)], "at_threshold long, just_above long")
     profile_schema = "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string"
     profile_rows = spark_session.createDataFrame(
         [
-            ("at_threshold", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_000, 80.0, None, None, "1", None, None, None, "800000"),
-            ("just_above", "bigint", 1_000_000, 1_000_000, 0, 0.0, 800_004, 80.0004, None, None, "1", None, None, None, "800004"),
+            (
+                "at_threshold",
+                "bigint",
+                1_000_000,
+                1_000_000,
+                0,
+                0.0,
+                800_000,
+                80.0,
+                None,
+                None,
+                "1",
+                None,
+                None,
+                None,
+                "800000",
+            ),
+            (
+                "just_above",
+                "bigint",
+                1_000_000,
+                1_000_000,
+                0,
+                0.0,
+                800_004,
+                80.0004,
+                None,
+                None,
+                "1",
+                None,
+                None,
+                None,
+                "800004",
+            ),
         ],
         profile_schema,
     )
@@ -492,9 +598,7 @@ def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="threshold_rounding",
     )
 
@@ -510,7 +614,9 @@ def test_profile_and_register_dataframe_uses_unrounded_cardinality_for_threshold
     }
 
 
-def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(spark_session, monkeypatch, registered):
+def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profiled_and_catalogue(
+    spark_session, monkeypatch, registered
+):
     """Verify output contract, frequency JSON, deterministic keys, and writer usage."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
 
@@ -542,10 +648,8 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="warehouse",
-        layer="silver",
-        schema_name="dbo",
+        target="silver",
+        schema="dbo",
         table_name="customers_clean",
         frequency_columns=("customer_type", "country"),
         frequency_top_n=5,
@@ -619,14 +723,14 @@ def test_profile_and_register_dataframe_builds_frequency_json_and_writes_profile
     source_role_result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="warehouse",
-        layer="silver",
-        schema_name="dbo",
+        target="silver",
+        schema="dbo",
         table_name="customers_clean",
         frequency_columns=None,
     )
-    assert {row.metadata_table_key for row in source_role_result.select("metadata_table_key").collect()} == {expected_table_key}
+    assert {row.metadata_table_key for row in source_role_result.select("metadata_table_key").collect()} == {
+        expected_table_key
+    }
 
 
 def test_profiled_schema_matches_detailed_profile_contract_without_profile_role():
@@ -724,10 +828,8 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
     ]
     base = {
         "metadata_table_key": "table-1",
-        "environment_name": "dev",
-        "store_type": "lakehouse",
-        "layer": "raw",
-        "schema_name": None,
+        "target": "raw",
+        "schema": None,
         "table_name": "orders",
         "data_type": "string",
         "row_count": 10,
@@ -817,13 +919,14 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
 
     monkeypatch.setattr(module, "_upsert_lineage_event", fail_upsert)
     expected_key = _metadata_table_key("dev", "lakehouse", "raw", None, "customers")
-    with pytest.raises(RuntimeError, match=f"Profile and catalogue registration succeeded but lineage registration failed.*{expected_key}.*source"):
+    with pytest.raises(
+        RuntimeError,
+        match=f"Profile and catalogue registration succeeded but lineage registration failed.*{expected_key}.*source",
+    ):
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
         )
     assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE]
@@ -842,12 +945,9 @@ def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monke
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
         )
-
 
 
 def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, monkeypatch, registered):
@@ -863,9 +963,7 @@ def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, mo
         profile_and_register_dataframe(
             _source_df(spark_session),
             profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
         )
     assert [write["table_name"] for write in registered] == [PROFILED_TABLE]
@@ -876,8 +974,12 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
 ):
     """Verify a caller frequency DataFrame affects only frequency evidence."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_dataframe")
-    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(20)], "id long, segment string")
-    frequency_source = spark_session.createDataFrame([(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string")
+    source = spark_session.createDataFrame(
+        [(i, "A" if i % 2 == 0 else "B") for i in range(20)], "id long, segment string"
+    )
+    frequency_source = spark_session.createDataFrame(
+        [(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string"
+    )
     calls = {"profile_is_source": None, "frequency_df_is_frequency_source": None, "schema_df_is_source": []}
     original_schema_fingerprint = module._schema_fingerprint
     original_frequency_distribution = module.build_frequency_distribution_dataframe
@@ -907,9 +1009,7 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=["segment"],
         frequency_profile_df=frequency_source,
@@ -932,14 +1032,14 @@ def test_profile_and_register_dataframe_uses_caller_frequency_profile_df_only_fo
 
 def test_profile_and_register_dataframe_default_frequency_scope_uses_full_source(spark_session, registered):
     """Verify omitting frequency_profile_df preserves full-source frequency profiling."""
-    source = spark_session.createDataFrame([(i, "A" if i % 2 == 0 else "B") for i in range(8)], "id long, segment string")
+    source = spark_session.createDataFrame(
+        [(i, "A" if i % 2 == 0 else "B") for i in range(8)], "id long, segment string"
+    )
 
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=["segment"],
     )
@@ -961,9 +1061,7 @@ def test_profile_and_register_dataframe_frequency_profile_df_missing_selected_co
         profile_and_register_dataframe(
             source,
             profile_role="source",
-            environment_name="dev",
-            store_type="lakehouse",
-            layer="raw",
+            target="raw",
             table_name="customers",
             frequency_columns=["segment"],
             frequency_profile_df=frequency_source,
@@ -991,9 +1089,7 @@ def test_profile_and_register_dataframe_empty_frequency_columns_does_not_validat
     result = profile_and_register_dataframe(
         _source_df(spark_session),
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_columns=[],
         frequency_profile_df=object(),
@@ -1029,9 +1125,7 @@ def test_profile_and_register_dataframe_automatic_selection_uses_full_profile_wi
     result = profile_and_register_dataframe(
         source,
         profile_role="source",
-        environment_name="dev",
-        store_type="lakehouse",
-        layer="raw",
+        target="raw",
         table_name="customers",
         frequency_profile_df=frequency_source,
     )

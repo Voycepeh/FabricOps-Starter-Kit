@@ -9,8 +9,14 @@ from typing import Any, Sequence
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table, write_lakehouse_table_core
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
+from fabricops_kit.io.shared import (
+    configured_lakehouse_schema,
+    resolve_configured_lakehouse_table,
+    resolve_lakehouse_table_location,
+    resolve_warehouse_table_location,
+    write_lakehouse_table_core,
+)
 from fabricops_kit.pipeline.shared import build_frequency_distribution_dataframe, build_profile_dataframe
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
@@ -38,11 +44,15 @@ def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
 
 def _stable_catalogue_key(*parts: Any) -> str:
     """Return a deterministic key that preserves nulls and delimiter values."""
-    payload = [{"is_null": part is None, "value": None if part is None else str(part).strip().lower()} for part in parts]
+    payload = [
+        {"is_null": part is None, "value": None if part is None else str(part).strip().lower()} for part in parts
+    ]
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def _metadata_table_key(environment_name: str, store_type: str, layer: str, schema_name: str | None, table_name: str) -> str:
+def _metadata_table_key(
+    environment_name: str, store_type: str, layer: str, schema_name: str | None, table_name: str
+) -> str:
     """Return the canonical physical asset key for a catalogue table snapshot."""
     return _stable_catalogue_key(environment_name, store_type, layer, schema_name, table_name)
 
@@ -62,6 +72,45 @@ def _schema_fingerprint(df: Any) -> str:
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
+def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, table_name: Any):
+    """Resolve and validate one configured physical table identity."""
+    normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
+    normalized_target = _require_non_empty_string(target, "target").lower()
+    config, env, context = resolve_fabric_context()
+    store = get_store(config, env, normalized_target)
+    store_kind = str(getattr(store, "kind", "")).strip().lower()
+
+    if store_kind == "lakehouse":
+        if getattr(store, "schema_enabled", False) and schema is None and not getattr(store, "schema", None):
+            raise ValueError(
+                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+        normalized_table, normalized_schema, _path = resolve_lakehouse_table_location(store, table_name, schema)
+        if getattr(store, "schema_enabled", False) and normalized_schema is None:
+            raise ValueError(
+                f"schema is required for schema-enabled Lakehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+    elif store_kind == "warehouse":
+        configured_schema = schema if schema is not None else getattr(store, "schema", None)
+        if configured_schema is None or not str(configured_schema).strip():
+            raise ValueError(
+                f"schema is required for Warehouse target '{normalized_target}'; "
+                "pass schema or configure a default schema."
+            )
+        normalized_schema, normalized_table, _object_name = resolve_warehouse_table_location(
+            store, configured_schema, table_name
+        )
+    else:
+        raise ValueError(
+            f"Target '{normalized_target}' has unsupported store kind {store_kind or '<blank>'!r}; "
+            "supported kinds are: lakehouse, warehouse."
+        )
+
+    return normalized_role, normalized_target, normalized_table, normalized_schema, store_kind, config, env, context
+
+
 def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_fingerprint: str, profile_role: str) -> str:
     """Return the deterministic runtime lineage event identity."""
     payload = {
@@ -71,7 +120,6 @@ def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_finge
         "profile_role": _normalize_choice(profile_role, "profile_role", {"source", "target"}),
     }
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
-
 
 
 def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
@@ -94,6 +142,7 @@ def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selec
         raise ValueError(f"frequency_profile_df is missing selected frequency columns: {', '.join(missing_columns)}")
 
     return frequency_profile_df, "caller_provided"
+
 
 def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
     """Return candidate columns whose Spark types are scalar frequency types."""
@@ -150,14 +199,18 @@ def _skipped_frequency_json_dataframe(profile_df, *, scalar_columns: Sequence[st
     )
 
 
-def _automatic_frequency_columns(profile_df, *, scalar_columns: Sequence[str], threshold_percent: float | None) -> list[str]:
+def _automatic_frequency_columns(
+    profile_df, *, scalar_columns: Sequence[str], threshold_percent: float | None
+) -> list[str]:
     """Return automatic scalar columns that pass the frequency cardinality guard."""
     from pyspark.sql import functions as F
 
     non_null_count = F.col("NON_NULL_COUNT").cast("double")
     distinct_count = F.col("DISTINCT_COUNT").cast("double")
     raw_cardinality_percent = (distinct_count / non_null_count) * 100
-    eligible = profile_df.where(F.col("COLUMN_NAME").isin(list(scalar_columns))).where(F.col("NON_NULL_COUNT").cast("long") > 0)
+    eligible = profile_df.where(F.col("COLUMN_NAME").isin(list(scalar_columns))).where(
+        F.col("NON_NULL_COUNT").cast("long") > 0
+    )
     if threshold_percent is not None:
         eligible = eligible.where(raw_cardinality_percent <= F.lit(float(threshold_percent)))
     return [row.COLUMN_NAME for row in eligible.select("COLUMN_NAME").collect()]
@@ -311,7 +364,9 @@ def _canonical_profiled_dataframe(
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
     if frequency_df is not None:
-        profiled_df = profiled_df.join(frequency_df, profiled_df.column_name == frequency_df.COLUMN_NAME, "left").drop(frequency_df.COLUMN_NAME)
+        profiled_df = profiled_df.join(frequency_df, profiled_df.column_name == frequency_df.COLUMN_NAME, "left").drop(
+            frequency_df.COLUMN_NAME
+        )
     else:
         profiled_df = profiled_df.withColumn("frequency_json", F.lit(None).cast("string"))
 
@@ -356,26 +411,30 @@ def _catalogue_dataframe_from_profiled(profiled_df):
     """Return distinct catalogue identity rows derived from detailed profiled rows."""
     from pyspark.sql import functions as F
 
-    return profiled_df.select(
-        F.col("metadata_table_key").cast("string"),
-        F.col("metadata_column_key").cast("string"),
-        F.col("schema_fingerprint").cast("string"),
-        F.col("environment_name").cast("string"),
-        F.col("store_type").cast("string"),
-        F.col("layer").cast("string"),
-        F.col("schema_name").cast("string"),
-        F.col("table_name").cast("string"),
-        F.col("column_name").cast("string"),
-        F.col("data_type").cast("string"),
-        F.col("_committed_by").cast("string"),
-        F.col("_committed_at").cast("timestamp"),
-        F.col("_workspace_id").cast("string"),
-        F.col("_workspace_name").cast("string"),
-        F.col("_notebook_id").cast("string"),
-        F.col("_notebook_name").cast("string"),
-        F.col("_metadata_lakehouse_name").cast("string"),
-        F.col("_activity_id").cast("string"),
-    ).dropDuplicates(["metadata_table_key", "metadata_column_key", "schema_fingerprint"]).select(*CATALOGUE_COLUMNS)
+    return (
+        profiled_df.select(
+            F.col("metadata_table_key").cast("string"),
+            F.col("metadata_column_key").cast("string"),
+            F.col("schema_fingerprint").cast("string"),
+            F.col("environment_name").cast("string"),
+            F.col("store_type").cast("string"),
+            F.col("layer").cast("string"),
+            F.col("schema_name").cast("string"),
+            F.col("table_name").cast("string"),
+            F.col("column_name").cast("string"),
+            F.col("data_type").cast("string"),
+            F.col("_committed_by").cast("string"),
+            F.col("_committed_at").cast("timestamp"),
+            F.col("_workspace_id").cast("string"),
+            F.col("_workspace_name").cast("string"),
+            F.col("_notebook_id").cast("string"),
+            F.col("_notebook_name").cast("string"),
+            F.col("_metadata_lakehouse_name").cast("string"),
+            F.col("_activity_id").cast("string"),
+        )
+        .dropDuplicates(["metadata_table_key", "metadata_column_key", "schema_fingerprint"])
+        .select(*CATALOGUE_COLUMNS)
+    )
 
 
 def _write_lineage_participation(
@@ -430,10 +489,15 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes.") from exc
+        raise RuntimeError(
+            "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
+        ) from exc
 
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "metadata", CATALOGUE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
+        "metadata",
+        CATALOGUE_TABLE,
+        configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
     )
     target = DeltaTable.forPath(spark_session, path)
     (
@@ -456,7 +520,10 @@ def _upsert_lineage_event(*, lineage_df: Any, config: Any, env: str, spark_sessi
         raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
 
     _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "metadata", LINEAGE_TABLE, configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}
+        "metadata",
+        LINEAGE_TABLE,
+        configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
     )
     target = DeltaTable.forPath(spark_session, path)
     (
@@ -472,11 +539,9 @@ def profile_and_register_dataframe(
     df,
     *,
     profile_role,
-    environment_name,
-    store_type,
-    layer,
+    target,
     table_name,
-    schema_name=None,
+    schema=None,
     frequency_columns=None,
     frequency_top_n: int | None = None,
     frequency_max_distinct_percent: float | None = 80.0,
@@ -493,7 +558,7 @@ def profile_and_register_dataframe(
 
     The original business DataFrame is not written, sampled, re-read, or
     changed by this function. All metadata writes go to the metadata lakehouse
-    configured in ``00_env_config`` for the selected environment.
+    configured in ``00_env_config`` for the active environment.
 
     Parameters
     ----------
@@ -506,24 +571,16 @@ def profile_and_register_dataframe(
         ``target`` for an activity output. The value is stored in
         ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
         ``METADATA_DATA_CATALOGUE``.
-    environment_name : str
-        FabricOps environment context used to find the configured metadata
-        lakehouse and persist the environment identity.
-    store_type : {"lakehouse", "warehouse"}
-        Physical store type of the business asset being profiled. This
-        identifies the asset and does not redirect metadata writes to that
-        business store.
-    layer : str
-        Logical lakehouse or warehouse layer of the business asset being
-        profiled. This identifies the asset and does not redirect metadata
-        writes.
+    target : str
+        Configured FabricStore target key. Its normalized key becomes the
+        physical identity's layer and its store kind determines whether the
+        asset is a Lakehouse or Warehouse table.
     table_name : str
         Physical table name of the business asset being profiled. This
         identifies the asset and does not redirect metadata writes.
-    schema_name : str, optional
-        Optional physical schema name for the business asset. Use ``None`` for
-        lakehouse tables without a separate schema. This identifies the asset
-        and does not redirect metadata writes.
+    schema : str, optional
+        Physical schema name, or ``None`` to use the configured store default.
+        Classic or schema-disabled Lakehouses preserve ``None``.
     frequency_columns : sequence of str, optional
         Selected columns that should receive embedded frequency evidence. ``None``
         profiles all eligible non-technical scalar columns. An empty sequence
@@ -564,7 +621,7 @@ def profile_and_register_dataframe(
     Raises
     ------
     ValueError
-        If profile role, store type, or required physical identity inputs are invalid.
+        If the role, target, configured store, schema, or table identity is invalid.
     RuntimeError
         If lineage registration fails after profile and catalogue registration
         succeed.
@@ -731,6 +788,11 @@ def profile_and_register_dataframe(
     representative, persisted, or governed; those responsibilities stay with
     the upstream ingestion or notebook workflow.
 
+    The physical identity is the caller-selected configured table identity;
+    an arbitrary DataFrame does not prove that table exists. Profile a source
+    after a successful complete-table read, and profile a target only after
+    its write has succeeded and the persisted target has been confirmed.
+
     Profile and catalogue registration occur before lineage registration. If
     lineage registration fails after those writes succeed, the function raises
     a ``RuntimeError`` explaining that profile and catalogue registration
@@ -738,19 +800,22 @@ def profile_and_register_dataframe(
     separate workflow.
 
     """
-    normalized_profile_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
-    normalized_store_type = _normalize_choice(store_type, "store_type", {"lakehouse", "warehouse"})
-    normalized_environment = _require_non_empty_string(environment_name, "environment_name")
-    normalized_layer = _require_non_empty_string(layer, "layer")
-    normalized_table = _require_non_empty_string(table_name, "table_name")
-    normalized_schema = None if schema_name is None else _require_non_empty_string(schema_name, "schema_name")
+    (
+        normalized_profile_role,
+        normalized_target,
+        normalized_table,
+        normalized_schema,
+        normalized_store_type,
+        config,
+        env,
+        context,
+    ) = _resolve_physical_identity(profile_role=profile_role, target=target, schema=schema, table_name=table_name)
     selected_frequency_columns = None if frequency_columns is None else list(frequency_columns)
     if frequency_max_distinct_percent is not None and (
         not math.isfinite(frequency_max_distinct_percent) or not 0.0 <= frequency_max_distinct_percent <= 100.0
     ):
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
-    config, env, context = resolve_fabric_context(env=normalized_environment)
     profile_df = build_profile_dataframe(df)
     schema_fingerprint = _schema_fingerprint(df)
     profiled_df = _canonical_profiled_dataframe(
@@ -759,9 +824,9 @@ def profile_and_register_dataframe(
         config=config,
         env=env,
         runtime_context=context,
-        environment_name=normalized_environment,
+        environment_name=env,
         store_type=normalized_store_type,
-        layer=normalized_layer,
+        layer=normalized_target,
         schema_name=normalized_schema,
         table_name=normalized_table,
         frequency_columns=selected_frequency_columns,
@@ -780,9 +845,9 @@ def profile_and_register_dataframe(
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
     metadata_table_key = _metadata_table_key(
-        normalized_environment,
+        env,
         normalized_store_type,
-        normalized_layer,
+        normalized_target,
         normalized_schema,
         normalized_table,
     )
