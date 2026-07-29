@@ -9,12 +9,19 @@
 
 Render the standalone data-agreement intake widget.
 
+<div class="reference-docstring-intro" markdown="1">
+
+The editor caches active data stewards, keeps one in-memory draft, and
+appends one complete agreement row only after final validation.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/widgets/widget_render_data_agreement.py:36`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L36-L229">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_render_data_agreement.py#L36-L341">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -52,7 +59,7 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark` | `Any` | Yes | Fabric Spark session used for metadata reads and append-only writes. |
+| `spark` | `Any` | Yes | Fabric Spark session used for initial metadata reads, explicit steward refreshes, and the final append-only write. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. When omitted, the helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``. |
 
 ## Returns

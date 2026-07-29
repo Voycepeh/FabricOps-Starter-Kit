@@ -193,7 +193,9 @@ def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
 
     assert config.data_steward_widget["custom_fields"][0]["options"] == ["A"]
     assert "data_agreement_evidence" not in config.metadata_tables
-    assert {"recipient", "business_purpose"}.issubset(set(config.data_agreement_widget["visible_columns"]))
+    visible_columns = set(config.data_agreement_widget["visible_columns"])
+    assert {"business_purpose", "provider_steward_id", "recipient_steward_id"}.issubset(visible_columns)
+    assert "recipient" not in visible_columns
     assert not any(field.startswith("approved_usage_") for field in config.data_agreement_widget["visible_columns"])
     with pytest.raises(ValueError, match="paths must be a non-empty mapping"):
         PathConfig(paths={})
