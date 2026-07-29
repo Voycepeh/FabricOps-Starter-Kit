@@ -253,6 +253,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
             table_name="orders",
             store_type="lakehouse",
             layer="raw",
+            schema_name=None,
             guardrail_type="schema",
             rule_type="schema",
             result={"status": "failed"},
