@@ -369,7 +369,6 @@ class DataAgreementConfig:
                 "domain",
                 "provider_steward_id",
                 "recipient_steward_id",
-                "recipient",
                 "start_date",
                 "expiry_date",
                 "business_purpose",

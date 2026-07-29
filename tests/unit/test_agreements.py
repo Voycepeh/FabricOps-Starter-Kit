@@ -25,7 +25,7 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     steward_fields = agreement.get_widget_visible_fields(config, "data_steward_widget")
     agreement_fields = agreement.get_widget_visible_fields(config, "data_agreement_widget")
 
-    assert "recipient" in agreement_fields
+    assert "recipient" not in agreement_fields
     assert not any(field.startswith("approved_usage_") for field in agreement_fields)
     assert "custom_fields_json" not in steward_fields + agreement_fields
     assert "agreement_id" not in agreement_fields
@@ -69,8 +69,6 @@ def test_agreement_validation_fails_before_writes(monkeypatch):
 
     with pytest.raises(ValueError, match="steward_name"):
         steward_widget._create_or_update_data_steward(spark=object(), config=agreement_config(), env="dev", values=steward_row(steward_name=""))
-    with pytest.raises(ValueError, match="recipient"):
-        agreement_widget._create_or_update_data_agreement(spark=object(), config=agreement_config(), env="dev", values=agreement_row(recipient=""))
 
 
 def test_new_and_existing_steward_uuid_identity(monkeypatch):
@@ -217,6 +215,8 @@ class _FakeWidget:
     """Minimal ipywidgets-compatible test double."""
 
     def __init__(self, value=None, options=None, children=None, **kwargs):
+        if children is None and isinstance(value, (list, tuple)):
+            children, value = value, None
         self.value = value
         self.options = options or []
         self.children = children or []
@@ -225,6 +225,13 @@ class _FakeWidget:
         self.disabled = False
         self.description = kwargs.get("description", "")
         self.placeholder = kwargs.get("placeholder", "")
+        self.layout = kwargs.get("layout")
+        self.selected_index = 0
+        self.titles = {}
+
+    def set_title(self, index, title):
+        """Record container titles."""
+        self.titles[index] = title
 
     def observe(self, callback, names=None):
         """Record observer callbacks."""
@@ -255,6 +262,8 @@ class _FakeWidgets:
     Button = _FakeWidget
     Output = _FakeWidget
     VBox = _FakeWidget
+    HBox = _FakeWidget
+    Tab = _FakeWidget
     Textarea = _FakeWidget
     DatePicker = _FakeWidget
     Checkbox = _FakeWidget
@@ -322,6 +331,22 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["identity_context"] is not None
     assert agreement_controls["provider_steward_selector"].options
     assert agreement_controls["recipient_steward_selector"].options
+    assert "recipient" not in agreement_controls["fields"]
+    assert len(agreement_controls["steps"].children) == 3
+    assert len(agreement_controls["supporting_documents"]) == 1
+    document_container = agreement_controls["supporting_documents"][0]["container"]
+    assert [child.value for child in document_container.children if isinstance(child.value, str) and "Document" in child.value] == [
+        "<b>Document name</b>", "<b>Document link</b>"
+    ]
+    root = agreement_controls["container"]
+    documents_container = agreement_controls["supporting_documents_container"]
+    agreement_controls["supporting_documents"][0]["label"].value = "First"
+    agreement_controls["add_supporting_document_button"].click_callbacks[0](None)
+    agreement_controls["supporting_documents"][1]["label"].value = "Second"
+    agreement_controls["supporting_documents"][0]["remove"].click_callbacks[0](None)
+    assert agreement_controls["container"] is root
+    assert agreement_controls["supporting_documents_container"] is documents_container
+    assert agreement_controls["supporting_documents"][0]["label"].value == "Second"
     assert steward_controls["identity_context"] is None
     assert steward_controls["fields"]["steward_role"].options
     assert steward_controls["fields"]["steward_role"].value == "Data Owner"
@@ -365,7 +390,7 @@ def test_canonical_agreement_schema_exact_order_and_nullability():
     schema = metadata_table_schema_registry()[agreement.DATA_AGREEMENT_TABLE]
     expected = [
         "agreement_id", "agreement_version", "agreement_name", "domain",
-        "provider_steward_id", "recipient_steward_id", "recipient", "start_date",
+        "provider_steward_id", "recipient_steward_id", "start_date",
         "expiry_date", "business_purpose", "supporting_documents_json",
         "approved_usage_json", "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
     ]

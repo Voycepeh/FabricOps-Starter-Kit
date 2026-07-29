@@ -34,12 +34,16 @@ from fabricops_kit.widgets.shared import (
 
 
 def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render append-only agreement create/update maintenance using active stewards.
+    """Render a compact, three-step data-agreement editor.
+
+    The editor caches active data stewards, keeps one in-memory draft, and
+    appends one complete agreement row only after final validation.
 
     Parameters
     ----------
     spark : pyspark.sql.SparkSession
-        Fabric Spark session used for metadata reads and append-only writes.
+        Fabric Spark session used for initial metadata reads, explicit steward
+        refreshes, and the final append-only write.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context. When omitted, the
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
@@ -47,7 +51,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     Returns
     -------
     dict[str, Any]
-        Rendered controls, including read-only generated-identifier context.
+        Stable root, step, field, document, steward, and save controls.
 
     """
     config, env, _context = resolve_fabric_context(context=context)
@@ -56,9 +60,10 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     kind = "data_agreement_widget"
     widget_config = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
-    fields = get_widget_visible_fields(config, kind)
+    fields = [field for field in get_widget_visible_fields(config, kind) if field != "recipient"]
     after_save_callbacks: list[Any] = []
     row_lookup: dict[str, dict[str, Any]] = {}
+    draft: dict[str, Any] = {}
 
     def _row_id(row: dict[str, Any]) -> str:
         return str(row.get("agreement_id") or "").strip()
@@ -67,7 +72,9 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         row_lookup.clear()
         row_lookup.update({_row_id(row): row for row in rows if _row_id(row)})
 
-    existing_rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
+    existing_rows = [
+        row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)
+    ]
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
@@ -76,37 +83,50 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         label_fn=_agreement_label,
         value_fn=_row_id,
         placeholder="Search agreements...",
-        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain", "recipient"],
-        context_fields=[("agreement_name", "Agreement name"), ("agreement_id", "Agreement ID"), ("agreement_version", "Current version"), ("recipient", "Recipient")],
+        search_fields=["agreement_name", "agreement_id", "agreement_version", "domain"],
+        context_fields=[
+            ("agreement_name", "Agreement name"),
+            ("agreement_id", "Agreement ID"),
+            ("agreement_version", "Current version"),
+        ],
         empty_label="Create new agreement",
     )
     selected = selected_selector["selector"]
     identity_context = widgets.HTML(value=_agreement_identity_text(None))
+
+    active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+    active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
     form: dict[str, Any] = {}
     steward_field_selectors: dict[str, dict[str, Any]] = {}
     for field in fields:
         if field in {"provider_steward_id", "recipient_steward_id"}:
-            steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
-            steward_field_selectors[field] = render_searchable_selector(
+            selector = render_searchable_selector(
                 widgets=widgets,
-                label=FIELD_LABELS.get(field, field.replace("_", " ").title()),
-                rows=steward_rows,
+                label=FIELD_LABELS[field],
+                rows=active_steward_rows,
                 label_fn=_steward_label,
                 value_fn=lambda row: str(row.get("steward_id") or "").strip(),
-                placeholder="Search stewards...",
+                placeholder="Search active stewards...",
                 search_fields=["steward_name", "steward_role", "contact", "steward_id"],
-                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
+                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact")],
             )
-            form[field] = steward_field_selectors[field]["selector"]
+            steward_field_selectors[field] = selector
+            form[field] = selector["selector"]
         else:
             form[field] = standard_widget(field)
+
     custom = render_custom_fields(widget_config)
     usage_options = [str(option) for option in widget_config.get("approved_usage_options", [])]
-    if not usage_options or len(set(usage_options)) != len(usage_options) or any(not option.strip() for option in usage_options):
+    if (
+        not usage_options
+        or len(set(usage_options)) != len(usage_options)
+        or any(not option.strip() for option in usage_options)
+    ):
         raise ValueError("approved_usage_options must contain unique, non-empty values.")
     approved_usage_checkboxes = {
         option: widgets.Checkbox(value=False, description=option.replace("_", " ").title()) for option in usage_options
     }
+
     supporting_document_rows: list[dict[str, Any]] = []
     supporting_documents = widgets.VBox([])
 
@@ -114,11 +134,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_documents.children = tuple(row["container"] for row in supporting_document_rows)
 
     def _add_document_row(label: str = "", location: str = "") -> None:
-        label_widget = widgets.Text(value=label, description="Document label")
-        location_widget = widgets.Text(value=location, description="Document location")
-        remove = widgets.Button(description="Remove document")
+        name_label = widgets.HTML(value="<b>Document name</b>")
+        label_widget = widgets.Text(value=label, description="")
+        link_label = widgets.HTML(value="<b>Document link</b>")
+        location_widget = widgets.Text(value=location, description="")
+        remove = widgets.Button(description="Remove")
         record = {"label": label_widget, "location": location_widget, "remove": remove}
-        record["container"] = widgets.VBox([label_widget, location_widget, remove])
+        record["container"] = widgets.HBox(
+            [name_label, label_widget, link_label, location_widget, remove],
+            layout=widgets.Layout(display="flex", flex_flow="row wrap", align_items="center"),
+        )
 
         def _remove(_: Any) -> None:
             supporting_document_rows.remove(record)
@@ -128,9 +153,15 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_document_rows.append(record)
         _render_document_rows()
 
-    add_supporting_document_button = widgets.Button(description="+ Add document")
+    add_supporting_document_button = widgets.Button(description="Add document")
     add_supporting_document_button.on_click(lambda _: _add_document_row())
     _add_document_row()
+
+    status = widgets.HTML(value="", layout=widgets.Layout(min_height="2.5em", max_height="4em", overflow="auto"))
+
+    def _set_status(message: str, *, error: bool = False) -> None:
+        colour = "#a4262c" if error else "#107c10"
+        status.value = f'<span style="color:{colour}">{message}</span>'
 
     def _refresh_existing_options(selected_id: str | None = None) -> None:
         rows = [row for row in list_data_agreements(config, env, spark_session=spark, missing_ok=True) if _row_id(row)]
@@ -138,16 +169,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         selected.refresh_rows(rows, selected_id if selected_id in row_lookup else "")
 
     def _refresh_steward_dropdowns() -> None:
-        rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+        nonlocal active_steward_rows, active_steward_ids
+        active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
+        active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
         for field in ("provider_steward_id", "recipient_steward_id"):
             current = str(form[field].value or "")
-            valid_ids = {str(row.get("steward_id") or "") for row in rows}
-            form[field].refresh_rows(rows, current if current in valid_ids else "")
+            form[field].refresh_rows(active_steward_rows, current if current in active_steward_ids else "")
+        _set_status("Active data stewards refreshed.")
 
     refresh_stewards = widgets.Button(description="Refresh active stewards")
     refresh_stewards.on_click(lambda _: _refresh_steward_dropdowns())
-    save = widgets.Button(description="Save")
-    output = widgets.Output()
 
     def _apply_widget_value(widget: Any, value: Any) -> None:
         select_value = getattr(widget, "select_value", None)
@@ -161,7 +192,9 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             widget.value = to_bool(value)
         else:
             options = list(getattr(widget, "options", []) or [])
-            option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options]
+            option_values = [
+                option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in options
+            ]
             widget.value = value if not option_values or value in option_values else option_values[0]
 
     def _populate(change: dict[str, Any]) -> None:
@@ -184,49 +217,106 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         selected_usage = _deserialize_approved_usage(row.get("approved_usage_json"), usage_options) if row else []
         for option, checkbox in approved_usage_checkboxes.items():
             checkbox.value = option in selected_usage
-        identity_context.value = _agreement_identity_text(row if row else None)
+        identity_context.value = _agreement_identity_text(row or None)
+        draft.clear()
+        draft.update(row)
 
     selected.observe(_populate, names="value")
     callbacks = getattr(selected, "callbacks", None)
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
+    save = widgets.Button(description="Save Agreement")
+
     def _save(_: Any) -> None:
         save.disabled = True
-        clear = getattr(output, "clear_output", None)
-        if clear is not None:
-            clear(wait=True)
-        with output:
-            try:
-                values = {key: to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value for key, widget in form.items()}
-                values["supporting_documents"] = [
-                    {"label": row["label"].value, "location": row["location"].value} for row in supporting_document_rows
-                ]
-                values["approved_usage"] = [option for option, checkbox in approved_usage_checkboxes.items() if checkbox.value]
-                extras = collect_custom_fields(widget_config, custom)
-                selected_row = row_lookup.get(selected.value) if selected.value else None
-                row = _create_or_update_data_agreement(spark=spark, config=config, env=env, values=values, selected_agreement=selected_row, custom_fields=extras)
-                if row.get("_fabricops_no_change"):
-                    print(row.get("_fabricops_message", "No changes detected. Nothing was appended."))
-                else:
-                    print(f"Saved data agreement: {row.get('agreement_name', '')} ({row['agreement_id']} v{row['agreement_version']})")
-                    for callback in after_save_callbacks:
-                        callback(row)
-                _refresh_existing_options(row["agreement_id"])
-                identity_context.value = _agreement_identity_text(row)
-            except Exception as exc:
-                print(f"Error: {exc}")
-            finally:
-                save.disabled = False
+        try:
+            values = {
+                key: to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value
+                for key, widget in form.items()
+            }
+            values["supporting_documents"] = [
+                {"label": row["label"].value, "location": row["location"].value} for row in supporting_document_rows
+            ]
+            values["approved_usage"] = [
+                option for option, checkbox in approved_usage_checkboxes.items() if checkbox.value
+            ]
+            draft.clear()
+            draft.update(values)
+            row = _create_or_update_data_agreement(
+                spark=spark,
+                config=config,
+                env=env,
+                values=draft,
+                selected_agreement=row_lookup.get(selected.value) if selected.value else None,
+                custom_fields=collect_custom_fields(widget_config, custom),
+                active_steward_ids=active_steward_ids,
+            )
+            if row.get("_fabricops_no_change"):
+                _set_status(str(row.get("_fabricops_message", "No changes detected.")))
+            else:
+                _set_status(
+                    f"Saved {row.get('agreement_name', '')} ({row['agreement_id']} v{row['agreement_version']})."
+                )
+                for callback in after_save_callbacks:
+                    callback(row)
+            row_lookup[row["agreement_id"]] = row
+            selected.refresh_rows(list(row_lookup.values()), row["agreement_id"])
+            identity_context.value = _agreement_identity_text(row)
+        except Exception as exc:
+            _set_status(f"Error: {exc}", error=True)
+        finally:
+            save.disabled = False
 
     save.on_click(_save)
-    controls = [selected_selector["container"], identity_context]
-    for field in fields:
-        controls.append(steward_field_selectors[field]["container"] if field in steward_field_selectors else form[field])
-    controls.extend([supporting_documents, add_supporting_document_button, *approved_usage_checkboxes.values(), *custom.values(), refresh_stewards])
-    container = widgets.VBox([*controls, save, output])
+    details_fields = ["agreement_name", "domain", "start_date", "expiry_date", "business_purpose"]
+    details = [form[field] for field in details_fields if field in form]
+    stewards = [
+        steward_field_selectors[field]["container"] for field in ("provider_steward_id", "recipient_steward_id")
+    ]
+    supporting = [
+        supporting_documents,
+        add_supporting_document_button,
+        *approved_usage_checkboxes.values(),
+        *custom.values(),
+        save,
+    ]
+    steps = widgets.Tab(
+        children=(widgets.VBox(details), widgets.VBox([*stewards, refresh_stewards]), widgets.VBox(supporting))
+    )
+    for index, title in enumerate(("1. Agreement details", "2. Data stewards", "3. Supporting information")):
+        steps.set_title(index, title)
+    back = widgets.Button(description="Back")
+    continue_button = widgets.Button(description="Continue")
+    back.on_click(lambda _: setattr(steps, "selected_index", max(0, steps.selected_index - 1)))
+    continue_button.on_click(lambda _: setattr(steps, "selected_index", min(2, steps.selected_index + 1)))
+    navigation = widgets.HBox([back, continue_button])
+    container = widgets.VBox([selected_selector["container"], identity_context, steps, navigation, status])
     ip.display(container)
-    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": identity_context, "fields": form, "provider_steward_selector": form["provider_steward_id"], "recipient_steward_selector": form["recipient_steward_id"], "supporting_documents": supporting_document_rows, "add_supporting_document_button": add_supporting_document_button, "approved_usage_checkboxes": approved_usage_checkboxes, "custom_fields": custom, "refresh_stewards_button": refresh_stewards, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": _refresh_steward_dropdowns, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
+    return {
+        "container": container,
+        "steps": steps,
+        "draft": draft,
+        "existing_record": selected,
+        "existing_record_search": selected_selector["search"],
+        "existing_record_context": selected_selector["context"],
+        "existing_records_by_id": row_lookup,
+        "identity_context": identity_context,
+        "fields": form,
+        "provider_steward_selector": form["provider_steward_id"],
+        "recipient_steward_selector": form["recipient_steward_id"],
+        "supporting_documents": supporting_document_rows,
+        "supporting_documents_container": supporting_documents,
+        "add_supporting_document_button": add_supporting_document_button,
+        "approved_usage_checkboxes": approved_usage_checkboxes,
+        "custom_fields": custom,
+        "refresh_stewards_button": refresh_stewards,
+        "refresh_existing_options": _refresh_existing_options,
+        "refresh_steward_options": _refresh_steward_dropdowns,
+        "after_save_callbacks": after_save_callbacks,
+        "save_button": save,
+        "status": status,
+    }
 
 
 def _parse_agreement_version(version: Any) -> tuple[int, int, int]:
@@ -300,7 +390,9 @@ def _business_agreement_snapshot(row: dict[str, Any]) -> dict[str, Any]:
         _deserialize_supporting_documents(row.get("supporting_documents_json", "[]"))
     )
     snapshot["approved_usage_json"] = str(row.get("approved_usage_json") or "")
-    snapshot["custom_fields_json"] = serialize_custom_fields(deserialize_custom_fields(row.get("custom_fields_json", "")))
+    snapshot["custom_fields_json"] = serialize_custom_fields(
+        deserialize_custom_fields(row.get("custom_fields_json", ""))
+    )
     return snapshot
 
 
@@ -328,13 +420,29 @@ def _agreement_label(row: dict[str, Any]) -> str:
     return f"{name} ({row_id} / v{version})"
 
 
-def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, values: dict[str, Any], selected_agreement: dict[str, Any] | None = None, custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
+def _create_or_update_data_agreement(
+    *,
+    spark: Any,
+    config: Any,
+    env: str,
+    values: dict[str, Any],
+    selected_agreement: dict[str, Any] | None = None,
+    custom_fields: dict[str, Any] | None = None,
+    committed_by: str | None = None,
+    committed_at: str | None = None,
+    runtime_context: dict[str, Any] | None = None,
+    active_steward_ids: set[str] | None = None,
+) -> dict[str, Any]:
     row = {field: values.get(field, "") for field in DATA_AGREEMENT_VISIBLE_FIELDS}
     existing_rows = list_all_data_agreement_rows(config, env, spark_session=spark, missing_ok=True)
     selected_id = str((selected_agreement or {}).get("agreement_id") or "").strip()
     if selected_id:
         same_agreement = [item for item in existing_rows if str(item.get("agreement_id") or "").strip() == selected_id]
-        latest = max(same_agreement, key=lambda item: _parse_agreement_version(item.get("agreement_version")), default=selected_agreement)
+        latest = max(
+            same_agreement,
+            key=lambda item: _parse_agreement_version(item.get("agreement_version")),
+            default=selected_agreement,
+        )
         row["agreement_id"] = selected_id
         row["agreement_version"] = _next_minor_version(latest.get("agreement_version"))
     else:
@@ -343,9 +451,27 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
         row["agreement_version"] = "1.0.0"
     uuid.UUID(row["agreement_id"])
     row["supporting_documents_json"] = _serialize_supporting_documents(values.get("supporting_documents", []))
-    usage_options = [str(option) for option in (dict(config_value(config, "data_agreement_widget", {}) or {}).get("approved_usage_options", WIDGET_CONFIG_DEFAULTS["data_agreement_widget"]["approved_usage_options"]) or [])]
+    usage_options = [
+        str(option)
+        for option in (
+            dict(config_value(config, "data_agreement_widget", {}) or {}).get(
+                "approved_usage_options", WIDGET_CONFIG_DEFAULTS["data_agreement_widget"]["approved_usage_options"]
+            )
+            or []
+        )
+    ]
     row["approved_usage_json"] = _serialize_approved_usage(values.get("approved_usage", []), usage_options)
-    required = ["agreement_id", "agreement_version", "agreement_name", "domain", "provider_steward_id", "recipient_steward_id", "recipient", "start_date", "expiry_date", "business_purpose"]
+    required = [
+        "agreement_id",
+        "agreement_version",
+        "agreement_name",
+        "domain",
+        "provider_steward_id",
+        "recipient_steward_id",
+        "start_date",
+        "expiry_date",
+        "business_purpose",
+    ]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
         raise ValueError("Missing required agreement field(s): " + ", ".join(missing))
@@ -353,7 +479,10 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     row["expiry_date"] = parse_iso_date(row.get("expiry_date"), "expiry_date", required=True)
     if row["expiry_date"] < row["start_date"]:
         raise ValueError("expiry_date must be on or after start_date.")
-    active_steward_ids = {str(item["steward_id"]) for item in list_data_stewards(config, env, spark_session=spark, active_only=True)}
+    if active_steward_ids is None:
+        active_steward_ids = {
+            str(item["steward_id"]) for item in list_data_stewards(config, env, spark_session=spark, active_only=True)
+        }
     provider_id = str(row["provider_steward_id"])
     recipient_id = str(row["recipient_steward_id"])
     if provider_id == recipient_id:
@@ -365,10 +494,34 @@ def _create_or_update_data_agreement(*, spark: Any, config: Any, env: str, value
     row["custom_fields_json"] = serialize_custom_fields(custom_fields)
     if latest is not None:
         if _business_agreement_snapshot(row) == _business_agreement_snapshot(latest):
-            return {**latest, "_fabricops_no_change": True, "_fabricops_message": "No changes detected. Nothing was appended."}
-    if any(str(item.get("agreement_id") or "").strip() == row["agreement_id"] and str(item.get("agreement_version") or "").strip() == row["agreement_version"] for item in existing_rows):
-        raise ValueError(f"Agreement {row['agreement_id']} version {row['agreement_version']} already exists. Select the existing agreement to create the next version, or create a new agreement.")
-    row.update(build_runtime_audit_fields(config=config, env=env, committed_by=committed_by, committed_at=committed_at, runtime_context=runtime_context))
+            return {
+                **latest,
+                "_fabricops_no_change": True,
+                "_fabricops_message": "No changes detected. Nothing was appended.",
+            }
+    if any(
+        str(item.get("agreement_id") or "").strip() == row["agreement_id"]
+        and str(item.get("agreement_version") or "").strip() == row["agreement_version"]
+        for item in existing_rows
+    ):
+        raise ValueError(
+            f"Agreement {row['agreement_id']} version {row['agreement_version']} already exists. Select the existing agreement to create the next version, or create a new agreement."
+        )
+    row.update(
+        build_runtime_audit_fields(
+            config=config,
+            env=env,
+            committed_by=committed_by,
+            committed_at=committed_at,
+            runtime_context=runtime_context,
+        )
+    )
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
-    write_widget_metadata_row(spark=spark, config=config, env=env, table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)), row=row)
+    write_widget_metadata_row(
+        spark=spark,
+        config=config,
+        env=env,
+        table=str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)),
+        row=row,
+    )
     return row

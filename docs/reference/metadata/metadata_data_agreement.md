@@ -12,7 +12,6 @@
 | `domain` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | Business domain recorded for the metadata row. |
 | `provider_steward_id` | `string` | No traced writer in current agreement workflow | Steward identifier recorded for the provider side of the agreement. |
 | `recipient_steward_id` | `string` | No traced writer in current agreement workflow | Steward identifier recorded for the recipient side of the agreement. |
-| `recipient` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | Recipient recorded for the agreement or access context. |
 | `start_date` | `date` | `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement`, `fabricops_kit.widgets.shared.parse_iso_date` | Date stored for `start_date`. |
 | `expiry_date` | `date` | `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement`, `fabricops_kit.widgets.shared.parse_iso_date` | Date stored for `expiry_date`. |
 | `business_purpose` | `string` | [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md), `fabricops_kit.widgets.widget_render_data_agreement._create_or_update_data_agreement` | Business purpose recorded for the agreement or access request. |
