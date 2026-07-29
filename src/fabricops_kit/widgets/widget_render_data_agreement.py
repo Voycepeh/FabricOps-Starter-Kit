@@ -60,7 +60,12 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     kind = "data_agreement_widget"
     widget_config = {**WIDGET_CONFIG_DEFAULTS[kind], **dict(config_value(config, kind, {}) or {})}
-    fields = [field for field in get_widget_visible_fields(config, kind) if field != "recipient"]
+    steward_fields = ("provider_steward_id", "recipient_steward_id")
+    fields = [
+        field
+        for field in get_widget_visible_fields(config, kind)
+        if field != "recipient" and field not in steward_fields
+    ]
     after_save_callbacks: list[Any] = []
     row_lookup: dict[str, dict[str, Any]] = {}
     draft: dict[str, Any] = {}
@@ -96,24 +101,21 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
     active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
-    form: dict[str, Any] = {}
+    form = {field: standard_widget(field) for field in fields}
     steward_field_selectors: dict[str, dict[str, Any]] = {}
-    for field in fields:
-        if field in {"provider_steward_id", "recipient_steward_id"}:
-            selector = render_searchable_selector(
-                widgets=widgets,
-                label=FIELD_LABELS[field],
-                rows=active_steward_rows,
-                label_fn=_steward_label,
-                value_fn=lambda row: str(row.get("steward_id") or "").strip(),
-                placeholder="Search active stewards...",
-                search_fields=["steward_name", "steward_role", "contact", "steward_id"],
-                context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact")],
-            )
-            steward_field_selectors[field] = selector
-            form[field] = selector["selector"]
-        else:
-            form[field] = standard_widget(field)
+    for field in steward_fields:
+        selector = render_searchable_selector(
+            widgets=widgets,
+            label=FIELD_LABELS[field],
+            rows=active_steward_rows,
+            label_fn=_steward_label,
+            value_fn=lambda row: str(row.get("steward_id") or "").strip(),
+            placeholder="Search active stewards...",
+            search_fields=["steward_name", "steward_role", "contact", "steward_id"],
+            context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact")],
+        )
+        steward_field_selectors[field] = selector
+        form[field] = selector["selector"]
 
     custom = render_custom_fields(widget_config)
     usage_options = [str(option) for option in widget_config.get("approved_usage_options", [])]
@@ -172,7 +174,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         nonlocal active_steward_rows, active_steward_ids
         active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
         active_steward_ids = {str(row.get("steward_id") or "").strip() for row in active_steward_rows}
-        for field in ("provider_steward_id", "recipient_steward_id"):
+        for field in steward_fields:
             current = str(form[field].value or "")
             form[field].refresh_rows(active_steward_rows, current if current in active_steward_ids else "")
         _set_status("Active data stewards refreshed.")
@@ -271,9 +273,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     save.on_click(_save)
     details_fields = ["agreement_name", "domain", "start_date", "expiry_date", "business_purpose"]
     details = [form[field] for field in details_fields if field in form]
-    stewards = [
-        steward_field_selectors[field]["container"] for field in ("provider_steward_id", "recipient_steward_id")
-    ]
+    stewards = [steward_field_selectors[field]["container"] for field in steward_fields]
     supporting = [
         supporting_documents,
         add_supporting_document_button,

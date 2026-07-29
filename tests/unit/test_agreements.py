@@ -352,6 +352,35 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert steward_controls["fields"]["steward_role"].value == "Data Owner"
 
 
+def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
+    """Render and require both steward roles when visible columns omit them."""
+    config = agreement_config()
+    config.data_agreement_config.data_agreement_widget["visible_columns"] = [
+        "agreement_name", "domain", "start_date", "expiry_date", "business_purpose"
+    ]
+    monkeypatch.setattr(agreement_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
+    monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [])
+    monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [
+        steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")
+    ])
+    monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *args, **kwargs: [])
+    monkeypatch.setattr(agreement_widget, "write_widget_metadata_row", lambda **kwargs: pytest.fail("must not write"))
+
+    controls = agreement_widget.widget_render_data_agreement(spark=object())
+
+    assert controls["provider_steward_selector"].options
+    assert controls["recipient_steward_selector"].options
+    controls["provider_steward_selector"].value = ""
+    controls["recipient_steward_selector"].value = ""
+    controls["approved_usage_checkboxes"]["internal"].value = True
+    controls["save_button"].click_callbacks[0](None)
+    assert "provider_steward_id" in controls["status"].value
+    assert "recipient_steward_id" in controls["status"].value
+
+
 def test_widget_architecture_cleanup_contracts_hold():
     """Verify deleted workflow containers and private shared imports stay removed."""
     from pathlib import Path
