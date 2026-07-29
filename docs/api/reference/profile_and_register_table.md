@@ -27,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:540`
+`fabricops_kit/pipeline/profile_and_register_table.py:525`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L540-L878">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L525-L865">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -241,7 +241,9 @@ metadata_column_key + schema_fingerprint``:
 - ``metadata_column_key``: stable logical column identity shared across
   environments.
 - ``schema_fingerprint``: deterministic fingerprint of ordered schema
-  content, independent of deployment environment.
+  content, independent of deployment environment. The current schema
+  contract includes ordered column names and data types; nullability is
+  not currently part of the fingerprint.
 - ``environment_name``: environment-specific catalogue observation.
 
 One logical Data Contract link can therefore govern the same dataset in

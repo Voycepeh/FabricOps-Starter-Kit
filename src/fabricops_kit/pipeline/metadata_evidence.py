@@ -20,6 +20,9 @@ def _write_guardrail_result_row(
     run_id: str,
     dataset_name: str,
     table_name: str,
+    store_type: str,
+    layer: str,
+    schema_name: str | None = None,
     guardrail_type: str,
     rule_type: str,
     result: dict[str, Any],
@@ -36,7 +39,10 @@ def _write_guardrail_result_row(
         "result_id": str(uuid.uuid4()),
         "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
-        "metadata_table_key": str(result.get("metadata_table_key") or _build_metadata_table_key(env, dataset_name, table_name)),
+        "metadata_table_key": str(
+            result.get("metadata_table_key")
+            or _build_metadata_table_key(store_type, layer, schema_name, table_name)
+        ),
         "environment_name": env,
         "dataset_name": dataset_name,
         "table_name": table_name,

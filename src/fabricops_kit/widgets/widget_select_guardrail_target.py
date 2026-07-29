@@ -68,7 +68,10 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
         table_name = str(row.get("table_name") or "")
         if not table_name:
             continue
-        metadata_table_key = str(row.get("metadata_table_key") or _governance_review._build_metadata_table_key(environment_name, dataset_name, table_name))
+        metadata_table_key = str(row.get("metadata_table_key") or _governance_review._build_metadata_table_key(
+            row.get("store_type", "lakehouse"), row.get("layer", row.get("fabric_store_target", "")),
+            row.get("schema_name"), table_name,
+        ))
         key = (environment_name, dataset_name, table_name, metadata_table_key)
         label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
         targets.setdefault(label, key)

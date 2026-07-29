@@ -8,6 +8,7 @@ import math
 from typing import Any, Sequence
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.metadata_keys import _build_metadata_column_key, _build_metadata_table_key
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
@@ -40,24 +41,6 @@ def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
         choices = ", ".join(sorted(allowed))
         raise ValueError(f"{name} must be one of: {choices}.")
     return normalized
-
-
-def _stable_catalogue_key(*parts: Any) -> str:
-    """Return a deterministic key that preserves nulls and delimiter values."""
-    payload = [
-        {"is_null": part is None, "value": None if part is None else str(part).strip().lower()} for part in parts
-    ]
-    return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
-
-
-def _metadata_table_key(store_type: str, layer: str, schema_name: str | None, table_name: str) -> str:
-    """Return the environment-independent logical identity for a table."""
-    return _stable_catalogue_key(store_type, layer, schema_name, table_name)
-
-
-def _metadata_column_key(metadata_table_key: str, column_name: str) -> str:
-    """Return the environment-independent logical identity for a column."""
-    return _stable_catalogue_key(metadata_table_key, column_name)
 
 
 def _schema_fingerprint(df: Any) -> str:
@@ -332,8 +315,10 @@ def _canonical_profiled_dataframe(
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
-    metadata_table_key = _metadata_table_key(store_type, layer, schema_name, table_name)
-    column_key_udf = F.udf(lambda column_name: _metadata_column_key(metadata_table_key, column_name), T.StringType())
+    metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
+    column_key_udf = F.udf(
+        lambda column_name: _build_metadata_column_key(metadata_table_key, column_name), T.StringType()
+    )
     frequency_df = _frequency_json_dataframe(
         source_df,
         frequency_profile_df,
@@ -756,7 +741,9 @@ def profile_and_register_table(
     - ``metadata_column_key``: stable logical column identity shared across
       environments.
     - ``schema_fingerprint``: deterministic fingerprint of ordered schema
-      content, independent of deployment environment.
+      content, independent of deployment environment. The current schema
+      contract includes ordered column names and data types; nullability is
+      not currently part of the fingerprint.
     - ``environment_name``: environment-specific catalogue observation.
 
     One logical Data Contract link can therefore govern the same dataset in
@@ -856,7 +843,7 @@ def profile_and_register_table(
     )
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
-    metadata_table_key = _metadata_table_key(
+    metadata_table_key = _build_metadata_table_key(
         normalized_store_type, normalized_target, normalized_schema, normalized_table
     )
     try:
