@@ -269,7 +269,7 @@ def get_data_contract_views(
     spark_session=None,
     context=None,
 ) -> dict[str, Any]:
-    """Return the ten raw metadata traces related to a registered dataset."""
+    """Return the canonical raw metadata traces related to a registered dataset."""
     from pyspark.sql import functions as F
 
     def read(name: str):

@@ -30,7 +30,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:129`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L442">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L444">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -155,10 +155,10 @@ Detailed table contents:
   ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
   ``start_date``, ``expiry_date``, ``business_purpose``,
   ``custom_fields_json``, and the standard audit fields.
-- ``METADATA_DATA_CONTRACT`` stores ``contract_id``, ``agreement_id``,
-  ``metadata_table_key``, ``schema_fingerprint``, ``contract_version``,
-  ``contract_status``, ``effective_from``, ``effective_to``,
-  ``contract_payload_json``, and the standard audit fields.
+- ``METADATA_DATA_CONTRACT`` stores ``agreement_id``,
+  ``metadata_table_key``, ``schema_fingerprint``, and the standard audit
+  fields. ``_activity_id`` groups one saved inventory and ``_committed_at``
+  orders inventory saves.
 - ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
   ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
   ``store_type``, ``layer``, ``schema_name``, ``table_name``,

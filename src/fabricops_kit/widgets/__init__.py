@@ -2,6 +2,7 @@
 
 __all__ = [
     "widget_view_data_contract",
+    "widget_register_data_contract",
     "widget_author_dq_rules",
     "widget_author_schema_freshness_profile_rules",
     "widget_enrich_table_metadata",

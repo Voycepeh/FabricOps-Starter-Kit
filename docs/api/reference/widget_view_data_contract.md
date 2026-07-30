@@ -79,11 +79,11 @@ def widget_view_data_contract(
 
 ## Returns
 
-Mutable widget state whose get_views callable returns the selection and ten raw, filtered canonical metadata DataFrames.
+Mutable widget state whose get_views callable returns the selection and raw, filtered canonical metadata DataFrames.
 
 ### Return interpretation
 
-The returned state updates as selectors change; call state["get_views"] to retrieve selection details and the ten raw metadata-history DataFrames ordered newest commit first.
+The returned state updates as selectors change; call state["get_views"] to retrieve selection details and raw metadata-history DataFrames ordered newest commit first.
 
 ## Raises / Errors
 

@@ -1160,6 +1160,9 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert catalogue["schema_fingerprint"] == "string"
     assert "fabric_store_target" not in catalogue
     assert contract["agreement_id"] == "string"
+    assert "contract_snapshot_id" not in contract
+    assert "snapshot_saved_at" not in contract
+    assert "contract_status" not in contract
     assert "null_percent" not in catalogue
     assert profiled["null_percent"] == "double"
     assert docs_catalogue["_committed_at"] == "timestamp"
