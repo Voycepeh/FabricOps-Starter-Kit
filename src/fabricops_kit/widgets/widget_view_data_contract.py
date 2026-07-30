@@ -103,7 +103,8 @@ def widget_view_data_contract(
     ----------
     agreement : dict, optional
         Agreement record or agreement-widget state. Linked data contracts are
-        offered first when canonical contract links already exist.
+        offered first when canonical contract links already exist, and the
+        resolved agreement ID constrains contract, agreement, and steward traces.
     metadata_id : str, optional
         Canonical ``metadata_table_key`` to select initially.
     metadata_ids : mapping or sequence of str, optional
@@ -134,9 +135,11 @@ def widget_view_data_contract(
     -----
     The environment is fixed to the active FabricOps context. Dataset identity
     is the stable ``metadata_table_key``. All metadata history for that identity
-    is retained. The selected environment is applied only to canonical tables
-    that contain ``environment_name``. After changing a widget selection, rerun
-    the notebook cell that displays ``get_views()`` results.
+    is retained within the supplied agreement scope. Without an agreement scope,
+    every agreement linked to the dataset and all of their stewards are returned.
+    The selected environment is applied only to canonical tables that contain
+    ``environment_name``. After changing a widget selection, rerun the notebook
+    cell that displays ``get_views()`` results.
 
     Examples
     --------
@@ -160,7 +163,7 @@ def widget_view_data_contract(
             "selection_mode": "restricted" if restricted_mode else ("direct" if metadata_id else "discovery"),
             "allowed_metadata_ids": [metadata_key for _label, metadata_key in restricted_items],
         }
-        empty_state["get_views"] = lambda: {key: value for key, value in empty_state.items() if key != "get_views"}
+        empty_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
         return empty_state
 
     config, env, resolved = resolve_fabric_context(context=context)
@@ -185,9 +188,7 @@ def widget_view_data_contract(
                 "allowed_metadata_ids": [],
                 "pipeline_scope_source": "unavailable",
             }
-            unavailable_state["get_views"] = lambda: {
-                key: value for key, value in unavailable_state.items() if key != "get_views"
-            }
+            unavailable_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
             return unavailable_state
         restricted_items, pipeline_scope_source = _pipeline_scope_items(lineage_items, restricted_items)
         if pipeline_scope_source == "empty":
@@ -203,9 +204,7 @@ def widget_view_data_contract(
                 "allowed_metadata_ids": [],
                 "pipeline_scope_source": "empty",
             }
-            empty_lineage_state["get_views"] = lambda: {
-                key: value for key, value in empty_lineage_state.items() if key != "get_views"
-            }
+            empty_lineage_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
             return empty_lineage_state
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
@@ -302,7 +301,8 @@ def widget_view_data_contract(
         for field in ("environment_name", "store_type", "layer", "schema_name", "table_name"):
             state[field] = selected_location.get(field)
         views = get_data_contract_views(
-            metadata_id, environment_name=state["environment_name"], target=target, schema=schema,
+            metadata_id, agreement_id=agreement_id or None,
+            environment_name=state["environment_name"], target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
         state["views"] = views

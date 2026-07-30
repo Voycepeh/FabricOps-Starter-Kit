@@ -119,6 +119,9 @@ def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, 
     assert state["selection_mode"] == "restricted"
     assert state["allowed_metadata_ids"] == ["dataset-1"]
     assert "Install the widget extra" in state["error"]
+    assert state["get_views"]() == {
+        "selection": None, "tables": {}, "error": "Install the widget extra.",
+    }
     assert "Data contract viewer unavailable" in capsys.readouterr().out
 
 
@@ -144,6 +147,7 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
         "METADATA_DATA_CONTRACT": frame(
             [("contract-old", "agreement-1", "dataset", old),
              ("contract-new", "agreement-1", "dataset", new),
+             ("contract-second-agreement", "agreement-2", "dataset", new),
              ("contract-other", "agreement-2", "other", new)],
             "contract_id string, agreement_id string, metadata_table_key string, _committed_at timestamp",
         ),
@@ -173,7 +177,10 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
         lambda name, **_kwargs: tables[name],
     )
 
-    views = get_data_contract_views("dataset", environment_name="dev", spark_session=spark_session)
+    views = get_data_contract_views(
+        "dataset", agreement_id="agreement-1", environment_name="dev",
+        spark_session=spark_session,
+    )
 
     assert list(views) == ["selection", "tables", "error"]
     assert list(views["tables"]) == list(tables)
@@ -198,6 +205,18 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
     for table_name in environment_tables:
         assert [row.marker for row in views["tables"][table_name].collect()] == ["new", "old"]
     assert [row.marker for row in views["tables"]["METADATA_ENRICHMENT"].collect()] == ["new", "old"]
+
+    unscoped = get_data_contract_views("dataset", environment_name="dev", spark_session=spark_session)
+    assert unscoped["selection"]["agreement_id"] is None
+    assert {row.agreement_id for row in unscoped["tables"]["METADATA_DATA_AGREEMENT"].collect()} == {
+        "agreement-1", "agreement-2",
+    }
+    assert {row.steward_id for row in unscoped["tables"]["METADATA_DATA_STEWARD"].collect()} == {
+        "provider", "recipient", "other",
+    }
+    assert {row.contract_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
+        "contract-old", "contract-new", "contract-second-agreement",
+    }
 
 def test_current_notebook_scope_uses_historical_unique_lineage_roles(monkeypatch, spark_session):
     """Pipeline scope combines roles and excludes other notebook identities."""
@@ -255,6 +274,8 @@ def test_widget_returns_non_breaking_state_when_lineage_context_is_unavailable(m
     assert state["allowed_metadata_ids"] == []
     assert "Current-notebook lineage could not be resolved" in state["error"]
     assert state["get_views"]()["error"] == state["error"]
+    assert state["get_views"]()["selection"] is None
+    assert state["get_views"]()["tables"] == {}
     assert "Ensure 00_env_config has run" in capsys.readouterr().out
 
 
@@ -287,4 +308,6 @@ def test_widget_returns_non_breaking_state_when_notebook_has_no_lineage(monkeypa
     assert state["selection_mode"] == "restricted"
     assert "No lineage records were found for this notebook" in state["error"]
     assert state["get_views"]()["error"] == state["error"]
+    assert state["get_views"]()["selection"] is None
+    assert state["get_views"]()["tables"] == {}
     assert "Run the profiling and lineage-writing sections first" in capsys.readouterr().out

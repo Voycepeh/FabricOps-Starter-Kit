@@ -1688,7 +1688,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Mutable widget state whose get_views callable returns the selection and ten raw, filtered canonical metadata DataFrames.',
   'raises': 'Raises Spark or metadata routing errors when metadata cannot be read. A missing optional widget dependency returns a non-breaking error state.',
   'related_functions': ['read_lakehouse_table', 'profile_dataframe'],
-  'expanded_purpose': 'Resolves one metadata_table_key through discovery, direct, agreement-linked, explicit restricted, or historical current-notebook lineage scope; resolves its agreement and steward identifiers; and returns all ten canonical metadata tables separately without presentation joins.',
+  'expanded_purpose': 'Resolves one metadata_table_key through discovery, direct, agreement-linked, explicit restricted, or historical current-notebook lineage scope; preserves an explicit agreement scope or includes every linked agreement and steward when none is supplied; and returns all ten canonical metadata tables separately without presentation joins.',
   'when_to_use': 'Use near the end of 01_agreement, 02_pipeline, and 03_review for role-specific validation, or in 99_explore for unrestricted browsing.',
   'do_not_use_when': 'Do not use for writing metadata, approving rules, or enforcing guardrails.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'notebook template'],

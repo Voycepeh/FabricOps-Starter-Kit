@@ -67,7 +67,7 @@ def widget_view_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. Linked data contracts are offered first when canonical contract links already exist. |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. Linked data contracts are offered first when canonical contract links already exist, and the resolved agreement ID constrains contract, agreement, and steward traces. |
 | `metadata_id` | `str \| None` | No | Canonical ``metadata_table_key`` to select initially. |
 | `metadata_ids` | `Mapping[str, str] \| Sequence[str] \| None` | No | Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``. When ``pipeline_scope`` is also supplied, these IDs are used only if the current notebook has no matching lineage history. |
 | `pipeline_scope` | `str \| None` | No | Restrict discovery to historical metadata IDs recorded in Data Lineage for the active environment, workspace, and notebook. |
@@ -100,9 +100,11 @@ Raises Spark or metadata routing errors when metadata cannot be read. A missing 
 
 The environment is fixed to the active FabricOps context. Dataset identity
 is the stable ``metadata_table_key``. All metadata history for that identity
-is retained. The selected environment is applied only to canonical tables
-that contain ``environment_name``. After changing a widget selection, rerun
-the notebook cell that displays ``get_views()`` results.
+is retained within the supplied agreement scope. Without an agreement scope,
+every agreement linked to the dataset and all of their stewards are returned.
+The selected environment is applied only to canonical tables that contain
+``environment_name``. After changing a widget selection, rerun the notebook
+cell that displays ``get_views()`` results.
 
 </div>
 

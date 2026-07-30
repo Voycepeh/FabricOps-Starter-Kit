@@ -262,6 +262,7 @@ def get_current_notebook_lineage_scope(
 def get_data_contract_views(
     metadata_table_key: str,
     *,
+    agreement_id: str | None = None,
     environment_name: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
@@ -277,18 +278,25 @@ def get_data_contract_views(
         )
 
     raw_tables = {name: read(name) for name in CANONICAL_METADATA_TABLES}
-    contract = raw_tables["METADATA_DATA_CONTRACT"].filter(
+    contracts = raw_tables["METADATA_DATA_CONTRACT"].filter(
         F.col("metadata_table_key") == metadata_table_key
     )
-    contract_row = contract.orderBy(F.col("_committed_at").desc_nulls_last()).first()
-    agreement_id = contract_row["agreement_id"] if contract_row else None
+    if agreement_id:
+        contracts = contracts.filter(F.col("agreement_id") == agreement_id)
+        agreement_ids = [agreement_id]
+    else:
+        agreement_ids = [
+            row["agreement_id"]
+            for row in contracts.select("agreement_id").distinct().collect()
+            if row["agreement_id"]
+        ]
 
     agreement = raw_tables["METADATA_DATA_AGREEMENT"]
-    agreement = agreement.filter(F.col("agreement_id") == agreement_id) if agreement_id else agreement.limit(0)
-    agreement_row = agreement.orderBy(F.col("_committed_at").desc_nulls_last()).first()
-    provider_steward_id = agreement_row["provider_steward_id"] if agreement_row else None
-    recipient_steward_id = agreement_row["recipient_steward_id"] if agreement_row else None
-    steward_ids = [value for value in (provider_steward_id, recipient_steward_id) if value]
+    agreement = agreement.filter(F.col("agreement_id").isin(agreement_ids)) if agreement_ids else agreement.limit(0)
+    agreement_rows = agreement.select("provider_steward_id", "recipient_steward_id").distinct().collect()
+    provider_steward_ids = [row["provider_steward_id"] for row in agreement_rows if row["provider_steward_id"]]
+    recipient_steward_ids = [row["recipient_steward_id"] for row in agreement_rows if row["recipient_steward_id"]]
+    steward_ids = list(dict.fromkeys([*provider_steward_ids, *recipient_steward_ids]))
 
     tables: dict[str, Any] = {}
     for name, frame in raw_tables.items():
@@ -297,7 +305,7 @@ def get_data_contract_views(
         elif name == "METADATA_DATA_AGREEMENT":
             frame = agreement
         elif name == "METADATA_DATA_CONTRACT":
-            frame = contract
+            frame = contracts
         else:
             frame = frame.filter(F.col("metadata_table_key") == metadata_table_key)
         if environment_name and "environment_name" in frame.columns:
@@ -309,8 +317,8 @@ def get_data_contract_views(
             "environment_name": environment_name,
             "metadata_table_key": metadata_table_key,
             "agreement_id": agreement_id,
-            "provider_steward_id": provider_steward_id,
-            "recipient_steward_id": recipient_steward_id,
+            "provider_steward_id": provider_steward_ids[0] if len(provider_steward_ids) == 1 else None,
+            "recipient_steward_id": recipient_steward_ids[0] if len(recipient_steward_ids) == 1 else None,
         },
         "tables": tables,
         "error": None,
