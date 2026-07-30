@@ -59,8 +59,8 @@ def widget_view_data_contract(
 
 >>> state = widget_view_data_contract()
 >>> views = state["get_views"]()
->>> table_name = "METADATA_DATA_CONTRACT"
->>> views["tables"][table_name].show()
+>>> contract_table = views["tables"].get("METADATA_DATA_CONTRACT")
+>>> contract_table.show()
 
 </div>
 

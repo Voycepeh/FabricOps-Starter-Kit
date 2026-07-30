@@ -60647,7 +60647,7 @@
       "depth": 6,
       "direct_call_count": 11,
       "discontinued_in": null,
-      "examples": ">>> state = widget_view_data_contract()\n>>> views = state[\"get_views\"]()\n>>> table_name = \"METADATA_DATA_CONTRACT\"\n>>> views[\"tables\"][table_name].show()",
+      "examples": ">>> state = widget_view_data_contract()\n>>> views = state[\"get_views\"]()\n>>> contract_table = views[\"tables\"].get(\"METADATA_DATA_CONTRACT\")\n>>> contract_table.show()",
       "files_touched": [
         "src/fabricops_kit/config/shared.py",
         "src/fabricops_kit/io/shared.py",
