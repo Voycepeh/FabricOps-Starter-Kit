@@ -342,6 +342,18 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert "background:#0f6cbd" in agreement_header.value
     assert agreement_controls["container"].layout.kwargs["width"] == "100%"
     assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)
+    steward_section = agreement_controls["steps"].children[1]
+    steward_panels_row = steward_section.children[1]
+    assert len(steward_panels_row.children) == 2
+    for panel, selector in zip(
+        steward_panels_row.children,
+        (agreement_controls["provider_steward_selector"], agreement_controls["recipient_steward_selector"]),
+        strict=True,
+    ):
+        assert panel.layout.kwargs["width"] == "49%"
+        search_selector_summary = panel.children[1]
+        assert len(search_selector_summary.children) == 3
+        assert search_selector_summary.children[1] is selector
     assert len(agreement_controls["supporting_documents"]) == 1
     document_container = agreement_controls["supporting_documents"][0]["container"]
     assert [child.value for child in document_container.children if isinstance(child.value, str) and "Document" in child.value] == [

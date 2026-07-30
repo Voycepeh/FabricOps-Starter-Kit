@@ -351,9 +351,28 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     steward_panels = []
     for field in steward_fields:
-        panel = steward_field_selectors[field]["container"]
-        panel.layout = paired_control_layout
-        steward_panels.append(panel)
+        selector_panel = steward_field_selectors[field]["container"]
+        selector_panel.layout = full_width_layout
+        steward_panels.append(
+            widgets.VBox(
+                [
+                    widgets.HTML(
+                        value=(
+                            '<div style="color:#0f548c;font-size:14px;font-weight:600;'
+                            f'margin-bottom:4px;">{FIELD_LABELS[field]}</div>'
+                        )
+                    ),
+                    selector_panel,
+                ],
+                layout=widgets.Layout(
+                    width="49%",
+                    min_width="280px",
+                    flex="1 1 320px",
+                    border="1px solid #d7e7f5",
+                    padding="10px 12px",
+                ),
+            )
+        )
     steward_section = widgets.VBox(
         [
             _section_heading("Provider and recipient data stewards"),
