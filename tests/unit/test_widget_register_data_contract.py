@@ -229,7 +229,8 @@ def test_latest_inventory_loads_without_combining_older_history(snapshot_runtime
     state = public_widget(agreement_id="agreement", spark_session=spark_session)
     assert state["latest_activity_id"] == "latest"
     assert state["inventory_metadata_ids"] == ["historical-key", "key-two"]
-    assert "Unavailable catalogue dataset" in dict(state["_controls"]["inventory"].options)["historical-key"]
+    labels_by_key = {value: label for label, value in state["_controls"]["inventory"].options}
+    assert "Unavailable catalogue dataset" in labels_by_key["historical-key"]
     assert [row["metadata_table_key"] for row in state["get_rows"]()] == ["historical-key", "key-two"]
 
 
@@ -279,6 +280,8 @@ def test_inventory_add_remove_and_duplicate_prevention(snapshot_runtime, spark_s
     controls["add"].click()
     controls["add"].click()
     assert state["inventory_metadata_ids"] == ["key-one", "key-two"]
+    assert controls["available"].value is None
+    assert controls["add"].disabled is True
     controls["inventory"].value = "key-one"
     controls["remove"].click()
     assert state["inventory_metadata_ids"] == ["key-two"]
@@ -322,13 +325,15 @@ def test_empty_inventory_is_rejected_without_writing(snapshot_runtime, spark_ses
     _module, tables, writes = snapshot_runtime
     _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 1, 1), ["key-one"])
     state = public_widget(agreement_id="agreement", spark_session=spark_session)
-    state["inventory_metadata_ids"] = []
-    state["_controls"]["save"].click()
+    controls = state["_controls"]
+    controls["inventory"].value = "key-one"
+    controls["remove"].click()
+    controls["save"].click()
     assert state["inventory_count"] == 0
     assert state["latest_activity_id"] == "old"
     assert tables["METADATA_DATA_CONTRACT"].count() == 1
     assert writes == []
-    assert "at least one logical dataset" in state["_controls"]["status"].value
+    assert "at least one logical dataset" in controls["status"].value
 
 
 def test_other_agreements_and_historical_rows_are_unchanged(snapshot_runtime, spark_session):
@@ -356,7 +361,8 @@ def test_html_values_are_escaped(snapshot_runtime, spark_session):
     )
     assert "<script>" not in state["_controls"]["agreement"].value
     assert "&lt;script&gt;" in state["_controls"]["agreement"].value
-    assert "<b>raw</b>" in dict(state["_controls"]["available"].options)["html"]
+    labels_by_key = {value: label for label, value in state["_controls"]["available"].options}
+    assert "<b>raw</b>" in labels_by_key["html"]
 
 
 def test_missing_widgets_is_actionable_and_non_destructive(monkeypatch, capsys):

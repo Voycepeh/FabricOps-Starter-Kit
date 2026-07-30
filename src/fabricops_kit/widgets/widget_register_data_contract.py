@@ -369,6 +369,8 @@ def widget_register_data_contract(
             if option[1] not in current_set and (not query or query in option[0].casefold())
         ]
         available.options = choices
+        available.value = None
+        add.disabled = True
         state["inventory_count"] = len(current)
         state["has_unsaved_changes"] = current != saved_ids
         summary.value = (
@@ -377,8 +379,9 @@ def widget_register_data_contract(
         )
 
     def set_editor_enabled(enabled: bool) -> None:
-        for control in (search, available, add, inventory, remove, save):
+        for control in (search, available, inventory, remove, save):
             control.disabled = not enabled
+        add.disabled = not enabled or available.value is None
 
     def load_agreement(selected_id: str) -> None:
         nonlocal latest_summary
@@ -424,6 +427,10 @@ def widget_register_data_contract(
         if key and key in rows_by_id and key not in state["inventory_metadata_ids"]:
             state["inventory_metadata_ids"].append(key)
         refresh_controls()
+
+    def select_available(change: dict[str, Any]) -> None:
+        if change.get("name") == "value":
+            add.disabled = not bool(state.get("agreement_id") and change.get("new"))
 
     def remove_selected(_button: Any = None) -> None:
         key = str(inventory.value or "")
@@ -491,6 +498,7 @@ def widget_register_data_contract(
         status.value = f"Saved inventory with {len(current)} logical datasets."
 
     search.observe(refresh_controls, names="value")
+    available.observe(select_available, names="value")
     add.on_click(add_selected)
     remove.on_click(remove_selected)
     save.on_click(save_inventory)
