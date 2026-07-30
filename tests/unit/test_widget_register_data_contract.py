@@ -15,9 +15,9 @@ from fabricops_kit.widgets.widget_register_data_contract import (
     _base_dataset_label,
     _dataset_options,
     _latest_catalogue_rows,
-    _latest_snapshot_header,
+    _latest_snapshot,
     _normalize_initial_ids,
-    _snapshot_membership_rows,
+    _deduplicate_memberships,
 )
 
 pytestmark = pytest.mark.unit
@@ -61,12 +61,14 @@ def test_latest_catalogue_and_snapshot_resolution_are_deterministic(spark_sessio
         ("one", "prod", "prod", "Lakehouse", "raw", "sales", "orders", new),
     ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
     assert _latest_catalogue_rows(catalogue, "dev")[0]["schema_fingerprint"] == "new-b"
-    headers = spark_session.createDataFrame([
-        ("snapshot-old", "agreement", old), ("snapshot-a", "agreement", new),
-        ("snapshot-b", "agreement", new), ("other", "other", new),
-    ], "contract_snapshot_id string, agreement_id string, snapshot_saved_at timestamp")
-    assert _latest_snapshot_header(headers, "agreement")["contract_snapshot_id"] == "snapshot-b"
-    assert _latest_snapshot_header(headers, "missing") is None
+    memberships = spark_session.createDataFrame([
+        ("snapshot-old", "agreement", "one", old), ("snapshot-a", "agreement", "one", new),
+        ("snapshot-b", "agreement", "two", new), ("other", "other", "one", new),
+    ], "contract_snapshot_id string, agreement_id string, metadata_table_key string, snapshot_saved_at timestamp")
+    summary, rows = _latest_snapshot(memberships, "agreement")
+    assert summary["contract_snapshot_id"] == "snapshot-b"
+    assert [row["metadata_table_key"] for row in rows] == ["two"]
+    assert _latest_snapshot(memberships, "missing") == (None, [])
 
 
 def test_snapshot_memberships_do_not_combine_history_and_deduplicate(spark_session):
@@ -75,9 +77,10 @@ def test_snapshot_memberships_do_not_combine_history_and_deduplicate(spark_sessi
         ("old", "one", "old-fp"), ("latest", "one", "fp"),
         ("latest", "one", "duplicate"), ("latest", "two", "two-fp"),
     ], "contract_snapshot_id string, metadata_table_key string, schema_fingerprint string")
-    rows = _snapshot_membership_rows(frame, "latest")
+    rows = _deduplicate_memberships([
+        row.asDict(recursive=True) for row in frame.filter("contract_snapshot_id = 'latest'").collect()
+    ])
     assert [row["metadata_table_key"] for row in rows] == ["one", "two"]
-    assert _snapshot_membership_rows(frame, None) == []
 
 
 @pytest.fixture
@@ -94,7 +97,6 @@ def snapshot_runtime(monkeypatch, spark_session):
     ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
     tables = {
         "METADATA_DATA_CATALOGUE": catalogue,
-        "METADATA_DATA_CONTRACT_SNAPSHOT": spark_session.createDataFrame([], registry["METADATA_DATA_CONTRACT_SNAPSHOT"]),
         "METADATA_DATA_CONTRACT": spark_session.createDataFrame([], registry["METADATA_DATA_CONTRACT"]),
     }
     writes: list[tuple[str, str, list[dict]]] = []
@@ -133,17 +135,11 @@ def _seed_snapshot(spark, tables, snapshot_id, agreement_id, saved_at, keys):
         "_workspace_id": "w", "_workspace_name": "w", "_notebook_id": "n",
         "_notebook_name": "n", "_metadata_lakehouse_name": "m", "_activity_id": "a",
     }
-    header = {
-        "contract_snapshot_id": snapshot_id, "agreement_id": agreement_id,
-        "snapshot_saved_at": saved_at, "linked_dataset_count": len(keys), **audit,
-    }
     rows = [{
         "contract_snapshot_id": snapshot_id, "agreement_id": agreement_id,
-        "metadata_table_key": key, "schema_fingerprint": f"fp-{key}", **audit,
+        "metadata_table_key": key, "schema_fingerprint": f"fp-{key}",
+        "snapshot_saved_at": saved_at, **audit,
     } for key in keys]
-    tables["METADATA_DATA_CONTRACT_SNAPSHOT"] = tables["METADATA_DATA_CONTRACT_SNAPSHOT"].unionByName(
-        spark.createDataFrame([header], registry["METADATA_DATA_CONTRACT_SNAPSHOT"]),
-    )
     if rows:
         tables["METADATA_DATA_CONTRACT"] = tables["METADATA_DATA_CONTRACT"].unionByName(
             spark.createDataFrame(rows, registry["METADATA_DATA_CONTRACT"]),
@@ -253,7 +249,6 @@ def test_successive_snapshots_append_complete_inventories_and_preserve_history(s
     third_id = state["saved_snapshot_id"]
 
     assert len({first_id, second_id, third_id}) == 3
-    assert tables["METADATA_DATA_CONTRACT_SNAPSHOT"].count() == 3
     assert tables["METADATA_DATA_CONTRACT"].count() == 5 + 6 + 4
     assert state["latest_snapshot_id"] == third_id
     assert state["inventory_count"] == 4
@@ -262,24 +257,21 @@ def test_successive_snapshots_append_complete_inventories_and_preserve_history(s
     for snapshot_id, count in ((first_id, 5), (second_id, 6), (third_id, 4)):
         rows = [row for row in tables["METADATA_DATA_CONTRACT"].collect() if row.contract_snapshot_id == snapshot_id]
         assert len(rows) == count
-        assert {row._committed_at for row in rows} == {
-            next(row.snapshot_saved_at for row in tables["METADATA_DATA_CONTRACT_SNAPSHOT"].collect() if row.contract_snapshot_id == snapshot_id)
-        }
+        assert {row._committed_at for row in rows} == {row.snapshot_saved_at for row in rows}
 
 
-def test_empty_inventory_appends_header_without_fake_membership(snapshot_runtime, spark_session):
-    """An explicit empty save is represented by a zero-count header."""
+def test_empty_inventory_is_rejected_without_writing(snapshot_runtime, spark_session):
+    """An empty inventory remains unsupported without creating a second metadata table."""
     _module, tables, writes = snapshot_runtime
     _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 1, 1), ["key-one"])
     state = public_widget(agreement_id="agreement", spark_session=spark_session)
     state["inventory_metadata_ids"] = []
     state["_controls"]["save"].click()
     assert state["inventory_count"] == 0
-    assert state["get_rows"]() == []
+    assert state["latest_snapshot_id"] == "old"
     assert tables["METADATA_DATA_CONTRACT"].count() == 1
-    header = state["get_snapshot"]()["header"]
-    assert header["linked_dataset_count"] == 0
-    assert [name for name, _mode, _rows in writes] == ["METADATA_DATA_CONTRACT_SNAPSHOT"]
+    assert writes == []
+    assert "at least one logical dataset" in state["_controls"]["status"].value
 
 
 def test_other_agreements_and_historical_rows_are_unchanged(snapshot_runtime, spark_session):

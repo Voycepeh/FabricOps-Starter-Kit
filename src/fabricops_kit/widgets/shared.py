@@ -290,11 +290,6 @@ def get_data_contract_views(
             for row in contracts.select("agreement_id").distinct().collect()
             if row["agreement_id"]
         ]
-    snapshot_ids = [
-        row["contract_snapshot_id"]
-        for row in contracts.select("contract_snapshot_id").distinct().collect()
-        if row["contract_snapshot_id"]
-    ]
 
     agreement = raw_tables["METADATA_DATA_AGREEMENT"]
     agreement = agreement.filter(F.col("agreement_id").isin(agreement_ids)) if agreement_ids else agreement.limit(0)
@@ -311,8 +306,6 @@ def get_data_contract_views(
             frame = agreement
         elif name == "METADATA_DATA_CONTRACT":
             frame = contracts
-        elif name == "METADATA_DATA_CONTRACT_SNAPSHOT":
-            frame = frame.filter(F.col("contract_snapshot_id").isin(snapshot_ids)) if snapshot_ids else frame.limit(0)
         else:
             frame = frame.filter(F.col("metadata_table_key") == metadata_table_key)
         if environment_name and "environment_name" in frame.columns:

@@ -16,10 +16,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
     Agreement records that describe approved use, steward, recipient, and lifecycle context.
 
--   **[METADATA_DATA_CONTRACT_SNAPSHOT](metadata/metadata_data_contract_snapshot.md)**
-
-    Immutable agreement inventory snapshot headers, including intentional empty inventories.
-
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
     Logical dataset memberships belonging to immutable agreement inventory snapshots.

@@ -119,7 +119,6 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 METADATA_TABLE_PURPOSES = {
     "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
     "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
-    "METADATA_DATA_CONTRACT_SNAPSHOT": "Immutable agreement inventory snapshot headers, including intentional empty inventories.",
     "METADATA_DATA_CONTRACT": "Logical dataset memberships belonging to immutable agreement inventory snapshots.",
     "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
     "METADATA_DATA_PROFILED": "Detailed per-column profiling evidence captured from a profiled dataset snapshot.",
@@ -200,10 +199,6 @@ METADATA_COLUMN_OWNERS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "__default__": ["fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"],
-        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-    },
-    "METADATA_DATA_CONTRACT_SNAPSHOT": {
         "__default__": ["fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
@@ -1718,7 +1713,7 @@ PUBLIC_SYMBOL_DOCS = [
   'when_to_use': 'Use to add or remove logical datasets and append the complete resulting inventory as one snapshot.',
   'do_not_use_when': 'Do not use for review, approval, promotion, cross-environment authoring, or pipeline inspection.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],
-  'return_interpretation': 'The inventory reflects only the latest snapshot plus unsaved valid additions; each save appends a new header and complete membership set without changing history.',
+  'return_interpretation': 'The inventory reflects only the latest snapshot plus unsaved valid additions; each save appends one complete non-empty membership set without changing history.',
   'common_failure_causes': ['No saved agreement is selected, so the inventory editor remains disabled.',
                             'The active environment has no registered catalogue datasets.',
                             'The metadata target cannot be written.']},

@@ -16,7 +16,6 @@ from fabricops_kit.widgets.shared import require_ipywidgets, widget_common
 
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-SNAPSHOT_TABLE = "METADATA_DATA_CONTRACT_SNAPSHOT"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
@@ -136,32 +135,33 @@ def _dataset_options(rows: list[dict[str, Any]]) -> list[tuple[str, str]]:
     ], key=lambda option: (option[0].casefold(), option[1]))
 
 
-def _latest_snapshot_header(headers, agreement_id: str) -> dict[str, Any] | None:
-    """Return the latest immutable snapshot header for one agreement."""
+def _latest_snapshot(memberships, agreement_id: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Return the latest snapshot summary and its membership rows."""
     from pyspark.sql import functions as F
 
     rows = [
         row.asDict(recursive=True)
-        for row in headers.filter(F.col("agreement_id") == agreement_id).collect()
+        for row in memberships.filter(F.col("agreement_id") == agreement_id).collect()
     ]
     if not rows:
-        return None
-    return max(rows, key=lambda row: (
+        return None, []
+    latest_row = max(rows, key=lambda row: (
         _commit_sort_value(row.get("snapshot_saved_at")),
         str(row.get("contract_snapshot_id") or ""),
     ))
+    snapshot_id = str(latest_row.get("contract_snapshot_id") or "")
+    snapshot_rows = [row for row in rows if str(row.get("contract_snapshot_id") or "") == snapshot_id]
+    summary = {
+        "contract_snapshot_id": snapshot_id,
+        "agreement_id": agreement_id,
+        "snapshot_saved_at": latest_row.get("snapshot_saved_at"),
+        "linked_dataset_count": len({str(row.get("metadata_table_key") or "") for row in snapshot_rows}),
+    }
+    return summary, _deduplicate_memberships(snapshot_rows)
 
 
-def _snapshot_membership_rows(memberships, snapshot_id: str | None) -> list[dict[str, Any]]:
-    """Return de-duplicated membership rows for exactly one snapshot."""
-    if not snapshot_id:
-        return []
-    from pyspark.sql import functions as F
-
-    rows = [
-        row.asDict(recursive=True)
-        for row in memberships.filter(F.col("contract_snapshot_id") == snapshot_id).collect()
-    ]
+def _deduplicate_memberships(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return one membership row per logical dataset identity."""
     by_key: dict[str, dict[str, Any]] = {}
     for row in rows:
         key = str(row.get("metadata_table_key") or "").strip()
@@ -172,30 +172,20 @@ def _snapshot_membership_rows(memberships, snapshot_id: str | None) -> list[dict
 
 def _append_snapshot(
     *,
-    snapshot_row: dict[str, Any],
     membership_rows: list[dict[str, Any]],
     target: str,
     schema: str | None,
     spark_session: Any,
     context: dict[str, Any],
 ) -> None:
-    """Append immutable membership rows and then their snapshot header."""
+    """Append one complete immutable membership snapshot."""
     registry = metadata_table_schema_registry()
-    if membership_rows:
-        membership_frame = spark_session.createDataFrame(
-            [coerce_metadata_row_types(CONTRACT_TABLE, row) for row in membership_rows],
-            schema=registry[CONTRACT_TABLE],
-        )
-        write_lakehouse_table_core(
-            membership_frame, CONTRACT_TABLE, target=target, schema=schema,
-            mode="append", context=context,
-        )
-    header_frame = spark_session.createDataFrame(
-        [coerce_metadata_row_types(SNAPSHOT_TABLE, snapshot_row)],
-        schema=registry[SNAPSHOT_TABLE],
+    membership_frame = spark_session.createDataFrame(
+        [coerce_metadata_row_types(CONTRACT_TABLE, row) for row in membership_rows],
+        schema=registry[CONTRACT_TABLE],
     )
     write_lakehouse_table_core(
-        header_frame, SNAPSHOT_TABLE, target=target, schema=schema,
+        membership_frame, CONTRACT_TABLE, target=target, schema=schema,
         mode="append", context=context,
     )
 
@@ -254,9 +244,9 @@ def widget_register_data_contract(
     Notes
     -----
     This is an immutable snapshot-based inventory of logical datasets linked
-    to a Data Agreement. Each explicit save appends one snapshot header and the
-    complete current membership list, while the widget displays only the
-    latest saved snapshot. Historical snapshots are never updated or deleted.
+    to a Data Agreement. Each explicit save appends the complete current
+    membership list under one snapshot identity, while the widget displays only
+    the latest saved snapshot. Historical snapshots are never updated or deleted.
     Catalogue discovery is restricted to the active environment, but logical
     ``metadata_table_key`` membership remains environment-independent.
     An unsaved agreement draft cannot create an inventory snapshot; select an
@@ -315,17 +305,15 @@ def widget_register_data_contract(
     rows_by_id = {row["metadata_table_key"]: row for row in catalogue_rows}
     all_options = _dataset_options(catalogue_rows)
     option_by_id = {key: label for label, key in all_options}
-    headers = read_lakehouse_table_core(
-        SNAPSHOT_TABLE, target=target, schema=schema,
-        spark_session=spark_session, context=runtime_context,
-    )
     memberships = read_lakehouse_table_core(
         CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
     )
-    latest_header = _latest_snapshot_header(headers, resolved_agreement_id) if resolved_agreement_id else None
+    latest_header, latest_rows = (
+        _latest_snapshot(memberships, resolved_agreement_id)
+        if resolved_agreement_id else (None, [])
+    )
     latest_snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
-    latest_rows = _snapshot_membership_rows(memberships, latest_snapshot_id)
     saved_ids = [str(row["metadata_table_key"]) for row in latest_rows]
     valid_initial_ids = [key for key in initial_ids if key in rows_by_id]
     inventory_ids = (
@@ -400,9 +388,8 @@ def widget_register_data_contract(
             return
         selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
-        latest_header = _latest_snapshot_header(headers, selected_id)
+        latest_header, loaded_rows = _latest_snapshot(memberships, selected_id)
         snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
-        loaded_rows = _snapshot_membership_rows(memberships, snapshot_id)
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
         valid_initial = [key for key in initial_ids if key in rows_by_id]
@@ -438,17 +425,18 @@ def widget_register_data_contract(
             CONTRACT_TABLE, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        return _snapshot_membership_rows(frame, state["latest_snapshot_id"])
+        _summary, rows = _latest_snapshot(frame, str(state.get("agreement_id") or ""))
+        return rows
 
     def get_snapshot() -> dict[str, Any]:
         if not state["latest_snapshot_id"]:
             return {"header": None, "memberships": []}
-        header_frame = read_lakehouse_table_core(
-            SNAPSHOT_TABLE, target=target, schema=schema,
+        frame = read_lakehouse_table_core(
+            CONTRACT_TABLE, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        header = _latest_snapshot_header(header_frame, str(state["agreement_id"]))
-        return {"header": header, "memberships": get_rows()}
+        summary, rows = _latest_snapshot(frame, str(state["agreement_id"]))
+        return {"header": summary, "memberships": rows}
 
     def save_inventory(_button: Any = None) -> None:
         nonlocal latest_header
@@ -457,26 +445,29 @@ def widget_register_data_contract(
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
         current = [key for key in current if key in rows_by_id or key in saved_ids]
+        if not current:
+            status.value = "An inventory snapshot must contain at least one logical dataset."
+            return
         snapshot_id = str(uuid.uuid4())
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
         saved_at = audit["_committed_at"]
-        header_row = {
-            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
-            "snapshot_saved_at": saved_at, "linked_dataset_count": len(current), **audit,
-        }
         rows = [{
             "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
             "metadata_table_key": key,
             "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
                 (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
             )),
+            "snapshot_saved_at": saved_at,
             **audit,
         } for key in current]
         _append_snapshot(
-            snapshot_row=header_row, membership_rows=rows, target=target, schema=schema,
+            membership_rows=rows, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        latest_header = header_row
+        latest_header = {
+            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
+            "snapshot_saved_at": saved_at, "linked_dataset_count": len(current),
+        }
         latest_rows[:] = rows
         saved_ids[:] = current
         state.update(

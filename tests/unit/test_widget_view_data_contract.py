@@ -145,18 +145,11 @@ def test_metadata_trace_returns_canonical_raw_filtered_tables(monkeypatch, spark
             "agreement_id string, provider_steward_id string, recipient_steward_id string, marker string, _committed_at timestamp",
         ),
         "METADATA_DATA_CONTRACT": frame(
-            [("snapshot-old", "agreement-1", "dataset", old),
-             ("snapshot-new", "agreement-1", "dataset", new),
-             ("snapshot-second-agreement", "agreement-2", "dataset", new),
-             ("snapshot-other", "agreement-2", "other", new)],
-            "contract_snapshot_id string, agreement_id string, metadata_table_key string, _committed_at timestamp",
-        ),
-        "METADATA_DATA_CONTRACT_SNAPSHOT": frame(
-            [("snapshot-old", "agreement-1", old),
-             ("snapshot-new", "agreement-1", new),
-             ("snapshot-second-agreement", "agreement-2", new),
-             ("snapshot-other", "agreement-2", new)],
-            "contract_snapshot_id string, agreement_id string, _committed_at timestamp",
+            [("snapshot-old", "agreement-1", "dataset", old, old),
+             ("snapshot-new", "agreement-1", "dataset", new, new),
+             ("snapshot-second-agreement", "agreement-2", "dataset", new, new),
+             ("snapshot-other", "agreement-2", "other", new, new)],
+            "contract_snapshot_id string, agreement_id string, metadata_table_key string, snapshot_saved_at timestamp, _committed_at timestamp",
         ),
     }
     environment_tables = {
