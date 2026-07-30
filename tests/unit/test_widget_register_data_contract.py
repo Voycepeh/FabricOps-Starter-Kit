@@ -23,6 +23,65 @@ from fabricops_kit.widgets.widget_register_data_contract import (
 pytestmark = pytest.mark.unit
 
 
+class _FakeWidget:
+    """Small observable widget double matching controls used by the inventory."""
+
+    def __init__(self, *args, value=None, options=None, **kwargs):
+        self.children = tuple(args[0]) if args else ()
+        self.description = kwargs.get("description", "")
+        self.disabled = bool(kwargs.get("disabled", False))
+        self._value = value
+        self._options = []
+        self._observers = []
+        self._click_handlers = []
+        if options is not None:
+            self.options = options
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, new):
+        old = self._value
+        self._value = new
+        if old != new:
+            for callback in list(self._observers):
+                callback({"name": "value", "old": old, "new": new})
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, new):
+        self._options = list(new or [])
+        values = [item[1] if isinstance(item, tuple) else item for item in self._options]
+        if self._value not in values:
+            self.value = values[0] if values else None
+
+    def observe(self, callback, names=None):
+        self._observers.append(callback)
+
+    def on_click(self, callback):
+        self._click_handlers.append(callback)
+
+    def click(self):
+        if not self.disabled:
+            for callback in list(self._click_handlers):
+                callback(self)
+
+
+class _FakeWidgets:
+    """Widget module double for deterministic headless behavior tests."""
+
+    Text = _FakeWidget
+    Select = _FakeWidget
+    HTML = _FakeWidget
+    Button = _FakeWidget
+    VBox = _FakeWidget
+
+
 def test_agreement_and_initial_identity_normalization():
     """Explicit IDs win and optional identities are trimmed and unique."""
     assert _agreement_details({"agreement_id": " state ", "agreement_name": "Customers"}, None) == (
@@ -104,6 +163,7 @@ def snapshot_runtime(monkeypatch, spark_session):
 
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: ({"config": True}, "dev", {}))
     monkeypatch.setattr(module, "get_spark_session", lambda value=None: value or spark_session)
+    monkeypatch.setattr(module, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda name, **_kwargs: tables[name])
 
     def write(frame, name, *, mode, **_kwargs):
@@ -177,12 +237,10 @@ def test_agreement_state_selection_reloads_inventory_and_disables_when_empty(
     snapshot_runtime, spark_session,
 ):
     """Changing the agreement selector reactively loads that agreement's latest snapshot."""
-    import ipywidgets as widgets
-
     _module, tables, writes = snapshot_runtime
     _seed_snapshot(spark_session, tables, "a", "agreement-a", datetime(2026, 1, 1), ["key-one"])
     _seed_snapshot(spark_session, tables, "b", "agreement-b", datetime(2026, 1, 2), ["key-two"])
-    selector = widgets.Select(options=[("Select", ""), ("A", "agreement-a"), ("B", "agreement-b")], value="")
+    selector = _FakeWidgets.Select(options=[("Select", ""), ("A", "agreement-a"), ("B", "agreement-b")], value="")
     agreement_state = {
         "existing_record": selector,
         "existing_records_by_id": {
