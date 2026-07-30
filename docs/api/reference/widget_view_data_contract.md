@@ -19,13 +19,12 @@ Render the canonical metadata trace for one registered dataset.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">01_agreement</span>
 <span class="reference-chip">02_pipeline</span>
 <span class="reference-chip">03_review</span>
 <span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `01_agreement`, `02_pipeline`, `03_review`, `99_explore`
+**Used in notebooks:** `02_pipeline`, `03_review`, `99_explore`
 
 ## Usage notes
 
