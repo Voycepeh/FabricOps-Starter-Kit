@@ -187,6 +187,8 @@ def test_agreement_scope_is_exclusive():
 def test_agreement_scope_strictly_intersects_active_catalogue(monkeypatch, spark_session):
     """Only contract-linked logical keys observed in the active environment are selectable."""
     import importlib
+    import sys
+    import types
     from tests.unit.test_widget_register_data_contract import _FakeWidgets
 
     module = importlib.import_module("fabricops_kit.widgets.widget_view_data_contract")
@@ -223,7 +225,12 @@ def test_agreement_scope_strictly_intersects_active_catalogue(monkeypatch, spark
             "error": None,
         },
     )
-    monkeypatch.setattr("IPython.display.display", lambda *_args, **_kwargs: None)
+    fake_display = types.ModuleType("IPython.display")
+    fake_display.display = lambda *_args, **_kwargs: None
+    fake_ipython = types.ModuleType("IPython")
+    fake_ipython.display = fake_display
+    monkeypatch.setitem(sys.modules, "IPython", fake_ipython)
+    monkeypatch.setitem(sys.modules, "IPython.display", fake_display)
 
     state = public_widget(
         agreement={"agreement_id": "agreement-1", "agreement_name": "Sales agreement"},
