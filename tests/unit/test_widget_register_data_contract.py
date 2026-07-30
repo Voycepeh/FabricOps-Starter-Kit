@@ -123,10 +123,19 @@ def contract_widget_runtime(monkeypatch, spark_session):
     monkeypatch.setattr(module, "get_spark_session", lambda value=None: value or spark_session)
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda name, **_kwargs: tables[name])
 
-    def write(frame, name, **_kwargs):
-        tables[name] = frame
+    mutations = []
 
-    monkeypatch.setattr(module, "write_lakehouse_table_core", write)
+    def replace(*, draft_rows, agreement_id, **_kwargs):
+        mutations.append({"agreement_id": agreement_id, "draft_rows": draft_rows})
+        preserved = [
+            row.asDict(recursive=True) for row in tables["METADATA_DATA_CONTRACT"].collect()
+            if row.agreement_id != agreement_id or str(row.contract_status).lower() != "draft"
+        ]
+        tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame(
+            [*preserved, *draft_rows], contract_schema,
+        )
+
+    monkeypatch.setattr(module, "_replace_agreement_drafts", replace)
     monkeypatch.setattr(module, "get_current_audit_timestamp", lambda **_kwargs: "2026-07-30T12:00:00+00:00")
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **_kwargs: {
         "_committed_by": "tester", "_committed_at": datetime(2026, 7, 30, 12),
@@ -135,12 +144,12 @@ def contract_widget_runtime(monkeypatch, spark_session):
         "_metadata_lakehouse_name": "metadata", "_activity_id": "activity-id",
     })
     monkeypatch.setattr("IPython.display.display", lambda *_args, **_kwargs: None)
-    return module, tables
+    return module, tables, mutations
 
 
 def test_widget_filters_initial_selection_and_returns_clear_state(contract_widget_runtime, spark_session):
     """Only active-environment catalogue identities are available and writable."""
-    _module, _tables = contract_widget_runtime
+    _module, _tables, _mutations = contract_widget_runtime
     state = public_widget(
         agreement_id=" agreement-1 ", metadata_ids=[" key-one ", "unknown", "key-prod"],
         spark_session=spark_session,
@@ -153,9 +162,63 @@ def test_widget_filters_initial_selection_and_returns_clear_state(contract_widge
     assert set(state["_controls"]) >= {"datasets", "save", "status"}
 
 
+def test_existing_drafts_are_preselected_and_initial_ids_are_merged(contract_widget_runtime, spark_session):
+    """Persisted draft inventory loads first and caller IDs only extend it."""
+    _module, tables, _mutations = contract_widget_runtime
+    schema = metadata_table_schema_registry()["METADATA_DATA_CONTRACT"]
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame([{
+        "contract_id": "existing", "agreement_id": "agreement-1",
+        "metadata_table_key": "key-one", "schema_fingerprint": "fp-new",
+        "contract_version": "1", "contract_status": "draft",
+        "effective_from": date(2026, 1, 1), "effective_to": None,
+        "contract_payload_json": "{}", "_committed_by": "old",
+        "_committed_at": datetime(2026, 1, 1), "_workspace_id": "w",
+        "_workspace_name": "w", "_notebook_id": "n", "_notebook_name": "n",
+        "_metadata_lakehouse_name": "m", "_activity_id": "a",
+    }], schema)
+    state = public_widget(
+        agreement_id="agreement-1", metadata_ids=["key-two", "key-prod", "missing"],
+        spark_session=spark_session,
+    )
+    assert state["existing_draft_metadata_ids"] == ["key-one"]
+    assert state["selected_metadata_ids"] == ["key-one", "key-two"]
+    assert state["pending_add_metadata_ids"] == ["key-two"]
+    assert state["pending_remove_metadata_ids"] == []
+    assert state["unknown_initial_metadata_ids"] == ["key-prod", "missing"]
+
+
+def test_html_inventory_values_are_escaped(contract_widget_runtime, spark_session):
+    """Agreement, environment, and dataset metadata cannot inject notebook HTML."""
+    _module, tables, _mutations = contract_widget_runtime
+    malicious_catalogue = spark_session.createDataFrame([
+        ("key-html", "fp", "dev", "Lakehouse", "<b>raw</b>", "sales", "orders", datetime(2026, 1, 1)),
+    ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
+    tables["METADATA_DATA_CATALOGUE"] = malicious_catalogue
+    state = public_widget(
+        agreement={"agreement_id": "agreement-1", "agreement_name": "<script>alert(1)</script>"},
+        metadata_ids=["key-html"], spark_session=spark_session,
+    )
+    assert "<script>" not in state["_controls"]["agreement"].value
+    assert "&lt;script&gt;" in state["_controls"]["agreement"].value
+    assert "&lt;b&gt;raw&lt;/b&gt;" in state["_controls"]["pending"].value
+
+
+def test_writer_uses_scoped_delta_mutation_without_whole_table_overwrite():
+    """The implementation never replaces the complete contract table."""
+    import inspect
+    module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+
+    source = inspect.getsource(module)
+    assert 'mode="overwrite"' not in source
+    assert "DeltaTable.forPath" in source
+    assert "whenNotMatchedBySourceDelete" in source
+    assert "target.agreement_id" in source
+    assert "lower(target.contract_status) = 'draft'" in source
+
+
 def test_save_writes_minimal_audited_rows_and_get_rows(contract_widget_runtime, spark_session):
     """Save writes one latest-fingerprint draft per selected logical key."""
-    _module, tables = contract_widget_runtime
+    _module, tables, mutations = contract_widget_runtime
     state = public_widget(
         agreement_id="agreement-1", metadata_ids=["key-one", "key-two"],
         spark_session=spark_session,
@@ -170,13 +233,45 @@ def test_save_writes_minimal_audited_rows_and_get_rows(contract_widget_runtime, 
     assert all(row["effective_to"] is None and row["contract_payload_json"] == "{}" for row in rows)
     assert all(row["_committed_by"] == "tester" and row["_activity_id"] == "activity-id" for row in rows)
     assert state["saved_contract_ids"] == [_contract_id("agreement-1", key) for key in ["key-one", "key-two"]]
-    assert "Saved 2 logical datasets" in state["_controls"]["status"].value
+    assert "inventory of 2 logical datasets" in state["_controls"]["status"].value
     assert tables["METADATA_DATA_CONTRACT"].count() == 2
+    assert len(mutations) == 1
+
+
+def test_non_draft_membership_is_visible_locked_and_cannot_duplicate_identity(
+    contract_widget_runtime, spark_session,
+):
+    """An approved logical membership cannot also be authored as a new draft."""
+    _module, tables, _mutations = contract_widget_runtime
+    schema = metadata_table_schema_registry()["METADATA_DATA_CONTRACT"]
+    approved_id = _contract_id("agreement-1", "key-one")
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame([{
+        "contract_id": approved_id, "agreement_id": "agreement-1",
+        "metadata_table_key": "key-one", "schema_fingerprint": "fp-new",
+        "contract_version": "1", "contract_status": "approved",
+        "effective_from": date(2026, 1, 1), "effective_to": None,
+        "contract_payload_json": "{}", "_committed_by": "old",
+        "_committed_at": datetime(2026, 1, 1), "_workspace_id": "w",
+        "_workspace_name": "w", "_notebook_id": "n", "_notebook_name": "n",
+        "_metadata_lakehouse_name": "m", "_activity_id": "a",
+    }], schema)
+    state = public_widget(
+        agreement_id="agreement-1", metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    assert state["existing_non_draft_metadata_ids"] == ["key-one"]
+    assert state["selected_metadata_ids"] == []
+    assert "approved" in state["_controls"]["inventory"].value
+    assert "key-one" not in [value for _label, value in state["_controls"]["datasets"].options]
+    state["_controls"]["save"].click()
+    rows = state["get_rows"]()
+    assert [(row["contract_id"], row["contract_status"]) for row in rows] == [
+        (approved_id, "approved"),
+    ]
 
 
 def test_resave_add_and_deselect_preserve_required_rows(contract_widget_runtime, spark_session):
     """Draft replacement is agreement-scoped and never removes non-draft rows."""
-    _module, tables = contract_widget_runtime
+    _module, tables, mutations = contract_widget_runtime
     schema = metadata_table_schema_registry()["METADATA_DATA_CONTRACT"]
     base = {
         "schema_fingerprint": "fp", "contract_version": "1", "effective_from": date(2026, 1, 1),
@@ -189,7 +284,12 @@ def test_resave_add_and_deselect_preserve_required_rows(contract_widget_runtime,
         {**base, "contract_id": "approved", "agreement_id": "agreement-1", "metadata_table_key": "legacy", "contract_status": "approved"},
         {**base, "contract_id": "other", "agreement_id": "agreement-2", "metadata_table_key": "other", "contract_status": "draft"},
     ], schema)
-    state = public_widget(agreement_id="agreement-1", metadata_ids=["key-one"], spark_session=spark_session)
+    state = public_widget(agreement_id="agreement-1", spark_session=spark_session)
+    assert state["existing_draft_metadata_ids"] == ["key-one"]
+    assert state["existing_non_draft_metadata_ids"] == ["legacy"]
+    assert state["selected_metadata_ids"] == ["key-one"]
+    assert "legacy" in state["_controls"]["inventory"].value
+    assert "legacy" not in dict((value, label) for label, value in state["_controls"]["datasets"].options)
     state["_controls"]["save"].click()
     assert tables["METADATA_DATA_CONTRACT"].count() == 3
     state["_controls"]["datasets"].value = ("key-one", "key-two")
@@ -203,11 +303,12 @@ def test_resave_add_and_deselect_preserve_required_rows(contract_widget_runtime,
         ("agreement-1", "legacy", "approved"),
         ("agreement-2", "other", "draft"),
     }
+    assert all(mutation["agreement_id"] == "agreement-1" for mutation in mutations)
 
 
 def test_empty_catalogue_is_non_breaking_and_does_not_save_implicitly(contract_widget_runtime, spark_session):
     """An empty catalogue explains the prerequisite and waits for explicit save."""
-    _module, tables = contract_widget_runtime
+    _module, tables, _mutations = contract_widget_runtime
     tables["METADATA_DATA_CATALOGUE"] = tables["METADATA_DATA_CATALOGUE"].limit(0)
     state = public_widget(agreement_id="agreement-1", spark_session=spark_session)
     assert state["available_metadata_ids"] == []

@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Register authoritative agreement-to-logical-dataset membership.
+Manage an agreement-level logical dataset inventory.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:152`
+`fabricops_kit/widgets/widget_register_data_contract.py:225`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L152-L400">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L225-L546">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -75,7 +75,7 @@ def widget_register_data_contract(
 | --- | --- | --- | --- |
 | `agreement` | `dict[str, Any] \| None` | No | Data Agreement record or agreement-widget state. Its selected ``agreement_id`` is used when no non-empty explicit ID is supplied; readable agreement information is reused for display without querying ``METADATA_DATA_AGREEMENT``. |
 | `agreement_id` | `str \| None` | No | Explicit canonical agreement identity. Surrounding whitespace is removed and a non-empty value takes precedence over ``agreement``. |
-| `metadata_ids` | `Sequence[str] \| None` | No | Initial selector values only. Values are trimmed and de-duplicated; unknown or inactive-environment identities are reported but cannot be selected or written. |
+| `metadata_ids` | `Sequence[str] \| None` | No | Optional additional initial selector values. Values are trimmed and de-duplicated, then merged with persisted draft memberships. Unknown or inactive-environment identities are reported but cannot be written. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
 | `schema` | `str \| None` | No | Metadata Lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
@@ -83,11 +83,11 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable widget state with selection and save results plus a get_rows callable for the selected agreement.
+Mutable inventory state with existing draft and non-draft memberships, pending additions and removals, save results, and a get_rows callable.
 
 ### Return interpretation
 
-Saved identities are the authoritative draft membership selected for the agreement; unknown initial identities remain non-writable.
+Existing memberships load immediately; pending lists explain the exact draft additions and removals before save, while non-draft and unknown identities remain non-writable.
 
 ## Raises / Errors
 
@@ -103,15 +103,17 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 <div class="reference-docstring-notes" markdown="1">
 
-Catalogue discovery is restricted to the active environment, while the
-saved relationship is environment-independent: one agreement links once to
-each logical ``metadata_table_key``. Saving writes minimal version ``1``
-draft rows with the latest active-environment schema fingerprint and normal
-runtime audit fields. The selection is authoritative for this agreement:
-new memberships are inserted, selected draft memberships are preserved,
-and deselected draft memberships are removed. Rows for other agreements and
-non-draft rows are preserved. Review, approval, promotion, environment
-comparison, and pipeline inspection are outside this draft-only writer.
+On opening, the widget reads the agreement's current contract inventory and
+preselects every existing draft membership. Non-draft memberships remain
+visible but locked outside the draft editor. Catalogue discovery is
+restricted to the active environment, while the saved relationship is
+environment-independent: one agreement links to each logical
+``metadata_table_key``. Saving narrowly replaces only this agreement's
+draft rows, preserving selected existing rows, all non-draft rows, and all
+other agreements. New memberships use minimal version ``1`` draft values,
+the latest active-environment schema fingerprint, and normal runtime audit
+fields. Review, approval, promotion, environment comparison, and pipeline
+inspection are outside this inventory editor.
 
 </div>
 
