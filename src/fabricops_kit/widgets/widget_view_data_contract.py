@@ -145,7 +145,8 @@ def widget_view_data_contract(
     --------
     >>> state = widget_view_data_contract()
     >>> views = state["get_views"]()
-    >>> views["tables"]["METADATA_DATA_CONTRACT"].show()
+    >>> table_name = "METADATA_DATA_CONTRACT"
+    >>> views["tables"][table_name].show()
 
     """
     if pipeline_scope not in {None, "current_notebook"}:

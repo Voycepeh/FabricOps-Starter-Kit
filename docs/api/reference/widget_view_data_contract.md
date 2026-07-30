@@ -14,7 +14,7 @@ Render the canonical metadata trace for one registered dataset.
 
 `fabricops_kit/widgets/widget_view_data_contract.py:89`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L316">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L317">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -59,7 +59,8 @@ def widget_view_data_contract(
 
 >>> state = widget_view_data_contract()
 >>> views = state["get_views"]()
->>> views["tables"]["METADATA_DATA_CONTRACT"].show()
+>>> table_name = "METADATA_DATA_CONTRACT"
+>>> views["tables"][table_name].show()
 
 </div>
 
