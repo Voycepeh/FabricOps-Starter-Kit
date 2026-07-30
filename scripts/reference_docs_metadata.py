@@ -1706,7 +1706,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Agreement intake',
   'use_when': 'Use in 01_agreement to review the latest inventory and append a complete new immutable snapshot.',
   'parameters': 'See the source docstring for agreement resolution, initial metadata identities, metadata target, Spark session, and context parameters.',
-  'returns': 'Mutable snapshot state with the latest inventory, unsaved edits, save results, get_rows, and get_snapshot callables.',
+  'returns': 'Mutable inventory state with latest_activity_id, latest_committed_at, saved_activity_id, unsaved edits, get_rows, and get_snapshot callables.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
   'related_functions': ['widget_render_data_agreement', 'widget_view_data_contract'],
   'expanded_purpose': 'An immutable inventory of logical datasets linked to a Data Agreement. Each save reuses one audit dictionary so _activity_id groups the complete inventory and _committed_at orders saves; the widget displays only the latest activity and reactively reloads when the supplied agreement selector changes.',

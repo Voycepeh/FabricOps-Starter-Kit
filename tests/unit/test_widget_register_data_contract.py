@@ -15,7 +15,7 @@ from fabricops_kit.widgets.widget_register_data_contract import (
     _base_dataset_label,
     _dataset_options,
     _latest_catalogue_rows,
-    _latest_snapshot,
+    _latest_inventory,
     _normalize_initial_ids,
     _deduplicate_memberships,
 )
@@ -65,10 +65,10 @@ def test_latest_catalogue_and_snapshot_resolution_are_deterministic(spark_sessio
         ("activity-old", "agreement", "one", old), ("activity-a", "agreement", "one", new),
         ("activity-b", "agreement", "two", new), ("other", "other", "one", new),
     ], "_activity_id string, agreement_id string, metadata_table_key string, _committed_at timestamp")
-    summary, rows = _latest_snapshot(memberships, "agreement")
+    summary, rows = _latest_inventory(memberships, "agreement")
     assert summary["activity_id"] == "activity-b"
     assert [row["metadata_table_key"] for row in rows] == ["two"]
-    assert _latest_snapshot(memberships, "missing") == (None, [])
+    assert _latest_inventory(memberships, "missing") == (None, [])
 
 
 def test_snapshot_memberships_do_not_combine_history_and_deduplicate(spark_session):
@@ -152,7 +152,7 @@ def test_no_snapshot_is_empty_and_initial_ids_extend_only_in_memory(snapshot_run
         agreement_id="agreement", metadata_ids=["key-one", "key-prod", "unknown"],
         spark_session=spark_session,
     )
-    assert state["latest_snapshot_id"] is None
+    assert state["latest_activity_id"] is None
     assert state["inventory_metadata_ids"] == ["key-one"]
     assert state["inventory_count"] == 1
     assert state["unknown_initial_metadata_ids"] == ["key-prod", "unknown"]
@@ -161,13 +161,13 @@ def test_no_snapshot_is_empty_and_initial_ids_extend_only_in_memory(snapshot_run
     assert state["get_snapshot"]() == {"header": None, "memberships": []}
 
 
-def test_latest_snapshot_loads_without_combining_older_history(snapshot_runtime, spark_session):
+def test_latest_inventory_loads_without_combining_older_history(snapshot_runtime, spark_session):
     """Opening displays only the newest snapshot and keeps unavailable identities visible."""
     _module, tables, _writes = snapshot_runtime
     _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 1, 1), ["key-one"])
     _seed_snapshot(spark_session, tables, "latest", "agreement", datetime(2026, 2, 1), ["key-two", "historical-key"])
     state = public_widget(agreement_id="agreement", spark_session=spark_session)
-    assert state["latest_snapshot_id"] == "latest"
+    assert state["latest_activity_id"] == "latest"
     assert state["inventory_metadata_ids"] == ["historical-key", "key-two"]
     assert "Unavailable catalogue dataset" in dict(state["_controls"]["inventory"].options)["historical-key"]
     assert [row["metadata_table_key"] for row in state["get_rows"]()] == ["historical-key", "key-two"]
@@ -202,13 +202,13 @@ def test_agreement_state_selection_reloads_inventory_and_disables_when_empty(
     selector.value = "agreement-a"
     assert state["agreement_id"] == "agreement-a"
     assert state["agreement_label"] == "Agreement A"
-    assert state["latest_snapshot_id"] == "a"
+    assert state["latest_activity_id"] == "a"
     assert state["inventory_metadata_ids"] == ["key-one", "key-three"]
     assert state["_controls"]["save"].disabled is False
 
     selector.value = "agreement-b"
     assert state["agreement_id"] == "agreement-b"
-    assert state["latest_snapshot_id"] == "b"
+    assert state["latest_activity_id"] == "b"
     assert state["inventory_metadata_ids"] == ["key-two", "key-three"]
 
 
@@ -239,17 +239,17 @@ def test_successive_snapshots_append_complete_inventories_and_preserve_history(s
     five = ["key-one", "key-two", "key-three", "key-4", "key-5"]
     state = public_widget(agreement_id="agreement", metadata_ids=five, spark_session=spark_session)
     state["_controls"]["save"].click()
-    first_id = state["saved_snapshot_id"]
+    first_id = state["saved_activity_id"]
     state["inventory_metadata_ids"].append("key-6")
     state["_controls"]["save"].click()
-    second_id = state["saved_snapshot_id"]
+    second_id = state["saved_activity_id"]
     state["inventory_metadata_ids"] = ["key-one", "key-two", "key-three", "key-4"]
     state["_controls"]["save"].click()
-    third_id = state["saved_snapshot_id"]
+    third_id = state["saved_activity_id"]
 
     assert len({first_id, second_id, third_id}) == 3
     assert tables["METADATA_DATA_CONTRACT"].count() == 5 + 6 + 4
-    assert state["latest_snapshot_id"] == third_id
+    assert state["latest_activity_id"] == third_id
     assert state["inventory_count"] == 4
     assert len(state["get_rows"]()) == 4
     assert {mode for _name, mode, _rows in writes} == {"append"}
@@ -267,7 +267,7 @@ def test_empty_inventory_is_rejected_without_writing(snapshot_runtime, spark_ses
     state["inventory_metadata_ids"] = []
     state["_controls"]["save"].click()
     assert state["inventory_count"] == 0
-    assert state["latest_snapshot_id"] == "old"
+    assert state["latest_activity_id"] == "old"
     assert tables["METADATA_DATA_CONTRACT"].count() == 1
     assert writes == []
     assert "at least one logical dataset" in state["_controls"]["status"].value

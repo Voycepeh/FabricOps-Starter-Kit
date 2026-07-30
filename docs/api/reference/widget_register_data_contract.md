@@ -14,7 +14,7 @@ Manage an immutable agreement dataset inventory.
 
 `fabricops_kit/widgets/widget_register_data_contract.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L192-L516">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L192-L519">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,7 +83,7 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable snapshot state with the latest inventory, unsaved edits, save results, get_rows, and get_snapshot callables.
+Mutable inventory state with latest_activity_id, latest_committed_at, saved_activity_id, unsaved edits, get_rows, and get_snapshot callables.
 
 ### Return interpretation
 

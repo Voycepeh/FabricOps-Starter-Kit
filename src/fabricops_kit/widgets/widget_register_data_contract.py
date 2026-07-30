@@ -134,8 +134,8 @@ def _dataset_options(rows: list[dict[str, Any]]) -> list[tuple[str, str]]:
     ], key=lambda option: (option[0].casefold(), option[1]))
 
 
-def _latest_snapshot(memberships, agreement_id: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-    """Return the latest snapshot summary and its membership rows."""
+def _latest_inventory(memberships, agreement_id: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Return the latest audit activity summary and its membership rows."""
     from pyspark.sql import functions as F
 
     rows = [
@@ -148,15 +148,15 @@ def _latest_snapshot(memberships, agreement_id: str) -> tuple[dict[str, Any] | N
         _commit_sort_value(row.get("_committed_at")),
         str(row.get("_activity_id") or ""),
     ))
-    snapshot_id = str(latest_row.get("_activity_id") or "")
-    snapshot_rows = [row for row in rows if str(row.get("_activity_id") or "") == snapshot_id]
+    activity_id = str(latest_row.get("_activity_id") or "")
+    activity_rows = [row for row in rows if str(row.get("_activity_id") or "") == activity_id]
     summary = {
-        "activity_id": snapshot_id,
+        "activity_id": activity_id,
         "agreement_id": agreement_id,
         "committed_at": latest_row.get("_committed_at"),
-        "linked_dataset_count": len({str(row.get("metadata_table_key") or "") for row in snapshot_rows}),
+        "linked_dataset_count": len({str(row.get("metadata_table_key") or "") for row in activity_rows}),
     }
-    return summary, _deduplicate_memberships(snapshot_rows)
+    return summary, _deduplicate_memberships(activity_rows)
 
 
 def _deduplicate_memberships(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -169,7 +169,7 @@ def _deduplicate_memberships(rows: list[dict[str, Any]]) -> list[dict[str, Any]]
     return [by_key[key] for key in sorted(by_key)]
 
 
-def _append_snapshot(
+def _append_inventory(
     *,
     membership_rows: list[dict[str, Any]],
     target: str,
@@ -177,7 +177,7 @@ def _append_snapshot(
     spark_session: Any,
     context: dict[str, Any],
 ) -> None:
-    """Append one complete immutable membership snapshot."""
+    """Append one complete immutable inventory under shared audit fields."""
     registry = metadata_table_schema_registry()
     membership_frame = spark_session.createDataFrame(
         [coerce_metadata_row_types(CONTRACT_TABLE, row) for row in membership_rows],
@@ -229,9 +229,12 @@ def widget_register_data_contract(
     Returns
     -------
     dict
-        Mutable snapshot-oriented state containing the latest snapshot,
-        editable inventory, save result, ``get_rows``, ``get_snapshot``, and
-        notebook controls under ``_controls``.
+        Mutable inventory state containing ``latest_activity_id``,
+        ``latest_committed_at``, editable membership identities,
+        ``saved_activity_id``, ``get_rows``, ``get_snapshot``, and notebook
+        controls under ``_controls``. Activity and commit values come directly
+        from the standard FabricOps audit fields rather than dedicated schema
+        columns.
 
     Raises
     ------
@@ -283,11 +286,11 @@ def widget_register_data_contract(
         print(f"Data Contract inventory unavailable: {message}")
         state: dict[str, Any] = {
             "agreement_id": resolved_agreement_id, "agreement_label": agreement_label,
-            "environment_name": None, "latest_snapshot_id": None,
-            "latest_snapshot_saved_at": None, "available_metadata_ids": [],
+            "environment_name": None, "latest_activity_id": None,
+            "latest_committed_at": None, "available_metadata_ids": [],
             "inventory_metadata_ids": [], "inventory_count": 0,
             "unknown_initial_metadata_ids": initial_ids, "has_unsaved_changes": False,
-            "saved_snapshot_id": None, "saved_metadata_ids": [], "error": message,
+            "saved_activity_id": None, "saved_metadata_ids": [], "error": message,
             "_controls": {},
         }
         state["get_rows"] = lambda: []
@@ -309,11 +312,11 @@ def widget_register_data_contract(
         CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
     )
-    latest_header, latest_rows = (
-        _latest_snapshot(memberships, resolved_agreement_id)
+    latest_summary, latest_rows = (
+        _latest_inventory(memberships, resolved_agreement_id)
         if resolved_agreement_id else (None, [])
     )
-    latest_snapshot_id = str((latest_header or {}).get("activity_id") or "") or None
+    latest_activity_id = str((latest_summary or {}).get("activity_id") or "") or None
     saved_ids = [str(row["metadata_table_key"]) for row in latest_rows]
     valid_initial_ids = [key for key in initial_ids if key in rows_by_id]
     inventory_ids = (
@@ -335,13 +338,13 @@ def widget_register_data_contract(
 
     state: dict[str, Any] = {
         "agreement_id": resolved_agreement_id or None, "agreement_label": agreement_label,
-        "environment_name": env, "latest_snapshot_id": latest_snapshot_id,
-        "latest_snapshot_saved_at": (latest_header or {}).get("committed_at"),
+        "environment_name": env, "latest_activity_id": latest_activity_id,
+        "latest_committed_at": (latest_summary or {}).get("committed_at"),
         "available_metadata_ids": [key for _label, key in all_options],
         "inventory_metadata_ids": inventory_ids, "inventory_count": len(inventory_ids),
         "unknown_initial_metadata_ids": unknown_ids,
         "has_unsaved_changes": inventory_ids != saved_ids,
-        "saved_snapshot_id": None, "saved_metadata_ids": [],
+        "saved_activity_id": None, "saved_metadata_ids": [],
     }
 
     def readable_label(key: str) -> str:
@@ -369,17 +372,17 @@ def widget_register_data_contract(
             control.disabled = not enabled
 
     def load_agreement(selected_id: str) -> None:
-        nonlocal latest_header
+        nonlocal latest_summary
         selected_id = str(selected_id or "").strip()
         if not selected_id:
-            latest_header = None
+            latest_summary = None
             latest_rows.clear()
             saved_ids.clear()
             state.update(
-                agreement_id=None, agreement_label="", latest_snapshot_id=None,
-                latest_snapshot_saved_at=None, inventory_metadata_ids=[],
+                agreement_id=None, agreement_label="", latest_activity_id=None,
+                latest_committed_at=None, inventory_metadata_ids=[],
                 inventory_count=0, has_unsaved_changes=False,
-                saved_snapshot_id=None, saved_metadata_ids=[],
+                saved_activity_id=None, saved_metadata_ids=[],
             )
             agreement_text.value = "<b>Agreement:</b> Select or save an agreement first"
             status.value = "Select an existing agreement or save a new agreement before maintaining its dataset inventory."
@@ -388,19 +391,19 @@ def widget_register_data_contract(
             return
         selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
-        latest_header, loaded_rows = _latest_snapshot(memberships, selected_id)
-        snapshot_id = str((latest_header or {}).get("activity_id") or "") or None
+        latest_summary, loaded_rows = _latest_inventory(memberships, selected_id)
+        activity_id = str((latest_summary or {}).get("activity_id") or "") or None
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
         valid_initial = [key for key in initial_ids if key in rows_by_id]
         current = list(dict.fromkeys([*saved_ids, *valid_initial]))
         state.update(
             agreement_id=selected_id, agreement_label=selected_label,
-            latest_snapshot_id=snapshot_id,
-            latest_snapshot_saved_at=(latest_header or {}).get("committed_at"),
+            latest_activity_id=activity_id,
+            latest_committed_at=(latest_summary or {}).get("committed_at"),
             inventory_metadata_ids=current, inventory_count=len(current),
             has_unsaved_changes=current != saved_ids,
-            saved_snapshot_id=None, saved_metadata_ids=[],
+            saved_activity_id=None, saved_metadata_ids=[],
         )
         agreement_text.value = f"<b>Agreement:</b> {html.escape(selected_label)}"
         status.value = ""
@@ -425,31 +428,31 @@ def widget_register_data_contract(
             CONTRACT_TABLE, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        _summary, rows = _latest_snapshot(frame, str(state.get("agreement_id") or ""))
+        _summary, rows = _latest_inventory(frame, str(state.get("agreement_id") or ""))
         return rows
 
     def get_snapshot() -> dict[str, Any]:
-        if not state["latest_snapshot_id"]:
+        if not state["latest_activity_id"]:
             return {"header": None, "memberships": []}
         frame = read_lakehouse_table_core(
             CONTRACT_TABLE, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        summary, rows = _latest_snapshot(frame, str(state["agreement_id"]))
+        summary, rows = _latest_inventory(frame, str(state["agreement_id"]))
         return {"header": summary, "memberships": rows}
 
     def save_inventory(_button: Any = None) -> None:
-        nonlocal latest_header
+        nonlocal latest_summary
         if not state.get("agreement_id"):
-            status.value = "Select or save an agreement before saving an inventory snapshot."
+            status.value = "Select or save an agreement before saving an inventory."
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
         current = [key for key in current if key in rows_by_id or key in saved_ids]
         if not current:
-            status.value = "An inventory snapshot must contain at least one logical dataset."
+            status.value = "An inventory save must contain at least one logical dataset."
             return
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        snapshot_id = str(audit["_activity_id"])
+        activity_id = str(audit["_activity_id"])
         saved_at = audit["_committed_at"]
         rows = [{
             "agreement_id": state["agreement_id"],
@@ -459,24 +462,24 @@ def widget_register_data_contract(
             )),
             **audit,
         } for key in current]
-        _append_snapshot(
+        _append_inventory(
             membership_rows=rows, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        latest_header = {
-            "activity_id": snapshot_id, "agreement_id": state["agreement_id"],
+        latest_summary = {
+            "activity_id": activity_id, "agreement_id": state["agreement_id"],
             "committed_at": saved_at, "linked_dataset_count": len(current),
         }
         latest_rows[:] = rows
         saved_ids[:] = current
         state.update(
-            latest_snapshot_id=snapshot_id, latest_snapshot_saved_at=saved_at,
+            latest_activity_id=activity_id, latest_committed_at=saved_at,
             inventory_metadata_ids=list(current), inventory_count=len(current),
-            has_unsaved_changes=False, saved_snapshot_id=snapshot_id,
+            has_unsaved_changes=False, saved_activity_id=activity_id,
             saved_metadata_ids=list(current),
         )
         refresh_controls()
-        status.value = f"Saved inventory snapshot with {len(current)} logical datasets."
+        status.value = f"Saved inventory with {len(current)} logical datasets."
 
     search.observe(refresh_controls, names="value")
     add.on_click(add_selected)
