@@ -103,15 +103,31 @@ def _dataset_options(
     rows: list[dict[str, Any]], roles: Mapping[str, str] | None = None,
 ) -> list[tuple[str, str]]:
     """Build unique readable labels whose values remain canonical logical keys."""
+    by_key = _latest_dataset_rows(rows)
+    entries = [(key, row, _base_dataset_label(row)) for key, row in by_key.items()]
+    return _disambiguated_dataset_options(entries, roles)
+
+
+def _latest_dataset_rows(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Return one deterministic newest catalogue observation per logical key."""
     by_key: dict[str, dict[str, Any]] = {}
     for row in sorted(rows, key=lambda item: (
         str(item.get("metadata_table_key") or ""),
-        str(item.get("_committed_at") or ""),
+        isinstance(item.get("_committed_at"), datetime),
+        item.get("_committed_at") if isinstance(item.get("_committed_at"), datetime) else datetime.min,
+        str(item.get("schema_fingerprint") or ""),
     ), reverse=True):
         key = str(row.get("metadata_table_key") or "")
         if key:
-            by_key[key] = row
-    entries = [(key, row, _base_dataset_label(row)) for key, row in by_key.items()]
+            by_key.setdefault(key, row)
+    return by_key
+
+
+def _disambiguated_dataset_options(
+    entries: list[tuple[str, dict[str, Any], str]],
+    roles: Mapping[str, str] | None,
+) -> list[tuple[str, str]]:
+    """Progressively disambiguate already-normalized dataset entries."""
     base_counts = Counter(base for _key, _row, base in entries)
     labels: list[tuple[str, str]] = []
     provisional: list[tuple[str, str, dict[str, Any]]] = []
@@ -186,15 +202,27 @@ def _empty_state(**values: Any) -> dict[str, Any]:
     return state
 
 
-def _assembled_views(trace: Mapping[str, Any]) -> dict[str, Any]:
-    """Expose the established five review views without altering their frames."""
+def _assembled_views(trace: Mapping[str, Any], schema_fingerprint: str | None = None) -> dict[str, Any]:
+    """Expose the five review views, filtering schema-specific frames by version."""
     tables = trace.get("tables") or {}
-    return {
+    views = {
         "summary": tables.get("METADATA_DATA_CATALOGUE"),
         "current_contract": tables.get("METADATA_DATA_CONTRACT"),
         "data_profiled": tables.get("METADATA_DATA_PROFILED"),
         "guardrail_results": tables.get("METADATA_GUARDRAIL_RESULTS"),
         "data_access": tables.get("METADATA_DATA_ACCESS"),
+    }
+    if not schema_fingerprint:
+        return views
+    from pyspark.sql import functions as F
+
+    return {
+        name: (
+            frame.filter(F.col("schema_fingerprint") == schema_fingerprint)
+            if frame is not None and "schema_fingerprint" in frame.columns
+            else frame
+        )
+        for name, frame in views.items()
     }
 
 
@@ -270,8 +298,10 @@ def widget_view_data_contract(
     Schema versions are newest first and have readable, locale-independent
     timestamps while retaining the full fingerprint as their value. Under the
     current schema contract, that fingerprint represents ordered column names
-    and data types. Large Spark DataFrames are returned by ``get_views`` rather
-    than rendered inside the widget.
+    and data types. Changing the version refreshes every returned review view
+    that carries ``schema_fingerprint``; version-agnostic views remain scoped
+    to the selected dataset. Large Spark DataFrames are returned by
+    ``get_views`` rather than rendered inside the widget.
 
     Examples
     --------
@@ -427,11 +457,26 @@ def widget_view_data_contract(
         return state.get("views", {"selection": None, "tables": {}, "error": "No dataset is selected."})
 
     state["get_views"] = get_views
+    latest_locations = _latest_dataset_rows(rows)
+
+    def refresh_selected_views() -> None:
+        """Reload and version-filter the assembled views for current controls."""
+        key = str(dataset.value or "")
+        state["schema_fingerprint"] = schema_control.value
+        if not key:
+            state["views"] = {"selection": None, "tables": {}, "error": "No dataset is selected."}
+            return
+        trace = get_data_contract_views(
+            key, agreement_id=resolved_agreement_id or None,
+            environment_name=state["environment_name"], target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+        state["views"] = _assembled_views(trace, state["schema_fingerprint"])
 
     def refresh_views(*_: Any) -> None:
         key = str(dataset.value or "")
         state["metadata_table_key"] = key or None
-        location = next((row for row in rows if str(row.get("metadata_table_key") or "") == key), {})
+        location = latest_locations.get(key, {})
         for field in ("environment_name", "store_type", "layer", "schema_name", "table_name"):
             state[field] = location.get(field)
         version_options = _schema_version_options(rows, key)
@@ -451,19 +496,11 @@ def widget_view_data_contract(
             f"<b>FabricStore:</b> {state['store_type'] or ''}<br>"
             f"<b>Location:</b> {_base_dataset_label(location)}{agreement_context}"
         )
-        if not key:
-            state["views"] = {"selection": None, "tables": {}, "error": "No dataset is selected."}
-            return
-        trace = get_data_contract_views(
-            key, agreement_id=resolved_agreement_id or None,
-            environment_name=state["environment_name"], target=target, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
-        state["views"] = _assembled_views(trace)
+        refresh_selected_views()
 
     dataset.observe(lambda change: refresh_views() if change.get("name") == "value" else None, names="value")
     schema_control.observe(
-        lambda change: state.update(schema_fingerprint=change.get("new")) if change.get("name") == "value" else None,
+        lambda change: refresh_selected_views() if change.get("name") == "value" else None,
         names="value",
     )
     refresh_views()

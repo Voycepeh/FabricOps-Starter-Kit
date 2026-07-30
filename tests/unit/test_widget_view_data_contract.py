@@ -12,6 +12,7 @@ from fabricops_kit.widgets.widget_view_data_contract import (
     _assembled_views,
     _base_dataset_label,
     _dataset_options,
+    _latest_dataset_rows,
     _normalize_metadata_ids,
     _pipeline_scope_items,
     _schema_version_options,
@@ -57,6 +58,19 @@ def test_dataset_options_use_key_as_final_deterministic_fallback():
     labels = [label for label, _value in _dataset_options(rows)]
     assert any("abcdefgh" in label for label in labels)
     assert any("ijklmnop" in label for label in labels)
+
+
+def test_dataset_label_and_context_mapping_use_newest_observation():
+    """A moved logical dataset consistently uses its newest physical location."""
+    old = datetime(2026, 7, 20)
+    new = datetime(2026, 7, 29)
+    rows = [
+        {**ROWS[0], "layer": "raw", "table_name": "old_orders", "_committed_at": old},
+        {**ROWS[0], "layer": "curated", "table_name": "new_orders", "_committed_at": new},
+    ]
+    latest = _latest_dataset_rows(rows)
+    assert latest["one"]["table_name"] == "new_orders"
+    assert _dataset_options(rows) == [("curated / sales / new_orders", "one")]
 
 
 def test_widget_is_publicly_importable_and_old_export_is_removed():
@@ -180,6 +194,7 @@ def test_agreement_scope_strictly_intersects_active_catalogue(monkeypatch, spark
     now = datetime(2026, 7, 29, 21, 30)
     catalogue = spark_session.createDataFrame([
         ("linked", "fingerprint-linked", "dev", "lakehouse", "raw", "sales", "orders", now),
+        ("linked", "fingerprint-old", "dev", "lakehouse", "legacy", "sales", "old_orders", datetime(2026, 7, 20)),
         ("unrelated", "fingerprint-other", "dev", "lakehouse", "raw", "sales", "other", now),
         ("prod-only", "fingerprint-prod", "prod", "lakehouse", "raw", "sales", "secret", now),
     ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
@@ -195,7 +210,18 @@ def test_agreement_scope_strictly_intersects_active_catalogue(monkeypatch, spark
     )
     monkeypatch.setattr(
         module, "get_data_contract_views",
-        lambda key, **kwargs: {"selection": {"metadata_table_key": key}, "tables": {}, "error": None},
+        lambda key, **kwargs: {
+            "selection": {"metadata_table_key": key},
+            "tables": {
+                name: catalogue.filter(catalogue.metadata_table_key == key)
+                for name in (
+                    "METADATA_DATA_CATALOGUE", "METADATA_DATA_CONTRACT",
+                    "METADATA_DATA_PROFILED", "METADATA_GUARDRAIL_RESULTS",
+                    "METADATA_DATA_ACCESS",
+                )
+            },
+            "error": None,
+        },
     )
     monkeypatch.setattr("IPython.display.display", lambda *_args, **_kwargs: None)
 
@@ -212,6 +238,16 @@ def test_agreement_scope_strictly_intersects_active_catalogue(monkeypatch, spark
     assert state["_controls"]["dataset"].disabled is True
     assert set(state["_controls"]) == {"dataset", "schema_fingerprint"}
     assert state["schema_fingerprint"] == "fingerprint-linked"
+    assert state["layer"] == "raw"
+    assert state["table_name"] == "orders"
+    assert state["_controls"]["dataset"].options == [("raw / sales / orders", "linked")]
+
+    state["_controls"]["schema_fingerprint"].value = "fingerprint-old"
+
+    assert state["schema_fingerprint"] == "fingerprint-old"
+    assert {
+        row.schema_fingerprint for row in state["get_views"]()["current_contract"].collect()
+    } == {"fingerprint-old"}
 
 
 @pytest.mark.parametrize(

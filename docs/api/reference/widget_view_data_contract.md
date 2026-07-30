@@ -12,9 +12,9 @@ Render the canonical metadata trace for one registered dataset.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_data_contract.py:201`
+`fabricops_kit/widgets/widget_view_data_contract.py:229`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L201-L475">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L229-L512">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -123,8 +123,10 @@ states rather than discovery.
 Schema versions are newest first and have readable, locale-independent
 timestamps while retaining the full fingerprint as their value. Under the
 current schema contract, that fingerprint represents ordered column names
-and data types. Large Spark DataFrames are returned by ``get_views`` rather
-than rendered inside the widget.
+and data types. Changing the version refreshes every returned review view
+that carries ``schema_fingerprint``; version-agnostic views remain scoped
+to the selected dataset. Large Spark DataFrames are returned by
+``get_views`` rather than rendered inside the widget.
 
 </div>
 
