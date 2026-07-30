@@ -29,6 +29,8 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     assert not any(field.startswith("approved_usage_") for field in agreement_fields)
     assert "custom_fields_json" not in steward_fields + agreement_fields
     assert "agreement_id" not in agreement_fields
+    assert "effective_from" not in steward_fields
+    assert "effective_to" not in steward_fields
 
 
 def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypatch):
@@ -350,6 +352,61 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert steward_controls["identity_context"] is None
     assert steward_controls["fields"]["steward_role"].options
     assert steward_controls["fields"]["steward_role"].value == "Data Owner"
+    assert "effective_from" not in steward_controls["fields"]
+    assert "effective_to" not in steward_controls["fields"]
+    steward_header = steward_controls["container"].children[0]
+    assert "Data Steward Creation Widget" in steward_header.value
+    assert "background:#0f6cbd" in steward_header.value
+
+
+def test_steward_widget_blocks_missing_required_fields_before_persistence(monkeypatch, capsys):
+    """List friendly missing fields without reaching steward persistence."""
+    config = agreement_config()
+    monkeypatch.setattr(steward_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
+    monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        steward_widget,
+        "_create_or_update_data_steward",
+        lambda **kwargs: pytest.fail("missing required fields must not reach persistence"),
+    )
+
+    controls = steward_widget.widget_render_data_steward(spark=object())
+    assert controls["save_button"].disabled is True
+    controls["fields"]["steward_name"].value = "  "
+    controls["fields"]["contact"].value = None
+    controls["save_button"].click_callbacks[0](None)
+
+    message = capsys.readouterr().out
+    assert "Cannot save data steward." in message
+    assert "Complete the following required fields:" in message
+    assert "• Steward name" in message
+    assert "• Contact" in message
+
+
+def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatch):
+    """Create valid steward frames with the canonical schema, including custom table names."""
+    created = {}
+
+    class Spark:
+        def createDataFrame(self, rows, schema=None):  # noqa: N802
+            created.update(rows=rows, schema=schema)
+            return "frame"
+
+    monkeypatch.setattr(agreement, "write_lakehouse_table_core", lambda *args, **kwargs: created.update(table=args[1]))
+    config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
+
+    agreement.write_widget_metadata_row(
+        spark=Spark(), config=config, env="dev", table="CUSTOM_STEWARD", row=steward_row()
+    )
+
+    assert created["schema"].fieldNames() == [
+        "steward_id", "steward_name", "steward_role", "contact", "is_active",
+        "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
+    ]
+    assert created["table"] == "CUSTOM_STEWARD"
 
 
 def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
@@ -496,10 +553,12 @@ def test_canonical_steward_schema_identity_and_existing_order():
 
     schema = metadata_table_schema_registry()[agreement.DATA_STEWARD_TABLE]
     assert schema.fieldNames() == [
-        "steward_id", "steward_name", "steward_role", "contact", "effective_from",
-        "effective_to", "is_active", "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
+        "steward_id", "steward_name", "steward_role", "contact", "is_active",
+        "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
     ]
-    steward_id = schema["steward_id"]
-    assert steward_id.dataType.simpleString() == "string"
+    assert "effective_from" not in schema.fieldNames()
+    assert "effective_to" not in schema.fieldNames()
+    steward_id = next(field for field in schema.fields if field.name == "steward_id")
+    assert type(steward_id.dataType).__name__ == "StringType"
     assert steward_id.nullable is False
-    assert all(field.nullable for field in schema.fields[1:8])
+    assert all(field.nullable for field in schema.fields[1:6])

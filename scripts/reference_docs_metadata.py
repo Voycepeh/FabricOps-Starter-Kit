@@ -113,8 +113,8 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 )
 
 METADATA_TABLE_PURPOSES = {
-    "METADATA_DATA_STEWARD": "Active and historical data steward records used by agreement intake.",
-    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context.",
+    "METADATA_DATA_STEWARD": "Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.",
+    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.",
     "METADATA_DATA_CONTRACT": "Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.",
     "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
     "METADATA_DATA_PROFILED": "Detailed per-column profiling evidence captured from a profiled dataset snapshot.",
@@ -146,14 +146,6 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
             "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
             "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
-        ],
-        "effective_from": [
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
-            "fabricops_kit.widgets.shared.parse_iso_date",
-        ],
-        "effective_to": [
-            "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
-            "fabricops_kit.widgets.shared.parse_iso_date",
         ],
         "is_active": [
             "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",

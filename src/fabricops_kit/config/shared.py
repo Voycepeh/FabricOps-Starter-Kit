@@ -356,8 +356,6 @@ class DataAgreementConfig:
                 "steward_name",
                 "steward_role",
                 "contact",
-                "effective_from",
-                "effective_to",
             ],
             "custom_fields": [],
         }
@@ -863,5 +861,4 @@ def _validate_metadata_table_registration(
         "show_tables_statement": None,
         "optional_documented_tables": [],
     }
-
 

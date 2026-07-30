@@ -18,7 +18,11 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key
-from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, coerce_metadata_row_types
+from fabricops_kit.config.metadata_schemas import (
+    CANONICAL_METADATA_TABLES,
+    coerce_metadata_row_types,
+    metadata_table_schema_registry,
+)
 
 
 _WIDGET_STYLE = {"description_width": "150px"}
@@ -186,7 +190,7 @@ def standard_widget(field: str, value: Any = "", *, options: list[Any] | None = 
 DATA_AGREEMENT_TABLE = "METADATA_DATA_AGREEMENT"
 DATA_STEWARD_TABLE = "METADATA_DATA_STEWARD"
 STANDARD_RUNTIME_AUDIT_COLUMNS = ["_committed_by", "_committed_at", "_workspace_id", "_workspace_name", "_notebook_id", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]
-DATA_STEWARD_VISIBLE_FIELDS = ["steward_name", "steward_role", "contact", "effective_from", "effective_to"]
+DATA_STEWARD_VISIBLE_FIELDS = ["steward_name", "steward_role", "contact"]
 DATA_STEWARD_BACKEND_FIELDS = ["steward_id", *DATA_STEWARD_VISIBLE_FIELDS, "is_active"]
 DATA_AGREEMENT_VISIBLE_FIELDS = ["agreement_name", "domain", "provider_steward_id", "recipient_steward_id", "start_date", "expiry_date", "business_purpose"]
 DATA_AGREEMENT_GENERATED_FIELDS = ["agreement_id", "agreement_version"]
@@ -454,6 +458,7 @@ def get_widget_visible_fields(config: Any, kind: str) -> list[str]:
     hidden = set(STANDARD_RUNTIME_AUDIT_COLUMNS) | {"custom_fields_json"}
     if kind == "data_steward_widget":
         hidden.update({"steward_id", "is_active"})
+        hidden.update(set(configured) - set(DATA_STEWARD_VISIBLE_FIELDS))
     if kind == "data_agreement_widget":
         hidden.update(DATA_AGREEMENT_GENERATED_FIELDS)
     return [field for field in configured if field not in hidden]
@@ -531,17 +536,9 @@ def _audit_date(config: Any = None) -> date:
     return datetime.fromisoformat(get_current_audit_timestamp(config=config)).date()
 
 def active_steward(row: dict[str, Any], config: Any = None) -> bool:
-    """Return whether a steward metadata row is active on the audit date."""
+    """Return whether a steward person record is active."""
     is_active = row.get("is_active")
-    if is_active not in (None, "") and not to_bool(is_active):
-        return False
-    today = _audit_date(config)
-    try:
-        starts_before_today = not row.get("effective_from") or date.fromisoformat(str(row["effective_from"])[:10]) <= today
-        ends_after_today = not row.get("effective_to") or date.fromisoformat(str(row["effective_to"])[:10]) >= today
-        return starts_before_today and ends_after_today
-    except ValueError as exc:
-        raise ValueError(f"{DATA_STEWARD_TABLE} row '{row.get('steward_id', '')}' has an invalid effective date. Use ISO dates.") from exc
+    return is_active in (None, "") or to_bool(is_active)
 
 
 def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
@@ -558,7 +555,14 @@ def list_data_stewards(config: Any, env: str, *, spark_session: Any = None, acti
 
 def write_widget_metadata_row(*, spark: Any, config: Any, env: str, table: str, row: dict[str, Any]) -> None:
     """Append one widget metadata row to the configured metadata target."""
-    write_lakehouse_table_core(spark.createDataFrame([coerce_metadata_row_types(table, row)]), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
+    metadata_tables = config_value(config, "metadata_tables", {}) or {}
+    canonical_table = {
+        str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): DATA_STEWARD_TABLE,
+        str(metadata_tables.get("data_agreement", DATA_AGREEMENT_TABLE)): DATA_AGREEMENT_TABLE,
+    }.get(table, table)
+    canonical_schema = metadata_table_schema_registry().get(canonical_table)
+    typed_row = coerce_metadata_row_types(canonical_table, row)
+    write_lakehouse_table_core(spark.createDataFrame([typed_row], schema=canonical_schema), table, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode="append")
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""

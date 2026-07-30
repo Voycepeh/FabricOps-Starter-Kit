@@ -56,7 +56,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
                 "data_agreement": DATA_AGREEMENT_TABLE,
             },
             data_steward_widget={
-                "visible_columns": ["steward_name", "steward_role", "contact", "effective_from", "effective_to"],
+                "visible_columns": ["steward_name", "steward_role", "contact"],
                 "custom_fields": [{"key": "group", "label": "Group", "type": "text"}],
             },
             data_agreement_widget={
@@ -86,8 +86,6 @@ def steward_row(**overrides: Any) -> dict[str, Any]:
         "steward_name": "Configured Steward",
         "steward_role": "Data Steward",
         "contact": "steward@example.com",
-        "effective_from": "2026-01-01",
-        "effective_to": "",
         "is_active": True,
     }
     row.update(overrides)

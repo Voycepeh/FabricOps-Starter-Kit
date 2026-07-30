@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 import uuid
 from typing import Any
 
@@ -17,12 +16,10 @@ from fabricops_kit.widgets.shared import (
     deserialize_custom_fields,
     get_widget_visible_fields,
     list_data_stewards,
-    parse_iso_date,
     render_custom_fields,
     serialize_custom_fields,
     standard_widget,
     to_bool,
-    to_iso_date,
     config_value,
     render_searchable_selector,
     require_ipywidgets,
@@ -112,8 +109,6 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 option_values = [option[1] if isinstance(option, tuple) and len(option) == 2 else option for option in list(getattr(widget, "options", []))]
                 if value not in option_values:
                     widget.options = [*list(getattr(widget, "options", [])), (str(value), str(value))]
-            if field in {"effective_from", "effective_to"}:
-                value = date.fromisoformat(str(value)[:10]) if value else None
             _apply_widget_value(widget, value)
         stored = deserialize_custom_fields(row.get("custom_fields_json", ""))
         for key, widget in custom.items():
@@ -126,6 +121,25 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     save = widgets.Button(description="Save")
     output = widgets.Output()
+    required_labels = {
+        "steward_name": "Steward name",
+        "steward_role": "Steward role",
+        "contact": "Contact",
+    }
+
+    def _missing_required(values: dict[str, Any]) -> list[str]:
+        return [
+            label
+            for field, label in required_labels.items()
+            if not str(values.get(field) or "").strip()
+        ]
+
+    def _sync_save_state(*_: Any) -> None:
+        save.disabled = bool(_missing_required({key: widget.value for key, widget in form.items()}))
+
+    for widget in form.values():
+        widget.observe(_sync_save_state, names="value")
+    _sync_save_state()
 
     def _save(_: Any) -> None:
         save.disabled = True
@@ -134,7 +148,16 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             clear(wait=True)
         with output:
             try:
-                values = {key: to_iso_date(widget.value) if key in {"effective_from", "effective_to"} else widget.value for key, widget in form.items()}
+                values = {
+                    key: widget.value.strip() if isinstance(widget.value, str) else widget.value
+                    for key, widget in form.items()
+                }
+                missing = _missing_required(values)
+                if missing:
+                    print("Cannot save data steward.\n\nComplete the following required fields:")
+                    for label in missing:
+                        print(f"• {label}")
+                    return
                 extras = collect_custom_fields(widget_config, custom)
                 if selected.value:
                     values["steward_id"] = selected.value
@@ -147,11 +170,18 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             except Exception as exc:
                 print(f"Error: {exc}")
             finally:
-                save.disabled = False
+                _sync_save_state()
 
     save.on_click(_save)
+    header = widgets.HTML(
+        value=(
+            '<div style="background:#0f6cbd;color:#fff;padding:14px 18px;'
+            'border-radius:8px;font-size:20px;font-weight:600;line-height:1.3;'
+            'margin:0 0 12px 0;">Data Steward Creation Widget</div>'
+        )
+    )
     controls = [selected_selector["container"], *[form[field] for field in fields], *custom.values()]
-    container = widgets.VBox([*controls, save, output])
+    container = widgets.VBox([header, *controls, save, output])
     ip.display(container)
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
 
@@ -168,7 +198,10 @@ def _steward_label(row: dict[str, Any]) -> str:
 
 
 def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values: dict[str, Any], custom_fields: dict[str, Any] | None = None, committed_by: str | None = None, committed_at: str | None = None, runtime_context: dict[str, Any] | None = None) -> dict[str, Any]:
-    row = {field: values.get(field, "") for field in DATA_STEWARD_VISIBLE_FIELDS}
+    row = {
+        field: value.strip() if isinstance(value := values.get(field), str) else value
+        for field in DATA_STEWARD_VISIBLE_FIELDS
+    }
     required = ["steward_name", "steward_role", "contact"]
     missing = [field for field in required if not str(row.get(field) or "").strip()]
     if missing:
@@ -179,10 +212,6 @@ def _create_or_update_data_steward(*, spark: Any, config: Any, env: str, values:
     role = str(row["steward_role"]).strip()
     if role not in configured_roles and not (selected_steward_id and existing_role and role == existing_role):
         raise ValueError("steward_role must be one of the configured steward role options.")
-    row["effective_from"] = parse_iso_date(row.get("effective_from"), "effective_from")
-    row["effective_to"] = parse_iso_date(row.get("effective_to"), "effective_to")
-    if row["effective_to"] and row["effective_from"] and row["effective_to"] < row["effective_from"]:
-        raise ValueError("effective_to must be on or after effective_from.")
     if selected_steward_id:
         uuid.UUID(selected_steward_id)
     row["steward_id"] = selected_steward_id or _generate_steward_id()

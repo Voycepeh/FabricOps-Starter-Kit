@@ -243,9 +243,10 @@ def setup_metadata_tables(
 
     Detailed table contents:
 
-    - ``METADATA_DATA_STEWARD`` stores ``steward_id``, ``steward_name``,
-      ``steward_role``, ``contact``, ``effective_from``, ``effective_to``,
-      ``is_active``, ``custom_fields_json``, and the standard audit fields.
+    - ``METADATA_DATA_STEWARD`` is a person registry storing ``steward_id``,
+      ``steward_name``, ``steward_role``, ``contact``, ``is_active``,
+      ``custom_fields_json``, and the standard audit fields. Responsibility
+      effective periods remain on ``METADATA_DATA_AGREEMENT``.
     - ``METADATA_DATA_AGREEMENT`` stores ``agreement_id``,
       ``agreement_version``, ``agreement_name``, ``domain``,
       ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,

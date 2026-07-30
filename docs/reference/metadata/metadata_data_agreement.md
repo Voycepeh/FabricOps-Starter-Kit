@@ -1,6 +1,6 @@
 # METADATA_DATA_AGREEMENT
 
-**Purpose:** Agreement records that describe approved use, steward, recipient, and lifecycle context.
+**Purpose:** Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
 
 ## Implemented schema
 

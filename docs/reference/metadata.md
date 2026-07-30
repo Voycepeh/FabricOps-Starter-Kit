@@ -10,11 +10,11 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)**
 
-    Active and historical data steward records used by agreement intake.
+    Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.
 
 -   **[METADATA_DATA_AGREEMENT](metadata/metadata_data_agreement.md)**
 
-    Agreement records that describe approved use, steward, recipient, and lifecycle context.
+    Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
