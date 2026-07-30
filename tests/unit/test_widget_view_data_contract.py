@@ -145,11 +145,11 @@ def test_metadata_trace_returns_canonical_raw_filtered_tables(monkeypatch, spark
             "agreement_id string, provider_steward_id string, recipient_steward_id string, marker string, _committed_at timestamp",
         ),
         "METADATA_DATA_CONTRACT": frame(
-            [("snapshot-old", "agreement-1", "dataset", old, old),
-             ("snapshot-new", "agreement-1", "dataset", new, new),
-             ("snapshot-second-agreement", "agreement-2", "dataset", new, new),
-             ("snapshot-other", "agreement-2", "other", new, new)],
-            "contract_snapshot_id string, agreement_id string, metadata_table_key string, snapshot_saved_at timestamp, _committed_at timestamp",
+            [("agreement-1", "dataset", "snapshot-old", old),
+             ("agreement-1", "dataset", "snapshot-new", new),
+             ("agreement-2", "dataset", "snapshot-second-agreement", new),
+             ("agreement-2", "other", "snapshot-other", new)],
+            "agreement_id string, metadata_table_key string, _activity_id string, _committed_at timestamp",
         ),
     }
     environment_tables = {
@@ -196,7 +196,7 @@ def test_metadata_trace_returns_canonical_raw_filtered_tables(monkeypatch, spark
     assert [row.marker for row in views["tables"]["METADATA_DATA_AGREEMENT"].collect()] == [
         "new agreement", "old agreement",
     ]
-    assert [row.contract_snapshot_id for row in views["tables"]["METADATA_DATA_CONTRACT"].collect()] == [
+    assert [row._activity_id for row in views["tables"]["METADATA_DATA_CONTRACT"].collect()] == [
         "snapshot-new", "snapshot-old",
     ]
     for table_name in tables:
@@ -214,7 +214,7 @@ def test_metadata_trace_returns_canonical_raw_filtered_tables(monkeypatch, spark
     assert {row.steward_id for row in unscoped["tables"]["METADATA_DATA_STEWARD"].collect()} == {
         "provider", "recipient", "other",
     }
-    assert {row.contract_snapshot_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
+    assert {row._activity_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
         "snapshot-old", "snapshot-new", "snapshot-second-agreement",
     }
 

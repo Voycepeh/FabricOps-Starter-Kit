@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from datetime import datetime
 import html
 from typing import Any
-import uuid
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
@@ -146,15 +145,15 @@ def _latest_snapshot(memberships, agreement_id: str) -> tuple[dict[str, Any] | N
     if not rows:
         return None, []
     latest_row = max(rows, key=lambda row: (
-        _commit_sort_value(row.get("snapshot_saved_at")),
-        str(row.get("contract_snapshot_id") or ""),
+        _commit_sort_value(row.get("_committed_at")),
+        str(row.get("_activity_id") or ""),
     ))
-    snapshot_id = str(latest_row.get("contract_snapshot_id") or "")
-    snapshot_rows = [row for row in rows if str(row.get("contract_snapshot_id") or "") == snapshot_id]
+    snapshot_id = str(latest_row.get("_activity_id") or "")
+    snapshot_rows = [row for row in rows if str(row.get("_activity_id") or "") == snapshot_id]
     summary = {
-        "contract_snapshot_id": snapshot_id,
+        "activity_id": snapshot_id,
         "agreement_id": agreement_id,
-        "snapshot_saved_at": latest_row.get("snapshot_saved_at"),
+        "committed_at": latest_row.get("_committed_at"),
         "linked_dataset_count": len({str(row.get("metadata_table_key") or "") for row in snapshot_rows}),
     }
     return summary, _deduplicate_memberships(snapshot_rows)
@@ -244,9 +243,10 @@ def widget_register_data_contract(
     Notes
     -----
     This is an immutable snapshot-based inventory of logical datasets linked
-    to a Data Agreement. Each explicit save appends the complete current
-    membership list under one snapshot identity, while the widget displays only
-    the latest saved snapshot. Historical snapshots are never updated or deleted.
+    to a Data Agreement. Each explicit save builds the FabricOps audit fields
+    once and appends the complete current membership list. ``_activity_id``
+    groups the save and ``_committed_at`` orders saves, while the widget displays
+    only the latest inventory. Historical rows are never updated or deleted.
     Catalogue discovery is restricted to the active environment, but logical
     ``metadata_table_key`` membership remains environment-independent.
     An unsaved agreement draft cannot create an inventory snapshot; select an
@@ -313,7 +313,7 @@ def widget_register_data_contract(
         _latest_snapshot(memberships, resolved_agreement_id)
         if resolved_agreement_id else (None, [])
     )
-    latest_snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
+    latest_snapshot_id = str((latest_header or {}).get("activity_id") or "") or None
     saved_ids = [str(row["metadata_table_key"]) for row in latest_rows]
     valid_initial_ids = [key for key in initial_ids if key in rows_by_id]
     inventory_ids = (
@@ -336,7 +336,7 @@ def widget_register_data_contract(
     state: dict[str, Any] = {
         "agreement_id": resolved_agreement_id or None, "agreement_label": agreement_label,
         "environment_name": env, "latest_snapshot_id": latest_snapshot_id,
-        "latest_snapshot_saved_at": (latest_header or {}).get("snapshot_saved_at"),
+        "latest_snapshot_saved_at": (latest_header or {}).get("committed_at"),
         "available_metadata_ids": [key for _label, key in all_options],
         "inventory_metadata_ids": inventory_ids, "inventory_count": len(inventory_ids),
         "unknown_initial_metadata_ids": unknown_ids,
@@ -389,7 +389,7 @@ def widget_register_data_contract(
         selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
         latest_header, loaded_rows = _latest_snapshot(memberships, selected_id)
-        snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
+        snapshot_id = str((latest_header or {}).get("activity_id") or "") or None
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
         valid_initial = [key for key in initial_ids if key in rows_by_id]
@@ -397,7 +397,7 @@ def widget_register_data_contract(
         state.update(
             agreement_id=selected_id, agreement_label=selected_label,
             latest_snapshot_id=snapshot_id,
-            latest_snapshot_saved_at=(latest_header or {}).get("snapshot_saved_at"),
+            latest_snapshot_saved_at=(latest_header or {}).get("committed_at"),
             inventory_metadata_ids=current, inventory_count=len(current),
             has_unsaved_changes=current != saved_ids,
             saved_snapshot_id=None, saved_metadata_ids=[],
@@ -448,16 +448,15 @@ def widget_register_data_contract(
         if not current:
             status.value = "An inventory snapshot must contain at least one logical dataset."
             return
-        snapshot_id = str(uuid.uuid4())
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+        snapshot_id = str(audit["_activity_id"])
         saved_at = audit["_committed_at"]
         rows = [{
-            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
+            "agreement_id": state["agreement_id"],
             "metadata_table_key": key,
             "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
                 (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
             )),
-            "snapshot_saved_at": saved_at,
             **audit,
         } for key in current]
         _append_snapshot(
@@ -465,8 +464,8 @@ def widget_register_data_contract(
             spark_session=spark_session, context=runtime_context,
         )
         latest_header = {
-            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
-            "snapshot_saved_at": saved_at, "linked_dataset_count": len(current),
+            "activity_id": snapshot_id, "agreement_id": state["agreement_id"],
+            "committed_at": saved_at, "linked_dataset_count": len(current),
         }
         latest_rows[:] = rows
         saved_ids[:] = current

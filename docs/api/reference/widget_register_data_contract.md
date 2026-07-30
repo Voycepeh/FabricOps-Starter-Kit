@@ -12,9 +12,9 @@ Manage an immutable agreement dataset inventory.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:193`
+`fabricops_kit/widgets/widget_register_data_contract.py:192`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L193-L517">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L192-L516">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,7 +87,7 @@ Mutable snapshot state with the latest inventory, unsaved edits, save results, g
 
 ### Return interpretation
 
-The inventory reflects only the latest snapshot plus unsaved valid additions; each save appends one complete non-empty membership set without changing history.
+The inventory reflects only the latest audit activity plus unsaved valid additions; each save appends one complete non-empty membership set without changing history.
 
 ## Raises / Errors
 
@@ -104,9 +104,10 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 <div class="reference-docstring-notes" markdown="1">
 
 This is an immutable snapshot-based inventory of logical datasets linked
-to a Data Agreement. Each explicit save appends the complete current
-membership list under one snapshot identity, while the widget displays only
-the latest saved snapshot. Historical snapshots are never updated or deleted.
+to a Data Agreement. Each explicit save builds the FabricOps audit fields
+once and appends the complete current membership list. ``_activity_id``
+groups the save and ``_committed_at`` orders saves, while the widget displays
+only the latest inventory. Historical rows are never updated or deleted.
 Catalogue discovery is restricted to the active environment, but logical
 ``metadata_table_key`` membership remains environment-independent.
 An unsaved agreement draft cannot create an inventory snapshot; select an

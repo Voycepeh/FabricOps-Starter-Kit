@@ -62,11 +62,11 @@ def test_latest_catalogue_and_snapshot_resolution_are_deterministic(spark_sessio
     ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
     assert _latest_catalogue_rows(catalogue, "dev")[0]["schema_fingerprint"] == "new-b"
     memberships = spark_session.createDataFrame([
-        ("snapshot-old", "agreement", "one", old), ("snapshot-a", "agreement", "one", new),
-        ("snapshot-b", "agreement", "two", new), ("other", "other", "one", new),
-    ], "contract_snapshot_id string, agreement_id string, metadata_table_key string, snapshot_saved_at timestamp")
+        ("activity-old", "agreement", "one", old), ("activity-a", "agreement", "one", new),
+        ("activity-b", "agreement", "two", new), ("other", "other", "one", new),
+    ], "_activity_id string, agreement_id string, metadata_table_key string, _committed_at timestamp")
     summary, rows = _latest_snapshot(memberships, "agreement")
-    assert summary["contract_snapshot_id"] == "snapshot-b"
+    assert summary["activity_id"] == "activity-b"
     assert [row["metadata_table_key"] for row in rows] == ["two"]
     assert _latest_snapshot(memberships, "missing") == (None, [])
 
@@ -76,9 +76,9 @@ def test_snapshot_memberships_do_not_combine_history_and_deduplicate(spark_sessi
     frame = spark_session.createDataFrame([
         ("old", "one", "old-fp"), ("latest", "one", "fp"),
         ("latest", "one", "duplicate"), ("latest", "two", "two-fp"),
-    ], "contract_snapshot_id string, metadata_table_key string, schema_fingerprint string")
+    ], "_activity_id string, metadata_table_key string, schema_fingerprint string")
     rows = _deduplicate_memberships([
-        row.asDict(recursive=True) for row in frame.filter("contract_snapshot_id = 'latest'").collect()
+        row.asDict(recursive=True) for row in frame.filter("_activity_id = 'latest'").collect()
     ])
     assert [row["metadata_table_key"] for row in rows] == ["one", "two"]
 
@@ -118,7 +118,7 @@ def snapshot_runtime(monkeypatch, spark_session):
             "_committed_by": "tester", "_committed_at": committed_at,
             "_workspace_id": "workspace-id", "_workspace_name": "workspace",
             "_notebook_id": "notebook-id", "_notebook_name": "notebook",
-            "_metadata_lakehouse_name": "metadata", "_activity_id": "activity-id",
+            "_metadata_lakehouse_name": "metadata", "_activity_id": f"activity-{tick['value']}",
         }
 
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
@@ -133,12 +133,11 @@ def _seed_snapshot(spark, tables, snapshot_id, agreement_id, saved_at, keys):
     audit = {
         "_committed_by": "seed", "_committed_at": saved_at,
         "_workspace_id": "w", "_workspace_name": "w", "_notebook_id": "n",
-        "_notebook_name": "n", "_metadata_lakehouse_name": "m", "_activity_id": "a",
+        "_notebook_name": "n", "_metadata_lakehouse_name": "m", "_activity_id": snapshot_id,
     }
     rows = [{
-        "contract_snapshot_id": snapshot_id, "agreement_id": agreement_id,
-        "metadata_table_key": key, "schema_fingerprint": f"fp-{key}",
-        "snapshot_saved_at": saved_at, **audit,
+        "agreement_id": agreement_id, "metadata_table_key": key,
+        "schema_fingerprint": f"fp-{key}", **audit,
     } for key in keys]
     if rows:
         tables["METADATA_DATA_CONTRACT"] = tables["METADATA_DATA_CONTRACT"].unionByName(
@@ -255,9 +254,9 @@ def test_successive_snapshots_append_complete_inventories_and_preserve_history(s
     assert len(state["get_rows"]()) == 4
     assert {mode for _name, mode, _rows in writes} == {"append"}
     for snapshot_id, count in ((first_id, 5), (second_id, 6), (third_id, 4)):
-        rows = [row for row in tables["METADATA_DATA_CONTRACT"].collect() if row.contract_snapshot_id == snapshot_id]
+        rows = [row for row in tables["METADATA_DATA_CONTRACT"].collect() if row._activity_id == snapshot_id]
         assert len(rows) == count
-        assert {row._committed_at for row in rows} == {row.snapshot_saved_at for row in rows}
+        assert len({row._committed_at for row in rows}) == 1
 
 
 def test_empty_inventory_is_rejected_without_writing(snapshot_runtime, spark_session):
@@ -279,10 +278,10 @@ def test_other_agreements_and_historical_rows_are_unchanged(snapshot_runtime, sp
     _module, tables, _writes = snapshot_runtime
     _seed_snapshot(spark_session, tables, "a-old", "agreement", datetime(2026, 1, 1), ["key-one"])
     _seed_snapshot(spark_session, tables, "b-old", "other", datetime(2026, 1, 1), ["key-two"])
-    original = {(row.contract_snapshot_id, row.agreement_id, row.metadata_table_key) for row in tables["METADATA_DATA_CONTRACT"].collect()}
+    original = {(row._activity_id, row.agreement_id, row.metadata_table_key) for row in tables["METADATA_DATA_CONTRACT"].collect()}
     state = public_widget(agreement_id="agreement", spark_session=spark_session)
     state["_controls"]["save"].click()
-    after = {(row.contract_snapshot_id, row.agreement_id, row.metadata_table_key) for row in tables["METADATA_DATA_CONTRACT"].collect()}
+    after = {(row._activity_id, row.agreement_id, row.metadata_table_key) for row in tables["METADATA_DATA_CONTRACT"].collect()}
     assert original <= after
     assert ("b-old", "other", "key-two") in after
 

@@ -251,9 +251,10 @@ def setup_metadata_tables(
       ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
       ``start_date``, ``expiry_date``, ``business_purpose``,
       ``custom_fields_json``, and the standard audit fields.
-    - ``METADATA_DATA_CONTRACT`` stores ``contract_snapshot_id``,
-      ``agreement_id``, ``metadata_table_key``, ``schema_fingerprint``,
-      ``snapshot_saved_at``, and the standard audit fields.
+    - ``METADATA_DATA_CONTRACT`` stores ``agreement_id``,
+      ``metadata_table_key``, ``schema_fingerprint``, and the standard audit
+      fields. ``_activity_id`` groups one saved inventory and ``_committed_at``
+      orders inventory saves.
     - ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
       ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
       ``store_type``, ``layer``, ``schema_name``, ``table_name``,

@@ -18,7 +18,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-    Logical dataset memberships belonging to immutable agreement inventory snapshots.
+    Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 

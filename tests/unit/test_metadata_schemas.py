@@ -22,11 +22,11 @@ def test_data_contract_uses_one_snapshot_membership_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in registry
     assert membership_names == [
-        "contract_snapshot_id", "agreement_id", "metadata_table_key",
-        "schema_fingerprint", "snapshot_saved_at", *audit_names,
+        "agreement_id", "metadata_table_key", "schema_fingerprint", *audit_names,
     ]
     abandoned = {
         "contract_id", "contract_version", "contract_status", "effective_from",
-        "effective_to", "contract_payload_json",
+        "effective_to", "contract_payload_json", "contract_snapshot_id",
+        "snapshot_saved_at",
     }
     assert abandoned.isdisjoint(membership_names)
