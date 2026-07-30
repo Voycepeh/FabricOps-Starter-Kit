@@ -34,6 +34,13 @@ def _code_cells(path: Path) -> Iterable[tuple[int, str]]:
             yield index, cell.source
 
 
+def _cell_index(notebook: nbformat.NotebookNode, text: str) -> int:
+    """Return the index of the single cell containing text."""
+    matches = [index for index, cell in enumerate(notebook.cells) if text in cell.source]
+    assert len(matches) == 1, f"Expected one cell containing {text!r}, found {matches}"
+    return matches[0]
+
+
 def _portable_python_source(source: str) -> str | None:
     """Return Python source for syntax checks, or None for cell magics."""
     lines = source.splitlines()
@@ -142,15 +149,7 @@ def test_02_pipeline_uses_only_the_contract_widget():
     assert "widget_enrich_" not in source
 
 
-@pytest.mark.parametrize(
-    ("notebook_name", "state_name"),
-    [
-        ("01_agreement.ipynb", "agreement_contract_view"),
-        ("02_pipeline.ipynb", "pipeline_contract_view"),
-        ("03_review.ipynb", "review_contract_view"),
-        ("99_explore.ipynb", "data_contract_view"),
-    ],
-)
+@pytest.mark.parametrize(("notebook_name", "state_name"), [("99_explore.ipynb", "data_contract_view")])
 def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, state_name):
     """Each template renders refreshed views in a separate rerunnable cell."""
     notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
@@ -161,3 +160,101 @@ def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, sta
     assert 'for table_name, frame in metadata_views["tables"].items()' in source
     assert 'print("Sorted by _committed_at descending")' in source
     assert "display(frame)" in source
+
+
+def test_01_agreement_registers_one_logical_draft_contract_after_agreement():
+    """The agreement notebook reuses agreement state for one logical contract write."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "01_agreement.ipynb")
+    source = "\n".join(cell.source for cell in notebook.cells)
+    agreement_index = _cell_index(notebook, "agreement_widget = widget_render_data_agreement")
+    contract_index = _cell_index(notebook, "contract_state = widget_register_data_contract")
+    contract_source = notebook.cells[contract_index].source
+
+    assert "widget_register_data_contract" in source
+    assert agreement_index < contract_index
+    assert "agreement=agreement_widget" in contract_source
+    assert 'target="metadata"' in contract_source
+    assert "schema=METADATA_SCHEMA" in contract_source
+    assert "spark_session=spark" in contract_source
+    assert "agreement_id=" not in contract_source
+    assert "metadata_id" not in contract_source
+    assert source.count("widget_render_data_agreement(") == 1
+    assert source.count("widget_register_data_contract(") == 1
+    assert "logical `metadata_table_key`" in source
+    assert "rather than duplicated for each environment" in source
+
+
+def test_02_pipeline_reviews_only_current_notebook_lineage_after_profiling():
+    """The pipeline viewer and output remain scoped and notebook-owned."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
+    source = "\n".join(cell.source for cell in notebook.cells)
+    profile_indices = [
+        index for index, cell in enumerate(notebook.cells)
+        if "profile_and_register_table(" in cell.source and "from fabricops_kit" not in cell.source
+    ]
+    viewer_index = _cell_index(notebook, "pipeline_contract_view = widget_view_data_contract")
+    output_index = _cell_index(notebook, 'pipeline_contract_view["get_views"]()')
+    viewer_source = notebook.cells[viewer_index].source
+    output_source = notebook.cells[output_index].source
+
+    assert "widget_view_data_contract" in source
+    assert max(profile_indices) < viewer_index < output_index
+    assert 'pipeline_scope="current_notebook"' in viewer_source
+    assert 'target="metadata"' in viewer_source
+    assert "schema=METADATA_SCHEMA" in viewer_source
+    assert "spark_session=spark" in viewer_source
+    assert "agreement" not in viewer_source
+    assert "steward_id" not in viewer_source
+    assert "metadata_id" not in viewer_source
+    assert source.count("widget_view_data_contract(") == 1
+    assert '.get("error")' in output_source
+    assert '.get("tables", {})' in output_source
+    assert "display(dataframe)" in output_source
+    assert "active environment" in source
+    assert "current Fabric workspace" in source
+    assert "current notebook lineage" in source
+
+
+def test_03_review_uses_steward_agreement_contract_order_and_scope():
+    """Governance review resolves its contract strictly through agreement state."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "03_review.ipynb")
+    source = "\n".join(cell.source for cell in notebook.cells)
+    steward_index = _cell_index(notebook, "steward_widget = widget_render_data_steward")
+    agreement_index = _cell_index(notebook, "agreement_widget = widget_render_data_agreement")
+    viewer_index = _cell_index(notebook, "governance_contract_view = widget_view_data_contract")
+    output_index = _cell_index(notebook, 'governance_contract_view["get_views"]()')
+    viewer_source = notebook.cells[viewer_index].source
+    output_source = notebook.cells[output_index].source
+
+    assert steward_index < agreement_index < viewer_index < output_index
+    assert "agreement=agreement_widget" in viewer_source
+    assert 'target="metadata"' in viewer_source
+    assert "schema=METADATA_SCHEMA" in viewer_source
+    assert "spark_session=spark" in viewer_source
+    assert "agreement_id" not in viewer_source
+    assert "steward_id" not in viewer_source
+    assert "pipeline_scope" not in viewer_source
+    assert source.count("widget_render_data_agreement(") == 1
+    assert source.count("widget_view_data_contract(") == 1
+    assert '.get("error")' in output_source
+    assert '.get("tables", {})' in output_source
+    assert "display(dataframe)" in output_source
+    assert "only linked logical datasets are visible" in source
+    assert "Contract membership is shared across Development and Production" in source
+    assert "observations remain separate" in source
+
+
+@pytest.mark.parametrize("notebook_name", ["01_agreement.ipynb", "02_pipeline.ipynb", "03_review.ipynb"])
+def test_data_contract_workflow_cells_are_clean(notebook_name):
+    """New contract workflow code cells have deterministic, output-free state."""
+    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
+    contract_cells = [
+        cell for cell in notebook.cells
+        if cell.cell_type == "code"
+        and ("widget_register_data_contract(" in cell.source or "widget_view_data_contract(" in cell.source
+             or '["get_views"]()' in cell.source)
+        and "from fabricops_kit" not in cell.source
+    ]
+    assert contract_cells
+    assert all(cell.execution_count is None for cell in contract_cells)
+    assert all(not cell.outputs for cell in contract_cells)

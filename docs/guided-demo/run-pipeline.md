@@ -85,4 +85,6 @@ The notebook also provides an optional Warehouse target using `write_warehouse_t
 
 Each successful profile registration appends observed statistical evidence to `METADATA_DATA_PROFILED`, upserts the canonical table and column identities in `METADATA_DATA_CATALOGUE`, and records source or target participation in `METADATA_DATA_LINEAGE`. All metadata writes continue to use the metadata Lakehouse configured by `00_env_config`, not the business source or target store.
 
-Finish the notebook with `widget_view_data_contract(spark_session=spark)` to review the registered source and target evidence.
+After profiling and registration, `02_pipeline` opens a technical Data Contract self-review with `pipeline_scope="current_notebook"`. The viewer is restricted to the active environment, current Fabric workspace, and current notebook lineage, so the pipeline author can inspect canonical metadata evidence only for datasets that this notebook registered or participated in through recorded lineage. It is not unrestricted catalogue browsing.
+
+The widget controls dataset selection, while the following rerunnable notebook cell calls `get_views()` and displays the returned labelled canonical metadata tables.
