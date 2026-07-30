@@ -270,22 +270,6 @@
       "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
       "sidebar_group": "3. Data engineer",
       "sidebar_include": true,
-      "callable_name": "prepare_pipeline_table_configs",
-      "callable_visibility": "public",
-      "callable_type": "callable",
-      "callable_role": "callable",
-      "template_notebook": "02_pipeline",
-      "template_segment": "Table config preparation",
-      "used_in_templates": [
-        "02_pipeline"
-      ]
-    },
-    {
-      "module_name": "pipeline",
-      "visibility": "public",
-      "module_summary": "Owns thin 02_pipeline helpers for profiles, lineage relationships, guardrail results, and run summaries.",
-      "sidebar_group": "3. Data engineer",
-      "sidebar_include": true,
       "callable_name": "profile_dataframe",
       "callable_visibility": "public",
       "callable_type": "callable",

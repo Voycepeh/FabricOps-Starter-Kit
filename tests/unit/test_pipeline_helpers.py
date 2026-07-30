@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import importlib
 import json
-import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -51,7 +49,11 @@ class FakeSpark:
 
 def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     """Verify public pipeline helpers are exported without wrapper bloat."""
-    assert "prepare_pipeline_table_configs" in fabricops_kit.__all__
+    assert "prepare_pipeline_table_configs" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "prepare_pipeline_table_configs")
+    assert not hasattr(pipeline, "prepare_pipeline_table_configs")
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("fabricops_kit.pipeline.prepare_pipeline_table_configs")
     assert "run_table_guardrails" in fabricops_kit.__all__
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
     assert "write_pipeline_lineage" not in fabricops_kit.__all__
@@ -92,85 +94,6 @@ class FakeDataFrame:
         return self
 
 
-def _install_fake_pyspark_functions(monkeypatch):
-    fake_functions = types.SimpleNamespace(lit=lambda value: ("lit", value))
-    fake_sql = types.ModuleType("pyspark.sql")
-    fake_sql.functions = fake_functions
-    fake_pyspark = types.ModuleType("pyspark")
-    fake_pyspark.sql = fake_sql
-    monkeypatch.setitem(sys.modules, "pyspark", fake_pyspark)
-    monkeypatch.setitem(sys.modules, "pyspark.sql", fake_sql)
-    monkeypatch.setitem(sys.modules, "pyspark.sql.functions", fake_functions)
-
-
-def test_prepare_pipeline_table_configs_source_role_derives_defaults_from_preloaded_dataframe():
-    """Verify prepare pipeline table configs source role derives defaults from preloaded dataframe."""
-    source_df = FakeDataFrame("source")
-
-    enriched, by_key = pipeline.prepare_pipeline_table_configs(
-        [
-            {
-                "key": "source_01",
-                "df": source_df,
-                "layer": "source",
-                "table_name": "orders_raw",
-                "fabric_store_target": "source",
-                "watermark_column": "business_date",
-            }
-        ],
-        {
-            "schema_preset": "allow_new_columns",
-            "profile_mode": "changing_data",
-        },
-        table_role="source",
-    )
-
-    assert enriched == [
-        {
-            "schema_preset": "allow_new_columns",
-            "profile_mode": "changing_data",
-            "key": "source_01",
-            "df": source_df,
-            "layer": "source",
-            "table_name": "orders_raw",
-            "watermark_column": "business_date",
-            "dataset_name": "orders_raw",
-            "stage": "source",
-            "fabric_store_target": "source",
-        }
-    ]
-    assert by_key["source_01"] is enriched[0]
-
-
-def test_prepare_pipeline_table_configs_source_role_requires_preloaded_dataframe():
-    """Verify prepare pipeline table configs source role requires preloaded dataframe."""
-    with pytest.raises(ValueError, match="must include a pre-loaded DataFrame"):
-        pipeline.prepare_pipeline_table_configs(
-            [{"key": "source_01", "layer": "source", "table_name": "orders_raw"}],
-            {},
-            table_role="source",
-        )
-
-
-def test_prepare_pipeline_table_configs_requires_explicit_fabric_store_target(monkeypatch):
-    """Verify prepare pipeline table configs does not infer FabricStore target from layer fields."""
-    _install_fake_pyspark_functions(monkeypatch)
-    with pytest.raises(ValueError, match="Table config 'source_01' must define a non-empty fabric_store_target"):
-        pipeline.prepare_pipeline_table_configs(
-            [{"key": "source_01", "df": FakeDataFrame("source"), "layer": "source", "table_name": "orders_raw"}],
-            {},
-            table_role="source",
-        )
-    with pytest.raises(ValueError, match="Table config 'target_01' must define a non-empty fabric_store_target"):
-        pipeline.prepare_pipeline_table_configs(
-            [{"key": "target_01", "df": FakeDataFrame("target"), "layer": "product", "table_name": "orders"}],
-            {},
-            table_role="target",
-            run_id="run-1",
-            pipeline_name="pipeline-1",
-        )
-
-
 def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     """Verify pipeline module does not expose source read routing wrappers."""
     assert not hasattr(pipeline, "_load_source_dataframe")
@@ -178,83 +101,6 @@ def test_pipeline_module_does_not_expose_source_read_routing_wrappers():
     assert not hasattr(pipeline, "_source_read_type")
 
 
-
-
-def test_prepare_pipeline_table_configs_target_role_adds_audit_columns_and_derives_write_defaults(monkeypatch):
-    """Verify prepare pipeline table configs target role adds audit columns and derives write defaults."""
-    _install_fake_pyspark_functions(monkeypatch)
-    df = FakeDataFrame("target")
-
-    enriched, by_key = pipeline.prepare_pipeline_table_configs(
-        [
-            {
-                "key": "target_01",
-                "df": df,
-                "layer": "unified",
-                "table_name": "orders_curated",
-                "fabric_store_target": "unified",
-            }
-        ],
-        {
-            "schema_preset": "allow_new_columns",
-            "write_mode": "overwrite",
-            "target_kind": "lakehouse",
-        },
-        table_role="target",
-        run_id="run-1",
-        pipeline_name="pipeline-1",
-    )
-
-    target = enriched[0]
-    assert target["dataset_name"] == "orders_curated"
-    assert target["stage"] == "unified"
-    assert target["target_layer"] == "unified"
-    assert target["target_name"] == "orders_curated"
-    assert target["target_kind"] == "lakehouse"
-    assert target["fabric_store_target"] == "unified"
-    assert by_key["target_01"] is target
-    assert [name for name, _value in df.with_columns] == [
-        "_fabricops_run_id",
-        "_fabricops_pipeline_name",
-        "_fabricops_created_at",
-    ]
-
-    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
-    assert created_at.endswith("+00:00")
-
-
-def test_prepare_pipeline_table_configs_target_role_uses_configured_audit_timezone(monkeypatch):
-    """Verify target audit columns use configured audit timezone."""
-    _install_fake_pyspark_functions(monkeypatch)
-    df = FakeDataFrame("target")
-    config = framework_config()
-    object.__setattr__(config, "audit_timezone", "Asia/Singapore")
-
-    enriched, _by_key = pipeline.prepare_pipeline_table_configs(
-        [
-            {
-                "key": "target_01",
-                "df": df,
-                "layer": "unified",
-                "table_name": "orders_curated",
-                "fabric_store_target": "unified",
-                "config": config,
-            }
-        ],
-        {},
-        table_role="target",
-        run_id="run-1",
-        pipeline_name="pipeline-1",
-    )
-
-    assert enriched[0]["df"] is df
-    assert [name for name, _value in df.with_columns] == [
-        "_fabricops_run_id",
-        "_fabricops_pipeline_name",
-        "_fabricops_created_at",
-    ]
-    created_at = dict(df.with_columns)["_fabricops_created_at"][1]
-    assert created_at.endswith("+08:00")
 
 
 def test_summary_status_treats_baseline_created_as_passed_and_skipped_as_nonblocking():

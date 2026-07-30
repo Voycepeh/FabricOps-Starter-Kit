@@ -73,7 +73,7 @@ source_guardrail_results = run_table_guardrails(SOURCE_TABLES, run_id=RUN_ID, co
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_configs` | `list[dict[str, Any]]` | Yes | Prepared source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings. Call prepare_pipeline_table_configs first when starting from notebook-editable source or target definitions. |
+| `table_configs` | `list[dict[str, Any]]` | Yes | Source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings. |
 | `run_id` | `str \| None` | No | Pipeline run identifier written with saved results and used to group in-memory profiles. Omit only when an active pipeline context already provides it. |
 | `context` | `dict[str, Any] \| None` | No | FabricOps runtime context, usually {"config": CONFIG, "env": ENV}. Omit when 00_env_config or an active pipeline context already provides the context. |
 | `spark_session` | `Any \| None` | No | Spark session used for profiling, metadata reads, DQ checks, and result writes. Omit only when an active pipeline context already provides it. |

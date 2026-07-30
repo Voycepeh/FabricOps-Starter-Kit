@@ -294,10 +294,6 @@ INTERNAL_HELPER_AUDIT_DECISIONS = {
 
 
 PARAMETER_DISPLAY_TYPES = {
-    "prepare_pipeline_table_configs": {
-        "table_configs": "list[PipelineTableConfig]",
-        "default_settings": "Mapping[str, Any] | PipelineTableConfig",
-    },
     "run_table_guardrails": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",
