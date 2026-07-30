@@ -25,7 +25,7 @@ def test_function_catalogue_uses_public_starter_kit_finder() -> None:
     page = _reference_index()
 
     assert "## Find a function" in page
-    assert "Use the finder below to search 25 public functions." in page
+    assert "Use the finder below to search 24 public functions." in page
     assert "Search public functions" in page
     assert 'placeholder="Search public functions"' in page
     assert "Function taxonomy filters" not in page
@@ -170,7 +170,6 @@ def _expected_direct_public_template_calls() -> set[str]:
     expected.discard("write_pipeline_run_summary")
     expected.discard("widget_render_agreement_evidence")
     expected.discard("display_guardrail_results")
-    expected.discard("prepare_pipeline_table_configs")
     expected.update(
         {
             "profile_and_register_table",
@@ -215,7 +214,7 @@ def test_reference_catalogue_rows_include_only_public_inventory_functions() -> N
     """Verify catalogue rows expose only public notebook-facing inventory functions."""
     assert (_core_template_called_public() - {"FabricStore", "PathConfig", "GovernanceConfig", "DataAgreementConfig", "FrameworkConfig", "write_pipeline_lineage", "widget_pipeline_bootstrap", "write_pipeline_run_summary"}) <= _catalogue_row_names()
     assert _catalogue_row_names() == _public_inventory_function_names()
-    assert len(_catalogue_row_names()) == 25
+    assert len(_catalogue_row_names()) == 24
 
 
 def test_public_inventory_functions_have_standalone_pages() -> None:

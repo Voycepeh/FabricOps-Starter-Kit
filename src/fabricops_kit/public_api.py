@@ -31,7 +31,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
     "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",
     "fabricops_kit.pipeline.display_guardrail_results",
-    "fabricops_kit.pipeline.prepare_pipeline_table_configs",
     "fabricops_kit.pipeline.run_table_guardrails",
 )
 

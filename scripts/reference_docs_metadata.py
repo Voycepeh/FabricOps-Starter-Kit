@@ -88,10 +88,6 @@ PIPELINE_USAGE_NOTE = """Use this as part of the standard Starter Kit pipeline f
 
 For profiling-related pipeline functions, the output captures the important details and profile of the data so downstream users can review the dataset consistently instead of relying on one-off summaries."""
 
-CONFIG_PREPARATION_USAGE_NOTE = """Use this to normalize source or target table configurations before guardrails, writes, lineage, and evidence helpers use them.
-
-This is intended for the standard pipeline table-config pattern, not for ad hoc reads or writes."""
-
 USAGE_NOTE_BY_PATH_PREFIX = {
     "fabricops_kit/io/": IO_USAGE_NOTE,
     "fabricops_kit/widgets/": WIDGET_USAGE_NOTE,
@@ -461,7 +457,6 @@ METADATA_COLUMN_OWNERS = {
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,
-    "prepare_pipeline_table_configs": CONFIG_PREPARATION_USAGE_NOTE,
 }
 
 
@@ -1413,45 +1408,6 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Prepare source or target table configs for 02_pipeline.',
-  'symbol_name': 'prepare_pipeline_table_configs',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Table config preparation',
-  'use_when': 'Use after SOURCE_TABLES or TARGET_TABLES and their defaults are defined to derive '
-              'standard config fields or add target audit columns.',
-  'do_not_use_when': 'Do not use for ad hoc reads or writes outside the pipeline table-config '
-                     'pattern.',
-  'parameters': {'table_configs': 'List of source or target table configuration dictionaries supplied by the notebook.', 'default_settings': 'Default settings to apply when an individual table config omits them.', 'table_role': 'Use "source" for input tables or "target" for output tables so FabricOps can apply the right required fields.', 'run_id': 'Optional run identifier used for target audit fields.', 'pipeline_name': 'Optional pipeline name used for target audit fields.'},
-  'returns': 'Enriched table configs and a dictionary keyed by table key.',
-  'raises': 'Raises ValueError when required configuration fields are missing, table_role is unsupported, or target audit columns cannot be added.',
-  'side_effects': 'Source role validates pre-loaded DataFrames. Target role adds FabricOps audit '
-                  'columns to target DataFrames.',
-  'fabric_context': 'Source DataFrames should be loaded directly in the notebook with existing '
-                    'FabricOps read helpers. Target audit columns require a Spark-compatible '
-                    'DataFrame.',
-  'ai_verification': 'Verify the correct table_role is used and enriched configs are passed to '
-                     'run_table_guardrails before transformation or writes.',
-  'preferred_example': 'SOURCE_TABLES, SOURCE_CONFIG_BY_KEY = '
-                       'prepare_pipeline_table_configs(SOURCE_TABLES, {}, table_role="source")',
-  'related_functions': ['run_table_guardrails', 'read_lakehouse_table'],
-  'expanded_purpose': 'Normalizes source and target table configuration dictionaries so pipeline '
-                      'guardrail, write, lineage, and evidence helpers receive consistent fields.',
-  'when_to_use': 'Use before running table guardrails or writes when notebook-editable table '
-                 'configs need package defaults and derived keys.',
-  'glossary_terms': ['source data', 'target table', 'stage', 'guardrails'],
-  'return_interpretation': 'The returned configs are enriched copies keyed for downstream helpers. '
-                           'Confirm each table has the expected stage, key, and write settings.',
-  'common_failure_causes': ['A table config is missing key or table_name fields.',
-                            'Stage or write settings are inconsistent.',
-                            'Source and target config shapes differ from expected dictionaries.',
-                            'Defaults in CONFIG do not match the notebook environment.'],
-  'related_guides': [{'title': 'Templates',
-                      'path': '../../notebook-templates.md'},
-                     {'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/run-pipeline.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
   'summary_override': 'Run approved table checks and return whether the pipeline may continue.',
   'symbol_name': 'run_table_guardrails',
   'template_notebook': '02_pipeline',
@@ -1460,7 +1416,7 @@ PUBLIC_SYMBOL_DOCS = [
               'guardrails before writes while keeping per-table results separated.',
   'do_not_use_when': 'Do not use as a replacement for individual helper calls when debugging one '
                      'specific guardrail interactively.',
-  'parameters': {'table_configs': 'Prepared source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings. Call prepare_pipeline_table_configs first when starting from notebook-editable source or target definitions.',
+  'parameters': {'table_configs': 'Source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings.',
                  'run_id': 'Pipeline run identifier written with saved results and used to group in-memory profiles. Omit only when an active pipeline context already provides it.',
                  'context': 'FabricOps runtime context, usually {"config": CONFIG, "env": ENV}. Omit when 00_env_config or an active pipeline context already provides the context.',
                  'spark_session': 'Spark session used for profiling, metadata reads, DQ checks, and result writes. Omit only when an active pipeline context already provides it.',
@@ -1483,7 +1439,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'source_guardrail_results = run_table_guardrails(SOURCE_TABLES, '
                        'run_id=RUN_ID, context={"config": CONFIG, "env": ENV}, '
                        'spark_session=spark, stop_on_failure=True)',
-  'related_functions': ['prepare_pipeline_table_configs', 'write_catalogue_evidence'],
+  'related_functions': ['write_catalogue_evidence'],
   'expanded_purpose': 'Runs the approved checks for each configured source or target table. It '
                       'can check schema, data freshness, profile changes, and data-quality rules, '
                       'then returns a combined result showing whether the pipeline may continue.',
@@ -2189,29 +2145,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'current runtime.',
                                               'The caller passed a warning result that should not '
                                               'stop execution.']},
- 'prepare_pipeline_table_configs': {'expanded_purpose': 'Normalizes source and target table '
-                                                        'configuration dictionaries so pipeline '
-                                                        'guardrail, write, lineage, and evidence '
-                                                        'helpers receive consistent fields.',
-                                    'when_to_use': 'Use before running table guardrails or writes '
-                                                   'when notebook-editable table configs need '
-                                                   'package defaults and derived keys.',
-                                    'glossary_terms': ['source data',
-                                                       'target table',
-                                                       'stage',
-                                                       'guardrails'],
-                                    'return_interpretation': 'The returned configs are enriched '
-                                                             'copies keyed for downstream helpers. '
-                                                             'Confirm each table has the expected '
-                                                             'stage, key, and write settings.',
-                                    'common_failure_causes': ['A table config is missing key or '
-                                                              'table_name fields.',
-                                                              'Stage or write settings are '
-                                                              'inconsistent.',
-                                                              'Source and target config shapes '
-                                                              'differ from expected dictionaries.',
-                                                              'Defaults in CONFIG do not match the '
-                                                              'notebook environment.']},
  'run_table_guardrails': {'expanded_purpose': 'Coordinates profiling, schema, freshness, profile '
                                               'behavior, DQ, and evidence checks for a '
                                               'group of pipeline table configs.',
@@ -2453,10 +2386,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                'path': '../../guided-demo/review-guardrails.md'}],
  'stop_if_failed': [{'title': 'Pipeline Execution',
                      'path': '../../guided-demo/run-pipeline.md'}],
- 'prepare_pipeline_table_configs': [{'title': 'Templates',
-                                     'path': '../../notebook-templates.md'},
-                                    {'title': 'Pipeline Execution',
-                                     'path': '../../guided-demo/run-pipeline.md'}],
  'run_table_guardrails': [{'title': 'Pipeline Execution',
                            'path': '../../guided-demo/run-pipeline.md'}],
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
