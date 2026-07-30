@@ -77,4 +77,4 @@ def test_central_metadata_setup_rejects_existing_tables_missing_columns(monkeypa
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "partial_failure"
     assert result["failed_tables"] == ["METADATA_DATA_STEWARD"]
-    assert "effective_from" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
+    assert "steward_name" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]

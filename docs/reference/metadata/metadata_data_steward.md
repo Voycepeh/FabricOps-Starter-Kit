@@ -1,6 +1,6 @@
 # METADATA_DATA_STEWARD
 
-**Purpose:** Active and historical data steward records used by agreement intake.
+**Purpose:** Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.
 
 ## Implemented schema
 
@@ -10,8 +10,6 @@
 | `steward_name` | `string` | [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md), `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward` | Human-readable steward name. |
 | `steward_role` | `string` | [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md), `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward` | Configured steward role captured for the row. |
 | `contact` | `string` | [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md), `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward` | Contact detail captured for the steward record. |
-| `effective_from` | `date` | `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward`, `fabricops_kit.widgets.shared.parse_iso_date` | Date when the record becomes effective. |
-| `effective_to` | `date` | `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward`, `fabricops_kit.widgets.shared.parse_iso_date` | Date when the record stops being effective. |
 | `is_active` | `boolean` | `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward`, `fabricops_kit.widgets.shared.active_steward` | Whether the row is currently active. |
 | `custom_fields_json` | `string` | `fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward`, `fabricops_kit.widgets.shared.serialize_custom_fields` | JSON payload stored for `custom_fields_json`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
