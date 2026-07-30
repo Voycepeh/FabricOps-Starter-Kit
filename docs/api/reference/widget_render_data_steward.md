@@ -20,9 +20,10 @@ Render the standalone data-steward intake widget.
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
 <span class="reference-chip">01_agreement</span>
+<span class="reference-chip">03_review</span>
 </p>
 
-**Used in notebooks:** `01_agreement`
+**Used in notebooks:** `01_agreement`, `03_review`
 
 ## Usage notes
 

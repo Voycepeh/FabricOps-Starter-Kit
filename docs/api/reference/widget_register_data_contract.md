@@ -19,10 +19,10 @@ Manage an immutable agreement dataset inventory.
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
-<span class="reference-chip">Usage detection may exclude indirect or generated references.</span>
+<span class="reference-chip">01_agreement</span>
 </p>
 
-**Used in notebooks:** Usage detection may exclude indirect or generated references.
+**Used in notebooks:** `01_agreement`
 
 ## Usage notes
 

@@ -1,24 +1,21 @@
-# Step 5: Create the Data Contract and record steward sign-off
+# Step 5: Create the draft Data Contract
 
-Return to `01_agreement` in the Governance workspace after Step 4 has validated the approved guardrails. This step creates the Data Contract that links governed catalogue tables to the Data Agreement and records steward sign-off.
-
-Approval and promotion occur only after this contract is signed off. Do not promote the Development `02_pipeline` to Engineering Production before completing this step.
+Use `01_agreement` to link a selected Data Agreement to the logical datasets it governs. Data Contract status remains draft in v0.2.0; signing, approval, and promotion are not implemented by this step.
 
 ## What to do
 
 1. Open `01_agreement` in the Governance workspace.
-2. Reuse the active `CONFIG` and metadata routing from `00_env_config`.
-3. Select the relevant tables from the Data Catalogue created by the Development pipeline runs.
-4. Select the Data Agreement created in Step 1.
-5. Create the Data Contract that links those catalogue tables to the Data Agreement.
-6. Record the required data steward sign-off for promotion approval.
+2. Run `00_env_config`, then select or create the relevant Data Steward records.
+3. Select or create the Data Agreement.
+4. Select registered logical datasets discovered from the active environment.
+5. Save the draft Data Contract membership.
 
 ## Expected evidence
 
-The configured metadata target receives Data Contract evidence that links the approved dataset, relevant catalogue tables, responsible agreement context, and steward sign-off. This approval context is what allows the validated `02_pipeline` to move to Engineering Production.
+Each agreement links once to each logical `metadata_table_key`. Development and Production use the same logical key and do not require duplicate contract membership, while their catalogue, profile, lineage, guardrail, and other evidence remains stored and reviewed as separate environment-specific metadata observations.
 
 Previous: [Step 4: Rerun the Development pipeline with guardrails](run-pipeline-with-guardrails.md).
 
-Next, continue to [Step 6: Promote the validated pipeline to Production](promote-to-production.md).
+Next, continue to [Step 6: Promote the validated pipeline to Production](promote-to-production.md). That later demonstration step does not make contract approval, signing, or automatic environment promotion part of the v0.2.0 Data Contract workflow.
 
 See also: [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md) and [List of Metadata Tables](../reference/metadata.md).
