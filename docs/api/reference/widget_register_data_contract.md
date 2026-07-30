@@ -12,9 +12,9 @@ Manage an immutable agreement dataset inventory.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:201`
+`fabricops_kit/widgets/widget_register_data_contract.py:203`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L201-L459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L203-L526">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -73,7 +73,7 @@ def widget_register_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state used to resolve the canonical agreement ID and a readable label locally. |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state used to resolve the canonical agreement ID and a readable label locally. When the supplied state exposes ``existing_record``, changing that selector reloads the latest inventory without rerunning the cell. The editor remains disabled while no saved agreement is selected. |
 | `agreement_id` | `str \| None` | No | Explicit canonical agreement identity. A non-empty trimmed value takes precedence over ``agreement``. |
 | `metadata_ids` | `Sequence[str] \| None` | No | Additional unsaved initial inventory identities. Valid active- environment identities extend the latest snapshot only in memory; unknown identities are reported and never written. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
@@ -95,7 +95,7 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 ### Common failure causes
 
-- No agreement ID is selected.
+- No saved agreement is selected, so the inventory editor remains disabled.
 - The active environment has no registered catalogue datasets.
 - The metadata target cannot be written.
 
@@ -109,6 +109,8 @@ complete current membership list, while the widget displays only the
 latest saved snapshot. Historical snapshots are never updated or deleted.
 Catalogue discovery is restricted to the active environment, but logical
 ``metadata_table_key`` membership remains environment-independent.
+An unsaved agreement draft cannot create an inventory snapshot; select an
+existing agreement or save the new agreement first.
 
 </div>
 

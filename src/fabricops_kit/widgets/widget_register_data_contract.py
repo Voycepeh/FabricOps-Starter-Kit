@@ -32,6 +32,8 @@ def _agreement_details(agreement: dict[str, Any] | None, agreement_id: str | Non
         row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
         resolved = str(row.get("agreement_id") or selected_id).strip()
     if not resolved:
+        if "existing_record" in supplied:
+            return "", ""
         raise ValueError("A valid agreement_id is required. Supply agreement_id or an agreement state with a selected agreement.")
     label = str(row.get("agreement_name") or supplied.get("agreement_name") or resolved).strip() or resolved
     return resolved, label
@@ -214,7 +216,10 @@ def widget_register_data_contract(
     ----------
     agreement : dict, optional
         Agreement record or agreement-widget state used to resolve the
-        canonical agreement ID and a readable label locally.
+        canonical agreement ID and a readable label locally. When the supplied
+        state exposes ``existing_record``, changing that selector reloads the
+        latest inventory without rerunning the cell. The editor remains
+        disabled while no saved agreement is selected.
     agreement_id : str, optional
         Explicit canonical agreement identity. A non-empty trimmed value takes
         precedence over ``agreement``.
@@ -254,6 +259,8 @@ def widget_register_data_contract(
     latest saved snapshot. Historical snapshots are never updated or deleted.
     Catalogue discovery is restricted to the active environment, but logical
     ``metadata_table_key`` membership remains environment-independent.
+    An unsaved agreement draft cannot create an inventory snapshot; select an
+    existing agreement or save the new agreement first.
 
     Examples
     --------
@@ -316,12 +323,15 @@ def widget_register_data_contract(
         CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
     )
-    latest_header = _latest_snapshot_header(headers, resolved_agreement_id)
+    latest_header = _latest_snapshot_header(headers, resolved_agreement_id) if resolved_agreement_id else None
     latest_snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
     latest_rows = _snapshot_membership_rows(memberships, latest_snapshot_id)
     saved_ids = [str(row["metadata_table_key"]) for row in latest_rows]
     valid_initial_ids = [key for key in initial_ids if key in rows_by_id]
-    inventory_ids = list(dict.fromkeys([*saved_ids, *valid_initial_ids]))
+    inventory_ids = (
+        list(dict.fromkeys([*saved_ids, *valid_initial_ids]))
+        if resolved_agreement_id else []
+    )
     unknown_ids = [key for key in initial_ids if key not in rows_by_id]
 
     search = widgets.Text(value="", placeholder="Search catalogue...", **widget_common(widgets, "Search catalogue"))
@@ -332,11 +342,11 @@ def widget_register_data_contract(
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
     status = widgets.HTML(value="")
-    agreement_text = widgets.HTML(value=f"<b>Agreement:</b> {html.escape(agreement_label)}")
+    agreement_text = widgets.HTML(value=f"<b>Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
     environment_text = widgets.HTML(value=f"<b>Environment:</b> {html.escape(env)}")
 
     state: dict[str, Any] = {
-        "agreement_id": resolved_agreement_id, "agreement_label": agreement_label,
+        "agreement_id": resolved_agreement_id or None, "agreement_label": agreement_label,
         "environment_name": env, "latest_snapshot_id": latest_snapshot_id,
         "latest_snapshot_saved_at": (latest_header or {}).get("snapshot_saved_at"),
         "available_metadata_ids": [key for _label, key in all_options],
@@ -366,6 +376,50 @@ def widget_register_data_contract(
             f"<b>Unsaved changes:</b> {'Yes' if state['has_unsaved_changes'] else 'No'}"
         )
 
+    def set_editor_enabled(enabled: bool) -> None:
+        for control in (search, available, add, inventory, remove, save):
+            control.disabled = not enabled
+
+    def load_agreement(selected_id: str) -> None:
+        nonlocal latest_header
+        selected_id = str(selected_id or "").strip()
+        if not selected_id:
+            latest_header = None
+            latest_rows.clear()
+            saved_ids.clear()
+            state.update(
+                agreement_id=None, agreement_label="", latest_snapshot_id=None,
+                latest_snapshot_saved_at=None, inventory_metadata_ids=[],
+                inventory_count=0, has_unsaved_changes=False,
+                saved_snapshot_id=None, saved_metadata_ids=[],
+            )
+            agreement_text.value = "<b>Agreement:</b> Select or save an agreement first"
+            status.value = "Select an existing agreement or save a new agreement before maintaining its dataset inventory."
+            set_editor_enabled(False)
+            refresh_controls()
+            return
+        selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
+        selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
+        latest_header = _latest_snapshot_header(headers, selected_id)
+        snapshot_id = str((latest_header or {}).get("contract_snapshot_id") or "") or None
+        loaded_rows = _snapshot_membership_rows(memberships, snapshot_id)
+        latest_rows[:] = loaded_rows
+        saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
+        valid_initial = [key for key in initial_ids if key in rows_by_id]
+        current = list(dict.fromkeys([*saved_ids, *valid_initial]))
+        state.update(
+            agreement_id=selected_id, agreement_label=selected_label,
+            latest_snapshot_id=snapshot_id,
+            latest_snapshot_saved_at=(latest_header or {}).get("snapshot_saved_at"),
+            inventory_metadata_ids=current, inventory_count=len(current),
+            has_unsaved_changes=current != saved_ids,
+            saved_snapshot_id=None, saved_metadata_ids=[],
+        )
+        agreement_text.value = f"<b>Agreement:</b> {html.escape(selected_label)}"
+        status.value = ""
+        set_editor_enabled(True)
+        refresh_controls()
+
     def add_selected(_button: Any = None) -> None:
         key = str(available.value or "")
         if key and key in rows_by_id and key not in state["inventory_metadata_ids"]:
@@ -393,22 +447,25 @@ def widget_register_data_contract(
             SNAPSHOT_TABLE, target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        header = _latest_snapshot_header(header_frame, resolved_agreement_id)
+        header = _latest_snapshot_header(header_frame, str(state["agreement_id"]))
         return {"header": header, "memberships": get_rows()}
 
     def save_inventory(_button: Any = None) -> None:
         nonlocal latest_header
+        if not state.get("agreement_id"):
+            status.value = "Select or save an agreement before saving an inventory snapshot."
+            return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
         current = [key for key in current if key in rows_by_id or key in saved_ids]
         snapshot_id = str(uuid.uuid4())
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
         saved_at = audit["_committed_at"]
         header_row = {
-            "contract_snapshot_id": snapshot_id, "agreement_id": resolved_agreement_id,
+            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
             "snapshot_saved_at": saved_at, "linked_dataset_count": len(current), **audit,
         }
         rows = [{
-            "contract_snapshot_id": snapshot_id, "agreement_id": resolved_agreement_id,
+            "contract_snapshot_id": snapshot_id, "agreement_id": state["agreement_id"],
             "metadata_table_key": key,
             "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
                 (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
@@ -435,6 +492,13 @@ def widget_register_data_contract(
     add.on_click(add_selected)
     remove.on_click(remove_selected)
     save.on_click(save_inventory)
+    agreement_selector = (agreement or {}).get("existing_record")
+    if agreement_selector is not None and hasattr(agreement_selector, "observe"):
+        agreement_selector.observe(
+            lambda change: load_agreement(str(change.get("new") or ""))
+            if change.get("name") == "value" else None,
+            names="value",
+        )
     state["get_rows"] = get_rows
     state["get_snapshot"] = get_snapshot
     state["_controls"] = {
@@ -444,7 +508,10 @@ def widget_register_data_contract(
         "status": status,
     }
     refresh_controls()
-    if not all_options:
+    set_editor_enabled(bool(state["agreement_id"]))
+    if not state["agreement_id"]:
+        status.value = "Select an existing agreement or save a new agreement before maintaining its dataset inventory."
+    elif not all_options:
         status.value = (
             "No registered datasets are available in the active environment.<br>"
             "Historical inventory memberships remain available for removal or preservation."

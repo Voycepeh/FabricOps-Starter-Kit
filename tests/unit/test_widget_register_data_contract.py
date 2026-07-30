@@ -178,6 +178,45 @@ def test_latest_snapshot_loads_without_combining_older_history(snapshot_runtime,
     assert [row["metadata_table_key"] for row in state["get_rows"]()] == ["historical-key", "key-two"]
 
 
+def test_agreement_state_selection_reloads_inventory_and_disables_when_empty(
+    snapshot_runtime, spark_session,
+):
+    """Changing the agreement selector reactively loads that agreement's latest snapshot."""
+    import ipywidgets as widgets
+
+    _module, tables, writes = snapshot_runtime
+    _seed_snapshot(spark_session, tables, "a", "agreement-a", datetime(2026, 1, 1), ["key-one"])
+    _seed_snapshot(spark_session, tables, "b", "agreement-b", datetime(2026, 1, 2), ["key-two"])
+    selector = widgets.Select(options=[("Select", ""), ("A", "agreement-a"), ("B", "agreement-b")], value="")
+    agreement_state = {
+        "existing_record": selector,
+        "existing_records_by_id": {
+            "agreement-a": {"agreement_id": "agreement-a", "agreement_name": "Agreement A"},
+            "agreement-b": {"agreement_id": "agreement-b", "agreement_name": "Agreement B"},
+        },
+    }
+    state = public_widget(
+        agreement=agreement_state, metadata_ids=["key-three"],
+        spark_session=spark_session,
+    )
+    assert state["agreement_id"] is None
+    assert state["inventory_metadata_ids"] == []
+    assert state["_controls"]["save"].disabled is True
+    assert writes == []
+
+    selector.value = "agreement-a"
+    assert state["agreement_id"] == "agreement-a"
+    assert state["agreement_label"] == "Agreement A"
+    assert state["latest_snapshot_id"] == "a"
+    assert state["inventory_metadata_ids"] == ["key-one", "key-three"]
+    assert state["_controls"]["save"].disabled is False
+
+    selector.value = "agreement-b"
+    assert state["agreement_id"] == "agreement-b"
+    assert state["latest_snapshot_id"] == "b"
+    assert state["inventory_metadata_ids"] == ["key-two", "key-three"]
+
+
 def test_inventory_add_remove_and_duplicate_prevention(snapshot_runtime, spark_session):
     """Catalogue additions and inventory removals update one unique in-memory list."""
     _module, _tables, _writes = snapshot_runtime
