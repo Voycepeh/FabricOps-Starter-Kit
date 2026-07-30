@@ -128,7 +128,7 @@ def widget_view_data_contract(
     -------
     dict
         Mutable state containing the selected dataset and a ``get_views``
-        callable. The callable returns all ten raw, filtered canonical metadata
+        callable. The callable returns all canonical raw, filtered metadata
         tables without rendering them.
 
     Notes
@@ -255,7 +255,7 @@ def widget_view_data_contract(
     }
 
     def get_views():
-        """Return the current selection and ten raw metadata DataFrames."""
+        """Return the current selection and canonical raw metadata DataFrames."""
         if state.get("error"):
             return {"selection": None, "tables": {}, "error": state["error"]}
         return state.get("views", {"selection": None, "tables": {}, "error": "No dataset is selected."})

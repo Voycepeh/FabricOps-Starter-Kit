@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Manage an agreement-level logical dataset inventory.
+Manage an immutable agreement dataset inventory.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:225`
+`fabricops_kit/widgets/widget_register_data_contract.py:201`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L225-L546">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L201-L459">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -73,9 +73,9 @@ def widget_register_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement` | `dict[str, Any] \| None` | No | Data Agreement record or agreement-widget state. Its selected ``agreement_id`` is used when no non-empty explicit ID is supplied; readable agreement information is reused for display without querying ``METADATA_DATA_AGREEMENT``. |
-| `agreement_id` | `str \| None` | No | Explicit canonical agreement identity. Surrounding whitespace is removed and a non-empty value takes precedence over ``agreement``. |
-| `metadata_ids` | `Sequence[str] \| None` | No | Optional additional initial selector values. Values are trimmed and de-duplicated, then merged with persisted draft memberships. Unknown or inactive-environment identities are reported but cannot be written. |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state used to resolve the canonical agreement ID and a readable label locally. |
+| `agreement_id` | `str \| None` | No | Explicit canonical agreement identity. A non-empty trimmed value takes precedence over ``agreement``. |
+| `metadata_ids` | `Sequence[str] \| None` | No | Additional unsaved initial inventory identities. Valid active- environment identities extend the latest snapshot only in memory; unknown identities are reported and never written. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
 | `schema` | `str \| None` | No | Metadata Lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
@@ -83,11 +83,11 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable inventory state with existing draft and non-draft memberships, pending additions and removals, save results, and a get_rows callable.
+Mutable snapshot state with the latest inventory, unsaved edits, save results, get_rows, and get_snapshot callables.
 
 ### Return interpretation
 
-Existing memberships load immediately; pending lists explain the exact draft additions and removals before save, while non-draft and unknown identities remain non-writable.
+The inventory reflects only the latest snapshot plus unsaved valid additions; each save appends a new header and complete membership set without changing history.
 
 ## Raises / Errors
 
@@ -103,17 +103,12 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 <div class="reference-docstring-notes" markdown="1">
 
-On opening, the widget reads the agreement's current contract inventory and
-preselects every existing draft membership. Non-draft memberships remain
-visible but locked outside the draft editor. Catalogue discovery is
-restricted to the active environment, while the saved relationship is
-environment-independent: one agreement links to each logical
-``metadata_table_key``. Saving narrowly replaces only this agreement's
-draft rows, preserving selected existing rows, all non-draft rows, and all
-other agreements. New memberships use minimal version ``1`` draft values,
-the latest active-environment schema fingerprint, and normal runtime audit
-fields. Review, approval, promotion, environment comparison, and pipeline
-inspection are outside this inventory editor.
+This is an immutable snapshot-based inventory of logical datasets linked
+to a Data Agreement. Each explicit save appends one snapshot header and the
+complete current membership list, while the widget displays only the
+latest saved snapshot. Historical snapshots are never updated or deleted.
+Catalogue discovery is restricted to the active environment, but logical
+``metadata_table_key`` membership remains environment-independent.
 
 </div>
 

@@ -235,7 +235,8 @@ def setup_metadata_tables(
 
     Metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
-    ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
+    ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT_SNAPSHOT``,
+    ``METADATA_DATA_CONTRACT``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
     ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
@@ -251,10 +252,12 @@ def setup_metadata_tables(
       ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
       ``start_date``, ``expiry_date``, ``business_purpose``,
       ``custom_fields_json``, and the standard audit fields.
-    - ``METADATA_DATA_CONTRACT`` stores ``contract_id``, ``agreement_id``,
-      ``metadata_table_key``, ``schema_fingerprint``, ``contract_version``,
-      ``contract_status``, ``effective_from``, ``effective_to``,
-      ``contract_payload_json``, and the standard audit fields.
+    - ``METADATA_DATA_CONTRACT_SNAPSHOT`` stores ``contract_snapshot_id``,
+      ``agreement_id``, ``snapshot_saved_at``, ``linked_dataset_count``, and
+      the standard audit fields.
+    - ``METADATA_DATA_CONTRACT`` stores ``contract_snapshot_id``,
+      ``agreement_id``, ``metadata_table_key``, ``schema_fingerprint``, and
+      the standard audit fields.
     - ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
       ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
       ``store_type``, ``layer``, ``schema_name``, ``table_name``,
@@ -387,7 +390,10 @@ def setup_metadata_tables(
 
     successful = created_tables + validated_tables
     status = "ready" if not failed_tables else ("partial_failure" if successful else "failed")
-    data_agreement_tables = ["METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT"]
+    data_agreement_tables = [
+        "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT",
+        "METADATA_DATA_CONTRACT_SNAPSHOT", "METADATA_DATA_CONTRACT",
+    ]
     data_agreement_failed = [table for table in data_agreement_tables if table in failed_tables]
     data_agreement = {
         "status": "failed" if data_agreement_failed else ("ready" if active_stewards else "not_ready"),

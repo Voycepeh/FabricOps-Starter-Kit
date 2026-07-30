@@ -125,7 +125,7 @@ def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, 
     assert "Data contract viewer unavailable" in capsys.readouterr().out
 
 
-def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_session):
+def test_metadata_trace_returns_canonical_raw_filtered_tables(monkeypatch, spark_session):
     """The trace helper filters raw canonical tables without joins or renames."""
     old = datetime(2026, 1, 1)
     new = datetime(2026, 2, 1)
@@ -145,11 +145,18 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
             "agreement_id string, provider_steward_id string, recipient_steward_id string, marker string, _committed_at timestamp",
         ),
         "METADATA_DATA_CONTRACT": frame(
-            [("contract-old", "agreement-1", "dataset", old),
-             ("contract-new", "agreement-1", "dataset", new),
-             ("contract-second-agreement", "agreement-2", "dataset", new),
-             ("contract-other", "agreement-2", "other", new)],
-            "contract_id string, agreement_id string, metadata_table_key string, _committed_at timestamp",
+            [("snapshot-old", "agreement-1", "dataset", old),
+             ("snapshot-new", "agreement-1", "dataset", new),
+             ("snapshot-second-agreement", "agreement-2", "dataset", new),
+             ("snapshot-other", "agreement-2", "other", new)],
+            "contract_snapshot_id string, agreement_id string, metadata_table_key string, _committed_at timestamp",
+        ),
+        "METADATA_DATA_CONTRACT_SNAPSHOT": frame(
+            [("snapshot-old", "agreement-1", old),
+             ("snapshot-new", "agreement-1", new),
+             ("snapshot-second-agreement", "agreement-2", new),
+             ("snapshot-other", "agreement-2", new)],
+            "contract_snapshot_id string, agreement_id string, _committed_at timestamp",
         ),
     }
     environment_tables = {
@@ -183,7 +190,7 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
     )
 
     assert list(views) == ["selection", "tables", "error"]
-    assert list(views["tables"]) == list(tables)
+    assert set(views["tables"]) == set(tables)
     assert views["error"] is None
     assert views["selection"] == {
         "environment_name": "dev", "metadata_table_key": "dataset",
@@ -196,8 +203,8 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
     assert [row.marker for row in views["tables"]["METADATA_DATA_AGREEMENT"].collect()] == [
         "new agreement", "old agreement",
     ]
-    assert [row.contract_id for row in views["tables"]["METADATA_DATA_CONTRACT"].collect()] == [
-        "contract-new", "contract-old",
+    assert [row.contract_snapshot_id for row in views["tables"]["METADATA_DATA_CONTRACT"].collect()] == [
+        "snapshot-new", "snapshot-old",
     ]
     for table_name in tables:
         assert views["tables"][table_name].columns == tables[table_name].columns
@@ -214,8 +221,8 @@ def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_sessi
     assert {row.steward_id for row in unscoped["tables"]["METADATA_DATA_STEWARD"].collect()} == {
         "provider", "recipient", "other",
     }
-    assert {row.contract_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
-        "contract-old", "contract-new", "contract-second-agreement",
+    assert {row.contract_snapshot_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
+        "snapshot-old", "snapshot-new", "snapshot-second-agreement",
     }
 
 def test_current_notebook_scope_uses_historical_unique_lineage_roles(monkeypatch, spark_session):

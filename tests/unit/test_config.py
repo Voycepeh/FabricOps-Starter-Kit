@@ -691,7 +691,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "failed"
-    assert len(result["failed_tables"]) == 10
+    assert len(result["failed_tables"]) == 11
     assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
@@ -699,10 +699,11 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 10
+    assert len(tables) == 11
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_CONTRACT" in tables
+    assert "METADATA_DATA_CONTRACT_SNAPSHOT" in tables
     assert "METADATA_ENRICHMENT" in tables
     assert "METADATA_COLUMN_CONTEXT" not in tables
     assert "METADATA_COLUMN_CLASSIFICATION" not in tables
@@ -1150,6 +1151,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     profiled = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_PROFILED"])}
     agreement = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_AGREEMENT"])}
     contract = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CONTRACT"])}
+    contract_snapshot = {row["name"]: row["type"] for row in metadata_table_schema_rows(registry["METADATA_DATA_CONTRACT_SNAPSHOT"])}
     docs_catalogue = catalogue
 
     assert agreement["start_date"] == "date"
@@ -1160,6 +1162,10 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert catalogue["schema_fingerprint"] == "string"
     assert "fabric_store_target" not in catalogue
     assert contract["agreement_id"] == "string"
+    assert contract["contract_snapshot_id"] == "string"
+    assert contract_snapshot["snapshot_saved_at"] == "timestamp"
+    assert contract_snapshot["linked_dataset_count"] == "long"
+    assert "contract_status" not in contract
     assert "null_percent" not in catalogue
     assert profiled["null_percent"] == "double"
     assert docs_catalogue["_committed_at"] == "timestamp"
@@ -1336,7 +1342,7 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     assert f"[2/{len(names)}] Created {names[1]}" in output
     assert f"FabricOps metadata setup complete ({len(names)}/{len(names)})." in output
     assert "Created: 2" in output
-    assert "Validated: 8" in output
+    assert "Validated: 9" in output
     assert f"- {names[0]}" in output
 
 

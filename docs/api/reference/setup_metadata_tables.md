@@ -30,7 +30,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:129`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L442">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L448">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -139,7 +139,8 @@ count.
 
 Metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
-``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
+``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT_SNAPSHOT``,
+``METADATA_DATA_CONTRACT``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
 ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
 ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
@@ -155,10 +156,12 @@ Detailed table contents:
   ``provider_steward_id``, ``recipient_steward_id``, ``recipient``,
   ``start_date``, ``expiry_date``, ``business_purpose``,
   ``custom_fields_json``, and the standard audit fields.
-- ``METADATA_DATA_CONTRACT`` stores ``contract_id``, ``agreement_id``,
-  ``metadata_table_key``, ``schema_fingerprint``, ``contract_version``,
-  ``contract_status``, ``effective_from``, ``effective_to``,
-  ``contract_payload_json``, and the standard audit fields.
+- ``METADATA_DATA_CONTRACT_SNAPSHOT`` stores ``contract_snapshot_id``,
+  ``agreement_id``, ``snapshot_saved_at``, ``linked_dataset_count``, and
+  the standard audit fields.
+- ``METADATA_DATA_CONTRACT`` stores ``contract_snapshot_id``,
+  ``agreement_id``, ``metadata_table_key``, ``schema_fingerprint``, and
+  the standard audit fields.
 - ``METADATA_DATA_CATALOGUE`` stores ``metadata_table_key``,
   ``metadata_column_key``, ``schema_fingerprint``, ``environment_name``,
   ``store_type``, ``layer``, ``schema_name``, ``table_name``,
