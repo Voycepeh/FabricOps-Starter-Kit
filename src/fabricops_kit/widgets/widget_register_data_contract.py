@@ -18,6 +18,15 @@ CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
+def _display_widget(value: Any) -> None:
+    """Display a widget when the optional IPython runtime is available."""
+    try:
+        from IPython import display as ip
+    except ModuleNotFoundError:
+        return
+    ip.display(value)
+
+
 def _agreement_details(agreement: dict[str, Any] | None, agreement_id: str | None) -> tuple[str, str]:
     """Resolve the canonical ID and a readable label from supplied state only."""
     explicit = str(agreement_id or "").strip()
@@ -510,9 +519,7 @@ def widget_register_data_contract(
             "Historical inventory memberships remain available for removal or preservation."
         )
 
-    from IPython import display as ip
-
-    ip.display(widgets.VBox([
+    _display_widget(widgets.VBox([
         widgets.HTML("<h2>Dataset inventory</h2>"), agreement_text, environment_text,
         summary, inventory, remove, search, available, add, save, status,
     ]))

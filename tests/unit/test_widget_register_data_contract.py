@@ -123,7 +123,7 @@ def snapshot_runtime(monkeypatch, spark_session):
 
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
     monkeypatch.setattr(module, "build_runtime_audit_fields", audit)
-    monkeypatch.setattr("IPython.display.display", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module, "_display_widget", lambda *_args, **_kwargs: None)
     return module, tables, writes
 
 

@@ -152,6 +152,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'widget_enrich_table_metadata',
         'widget_author_schema_freshness_profile_rules',
         'widget_view_data_contract',
+        'widget_register_data_contract',
         'widget_author_dq_rules',
         'widget_review_guardrail_governance',
     ]
