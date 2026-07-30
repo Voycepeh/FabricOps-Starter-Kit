@@ -34,7 +34,7 @@ from fabricops_kit.widgets.shared import (
 
 
 def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render a compact, three-step data-agreement editor.
+    """Render a wide, single-flow data-agreement editor.
 
     The editor caches active data stewards, keeps one in-memory draft, and
     appends one complete agreement row only after final validation.
@@ -51,7 +51,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     Returns
     -------
     dict[str, Any]
-        Stable root, step, field, document, steward, and save controls.
+        Stable root, section, field, document, steward, and save controls.
 
     """
     config, env, _context = resolve_fabric_context(context=context)
@@ -141,15 +141,21 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_documents.children = tuple(row["container"] for row in supporting_document_rows)
 
     def _add_document_row(label: str = "", location: str = "") -> None:
-        name_label = widgets.HTML(value="<b>Document name</b>")
-        label_widget = widgets.Text(value=label, description="")
-        link_label = widgets.HTML(value="<b>Document link</b>")
-        location_widget = widgets.Text(value=location, description="")
+        name_label = widgets.HTML(value="<b>Document name</b>", layout=widgets.Layout(width="115px"))
+        label_widget = widgets.Text(
+            value=label, description="", layout=widgets.Layout(width="28%", min_width="180px")
+        )
+        link_label = widgets.HTML(value="<b>Document link</b>", layout=widgets.Layout(width="110px"))
+        location_widget = widgets.Text(
+            value=location, description="", layout=widgets.Layout(width="38%", min_width="240px")
+        )
         remove = widgets.Button(description="Remove")
         record = {"label": label_widget, "location": location_widget, "remove": remove}
         record["container"] = widgets.HBox(
             [name_label, label_widget, link_label, location_widget, remove],
-            layout=widgets.Layout(display="flex", flex_flow="row wrap", align_items="center"),
+            layout=widgets.Layout(
+                display="flex", flex_flow="row wrap", align_items="center", width="100%", gap="6px"
+            ),
         )
 
         def _remove(_: Any) -> None:
@@ -293,27 +299,93 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     save.on_click(_save)
     _update_steward_prerequisite()
-    details_fields = ["agreement_name", "domain", "start_date", "expiry_date", "business_purpose"]
-    details = [form[field] for field in details_fields if field in form]
-    stewards = [steward_field_selectors[field]["container"] for field in steward_fields]
-    supporting = [
-        supporting_documents,
-        add_supporting_document_button,
-        *approved_usage_checkboxes.values(),
-        *custom.values(),
-        save,
-    ]
-    steps = widgets.Tab(
-        children=(widgets.VBox(details), widgets.VBox([*stewards, refresh_stewards]), widgets.VBox(supporting))
+    header = widgets.HTML(
+        value=(
+            '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
+            'border-radius:8px;margin:0 0 14px 0;">'
+            '<div style="font-size:21px;font-weight:600;line-height:1.3;">'
+            'Data Agreement Creation Widget</div>'
+            '<div style="font-size:13px;line-height:1.4;margin-top:3px;opacity:.9;">'
+            'Between 2 Data Stewards/Managers</div></div>'
+        ),
+        layout=widgets.Layout(width="100%"),
     )
-    for index, title in enumerate(("1. Agreement details", "2. Data stewards", "3. Supporting information")):
-        steps.set_title(index, title)
-    back = widgets.Button(description="Back")
-    continue_button = widgets.Button(description="Continue")
-    back.on_click(lambda _: setattr(steps, "selected_index", max(0, steps.selected_index - 1)))
-    continue_button.on_click(lambda _: setattr(steps, "selected_index", min(2, steps.selected_index + 1)))
-    navigation = widgets.HBox([back, continue_button])
-    container = widgets.VBox([selected_selector["container"], identity_context, steps, navigation, status])
+    section_layout = widgets.Layout(width="100%", margin="4px 0 2px 0")
+
+    def _section_heading(title: str) -> Any:
+        return widgets.HTML(
+            value=(
+                '<div style="color:#0f548c;font-size:16px;font-weight:600;'
+                f'border-bottom:1px solid #d7e7f5;padding:8px 0 5px 0;">{title}</div>'
+            ),
+            layout=section_layout,
+        )
+
+    paired_control_layout = widgets.Layout(width="49%", min_width="280px", flex="1 1 320px")
+    full_width_layout = widgets.Layout(width="100%")
+    row_layout = widgets.Layout(
+        display="flex",
+        flex_flow="row wrap",
+        justify_content="space-between",
+        align_items="flex-start",
+        width="100%",
+    )
+    for field in ("agreement_name", "domain", "start_date", "expiry_date"):
+        if field in form:
+            form[field].layout = paired_control_layout
+    if "business_purpose" in form:
+        form["business_purpose"].layout = widgets.Layout(width="100%", height="90px")
+
+    name_domain_row = widgets.HBox(
+        [form[field] for field in ("agreement_name", "domain") if field in form], layout=row_layout
+    )
+    date_row = widgets.HBox(
+        [form[field] for field in ("start_date", "expiry_date") if field in form], layout=row_layout
+    )
+    detail_controls = [name_domain_row, date_row]
+    if "business_purpose" in form:
+        detail_controls.append(form["business_purpose"])
+    details_section = widgets.VBox(
+        [_section_heading("Agreement details"), *detail_controls], layout=full_width_layout
+    )
+
+    steward_panels = []
+    for field in steward_fields:
+        panel = steward_field_selectors[field]["container"]
+        panel.layout = paired_control_layout
+        steward_panels.append(panel)
+    steward_section = widgets.VBox(
+        [
+            _section_heading("Provider and recipient data stewards"),
+            widgets.HBox(steward_panels, layout=row_layout),
+            widgets.HBox([refresh_stewards], layout=widgets.Layout(justify_content="flex-end", width="100%")),
+        ],
+        layout=full_width_layout,
+    )
+
+    usage_row = widgets.HBox(
+        list(approved_usage_checkboxes.values()),
+        layout=widgets.Layout(display="flex", flex_flow="row wrap", width="100%"),
+    )
+    custom_row = widgets.HBox(list(custom.values()), layout=row_layout)
+    supporting_section = widgets.VBox(
+        [
+            _section_heading("Supporting information"),
+            supporting_documents,
+            add_supporting_document_button,
+            usage_row,
+            custom_row,
+        ],
+        layout=full_width_layout,
+    )
+    steps = widgets.VBox([details_section, steward_section, supporting_section], layout=full_width_layout)
+    actions = widgets.HBox(
+        [save], layout=widgets.Layout(justify_content="flex-end", width="100%", margin="8px 0 0 0")
+    )
+    container = widgets.VBox(
+        [header, selected_selector["container"], identity_context, steps, actions, status],
+        layout=widgets.Layout(width="100%"),
+    )
     ip.display(container)
     return {
         "container": container,

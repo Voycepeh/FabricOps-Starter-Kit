@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import ast
+import inspect
 import sys
 import json
 import uuid
@@ -335,6 +336,12 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["recipient_steward_selector"].options
     assert "recipient" not in agreement_controls["fields"]
     assert len(agreement_controls["steps"].children) == 3
+    agreement_header = agreement_controls["container"].children[0]
+    assert "Data Agreement Creation Widget" in agreement_header.value
+    assert "Between 2 Data Stewards/Managers" in agreement_header.value
+    assert "background:#0f6cbd" in agreement_header.value
+    assert agreement_controls["container"].layout.kwargs["width"] == "100%"
+    assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)
     assert len(agreement_controls["supporting_documents"]) == 1
     document_container = agreement_controls["supporting_documents"][0]["container"]
     assert [child.value for child in document_container.children if isinstance(child.value, str) and "Document" in child.value] == [
