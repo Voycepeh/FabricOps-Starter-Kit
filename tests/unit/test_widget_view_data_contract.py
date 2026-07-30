@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 from datetime import datetime
-import json
 
 import fabricops_kit
 from fabricops_kit.widgets import widget_view_data_contract as public_widget
@@ -55,8 +54,7 @@ def test_widget_returns_dataframe_views_without_rendering_them():
     import fabricops_kit.widgets.shared as shared
 
     source = inspect.getsource(public_widget)
-    for key in ("summary", "current_contract", "data_profiled", "guardrail_results", "data_access"):
-        assert f'display(state["{key}"])' not in source
+    assert "display(frame)" not in source
     assert "render_expandable_dataframe" not in source
     for removed_name in (
         "format_full_value", "_compact_value", "export_dataframe_to_files",
@@ -115,89 +113,110 @@ def test_missing_optional_widgets_returns_clear_non_breaking_state(monkeypatch, 
     )
     state = public_widget(
         metadata_id="dataset-1", metadata_ids={"Target": "dataset-1"},
-        schema_version="schema-2",
     )
 
     assert state["metadata_table_key"] == "dataset-1"
-    assert state["schema_fingerprint"] == "schema-2"
     assert state["selection_mode"] == "restricted"
     assert state["allowed_metadata_ids"] == ["dataset-1"]
     assert "Install the widget extra" in state["error"]
+    assert state["get_views"]() == {
+        "selection": None, "tables": {}, "error": "Install the widget extra.",
+    }
     assert "Data contract viewer unavailable" in capsys.readouterr().out
 
 
-def test_contract_assembly_preserves_rules_history_and_separate_views(monkeypatch, spark_session):
-    """The assembly helper keeps contract grain and every related evidence surface."""
+def test_metadata_trace_returns_ten_raw_filtered_tables(monkeypatch, spark_session):
+    """The trace helper filters raw canonical tables without joins or renames."""
     old = datetime(2026, 1, 1)
     new = datetime(2026, 2, 1)
+
+    def frame(rows, schema):
+        return spark_session.createDataFrame(rows, schema)
+
     tables = {
-        "METADATA_DATA_CATALOGUE": spark_session.createDataFrame(
-            [
-                ("dataset", "c1", "schema-1", "dev", "lakehouse", "raw", "sales", "orders", "id", "long", old),
-                ("dataset", "c2", "schema-1", "dev", "lakehouse", "raw", "sales", "orders", "status", "string", old),
-                ("dataset", "c1", "schema-2", "dev", "lakehouse", "raw", "sales", "orders", "id", "long", new),
-            ],
-            "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, column_name string, data_type string, _committed_at timestamp",
+        "METADATA_DATA_STEWARD": frame(
+            [("provider", "Provider", old), ("recipient", "Recipient", new), ("other", "Other", new)],
+            "steward_id string, marker string, _committed_at timestamp",
         ),
-        "METADATA_ENRICHMENT": spark_session.createDataFrame(
-            [("dataset", "c1", "Identifier", new, "orders", "id")],
-            "metadata_table_key string, metadata_column_key string, business_meaning string, _committed_at timestamp, table_name string, column_name string",
+        "METADATA_DATA_AGREEMENT": frame(
+            [("agreement-1", "provider", "recipient", "old agreement", old),
+             ("agreement-1", "provider", "recipient", "new agreement", new),
+             ("agreement-2", "other", "other", "other agreement", new)],
+            "agreement_id string, provider_steward_id string, recipient_steward_id string, marker string, _committed_at timestamp",
         ),
-        "METADATA_GUARDRAIL": spark_session.createDataFrame(
-            [
-                ("dataset", "c1", "rule-not-null", "g1", "r1", "not_null", "error", True, "active", old, "orders", "id"),
-                ("dataset", "c1", "rule-unique", "g2", "r2", "unique", "warning", True, "active", new, "orders", "id"),
-                ("dataset", "c1", "rule-retired", "g3", "r3", "between", "warning", False, "inactive", new, "orders", "id"),
-            ],
-            "metadata_table_key string, metadata_column_key string, rule_key string, guardrail_rule_id string, rule_id string, rule_type string, severity string, is_active boolean, activation_state string, _committed_at timestamp, table_name string, column_name string",
-        ),
-        "METADATA_DATA_PROFILED": spark_session.createDataFrame(
-            [("dataset", "c1", "schema-1", "id", old, old), ("dataset", "c1", "schema-2", "id", new, new)],
-            "metadata_table_key string, metadata_column_key string, schema_fingerprint string, column_name string, profiled_at timestamp, _committed_at timestamp",
-        ),
-        "METADATA_GUARDRAIL_RESULTS": spark_session.createDataFrame(
-            [("dataset", "old", old), ("dataset", "new", new)],
-            "metadata_table_key string, result_id string, _committed_at timestamp",
-        ),
-        "METADATA_DATA_ACCESS": spark_session.createDataFrame(
-            [("dataset", "reader", old, None, old)],
-            "metadata_table_key string, user_principal string, approved_at timestamp, expires_at timestamp, _committed_at timestamp",
+        "METADATA_DATA_CONTRACT": frame(
+            [("contract-old", "agreement-1", "dataset", old),
+             ("contract-new", "agreement-1", "dataset", new),
+             ("contract-second-agreement", "agreement-2", "dataset", new),
+             ("contract-other", "agreement-2", "other", new)],
+            "contract_id string, agreement_id string, metadata_table_key string, _committed_at timestamp",
         ),
     }
+    environment_tables = {
+        "METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_LINEAGE",
+        "METADATA_GUARDRAIL", "METADATA_GUARDRAIL_RESULTS",
+    }
+    for table_name in (
+        "METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_LINEAGE",
+        "METADATA_DATA_ACCESS", "METADATA_ENRICHMENT", "METADATA_GUARDRAIL",
+        "METADATA_GUARDRAIL_RESULTS",
+    ):
+        if table_name in environment_tables:
+            tables[table_name] = frame(
+                [("dataset", "dev", "old", old), ("dataset", "dev", "new", new),
+                 ("dataset", "prod", "other environment", new), ("other", "dev", "other dataset", new)],
+                "metadata_table_key string, environment_name string, marker string, _committed_at timestamp",
+            )
+        else:
+            tables[table_name] = frame(
+                [("dataset", "old", old), ("dataset", "new", new), ("other", "other dataset", new)],
+                "metadata_table_key string, marker string, _committed_at timestamp",
+            )
     monkeypatch.setattr(
         "fabricops_kit.widgets.shared.read_lakehouse_table_core",
         lambda name, **_kwargs: tables[name],
     )
 
-    latest = get_data_contract_views("dataset", spark_session=spark_session)
-    assert latest["summary"].first().schema_fingerprint == "schema-2"
-
-    historical = get_data_contract_views(
-        "dataset", schema_fingerprint="schema-1", spark_session=spark_session,
+    views = get_data_contract_views(
+        "dataset", agreement_id="agreement-1", environment_name="dev",
+        spark_session=spark_session,
     )
-    contract_rows = {row.column_name: row for row in historical["current_contract"].collect()}
-    assert set(contract_rows) == {"id", "status"}
-    assert contract_rows["id"].enrichment_business_meaning == "Identifier"
-    assert contract_rows["status"].enrichment_business_meaning is None
-    rules = json.loads(contract_rows["id"].guardrail_rules_json)
-    assert {rule["rule_type"] for rule in rules} == {"not_null", "unique"}
-    assert json.loads(contract_rows["status"].guardrail_rules_json) == []
-    assert "not schema-versioned" in contract_rows["id"].governance_metadata_scope
-    assert [row.schema_fingerprint for row in historical["data_profiled"].collect()] == ["schema-2", "schema-1"]
-    assert [row.result_id for row in historical["guardrail_results"].collect()] == ["new", "old"]
-    assert historical["data_access"].first().user_principal == "reader"
 
-    for name in ("METADATA_ENRICHMENT", "METADATA_GUARDRAIL", "METADATA_GUARDRAIL_RESULTS", "METADATA_DATA_ACCESS"):
-        tables[name] = tables[name].limit(0)
-    without_related = get_data_contract_views(
-        "dataset", schema_fingerprint="schema-1", spark_session=spark_session,
-    )
-    empty_related_rows = {row.column_name: row for row in without_related["current_contract"].collect()}
-    assert empty_related_rows["id"].enrichment_business_meaning is None
-    assert json.loads(empty_related_rows["id"].guardrail_rules_json) == []
-    assert without_related["guardrail_results"].count() == 0
-    assert without_related["data_access"].count() == 0
+    assert list(views) == ["selection", "tables", "error"]
+    assert list(views["tables"]) == list(tables)
+    assert views["error"] is None
+    assert views["selection"] == {
+        "environment_name": "dev", "metadata_table_key": "dataset",
+        "agreement_id": "agreement-1", "provider_steward_id": "provider",
+        "recipient_steward_id": "recipient",
+    }
+    assert [row.steward_id for row in views["tables"]["METADATA_DATA_STEWARD"].collect()] == [
+        "recipient", "provider",
+    ]
+    assert [row.marker for row in views["tables"]["METADATA_DATA_AGREEMENT"].collect()] == [
+        "new agreement", "old agreement",
+    ]
+    assert [row.contract_id for row in views["tables"]["METADATA_DATA_CONTRACT"].collect()] == [
+        "contract-new", "contract-old",
+    ]
+    for table_name in tables:
+        assert views["tables"][table_name].columns == tables[table_name].columns
+        assert all(row._committed_at in {old, new} for row in views["tables"][table_name].collect())
+    for table_name in environment_tables:
+        assert [row.marker for row in views["tables"][table_name].collect()] == ["new", "old"]
+    assert [row.marker for row in views["tables"]["METADATA_ENRICHMENT"].collect()] == ["new", "old"]
 
+    unscoped = get_data_contract_views("dataset", environment_name="dev", spark_session=spark_session)
+    assert unscoped["selection"]["agreement_id"] is None
+    assert {row.agreement_id for row in unscoped["tables"]["METADATA_DATA_AGREEMENT"].collect()} == {
+        "agreement-1", "agreement-2",
+    }
+    assert {row.steward_id for row in unscoped["tables"]["METADATA_DATA_STEWARD"].collect()} == {
+        "provider", "recipient", "other",
+    }
+    assert {row.contract_id for row in unscoped["tables"]["METADATA_DATA_CONTRACT"].collect()} == {
+        "contract-old", "contract-new", "contract-second-agreement",
+    }
 
 def test_current_notebook_scope_uses_historical_unique_lineage_roles(monkeypatch, spark_session):
     """Pipeline scope combines roles and excludes other notebook identities."""
@@ -243,6 +262,11 @@ def test_widget_returns_non_breaking_state_when_lineage_context_is_unavailable(m
         "resolve_fabric_context",
         lambda **_kwargs: (object(), "dev", {}),
     )
+    monkeypatch.setattr(
+        module,
+        "get_current_notebook_lineage_scope",
+        lambda **_kwargs: (_ for _ in ()).throw(ValueError("missing runtime IDs")),
+    )
 
     state = public_widget(pipeline_scope="current_notebook")
 
@@ -250,6 +274,8 @@ def test_widget_returns_non_breaking_state_when_lineage_context_is_unavailable(m
     assert state["allowed_metadata_ids"] == []
     assert "Current-notebook lineage could not be resolved" in state["error"]
     assert state["get_views"]()["error"] == state["error"]
+    assert state["get_views"]()["selection"] is None
+    assert state["get_views"]()["tables"] == {}
     assert "Ensure 00_env_config has run" in capsys.readouterr().out
 
 
@@ -282,4 +308,6 @@ def test_widget_returns_non_breaking_state_when_notebook_has_no_lineage(monkeypa
     assert state["selection_mode"] == "restricted"
     assert "No lineage records were found for this notebook" in state["error"]
     assert state["get_views"]()["error"] == state["error"]
+    assert state["get_views"]()["selection"] is None
+    assert state["get_views"]()["tables"] == {}
     assert "Run the profiling and lineage-writing sections first" in capsys.readouterr().out

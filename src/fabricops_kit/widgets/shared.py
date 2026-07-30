@@ -18,7 +18,7 @@ from fabricops_kit.io.shared import (
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key
-from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, coerce_metadata_row_types
 
 
 _WIDGET_STYLE = {"description_width": "150px"}
@@ -262,110 +262,66 @@ def get_current_notebook_lineage_scope(
 def get_data_contract_views(
     metadata_table_key: str,
     *,
-    schema_fingerprint: str | None = None,
+    agreement_id: str | None = None,
+    environment_name: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
     spark_session=None,
     context=None,
 ) -> dict[str, Any]:
-    """Assemble separate governed metadata views for a registered dataset."""
+    """Return the ten raw metadata traces related to a registered dataset."""
     from pyspark.sql import functions as F
-    from pyspark.sql.window import Window
 
     def read(name: str):
         return read_lakehouse_table_core(
             name, target=target, schema=schema, spark_session=spark_session, context=context,
         )
 
-    catalogue = read(CATALOGUE_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-    profiled = read(PROFILED_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-    enrichment = read(ENRICHMENT_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-    guardrails = read(GUARDRAIL_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-    results = read(GUARDRAIL_RESULTS_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-    access = read(DATA_ACCESS_TABLE).filter(F.col("metadata_table_key") == metadata_table_key)
-
-    if schema_fingerprint is None:
-        latest = catalogue.groupBy("schema_fingerprint").agg(F.max("_committed_at").alias("latest_at")).orderBy(F.col("latest_at").desc_nulls_last()).first()
-        schema_fingerprint = latest["schema_fingerprint"] if latest else None
-    current = catalogue.filter(F.col("schema_fingerprint") == schema_fingerprint) if schema_fingerprint else catalogue.limit(0)
-
-    def latest_per_column(frame, prefix: str):
-        order = F.col("_committed_at").desc_nulls_last()
-        ranked = frame.withColumn("_contract_rank", F.row_number().over(Window.partitionBy("metadata_table_key", "metadata_column_key").orderBy(order)))
-        selected = ranked.filter(F.col("_contract_rank") == 1).drop("_contract_rank")
-        return selected.select(
-            "metadata_table_key", "metadata_column_key",
-            *[F.col(column).alias(f"{prefix}_{column}") for column in selected.columns if column not in {"metadata_table_key", "metadata_column_key", "table_name", "column_name"}],
-        )
-
-    contract_base = current.join(latest_per_column(enrichment, "enrichment"), ["metadata_table_key", "metadata_column_key"], "left")
-
-    rule_identity = F.coalesce(
-        F.when(F.length(F.trim(F.col("rule_key"))) > 0, F.col("rule_key")),
-        F.when(F.length(F.trim(F.col("guardrail_rule_id"))) > 0, F.col("guardrail_rule_id")),
-        F.col("rule_id"),
+    raw_tables = {name: read(name) for name in CANONICAL_METADATA_TABLES}
+    contracts = raw_tables["METADATA_DATA_CONTRACT"].filter(
+        F.col("metadata_table_key") == metadata_table_key
     )
-    latest_rules = (
-        guardrails.withColumn("_contract_rule_identity", rule_identity)
-        .withColumn(
-            "_contract_rank",
-            F.row_number().over(
-                Window.partitionBy("metadata_table_key", "metadata_column_key", "_contract_rule_identity")
-                .orderBy(F.col("_committed_at").desc_nulls_last())
-            ),
-        )
-        .filter(F.col("_contract_rank") == 1)
-        .filter(
-            F.coalesce(F.col("is_active"), F.lit(True))
-            & ~F.coalesce(F.col("activation_state").isin("inactive", "superseded"), F.lit(False))
-        )
-        .drop("_contract_rank", "_contract_rule_identity")
-    )
-    rule_fields = [
-        column for column in latest_rules.columns
-        if column not in {"metadata_table_key", "metadata_column_key", "table_name", "column_name"}
-    ]
-    catalogue_alias = contract_base.alias("catalogue")
-    guardrail_alias = latest_rules.alias("guardrail")
-    guardrail_join = (
-        (F.col("catalogue.metadata_table_key") == F.col("guardrail.metadata_table_key"))
-        & (
-            F.col("guardrail.metadata_column_key").isNull()
-            | (F.col("catalogue.metadata_column_key") == F.col("guardrail.metadata_column_key"))
-        )
-    )
-    joined_rules = catalogue_alias.join(guardrail_alias, guardrail_join, "left").select(
-        *[F.col(f"catalogue.`{column}`").alias(column) for column in contract_base.columns],
-        F.when(
-            F.coalesce(
-                F.col("guardrail.rule_key"), F.col("guardrail.guardrail_rule_id"), F.col("guardrail.rule_id"),
-            ).isNotNull(),
-            F.struct(*[F.col(f"guardrail.`{column}`").alias(column) for column in rule_fields]),
-        ).alias("_guardrail_rule"),
-    )
-    contract = joined_rules.groupBy(*contract_base.columns).agg(
-        F.to_json(F.collect_list("_guardrail_rule")).alias("guardrail_rules_json")
-    ).withColumn(
-        "governance_metadata_scope",
-        F.lit("Current governance metadata; enrichment and guardrail tables are not schema-versioned."),
-    )
-    profiled = profiled.orderBy(F.col("profiled_at").desc_nulls_last(), F.col("_committed_at").desc_nulls_last())
-    results = results.orderBy(F.col("_committed_at").desc_nulls_last())
-    access = access.orderBy(F.coalesce(F.col("approved_at"), F.col("expires_at"), F.col("_committed_at")).desc_nulls_last())
+    if agreement_id:
+        contracts = contracts.filter(F.col("agreement_id") == agreement_id)
+        agreement_ids = [agreement_id]
+    else:
+        agreement_ids = [
+            row["agreement_id"]
+            for row in contracts.select("agreement_id").distinct().collect()
+            if row["agreement_id"]
+        ]
 
-    location = current.orderBy(F.col("_committed_at").desc_nulls_last()).limit(1)
-    profile_time = profiled.agg(F.max("profiled_at").alias("latest_profiled_at"))
-    result_time = results.agg(F.max("_committed_at").alias("latest_guardrail_execution_at"))
-    summary = location.select(
-        "environment_name", "store_type", "layer", "schema_name", "table_name", "metadata_table_key",
-        F.lit(schema_fingerprint).alias("schema_fingerprint"),
-        F.lit("Current governance metadata; enrichment and guardrail tables are not schema-versioned.").alias(
-            "governance_metadata_scope"
-        ),
-    ).crossJoin(profile_time).crossJoin(result_time)
+    agreement = raw_tables["METADATA_DATA_AGREEMENT"]
+    agreement = agreement.filter(F.col("agreement_id").isin(agreement_ids)) if agreement_ids else agreement.limit(0)
+    agreement_rows = agreement.select("provider_steward_id", "recipient_steward_id").distinct().collect()
+    provider_steward_ids = [row["provider_steward_id"] for row in agreement_rows if row["provider_steward_id"]]
+    recipient_steward_ids = [row["recipient_steward_id"] for row in agreement_rows if row["recipient_steward_id"]]
+    steward_ids = list(dict.fromkeys([*provider_steward_ids, *recipient_steward_ids]))
+
+    tables: dict[str, Any] = {}
+    for name, frame in raw_tables.items():
+        if name == "METADATA_DATA_STEWARD":
+            frame = frame.filter(F.col("steward_id").isin(steward_ids)) if steward_ids else frame.limit(0)
+        elif name == "METADATA_DATA_AGREEMENT":
+            frame = agreement
+        elif name == "METADATA_DATA_CONTRACT":
+            frame = contracts
+        else:
+            frame = frame.filter(F.col("metadata_table_key") == metadata_table_key)
+        if environment_name and "environment_name" in frame.columns:
+            frame = frame.filter(F.col("environment_name") == environment_name)
+        tables[name] = frame.orderBy(F.col("_committed_at").desc_nulls_last())
+
     return {
-        "summary": summary, "current_contract": contract, "data_profiled": profiled,
-        "guardrail_results": results, "data_access": access,
+        "selection": {
+            "environment_name": environment_name,
+            "metadata_table_key": metadata_table_key,
+            "agreement_id": agreement_id,
+            "provider_steward_id": provider_steward_ids[0] if len(provider_steward_ids) == 1 else None,
+            "recipient_steward_id": recipient_steward_ids[0] if len(recipient_steward_ids) == 1 else None,
+        },
+        "tables": tables,
+        "error": None,
     }
 
 

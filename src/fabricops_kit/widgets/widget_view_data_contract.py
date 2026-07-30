@@ -92,19 +92,19 @@ def widget_view_data_contract(
     metadata_id: str | None = None,
     metadata_ids: Mapping[str, str] | Sequence[str] | None = None,
     pipeline_scope: str | None = None,
-    schema_version: str | None = None,
     target: str = "metadata",
     schema: str | None = None,
     spark_session=None,
     context=None,
 ):
-    """Render the governed metadata surfaces for one registered dataset.
+    """Render the canonical metadata trace for one registered dataset.
 
     Parameters
     ----------
     agreement : dict, optional
         Agreement record or agreement-widget state. Linked data contracts are
-        offered first when canonical contract links already exist.
+        offered first when canonical contract links already exist, and the
+        resolved agreement ID constrains contract, agreement, and steward traces.
     metadata_id : str, optional
         Canonical ``metadata_table_key`` to select initially.
     metadata_ids : mapping or sequence of str, optional
@@ -115,8 +115,6 @@ def widget_view_data_contract(
     pipeline_scope : {"current_notebook"}, optional
         Restrict discovery to historical metadata IDs recorded in Data Lineage
         for the active environment, workspace, and notebook.
-    schema_version : str, optional
-        Canonical ``schema_fingerprint`` to select initially.
     target : str, default="metadata"
         Configured FabricStore target containing FabricOps metadata tables.
     schema : str, optional
@@ -129,24 +127,26 @@ def widget_view_data_contract(
     Returns
     -------
     dict
-        Mutable state containing canonical selections, the assembled Spark
-        DataFrames and a ``get_views`` callable. The widget does not render the
-        DataFrames; display the returned views in a separate notebook cell.
+        Mutable state containing the selected dataset and a ``get_views``
+        callable. The callable returns all ten raw, filtered canonical metadata
+        tables without rendering them.
 
     Notes
     -----
     The environment is fixed to the active FabricOps context. Dataset identity
-    is the stable ``metadata_table_key``; schema history is selected with the
-    canonical ``schema_fingerprint``. Governance tables are not
-    schema-versioned, so historical catalogue schemas are explicitly combined
-    with current enrichment and guardrail definitions. After changing a widget
-    selection, rerun the notebook cell that displays ``get_views()`` results.
+    is the stable ``metadata_table_key``. All metadata history for that identity
+    is retained within the supplied agreement scope. Without an agreement scope,
+    every agreement linked to the dataset and all of their stewards are returned.
+    The selected environment is applied only to canonical tables that contain
+    ``environment_name``. After changing a widget selection, rerun the notebook
+    cell that displays ``get_views()`` results.
 
     Examples
     --------
     >>> state = widget_view_data_contract()
     >>> views = state["get_views"]()
-    >>> views["current_contract"].show()
+    >>> contract_table = views["tables"].get("METADATA_DATA_CONTRACT")
+    >>> contract_table.show()
 
     """
     if pipeline_scope not in {None, "current_notebook"}:
@@ -161,11 +161,10 @@ def widget_view_data_contract(
         empty_state: dict[str, Any] = {
             "error": message,
             "metadata_table_key": metadata_id,
-            "schema_fingerprint": schema_version,
             "selection_mode": "restricted" if restricted_mode else ("direct" if metadata_id else "discovery"),
             "allowed_metadata_ids": [metadata_key for _label, metadata_key in restricted_items],
         }
-        empty_state["get_views"] = lambda: {key: value for key, value in empty_state.items() if key != "get_views"}
+        empty_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
         return empty_state
 
     config, env, resolved = resolve_fabric_context(context=context)
@@ -186,14 +185,11 @@ def widget_view_data_contract(
             unavailable_state: dict[str, Any] = {
                 "error": message,
                 "metadata_table_key": metadata_id,
-                "schema_fingerprint": schema_version,
                 "selection_mode": "restricted",
                 "allowed_metadata_ids": [],
                 "pipeline_scope_source": "unavailable",
             }
-            unavailable_state["get_views"] = lambda: {
-                key: value for key, value in unavailable_state.items() if key != "get_views"
-            }
+            unavailable_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
             return unavailable_state
         restricted_items, pipeline_scope_source = _pipeline_scope_items(lineage_items, restricted_items)
         if pipeline_scope_source == "empty":
@@ -205,14 +201,11 @@ def widget_view_data_contract(
             empty_lineage_state: dict[str, Any] = {
                 "error": message,
                 "metadata_table_key": metadata_id,
-                "schema_fingerprint": schema_version,
                 "selection_mode": "restricted",
                 "allowed_metadata_ids": [],
                 "pipeline_scope_source": "empty",
             }
-            empty_lineage_state["get_views"] = lambda: {
-                key: value for key, value in empty_lineage_state.items() if key != "get_views"
-            }
+            empty_lineage_state["get_views"] = lambda: {"selection": None, "tables": {}, "error": message}
             return empty_lineage_state
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE", target=target, schema=schema,
@@ -250,12 +243,11 @@ def widget_view_data_contract(
         ("metadata_table_key", "Metadata ID"),
     ])
     controls = {field: widgets.Dropdown(options=[], **widget_common(widgets, label)) for field, label in hierarchy}
-    version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
     controls_box = widgets.VBox([])
     state: dict[str, Any] = {
         "environment_name": env, "store_type": None, "layer": None,
         "schema_name": None, "table_name": None, "metadata_table_key": None,
-        "schema_fingerprint": None, "agreement_id": agreement_id,
+        "agreement_id": agreement_id,
         "linked_metadata_ids": linked_metadata_ids,
         "selection_mode": "restricted" if restricted_mode else ("direct" if metadata_id else "discovery"),
         "allowed_metadata_ids": [metadata_key for _label, metadata_key in restricted_items],
@@ -263,12 +255,12 @@ def widget_view_data_contract(
     }
 
     def get_views():
-        """Return current selections and assembled DataFrames."""
-        return {key: value for key, value in state.items() if key not in {"get_views", "_controls"}}
+        """Return the current selection and ten raw metadata DataFrames."""
+        if state.get("error"):
+            return {"selection": None, "tables": {}, "error": state["error"]}
+        return state.get("views", {"selection": None, "tables": {}, "error": "No dataset is selected."})
 
     state["get_views"] = get_views
-    initial_schema_pending = True
-
     def refresh_from(start: int = 0) -> None:
         selections: dict[str, Any] = {}
         restricted_default = restricted_items[0][1] if restricted_items else None
@@ -300,40 +292,26 @@ def widget_view_data_contract(
         refresh_views()
 
     def refresh_views(*_: Any) -> None:
-        nonlocal initial_schema_pending
         for field, _label in hierarchy:
             state[field] = controls[field].value
         metadata_id = state["metadata_table_key"]
         if not metadata_id:
-            for key in ("summary", "current_contract", "data_profiled", "guardrail_results", "data_access"):
-                state.pop(key, None)
+            state["views"] = {"selection": None, "tables": {}, "error": "No dataset is selected."}
             return
         selected_location = next((row for row in rows if row.get("metadata_table_key") == metadata_id), {})
         for field in ("environment_name", "store_type", "layer", "schema_name", "table_name"):
             state[field] = selected_location.get(field)
-        from pyspark.sql import functions as F
-
-        versions = [row["schema_fingerprint"] for row in (
-            catalogue.filter(F.col("metadata_table_key") == metadata_id)
-            .groupBy("schema_fingerprint").agg(F.max("_committed_at").alias("latest_at"))
-            .orderBy(F.col("latest_at").desc_nulls_last()).collect()
-        )]
-        requested_schema = schema_version if initial_schema_pending else None
-        selected = requested_schema if requested_schema in versions else (version.value if version.value in versions else (versions[0] if versions else None))
-        version.options = [((f"{value} (latest)" if index == 0 else str(value)), value) for index, value in enumerate(versions)]
-        version.value = selected
-        state["schema_fingerprint"] = selected
-        initial_schema_pending = False
         views = get_data_contract_views(
-            metadata_id, schema_fingerprint=selected, target=target, schema=schema,
+            metadata_id, agreement_id=agreement_id or None,
+            environment_name=state["environment_name"], target=target, schema=schema,
             spark_session=spark_session, context=runtime_context,
         )
-        state.update(views)
+        state["views"] = views
+        state["agreement_id"] = views["selection"]["agreement_id"]
 
     for index, (field, _label) in enumerate(hierarchy):
         controls[field].observe(lambda change, i=index: refresh_from(i + 1) if change.get("name") == "value" else None, names="value")
-    version.observe(lambda change: refresh_views() if change.get("name") == "value" and change.get("new") else None, names="value")
     refresh_from()
-    state["_controls"] = {**controls, "schema_fingerprint": version}
-    ip.display(widgets.VBox([widgets.HTML("<h2>View data contract</h2>"), controls_box, version]))
+    state["_controls"] = controls
+    ip.display(widgets.VBox([widgets.HTML("<h2>View metadata trace</h2>"), controls_box]))
     return state
