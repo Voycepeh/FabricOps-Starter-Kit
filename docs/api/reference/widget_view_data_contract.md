@@ -12,9 +12,9 @@ Render the canonical metadata trace for one registered dataset.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_data_contract.py:89`
+`fabricops_kit/widgets/widget_view_data_contract.py:201`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L89-L317">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_contract.py#L201-L475">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -41,9 +41,11 @@ They help users write values into the correct underlying metadata tables without
 ```python
 def widget_view_data_contract(
     agreement: dict[str, Any] | None=None,
+    agreement_id: str | None=None,
     metadata_id: str | None=None,
     metadata_ids: Mapping[str, str] | Sequence[str] | None=None,
     pipeline_scope: str | None=None,
+    schema_version: str | None=None,
     target: str='metadata',
     schema: str | None=None,
     spark_session=None,
@@ -57,10 +59,18 @@ def widget_view_data_contract(
 
 <div class="reference-example-usage" markdown="1">
 
->>> state = widget_view_data_contract()
->>> views = state["get_views"]()
->>> contract_table = views["tables"].get("METADATA_DATA_CONTRACT")
->>> contract_table.show()
+>>> pipeline_view = widget_view_data_contract(
+...     pipeline_scope="current_notebook", target="metadata",
+...     schema=METADATA_SCHEMA, spark_session=spark,
+... )
+>>> governance_view = widget_view_data_contract(
+...     agreement=agreement_state, target="metadata",
+...     schema=METADATA_SCHEMA, spark_session=spark,
+... )
+>>> direct_view = widget_view_data_contract(
+...     metadata_id="logical-table-key", target="metadata",
+...     schema=METADATA_SCHEMA, spark_session=spark,
+... )
 
 </div>
 
@@ -68,10 +78,12 @@ def widget_view_data_contract(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. Linked data contracts are offered first when canonical contract links already exist, and the resolved agreement ID constrains contract, agreement, and steward traces. |
-| `metadata_id` | `str \| None` | No | Canonical ``metadata_table_key`` to select initially. |
-| `metadata_ids` | `Mapping[str, str] \| Sequence[str] \| None` | No | Canonical dataset identities allowed in restricted mode. Mapping keys become readable role labels, such as ``Source`` and ``Target``. When ``pipeline_scope`` is also supplied, these IDs are used only if the current notebook has no matching lineage history. |
-| `pipeline_scope` | `str \| None` | No | Restrict discovery to historical metadata IDs recorded in Data Lineage for the active environment, workspace, and notebook. |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement record or agreement-widget state. This activates strict agreement scope and may also supply a readable agreement label. |
+| `agreement_id` | `str \| None` | No | Direct agreement identity. A non-empty trimmed value takes precedence over the identity in ``agreement``. |
+| `metadata_id` | `str \| None` | No | Canonical ``metadata_table_key`` to select initially within the allowed scope. It never broadens that scope. |
+| `metadata_ids` | `Mapping[str, str] \| Sequence[str] \| None` | No | Logical dataset identities for restricted selection, or fallback scope when current-notebook lineage is empty. Mapping keys are role labels. |
+| `pipeline_scope` | `str \| None` | No | Restrict selection to lineage for the active environment and current workspace and notebook. |
+| `schema_version` | `str \| None` | No | Full schema fingerprint to select initially when it exists for the selected dataset. |
 | `target` | `str` | No | Configured FabricStore target containing FabricOps metadata tables. |
 | `schema` | `str \| None` | No | Metadata lakehouse schema override. |
 | `spark_session` | `object` | No | Spark session override. |
@@ -99,13 +111,20 @@ Raises Spark or metadata routing errors when metadata cannot be read. A missing 
 
 <div class="reference-docstring-notes" markdown="1">
 
-The environment is fixed to the active FabricOps context. Dataset identity
-is the stable ``metadata_table_key``. All metadata history for that identity
-is retained within the supplied agreement scope. Without an agreement scope,
-every agreement linked to the dataset and all of their stewards are returned.
-The selected environment is applied only to canonical tables that contain
-``environment_name``. After changing a widget selection, rerun the notebook
-cell that displays ``get_views()`` results.
+The single dataset selector has ``agreement``, ``pipeline``, ``restricted``,
+``direct``, and ``discovery`` modes. Agreement scope follows only
+``agreement_id -> METADATA_DATA_CONTRACT -> metadata_table_key`` and then
+intersects those links with catalogue evidence in the active environment;
+unrelated or cross-environment datasets are never offered. Agreement and
+other restricted scopes are mutually exclusive. Empty agreement links and
+links absent from the active environment return explicit non-breaking empty
+states rather than discovery.
+
+Schema versions are newest first and have readable, locale-independent
+timestamps while retaining the full fingerprint as their value. Under the
+current schema contract, that fingerprint represents ordered column names
+and data types. Large Spark DataFrames are returned by ``get_views`` rather
+than rendered inside the widget.
 
 </div>
 
