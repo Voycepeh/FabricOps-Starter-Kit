@@ -283,7 +283,7 @@ def widget_register_data_contract(
     See Also
     --------
     widget_render_data_agreement
-    widget_view_data_contract
+    widget_view_agreement_catalogue
 
     """
     resolved_agreement_id, agreement_label = _agreement_details(agreement, agreement_id)

@@ -61,7 +61,9 @@ EXPECTED_V1_CALLABLES = [
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_schema_freshness_profile_rules',
-    'widget_view_data_contract',
+    'widget_view_agreement_catalogue',
+    'widget_view_pipeline_catalogue',
+    'widget_view_data_catalogue',
     'widget_register_data_contract',
     'widget_author_dq_rules',
     'widget_review_guardrail_governance',
@@ -81,7 +83,9 @@ def test_widget_public_callables_live_under_widgets_package():
     widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
-        'widget_view_data_contract',
+        'widget_view_agreement_catalogue',
+        'widget_view_pipeline_catalogue',
+        'widget_view_data_catalogue',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -106,7 +110,9 @@ def test_widget_modules_do_not_call_public_widget_functions():
     public_widget_names = {
         'widget_author_dq_rules',
         'widget_author_schema_freshness_profile_rules',
-        'widget_view_data_contract',
+        'widget_view_agreement_catalogue',
+        'widget_view_pipeline_catalogue',
+        'widget_view_data_catalogue',
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
@@ -530,7 +536,8 @@ def test_99_explore_uses_metadata_catalogue_widget():
     code = "\n".join("".join(cell.get("source", [])) for cell in notebook["cells"] if cell.get("cell_type") == "code")
 
     assert "get_latest_metadata_catalogue" not in code
-    assert "widget_view_data_contract" in code
+    assert "widget_view_data_catalogue" in code
+    assert "widget_view_data_contract" not in code
     assert "METADATA_DATA_CATALOGUE" not in code
     assert 'F.col("table_name") == source_table_name' not in code
 
