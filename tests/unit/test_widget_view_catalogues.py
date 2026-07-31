@@ -84,7 +84,7 @@ def test_internal_selection_context_is_not_rendered(monkeypatch):
     state = build_catalogue_widget(
         heading="Pipeline catalogue",
         selection_context={"notebook_id": "technical-id", "environment_name": "dev"},
-        display_context={"Notebook": "Customer pipeline", "Environment": "dev", "Linked datasets": 1},
+        display_context={"Notebook": "Customer <pipeline>", "Environment": "dev", "Linked datasets": 1},
         inventory_rows=[{
             "metadata_table_key": "dataset-key", "schema_fingerprint": "fingerprint",
             "layer": "raw", "schema_name": "sales", "table_name": "orders",
@@ -95,7 +95,8 @@ def test_internal_selection_context_is_not_rendered(monkeypatch):
     )
 
     visible_html = displayed[0].children[0].value
-    assert "<b>Notebook:</b> Customer pipeline" in visible_html
+    assert "<b>Notebook:</b> Customer &lt;pipeline&gt;" in visible_html
+    assert "Customer <pipeline>" not in visible_html
     assert "<b>Environment:</b> dev" in visible_html
     assert "<b>Linked datasets:</b> 1" in visible_html
     assert "technical-id" not in visible_html

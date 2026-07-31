@@ -1997,7 +1997,7 @@ def build_catalogue_widget(
     version.observe(lambda change: state.update(get_selection()) if change.get("name") == "value" else None, names="value")
     refresh()
     context_html = "<br>".join(
-        f"<b>{name}:</b> {value}"
+        f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
         for name, value in display_context.items()
         if value not in (None, "")
     )
