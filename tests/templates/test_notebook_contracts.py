@@ -140,26 +140,26 @@ def test_02_pipeline_presents_the_v02_table_workflow():
     assert "run_table_guardrails" not in source
 
 
-def test_02_pipeline_uses_only_the_contract_widget():
-    """Verify the simplified pipeline uses only the requested contract widget."""
+def test_02_pipeline_uses_only_the_catalogue_widget():
+    """Verify the simplified pipeline uses only the scoped catalogue widget."""
     source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
 
-    assert "widget_view_data_contract" in source
+    assert "widget_view_pipeline_catalogue" in source
+    assert "widget_view_data_contract" not in source
     assert "widget_author_" not in source
     assert "widget_enrich_" not in source
 
 
-@pytest.mark.parametrize(("notebook_name", "state_name"), [("99_explore.ipynb", "data_contract_view")])
+@pytest.mark.parametrize(("notebook_name", "state_name"), [("99_explore.ipynb", "data_catalogue_view")])
 def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, state_name):
     """Each template renders refreshed views in a separate rerunnable cell."""
     notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook.cells)
 
-    assert "Select a dataset above, then rerun this cell" in source
     assert f'{state_name}["get_views"]()' in source
-    assert 'for table_name, frame in metadata_views["tables"].items()' in source
-    assert 'print("Sorted by _committed_at descending")' in source
-    assert "display(frame)" in source
+    assert "display(catalogue_df)" in source
+    assert "display(profile_df)" in source
+    assert 'get("tables"' not in source
 
 
 def test_01_agreement_registers_one_logical_draft_contract_after_agreement():
@@ -192,27 +192,22 @@ def test_02_pipeline_reviews_only_current_notebook_lineage_after_profiling():
         index for index, cell in enumerate(notebook.cells)
         if "profile_and_register_table(" in cell.source and "from fabricops_kit" not in cell.source
     ]
-    viewer_index = _cell_index(notebook, "pipeline_contract_view = widget_view_data_contract")
-    output_index = _cell_index(notebook, 'pipeline_contract_view["get_views"]()')
+    viewer_index = _cell_index(notebook, "pipeline_catalogue_view = widget_view_pipeline_catalogue")
+    output_index = _cell_index(notebook, 'pipeline_catalogue_view["get_views"]()')
     viewer_source = notebook.cells[viewer_index].source
     output_source = notebook.cells[output_index].source
 
-    assert "widget_view_data_contract" in source
+    assert "widget_view_pipeline_catalogue" in source
     assert max(profile_indices) < viewer_index < output_index
-    assert 'pipeline_scope="current_notebook"' in viewer_source
     assert 'target="metadata"' in viewer_source
     assert "schema=METADATA_SCHEMA" in viewer_source
     assert "spark_session=spark" in viewer_source
     assert "agreement" not in viewer_source
     assert "steward_id" not in viewer_source
     assert "metadata_id" not in viewer_source
-    assert source.count("widget_view_data_contract(") == 1
-    assert '.get("error")' in output_source
-    assert '.get("tables", {})' in output_source
-    assert "display(dataframe)" in output_source
-    assert "active environment" in source
-    assert "current Fabric workspace" in source
-    assert "current notebook lineage" in source
+    assert source.count("widget_view_pipeline_catalogue(") == 1
+    assert "catalogue_df, profile_df" in output_source
+    assert "Source" in source and "Target" in source
 
 
 def test_03_review_uses_steward_agreement_contract_order_and_scope():
@@ -221,8 +216,8 @@ def test_03_review_uses_steward_agreement_contract_order_and_scope():
     source = "\n".join(cell.source for cell in notebook.cells)
     steward_index = _cell_index(notebook, "steward_widget = widget_render_data_steward")
     agreement_index = _cell_index(notebook, "agreement_widget = widget_render_data_agreement")
-    viewer_index = _cell_index(notebook, "governance_contract_view = widget_view_data_contract")
-    output_index = _cell_index(notebook, 'governance_contract_view["get_views"]()')
+    viewer_index = _cell_index(notebook, "governance_catalogue_view = widget_view_agreement_catalogue")
+    output_index = _cell_index(notebook, 'governance_catalogue_view["get_views"]()')
     viewer_source = notebook.cells[viewer_index].source
     output_source = notebook.cells[output_index].source
 
@@ -235,10 +230,8 @@ def test_03_review_uses_steward_agreement_contract_order_and_scope():
     assert "steward_id" not in viewer_source
     assert "pipeline_scope" not in viewer_source
     assert source.count("widget_render_data_agreement(") == 1
-    assert source.count("widget_view_data_contract(") == 1
-    assert '.get("error")' in output_source
-    assert '.get("tables", {})' in output_source
-    assert "display(dataframe)" in output_source
+    assert source.count("widget_view_agreement_catalogue(") == 1
+    assert "catalogue_df, profile_df" in output_source
     assert "only linked logical datasets are visible" in source
     assert "Contract membership is shared across Development and Production" in source
     assert "observations remain separate" in source

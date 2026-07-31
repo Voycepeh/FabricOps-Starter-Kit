@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field as dataclass_field
 from datetime import date, datetime
@@ -52,6 +53,20 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
             kwargs["height"] = _TEXTAREA_HEIGHT
         common["layout"] = layout_class(**kwargs)
     return common
+
+
+def resolve_agreement_details(agreement: dict[str, Any] | None) -> tuple[str, str]:
+    """Resolve a canonical agreement ID and label from agreement widget state."""
+    supplied = agreement or {}
+    row: dict[str, Any] = supplied
+    resolved = str(supplied.get("agreement_id") or "").strip()
+    if not resolved:
+        selected = supplied.get("existing_record")
+        selected_id = str(getattr(selected, "value", "") or "").strip()
+        row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
+        resolved = str(row.get("agreement_id") or selected_id).strip()
+    label = str(row.get("agreement_name") or supplied.get("agreement_name") or resolved).strip()
+    return resolved, label
 
 
 def _html_escape(value: Any) -> str:
@@ -1847,3 +1862,145 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             **audit,
         })
     return rows
+
+
+# Shared catalogue-selection widget implementation.
+CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+PROFILE_TABLE = "METADATA_DATA_PROFILED"
+
+
+def collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[dict[str, Any]]:
+    """Collect distinct dataset-version observations in the active environment."""
+    from pyspark.sql import functions as F
+
+    fields = [
+        "metadata_table_key", "schema_fingerprint", "environment_name", "store_type",
+        "layer", "schema_name", "table_name", "_committed_at",
+    ]
+    return [
+        row.asDict(recursive=True)
+        for row in catalogue.filter(F.col("environment_name") == environment_name)
+        .select(*fields).distinct().collect()
+        if str(row["metadata_table_key"] or "").strip()
+    ]
+
+
+def dataset_label(row: dict[str, Any], role: str | None = None) -> str:
+    """Build the consistent physical dataset label, optionally tagged by role."""
+    location = " / ".join(
+        str(row.get(field) or "").strip()
+        for field in ("layer", "schema_name", "table_name")
+        if str(row.get(field) or "").strip()
+    ) or str(row.get("metadata_table_key") or "")
+    return f"[{role}] {location}" if role else location
+
+
+def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) -> list[tuple[str, str]]:
+    """Return deterministic newest-first schema choices for one dataset."""
+    versions: dict[str, Any] = {}
+    for row in rows:
+        if str(row.get("metadata_table_key") or "") != metadata_table_key:
+            continue
+        fingerprint = str(row.get("schema_fingerprint") or "").strip()
+        committed = row.get("_committed_at")
+        if fingerprint and str(committed or "") >= str(versions.get(fingerprint) or ""):
+            versions[fingerprint] = committed
+    ordered = sorted(
+        versions.items(),
+        key=lambda item: (isinstance(item[1], datetime), str(item[1] or ""), item[0]),
+        reverse=True,
+    )
+    counts = Counter(str(timestamp or "") for _fingerprint, timestamp in ordered)
+    result = []
+    for index, (fingerprint, timestamp) in enumerate(ordered):
+        name = "Latest" if index == 0 else "Previous"
+        detail = timestamp.isoformat(sep=" ", timespec="minutes") if isinstance(timestamp, datetime) else "Timestamp unavailable"
+        suffix = f" — {fingerprint[:8]}" if counts[str(timestamp or "")] > 1 or timestamp is None else ""
+        result.append((f"{name} — {detail}{suffix}", fingerprint))
+    return result
+
+
+def build_catalogue_widget(
+    *, heading: str, selection_context: dict[str, Any], display_context: dict[str, Any],
+    inventory_rows: list[dict[str, Any]],
+    role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
+    spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
+) -> dict[str, Any]:
+    """Build common controls and lazy catalogue/profile frame readers."""
+    widgets = require_ipywidgets()
+    rows_by_key: dict[str, list[dict[str, Any]]] = {}
+    for row in inventory_rows:
+        rows_by_key.setdefault(str(row["metadata_table_key"]), []).append(row)
+    roles = role_options or [(None, key) for key in sorted(rows_by_key)]
+    options: list[tuple[str, str]] = []
+    option_context: dict[str, tuple[str | None, str]] = {}
+    for role, key in roles:
+        if key not in rows_by_key:
+            continue
+        latest = max(rows_by_key[key], key=lambda row: (str(row.get("_committed_at") or ""), str(row.get("schema_fingerprint") or "")))
+        value = f"{role or ''}\x1f{key}"
+        options.append((dataset_label(latest, role), value))
+        option_context[value] = (role, key)
+    options.sort(key=lambda item: (item[0].casefold(), item[1]))
+    dataset = widgets.Dropdown(options=options, **widget_common(widgets, "Dataset"))
+    version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
+    status = widgets.HTML(value="")
+    controls = {"dataset": dataset, "schema_fingerprint": version}
+    state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
+
+    def get_selection() -> dict[str, Any]:
+        """Return current control values and entry-point context."""
+        role, key = option_context.get(str(dataset.value or ""), (None, ""))
+        selected_rows = rows_by_key.get(key, [])
+        latest = max(selected_rows, key=lambda row: (str(row.get("_committed_at") or ""), str(row.get("schema_fingerprint") or "")), default={})
+        return {
+            **selection_context, "metadata_table_key": key or None,
+            "schema_fingerprint": version.value, "dataset_label": dataset_label(latest, role) if latest else None,
+            "profile_role": role, "store_type": latest.get("store_type"), "layer": latest.get("layer"),
+            "schema_name": latest.get("schema_name"), "table_name": latest.get("table_name"),
+        }
+
+    def get_views():
+        """Read and return exactly the selected catalogue and profile frames."""
+        selection = get_selection()
+        key = selection["metadata_table_key"]
+        fingerprint = selection["schema_fingerprint"]
+        if not key or not fingerprint:
+            raise ValueError(empty_message)
+        from pyspark.sql import functions as F
+
+        catalogue = read_lakehouse_table_core(CATALOGUE_TABLE, target=target, schema=schema, spark_session=spark_session, context=runtime_context)
+        profile = read_lakehouse_table_core(PROFILE_TABLE, target=target, schema=schema, spark_session=spark_session, context=runtime_context)
+        catalogue = catalogue.filter((F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint))
+        profile = profile.filter((F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint))
+        catalogue_order = [name for name in ("column_name", "metadata_column_key", "_committed_at") if name in catalogue.columns]
+        profile_order = [name for name in ("column_name", "metadata_column_key", "profiled_at", "_committed_at") if name in profile.columns]
+        return catalogue.orderBy(*catalogue_order), profile.orderBy(*profile_order)
+
+    def refresh(*_args: Any) -> None:
+        """Synchronize schema choices and lightweight selection state."""
+        _role, key = option_context.get(str(dataset.value or ""), (None, ""))
+        choices = schema_version_options(inventory_rows, key)
+        current = str(version.value or "")
+        version.options = choices
+        values = [value for _label, value in choices]
+        version.value = current if current in values else (values[0] if values else None)
+        state.update(get_selection())
+        state["error"] = None if key else empty_message
+        status.value = (
+            "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
+            if key else empty_message
+        )
+
+    state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
+    dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
+    version.observe(lambda change: state.update(get_selection()) if change.get("name") == "value" else None, names="value")
+    refresh()
+    context_html = "<br>".join(
+        f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
+        for name, value in display_context.items()
+        if value not in (None, "")
+    )
+    from IPython import display as ip
+    ip.display(widgets.VBox([widgets.HTML(f"<h2>{heading}</h2>{context_html}"), dataset, version, status]))
+    return state
