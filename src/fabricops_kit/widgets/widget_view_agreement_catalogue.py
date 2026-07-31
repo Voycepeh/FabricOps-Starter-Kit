@@ -61,7 +61,9 @@ def widget_view_agreement_catalogue(*, agreement: dict[str, Any], spark_session=
     catalogue = read_lakehouse_table_core("METADATA_DATA_CATALOGUE", target=target, schema=schema, spark_session=spark_session, context=runtime_context)
     rows = [row for row in collect_catalogue_inventory(catalogue, environment_name) if row["metadata_table_key"] in set(keys)]
     return build_catalogue_widget(
-        heading="Agreement catalogue", context_values={"agreement_id": agreement_id, "Agreement": agreement_name, "environment_name": environment_name, "Linked dataset count": len({row['metadata_table_key'] for row in rows})},
+        heading="Agreement catalogue",
+        selection_context={"agreement_id": agreement_id, "environment_name": environment_name},
+        display_context={"Agreement": agreement_name, "Environment": environment_name, "Linked datasets": len({row['metadata_table_key'] for row in rows})},
         inventory_rows=rows, role_options=None, target=target, schema=schema, spark_session=spark_session,
         runtime_context=runtime_context, empty_message="This agreement has no linked catalogue inventory.",
     )

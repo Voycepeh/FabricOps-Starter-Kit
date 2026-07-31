@@ -42,7 +42,9 @@ def widget_view_data_catalogue(*, spark_session=None, target: str = "metadata", 
     catalogue = read_lakehouse_table_core("METADATA_DATA_CATALOGUE", target=target, schema=schema, spark_session=spark_session, context=runtime_context)
     rows = collect_catalogue_inventory(catalogue, environment_name)
     return build_catalogue_widget(
-        heading="Data catalogue", context_values={"environment_name": environment_name, "Environment": environment_name, "Dataset count": len({row['metadata_table_key'] for row in rows})},
+        heading="Data catalogue",
+        selection_context={"environment_name": environment_name},
+        display_context={"Environment": environment_name, "Datasets": len({row['metadata_table_key'] for row in rows})},
         inventory_rows=rows, role_options=None, target=target, schema=schema, spark_session=spark_session,
         runtime_context=runtime_context, empty_message="The data catalogue has no datasets in the current environment.",
     )

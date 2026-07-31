@@ -1921,7 +1921,8 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
 
 
 def build_catalogue_widget(
-    *, heading: str, context_values: dict[str, Any], inventory_rows: list[dict[str, Any]],
+    *, heading: str, selection_context: dict[str, Any], display_context: dict[str, Any],
+    inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
 ) -> dict[str, Any]:
@@ -1953,7 +1954,7 @@ def build_catalogue_widget(
         selected_rows = rows_by_key.get(key, [])
         latest = max(selected_rows, key=lambda row: (str(row.get("_committed_at") or ""), str(row.get("schema_fingerprint") or "")), default={})
         return {
-            **context_values, "metadata_table_key": key or None,
+            **selection_context, "metadata_table_key": key or None,
             "schema_fingerprint": version.value, "dataset_label": dataset_label(latest, role) if latest else None,
             "profile_role": role, "store_type": latest.get("store_type"), "layer": latest.get("layer"),
             "schema_name": latest.get("schema_name"), "table_name": latest.get("table_name"),
@@ -1995,7 +1996,11 @@ def build_catalogue_widget(
     dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
     version.observe(lambda change: state.update(get_selection()) if change.get("name") == "value" else None, names="value")
     refresh()
-    context_html = "<br>".join(f"<b>{name}:</b> {value}" for name, value in context_values.items() if value not in (None, ""))
+    context_html = "<br>".join(
+        f"<b>{name}:</b> {value}"
+        for name, value in display_context.items()
+        if value not in (None, "")
+    )
     from IPython import display as ip
     ip.display(widgets.VBox([widgets.HTML(f"<h2>{heading}</h2>{context_html}"), dataset, version, status]))
     return state

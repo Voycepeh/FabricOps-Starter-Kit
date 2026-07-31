@@ -14,7 +14,7 @@ Select any dataset recorded in the data catalogue, then load its catalogue and p
 
 `fabricops_kit/widgets/widget_view_data_catalogue.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L48">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L50">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -26,9 +26,9 @@ Select any dataset recorded in the data catalogue, then load its catalogue and p
 
 ## Usage notes
 
-Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
 
-They help users write values into the correct underlying metadata tables without manually editing those tables directly.
+They are read-only selectors and do not modify metadata.
 
 
 ## Signature

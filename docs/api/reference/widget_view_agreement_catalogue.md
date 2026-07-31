@@ -14,7 +14,7 @@ Select a dataset linked to an agreement through its registered data contracts, t
 
 `fabricops_kit/widgets/widget_view_agreement_catalogue.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L67">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L69">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -27,9 +27,9 @@ Select a dataset linked to an agreement through its registered data contracts, t
 
 ## Usage notes
 
-Widget helpers provide a front-end notebook interface so users can enter metadata in a guided way.
+Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
 
-They help users write values into the correct underlying metadata tables without manually editing those tables directly.
+They are read-only selectors and do not modify metadata.
 
 
 ## Signature

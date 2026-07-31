@@ -72,6 +72,10 @@ WIDGET_USAGE_NOTE = """Widget helpers provide a front-end notebook interface so 
 
 They help users write values into the correct underlying metadata tables without manually editing those tables directly."""
 
+CATALOGUE_WIDGET_USAGE_NOTE = """Catalogue viewer widgets let users select governed datasets and load catalogue and profile Spark DataFrames for native Fabric notebook rendering.
+
+They are read-only selectors and do not modify metadata."""
+
 SETUP_NOTEBOOK_USAGE_NOTE = """Use this in the setup notebook to capture and render the key runtime information required by downstream Starter Kit notebooks.
 
 This helps confirm the active environment, configured stores, notebook context, and runtime values before later notebooks depend on them."""
@@ -449,6 +453,9 @@ METADATA_COLUMN_OWNERS = {
 USAGE_NOTE_BY_FUNCTION = {
     "setup_notebook": SETUP_NOTEBOOK_USAGE_NOTE,
     "setup_metadata_tables": SETUP_METADATA_USAGE_NOTE,
+    "widget_view_agreement_catalogue": CATALOGUE_WIDGET_USAGE_NOTE,
+    "widget_view_pipeline_catalogue": CATALOGUE_WIDGET_USAGE_NOTE,
+    "widget_view_data_catalogue": CATALOGUE_WIDGET_USAGE_NOTE,
 }
 
 

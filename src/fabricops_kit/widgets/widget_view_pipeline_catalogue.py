@@ -60,7 +60,9 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     allowed = {key for _role, key in pairs}
     rows = [row for row in collect_catalogue_inventory(catalogue, environment_name) if row["metadata_table_key"] in allowed]
     return build_catalogue_widget(
-        heading="Pipeline catalogue", context_values={"notebook_id": notebook_id, "notebook_name": notebook_name, "Notebook": notebook_name, "environment_name": environment_name, "Linked dataset count": len(pairs)},
+        heading="Pipeline catalogue",
+        selection_context={"notebook_id": notebook_id, "notebook_name": notebook_name, "environment_name": environment_name},
+        display_context={"Notebook": notebook_name, "Environment": environment_name, "Linked datasets": len(pairs)},
         inventory_rows=rows, role_options=pairs, target=target, schema=schema, spark_session=spark_session,
         runtime_context=runtime_context, empty_message="No lineage catalogue inventory was found for this notebook.",
     )
