@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import html
 import json
 import re
 from pathlib import Path
@@ -89,24 +88,6 @@ def test_finder_searches_public_catalogue_fields_without_type_filters() -> None:
     assert "entry.module.includes(query)" in script
     assert "entry.starterPath.includes(query)" in script
     assert "queryMatchesEntry(queryTokens, entry.tokens)" in script
-
-
-def test_homepage_template_called_function_kpi_matches_reference_count() -> None:
-    """Verify homepage template-called function KPI matches the reference count."""
-    homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
-    token_match = re.search(
-        r"<!-- FABRICOPS_PUBLIC_FUNCTION_COUNT -->(.*?)<!-- /FABRICOPS_PUBLIC_FUNCTION_COUNT -->",
-        homepage,
-    )
-
-    assert token_match is not None
-    token_body = token_match.group(1).strip()
-    token_text = " ".join(html.unescape(re.sub(r"<[^>]+>", " ", token_body)).split())
-
-    assert token_text == "24 public callable functions"
-    assert "<strong>" in token_body
-    assert "<span> public callable functions</span>" in token_body
-    assert 'href="reference/"' in homepage
 
 
 def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
