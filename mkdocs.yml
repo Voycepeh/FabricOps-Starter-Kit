@@ -22,16 +22,15 @@ nav:
   - How FabricOps Works: how-fabricops-works.md
   - Guided Demo:
       - Overview: guided-demo.md
-      - Prepare Fabric Artifacts: guided-demo/setup-fabric-artifacts.md
-      - Step 0 - Set Up Environment: guided-demo/run-environment-setup.md
-      - Step 1 - Create Agreement: guided-demo/create-agreement.md
-      - Step 2 - Run Development Pipeline: guided-demo/run-pipeline.md
-      - Step 3 - Review and Define Guardrails: guided-demo/review-guardrails.md
-      - Step 4 - Validate Guardrails: guided-demo/run-pipeline-with-guardrails.md
-      - Step 5 - Create Data Contract: guided-demo/create-data-contract.md
-      - Step 6 - Promote to Production: guided-demo/promote-to-production.md
-      - Optional - Explore Metadata: guided-demo/explore-metadata-outputs.md
-      - Optional - IO and Profiling Demo: guided-demo/run-io-and-profiling-demo.md
+      - Step 0A - Prepare Fabric Artifacts: guided-demo/00A-setup-fabric-artifacts.md
+      - Step 0B - Set Up Environment: guided-demo/00B-run-environment-setup.md
+      - Step 1 - Create Agreement: guided-demo/01-create-agreement.md
+      - Step 2 - Run Development Pipeline: guided-demo/02-run-pipeline.md
+      - Step 3 - Review and Define Guardrails: guided-demo/03-enrich-guardrails.md
+      - Step 4 - Validate Guardrails: guided-demo/04-run-pipeline-with-guardrails.md
+      - Step 5 - Create Data Contract: guided-demo/05-create-data-contract.md
+      - Step 6 - Promote to Production: guided-demo/06-promote-to-production.md
+      - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md
