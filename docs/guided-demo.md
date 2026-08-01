@@ -16,7 +16,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 | 4 | Engineering Development | `02_pipeline` | [Rerun the Development pipeline with guardrails](guided-demo/04-run-pipeline-with-guardrails.md) |
 | 5 | Governance | `01_agreement` | [Create the Data Contract and record steward sign-off](guided-demo/05-create-data-contract.md) |
 | 6 | Engineering Production | Promoted `02_pipeline` | [Promote the validated pipeline to Production](guided-demo/06-promote-to-production.md) |
-| 7 | Project-Specific Consumer | `99_explore` | [Consume approved Production data with FabricOps IO and profiling](guided-demo/99-explore-via-notebooks.md) |
+| 7 | Project-Specific Consumer | `99_explore` | [Consume approved Production data with FabricOps IO and profiling](guided-demo/99-explore-via-notebook.md) |
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
