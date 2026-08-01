@@ -1,51 +1,97 @@
 # Step 0B: Set up the operating environment
 
-After completing [Step 0A: Prepare Fabric artifacts](setup-fabric-artifacts.md), run `00_env_config` in the Governance, Engineering Development, and Engineering Production workspaces. It is the control panel for the governed workflow: every downstream notebook depends on its active `ENV`, shared `CONFIG`, Fabric item routes, metadata target, runtime validation choices, widget configuration, and audit settings.
+After completing [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md), configure and run `00_env_config`.
+
+`00_env_config` controls the settings used by the other FabricOps notebooks, including:
+
+
+* Path to other workspace 
+* Path to Fabric objects
+* Runtime settings
+* Widget settings
+
+
+Run it in the Governance, Engineering Development, and Engineering Production workspaces.
 
 ## 1. Open `00_env_config`
 
-Open the copied `00_env_config` template after uploading the template notebooks to your workspace. Attach the same Fabric Environment that contains the FabricOps wheel before running setup cells.
+Open the copied `00_env_config` notebook in the target workspace.
 
-## 2. Attach the Environment to notebooks
+Before running it, confirm that the notebook uses the Fabric Environment containing the FabricOps wheel.
 
-Attach the Environment to every template notebook unless your workspace already has a default Environment with the FabricOps library installed. Restart the notebook session after attachment or library changes so the runtime loads the published Environment.
+## 2. Attach the Fabric Environment
 
-![Fabric notebook Environment selection example](../assets/fabric-example-set-notebook-environment.png)
+Attach the same Fabric Environment to each template notebook.
 
-## 3. Set runtime configuration
+1. Open the notebook.
+2. Select the Fabric Environment containing the FabricOps wheel.
+3. Restart the notebook session after changing the Environment or its libraries.
 
-Review the visible `RUNTIME_CONFIG` values. These control notebook naming, validation behavior, required target checks, schema defaults, timezone handling, and audit values that helpers write with metadata rows.
+You can skip this step when the workspace default Environment already contains the correct FabricOps package.
 
-![Runtime config](../assets/fabric-example-00_config_runtime_config.png)
+![Fabric notebook Environment selection example](../assets/00B/fabric-example-set-notebook-environment.png)
 
-## 4. Set path configuration
+## 3. Configure Fabric item paths
 
-Update `ENV_PATHS` for the active environment. Each logical target, such as `source`, `unified`, `product`, and `metadata`, should point to the correct Fabric workspace item, item kind, schema, and environment.
+Update `ENV_PATHS` for the active environment.
 
-Metadata operations must use the configured `metadata` target from `00_env_config`; do not rely on the notebook's attached or default Lakehouse for `METADATA_*` tables.
+Via clicking on the lakehouse/warehouse and seeing the url ie 
+https://app.powerbi.com/groups/68fa4319-1945-458f-bd21-05334c51cbb4/lakehouses/329b3989-4546-4331-b9ff-df898d49ee73
 
-![Path config](../assets/fabric-example-00_config_paths.png)
+workspace id : 68fa4319-1945-458f-bd21-05334c51cbb4
+item id: 329b3989-4546-4331-b9ff-df898d49ee73
+name : Metadata
+kind : lakehouse 
 
-## 5. Review widget-specific configuration
+![Path config](../assets/00B/00_config_paths.png)
 
-Edit `DATA_AGREEMENT_CONFIG` and `GOVERNANCE_CONFIG` only where the demo or your team needs different dropdown values, visible columns, or reusable custom fields. Custom steward, agreement, and governance fields are stored in JSON metadata columns; they do not create new physical metadata table columns.
 
-![Widget config](../assets/fabric-example-00_config_widgets_config_setup.png)
+```
+Why do we even bother with this? 
 
-## 6. Create or validate metadata tables in Governance
+As per writing this Fabric notebook can only have one default lakehouse/warehouse connected to it at one point of time so when we need to read and write from one place to another we need to resort to coding , but hard coding the exact path in every notebook is bad coding practice so we define a singlar config file similar to a .yml but using a fabric notebook.
+```
 
-In the Governance workspace, run the metadata setup cell once for the configured metadata target, then freeze or leave the cell unchanged for routine demo runs. The setup validates required environment keys and creates or validates the metadata tables needed by agreement, pipeline, governance, lineage, and run evidence.
+## 4. Widget settings
 
-![Setup Metadata Tables](../assets/fabric-example-00_config_metadata_tables_setup_code.png)
+Change these settings only when you need different:
 
-Completed creation of the tables:
+* dropdown options for predefined fields 
+* additional custom fields
 
-![Metadata Tables Done](../assets/fabric-example-00_config_metadata_tables_setup.png)
+Custom fields are stored as JSON in a cell. They do not create additional physical table columns.
+
+![Widget config](../assets/00B/00_config_widgets_config_setup.png)
+
+## 5. Set up metadata tables
+
+Complete this step in the Governance workspace.
+
+1. Confirm that the `metadata` target points to the correct metadata lakehouse.
+2. Run the metadata setup cell.
+3. Allow the setup to create or validate the required metadata tables.
+4. Leave the setup cell unchanged during normal guided demo runs.
+
+![Setup Metadata Tables](../assets/00B/00_config_metadata_tables_setup_code.png)
+
+
+The cell should complete without errors and confirm that the metadata tables are ready.
+
+![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
+
+## 6. Resuable Context is prepared for downstream function usage
+![For Downstream Usage](../assets/00B/00_config_resuable_context.png)
 
 ## Expected result
 
-After `00_env_config` succeeds, `FABRIC_CONTEXT["env"]` and `FABRIC_CONTEXT["config"]` are available, source/unified/product/metadata targets are validated, and downstream notebooks can safely route agreement, catalogue, guardrail, lineage, pipeline, governance, and enrichment evidence through the configured metadata target.
+00 env config is ready when:
 
-Previous: [Step 0A: Prepare Fabric artifacts](setup-fabric-artifacts.md).
+* the Fabric Environment is attached
+* the FabricOps package can be imported
+* runtime and path settings are configured
+* required metadata tables have been created or validated
+* `FABRIC_CONTEXT["env"]` and `FABRIC_CONTEXT["config"]` are available
 
-Next, continue to [Step 1: Create data stewards and a data agreement](create-agreement.md).
+Previous: [Step 0A: Prepare Fabric artifacts](00A-setup-fabric-artifacts.md).
+
+Next: [Step 1: Create data stewards and a data agreement](01-create-agreement.md).

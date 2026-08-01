@@ -31,7 +31,8 @@ For demo purpose you can simply create a singular demo workspace.
 1. Open The Governance workspace and create a lakehouse object name it 'METADATA'
 2. Open The Engineering dev workspace and create a bronze lakehouse , a silver lakehouse and a gold warehouse - feel free to rename accordingly
 3. Read up on medallion structure https://learn.microsoft.com/en-us/azure/databricks/lakehouse/medallion 
-4. Repeat step 2 for The Engineering prod workspace make sure the naming of the lakehouse and warehouse are exactly the same
+4. Read up on lakehouse vs warehouse https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse
+5. Repeat step 2 for The Engineering prod workspace make sure the naming of the lakehouse and warehouse are exactly the same
 
 ```
 For demo purpose you can simply create all these objects in the same demo workspace
