@@ -1,4 +1,4 @@
-"""Normalize guided-demo links after generated documentation is refreshed."""
+"""Normalize stale guided-demo Markdown link targets after docs generation."""
 
 from __future__ import annotations
 
@@ -21,17 +21,25 @@ LINK_REPLACEMENTS = {
     "promote-to-production.md": "06-promote-to-production.md",
     "explore-metadata-outputs.md": "99-explore-via-notebook.md",
 }
-LINK_PATTERN = re.compile(
-    "|".join(re.escape(link) for link in sorted(LINK_REPLACEMENTS, key=len, reverse=True))
-)
+
+# Match only complete Markdown destinations. This prevents a valid target such as
+# ``02-run-pipeline.md`` from being rewritten to ``02-02-run-pipeline.md``.
+MARKDOWN_LINK_PATTERN = re.compile(r"(?P<prefix>\]\()(?P<target>[^)]+)(?P<suffix>\))")
+
+
+def _replace_target(match: re.Match[str]) -> str:
+    """Return a Markdown link with an exact stale destination normalized."""
+    target = match.group("target")
+    replacement = LINK_REPLACEMENTS.get(target, target)
+    return f'{match.group("prefix")}{replacement}{match.group("suffix")}'
 
 
 def normalize_links() -> list[Path]:
-    """Replace stale guided-demo targets in Markdown documentation."""
+    """Replace exact stale guided-demo targets in Markdown documentation."""
     changed: list[Path] = []
     for path in DOCS_DIR.rglob("*.md"):
         original = path.read_text(encoding="utf-8")
-        updated = LINK_PATTERN.sub(lambda match: LINK_REPLACEMENTS[match.group(0)], original)
+        updated = MARKDOWN_LINK_PATTERN.sub(_replace_target, original)
         if updated != original:
             path.write_text(updated, encoding="utf-8")
             changed.append(path.relative_to(ROOT))
