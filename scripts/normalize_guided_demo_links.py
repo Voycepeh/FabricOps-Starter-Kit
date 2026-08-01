@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +21,9 @@ LINK_REPLACEMENTS = {
     "promote-to-production.md": "06-promote-to-production.md",
     "explore-metadata-outputs.md": "99-explore-via-notebook.md",
 }
+LINK_PATTERN = re.compile(
+    "|".join(re.escape(link) for link in sorted(LINK_REPLACEMENTS, key=len, reverse=True))
+)
 
 
 def normalize_links() -> list[Path]:
@@ -27,9 +31,7 @@ def normalize_links() -> list[Path]:
     changed: list[Path] = []
     for path in DOCS_DIR.rglob("*.md"):
         original = path.read_text(encoding="utf-8")
-        updated = original
-        for stale, current in LINK_REPLACEMENTS.items():
-            updated = updated.replace(stale, current)
+        updated = LINK_PATTERN.sub(lambda match: LINK_REPLACEMENTS[match.group(0)], original)
         if updated != original:
             path.write_text(updated, encoding="utf-8")
             changed.append(path.relative_to(ROOT))
