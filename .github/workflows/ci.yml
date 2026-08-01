@@ -36,6 +36,9 @@ jobs:
       - name: Ruff lint
         run: uv run ruff check .
 
+      - name: Normalize guided-demo links
+        run: uv run python scripts/normalize_guided_demo_links.py
+
       - name: Run full test suite
         run: uv run pytest
 
