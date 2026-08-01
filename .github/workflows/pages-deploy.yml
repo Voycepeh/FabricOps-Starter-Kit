@@ -42,6 +42,7 @@ jobs:
           set -euo pipefail
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          python scripts/normalize_guided_demo_links.py
 
       - name: Build strict documentation
         env:
