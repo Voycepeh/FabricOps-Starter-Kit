@@ -216,7 +216,7 @@ def _profile_percent_expr(numerator, denominator):
     return F.when(denominator == 0, F.lit(0.0)).otherwise(F.round((numerator.cast("double") / denominator.cast("double")) * F.lit(100.0), 3))
 
 
-def build_profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = True):
+def build_profile_dataframe(df, *, exclude_columns=None):
     """Return structural and statistical profile rows for a Spark DataFrame."""
     from pyspark.sql import functions as F
     from pyspark.sql.types import DateType, NumericType, StringType, TimestampType
@@ -226,7 +226,6 @@ def build_profile_dataframe(df, *, exclude_columns=None, approximate_distinct: b
         raise ValueError("No eligible non-technical columns found for metadata profiling.")
 
     fields = {field.name: field for field in df.schema.fields}
-    distinct_fn = F.approx_count_distinct if approximate_distinct else F.count_distinct
     agg_exprs = [F.count(F.lit(1)).cast("long").alias("__ROW_COUNT")]
 
     for column_name in eligible_columns:
@@ -236,7 +235,7 @@ def build_profile_dataframe(df, *, exclude_columns=None, approximate_distinct: b
         agg_exprs.extend([
             F.count(col).cast("long").alias(f"{prefix}NON_NULL_COUNT"),
             F.sum(col.isNull().cast("long")).cast("long").alias(f"{prefix}NULL_COUNT"),
-            distinct_fn(col).cast("long").alias(f"{prefix}DISTINCT_COUNT"),
+            F.count_distinct(col).cast("long").alias(f"{prefix}DISTINCT_COUNT"),
         ])
         if isinstance(data_type, NumericType):
             agg_exprs.extend([

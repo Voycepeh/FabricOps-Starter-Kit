@@ -1167,7 +1167,7 @@ PUBLIC_SYMBOL_DOCS = [
   'use_when': 'Use to create schema, row-count, null, distinct, min/max, and numeric statistic profiles from a Spark DataFrame.',
   'do_not_use_when': 'Do not use as a data-quality enforcement step or as a persistence helper; it '
                      'builds profile rows but does not approve governance evidence.',
-  'parameters': 'df, optional exclude_columns, and approximate_distinct.',
+  'parameters': 'df and optional exclude_columns.',
   'returns': 'Spark DataFrame containing one profile row per eligible business column.',
   'raises': 'Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.',
   'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write '
@@ -1851,8 +1851,8 @@ FOCUSED_FUNCTION_DOC_UPDATES = {
         "when_to_use": "Use for exploratory or governed profiling when you need a reusable profile DataFrame but do not want to write metadata. Use profile_and_register_table when the profile must be persisted as FabricOps evidence.",
         "returns": "Spark DataFrame with one profiling row per eligible input column and columns COLUMN_NAME, DATA_TYPE, ROW_COUNT, NON_NULL_COUNT, NULL_COUNT, NULL_PERCENT, DISTINCT_COUNT, DISTINCT_PERCENT, MEAN, STDDEV, MIN_VALUE, PERCENTILE_25, MEDIAN, PERCENTILE_75, and MAX_VALUE.",
         "return_interpretation": "Each returned row describes one eligible source column, not one input record. Counts and percentages describe exactly the DataFrame supplied by the caller.",
-        "common_failure_causes": ["No eligible non-technical columns remain after exclusions.", "Unsupported complex types or Spark expression limitations can prevent specific statistics.", "Exact distinct counts are more expensive when approximate_distinct is False.", "Spark actions can fail while computing counts, summaries, or percentiles."],
-        "preferred_example": 'profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"], approximate_distinct=True)',
+        "common_failure_causes": ["No eligible non-technical columns remain after exclusions.", "Unsupported complex types or Spark expression limitations can prevent specific statistics.", "Exact distinct counts can be expensive for high-cardinality columns.", "Spark actions can fail while computing counts, summaries, or percentiles."],
+        "preferred_example": 'profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"])',
     },
     "profile_frequency_distribution": {
         "expanded_purpose": "Calculates exact value frequency distributions for eligible Spark DataFrame columns, returning counts, percentages, ranks, source data type, total row count, and non-null count. By default, it profiles every eligible non-technical scalar column and returns every distinct value. It does not sample or write metadata.",

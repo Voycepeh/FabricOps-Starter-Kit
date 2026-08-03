@@ -239,11 +239,15 @@ def test_old_profile_registration_api_is_removed():
 
 
 def test_profile_and_register_table_imports_shared_profiler_directly():
-    """Verify registration has no dependency on the public profiling wrapper."""
+    """Verify registration uses the exact-only shared statistical profiler."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
 
     assert module.build_profile_dataframe is not None
     assert not hasattr(module, "profile_dataframe")
+    assert str(inspect.signature(module.build_profile_dataframe)) == "(df, *, exclude_columns=None)"
+    shared_source = inspect.getsource(module.build_profile_dataframe)
+    assert "count_distinct" in shared_source
+    assert "approx" + "_count_distinct" not in shared_source
 
 
 def test_profile_registration_call_flow_records_authoritative_frequency_callable():

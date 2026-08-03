@@ -886,7 +886,9 @@ def test_template_called_callable_parameters_render_as_api_table() -> None:
 
     assert "| Parameter | Type | Required | Description |" in parameters
     assert "| `df` |" in parameters
-    assert "| `approximate_distinct` |" in parameters
+    assert "| `exclude_columns` |" in parameters
+    removed_parameter = "approximate_" + "distinct"
+    assert f"| `{removed_parameter}` |" not in parameters
 
 
 def test_internalized_enforce_profile_behavior_preserves_no_page_contract() -> None:

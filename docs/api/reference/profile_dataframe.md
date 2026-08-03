@@ -12,8 +12,9 @@ Profile a Spark DataFrame for structural and statistical exploration.
 <div class="reference-docstring-intro" markdown="1">
 
 The returned profile includes row and null counts, null percentages,
-distinct counts and percentages, numeric summary statistics, and minimum
-and maximum values for each included input column.
+exact distinct counts and percentages, numeric summary statistics, and
+minimum and maximum values for each included input column. Exact distinct
+counts exclude null values.
 
 </div>
 
@@ -22,7 +23,7 @@ and maximum values for each included input column.
 
 `fabricops_kit/pipeline/profile_dataframe.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L49">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_dataframe.py#L8-L47">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -44,7 +45,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=True)
+def profile_dataframe(df, *, exclude_columns=None)
 ```
 
 </div>
@@ -54,7 +55,7 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool=Tr
 <div class="reference-example-usage" markdown="1">
 
 ```python
-profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"], approximate_distinct=True)
+profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"])
 ```
 
 </div>
@@ -65,7 +66,6 @@ profile_rows_df = profile_dataframe(source_df, exclude_columns=["_ingested_at"],
 | --- | --- | --- | --- |
 | `df` | `pyspark.sql.DataFrame` | Yes | Spark DataFrame to profile. |
 | `exclude_columns` | `list[str] or set[str]` | No | Additional caller-selected columns to skip after standard FabricOps technical-column exclusions are applied. |
-| `approximate_distinct` | `bool` | No | When True, use Spark ``approx_count_distinct`` for per-column cardinality. When False, use exact ``count_distinct``. |
 
 ## Returns
 
@@ -83,7 +83,7 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 - No eligible non-technical columns remain after exclusions.
 - Unsupported complex types or Spark expression limitations can prevent specific statistics.
-- Exact distinct counts are more expensive when approximate_distinct is False.
+- Exact distinct counts can be expensive for high-cardinality columns.
 - Spark actions can fail while computing counts, summaries, or percentiles.
 
 ## See also
