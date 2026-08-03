@@ -15,6 +15,12 @@ from fabricops_kit.widgets.shared import (
     FIELD_LABELS,
     WIDGET_CONFIG_DEFAULTS,
     collect_custom_fields,
+    form_section,
+    form_page,
+    form_grid,
+    execution_log_section,
+    checkbox_group,
+    action_row,
     deserialize_custom_fields,
     get_widget_visible_fields,
     list_data_stewards,
@@ -83,27 +89,21 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
-        label="Create / update",
+        label="Agreement",
         rows=existing_rows,
         label_fn=_agreement_label,
         value_fn=_row_id,
         placeholder="Search agreements...",
         search_fields=["agreement_name", "agreement_id", "agreement_version", "domain"],
-        context_fields=[
-            ("agreement_name", "Agreement name"),
-            ("agreement_id", "Agreement ID"),
-            ("agreement_version", "Current version"),
-        ],
         empty_label="Create new agreement",
+        search_label="Search agreements",
     )
     selected = selected_selector["selector"]
     identity_context = widgets.HTML(value=_agreement_identity_text(None))
 
     active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
     active_steward_ids = {
-        steward_id
-        for row in active_steward_rows
-        if (steward_id := str(row.get("steward_id") or "").strip())
+        steward_id for row in active_steward_rows if (steward_id := str(row.get("steward_id") or "").strip())
     }
     form = {field: standard_widget(field) for field in fields}
     steward_field_selectors: dict[str, dict[str, Any]] = {}
@@ -118,6 +118,9 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             search_fields=["steward_name", "steward_role", "contact", "steward_id"],
             context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact")],
             empty_label="Select an active data steward",
+            search_label=(
+                "Search provider data stewards" if field == "provider_steward_id" else "Search recipient data stewards"
+            ),
         )
         steward_field_selectors[field] = selector
         form[field] = selector["selector"]
@@ -142,20 +145,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     def _add_document_row(label: str = "", location: str = "") -> None:
         name_label = widgets.HTML(value="<b>Document name</b>", layout=widgets.Layout(width="115px"))
-        label_widget = widgets.Text(
-            value=label, description="", layout=widgets.Layout(width="28%", min_width="180px")
-        )
+        label_widget = widgets.Text(value=label, description="", layout=widgets.Layout(width="28%", min_width="180px"))
         link_label = widgets.HTML(value="<b>Document link</b>", layout=widgets.Layout(width="110px"))
         location_widget = widgets.Text(
             value=location, description="", layout=widgets.Layout(width="38%", min_width="240px")
         )
-        remove = widgets.Button(description="Remove")
+        remove = widgets.Button(description="Remove document")
         record = {"label": label_widget, "location": location_widget, "remove": remove}
         record["container"] = widgets.HBox(
             [name_label, label_widget, link_label, location_widget, remove],
-            layout=widgets.Layout(
-                display="flex", flex_flow="row wrap", align_items="center", width="100%", gap="6px"
-            ),
+            layout=widgets.Layout(display="flex", flex_flow="row wrap", align_items="center", width="100%", gap="6px"),
         )
 
         def _remove(_: Any) -> None:
@@ -166,7 +165,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         supporting_document_rows.append(record)
         _render_document_rows()
 
-    add_supporting_document_button = widgets.Button(description="Add document")
+    add_supporting_document_button = widgets.Button(description="Add another document")
     add_supporting_document_button.on_click(lambda _: _add_document_row())
     _add_document_row()
 
@@ -175,7 +174,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "Create or reactivate another data steward, then select Refresh active stewards."
     )
     save = widgets.Button(description="Save Agreement")
-    status = widgets.HTML(value="", layout=widgets.Layout(min_height="2.5em", max_height="4em", overflow="auto"))
+    status = widgets.HTML(value="", layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
+    execution_output = widgets.Output(layout=widgets.Layout(width="100%", height="auto", overflow="visible"))
 
     def _set_status(message: str, *, error: bool = False) -> None:
         colour = "#a4262c" if error else "#107c10"
@@ -199,9 +199,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         nonlocal active_steward_rows, active_steward_ids
         active_steward_rows = list_data_stewards(config, env, spark_session=spark, active_only=True, missing_ok=True)
         active_steward_ids = {
-            steward_id
-            for row in active_steward_rows
-            if (steward_id := str(row.get("steward_id") or "").strip())
+            steward_id for row in active_steward_rows if (steward_id := str(row.get("steward_id") or "").strip())
         }
         for field in steward_fields:
             current = str(form[field].value or "")
@@ -272,15 +270,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             ]
             draft.clear()
             draft.update(values)
-            row = _create_or_update_data_agreement(
-                spark=spark,
-                config=config,
-                env=env,
-                values=draft,
-                selected_agreement=row_lookup.get(selected.value) if selected.value else None,
-                custom_fields=collect_custom_fields(widget_config, custom),
-                active_steward_ids=active_steward_ids,
-            )
+            with execution_output:
+                row = _create_or_update_data_agreement(
+                    spark=spark,
+                    config=config,
+                    env=env,
+                    values=draft,
+                    selected_agreement=row_lookup.get(selected.value) if selected.value else None,
+                    custom_fields=collect_custom_fields(widget_config, custom),
+                    active_steward_ids=active_steward_ids,
+                )
             if row.get("_fabricops_no_change"):
                 _set_status(str(row.get("_fabricops_message", "No changes detected.")))
             else:
@@ -299,30 +298,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     save.on_click(_save)
     _update_steward_prerequisite()
-    header = widgets.HTML(
-        value=(
-            '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
-            'border-radius:8px;margin:0 0 14px 0;">'
-            '<div style="font-size:21px;font-weight:600;line-height:1.3;">'
-            'Data Agreement Creation Widget</div>'
-            '<div style="font-size:13px;line-height:1.4;margin-top:3px;opacity:.9;">'
-            'Between 2 Data Stewards/Managers</div></div>'
-        ),
-        layout=widgets.Layout(width="100%"),
-    )
-    section_layout = widgets.Layout(width="100%", margin="4px 0 2px 0")
-
-    def _section_heading(title: str) -> Any:
-        return widgets.HTML(
-            value=(
-                '<div style="color:#0f548c;font-size:16px;font-weight:600;'
-                f'border-bottom:1px solid #d7e7f5;padding:8px 0 5px 0;">{title}</div>'
-            ),
-            layout=section_layout,
-        )
-
-    paired_control_layout = widgets.Layout(width="49%", min_width="280px", flex="1 1 320px")
-    full_width_layout = widgets.Layout(width="100%")
+    full_width_layout = widgets.Layout(width="100%", height="auto", overflow="visible")
     row_layout = widgets.Layout(
         display="flex",
         flex_flow="row wrap",
@@ -330,24 +306,16 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         align_items="flex-start",
         width="100%",
     )
-    for field in ("agreement_name", "domain", "start_date", "expiry_date"):
-        if field in form:
-            form[field].layout = paired_control_layout
     if "business_purpose" in form:
         form["business_purpose"].layout = widgets.Layout(width="100%", height="90px")
 
-    name_domain_row = widgets.HBox(
-        [form[field] for field in ("agreement_name", "domain") if field in form], layout=row_layout
+    detail_controls = [form_grid(widgets, [form[field] for field in ("agreement_name", "domain") if field in form])]
+    detail_controls.append(
+        form_grid(widgets, [form[field] for field in ("start_date", "expiry_date") if field in form])
     )
-    date_row = widgets.HBox(
-        [form[field] for field in ("start_date", "expiry_date") if field in form], layout=row_layout
-    )
-    detail_controls = [name_domain_row, date_row]
     if "business_purpose" in form:
         detail_controls.append(form["business_purpose"])
-    details_section = widgets.VBox(
-        [_section_heading("Agreement details"), *detail_controls], layout=full_width_layout
-    )
+    details_section = form_section(widgets, title="Agreement details", children=detail_controls)
 
     steward_panels = []
     for field in steward_fields:
@@ -366,6 +334,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 ],
                 layout=widgets.Layout(
                     width="49%",
+                    height="auto",
+                    overflow="visible",
                     min_width="280px",
                     flex="1 1 320px",
                     border="1px solid #d7e7f5",
@@ -373,42 +343,57 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
                 ),
             )
         )
-    steward_section = widgets.VBox(
-        [
-            _section_heading("Provider and recipient data stewards"),
+    steward_section = form_section(
+        widgets,
+        title="Provider and recipient data stewards",
+        children=[
             widgets.HBox(steward_panels, layout=row_layout),
             widgets.HBox([refresh_stewards], layout=widgets.Layout(justify_content="flex-end", width="100%")),
         ],
-        layout=full_width_layout,
     )
 
-    usage_row = widgets.HBox(
-        list(approved_usage_checkboxes.values()),
-        layout=widgets.Layout(display="flex", flex_flow="row wrap", width="100%"),
+    supporting_section = form_section(
+        widgets,
+        title="Supporting documents",
+        children=[supporting_documents, add_supporting_document_button],
     )
     custom_row = widgets.HBox(list(custom.values()), layout=row_layout)
-    supporting_section = widgets.VBox(
-        [
-            _section_heading("Supporting information"),
-            supporting_documents,
-            add_supporting_document_button,
-            usage_row,
+    scope_section = form_section(
+        widgets,
+        title="Agreement scope or classification",
+        children=[
+            checkbox_group(widgets, label="Approved usage", checkboxes=approved_usage_checkboxes.values()),
             custom_row,
         ],
+    )
+    selection_section = form_section(
+        widgets,
+        title="Agreement selection",
+        children=[selected_selector["container"], identity_context],
+    )
+    form_flow = widgets.VBox(
+        [selection_section, details_section, steward_section, supporting_section, scope_section],
         layout=full_width_layout,
     )
-    steps = widgets.VBox([details_section, steward_section, supporting_section], layout=full_width_layout)
-    actions = widgets.HBox(
-        [save], layout=widgets.Layout(justify_content="flex-end", width="100%", margin="8px 0 0 0")
+    actions = form_section(
+        widgets,
+        title="Save agreement",
+        children=[action_row(widgets, [save])],
     )
-    container = widgets.VBox(
-        [header, selected_selector["container"], identity_context, steps, actions, status],
-        layout=widgets.Layout(width="100%"),
+    result_section = form_section(
+        widgets,
+        title="Save result",
+        children=[status, execution_log_section(widgets, execution_output)],
+    )
+    container = form_page(
+        widgets,
+        title="Data Agreement Creation Widget",
+        description="Between 2 Data Stewards/Managers",
+        children=[form_flow, actions, result_section],
     )
     ip.display(container)
     return {
         "container": container,
-        "steps": steps,
         "draft": draft,
         "existing_record": selected,
         "existing_record_search": selected_selector["search"],
@@ -429,6 +414,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "after_save_callbacks": after_save_callbacks,
         "save_button": save,
         "status": status,
+        "execution_output": execution_output,
+        "execution_log_section": result_section.children[2],
     }
 
 

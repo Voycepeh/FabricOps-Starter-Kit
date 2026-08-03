@@ -266,6 +266,7 @@ class _FakeWidgets:
     Output = _FakeWidget
     VBox = _FakeWidget
     HBox = _FakeWidget
+    GridBox = _FakeWidget
     Tab = _FakeWidget
     Textarea = _FakeWidget
     DatePicker = _FakeWidget
@@ -335,14 +336,15 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["provider_steward_selector"].options
     assert agreement_controls["recipient_steward_selector"].options
     assert "recipient" not in agreement_controls["fields"]
-    assert len(agreement_controls["steps"].children) == 3
+    form_flow = agreement_controls["container"].children[1]
+    assert len(form_flow.children) == 5
     agreement_header = agreement_controls["container"].children[0]
     assert "Data Agreement Creation Widget" in agreement_header.value
     assert "Between 2 Data Stewards/Managers" in agreement_header.value
     assert "background:#0f6cbd" in agreement_header.value
     assert agreement_controls["container"].layout.kwargs["width"] == "100%"
     assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)
-    steward_section = agreement_controls["steps"].children[1]
+    steward_section = form_flow.children[2]
     steward_panels_row = steward_section.children[1]
     assert len(steward_panels_row.children) == 2
     for panel, selector in zip(

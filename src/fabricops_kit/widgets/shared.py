@@ -55,6 +55,106 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
     return common
 
 
+
+def form_page(widgets: Any, *, title: str, description: str, children: Iterable[Any]) -> Any:
+    """Compose a full-width widget form with a consistent page header."""
+    header = widgets.HTML(
+        value=(
+            '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
+            'border-radius:8px;">'
+            f'<div style="font-size:21px;font-weight:600;line-height:1.3;">{_html_escape(title)}</div>'
+            f'<div style="font-size:13px;line-height:1.4;margin-top:3px;opacity:.9;">{_html_escape(description)}</div>'
+            "</div>"
+        ),
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+    )
+    return widgets.VBox(
+        [header, *children],
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="12px"),
+    )
+
+
+def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
+    """Group naturally expanding form content under a visible heading."""
+    heading = widgets.HTML(
+        value=(
+            '<div style="color:#0f548c;font-size:16px;font-weight:600;'
+            f'border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">{_html_escape(title)}</div>'
+        ),
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
+    )
+    return widgets.VBox(
+        [heading, *children],
+        layout=widgets.Layout(
+            width="100%", height="auto", overflow="visible", border="1px solid #d7e7f5", padding="12px", gap="8px"
+        ),
+    )
+
+
+def form_grid(widgets: Any, children: Iterable[Any]) -> Any:
+    """Lay out form controls in responsive, wrapping columns."""
+    return widgets.GridBox(
+        list(children),
+        layout=widgets.Layout(
+            width="100%",
+            height="auto",
+            overflow="visible",
+            grid_template_columns="repeat(auto-fit, minmax(260px, 1fr))",
+            grid_gap="10px 16px",
+        ),
+    )
+
+
+def checkbox_group(widgets: Any, *, label: str, checkboxes: Iterable[Any]) -> Any:
+    """Render a labelled, naturally expanding checkbox option group."""
+    label_widget = widgets.HTML(value=f"<b>{_html_escape(label)}</b>")
+    options = widgets.GridBox(
+        list(checkboxes),
+        layout=widgets.Layout(
+            width="100%",
+            height="auto",
+            overflow="visible",
+            grid_template_columns="repeat(auto-fit, minmax(140px, 1fr))",
+            grid_gap="6px 12px",
+        ),
+    )
+    return widgets.VBox(
+        [label_widget, options], layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="4px")
+    )
+
+
+def action_row(widgets: Any, controls: Iterable[Any], *, consequence: Any | None = None) -> Any:
+    """Position form actions and an optional consequence summary in a footer row."""
+    children = ([consequence] if consequence is not None else []) + list(controls)
+    return widgets.HBox(
+        children,
+        layout=widgets.Layout(
+            width="100%",
+            height="auto",
+            overflow="visible",
+            justify_content="flex-end",
+            align_items="center",
+            gap="10px",
+        ),
+    )
+
+
+def execution_log_section(widgets: Any, output: Any) -> Any:
+    """Present unfiltered technical output beneath a visible execution-log heading."""
+    output.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
+    return widgets.VBox(
+        [widgets.HTML(value="<b>Execution log</b>"), output],
+        layout=widgets.Layout(
+            width="100%",
+            height="auto",
+            overflow="visible",
+            border="1px solid #d7e7f5",
+            padding="10px",
+            font_family="monospace",
+        ),
+    )
+
+
 def resolve_agreement_details(agreement: dict[str, Any] | None) -> tuple[str, str]:
     """Resolve a canonical agreement ID and label from agreement widget state."""
     supplied = agreement or {}
@@ -89,9 +189,12 @@ def render_searchable_selector(
     context_fields: list[tuple[str, str]] | None = None,
     empty_label: str | None = None,
     selected_value: str | None = None,
+    search_label: str | None = None,
 ) -> dict[str, Any]:
     """Render a table-backed selector with search and stable-value tracking."""
-    search = widgets.Text(value="", placeholder=placeholder, **widget_common(widgets, f"Search {label}"))
+    search = widgets.Text(
+        value="", placeholder=placeholder, **widget_common(widgets, search_label or f"Search {label}")
+    )
     selector = widgets.Select(options=[], **widget_common(widgets, label))
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
@@ -150,7 +253,9 @@ def render_searchable_selector(
     _set_rows(rows)
     _refresh_options()
     selector.refresh_rows = _refresh_rows
-    container = widgets.VBox([search, selector, context])
+    container = widgets.VBox(
+        [search, selector, context], layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="6px")
+    )
     return {"container": container, "search": search, "selector": selector, "context": context, "rows_by_value": lookup}
 
 
