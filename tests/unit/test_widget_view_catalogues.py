@@ -118,7 +118,13 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
             "frequency_rank integer, profiled_at timestamp",
         ),
     }
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda table, **_kwargs: tables[table])
+    read_calls = []
+
+    def read_table(table, **_kwargs):
+        read_calls.append(table)
+        return tables[table]
+
+    monkeypatch.setattr(shared, "read_lakehouse_table_core", read_table)
 
     state = build_catalogue_widget(
         title="Pipeline Catalogue Viewer",
@@ -158,10 +164,18 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     selection = state["get_selection"]()
     assert selection["notebook_id"] == "technical-id"
     assert selection["metadata_table_key"] == "dataset-key"
-    assert selection["profiled_at"] == latest_snapshot
-    assert selection["metadata_column_key"] == "column-a"
+    assert selection["profiled_at"] is None
+    assert selection["metadata_column_key"] is None
+    assert read_calls == []
 
     views = state["get_views"]()
+    assert read_calls == [
+        "METADATA_DATA_CATALOGUE",
+        "METADATA_DATA_PROFILED",
+        "METADATA_DATA_PROFILED_FREQUENCY",
+    ]
+    assert state["get_selection"]()["profiled_at"] == latest_snapshot
+    assert state["get_selection"]()["metadata_column_key"] == "column-a"
     assert set(views) == {"catalogue", "profile", "frequency"}
     assert {row.profiled_at for row in views["profile"].collect()} == {latest_snapshot}
     frequency_rows = views["frequency"].collect()
@@ -173,18 +187,22 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     assert state["_controls"]["dataset"].value is None
     state["_controls"]["search"].value = ""
     assert state["_controls"]["dataset"].value == "\x1fdataset-key"
+    assert len(read_calls) == 3
 
     selected_details = page.children[3].children[1]
     state["_controls"]["schema_fingerprint"].value = "previous-fingerprint"
     assert "<b>Schema version:</b> previous-fingerprint" in selected_details.value
     state["_controls"]["schema_fingerprint"].value = "fingerprint"
+    assert len(read_calls) == 3
 
     state["_controls"]["metadata_column_key"].value = "column-b"
     assert state["get_selection"]()["metadata_column_key"] == "column-b"
     assert state["get_views"]()["frequency"].count() == 0
+    assert len(read_calls) == 3
 
     state["_controls"]["dataset"].value = "\x1funprofiled-key"
     unprofiled = state["get_views"]()
+    assert len(read_calls) == 3
     assert state["get_selection"]()["profiled_at"] is None
     assert unprofiled["profile"].count() == 0
     assert unprofiled["frequency"].count() == 0

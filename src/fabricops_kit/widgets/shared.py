@@ -2063,6 +2063,7 @@ def build_catalogue_widget(
         "metadata_column_key": profile_column,
     }
     state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
+    source_frames: dict[str, Any] = {}
     current_frames: dict[str, Any] = {}
     selected_profiled_at: Any = None
     last_dataset_value = str(dataset.value or "")
@@ -2088,6 +2089,22 @@ def build_catalogue_widget(
         fingerprint = selection["schema_fingerprint"]
         if not key or not fingerprint:
             raise ValueError(empty_message)
+        if not source_frames:
+            source_frames.update({
+                "catalogue": read_lakehouse_table_core(
+                    CATALOGUE_TABLE, target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                ),
+                "profile": read_lakehouse_table_core(
+                    PROFILE_TABLE, target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                ),
+                "frequency": read_lakehouse_table_core(
+                    PROFILE_FREQUENCY_TABLE, target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                ),
+            })
+            refresh_loaded_views()
         catalogue = current_frames["catalogue"]
         profile = current_frames["profile"]
         frequency = current_frames["frequency"]
@@ -2100,34 +2117,17 @@ def build_catalogue_widget(
             "frequency": frequency.orderBy(*frequency_order),
         }
 
-    def refresh(*_args: Any) -> None:
-        """Synchronize schema, latest profile snapshot, and column choices."""
+    def refresh_loaded_views() -> None:
+        """Filter cached source frames for the active dataset and snapshot."""
         nonlocal selected_profiled_at
         from pyspark.sql import functions as F
 
         _role, key = option_context.get(str(dataset.value or ""), (None, ""))
-        choices = schema_version_options(inventory_rows, key)
-        current = str(version.value or "")
-        version.options = choices
-        values = [value for _label, value in choices]
-        version.value = current if current in values else (values[0] if values else None)
         fingerprint = version.value
-        catalogue = read_lakehouse_table_core(
-            CATALOGUE_TABLE, target=target, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
-        profile = read_lakehouse_table_core(
-            PROFILE_TABLE, target=target, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
-        frequency = read_lakehouse_table_core(
-            PROFILE_FREQUENCY_TABLE, target=target, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
-        catalogue = catalogue.filter(
+        catalogue = source_frames["catalogue"].filter(
             (F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint)
         )
-        profile_for_dataset = profile.filter(
+        profile_for_dataset = source_frames["profile"].filter(
             (F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint)
         )
         latest_rows = (
@@ -2137,7 +2137,7 @@ def build_catalogue_widget(
         selected_profiled_at = latest_rows[0]["profiled_at"] if latest_rows else None
         if selected_profiled_at is None:
             profile_snapshot = profile_for_dataset.limit(0)
-            frequency_snapshot = frequency.filter(F.lit(False))
+            frequency_snapshot = source_frames["frequency"].filter(F.lit(False))
             column_options: list[tuple[str, str]] = []
             frequency_keys: set[str] = set()
         else:
@@ -2148,7 +2148,7 @@ def build_catalogue_widget(
                 key=lambda option: (option[0].casefold(), option[1]),
             )
             profile_keys = [value for _label, value in column_options]
-            frequency_snapshot = frequency.filter(
+            frequency_snapshot = source_frames["frequency"].filter(
                 (F.col("profiled_at") == selected_profiled_at)
                 & F.col("metadata_column_key").isin(profile_keys)
             )
@@ -2191,6 +2191,35 @@ def build_catalogue_widget(
             else "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
             if key
             else empty_message
+        )
+
+    def refresh(*_args: Any) -> None:
+        """Synchronize lightweight selection state and filter loaded frames."""
+        nonlocal selected_profiled_at
+        _role, key = option_context.get(str(dataset.value or ""), (None, ""))
+        choices = schema_version_options(inventory_rows, key)
+        current = str(version.value or "")
+        version.options = choices
+        values = [value for _label, value in choices]
+        version.value = current if current in values else (values[0] if values else None)
+        if source_frames:
+            refresh_loaded_views()
+            return
+        selected_profiled_at = None
+        profile_column.options = []
+        state.update(get_selection())
+        state["error"] = None if key else empty_message
+        selection = get_selection()
+        selection_details.value = (
+            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
+            f"<b>Schema version:</b> {_html_escape(selection['schema_fingerprint'])}<br>"
+            "<b>Profile snapshot:</b> Load views to resolve<br>"
+            "<b>Profile column:</b> Load views to resolve"
+            if key else ""
+        )
+        status.value = (
+            "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
+            if key else empty_message
         )
 
     def refresh_frequency(*_args: Any) -> None:
