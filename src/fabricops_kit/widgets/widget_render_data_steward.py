@@ -209,7 +209,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     container = form_page(
         widgets,
         title="Data Steward Creation Widget",
-        description="Create, update, or reactivate a data steward",
+        description="Create or update data stewards",
         children=[selection_section, details_section, *supporting_sections, actions, result_section],
     )
     ip.display(container)

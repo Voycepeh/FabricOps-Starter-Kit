@@ -565,7 +565,7 @@ def widget_register_data_contract(
     container = form_page(
         widgets,
         title="Data Contract Creation Widget",
-        description="Maintain the dataset inventory connected to a saved Data Agreement",
+        description="Create data contracts that link data catalogues to data agreements",
         children=[relationship_section, details_section, catalogue_section, actions, result_section],
     )
     state["_controls"].update(
