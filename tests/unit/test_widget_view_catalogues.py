@@ -58,6 +58,38 @@ def test_widgets_do_not_render_spark_dataframes_or_return_ten_table_mapping():
         assert "get_data_contract_views" not in source
 
 
+@pytest.mark.parametrize(
+    ("widget", "title", "subtitle", "empty_message"),
+    [
+        (
+            fabricops_kit.widget_view_agreement_catalogue,
+            "Agreement Catalogue Viewer",
+            "View data catalogues linked to the selected data agreement",
+            "This agreement has no linked catalogue inventory.",
+        ),
+        (
+            fabricops_kit.widget_view_pipeline_catalogue,
+            "Pipeline Catalogue Viewer",
+            "View data catalogues used by the current pipeline notebook",
+            "No lineage catalogue inventory was found for this notebook.",
+        ),
+        (
+            fabricops_kit.widget_view_data_catalogue,
+            "Data Catalogue Viewer",
+            "Browse data catalogues available in the current environment",
+            "The data catalogue has no datasets in the current environment.",
+        ),
+    ],
+)
+def test_catalogue_viewers_supply_exact_shared_layout_copy(widget, title, subtitle, empty_message):
+    """Each owner supplies its viewer-specific copy to the common builder."""
+    source = inspect.getsource(widget)
+    assert "return build_catalogue_widget(" in source
+    assert f'title="{title}"' in source
+    assert f'description="{subtitle}"' in source
+    assert f'empty_message="{empty_message}"' in source
+
+
 def test_internal_selection_context_is_not_rendered(monkeypatch):
     """Technical selection identifiers remain available without appearing in UI context."""
     import fabricops_kit.widgets.shared as shared
@@ -82,7 +114,8 @@ def test_internal_selection_context_is_not_rendered(monkeypatch):
     monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
 
     state = build_catalogue_widget(
-        heading="Pipeline catalogue",
+        title="Pipeline Catalogue Viewer",
+        description="View data catalogues used by the current pipeline notebook",
         selection_context={"notebook_id": "technical-id", "environment_name": "dev"},
         display_context={"Notebook": "Customer <pipeline>", "Environment": "dev", "Linked datasets": 1},
         inventory_rows=[{
@@ -94,7 +127,26 @@ def test_internal_selection_context_is_not_rendered(monkeypatch):
         spark_session=object(), runtime_context={}, empty_message="No inventory.",
     )
 
-    visible_html = displayed[0].children[0].value
+    page = displayed[0]
+    header, context_section, selection_section, selected_section = page.children
+    visible_html = context_section.children[1].value
+    assert "Pipeline Catalogue Viewer" in header.value
+    assert "View data catalogues used by the current pipeline notebook" in header.value
+    assert "background:#0f6cbd" in header.value
+    assert [section.children[0].value for section in page.children[1:]] == [
+        '<div style="color:#0f548c;font-size:16px;font-weight:600;border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">Context</div>',
+        '<div style="color:#0f548c;font-size:16px;font-weight:600;border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">Catalogue selection</div>',
+        '<div style="color:#0f548c;font-size:16px;font-weight:600;border-bottom:1px solid #d7e7f5;padding:0 0 6px 0;">Selected catalogue</div>',
+    ]
+    for widget in (page, header, context_section, selection_section, selected_section):
+        assert widget.layout.kwargs["width"] == "100%"
+        assert widget.layout.kwargs["height"] == "auto"
+        assert widget.layout.kwargs["overflow"] == "visible"
+    assert state["_controls"]["search"].description == "Search"
+    for control in state["_controls"].values():
+        assert control.layout.kwargs == {"width": "100%", "height": "auto", "overflow": "visible"}
+    assert "Save" not in repr(page.children)
+    assert "Execution log" not in repr(page.children)
     assert "<b>Notebook:</b> Customer &lt;pipeline&gt;" in visible_html
     assert "Customer <pipeline>" not in visible_html
     assert "<b>Environment:</b> dev" in visible_html

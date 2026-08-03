@@ -2026,7 +2026,7 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
 
 
 def build_catalogue_widget(
-    *, heading: str, selection_context: dict[str, Any], display_context: dict[str, Any],
+    *, title: str, description: str, selection_context: dict[str, Any], display_context: dict[str, Any],
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
@@ -2047,10 +2047,14 @@ def build_catalogue_widget(
         options.append((dataset_label(latest, role), value))
         option_context[value] = (role, key)
     options.sort(key=lambda item: (item[0].casefold(), item[1]))
+    search = widgets.Text(value="", placeholder="Search catalogues", **widget_common(widgets, "Search"))
     dataset = widgets.Dropdown(options=options, **widget_common(widgets, "Dataset"))
     version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
+    for control in (search, dataset, version):
+        control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
+    selection_details = widgets.HTML(value="")
     status = widgets.HTML(value="")
-    controls = {"dataset": dataset, "schema_fingerprint": version}
+    controls = {"search": search, "dataset": dataset, "schema_fingerprint": version}
     state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
 
     def get_selection() -> dict[str, Any]:
@@ -2092,6 +2096,12 @@ def build_catalogue_widget(
         version.value = current if current in values else (values[0] if values else None)
         state.update(get_selection())
         state["error"] = None if key else empty_message
+        selection = get_selection()
+        selection_details.value = (
+            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
+            f"<b>Schema version:</b> {_html_escape(selection['schema_fingerprint'])}"
+            if key else ""
+        )
         status.value = (
             "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
             if key else empty_message
@@ -2100,6 +2110,17 @@ def build_catalogue_widget(
     state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
     dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
     version.observe(lambda change: state.update(get_selection()) if change.get("name") == "value" else None, names="value")
+
+    def filter_options(*_args: Any) -> None:
+        """Filter the bounded dataset selector without changing its values."""
+        query = str(search.value or "").strip().casefold()
+        current = dataset.value
+        dataset.options = [option for option in options if query in option[0].casefold()]
+        values = [value for _label, value in dataset.options]
+        if current in values:
+            dataset.value = current
+
+    search.observe(lambda change: filter_options() if change.get("name") == "value" else None, names="value")
     refresh()
     context_html = "<br>".join(
         f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
@@ -2107,5 +2128,23 @@ def build_catalogue_widget(
         if value not in (None, "")
     )
     from IPython import display as ip
-    ip.display(widgets.VBox([widgets.HTML(f"<h2>{heading}</h2>{context_html}"), dataset, version, status]))
+    context_section = form_section(widgets, title="Context", children=[widgets.HTML(value=context_html)])
+    selection_section = form_section(
+        widgets,
+        title="Catalogue selection",
+        children=[form_grid(widgets, [search, dataset, version])],
+    )
+    selected_section = form_section(
+        widgets,
+        title="Selected catalogue",
+        children=[selection_details, status],
+    )
+    ip.display(
+        form_page(
+            widgets,
+            title=title,
+            description=description,
+            children=[context_section, selection_section, selected_section],
+        )
+    )
     return state

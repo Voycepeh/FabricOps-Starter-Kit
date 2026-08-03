@@ -14,7 +14,7 @@ Select any dataset recorded in the data catalogue, then load its catalogue and p
 
 `fabricops_kit/widgets/widget_view_data_catalogue.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L50">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L51">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
