@@ -26,8 +26,11 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
     if not existing:
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     missing = [name for name in expected if name not in existing]
+    unexpected = [name for name in existing if name not in expected]
     if missing:
         raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+    if unexpected:
+        raise ValueError(f"{table_name} has unexpected column(s): {', '.join(unexpected)}.")
     mismatches: list[str] = []
     for name, expected_field in expected.items():
         existing_field = existing.get(name)
@@ -37,6 +40,10 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
         existing_type = metadata_schema_type_name(existing_field.dataType)
         if existing_type != expected_type:
             mismatches.append(f"{name} type expected {expected_type} but found {existing_type}")
+        if bool(existing_field.nullable) != bool(expected_field.nullable):
+            mismatches.append(
+                f"{name} nullability expected {expected_field.nullable} but found {existing_field.nullable}"
+            )
     if mismatches:
         raise ValueError(
             f"{table_name} physical schema does not match the canonical FabricOps metadata schema: "
@@ -267,8 +274,11 @@ def setup_metadata_tables(
       ``distinct_count``, ``distinct_percent``, ``mean_value``,
       ``stddev_value``, ``min_value``, ``percentile_25_value``,
       ``median_value``, ``percentile_75_value``, ``max_value``,
-      ``frequency_json``, ``schema_fingerprint``,
-      ``profiled_at``, and the standard audit fields.
+      ``schema_fingerprint``, ``profiled_at``, and the standard audit fields.
+    - ``METADATA_DATA_PROFILED_FREQUENCY`` stores one flattened row per
+      distinct profiled value with ``metadata_column_key``, value, count,
+      percentage, rank, profiled row totals, ``profiled_at``, and audit fields.
+      Join it to ``METADATA_DATA_PROFILED`` through ``metadata_column_key``.
     - ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
       ``notebook_id``, ``notebook_name``, ``workspace_id``,
       ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
@@ -292,7 +302,10 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     Existing tables are validated for required column names and
-    compatible Spark data types. Nullability is not part of this validation.
+    compatible Spark data types and nullability. Unexpected legacy columns also fail validation.
+    Because normalized frequency persistence is a breaking physical-schema
+    change, existing metadata tables may need recreation through this setup
+    flow; no automatic migration is performed.
     Existing tables are not automatically overwritten merely because they
     already exist. Missing columns or incompatible types mark that table as
     failed, processing continues for remaining metadata tables, and

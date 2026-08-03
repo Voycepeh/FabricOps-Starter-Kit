@@ -28,9 +28,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:129`
+`fabricops_kit/config/setup_metadata_tables.py:136`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L129-L445">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L136-L458">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -171,8 +171,11 @@ Detailed table contents:
   ``distinct_count``, ``distinct_percent``, ``mean_value``,
   ``stddev_value``, ``min_value``, ``percentile_25_value``,
   ``median_value``, ``percentile_75_value``, ``max_value``,
-  ``frequency_json``, ``schema_fingerprint``,
-  ``profiled_at``, and the standard audit fields.
+  ``schema_fingerprint``, ``profiled_at``, and the standard audit fields.
+- ``METADATA_DATA_PROFILED_FREQUENCY`` stores one flattened row per
+  distinct profiled value with ``metadata_column_key``, value, count,
+  percentage, rank, profiled row totals, ``profiled_at``, and audit fields.
+  Join it to ``METADATA_DATA_PROFILED`` through ``metadata_column_key``.
 - ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
   ``notebook_id``, ``notebook_name``, ``workspace_id``,
   ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
@@ -196,7 +199,10 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
 Existing tables are validated for required column names and
-compatible Spark data types. Nullability is not part of this validation.
+compatible Spark data types and nullability. Unexpected legacy columns also fail validation.
+Because normalized frequency persistence is a breaking physical-schema
+change, existing metadata tables may need recreation through this setup
+flow; no automatic migration is performed.
 Existing tables are not automatically overwritten merely because they
 already exist. Missing columns or incompatible types mark that table as
 failed, processing continues for remaining metadata tables, and

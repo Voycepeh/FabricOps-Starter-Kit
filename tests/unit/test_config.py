@@ -564,7 +564,8 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
     )
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["status"] == "ready"
+    assert result["status"] == "partial_failure"
+    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
 
 
 def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type(monkeypatch):
@@ -691,7 +692,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "failed"
-    assert len(result["failed_tables"]) == 10
+    assert len(result["failed_tables"]) == 11
     assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
@@ -699,7 +700,7 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 10
+    assert len(tables) == 11
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_CONTRACT" in tables
@@ -743,7 +744,6 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "frequency_json",
         "profiled_at",
     }
 
@@ -1339,7 +1339,7 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     assert f"[2/{len(names)}] Created {names[1]}" in output
     assert f"FabricOps metadata setup complete ({len(names)}/{len(names)})." in output
     assert "Created: 2" in output
-    assert "Validated: 8" in output
+    assert f"Validated: {len(names) - 2}" in output
     assert f"- {names[0]}" in output
 
 
