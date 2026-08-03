@@ -266,6 +266,7 @@ class _FakeWidgets:
     Output = _FakeWidget
     VBox = _FakeWidget
     HBox = _FakeWidget
+    GridBox = _FakeWidget
     Tab = _FakeWidget
     Textarea = _FakeWidget
     DatePicker = _FakeWidget
