@@ -1972,6 +1972,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
 # Shared catalogue-selection widget implementation.
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 PROFILE_TABLE = "METADATA_DATA_PROFILED"
+PROFILE_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
 
 
 def collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[dict[str, Any]]:
@@ -2026,12 +2027,12 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
 
 
 def build_catalogue_widget(
-    *, title: str, description: str, selection_context: dict[str, Any], display_context: dict[str, Any],
+    *, heading: str, selection_context: dict[str, Any], display_context: dict[str, Any],
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
 ) -> dict[str, Any]:
-    """Build common controls and lazy catalogue/profile frame readers."""
+    """Build common controls and snapshot-scoped catalogue/profile readers."""
     widgets = require_ipywidgets()
     rows_by_key: dict[str, list[dict[str, Any]]] = {}
     for row in inventory_rows:
@@ -2047,15 +2048,14 @@ def build_catalogue_widget(
         options.append((dataset_label(latest, role), value))
         option_context[value] = (role, key)
     options.sort(key=lambda item: (item[0].casefold(), item[1]))
-    search = widgets.Text(value="", placeholder="Search catalogues", **widget_common(widgets, "Search"))
     dataset = widgets.Dropdown(options=options, **widget_common(widgets, "Dataset"))
     version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
-    for control in (search, dataset, version):
-        control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
-    selection_details = widgets.HTML(value="")
+    profile_column = widgets.Dropdown(options=[], **widget_common(widgets, "Profile column"))
     status = widgets.HTML(value="")
-    controls = {"search": search, "dataset": dataset, "schema_fingerprint": version}
+    controls = {"dataset": dataset, "schema_fingerprint": version, "metadata_column_key": profile_column}
     state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
+    current_frames: dict[str, Any] = {}
+    selected_profiled_at: Any = None
 
     def get_selection() -> dict[str, Any]:
         """Return current control values and entry-point context."""
@@ -2065,86 +2065,139 @@ def build_catalogue_widget(
         return {
             **selection_context, "metadata_table_key": key or None,
             "schema_fingerprint": version.value, "dataset_label": dataset_label(latest, role) if latest else None,
+            "profiled_at": selected_profiled_at, "metadata_column_key": profile_column.value,
             "profile_role": role, "store_type": latest.get("store_type"), "layer": latest.get("layer"),
             "schema_name": latest.get("schema_name"), "table_name": latest.get("table_name"),
         }
 
     def get_views():
-        """Read and return exactly the selected catalogue and profile frames."""
+        """Return the selected catalogue, compact profile, and frequency frames."""
         selection = get_selection()
         key = selection["metadata_table_key"]
         fingerprint = selection["schema_fingerprint"]
         if not key or not fingerprint:
             raise ValueError(empty_message)
-        from pyspark.sql import functions as F
-
-        catalogue = read_lakehouse_table_core(CATALOGUE_TABLE, target=target, schema=schema, spark_session=spark_session, context=runtime_context)
-        profile = read_lakehouse_table_core(PROFILE_TABLE, target=target, schema=schema, spark_session=spark_session, context=runtime_context)
-        catalogue = catalogue.filter((F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint))
-        profile = profile.filter((F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint))
+        catalogue = current_frames["catalogue"]
+        profile = current_frames["profile"]
+        frequency = current_frames["frequency"]
         catalogue_order = [name for name in ("column_name", "metadata_column_key", "_committed_at") if name in catalogue.columns]
         profile_order = [name for name in ("column_name", "metadata_column_key", "profiled_at", "_committed_at") if name in profile.columns]
-        return catalogue.orderBy(*catalogue_order), profile.orderBy(*profile_order)
+        frequency_order = [name for name in ("frequency_rank", "value", "_committed_at") if name in frequency.columns]
+        return {
+            "catalogue": catalogue.orderBy(*catalogue_order),
+            "profile": profile.orderBy(*profile_order),
+            "frequency": frequency.orderBy(*frequency_order),
+        }
 
     def refresh(*_args: Any) -> None:
-        """Synchronize schema choices and lightweight selection state."""
+        """Synchronize schema, latest profile snapshot, and column choices."""
+        nonlocal selected_profiled_at
+        from pyspark.sql import functions as F
+
         _role, key = option_context.get(str(dataset.value or ""), (None, ""))
         choices = schema_version_options(inventory_rows, key)
         current = str(version.value or "")
         version.options = choices
         values = [value for _label, value in choices]
         version.value = current if current in values else (values[0] if values else None)
+        fingerprint = version.value
+        catalogue = read_lakehouse_table_core(
+            CATALOGUE_TABLE, target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+        profile = read_lakehouse_table_core(
+            PROFILE_TABLE, target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+        frequency = read_lakehouse_table_core(
+            PROFILE_FREQUENCY_TABLE, target=target, schema=schema,
+            spark_session=spark_session, context=runtime_context,
+        )
+        catalogue = catalogue.filter(
+            (F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint)
+        )
+        profile_for_dataset = profile.filter(
+            (F.col("metadata_table_key") == key) & (F.col("schema_fingerprint") == fingerprint)
+        )
+        latest_rows = (
+            profile_for_dataset.filter(F.col("profiled_at").isNotNull())
+            .select("profiled_at").distinct().orderBy(F.col("profiled_at").desc()).limit(1).collect()
+        )
+        selected_profiled_at = latest_rows[0]["profiled_at"] if latest_rows else None
+        if selected_profiled_at is None:
+            profile_snapshot = profile_for_dataset.limit(0)
+            frequency_snapshot = frequency.filter(F.lit(False))
+            column_options: list[tuple[str, str]] = []
+            frequency_keys: set[str] = set()
+        else:
+            profile_snapshot = profile_for_dataset.filter(F.col("profiled_at") == selected_profiled_at)
+            column_rows = profile_snapshot.select("metadata_column_key", "column_name").distinct().collect()
+            column_options = sorted(
+                ((str(row["column_name"] or row["metadata_column_key"]), str(row["metadata_column_key"])) for row in column_rows),
+                key=lambda option: (option[0].casefold(), option[1]),
+            )
+            profile_keys = [value for _label, value in column_options]
+            frequency_snapshot = frequency.filter(
+                (F.col("profiled_at") == selected_profiled_at)
+                & F.col("metadata_column_key").isin(profile_keys)
+            )
+            frequency_keys = {
+                str(row["metadata_column_key"])
+                for row in frequency_snapshot.select("metadata_column_key").distinct().collect()
+            }
+        previous_column = str(profile_column.value or "")
+        profile_column.options = column_options
+        column_values = [value for _label, value in column_options]
+        preferred_column = next((value for value in column_values if value in frequency_keys), None)
+        profile_column.value = (
+            previous_column if previous_column in column_values
+            else preferred_column or (column_values[0] if column_values else None)
+        )
+        selected_key = profile_column.value
+        selected_frequency = frequency_snapshot.filter(
+            (F.col("metadata_column_key") == selected_key)
+            & (F.col("profiled_at") == selected_profiled_at)
+        ) if selected_key and selected_profiled_at is not None else frequency_snapshot.limit(0)
+        current_frames.update({
+            "catalogue": catalogue,
+            "profile": profile_snapshot,
+            "frequency_snapshot": frequency_snapshot,
+            "frequency": selected_frequency,
+        })
         state.update(get_selection())
         state["error"] = None if key else empty_message
-        selection = get_selection()
-        selection_details.value = (
-            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
-            f"<b>Schema version:</b> {_html_escape(selection['schema_fingerprint'])}"
-            if key else ""
-        )
         status.value = (
-            "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
-            if key else empty_message
+            "No compact profile snapshot is available for this dataset."
+            if key and selected_profiled_at is None
+            else "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
+            if key
+            else empty_message
         )
+
+    def refresh_frequency(*_args: Any) -> None:
+        """Restrict normalized frequencies to the selected snapshot column."""
+        from pyspark.sql import functions as F
+
+        frequency = current_frames.get("frequency_snapshot")
+        if frequency is None:
+            return
+        selected_key = profile_column.value
+        current_frames["frequency"] = frequency.filter(
+            (F.col("metadata_column_key") == selected_key)
+            & (F.col("profiled_at") == selected_profiled_at)
+        ) if selected_key and selected_profiled_at is not None else frequency.limit(0)
+        state.update(get_selection())
 
     state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
-    dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
-    version.observe(lambda change: state.update(get_selection()) if change.get("name") == "value" else None, names="value")
-
-    def filter_options(*_args: Any) -> None:
-        """Filter the bounded dataset selector without changing its values."""
-        query = str(search.value or "").strip().casefold()
-        current = dataset.value
-        dataset.options = [option for option in options if query in option[0].casefold()]
-        values = [value for _label, value in dataset.options]
-        if current in values:
-            dataset.value = current
-
-    search.observe(lambda change: filter_options() if change.get("name") == "value" else None, names="value")
     refresh()
+    dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
+    version.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
+    profile_column.observe(lambda change: refresh_frequency() if change.get("name") == "value" else None, names="value")
     context_html = "<br>".join(
         f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
         for name, value in display_context.items()
         if value not in (None, "")
     )
     from IPython import display as ip
-    context_section = form_section(widgets, title="Context", children=[widgets.HTML(value=context_html)])
-    selection_section = form_section(
-        widgets,
-        title="Catalogue selection",
-        children=[form_grid(widgets, [search, dataset, version])],
-    )
-    selected_section = form_section(
-        widgets,
-        title="Selected catalogue",
-        children=[selection_details, status],
-    )
-    ip.display(
-        form_page(
-            widgets,
-            title=title,
-            description=description,
-            children=[context_section, selection_section, selected_section],
-        )
-    )
+    ip.display(widgets.VBox([widgets.HTML(f"<h2>{heading}</h2>{context_html}"), dataset, version, profile_column, status]))
     return state

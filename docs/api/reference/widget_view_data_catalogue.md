@@ -14,7 +14,7 @@ Select any dataset recorded in the data catalogue, then load its catalogue and p
 
 `fabricops_kit/widgets/widget_view_data_catalogue.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L51">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_data_catalogue.py#L10-L56">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -51,7 +51,8 @@ def widget_view_data_catalogue(
 <div class="reference-example-usage" markdown="1">
 
 >>> view = widget_view_data_catalogue(spark_session=spark)
->>> catalogue_df, profile_df = view["get_views"]()
+>>> views = view["get_views"]()
+>>> views["catalogue"], views["profile"], views["frequency"]
 
 </div>
 
@@ -67,8 +68,9 @@ def widget_view_data_catalogue(
 ## Returns
 
 dict
-    Common catalogue state mapping. ``get_views`` returns exactly the
-    selected catalogue and profile Spark DataFrames without rendering.
+    Common catalogue state mapping. ``get_views`` returns a named mapping
+    containing the selected ``catalogue``, compact ``profile``, and
+    normalized ``frequency`` Spark DataFrames without rendering.
 
 ### Return interpretation
 
@@ -83,6 +85,10 @@ Not documented yet
 <div class="reference-docstring-notes" markdown="1">
 
 Inventory is built only from the current environment's data catalogue.
+The compact profile defaults to the latest ``profiled_at`` snapshot.
+Frequencies are limited to the selected profile column and matched through
+both ``metadata_column_key`` and ``profiled_at`` so historical snapshots
+cannot be mixed.
 
 </div>
 

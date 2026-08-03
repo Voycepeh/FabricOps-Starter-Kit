@@ -150,15 +150,29 @@ def test_02_pipeline_uses_only_the_catalogue_widget():
     assert "widget_enrich_" not in source
 
 
-@pytest.mark.parametrize(("notebook_name", "state_name"), [("99_explore.ipynb", "data_catalogue_view")])
+@pytest.mark.parametrize(
+    ("notebook_name", "state_name"),
+    [
+        ("01_agreement.ipynb", "agreement_catalogue_view"),
+        ("02_pipeline.ipynb", "pipeline_catalogue_view"),
+        ("03_review.ipynb", "governance_catalogue_view"),
+        ("99_explore.ipynb", "data_catalogue_view"),
+    ],
+)
 def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, state_name):
-    """Each template renders refreshed views in a separate rerunnable cell."""
+    """Each template renders the named, snapshot-scoped views outside the widget."""
     notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
     source = "\n".join("".join(cell.get("source", [])) for cell in notebook.cells)
 
     assert f'{state_name}["get_views"]()' in source
+    assert 'catalogue_df = views["catalogue"]' in source
+    assert 'profile_df = views["profile"]' in source
+    assert 'frequency_df = views["frequency"]' in source
     assert "display(catalogue_df)" in source
     assert "display(profile_df)" in source
+    assert "display(frequency_df)" in source
+    assert "catalogue_df, profile_df" not in source
+    assert "METADATA_DATA_PROFILED_FREQUENCY" not in source
     assert 'get("tables"' not in source
 
 
@@ -206,7 +220,8 @@ def test_02_pipeline_reviews_only_current_notebook_lineage_after_profiling():
     assert "steward_id" not in viewer_source
     assert "metadata_id" not in viewer_source
     assert source.count("widget_view_pipeline_catalogue(") == 1
-    assert "catalogue_df, profile_df" in output_source
+    assert 'profile_df = views["profile"]' in output_source
+    assert 'frequency_df = views["frequency"]' in output_source
     assert "Source" in source and "Target" in source
 
 
@@ -231,7 +246,8 @@ def test_03_review_uses_steward_agreement_contract_order_and_scope():
     assert "pipeline_scope" not in viewer_source
     assert source.count("widget_render_data_agreement(") == 1
     assert source.count("widget_view_agreement_catalogue(") == 1
-    assert "catalogue_df, profile_df" in output_source
+    assert 'profile_df = views["profile"]' in output_source
+    assert 'frequency_df = views["frequency"]' in output_source
     assert "only linked logical datasets are visible" in source
     assert "Contract membership is shared across Development and Production" in source
     assert "observations remain separate" in source

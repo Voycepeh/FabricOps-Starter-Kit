@@ -24,17 +24,23 @@ def widget_view_data_catalogue(*, spark_session=None, target: str = "metadata", 
     Returns
     -------
     dict
-        Common catalogue state mapping. ``get_views`` returns exactly the
-        selected catalogue and profile Spark DataFrames without rendering.
+        Common catalogue state mapping. ``get_views`` returns a named mapping
+        containing the selected ``catalogue``, compact ``profile``, and
+        normalized ``frequency`` Spark DataFrames without rendering.
 
     Notes
     -----
     Inventory is built only from the current environment's data catalogue.
+    The compact profile defaults to the latest ``profiled_at`` snapshot.
+    Frequencies are limited to the selected profile column and matched through
+    both ``metadata_column_key`` and ``profiled_at`` so historical snapshots
+    cannot be mixed.
 
     Examples
     --------
     >>> view = widget_view_data_catalogue(spark_session=spark)
-    >>> catalogue_df, profile_df = view["get_views"]()
+    >>> views = view["get_views"]()
+    >>> views["catalogue"], views["profile"], views["frequency"]
 
     """
     config, environment_name, resolved = resolve_fabric_context(context=context)
@@ -42,8 +48,7 @@ def widget_view_data_catalogue(*, spark_session=None, target: str = "metadata", 
     catalogue = read_lakehouse_table_core("METADATA_DATA_CATALOGUE", target=target, schema=schema, spark_session=spark_session, context=runtime_context)
     rows = collect_catalogue_inventory(catalogue, environment_name)
     return build_catalogue_widget(
-        title="Data Catalogue Viewer",
-        description="Browse data catalogues available in the current environment",
+        heading="Data catalogue",
         selection_context={"environment_name": environment_name},
         display_context={"Environment": environment_name, "Datasets": len({row['metadata_table_key'] for row in rows})},
         inventory_rows=rows, role_options=None, target=target, schema=schema, spark_session=spark_session,

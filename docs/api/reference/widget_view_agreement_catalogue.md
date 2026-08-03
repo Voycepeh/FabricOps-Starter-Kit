@@ -14,7 +14,7 @@ Select a dataset linked to an agreement through its registered data contracts, t
 
 `fabricops_kit/widgets/widget_view_agreement_catalogue.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L70">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L73">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -53,7 +53,8 @@ def widget_view_agreement_catalogue(
 <div class="reference-example-usage" markdown="1">
 
 >>> view = widget_view_agreement_catalogue(agreement=agreement_widget, spark_session=spark)
->>> catalogue_df, profile_df = view["get_views"]()
+>>> views = view["get_views"]()
+>>> views["catalogue"], views["profile"], views["frequency"]
 
 </div>
 
@@ -71,8 +72,9 @@ def widget_view_agreement_catalogue(
 
 dict
     State mapping with ``get_selection``, ``get_views``, and ``refresh``.
-    ``get_views`` returns exactly the selected catalogue and profile Spark
-    DataFrames and does not render them.
+    ``get_views`` returns a named mapping containing ``catalogue``,
+    ``profile``, and ``frequency`` Spark DataFrames and does not render
+    them.
 
 ### Return interpretation
 
@@ -88,8 +90,10 @@ ValueError
 <div class="reference-docstring-notes" markdown="1">
 
 Inventory follows agreement to registered data contracts to catalogue
-datasets in the current environment. Spark reads for the returned views
-occur only when ``get_views`` is called.
+datasets in the current environment. The compact parent profile defaults
+to the latest ``profiled_at`` snapshot. Normalized child frequencies are
+limited to the selected column and matched to that snapshot through both
+``metadata_column_key`` and ``profiled_at``.
 
 </div>
 
