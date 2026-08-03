@@ -74,7 +74,7 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
   </a>
 
   <a class="fabricops-landing-card" href="reference/metadata/">
-    <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>10</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
+    <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>11</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
     <span class="fabricops-landing-card__body">Read every metadata table's purpose, schema, and know which functions write to them .</span>
   </a>
 
