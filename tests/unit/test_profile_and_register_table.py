@@ -25,6 +25,7 @@ from fabricops_kit.pipeline.profile_and_register_table import (
     CATALOGUE_COLUMNS,
     CATALOGUE_TABLE,
     PROFILED_COLUMNS,
+    PROFILED_FREQUENCY_TABLE,
     PROFILED_TABLE,
     _catalogue_dataframe_from_profiled,
     _replace_frequency_rows,
@@ -844,7 +845,11 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
             target="raw",
             table_name="customers",
         )
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE]
+    assert [write["table_name"] for write in registered] == [
+        PROFILED_TABLE,
+        PROFILED_FREQUENCY_TABLE,
+        CATALOGUE_TABLE,
+    ]
 
 
 def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monkeypatch, registered):
@@ -881,7 +886,7 @@ def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, mo
             target="raw",
             table_name="customers",
         )
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE]
+    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, PROFILED_FREQUENCY_TABLE]
 
 
 def test_profile_and_register_table_uses_caller_frequency_profile_df_only_for_frequency(
