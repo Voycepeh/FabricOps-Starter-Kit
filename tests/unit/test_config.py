@@ -564,7 +564,8 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
     )
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["status"] == "ready"
+    assert result["status"] == "partial_failure"
+    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
 
 
 def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type(monkeypatch):
@@ -621,6 +622,64 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type
     assert (
         "row_count type expected long but found string" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
     )
+
+
+def test_profiled_validation_rejects_only_legacy_frequency_json_addition():
+    """Verify the breaking unexpected-column rule is scoped to the profiled parent."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    from fabricops_kit.config.setup_metadata_tables import _validate_existing_metadata_schema
+
+    registry = metadata_table_schema_registry()
+    profiled = registry["METADATA_DATA_PROFILED"]
+    field_type = type(profiled.fields[0])
+    schema_type = type(profiled)
+    with_legacy = schema_type(
+        [*profiled.fields, field_type("frequency_json", profiled.fields[0].dataType, True)]
+    )
+    with pytest.raises(ValueError, match="unexpected legacy column: frequency_json"):
+        _validate_existing_metadata_schema("METADATA_DATA_PROFILED", with_legacy, profiled)
+
+    catalogue = registry["METADATA_DATA_CATALOGUE"]
+    additive_catalogue = schema_type(
+        [*catalogue.fields, field_type("consumer_extension", catalogue.fields[0].dataType, True)]
+    )
+    _validate_existing_metadata_schema("METADATA_DATA_CATALOGUE", additive_catalogue, catalogue)
+
+
+def test_profiled_frequency_validation_checks_required_type_and_nullability():
+    """Verify every required normalized child field retains strict physical validation."""
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    from fabricops_kit.config.setup_metadata_tables import _validate_existing_metadata_schema
+
+    schema = metadata_table_schema_registry()["METADATA_DATA_PROFILED_FREQUENCY"]
+    field_type = type(schema.fields[0])
+    schema_type = type(schema)
+    missing_value = schema_type([field for field in schema.fields if field.name != "value"])
+    with pytest.raises(ValueError, match=r"missing required column\(s\): value"):
+        _validate_existing_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", missing_value, schema)
+
+    wrong_nullability = schema_type(
+        [
+            field_type(field.name, field.dataType, True) if field.name == "frequency_count" else field
+            for field in schema.fields
+        ]
+    )
+    with pytest.raises(ValueError, match="frequency_count nullability expected False but found True"):
+        _validate_existing_metadata_schema(
+            "METADATA_DATA_PROFILED_FREQUENCY", wrong_nullability, schema
+        )
+
+    string_type = next(field.dataType for field in schema.fields if field.name == "value")
+    wrong_type = schema_type(
+        [
+            field_type(field.name, string_type, field.nullable)
+            if field.name == "frequency_count"
+            else field
+            for field in schema.fields
+        ]
+    )
+    with pytest.raises(ValueError, match="frequency_count type expected long but found string"):
+        _validate_existing_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", wrong_type, schema)
 
 
 def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypatch):
@@ -691,7 +750,7 @@ def test_setup_metadata_tables_non_missing_read_error_includes_original_exceptio
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", read_table)
     result = setup_metadata_tables(spark=Spark(), config=framework_config(), env="dev", verbose=False)
     assert result["status"] == "failed"
-    assert len(result["failed_tables"]) == 10
+    assert len(result["failed_tables"]) == 11
     assert "Original ValueError: Delta log is corrupt" in result["table_results"]["METADATA_DATA_STEWARD"]["message"]
 
 
@@ -699,7 +758,7 @@ def test_active_metadata_tables_are_source_driven_and_include_access_context():
     """Verify active metadata tables are source driven and include access context."""
     tables = _get_active_metadata_tables(framework_config())
 
-    assert len(tables) == 10
+    assert len(tables) == 11
     assert "METADATA_DATA_STEWARD" in tables
     assert "METADATA_DATA_AGREEMENT" in tables
     assert "METADATA_DATA_CONTRACT" in tables
@@ -743,7 +802,6 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "frequency_json",
         "profiled_at",
     }
 
@@ -1339,7 +1397,7 @@ def test_setup_metadata_tables_missing_tables_prints_numbered_created_summary(mo
     assert f"[2/{len(names)}] Created {names[1]}" in output
     assert f"FabricOps metadata setup complete ({len(names)}/{len(names)})." in output
     assert "Created: 2" in output
-    assert "Validated: 8" in output
+    assert f"Validated: {len(names) - 2}" in output
     assert f"- {names[0]}" in output
 
 

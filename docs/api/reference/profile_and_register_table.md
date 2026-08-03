@@ -27,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:525`
+`fabricops_kit/pipeline/profile_and_register_table.py:473`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L525-L865">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L473-L824">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -85,18 +85,18 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 | `target` | `str` | Yes | Configured FabricStore target key. Its normalized key becomes the physical identity's layer and its store kind determines whether the asset is a Lakehouse or Warehouse table. |
 | `table_name` | `str` | Yes | Physical table name of the business asset being profiled. This identifies the asset and does not redirect metadata writes. |
 | `schema` | `str` | No | Physical schema name, or ``None`` to use the configured store default. Classic or schema-disabled Lakehouses preserve ``None``. |
-| `frequency_columns` | `sequence of str` | No | Selected columns that should receive embedded frequency evidence. ``None`` profiles all eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and persists null ``frequency_json`` for every statistical profile row. Requested columns should also be eligible for the main statistical profile. |
+| `frequency_columns` | `sequence of str` | No | Selected columns whose flattened frequency rows should be persisted. ``None`` profiles eligible non-technical scalar columns. An empty sequence skips frequency profiling entirely and writes no child rows. Requested columns should also be eligible for the main statistical profile. |
 | `frequency_top_n` | `int \| None` | No | Optional number of ranked values to retain per selected frequency column. ``None`` retains every distinct value. |
-| `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold receive structured skipped JSON instead of generated frequencies. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns still receive structured skipped JSON. Explicit ``frequency_columns`` selections override this threshold. |
+| `frequency_max_distinct_percent` | `float \| None` | No | Automatic frequency-profiling safeguard used only when ``frequency_columns=None``. Columns whose distinct-per-non-null percentage is greater than this threshold are skipped and produce no child frequency rows. Values must be between ``0.0`` and ``100.0`` when supplied. ``None`` disables the high-cardinality threshold; all-null automatic columns remain skipped. Explicit ``frequency_columns`` selections override this threshold. |
 | `frequency_profile_df` | `pyspark.sql.DataFrame` | No | Optional caller-provided Spark DataFrame to use only for frequency distribution calculation. ``None`` preserves full-source frequency profiling. When supplied, it must contain every selected frequency column, may contain extra columns, and must use a compatible Spark session when this can be determined. The caller is responsible for preparing, persisting, refreshing, and governing this DataFrame; this function does not verify whether it is random, representative, sampled, persisted, or otherwise suitable for the caller's purpose. |
 
 ## Returns
 
-Spark DataFrame containing one detailed profiling row for each eligible column appended to METADATA_DATA_PROFILED, including stable table and column IDs, complete-DataFrame statistical metrics, frequency_json where enabled, schema fingerprint, and runtime audit fields.
+Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including stable identities, complete-DataFrame statistics, schema fingerprint, profiling timestamp, and runtime audit fields.
 
 ### Return interpretation
 
-The returned rows are the detailed profile results for eligible columns. Statistical metrics always describe the complete supplied DataFrame. Frequency counts and percentages describe the complete source by default or the caller-provided frequency_profile_df when supplied; frequency_json discloses source_row_count, profiled_row_count, profiled_non_null_count, and frequency_scope. Catalogue rows and source or target activity records are saved as side effects and are not returned.
+The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY and join to the returned rows through metadata_column_key; frequency, catalogue, and lineage rows are side effects and are not returned.
 
 ## Raises / Errors
 
@@ -122,20 +122,22 @@ Processing flow:
 2. Use that statistical profile to choose automatic frequency columns
    when ``frequency_columns=None``: eligible scalar columns at or below
    ``frequency_max_distinct_percent`` are profiled, high-cardinality
-   columns receive structured skipped JSON, and all-null columns receive
-   structured no-non-null-values skipped JSON. Explicit non-empty
+   columns and all-null columns produce no child frequency rows. Explicit non-empty
    ``frequency_columns`` bypass this threshold, while
    ``frequency_columns=[]`` skips frequency profiling entirely.
-3. Convert the multiple frequency rows for each column into one
-   deterministic JSON document.
-4. Left-join that JSON to the statistical profile on
-   ``profile_dataframe.COLUMN_NAME = profile_frequency_distribution.COLUMN_NAME``.
-5. Save a new profiling snapshot to ``METADATA_DATA_PROFILED``.
-6. Create stable table and column IDs, then update matching catalogue
+3. Call ``profile_frequency_distribution`` to produce flattened frequency
+   rows for the selected columns.
+4. Resolve each frequency row to its parent ``metadata_column_key`` and
+   prepare it with the same ``profiled_at`` snapshot timestamp.
+5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
+6. Replace rows for the exact ``metadata_column_key + profiled_at`` child
+   snapshot and write the normalized rows to
+   ``METADATA_DATA_PROFILED_FREQUENCY``.
+7. Create stable table and column IDs, then update matching catalogue
    records or add new records in ``METADATA_DATA_CATALOGUE``.
-7. Record whether the table was used as an input or produced as an output
+8. Record whether the table was used as an input or produced as an output
    in ``METADATA_DATA_LINEAGE``.
-8. Return the detailed Spark DataFrame written to
+9. Return only the compact parent Spark DataFrame written to
    ``METADATA_DATA_PROFILED``.
 
 User-facing workflow:
@@ -144,8 +146,8 @@ Supplied DataFrame
     ↓
 Calculate column statistics and value frequencies
     ↓
-Save a new profiling snapshot
-``METADATA_DATA_PROFILED``
+Save compact summary and flattened frequency snapshots
+``METADATA_DATA_PROFILED`` + ``METADATA_DATA_PROFILED_FREQUENCY``
     ↓
 Create stable table and column IDs
     ↓
@@ -158,57 +160,39 @@ Record whether the table was used as an input or output
     ↓
 Return the profiling result to the notebook
 
-Frequency join behavior:
+Frequency snapshot behavior:
 
-- The statistical profile is the left side of the join, so every eligible
-  statistical profile row remains in the returned result.
+- Every eligible statistical profile row remains in the compact parent
+  result whether or not that column produces child frequency rows.
 - ``frequency_columns=None`` automatically profiles eligible non-technical
   scalar columns whose distinct-per-non-null percentage is less than or
   equal to ``frequency_max_distinct_percent``. The default threshold is
   ``80.0`` percent.
-- Automatically selected columns above the threshold receive deterministic
-  structured ``frequency_json`` with ``status="skipped"`` and
-  ``reason="high_cardinality"``. All-null automatic columns receive
-  ``reason="no_non_null_values"``.
+- Automatically selected columns above the threshold and all-null automatic
+  columns produce no child frequency rows. No fake skipped values are stored.
 - ``frequency_max_distinct_percent=None`` disables the high-cardinality
   threshold for automatic columns.
 - Only columns listed in a non-empty ``frequency_columns`` sequence receive
   generated frequency evidence; explicit selections override the automatic
-  threshold. Other profiled columns receive null.
-- ``frequency_columns=[]`` skips frequency profiling entirely and persists
-  null ``frequency_json`` for every row.
+  threshold. Other profiled columns produce no child rows.
+- ``frequency_columns=[]`` skips frequency profiling entirely and writes no
+  child rows for the current snapshot.
 - ``frequency_profile_df=None`` profiles frequencies against the complete
   supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
   frequency counts, percentages, ranks, profiled row counts, and profiled
-  non-null counts describe that caller-provided DataFrame, while
-  ``source_row_count`` records the complete source DataFrame row count.
-- ``frequency_top_n`` restricts embedded values only when supplied. It
+  non-null counts describe that caller-provided DataFrame. The compact
+  parent statistics still describe the complete source DataFrame.
+- ``frequency_top_n`` restricts persisted child rows only when supplied. It
   limits output rows after grouped counts are calculated and does not
   reduce grouping cost.
 - Frequency values are ordered deterministically by rank.
-
-Example ``frequency_json`` structure:
-
-.. code-block:: json
-
-   {
-     "source_row_count": 1000,
-     "profiled_row_count": 1000,
-     "profiled_non_null_count": 995,
-     "frequency_scope": "full_source",
-     "values": [
-       {
-         "value": "Active",
-         "count": 700,
-         "percent": 70.0,
-         "rank": 1
-       }
-     ]
-   }
+- Historical parent and child snapshots join on both
+  ``metadata_column_key`` and ``profiled_at``. Rows are replaced only for
+  that exact snapshot identity, so earlier snapshots remain intact.
 
 ``METADATA_DATA_PROFILED`` receives one appended row per eligible input
 DataFrame column. Repeated executions create additional profiling
-snapshots, and the returned DataFrame is the same detailed DataFrame
+snapshots, and the returned DataFrame is the same compact DataFrame
 appended to this table. Its logical field groups are:
 
 - Identity fields: ``metadata_table_key``, ``metadata_column_key``,
@@ -219,15 +203,15 @@ appended to this table. Its logical field groups are:
   ``mean_value``, ``stddev_value``, ``min_value``,
   ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
   ``max_value``.
-- Frequency and runtime fields: ``frequency_json``, ``schema_fingerprint``,
-  ``profiled_at``.
+- Runtime fields: ``schema_fingerprint``, ``profiled_at``.
 - Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
   ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
   ``_metadata_lakehouse_name``, ``_activity_id``.
 
-``METADATA_DATA_PROFILED`` saves a new profiling snapshot. One row is
-saved for each eligible DataFrame column. Earlier profiling snapshots are
-retained.
+``METADATA_DATA_PROFILED`` saves a new compact profiling snapshot. One row
+is saved for each eligible DataFrame column. ``METADATA_DATA_PROFILED_FREQUENCY``
+saves one flattened row per returned distinct value. Earlier parent and
+child snapshots are retained and join on ``metadata_column_key + profiled_at``.
 
 ``METADATA_DATA_CATALOGUE`` stores table and column records, not profiling
 measurements. FabricOps creates a stable ID for the table and each column,
@@ -274,15 +258,16 @@ result row for each eligible column.
 
 What FabricOps saves:
 
-- ``METADATA_DATA_PROFILED``: a new profiling snapshot.
+- ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
+- ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
+  ``metadata_column_key`` and ``profiled_at``.
 - ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
   records.
 - ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
 Statistical profiling records describe the complete DataFrame supplied
 during the notebook activity. If ``frequency_profile_df`` is supplied,
-only generated frequency evidence uses that DataFrame and its JSON records
-``frequency_scope="caller_provided"``. The function does not claim or
+only generated frequency evidence uses that DataFrame. The function does not claim or
 verify that the caller-provided DataFrame is sampled, random,
 representative, persisted, or governed; those responsibilities stay with
 the upstream ingestion or notebook workflow.
@@ -298,11 +283,16 @@ a ``RuntimeError`` explaining that profile and catalogue registration
 succeeded but lineage registration failed. Guardrail execution is a
 separate workflow.
 
+Removing ``frequency_json`` from ``METADATA_DATA_PROFILED`` and adding the
+normalized child table is a breaking physical-schema change. Existing
+metadata tables may need recreation through the established setup flow;
+no compatibility or automatic migration layer is provided.
+
 </div>
 
 ## See also
 
-- [Pipeline Execution](../../guided-demo/run-pipeline.md)
+- [Pipeline Execution](../../guided-demo/02-run-pipeline.md)
 
 
 <details>

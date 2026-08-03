@@ -5,12 +5,13 @@ from __future__ import annotations
 from fabricops_kit.pipeline.shared import build_profile_dataframe
 
 
-def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = True):
+def profile_dataframe(df, *, exclude_columns=None):
     """Calculate column-level profiling statistics for a Spark DataFrame.
 
     The returned profile includes row and null counts, null percentages,
-    distinct counts and percentages, numeric summary statistics, and minimum
-    and maximum values for each included input column.
+    exact distinct counts and percentages, numeric summary statistics, and
+    minimum and maximum values for each included input column. Exact distinct
+    counts exclude null values.
 
     Parameters
     ----------
@@ -19,9 +20,6 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = 
     exclude_columns : list[str] or set[str], optional
         Additional caller-selected columns to skip after standard FabricOps
         technical-column exclusions are applied.
-    approximate_distinct : bool, default=True
-        When True, use Spark ``approx_count_distinct`` for per-column
-        cardinality. When False, use exact ``count_distinct``.
 
     Returns
     -------
@@ -46,4 +44,4 @@ def profile_dataframe(df, *, exclude_columns=None, approximate_distinct: bool = 
         If no eligible non-technical columns remain after exclusions.
 
     """
-    return build_profile_dataframe(df, exclude_columns=exclude_columns, approximate_distinct=approximate_distinct)
+    return build_profile_dataframe(df, exclude_columns=exclude_columns)

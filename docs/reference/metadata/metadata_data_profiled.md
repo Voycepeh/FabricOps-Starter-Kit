@@ -1,6 +1,6 @@
 # METADATA_DATA_PROFILED
 
-**Purpose:** Detailed per-column profiling evidence captured from a profiled dataset snapshot.
+**Purpose:** Compact per-column summary statistics captured from a profiled dataset snapshot.
 
 ## Implemented schema
 
@@ -28,7 +28,6 @@
 | `median_value` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed median value for numeric columns when available. |
 | `percentile_75_value` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed 75th percentile for numeric columns when available. |
 | `max_value` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed maximum value captured as text. |
-| `frequency_json` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._frequency_json_dataframe` | Serialized frequency distribution for the column when enabled. |
 | `schema_fingerprint` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint` | Deterministic fingerprint for the observed or governed schema snapshot. |
 | `profiled_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Timestamp when the dataset profile snapshot was captured. |
 | `_committed_by` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | User principal or runtime identity that committed the metadata row. |

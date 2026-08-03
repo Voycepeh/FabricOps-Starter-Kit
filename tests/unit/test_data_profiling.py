@@ -39,14 +39,14 @@ def test_profile_dataframe_delegates_to_shared_profiler(monkeypatch):
     expected = object()
     calls = []
 
-    def build(df, *, exclude_columns=None, approximate_distinct=True):
-        calls.append((df, exclude_columns, approximate_distinct))
+    def build(df, *, exclude_columns=None):
+        calls.append((df, exclude_columns))
         return expected
 
     monkeypatch.setattr(module, "build_profile_dataframe", build)
 
-    assert module.profile_dataframe(source, exclude_columns={"audit"}, approximate_distinct=False) is expected
-    assert calls == [(source, {"audit"}, False)]
+    assert module.profile_dataframe(source, exclude_columns={"audit"}) is expected
+    assert calls == [(source, {"audit"})]
 
 FREQUENCY_COLUMNS = [
     "COLUMN_NAME",
@@ -76,7 +76,7 @@ def test_profile_dataframe_output_order_counts_exclusions_and_numeric_stats(spar
         ["id", "amount", "category", "_pipeline_run_id"],
     )
 
-    profile = profile_dataframe(df, exclude_columns=["id"], approximate_distinct=False)
+    profile = profile_dataframe(df, exclude_columns=["id"])
     rows = _profile_rows(profile)
 
     assert profile.columns == PROFILE_COLUMNS
@@ -108,14 +108,41 @@ def test_profile_dataframe_output_order_counts_exclusions_and_numeric_stats(spar
     assert rows["category"]["MAX_VALUE"] == "b"
 
 
-def test_profile_dataframe_approximate_default_and_public_signature():
+def test_profile_dataframe_exact_distinct_counts_at_scale_with_duplicates_and_nulls(spark_session):
+    """Verify exact cardinality, percentage bounds, duplicates, and null exclusion."""
+    from pyspark.sql import functions as F
+
+    df = spark_session.range(100_000).select(
+        F.col("id").alias("unique_value"),
+        (F.col("id") % 10).alias("duplicate_value"),
+        F.when((F.col("id") % 2) == 0, F.lit(None)).otherwise(F.lit("present")).alias("nullable_value"),
+    )
+
+    rows = _profile_rows(profile_dataframe(df))
+
+    assert rows["unique_value"]["DISTINCT_COUNT"] == 100_000
+    assert rows["unique_value"]["DISTINCT_PERCENT"] == 100.0
+    assert rows["duplicate_value"]["DISTINCT_COUNT"] == 10
+    assert rows["duplicate_value"]["DISTINCT_PERCENT"] == 0.01
+    assert rows["nullable_value"]["NON_NULL_COUNT"] == 50_000
+    assert rows["nullable_value"]["NULL_COUNT"] == 50_000
+    assert rows["nullable_value"]["DISTINCT_COUNT"] == 1
+    assert rows["nullable_value"]["DISTINCT_PERCENT"] == 0.001
+    assert all(row["DISTINCT_COUNT"] <= row["ROW_COUNT"] for row in rows.values())
+    assert all(row["DISTINCT_PERCENT"] <= 100.0 for row in rows.values())
+
+
+def test_profile_dataframe_exact_only_public_signature():
     """Verify root imports and breaking cleanup of the public signature."""
     from fabricops_kit import profile_dataframe as root_profile_dataframe
     from fabricops_kit import profile_frequency_distribution as root_frequency
 
     assert root_profile_dataframe is profile_dataframe
     assert root_frequency is profile_frequency_distribution
-    assert str(inspect.signature(profile_dataframe)) == "(df, *, exclude_columns=None, approximate_distinct: 'bool' = True)"
+    assert str(inspect.signature(profile_dataframe)) == "(df, *, exclude_columns=None)"
+    removed_parameter = "approximate_" + "distinct"
+    with pytest.raises(TypeError, match=removed_parameter):
+        profile_dataframe(object(), **{removed_parameter: True})
     assert str(inspect.signature(profile_frequency_distribution)) == "(df, *, columns=None, top_n: 'int | None' = None)"
 
 
@@ -152,7 +179,7 @@ def test_profile_dataframe_uses_consolidated_aggregation_not_dataframe_count(spa
         raise AssertionError("DataFrame.count should not be called by profile_dataframe")
 
     monkeypatch.setattr(df, "count", forbidden_count)
-    assert profile_dataframe(df, approximate_distinct=False).count() == 2
+    assert profile_dataframe(df).count() == 2
 
 
 def test_profile_frequency_distribution_requested_columns_top_n_ranking_and_percentages(spark_session):

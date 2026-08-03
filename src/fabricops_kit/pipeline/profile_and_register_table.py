@@ -18,12 +18,15 @@ from fabricops_kit.io.shared import (
     resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
-from fabricops_kit.pipeline.shared import build_frequency_distribution_dataframe, build_profile_dataframe
+from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
+from fabricops_kit.pipeline.shared import build_profile_dataframe
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
+PROFILED_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
+PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
 CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
 
 
@@ -138,49 +141,6 @@ def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]
     ]
 
 
-def _skipped_frequency_json_dataframe(profile_df, *, scalar_columns: Sequence[str], threshold_percent: float | None):
-    """Return automatic frequency skip JSON for high-cardinality or all-null columns."""
-    from pyspark.sql import functions as F
-
-    non_null_count = F.col("NON_NULL_COUNT").cast("double")
-    distinct_count = F.col("DISTINCT_COUNT").cast("double")
-    raw_cardinality_percent = (distinct_count / non_null_count) * 100
-    cardinality_percent = F.when(non_null_count == 0, F.lit(None).cast("double")).otherwise(
-        F.round(raw_cardinality_percent, 3)
-    )
-    threshold = F.lit(None if threshold_percent is None else float(threshold_percent)).cast("double")
-    no_non_null = F.col("NON_NULL_COUNT").cast("long") == F.lit(0)
-    high_cardinality = (F.lit(threshold_percent is not None)) & (raw_cardinality_percent > threshold)
-    reason = F.when(no_non_null, F.lit("no_non_null_values")).otherwise(F.lit("high_cardinality"))
-    message = F.when(
-        no_non_null,
-        F.lit("Frequency profiling skipped because the column contains no non-null values."),
-    ).otherwise(
-        F.concat(
-            F.lit("Frequency profiling skipped because distinct percentage exceeded "),
-            F.regexp_replace(F.format_number(threshold, 3), r"\.?0+$", ""),
-            F.lit("%."),
-        )
-    )
-    return (
-        profile_df.where(F.col("COLUMN_NAME").isin(list(scalar_columns)))
-        .where(no_non_null | high_cardinality)
-        .select(
-            F.col("COLUMN_NAME"),
-            F.to_json(
-                F.struct(
-                    F.lit("skipped").alias("status"),
-                    reason.alias("reason"),
-                    cardinality_percent.alias("distinct_percent"),
-                    threshold.alias("threshold_percent"),
-                    message.alias("message"),
-                ),
-                options={"ignoreNullFields": "false"},
-            ).alias("frequency_json"),
-        )
-    )
-
-
 def _automatic_frequency_columns(
     profile_df, *, scalar_columns: Sequence[str], threshold_percent: float | None
 ) -> list[str]:
@@ -198,83 +158,90 @@ def _automatic_frequency_columns(
     return [row.COLUMN_NAME for row in eligible.select("COLUMN_NAME").collect()]
 
 
-def _frequency_json_dataframe(
-    source_df,
-    frequency_profile_df,
-    profile_df,
-    frequency_columns: Sequence[str] | None,
-    frequency_top_n: int | None,
-    frequency_max_distinct_percent: float | None,
+def _selected_frequency_columns(
+    source_df, profile_df, frequency_columns: Sequence[str] | None, threshold_percent: float | None
+) -> list[str]:
+    """Return explicitly requested or automatically eligible frequency columns."""
+    if frequency_columns is not None:
+        return list(frequency_columns)
+    profiled_columns = [row.COLUMN_NAME for row in profile_df.select("COLUMN_NAME").collect()]
+    scalar_columns = _scalar_frequency_columns(source_df, profiled_columns)
+    return _automatic_frequency_columns(
+        profile_df, scalar_columns=scalar_columns, threshold_percent=threshold_percent
+    )
+
+
+def _frequency_metadata_dataframe(
+    frequency_df, *, profiled_df, config: Any, env: str, runtime_context: dict[str, Any]
 ):
-    """Return per-column deterministic frequency JSON evidence."""
+    """Map authoritative flattened frequency output to its canonical child schema."""
     from pyspark.sql import functions as F
 
-    if frequency_columns is not None and len(frequency_columns) == 0:
-        return None
+    identities = profiled_df.select(
+        F.col("column_name").alias("_column_name"),
+        F.col("data_type").alias("_data_type"),
+        "metadata_column_key",
+        "profiled_at",
+    )
+    audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
+    joined = frequency_df.join(
+        identities,
+        (frequency_df.COLUMN_NAME == identities._column_name)
+        & (frequency_df.DATA_TYPE == identities._data_type),
+        "inner",
+    )
+    return joined.select(
+        F.col("metadata_column_key").cast("string"),
+        F.col("VALUE").cast("string").alias("value"),
+        F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
+        F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
+        F.col("FREQUENCY_RANK").cast("integer").alias("frequency_rank"),
+        F.col("PROFILED_ROW_COUNT").cast("long").alias("profiled_row_count"),
+        F.col("PROFILED_NON_NULL_COUNT").cast("long").alias("profiled_non_null_count"),
+        F.col("profiled_at").cast("timestamp"),
+        *[column.alias(name) for name, column in audit_columns.items()],
+    ).select(*PROFILED_FREQUENCY_COLUMNS)
 
-    explicit_columns = None if frequency_columns is None else list(frequency_columns)
-    if explicit_columns is None:
-        profiled_columns = [row.COLUMN_NAME for row in profile_df.select("COLUMN_NAME").collect()]
-        scalar_columns = _scalar_frequency_columns(source_df, profiled_columns)
-        selected_columns = _automatic_frequency_columns(
-            profile_df,
-            scalar_columns=scalar_columns,
-            threshold_percent=frequency_max_distinct_percent,
-        )
-        skipped_df = _skipped_frequency_json_dataframe(
-            profile_df,
-            scalar_columns=scalar_columns,
-            threshold_percent=frequency_max_distinct_percent,
-        )
-    else:
-        selected_columns = explicit_columns
-        skipped_df = None
 
-    frequency_json_df = None
-    if selected_columns:
-        source_row_count_df = profile_df.select(
-            F.first("ROW_COUNT", ignorenulls=True).cast("long").alias("SOURCE_ROW_COUNT")
-        )
-        frequency_source_df, frequency_scope = _validate_frequency_profile_dataframe(
-            source_df,
-            frequency_profile_df,
-            selected_columns,
-        )
-        frequency_df = build_frequency_distribution_dataframe(
-            frequency_source_df, columns=selected_columns, top_n=frequency_top_n
-        ).crossJoin(source_row_count_df)
-        value_struct = F.struct(
-            F.col("FREQUENCY_RANK").cast("int").alias("rank"),
-            F.col("VALUE").alias("value"),
-            F.col("FREQUENCY_COUNT").cast("long").alias("count"),
-            F.col("FREQUENCY_PERCENT").cast("double").alias("percent"),
-        )
-        ordered = F.sort_array(F.collect_list(value_struct))
-        values = F.transform(
-            ordered,
-            lambda x: F.struct(
-                x["value"].alias("value"),
-                x["count"].alias("count"),
-                x["percent"].alias("percent"),
-                x["rank"].alias("rank"),
-            ),
-        )
-        frequency_json_df = frequency_df.groupBy("COLUMN_NAME").agg(
-            F.to_json(
-                F.struct(
-                    F.first("SOURCE_ROW_COUNT", ignorenulls=True).cast("long").alias("source_row_count"),
-                    F.first("PROFILED_ROW_COUNT", ignorenulls=True).cast("long").alias("profiled_row_count"),
-                    F.first("PROFILED_NON_NULL_COUNT", ignorenulls=True).cast("long").alias("profiled_non_null_count"),
-                    F.lit(frequency_scope).cast("string").alias("frequency_scope"),
-                    values.alias("values"),
-                ),
-                options={"ignoreNullFields": "false"},
-            ).alias("frequency_json")
-        )
+def _replace_frequency_rows(
+    *, frequency_df: Any | None, profiled_df: Any, config: Any, env: str, spark_session: Any
+) -> None:
+    """Replace child rows only for the exact parent column snapshot identities."""
+    try:
+        from delta.tables import DeltaTable
+    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
+        raise RuntimeError(
+            "Delta Lake support is required for replacement METADATA_DATA_PROFILED_FREQUENCY writes."
+        ) from exc
 
-    if skipped_df is not None:
-        frequency_json_df = skipped_df if frequency_json_df is None else frequency_json_df.unionByName(skipped_df)
-    return frequency_json_df
+    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+        "metadata",
+        PROFILED_FREQUENCY_TABLE,
+        configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
+    )
+    snapshots = profiled_df.select("metadata_column_key", "profiled_at").dropDuplicates()
+    (
+        DeltaTable.forPath(spark_session, path)
+        .alias("target")
+        .merge(
+            snapshots.alias("source"),
+            "target.metadata_column_key = source.metadata_column_key "
+            "AND target.profiled_at = source.profiled_at",
+        )
+        .whenMatchedDelete()
+        .execute()
+    )
+    if frequency_df is None:
+        return
+    write_lakehouse_table_core(
+        frequency_df,
+        PROFILED_FREQUENCY_TABLE,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
+        mode="append",
+    )
 
 
 def _audit_literal_columns(*, config: Any, env: str, runtime_context: dict[str, Any]) -> dict[str, Any]:
@@ -306,10 +273,6 @@ def _canonical_profiled_dataframe(
     layer: str,
     schema_name: str | None,
     table_name: str,
-    frequency_columns: Sequence[str] | None,
-    frequency_top_n: int | None,
-    frequency_max_distinct_percent: float | None,
-    frequency_profile_df: Any,
 ):
     """Return profile rows mapped to the detailed profiled schema."""
     from pyspark.sql import functions as F
@@ -318,14 +281,6 @@ def _canonical_profiled_dataframe(
     metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
     column_key_udf = F.udf(
         lambda column_name: _build_metadata_column_key(metadata_table_key, column_name), T.StringType()
-    )
-    frequency_df = _frequency_json_dataframe(
-        source_df,
-        frequency_profile_df,
-        profile_df,
-        frequency_columns,
-        frequency_top_n,
-        frequency_max_distinct_percent,
     )
     schema_fingerprint = _schema_fingerprint(source_df)
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
@@ -347,12 +302,6 @@ def _canonical_profiled_dataframe(
         F.col("PERCENTILE_75").cast("double").alias("percentile_75_value"),
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
-    if frequency_df is not None:
-        profiled_df = profiled_df.join(frequency_df, profiled_df.column_name == frequency_df.COLUMN_NAME, "left").drop(
-            frequency_df.COLUMN_NAME
-        )
-    else:
-        profiled_df = profiled_df.withColumn("frequency_json", F.lit(None).cast("string"))
 
     return profiled_df.select(
         F.lit(metadata_table_key).cast("string").alias("metadata_table_key"),
@@ -377,7 +326,6 @@ def _canonical_profiled_dataframe(
         F.col("median_value"),
         F.col("percentile_75_value"),
         F.col("max_value"),
-        F.col("frequency_json").cast("string"),
         F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
         audit_columns["_committed_at"].alias("profiled_at"),
         audit_columns["_committed_by"].alias("_committed_by"),
@@ -569,22 +517,22 @@ def profile_and_register_table(
         Physical schema name, or ``None`` to use the configured store default.
         Classic or schema-disabled Lakehouses preserve ``None``.
     frequency_columns : sequence of str, optional
-        Selected columns that should receive embedded frequency evidence. ``None``
-        profiles all eligible non-technical scalar columns. An empty sequence
-        skips frequency profiling entirely and persists null ``frequency_json``
-        for every statistical profile row. Requested columns should also be
-        eligible for the main statistical profile.
+        Selected columns whose flattened frequency rows should be persisted.
+        ``None`` profiles eligible non-technical scalar columns. An empty
+        sequence skips frequency profiling entirely and writes no child rows.
+        Requested columns should also be eligible for the main statistical
+        profile.
     frequency_top_n : int or None, optional
         Optional number of ranked values to retain per selected frequency
         column. ``None`` retains every distinct value.
     frequency_max_distinct_percent : float or None, default=80.0
         Automatic frequency-profiling safeguard used only when
         ``frequency_columns=None``. Columns whose distinct-per-non-null
-        percentage is greater than this threshold receive structured skipped
-        JSON instead of generated frequencies. Values must be between ``0.0``
-        and ``100.0`` when supplied. ``None`` disables the high-cardinality
-        threshold; all-null automatic columns still receive structured skipped
-        JSON. Explicit ``frequency_columns`` selections override this threshold.
+        percentage is greater than this threshold are skipped and produce no
+        child frequency rows. Values must be between ``0.0`` and ``100.0``
+        when supplied. ``None`` disables the high-cardinality threshold;
+        all-null automatic columns remain skipped. Explicit
+        ``frequency_columns`` selections override this threshold.
     frequency_profile_df : pyspark.sql.DataFrame, optional
         Optional caller-provided Spark DataFrame to use only for frequency
         distribution calculation. ``None`` preserves full-source frequency
@@ -601,17 +549,17 @@ def profile_and_register_table(
         A Spark DataFrame containing one canonical profiling record for each
         eligible column in the supplied DataFrame. This is the same DataFrame
         appended to ``METADATA_DATA_PROFILED`` and includes physical asset
-        identity, statistical metrics, frequency JSON where enabled, schema
-        identity, and runtime audit fields. The function
-        does not return the generated catalogue rows or lineage event.
+        identity, compact statistical metrics, schema identity, and runtime
+        audit fields. Flattened child frequency rows, generated catalogue rows,
+        and the lineage event are not returned.
 
     Raises
     ------
     ValueError
         If the role, target, configured store, schema, or table identity is invalid.
     RuntimeError
-        If lineage registration fails after profile and catalogue registration
-        succeed.
+        If Delta replacement support is unavailable, or lineage registration
+        fails after profile and catalogue registration succeed.
 
     Notes
     -----
@@ -622,20 +570,22 @@ def profile_and_register_table(
     2. Use that statistical profile to choose automatic frequency columns
        when ``frequency_columns=None``: eligible scalar columns at or below
        ``frequency_max_distinct_percent`` are profiled, high-cardinality
-       columns receive structured skipped JSON, and all-null columns receive
-       structured no-non-null-values skipped JSON. Explicit non-empty
+       columns and all-null columns produce no child frequency rows. Explicit non-empty
        ``frequency_columns`` bypass this threshold, while
        ``frequency_columns=[]`` skips frequency profiling entirely.
-    3. Convert the multiple frequency rows for each column into one
-       deterministic JSON document.
-    4. Left-join that JSON to the statistical profile on
-       ``profile_dataframe.COLUMN_NAME = profile_frequency_distribution.COLUMN_NAME``.
-    5. Save a new profiling snapshot to ``METADATA_DATA_PROFILED``.
-    6. Create stable table and column IDs, then update matching catalogue
+    3. Call ``profile_frequency_distribution`` to produce flattened frequency
+       rows for the selected columns.
+    4. Resolve each frequency row to its parent ``metadata_column_key`` and
+       prepare it with the same ``profiled_at`` snapshot timestamp.
+    5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
+    6. Replace rows for the exact ``metadata_column_key + profiled_at`` child
+       snapshot and write the normalized rows to
+       ``METADATA_DATA_PROFILED_FREQUENCY``.
+    7. Create stable table and column IDs, then update matching catalogue
        records or add new records in ``METADATA_DATA_CATALOGUE``.
-    7. Record whether the table was used as an input or produced as an output
+    8. Record whether the table was used as an input or produced as an output
        in ``METADATA_DATA_LINEAGE``.
-    8. Return the detailed Spark DataFrame written to
+    9. Return only the compact parent Spark DataFrame written to
        ``METADATA_DATA_PROFILED``.
 
     User-facing workflow:
@@ -644,8 +594,8 @@ def profile_and_register_table(
         ↓
     Calculate column statistics and value frequencies
         ↓
-    Save a new profiling snapshot
-    ``METADATA_DATA_PROFILED``
+    Save compact summary and flattened frequency snapshots
+    ``METADATA_DATA_PROFILED`` + ``METADATA_DATA_PROFILED_FREQUENCY``
         ↓
     Create stable table and column IDs
         ↓
@@ -658,57 +608,39 @@ def profile_and_register_table(
         ↓
     Return the profiling result to the notebook
 
-    Frequency join behavior:
+    Frequency snapshot behavior:
 
-    - The statistical profile is the left side of the join, so every eligible
-      statistical profile row remains in the returned result.
+    - Every eligible statistical profile row remains in the compact parent
+      result whether or not that column produces child frequency rows.
     - ``frequency_columns=None`` automatically profiles eligible non-technical
       scalar columns whose distinct-per-non-null percentage is less than or
       equal to ``frequency_max_distinct_percent``. The default threshold is
       ``80.0`` percent.
-    - Automatically selected columns above the threshold receive deterministic
-      structured ``frequency_json`` with ``status="skipped"`` and
-      ``reason="high_cardinality"``. All-null automatic columns receive
-      ``reason="no_non_null_values"``.
+    - Automatically selected columns above the threshold and all-null automatic
+      columns produce no child frequency rows. No fake skipped values are stored.
     - ``frequency_max_distinct_percent=None`` disables the high-cardinality
       threshold for automatic columns.
     - Only columns listed in a non-empty ``frequency_columns`` sequence receive
       generated frequency evidence; explicit selections override the automatic
-      threshold. Other profiled columns receive null.
-    - ``frequency_columns=[]`` skips frequency profiling entirely and persists
-      null ``frequency_json`` for every row.
+      threshold. Other profiled columns produce no child rows.
+    - ``frequency_columns=[]`` skips frequency profiling entirely and writes no
+      child rows for the current snapshot.
     - ``frequency_profile_df=None`` profiles frequencies against the complete
       supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
       frequency counts, percentages, ranks, profiled row counts, and profiled
-      non-null counts describe that caller-provided DataFrame, while
-      ``source_row_count`` records the complete source DataFrame row count.
-    - ``frequency_top_n`` restricts embedded values only when supplied. It
+      non-null counts describe that caller-provided DataFrame. The compact
+      parent statistics still describe the complete source DataFrame.
+    - ``frequency_top_n`` restricts persisted child rows only when supplied. It
       limits output rows after grouped counts are calculated and does not
       reduce grouping cost.
     - Frequency values are ordered deterministically by rank.
-
-    Example ``frequency_json`` structure:
-
-    .. code-block:: json
-
-       {
-         "source_row_count": 1000,
-         "profiled_row_count": 1000,
-         "profiled_non_null_count": 995,
-         "frequency_scope": "full_source",
-         "values": [
-           {
-             "value": "Active",
-             "count": 700,
-             "percent": 70.0,
-             "rank": 1
-           }
-         ]
-       }
+    - Historical parent and child snapshots join on both
+      ``metadata_column_key`` and ``profiled_at``. Rows are replaced only for
+      that exact snapshot identity, so earlier snapshots remain intact.
 
     ``METADATA_DATA_PROFILED`` receives one appended row per eligible input
     DataFrame column. Repeated executions create additional profiling
-    snapshots, and the returned DataFrame is the same detailed DataFrame
+    snapshots, and the returned DataFrame is the same compact DataFrame
     appended to this table. Its logical field groups are:
 
     - Identity fields: ``metadata_table_key``, ``metadata_column_key``,
@@ -719,15 +651,15 @@ def profile_and_register_table(
       ``mean_value``, ``stddev_value``, ``min_value``,
       ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
       ``max_value``.
-    - Frequency and runtime fields: ``frequency_json``, ``schema_fingerprint``,
-      ``profiled_at``.
+    - Runtime fields: ``schema_fingerprint``, ``profiled_at``.
     - Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
       ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
       ``_metadata_lakehouse_name``, ``_activity_id``.
 
-    ``METADATA_DATA_PROFILED`` saves a new profiling snapshot. One row is
-    saved for each eligible DataFrame column. Earlier profiling snapshots are
-    retained.
+    ``METADATA_DATA_PROFILED`` saves a new compact profiling snapshot. One row
+    is saved for each eligible DataFrame column. ``METADATA_DATA_PROFILED_FREQUENCY``
+    saves one flattened row per returned distinct value. Earlier parent and
+    child snapshots are retained and join on ``metadata_column_key + profiled_at``.
 
     ``METADATA_DATA_CATALOGUE`` stores table and column records, not profiling
     measurements. FabricOps creates a stable ID for the table and each column,
@@ -774,15 +706,16 @@ def profile_and_register_table(
 
     What FabricOps saves:
 
-    - ``METADATA_DATA_PROFILED``: a new profiling snapshot.
+    - ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
+    - ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
+      ``metadata_column_key`` and ``profiled_at``.
     - ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
       records.
     - ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
     Statistical profiling records describe the complete DataFrame supplied
     during the notebook activity. If ``frequency_profile_df`` is supplied,
-    only generated frequency evidence uses that DataFrame and its JSON records
-    ``frequency_scope="caller_provided"``. The function does not claim or
+    only generated frequency evidence uses that DataFrame. The function does not claim or
     verify that the caller-provided DataFrame is sampled, random,
     representative, persisted, or governed; those responsibilities stay with
     the upstream ingestion or notebook workflow.
@@ -797,6 +730,11 @@ def profile_and_register_table(
     a ``RuntimeError`` explaining that profile and catalogue registration
     succeeded but lineage registration failed. Guardrail execution is a
     separate workflow.
+
+    Removing ``frequency_json`` from ``METADATA_DATA_PROFILED`` and adding the
+    normalized child table is a breaking physical-schema change. Existing
+    metadata tables may need recreation through the established setup flow;
+    no compatibility or automatic migration layer is provided.
 
     """
     (
@@ -828,11 +766,25 @@ def profile_and_register_table(
         layer=normalized_target,
         schema_name=normalized_schema,
         table_name=normalized_table,
-        frequency_columns=selected_frequency_columns,
-        frequency_top_n=frequency_top_n,
-        frequency_max_distinct_percent=frequency_max_distinct_percent,
-        frequency_profile_df=frequency_profile_df,
     )
+    selected_columns = _selected_frequency_columns(
+        df, profile_df, selected_frequency_columns, frequency_max_distinct_percent
+    )
+    frequency_metadata_df = None
+    if selected_columns:
+        frequency_source_df, _frequency_scope = _validate_frequency_profile_dataframe(
+            df, frequency_profile_df, selected_columns
+        )
+        frequency_df = profile_frequency_distribution(
+            frequency_source_df, columns=selected_columns, top_n=frequency_top_n
+        )
+        frequency_metadata_df = _frequency_metadata_dataframe(
+            frequency_df,
+            profiled_df=profiled_df,
+            config=config,
+            env=env,
+            runtime_context=context,
+        )
     write_lakehouse_table_core(
         profiled_df,
         PROFILED_TABLE,
@@ -840,6 +792,13 @@ def profile_and_register_table(
         schema=configured_lakehouse_schema(config, env, "metadata"),
         context={"config": config, "env": env},
         mode="append",
+    )
+    _replace_frequency_rows(
+        frequency_df=frequency_metadata_df,
+        profiled_df=profiled_df,
+        config=config,
+        env=env,
+        spark_session=df.sparkSession,
     )
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)

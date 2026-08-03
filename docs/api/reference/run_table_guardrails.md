@@ -104,7 +104,7 @@ Raises ValueError when required runtime context such as spark_session or run_id 
 
 ## See also
 
-- [Pipeline Execution](../../guided-demo/run-pipeline.md)
+- [Pipeline Execution](../../guided-demo/02-run-pipeline.md)
 
 
 <details>

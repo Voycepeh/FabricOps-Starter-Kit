@@ -26,7 +26,11 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)**
 
-    Detailed per-column profiling evidence captured from a profiled dataset snapshot.
+    Compact per-column summary statistics captured from a profiled dataset snapshot.
+
+-   **[METADATA_DATA_PROFILED_FREQUENCY](metadata/metadata_data_profiled_frequency.md)**
+
+    Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.
 
 -   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
 

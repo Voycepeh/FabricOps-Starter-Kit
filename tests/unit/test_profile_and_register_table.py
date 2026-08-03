@@ -5,9 +5,11 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
+from types import ModuleType
 
 import pytest
 
@@ -18,12 +20,15 @@ from fabricops_kit.config.metadata_keys import (
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.pipeline import profile_and_register_table as public_profile_and_register_table
+from fabricops_kit.pipeline import profile_frequency_distribution
 from fabricops_kit.pipeline.profile_and_register_table import (
     CATALOGUE_COLUMNS,
     CATALOGUE_TABLE,
     PROFILED_COLUMNS,
+    PROFILED_FREQUENCY_TABLE,
     PROFILED_TABLE,
     _catalogue_dataframe_from_profiled,
+    _replace_frequency_rows,
     _resolve_physical_identity,
     _schema_fingerprint,
     profile_and_register_table,
@@ -197,7 +202,21 @@ def registered(monkeypatch):
             }
         )
 
+    def replace_frequency(*, frequency_df, profiled_df, config, env, spark_session):
+        writes.append(
+            {
+                "df": frequency_df,
+                "profiled_df": profiled_df,
+                "table_name": "METADATA_DATA_PROFILED_FREQUENCY",
+                "target": "metadata",
+                "schema": None,
+                "context": {"config": config, "env": env},
+                "mode": "replace",
+            }
+        )
+
     monkeypatch.setattr(module, "write_lakehouse_table_core", write)
+    monkeypatch.setattr(module, "_replace_frequency_rows", replace_frequency)
     monkeypatch.setattr(module, "_upsert_catalogue_identities", upsert_catalogue)
     monkeypatch.setattr(module, "_upsert_lineage_event", upsert_lineage)
     return writes
@@ -220,15 +239,19 @@ def test_old_profile_registration_api_is_removed():
 
 
 def test_profile_and_register_table_imports_shared_profiler_directly():
-    """Verify registration has no dependency on the public profiling wrapper."""
+    """Verify registration uses the exact-only shared statistical profiler."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
 
     assert module.build_profile_dataframe is not None
     assert not hasattr(module, "profile_dataframe")
+    assert str(inspect.signature(module.build_profile_dataframe)) == "(df, *, exclude_columns=None)"
+    shared_source = inspect.getsource(module.build_profile_dataframe)
+    assert "count_distinct" in shared_source
+    assert "approx" + "_count_distinct" not in shared_source
 
 
-def test_profile_registration_call_flow_has_no_public_profiling_edge():
-    """Verify the committed architecture contract records the shared call seam."""
+def test_profile_registration_call_flow_records_authoritative_frequency_callable():
+    """Verify registration directly reuses the required public frequency implementation."""
     payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
     direct_callees = {
@@ -239,20 +262,10 @@ def test_profile_registration_call_flow_has_no_public_profiling_edge():
     assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
     assert "Type 1" not in direct_callees["fabricops_kit.pipeline.shared.build_profile_dataframe"]["violation_types"]
 
-    frequency_json = next(
-        row
-        for row in flow["flow"]
-        if row["qualified_name"] == "fabricops_kit.pipeline.profile_and_register_table._frequency_json_dataframe"
-    )
-    frequency_callees = {
-        row["qualified_name"]
-        for row in flow["flow"]
-        if row["parent_qualified_name"] == frequency_json["qualified_name"]
-    }
-    assert (
-        "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution" not in frequency_callees
-    )
-    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" in frequency_callees
+    frequency_callable = "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution"
+    assert frequency_callable in direct_callees
+    assert "Type 1" in direct_callees[frequency_callable]["violation_types"]
+    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" not in direct_callees
 
 
 def test_profile_and_register_table_signature_requires_profile_role():
@@ -415,405 +428,225 @@ def test_profile_and_register_table_rejects_invalid_frequency_threshold(spark_se
         )
 
 
-def test_profile_and_register_table_skips_frequency_for_empty_columns(spark_session, monkeypatch, registered):
-    """Verify no frequency profiling occurs for an explicit empty frequency column list."""
+def test_profile_and_register_table_empty_frequency_selection_writes_compact_parent_only(
+    spark_session, monkeypatch, registered
+):
+    """Verify an empty selection emits no child rows and retains compact parents."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-
-    calls = {"profile": 0, "frequency": 0, "df": None}
-
-    def profile(df):
-        calls["profile"] += 1
-        calls["df"] = df
-        return _profile_df(spark_session)
-
-    def frequency(*_args, **_kwargs):
-        calls["frequency"] += 1
-        raise AssertionError("frequency profiling should not run")
-
-    source = _source_df(spark_session)
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
+    monkeypatch.setattr(
+        module,
+        "profile_frequency_distribution",
+        lambda *_args, **_kwargs: pytest.fail("empty selection must not invoke frequency profiling"),
+    )
 
     result = profile_and_register_table(
-        source,
+        _source_df(spark_session),
         profile_role="source",
         target="raw",
         table_name="customers",
         frequency_columns=[],
     )
 
-    assert calls == {"profile": 1, "frequency": 0, "df": source}
-    assert "profile_role" not in result.columns
-    assert "profiled_at" in result.columns
-    assert result.where("frequency_json is not null").count() == 0
-    assert result.count() == 3
+    assert "frequency_json" not in result.columns
+    frequency_write = next(write for write in registered if write["table_name"] == "METADATA_DATA_PROFILED_FREQUENCY")
+    assert frequency_write["df"] is None
+    assert frequency_write["profiled_df"] is result
 
 
-def test_profile_and_register_table_default_and_explicit_frequency_json_integration(spark_session, registered):
-    """Verify default threshold, explicit columns, disabled threshold, and empty skip semantics."""
-    source = spark_session.createDataFrame(
-        [(i, "A" if i % 2 == 0 else "B", "US" if i % 3 == 0 else "GB") for i in range(25)],
-        "id long, customer_type string, country string",
-    )
-
-    default_result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-    )
-    default_rows = {row.column_name: row.asDict() for row in default_result.collect()}
-    assert set(default_rows) == {"id", "customer_type", "country"}
-    id_skip = json.loads(default_rows["id"]["frequency_json"])
-    assert id_skip == {
-        "status": "skipped",
-        "reason": "high_cardinality",
-        "distinct_percent": 100.0,
-        "threshold_percent": 80.0,
-        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
-    }
-    assert "values" in json.loads(default_rows["customer_type"]["frequency_json"])
-    assert "values" in json.loads(default_rows["country"]["frequency_json"])
-
-    selected_result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-        frequency_columns=["id"],
-    )
-    selected_rows = {row.column_name: row.asDict() for row in selected_result.collect()}
-    assert selected_rows["customer_type"]["frequency_json"] is None
-    assert selected_rows["country"]["frequency_json"] is None
-    selected_frequency = json.loads(selected_rows["id"]["frequency_json"])
-    assert len(selected_frequency["values"]) == 25
-    assert selected_frequency["source_row_count"] == 25
-    assert selected_frequency["profiled_row_count"] == 25
-    assert selected_frequency["profiled_non_null_count"] == 25
-    assert selected_frequency["frequency_scope"] == "full_source"
-
-    unbounded_result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-        frequency_max_distinct_percent=None,
-    )
-    unbounded_rows = {row.column_name: row.asDict() for row in unbounded_result.collect()}
-    assert len(json.loads(unbounded_rows["id"]["frequency_json"])["values"]) == 25
-
-    skipped_result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-        frequency_columns=[],
-    )
-    assert skipped_result.where("frequency_json is not null").count() == 0
-    assert skipped_result.count() == 3
-
-
-def test_profile_and_register_table_threshold_boundary_and_all_null_json(spark_session, registered):
-    """Verify automatic 80% boundary, high-cardinality skip JSON, and all-null skip JSON."""
-    source = spark_session.createDataFrame(
-        [(i % 8, i % 9, None) for i in range(10)],
-        "at_threshold int, above_threshold int, all_null string",
-    )
-
-    result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="thresholds",
-    )
-
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    assert "values" in json.loads(rows["at_threshold"]["frequency_json"])
-    assert json.loads(rows["above_threshold"]["frequency_json"]) == {
-        "status": "skipped",
-        "reason": "high_cardinality",
-        "distinct_percent": 90.0,
-        "threshold_percent": 80.0,
-        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
-    }
-    assert json.loads(rows["all_null"]["frequency_json"]) == {
-        "status": "skipped",
-        "reason": "no_non_null_values",
-        "distinct_percent": None,
-        "threshold_percent": 80.0,
-        "message": "Frequency profiling skipped because the column contains no non-null values.",
-    }
-
-
-def test_profile_and_register_table_reuses_profile_for_automatic_frequency_selection(
+def test_profile_and_register_table_writes_normalized_frequency_rows(
     spark_session, monkeypatch, registered
 ):
-    """Verify automatic selection uses one profile pass and one frequency call."""
+    """Verify normalized mapping, stable keys, timestamps, audit fields, and null values."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     source = _source_df(spark_session)
-    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None}
-
-    def profile(df):
-        calls["profile"] += 1
-        assert df is source
-        return _profile_df(spark_session)
+    calls = []
 
     def frequency(df, *, columns, top_n):
-        calls["frequency"] += 1
-        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n, "df_is_source": df is source}
-        quoted_columns = ", ".join(repr(column) for column in columns)
-        return _frequency_df(spark_session).where(f"COLUMN_NAME in ({quoted_columns})")
-
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
-    result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-    )
-
-    assert calls == {
-        "profile": 1,
-        "frequency": 1,
-        "frequency_kwargs": {"columns": ["customer_type"], "top_n": None, "df_is_source": True},
-    }
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
-    country_skip = json.loads(rows["country"]["frequency_json"])
-    assert country_skip == {
-        "status": "skipped",
-        "reason": "high_cardinality",
-        "distinct_percent": 100.0,
-        "threshold_percent": 80.0,
-        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
-    }
-
-
-def test_profile_and_register_table_uses_unrounded_cardinality_for_threshold(
-    spark_session, monkeypatch, registered
-):
-    """Verify a column just above 80% is skipped even when display percentage rounds to 80.0."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    source = spark_session.createDataFrame([(1, 1), (2, 2)], "at_threshold long, just_above long")
-    profile_schema = "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string"
-    profile_rows = spark_session.createDataFrame(
-        [
-            (
-                "at_threshold",
-                "bigint",
-                1_000_000,
-                1_000_000,
-                0,
-                0.0,
-                800_000,
-                80.0,
-                None,
-                None,
-                "1",
-                None,
-                None,
-                None,
-                "800000",
-            ),
-            (
-                "just_above",
-                "bigint",
-                1_000_000,
-                1_000_000,
-                0,
-                0.0,
-                800_004,
-                80.0004,
-                None,
-                None,
-                "1",
-                None,
-                None,
-                None,
-                "800004",
-            ),
-        ],
-        profile_schema,
-    )
-    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None}
-
-    def profile(df):
-        calls["profile"] += 1
-        return profile_rows
-
-    def frequency(df, *, columns, top_n):
-        calls["frequency"] += 1
-        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n}
-        return spark_session.createDataFrame(
-            [("at_threshold", "bigint", "1", 1, 100.0, 1, 1_000_000, 1_000_000)],
-            "COLUMN_NAME string, DATA_TYPE string, VALUE string, FREQUENCY_COUNT long, FREQUENCY_PERCENT double, FREQUENCY_RANK int, PROFILED_ROW_COUNT long, PROFILED_NON_NULL_COUNT long",
-        )
-
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
-    result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="threshold_rounding",
-    )
-
-    assert calls == {"profile": 1, "frequency": 1, "frequency_kwargs": {"columns": ["at_threshold"], "top_n": None}}
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    assert "values" in json.loads(rows["at_threshold"]["frequency_json"])
-    assert json.loads(rows["just_above"]["frequency_json"]) == {
-        "status": "skipped",
-        "reason": "high_cardinality",
-        "distinct_percent": 80.0,
-        "threshold_percent": 80.0,
-        "message": "Frequency profiling skipped because distinct percentage exceeded 80%.",
-    }
-
-
-def test_profile_and_register_table_builds_frequency_json_and_writes_profiled_and_catalogue(
-    spark_session, monkeypatch, registered
-):
-    """Verify output contract, frequency JSON, deterministic keys, and writer usage."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-
-    calls = {"profile": 0, "frequency": 0, "frequency_kwargs": None, "sample": 0}
-    source = _source_df(spark_session)
-    original_sample = getattr(source, "sample")
-
-    def sample_tracker(*args, **kwargs):
-        calls["sample"] += 1
-        return original_sample(*args, **kwargs)
-
-    source.sample = sample_tracker
-
-    def profile(df):
-        calls["profile"] += 1
-        assert df is source
-        assert profile.__module__ == __name__
-        return _profile_df(spark_session)
-
-    def frequency(df, *, columns, top_n):
-        calls["frequency"] += 1
-        calls["frequency_kwargs"] = {"columns": columns, "top_n": top_n, "df_is_source": df is source}
-        assert frequency.__module__ == __name__
+        calls.append((df, columns, top_n))
         return _frequency_df(spark_session)
 
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
     result = profile_and_register_table(
         source,
         profile_role="source",
         target="silver",
         schema="dbo",
         table_name="customers_clean",
-        frequency_columns=("customer_type", "country"),
+        frequency_columns=["customer_type", "country"],
         frequency_top_n=5,
     )
 
-    assert calls == {
-        "profile": 1,
-        "frequency": 1,
-        "frequency_kwargs": {"columns": ["customer_type", "country"], "top_n": 5, "df_is_source": True},
-        "sample": 0,
-    }
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"]
-    assert registered[0] == {
-        "df": result,
-        "table_name": PROFILED_TABLE,
-        "target": "metadata",
-        "schema": None,
-        "context": {"config": registered[0]["context"]["config"], "env": "dev"},
-        "mode": "append",
-    }
-    assert registered[1]["table_name"] == CATALOGUE_TABLE
-    assert registered[1]["mode"] == "upsert"
-    assert registered[1]["df"].columns == CATALOGUE_COLUMNS
-    assert registered[1]["df"].count() == 3
-    assert registered[2]["context"]["env"] == "dev"
-    lineage_schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
-    assert [(f.name, type(f.dataType).__name__, f.nullable) for f in registered[2]["df"].schema.fields] == [
-        (f.name, type(f.dataType).__name__, f.nullable) for f in lineage_schema.fields
-    ]
-    assert result.columns == PROFILED_COLUMNS
-    expected_schema = metadata_table_schema_registry()[PROFILED_TABLE]
-    assert [(f.name, type(f.dataType).__name__) for f in result.schema.fields] == [
-        (f.name, type(f.dataType).__name__) for f in expected_schema.fields
-    ]
-    assert "profile_role" not in result.columns
-    assert set(AUDIT_COLUMNS).issubset(result.columns)
-    assert [name for name, dtype in result.dtypes if dtype == "timestamp"] == ["profiled_at", "_committed_at"]
+    assert calls == [(source, ["customer_type", "country"], 5)]
+    assert "frequency_json" not in result.columns
+    frequency_write = next(write for write in registered if write["table_name"] == "METADATA_DATA_PROFILED_FREQUENCY")
+    child = frequency_write["df"]
+    expected_columns = metadata_table_schema_registry()["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames()
+    assert child.columns == expected_columns
+    assert "COLUMN_NAME" not in child.columns
+    assert "DATA_TYPE" not in child.columns
+    parent = {row.column_name: row.asDict() for row in result.collect()}
+    rows = {(row.metadata_column_key, row.value): row.asDict() for row in child.collect()}
+    country_key = parent["country"]["metadata_column_key"]
+    customer_key = parent["customer_type"]["metadata_column_key"]
+    assert rows[(customer_key, "A")]["frequency_count"] == 2
+    assert rows[(customer_key, "A")]["frequency_percent"] == 66.667
+    assert rows[(customer_key, "A")]["frequency_rank"] == 1
+    assert rows[(country_key, None)]["profiled_row_count"] == 3
+    assert rows[(country_key, None)]["profiled_non_null_count"] == 2
+    assert rows[(country_key, None)]["profiled_at"] == parent["country"]["profiled_at"]
+    assert set(AUDIT_COLUMNS).issubset(child.columns)
 
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    assert rows["id"]["frequency_json"] is None
-    customer_frequency = json.loads(rows["customer_type"]["frequency_json"])
-    country_frequency = json.loads(rows["country"]["frequency_json"])
-    assert [value["rank"] for value in customer_frequency["values"]] == [1, 2]
-    assert [value["value"] for value in customer_frequency["values"]] == ["A", "B"]
-    assert [value["value"] for value in country_frequency["values"]] == ["US", None]
-    assert "is_sampled" not in rows["country"]
 
-    expected_environment = "dev"
-    expected_store_type = "lakehouse"
-    expected_layer = "silver"
-    expected_schema = "dbo"
-    expected_table = "customers_clean"
-    expected_table_key = _metadata_table_key(
-        expected_store_type,
-        expected_layer,
-        expected_schema,
-        expected_table,
+def test_profile_and_register_table_automatic_skips_produce_no_fake_child_rows(
+    spark_session, monkeypatch, registered
+):
+    """Verify high-cardinality and all-null automatic columns remain parent-only."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    source = spark_session.createDataFrame(
+        [(1, "A", None), (2, "A", None), (3, "B", None)],
+        "identifier long, category string, empty string",
     )
-    assert {row["metadata_table_key"] for row in rows.values()} == {expected_table_key}
-    assert {
-        (
-            row["environment_name"],
-            row["store_type"],
-            row["layer"],
-            row["schema_name"],
-            row["table_name"],
-        )
-        for row in rows.values()
-    } == {(expected_environment, expected_store_type, expected_layer, expected_schema, expected_table)}
-    assert rows["country"]["metadata_column_key"] == _metadata_column_key(expected_table_key, "country")
-    assert rows["country"]["metadata_column_key"] != rows["customer_type"]["metadata_column_key"]
-    assert expected_table_key != _metadata_table_key(
-        expected_store_type,
-        expected_layer,
-        None,
-        expected_table,
+    selected = []
+
+    def frequency(df, *, columns, top_n):
+        selected.extend(columns)
+        return profile_frequency_distribution(df, columns=columns, top_n=top_n)
+
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    result = profile_and_register_table(
+        source, profile_role="source", target="raw", table_name="automatic"
     )
 
-    catalogue_rows = registered[1]["df"].collect()
-    assert {row.metadata_column_key for row in catalogue_rows} == {row["metadata_column_key"] for row in rows.values()}
-    assert all(row.row_count is None if hasattr(row, "row_count") else True for row in catalogue_rows)
+    assert selected == ["category"]
+    assert result.count() == 3
+    child = next(write["df"] for write in registered if write["table_name"] == "METADATA_DATA_PROFILED_FREQUENCY")
+    parent_keys = {row.column_name: row.metadata_column_key for row in result.collect()}
+    child_keys = {row.metadata_column_key for row in child.collect()}
+    assert child_keys == {parent_keys["category"]}
 
-    lineage_rows = registered[2]["df"].collect()
-    assert len(lineage_rows) == 1
-    lineage = lineage_rows[0].asDict()
-    assert lineage["metadata_table_key"] == expected_table_key
-    assert lineage["profile_role"] == "source"
-    assert lineage["activity_id"] == "activity-1"
-    assert lineage["workspace_id"] == "workspace-1"
-    assert lineage["notebook_id"] == "notebook-1"
-    assert lineage["_activity_id"] == "activity-1"
-    assert lineage["_workspace_id"] == "workspace-1"
-    assert lineage["_notebook_id"] == "notebook-1"
-    assert lineage["_committed_by"] == "tester"
 
-    source_role_result = profile_and_register_table(
+def test_profile_and_register_table_explicit_frequency_overrides_threshold(
+    spark_session, monkeypatch, registered
+):
+    """Verify explicit selections continue to override automatic cardinality filtering."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    source = spark_session.createDataFrame([(1,), (2,), (3,)], "identifier long")
+    selected = []
+
+    def frequency(df, *, columns, top_n):
+        selected.extend(columns)
+        return profile_frequency_distribution(df, columns=columns, top_n=top_n)
+
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    profile_and_register_table(
         source,
         profile_role="source",
-        target="silver",
-        schema="dbo",
-        table_name="customers_clean",
-        frequency_columns=None,
+        target="raw",
+        table_name="explicit",
+        frequency_columns=["identifier"],
+        frequency_max_distinct_percent=0.0,
     )
-    assert {row.metadata_table_key for row in source_role_result.select("metadata_table_key").collect()} == {
-        expected_table_key
+
+    assert selected == ["identifier"]
+    child = next(write["df"] for write in registered if write["table_name"] == "METADATA_DATA_PROFILED_FREQUENCY")
+    assert child.count() == 3
+
+
+def test_frequency_replacement_is_scoped_to_exact_column_snapshot(monkeypatch):
+    """Verify history remains while obsolete rows in one exact snapshot are replaced."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    stored = []
+
+    class Frame:
+        def __init__(self, rows):
+            self.rows = rows
+
+        def select(self, *names):
+            return Frame([{name: row[name] for name in names} for row in self.rows])
+
+        def dropDuplicates(self):  # noqa: N802
+            unique = {(row["metadata_column_key"], row["profiled_at"]): row for row in self.rows}
+            return Frame(list(unique.values()))
+
+        def alias(self, _name):
+            return self
+
+    class Target:
+        def alias(self, _name):
+            return self
+
+        def merge(self, snapshots, condition):
+            assert condition == (
+                "target.metadata_column_key = source.metadata_column_key "
+                "AND target.profiled_at = source.profiled_at"
+            )
+            self.snapshots = {
+                (row["metadata_column_key"], row["profiled_at"]) for row in snapshots.rows
+            }
+            return self
+
+        def whenMatchedDelete(self):  # noqa: N802
+            return self
+
+        def execute(self):
+            stored[:] = [
+                row
+                for row in stored
+                if (row["metadata_column_key"], row["profiled_at"]) not in self.snapshots
+            ]
+
+    class DeltaTable:
+        @staticmethod
+        def forPath(_spark_session, path):  # noqa: N802
+            assert path == "/metadata/frequency"
+            return Target()
+
+    delta_module = ModuleType("delta")
+    delta_tables_module = ModuleType("delta.tables")
+    delta_tables_module.DeltaTable = DeltaTable
+    monkeypatch.setitem(sys.modules, "delta", delta_module)
+    monkeypatch.setitem(sys.modules, "delta.tables", delta_tables_module)
+    monkeypatch.setattr(
+        module,
+        "resolve_configured_lakehouse_table",
+        lambda *_args, **_kwargs: (None, None, None, "/metadata/frequency"),
+    )
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *_args: None)
+    monkeypatch.setattr(
+        module,
+        "write_lakehouse_table_core",
+        lambda frame, *_args, **_kwargs: stored.extend(frame.rows),
+    )
+
+    def replace(profiled_at, values):
+        parent = Frame([{"metadata_column_key": "column-1", "profiled_at": profiled_at}])
+        child = None if values is None else Frame(
+            [
+                {"metadata_column_key": "column-1", "profiled_at": profiled_at, "value": value}
+                for value in values
+            ]
+        )
+        _replace_frequency_rows(
+            frequency_df=child,
+            profiled_df=parent,
+            config=object(),
+            env="dev",
+            spark_session=object(),
+        )
+
+    first_at = datetime(2026, 1, 1)
+    second_at = datetime(2026, 1, 2)
+    replace(first_at, ["old-history"])
+    replace(second_at, ["obsolete", "current"])
+    replace(second_at, None)
+    assert stored == [
+        {"metadata_column_key": "column-1", "profiled_at": first_at, "value": "old-history"}
+    ]
+    replace(second_at, ["replacement"])
+
+    assert {(row["profiled_at"], row["value"]) for row in stored} == {
+        (first_at, "old-history"),
+        (second_at, "replacement"),
     }
 
 
@@ -844,7 +677,6 @@ def test_profiled_schema_matches_detailed_profile_contract_without_profile_role(
         "median_value",
         "percentile_75_value",
         "max_value",
-        "frequency_json",
         "schema_fingerprint",
         "profiled_at",
         "_committed_by",
@@ -897,7 +729,6 @@ def test_catalogue_schema_is_narrow_identity_contract():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "frequency_json",
         "profiled_at",
     }.isdisjoint(schema.fieldNames())
 
@@ -1018,7 +849,11 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
             target="raw",
             table_name="customers",
         )
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, CATALOGUE_TABLE]
+    assert [write["table_name"] for write in registered] == [
+        PROFILED_TABLE,
+        PROFILED_FREQUENCY_TABLE,
+        CATALOGUE_TABLE,
+    ]
 
 
 def test_lineage_is_not_attempted_when_profiled_write_fails(spark_session, monkeypatch, registered):
@@ -1055,46 +890,25 @@ def test_catalogue_upsert_failure_does_not_fall_back_to_append(spark_session, mo
             target="raw",
             table_name="customers",
         )
-    assert [write["table_name"] for write in registered] == [PROFILED_TABLE]
+    assert [write["table_name"] for write in registered] == [PROFILED_TABLE, PROFILED_FREQUENCY_TABLE]
 
 
 def test_profile_and_register_table_uses_caller_frequency_profile_df_only_for_frequency(
     spark_session, monkeypatch, registered
 ):
-    """Verify a caller frequency DataFrame affects only frequency evidence."""
+    """Verify alternate frequency input does not change complete-source parent statistics."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     source = spark_session.createDataFrame(
         [(i, "A" if i % 2 == 0 else "B") for i in range(20)], "id long, segment string"
     )
-    frequency_source = spark_session.createDataFrame(
-        [(0, "A", "extra"), (1, "A", "extra"), (2, "B", "extra")], "id long, segment string, extra string"
-    )
-    calls = {"profile_is_source": None, "frequency_df_is_frequency_source": None, "schema_df_is_source": []}
-    original_schema_fingerprint = module._schema_fingerprint
-    original_frequency_distribution = module.build_frequency_distribution_dataframe
-
-    def schema_fingerprint(df):
-        calls["schema_df_is_source"].append(df is source)
-        return original_schema_fingerprint(df)
-
-    def profile(df):
-        calls["profile_is_source"] = df is source
-        return spark_session.createDataFrame(
-            [
-                ("id", "bigint", 20, 20, 0, 0.0, 20, 100.0, None, None, "0", None, None, None, "19"),
-                ("segment", "string", 20, 20, 0, 0.0, 2, 10.0, None, None, "A", None, None, None, "B"),
-            ],
-            "COLUMN_NAME string, DATA_TYPE string, ROW_COUNT long, NON_NULL_COUNT long, NULL_COUNT long, NULL_PERCENT double, DISTINCT_COUNT long, DISTINCT_PERCENT double, MEAN double, STDDEV double, MIN_VALUE string, PERCENTILE_25 double, MEDIAN double, PERCENTILE_75 double, MAX_VALUE string",
-        )
+    frequency_source = spark_session.createDataFrame([(100, "A"), (101, "A"), (102, "B")], "id long, segment string")
+    seen = []
 
     def frequency(df, *, columns, top_n):
-        calls["frequency_df_is_frequency_source"] = df is frequency_source
-        return original_frequency_distribution(df, columns=columns, top_n=top_n)
+        seen.append(df)
+        return profile_frequency_distribution(df, columns=columns, top_n=top_n)
 
-    monkeypatch.setattr(module, "_schema_fingerprint", schema_fingerprint)
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
+    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
     result = profile_and_register_table(
         source,
         profile_role="source",
@@ -1104,125 +918,46 @@ def test_profile_and_register_table_uses_caller_frequency_profile_df_only_for_fr
         frequency_profile_df=frequency_source,
     )
 
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    frequency_json = json.loads(rows["segment"]["frequency_json"])
-    assert calls["profile_is_source"] is True
-    assert calls["frequency_df_is_frequency_source"] is True
-    assert calls["schema_df_is_source"] and all(calls["schema_df_is_source"])
-    assert rows["segment"]["row_count"] == 20
-    assert frequency_json["source_row_count"] == 20
-    assert frequency_json["profiled_row_count"] == 3
-    assert frequency_json["profiled_non_null_count"] == 3
-    assert frequency_json["frequency_scope"] == "caller_provided"
-    assert [value["value"] for value in frequency_json["values"]] == ["A", "B"]
-    assert {write["table_name"] for write in registered} == {PROFILED_TABLE, CATALOGUE_TABLE, "METADATA_DATA_LINEAGE"}
-    assert registered[1]["df"].select("table_name").distinct().collect()[0].table_name == "customers"
-
-
-def test_profile_and_register_table_default_frequency_scope_uses_full_source(spark_session, registered):
-    """Verify omitting frequency_profile_df preserves full-source frequency profiling."""
-    source = spark_session.createDataFrame(
-        [(i, "A" if i % 2 == 0 else "B") for i in range(8)], "id long, segment string"
-    )
-
-    result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-        frequency_columns=["segment"],
-    )
-
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    frequency_json = json.loads(rows["segment"]["frequency_json"])
-    assert frequency_json["source_row_count"] == 8
-    assert frequency_json["profiled_row_count"] == 8
-    assert frequency_json["profiled_non_null_count"] == 8
-    assert frequency_json["frequency_scope"] == "full_source"
+    assert seen == [frequency_source]
+    assert {row.column_name: row.row_count for row in result.collect()} == {"id": 20, "segment": 20}
+    child = next(write["df"] for write in registered if write["table_name"] == "METADATA_DATA_PROFILED_FREQUENCY")
+    assert {row.profiled_row_count for row in child.collect()} == {3}
 
 
 def test_profile_and_register_table_frequency_profile_df_missing_selected_column_raises(spark_session, registered):
-    """Verify caller-provided frequency DataFrames must contain selected frequency columns."""
-    source = spark_session.createDataFrame([(1, "A")], "id long, segment string")
-    frequency_source = spark_session.createDataFrame([(1, "extra")], "id long, extra string")
-
-    with pytest.raises(ValueError, match="frequency_profile_df is missing selected frequency columns: segment"):
+    """Verify alternate frequency input must include explicitly selected columns."""
+    source = _source_df(spark_session)
+    alternate = source.select("id")
+    with pytest.raises(ValueError, match="missing selected frequency columns: country"):
         profile_and_register_table(
             source,
             profile_role="source",
             target="raw",
             table_name="customers",
-            frequency_columns=["segment"],
-            frequency_profile_df=frequency_source,
+            frequency_columns=["country"],
+            frequency_profile_df=alternate,
         )
 
 
-def test_profile_and_register_table_empty_frequency_columns_does_not_validate_frequency_profile_df(
+def test_profile_and_register_table_empty_selection_does_not_validate_frequency_profile_df(
     spark_session, monkeypatch, registered
 ):
-    """Verify frequency_columns=[] skips frequency profiling without touching caller frequency input."""
+    """Verify disabled frequency profiling ignores an alternate DataFrame schema."""
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    calls = {"validate": 0, "frequency": 0}
-
-    def validate(*_args, **_kwargs):
-        calls["validate"] += 1
-        raise AssertionError("frequency_profile_df should not be validated")
-
-    def frequency(*_args, **_kwargs):
-        calls["frequency"] += 1
-        raise AssertionError("frequency profiling should not run")
-
-    monkeypatch.setattr(module, "_validate_frequency_profile_dataframe", validate)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
+    monkeypatch.setattr(
+        module,
+        "profile_frequency_distribution",
+        lambda *_args, **_kwargs: pytest.fail("frequency profiler must not run"),
+    )
     result = profile_and_register_table(
         _source_df(spark_session),
         profile_role="source",
         target="raw",
         table_name="customers",
         frequency_columns=[],
-        frequency_profile_df=object(),
+        frequency_profile_df=spark_session.createDataFrame([(1,)], "other long"),
     )
-
-    assert calls == {"validate": 0, "frequency": 0}
-    assert result.where("frequency_json is not null").count() == 0
-
-
-def test_profile_and_register_table_automatic_selection_uses_full_profile_with_frequency_profile_df(
-    spark_session, monkeypatch, registered
-):
-    """Verify automatic cardinality filtering still uses the full statistical profile."""
-    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    source = _source_df(spark_session)
-    frequency_source = spark_session.createDataFrame([("A", "US"), ("B", "GB")], "customer_type string, country string")
-    calls = {"frequency_columns": None}
-
-    def profile(df):
-        assert df is source
-        return _profile_df(spark_session)
-
-    original_frequency_distribution = module.build_frequency_distribution_dataframe
-
-    def frequency(df, *, columns, top_n):
-        assert df is frequency_source
-        calls["frequency_columns"] = columns
-        return original_frequency_distribution(df, columns=columns, top_n=top_n)
-
-    monkeypatch.setattr(module, "build_profile_dataframe", profile)
-    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
-
-    result = profile_and_register_table(
-        source,
-        profile_role="source",
-        target="raw",
-        table_name="customers",
-        frequency_profile_df=frequency_source,
-    )
-
-    rows = {row.column_name: row.asDict() for row in result.collect()}
-    assert calls["frequency_columns"] == ["customer_type"]
-    assert json.loads(rows["customer_type"]["frequency_json"])["frequency_scope"] == "caller_provided"
-    assert json.loads(rows["id"]["frequency_json"])["reason"] == "high_cardinality"
+    assert result.count() == 3
 
 
 def test_validate_frequency_profile_dataframe_rejects_incompatible_session():
