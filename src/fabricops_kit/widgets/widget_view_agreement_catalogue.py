@@ -30,8 +30,9 @@ def widget_view_agreement_catalogue(*, agreement: dict[str, Any], spark_session=
     -------
     dict
         State mapping with ``get_selection``, ``get_views``, and ``refresh``.
-        ``get_views`` returns exactly the selected catalogue and profile Spark
-        DataFrames and does not render them.
+        ``get_views`` returns a named mapping containing ``catalogue``,
+        ``profile``, and ``frequency`` Spark DataFrames and does not render
+        them.
 
     Raises
     ------
@@ -41,13 +42,16 @@ def widget_view_agreement_catalogue(*, agreement: dict[str, Any], spark_session=
     Notes
     -----
     Inventory follows agreement to registered data contracts to catalogue
-    datasets in the current environment. Spark reads for the returned views
-    occur only when ``get_views`` is called.
+    datasets in the current environment. The compact parent profile defaults
+    to the latest ``profiled_at`` snapshot. Normalized child frequencies are
+    limited to the selected column and matched to that snapshot through both
+    ``metadata_column_key`` and ``profiled_at``.
 
     Examples
     --------
     >>> view = widget_view_agreement_catalogue(agreement=agreement_widget, spark_session=spark)
-    >>> catalogue_df, profile_df = view["get_views"]()
+    >>> views = view["get_views"]()
+    >>> views["catalogue"], views["profile"], views["frequency"]
 
     """
     agreement_id, agreement_name = resolve_agreement_details(agreement)
@@ -61,7 +65,8 @@ def widget_view_agreement_catalogue(*, agreement: dict[str, Any], spark_session=
     catalogue = read_lakehouse_table_core("METADATA_DATA_CATALOGUE", target=target, schema=schema, spark_session=spark_session, context=runtime_context)
     rows = [row for row in collect_catalogue_inventory(catalogue, environment_name) if row["metadata_table_key"] in set(keys)]
     return build_catalogue_widget(
-        heading="Agreement catalogue",
+        title="Agreement Catalogue Viewer",
+        description="View data catalogues linked to the selected data agreement",
         selection_context={"agreement_id": agreement_id, "environment_name": environment_name},
         display_context={"Agreement": agreement_name, "Environment": environment_name, "Linked datasets": len({row['metadata_table_key'] for row in rows})},
         inventory_rows=rows, role_options=None, target=target, schema=schema, spark_session=spark_session,

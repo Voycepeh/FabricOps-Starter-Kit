@@ -24,18 +24,27 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     Returns
     -------
     dict
-        Common catalogue state mapping. ``get_views`` returns exactly the
-        selected catalogue and profile Spark DataFrames without rendering.
+        Common catalogue state mapping. ``get_views`` returns a named mapping
+        containing the selected ``catalogue``, compact ``profile``, and
+        normalized ``frequency`` Spark DataFrames without rendering.
 
     Raises
     ------
     ValueError
         If stable notebook identity is unavailable.
 
+    Notes
+    -----
+    The compact profile defaults to the latest ``profiled_at`` snapshot.
+    Frequencies are limited to the selected profile column and matched through
+    both ``metadata_column_key`` and ``profiled_at`` so historical snapshots
+    cannot be mixed.
+
     Examples
     --------
     >>> view = widget_view_pipeline_catalogue(spark_session=spark)
-    >>> catalogue_df, profile_df = view["get_views"]()
+    >>> views = view["get_views"]()
+    >>> views["catalogue"], views["profile"], views["frequency"]
 
     """
     config, environment_name, resolved = resolve_fabric_context(context=context)
@@ -60,7 +69,8 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     allowed = {key for _role, key in pairs}
     rows = [row for row in collect_catalogue_inventory(catalogue, environment_name) if row["metadata_table_key"] in allowed]
     return build_catalogue_widget(
-        heading="Pipeline catalogue",
+        title="Pipeline Catalogue Viewer",
+        description="View data catalogues used by the current pipeline notebook",
         selection_context={"notebook_id": notebook_id, "notebook_name": notebook_name, "environment_name": environment_name},
         display_context={"Notebook": notebook_name, "Environment": environment_name, "Linked datasets": len(pairs)},
         inventory_rows=rows, role_options=pairs, target=target, schema=schema, spark_session=spark_session,
