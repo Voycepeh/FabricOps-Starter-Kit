@@ -90,6 +90,7 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
         "METADATA_DATA_CATALOGUE": spark_session.createDataFrame(
             [
                 ("dataset-key", "fingerprint", "id", "column-id", latest_snapshot),
+                ("dataset-key", "previous-fingerprint", "id", "column-id", old_snapshot),
                 ("unprofiled-key", "fingerprint-2", "id", "column-id-2", latest_snapshot),
             ],
             "metadata_table_key string, schema_fingerprint string, column_name string, "
@@ -100,6 +101,7 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
                 ("dataset-key", "fingerprint", "column-a", "Country", old_snapshot, old_snapshot),
                 ("dataset-key", "fingerprint", "column-a", "Country", latest_snapshot, latest_snapshot),
                 ("dataset-key", "fingerprint", "column-b", "Comment", latest_snapshot, latest_snapshot),
+                ("dataset-key", "previous-fingerprint", "column-a", "Country", old_snapshot, old_snapshot),
             ],
             "metadata_table_key string, schema_fingerprint string, metadata_column_key string, "
             "column_name string, profiled_at timestamp, _committed_at timestamp",
@@ -119,7 +121,8 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     monkeypatch.setattr(shared, "read_lakehouse_table_core", lambda table, **_kwargs: tables[table])
 
     state = build_catalogue_widget(
-        heading="Pipeline catalogue",
+        title="Pipeline Catalogue Viewer",
+        description="View data catalogues used by the current pipeline notebook",
         selection_context={"notebook_id": "technical-id", "environment_name": "dev"},
         display_context={"Notebook": "Customer <pipeline>", "Environment": "dev", "Linked datasets": 1},
         inventory_rows=[
@@ -127,6 +130,11 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
                 "metadata_table_key": "dataset-key", "schema_fingerprint": "fingerprint",
                 "layer": "raw", "schema_name": "sales", "table_name": "orders",
                 "_committed_at": latest_snapshot,
+            },
+            {
+                "metadata_table_key": "dataset-key", "schema_fingerprint": "previous-fingerprint",
+                "layer": "raw", "schema_name": "sales", "table_name": "orders",
+                "_committed_at": old_snapshot,
             },
             {
                 "metadata_table_key": "unprofiled-key", "schema_fingerprint": "fingerprint-2",
@@ -138,7 +146,8 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
         spark_session=object(), runtime_context={}, empty_message="No inventory.",
     )
 
-    visible_html = displayed[0].children[0].value
+    page = displayed[0]
+    visible_html = page.children[1].children[1].value
     assert "<b>Notebook:</b> Customer &lt;pipeline&gt;" in visible_html
     assert "Customer <pipeline>" not in visible_html
     assert "<b>Environment:</b> dev" in visible_html
@@ -159,6 +168,16 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     assert {row.profiled_at for row in frequency_rows} == {latest_snapshot}
     assert {row.metadata_column_key for row in frequency_rows} == {"column-a"}
     assert {row.value for row in frequency_rows} == {None, "current"}
+
+    state["_controls"]["search"].value = "does not exist"
+    assert state["_controls"]["dataset"].value is None
+    state["_controls"]["search"].value = ""
+    assert state["_controls"]["dataset"].value == "\x1fdataset-key"
+
+    selected_details = page.children[3].children[1]
+    state["_controls"]["schema_fingerprint"].value = "previous-fingerprint"
+    assert "<b>Schema version:</b> previous-fingerprint" in selected_details.value
+    state["_controls"]["schema_fingerprint"].value = "fingerprint"
 
     state["_controls"]["metadata_column_key"].value = "column-b"
     assert state["get_selection"]()["metadata_column_key"] == "column-b"

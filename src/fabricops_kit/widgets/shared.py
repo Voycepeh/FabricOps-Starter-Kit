@@ -2027,7 +2027,7 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
 
 
 def build_catalogue_widget(
-    *, heading: str, selection_context: dict[str, Any], display_context: dict[str, Any],
+    *, title: str, description: str, selection_context: dict[str, Any], display_context: dict[str, Any],
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
@@ -2048,14 +2048,25 @@ def build_catalogue_widget(
         options.append((dataset_label(latest, role), value))
         option_context[value] = (role, key)
     options.sort(key=lambda item: (item[0].casefold(), item[1]))
+    search = widgets.Text(value="", placeholder="Search catalogues", **widget_common(widgets, "Search"))
     dataset = widgets.Dropdown(options=options, **widget_common(widgets, "Dataset"))
     version = widgets.Dropdown(options=[], **widget_common(widgets, "Schema version"))
     profile_column = widgets.Dropdown(options=[], **widget_common(widgets, "Profile column"))
+    for control in (search, dataset, version, profile_column):
+        control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
+    selection_details = widgets.HTML(value="")
     status = widgets.HTML(value="")
-    controls = {"dataset": dataset, "schema_fingerprint": version, "metadata_column_key": profile_column}
+    controls = {
+        "search": search,
+        "dataset": dataset,
+        "schema_fingerprint": version,
+        "metadata_column_key": profile_column,
+    }
     state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
     current_frames: dict[str, Any] = {}
     selected_profiled_at: Any = None
+    last_dataset_value = str(dataset.value or "")
+    filtering_options = False
 
     def get_selection() -> dict[str, Any]:
         """Return current control values and entry-point context."""
@@ -2166,6 +2177,14 @@ def build_catalogue_widget(
         })
         state.update(get_selection())
         state["error"] = None if key else empty_message
+        selection = get_selection()
+        selection_details.value = (
+            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
+            f"<b>Schema version:</b> {_html_escape(selection['schema_fingerprint'])}<br>"
+            f"<b>Profile snapshot:</b> {_html_escape(selection['profiled_at'])}<br>"
+            f"<b>Profile column:</b> {_html_escape(selection['metadata_column_key'])}"
+            if key else ""
+        )
         status.value = (
             "No compact profile snapshot is available for this dataset."
             if key and selected_profiled_at is None
@@ -2188,16 +2207,64 @@ def build_catalogue_widget(
         ) if selected_key and selected_profiled_at is not None else frequency.limit(0)
         state.update(get_selection())
 
+    def select_dataset(change: dict[str, Any]) -> None:
+        """Remember valid selections and refresh after direct dataset changes."""
+        nonlocal last_dataset_value
+        selected = str(change.get("new") or "")
+        if selected:
+            last_dataset_value = selected
+        if not filtering_options:
+            refresh()
+
+    def filter_options(*_args: Any) -> None:
+        """Filter datasets and restore a valid selection automatically."""
+        nonlocal filtering_options, last_dataset_value
+        query = str(search.value or "").strip().casefold()
+        filtered = [option for option in options if query in option[0].casefold()]
+        filtered_values = [value for _label, value in filtered]
+        filtering_options = True
+        try:
+            dataset.options = filtered
+            dataset.value = (
+                last_dataset_value if last_dataset_value in filtered_values
+                else filtered_values[0] if filtered_values
+                else None
+            )
+        finally:
+            filtering_options = False
+        if dataset.value:
+            last_dataset_value = str(dataset.value)
+        refresh()
+
     state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
     refresh()
-    dataset.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
+    dataset.observe(lambda change: select_dataset(change) if change.get("name") == "value" else None, names="value")
     version.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")
     profile_column.observe(lambda change: refresh_frequency() if change.get("name") == "value" else None, names="value")
+    search.observe(lambda change: filter_options() if change.get("name") == "value" else None, names="value")
     context_html = "<br>".join(
         f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
         for name, value in display_context.items()
         if value not in (None, "")
     )
     from IPython import display as ip
-    ip.display(widgets.VBox([widgets.HTML(f"<h2>{heading}</h2>{context_html}"), dataset, version, profile_column, status]))
+    context_section = form_section(widgets, title="Context", children=[widgets.HTML(value=context_html)])
+    selection_section = form_section(
+        widgets,
+        title="Catalogue selection",
+        children=[form_grid(widgets, [search, dataset, version, profile_column])],
+    )
+    selected_section = form_section(
+        widgets,
+        title="Selected catalogue",
+        children=[selection_details, status],
+    )
+    ip.display(
+        form_page(
+            widgets,
+            title=title,
+            description=description,
+            children=[context_section, selection_section, selected_section],
+        )
+    )
     return state

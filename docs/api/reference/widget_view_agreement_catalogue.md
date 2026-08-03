@@ -14,7 +14,7 @@ Select a dataset linked to an agreement through its registered data contracts, t
 
 `fabricops_kit/widgets/widget_view_agreement_catalogue.py:13`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L73">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_agreement_catalogue.py#L13-L74">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
