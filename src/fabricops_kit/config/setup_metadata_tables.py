@@ -26,11 +26,10 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
     if not existing:
         existing = {name: None for name in getattr(existing_schema, "fieldNames", lambda: [])()}
     missing = [name for name in expected if name not in existing]
-    unexpected = [name for name in existing if name not in expected]
     if missing:
         raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
-    if unexpected:
-        raise ValueError(f"{table_name} has unexpected column(s): {', '.join(unexpected)}.")
+    if table_name == "METADATA_DATA_PROFILED" and "frequency_json" in existing:
+        raise ValueError("METADATA_DATA_PROFILED has unexpected legacy column: frequency_json.")
     mismatches: list[str] = []
     for name, expected_field in expected.items():
         existing_field = existing.get(name)
@@ -302,7 +301,9 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     Existing tables are validated for required column names and
-    compatible Spark data types and nullability. Unexpected legacy columns also fail validation.
+    compatible Spark data types and nullability. The legacy ``frequency_json``
+    column specifically fails ``METADATA_DATA_PROFILED`` validation; unrelated
+    metadata tables continue to permit additive columns.
     Because normalized frequency persistence is a breaking physical-schema
     change, existing metadata tables may need recreation through this setup
     flow; no automatic migration is performed.

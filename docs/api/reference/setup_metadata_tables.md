@@ -28,9 +28,9 @@ guardrail results.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:136`
+`fabricops_kit/config/setup_metadata_tables.py:135`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L136-L458">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L135-L459">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -199,7 +199,9 @@ Standard audit fields are ``_committed_by``, ``_committed_at``,
 ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
 Existing tables are validated for required column names and
-compatible Spark data types and nullability. Unexpected legacy columns also fail validation.
+compatible Spark data types and nullability. The legacy ``frequency_json``
+column specifically fails ``METADATA_DATA_PROFILED`` validation; unrelated
+metadata tables continue to permit additive columns.
 Because normalized frequency persistence is a breaking physical-schema
 change, existing metadata tables may need recreation through this setup
 flow; no automatic migration is performed.
