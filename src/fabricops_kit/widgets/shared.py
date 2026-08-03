@@ -91,7 +91,7 @@ def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
     )
 
 
-def form_grid(widgets: Any, children: Iterable[Any], *, columns: int = 2) -> Any:
+def form_grid(widgets: Any, children: Iterable[Any]) -> Any:
     """Lay out form controls in responsive, wrapping columns."""
     return widgets.GridBox(
         list(children),
@@ -99,7 +99,7 @@ def form_grid(widgets: Any, children: Iterable[Any], *, columns: int = 2) -> Any
             width="100%",
             height="auto",
             overflow="visible",
-            grid_template_columns=f"repeat({columns}, minmax(260px, 1fr))",
+            grid_template_columns="repeat(auto-fit, minmax(260px, 1fr))",
             grid_gap="10px 16px",
         ),
     )

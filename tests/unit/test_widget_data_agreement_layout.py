@@ -46,6 +46,9 @@ def test_shared_form_containers_expand_without_scrollbars():
         assert container.layout.kwargs["height"] == "auto"
         assert container.layout.kwargs["overflow"] == "visible"
 
+    grid = shared.form_grid(_FakeWidgets, [_FakeWidget(), _FakeWidget()])
+    assert grid.layout.kwargs["grid_template_columns"] == "repeat(auto-fit, minmax(260px, 1fr))"
+
 
 def test_long_search_results_are_bounded_without_scrolling_the_form():
     """Bound selector results without adding scrollbars to its container."""

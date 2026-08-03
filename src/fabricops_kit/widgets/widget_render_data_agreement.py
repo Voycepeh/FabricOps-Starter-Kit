@@ -371,9 +371,6 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         title="Agreement selection",
         children=[selected_selector["container"], identity_context],
     )
-    steps = widgets.VBox(
-        [details_section, steward_section, supporting_section], layout=full_width_layout
-    )
     form_flow = widgets.VBox(
         [selection_section, details_section, steward_section, supporting_section, scope_section],
         layout=full_width_layout,
@@ -397,7 +394,6 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     ip.display(container)
     return {
         "container": container,
-        "steps": steps,
         "draft": draft,
         "existing_record": selected,
         "existing_record_search": selected_selector["search"],
