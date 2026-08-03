@@ -88,8 +88,8 @@ Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.
 
 ## See also
 
-- [Pipeline Execution](../../guided-demo/run-pipeline.md)
-- [Governance Review](../../guided-demo/review-guardrails.md)
+- [Pipeline Execution](../../guided-demo/02-run-pipeline.md)
+- [Governance Review](../../guided-demo/03-enrich-guardrails.md)
 
 
 <details>
