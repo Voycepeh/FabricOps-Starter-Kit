@@ -30,7 +30,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:135`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L135-L459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L135-L460">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -175,7 +175,8 @@ Detailed table contents:
 - ``METADATA_DATA_PROFILED_FREQUENCY`` stores one flattened row per
   distinct profiled value with ``metadata_column_key``, value, count,
   percentage, rank, profiled row totals, ``profiled_at``, and audit fields.
-  Join it to ``METADATA_DATA_PROFILED`` through ``metadata_column_key``.
+  Join historical snapshots to ``METADATA_DATA_PROFILED`` through both
+  ``metadata_column_key`` and ``profiled_at``.
 - ``METADATA_DATA_LINEAGE`` stores ``lineage_event_id``, ``activity_id``,
   ``notebook_id``, ``notebook_name``, ``workspace_id``,
   ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
