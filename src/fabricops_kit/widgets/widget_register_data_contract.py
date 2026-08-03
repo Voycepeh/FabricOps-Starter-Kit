@@ -11,7 +11,15 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.widgets.shared import require_ipywidgets, widget_common
+from fabricops_kit.widgets.shared import (
+    action_row,
+    execution_log_section,
+    form_grid,
+    form_page,
+    form_section,
+    require_ipywidgets,
+    widget_common,
+)
 
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -342,6 +350,7 @@ def widget_register_data_contract(
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
     status = widgets.HTML(value="")
+    execution_output = widgets.Output()
     agreement_text = widgets.HTML(value=f"<b>Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
     environment_text = widgets.HTML(value=f"<b>Environment:</b> {html.escape(env)}")
 
@@ -478,10 +487,14 @@ def widget_register_data_contract(
             )),
             **audit,
         } for key in current]
-        _append_inventory(
-            membership_rows=rows, target=target, schema=schema,
-            spark_session=spark_session, context=runtime_context,
-        )
+        clear = getattr(execution_output, "clear_output", None)
+        if clear is not None:
+            clear(wait=True)
+        with execution_output:
+            _append_inventory(
+                membership_rows=rows, target=target, schema=schema,
+                spark_session=spark_session, context=runtime_context,
+            )
         latest_summary = {
             "activity_id": activity_id, "agreement_id": state["agreement_id"],
             "committed_at": saved_at, "linked_dataset_count": len(current),
@@ -515,7 +528,7 @@ def widget_register_data_contract(
         "agreement": agreement_text, "environment": environment_text,
         "summary": summary, "inventory": inventory, "remove": remove,
         "search": search, "available": available, "add": add, "save": save,
-        "status": status,
+        "status": status, "execution_output": execution_output,
     }
     refresh_controls()
     set_editor_enabled(bool(state["agreement_id"]))
@@ -527,8 +540,41 @@ def widget_register_data_contract(
             "Historical inventory memberships remain available for removal or preservation."
         )
 
-    _display_widget(widgets.VBox([
-        widgets.HTML("<h2>Dataset inventory</h2>"), agreement_text, environment_text,
-        summary, inventory, remove, search, available, add, save, status,
-    ]))
+    relationship_section = form_section(
+        widgets,
+        title="Agreement and catalogue relationship",
+        children=[form_grid(widgets, [agreement_text, environment_text])],
+    )
+    details_section = form_section(
+        widgets,
+        title="Contract details",
+        children=[summary, inventory, action_row(widgets, [remove])],
+    )
+    catalogue_section = form_section(
+        widgets,
+        title="Related catalogue datasets",
+        children=[search, available, action_row(widgets, [add])],
+    )
+    actions = form_section(
+        widgets, title="Save contract", children=[action_row(widgets, [save])]
+    )
+    log_section = execution_log_section(widgets, execution_output)
+    result_section = form_section(
+        widgets, title="Save result", children=[status, log_section]
+    )
+    container = form_page(
+        widgets,
+        title="Data Contract Creation Widget",
+        description="Maintain the dataset inventory connected to a saved Data Agreement",
+        children=[relationship_section, details_section, catalogue_section, actions, result_section],
+    )
+    state["_controls"].update(
+        container=container,
+        relationship_section=relationship_section,
+        details_section=details_section,
+        action_section=actions,
+        result_section=result_section,
+        execution_log_section=log_section,
+    )
+    _display_widget(container)
     return state
