@@ -30,6 +30,7 @@ class _FakeWidget:
         self.children = tuple(args[0]) if args else ()
         self.description = kwargs.get("description", "")
         self.disabled = bool(kwargs.get("disabled", False))
+        self.layout = kwargs.get("layout")
         self._value = value
         self._options = []
         self._observers = []
@@ -72,6 +73,26 @@ class _FakeWidget:
                 callback(self)
 
 
+class _FakeOutput(_FakeWidget):
+    """Output double supporting capture contexts and clearing."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+    def clear_output(self, wait=False):
+        self.outputs = []
+
+
+class _FakeLayout:
+    """Record layout keyword arguments used by shared form helpers."""
+
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+
 class _FakeWidgets:
     """Widget module double for deterministic headless behavior tests."""
 
@@ -79,7 +100,11 @@ class _FakeWidgets:
     Select = _FakeWidget
     HTML = _FakeWidget
     Button = _FakeWidget
+    Output = _FakeOutput
     VBox = _FakeWidget
+    HBox = _FakeWidget
+    GridBox = _FakeWidget
+    Layout = _FakeLayout
 
 
 def test_agreement_and_initial_identity_normalization():

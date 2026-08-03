@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import importlib
 import sys
 
 import pytest
 
 import fabricops_kit.widgets.shared as shared
 import fabricops_kit.widgets.widget_render_data_agreement as agreement_widget
+import fabricops_kit.widgets.widget_render_data_steward as steward_widget
+import fabricops_kit.widgets as widgets_package
+from fabricops_kit.widgets import widget_register_data_contract as contract_callable
+contract_widget = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
+widgets_package.widget_register_data_contract = contract_callable
 from tests.helpers import agreement_config, agreement_row, steward_row
 from tests.unit.test_agreements import _FakeWidget, _FakeWidgets
 
@@ -34,6 +40,37 @@ def _visible_text(widget):
     values = [str(getattr(widget, "value", "") or ""), str(getattr(widget, "description", "") or "")]
     values.extend(_visible_text(child) for child in getattr(widget, "children", ()))
     return " ".join(values)
+
+
+def _render_steward(monkeypatch):
+    config = agreement_config()
+    monkeypatch.setattr(steward_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
+    monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
+    monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    return steward_widget.widget_render_data_steward(spark=object())
+
+
+def _render_contract(monkeypatch):
+    monkeypatch.setattr(contract_widget, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(contract_widget, "resolve_fabric_context", lambda **kwargs: ({}, "dev", {}))
+    monkeypatch.setattr(contract_widget, "get_spark_session", lambda value=None: value)
+    monkeypatch.setattr(contract_widget, "read_lakehouse_table_core", lambda *args, **kwargs: object())
+    monkeypatch.setattr(
+        contract_widget,
+        "_latest_catalogue_rows",
+        lambda *args: [{
+            "metadata_table_key": "dataset-1", "schema_fingerprint": "fingerprint",
+            "store_type": "Lakehouse", "layer": "curated", "schema_name": "sales",
+            "table_name": "orders",
+        }],
+    )
+    monkeypatch.setattr(contract_widget, "_latest_inventory", lambda *args: (None, []))
+    monkeypatch.setattr(contract_widget, "_display_widget", lambda value: None)
+    return contract_widget.widget_register_data_contract(
+        agreement_id="agreement-1", metadata_ids=["dataset-1"], spark_session=object()
+    )
 
 
 def test_shared_form_containers_expand_without_scrollbars():
@@ -107,3 +144,53 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
 
     assert message in capsys.readouterr().out
     assert controls["save_button"].disabled is False
+
+
+def test_steward_form_uses_labelled_shared_sections(monkeypatch):
+    """Compose steward maintenance without fixed-height form containers."""
+    controls = _render_steward(monkeypatch)
+    text = _visible_text(controls["container"])
+
+    for label in (
+        "Steward selection", "Steward details", "Save steward", "Save result",
+        "Execution log", "Search data stewards", "Existing data steward",
+    ):
+        assert label in text
+    assert "Optional" not in text
+    assert controls["save_button"].click_callbacks
+    assert controls["container"].layout.kwargs["height"] == "auto"
+    assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
+
+
+def test_contract_form_uses_labelled_shared_sections(monkeypatch):
+    """Compose contract inventory controls as a responsive, unclipped form."""
+    state = _render_contract(monkeypatch)
+    controls = state["_controls"]
+    text = _visible_text(controls["container"])
+
+    for label in (
+        "Agreement and catalogue relationship", "Contract details",
+        "Related catalogue datasets", "Save contract", "Save result",
+        "Execution log", "Search catalogue", "Existing inventory",
+    ):
+        assert label in text
+    assert "Optional" not in text
+    assert controls["save"].click_callbacks
+    assert controls["container"].layout.kwargs["height"] == "auto"
+    assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
+
+
+def test_contract_save_preserves_complete_execution_output(monkeypatch, capsys):
+    """Do not filter the technical Lakehouse destination emitted during a save."""
+    message = "Writing Lakehouse table to abfss://container@account.dfs.core.windows.net/path"
+    monkeypatch.setattr(contract_widget, "_append_inventory", lambda **kwargs: print(message))
+    monkeypatch.setattr(
+        contract_widget,
+        "build_runtime_audit_fields",
+        lambda **kwargs: {"_activity_id": "activity-1", "_committed_at": "2026-08-03"},
+    )
+    state = _render_contract(monkeypatch)
+    state["_controls"]["save"].click_callbacks[0](None)
+
+    assert message in capsys.readouterr().out
+    assert "Saved inventory" in state["_controls"]["status"].value

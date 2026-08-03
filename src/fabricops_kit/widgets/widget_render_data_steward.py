@@ -14,6 +14,11 @@ from fabricops_kit.widgets.shared import (
     active_steward,
     collect_custom_fields,
     deserialize_custom_fields,
+    action_row,
+    execution_log_section,
+    form_grid,
+    form_page,
+    form_section,
     get_widget_visible_fields,
     list_data_stewards,
     render_custom_fields,
@@ -65,7 +70,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
-        label="Create / update",
+        label="Existing data steward",
         rows=existing_rows,
         label_fn=_steward_label,
         value_fn=_row_id,
@@ -73,6 +78,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         search_fields=["steward_name", "steward_role", "contact", "steward_id"],
         context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
         empty_label="Create new steward",
+        search_label="Search data stewards",
     )
     selected = selected_selector["selector"]
     roles = [str(option).strip() for option in (config_value(config, "steward_role_options", DEFAULT_STEWARD_ROLE_OPTIONS) or []) if str(option).strip()]
@@ -121,6 +127,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     save = widgets.Button(description="Save")
     output = widgets.Output()
+    status = widgets.HTML(value="")
     required_labels = {
         "steward_name": "Steward name",
         "steward_role": "Steward role",
@@ -154,6 +161,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 }
                 missing = _missing_required(values)
                 if missing:
+                    status.value = "Data steward was not saved. Complete the required fields."
                     print("Cannot save data steward.\n\nComplete the following required fields:")
                     for label in missing:
                         print(f"• {label}")
@@ -166,24 +174,46 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 _refresh_existing_options(row["steward_id"])
                 for callback in after_save_callbacks:
                     callback(row)
+                status.value = f"Saved data steward: {row.get('steward_name', '')}"
                 print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
             except Exception as exc:
+                status.value = f"Data steward was not saved: {exc}"
                 print(f"Error: {exc}")
             finally:
                 _sync_save_state()
 
     save.on_click(_save)
-    header = widgets.HTML(
-        value=(
-            '<div style="background:#0f6cbd;color:#fff;padding:14px 18px;'
-            'border-radius:8px;font-size:20px;font-weight:600;line-height:1.3;'
-            'margin:0 0 12px 0;">Data Steward Creation Widget</div>'
-        )
+    detail_fields = [form[field] for field in fields]
+    selection_section = form_section(
+        widgets, title="Steward selection", children=[selected_selector["container"]]
     )
-    controls = [selected_selector["container"], *[form[field] for field in fields], *custom.values()]
-    container = widgets.VBox([header, *controls, save, output])
+    details_section = form_section(
+        widgets, title="Steward details", children=[form_grid(widgets, detail_fields)]
+    )
+    supporting_sections = []
+    if custom:
+        supporting_sections.append(
+            form_section(
+                widgets,
+                title="Contact or supporting information",
+                children=[form_grid(widgets, custom.values())],
+            )
+        )
+    actions = form_section(
+        widgets, title="Save steward", children=[action_row(widgets, [save])]
+    )
+    log_section = execution_log_section(widgets, output)
+    result_section = form_section(
+        widgets, title="Save result", children=[status, log_section]
+    )
+    container = form_page(
+        widgets,
+        title="Data Steward Creation Widget",
+        description="Create or update data stewards",
+        children=[selection_section, details_section, *supporting_sections, actions, result_section],
+    )
     ip.display(container)
-    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "output": output}
+    return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "status": status, "output": output, "execution_output": output, "execution_log_section": log_section}
 
 
 def _generate_steward_id() -> str:

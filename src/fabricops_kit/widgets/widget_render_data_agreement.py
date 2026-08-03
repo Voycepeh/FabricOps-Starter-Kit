@@ -388,7 +388,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
     container = form_page(
         widgets,
         title="Data Agreement Creation Widget",
-        description="Between 2 Data Stewards/Managers",
+        description="Create or update data agreements between two data stewards",
         children=[form_flow, actions, result_section],
     )
     ip.display(container)
