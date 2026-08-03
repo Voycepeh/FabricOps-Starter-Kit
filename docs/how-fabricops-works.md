@@ -47,7 +47,7 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-FabricOps uses these connected [Metadata Tables](reference/metadata/) to carry governance context through the workflow.
+FabricOps uses these connected [Metadata Tables](../reference/metadata/) to carry governance context through the workflow.
 
 The data catalogue sits at the centre of the model. It identifies each governed dataset and connects its profiling, lineage, access, enrichment, guardrails, and guardrail results.
 
