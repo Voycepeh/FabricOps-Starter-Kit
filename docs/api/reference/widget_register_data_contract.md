@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Manage an immutable agreement dataset inventory.
+Review catalogue schemas and accept immutable agreement inventory baselines.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:209`
+`fabricops_kit/widgets/widget_register_data_contract.py:273`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L209-L580">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L273-L828">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,11 +83,11 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable inventory state with latest_activity_id, latest_committed_at, saved_activity_id, unsaved edits, get_rows, and get_snapshot callables.
+Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.
 
 ### Return interpretation
 
-The inventory reflects only the latest audit activity plus unsaved valid additions; each save appends one complete non-empty membership set without changing history.
+dataset_reviews exposes complete schemas and stable-key differences for the editable latest inventory; each save appends one complete non-empty baseline without changing history.
 
 ## Raises / Errors
 
@@ -103,15 +103,30 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 <div class="reference-docstring-notes" markdown="1">
 
-This is an immutable snapshot-based inventory of logical datasets linked
-to a Data Agreement. Each explicit save builds the FabricOps audit fields
+This widget selects catalogue datasets covered by an agreement and freezes
+each current schema fingerprint in an immutable inventory snapshot. It
+resolves the actual contracted schema from historical catalogue rows,
+compares it with the current active-environment catalogue schema, and
+displays additive and breaking structural differences. Catalogue datasets
+appear once by logical ``metadata_table_key``; selecting one previews the
+exact latest active-environment schema and fingerprint before it is added.
+Each explicit save
+accepts the current fingerprint as the new contracted baseline, builds the FabricOps audit fields
 once and appends the complete current membership list. ``_activity_id``
 groups the save and ``_committed_at`` orders saves, while the widget displays
 only the latest inventory. Historical rows are never updated or deleted.
+Within each activity, ``agreement_id + metadata_table_key`` is unique and
+identifies exactly one accepted ``schema_fingerprint``.
 Catalogue discovery is restricted to the active environment, but logical
 ``metadata_table_key`` membership remains environment-independent.
 An unsaved agreement draft cannot create an inventory snapshot; select an
 existing agreement or save the new agreement first.
+
+In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
+and guardrails and guardrail results remain separate future workflows.
+Granularity, semantic calculation changes, data quality, freshness,
+sensitivity, and PII are not enforced by this widget. This widget does not
+claim Open Data Contract Standard completeness.
 
 </div>
 

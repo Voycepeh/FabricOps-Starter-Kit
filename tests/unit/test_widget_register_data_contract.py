@@ -16,6 +16,8 @@ from fabricops_kit.widgets.widget_register_data_contract import (
     _dataset_options,
     _latest_catalogue_rows,
     _latest_inventory,
+    _catalogue_schema_rows,
+    _compare_schemas,
     _normalize_initial_ids,
     _deduplicate_memberships,
 )
@@ -167,18 +169,59 @@ def test_snapshot_memberships_do_not_combine_history_and_deduplicate(spark_sessi
     assert [row["metadata_table_key"] for row in rows] == ["one", "two"]
 
 
+def test_schema_lookup_preserves_historical_snapshots_and_active_environment(spark_session):
+    """A key and fingerprint recover complete schemas without crossing environments."""
+    catalogue = spark_session.createDataFrame([
+        ("table", "b", "old", "dev", "beta", "string"),
+        ("table", "a", "old", "dev", "alpha", "long"),
+        ("table", "a", "new", "dev", "alpha", "decimal"),
+        ("table", "x", "old", "prod", "other", "boolean"),
+    ], "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, column_name string, data_type string")
+    assert _catalogue_schema_rows(catalogue, "dev", "table", "old") == [
+        {"metadata_column_key": "a", "column_name": "alpha", "data_type": "long"},
+        {"metadata_column_key": "b", "column_name": "beta", "data_type": "string"},
+    ]
+    assert _catalogue_schema_rows(catalogue, "dev", "table", "new") == [
+        {"metadata_column_key": "a", "column_name": "alpha", "data_type": "decimal"},
+    ]
+
+
+def test_schema_comparison_uses_stable_keys_for_structural_differences():
+    """Stable keys distinguish additions, removals, type changes, and renames."""
+    difference = _compare_schemas(
+        [
+            {"metadata_column_key": "same", "column_name": "old_name", "data_type": "long"},
+            {"metadata_column_key": "typed", "column_name": "amount", "data_type": "int"},
+            {"metadata_column_key": "removed", "column_name": "legacy", "data_type": "string"},
+        ],
+        [
+            {"metadata_column_key": "same", "column_name": "new_name", "data_type": "long"},
+            {"metadata_column_key": "typed", "column_name": "amount", "data_type": "long"},
+            {"metadata_column_key": "added", "column_name": "fresh", "data_type": "string"},
+        ],
+    )
+    assert [row["metadata_column_key"] for row in difference["added_columns"]] == ["added"]
+    assert [row["metadata_column_key"] for row in difference["removed_columns"]] == ["removed"]
+    assert difference["changed_data_types"][0]["current_data_type"] == "long"
+    assert difference["renamed_columns"] == [{
+        "metadata_column_key": "same", "contracted_column_name": "old_name",
+        "current_column_name": "new_name",
+    }]
+
+
 @pytest.fixture
 def snapshot_runtime(monkeypatch, spark_session):
     """Provide real widgets and append-only in-memory metadata tables."""
     module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
     registry = metadata_table_schema_registry()
     catalogue = spark_session.createDataFrame([
-        ("key-one", "fp-old", "dev", "Lakehouse", "raw", "sales", "orders", datetime(2026, 1, 1)),
-        ("key-one", "fp-new", "dev", "Lakehouse", "raw", "sales", "orders", datetime(2026, 2, 1)),
-        ("key-two", "fp-two", "dev", "Warehouse", "curated", "finance", "summary", datetime(2026, 2, 1)),
-        ("key-three", "fp-three", "dev", "Lakehouse", "raw", "", "customers", datetime(2026, 2, 1)),
-        ("key-prod", "fp-prod", "prod", "Lakehouse", "raw", "sales", "prod", datetime(2026, 2, 1)),
-    ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
+        ("key-one", "col-id", "fp-old", "dev", "Lakehouse", "raw", "sales", "orders", "id", "int", datetime(2026, 1, 1)),
+        ("key-one", "col-id", "fp-new", "dev", "Lakehouse", "raw", "sales", "orders", "id", "long", datetime(2026, 2, 1)),
+        ("key-one", "col-name", "fp-new", "dev", "Lakehouse", "raw", "sales", "orders", "name", "string", datetime(2026, 2, 1)),
+        ("key-two", "col-total", "fp-two", "dev", "Warehouse", "curated", "finance", "summary", "total", "decimal", datetime(2026, 2, 1)),
+        ("key-three", "col-customer", "fp-three", "dev", "Lakehouse", "raw", "", "customers", "customer_id", "long", datetime(2026, 2, 1)),
+        ("key-prod", "col-prod", "fp-prod", "prod", "Lakehouse", "raw", "sales", "prod", "id", "long", datetime(2026, 2, 1)),
+    ], "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, column_name string, data_type string, _committed_at timestamp")
     tables = {
         "METADATA_DATA_CATALOGUE": catalogue,
         "METADATA_DATA_CONTRACT": spark_session.createDataFrame([], registry["METADATA_DATA_CONTRACT"]),
@@ -244,6 +287,71 @@ def test_no_snapshot_is_empty_and_initial_ids_extend_only_in_memory(snapshot_run
     assert state["has_unsaved_changes"] is True
     assert writes == []
     assert state["get_snapshot"]() == {"header": None, "memberships": []}
+    review = state["get_schema_review"]()[0]
+    assert review["schema_status"] == "New"
+    assert review["current_fingerprint"] == "fp-new"
+    assert review["contracted_fingerprint"] is None
+    assert [row["column_name"] for row in review["current_schema"]] == ["id", "name"]
+    assert state["schema_baseline_will_change"] is False
+
+
+def test_schema_review_classifies_unchanged_additive_and_breaking_changes(
+    snapshot_runtime, spark_session,
+):
+    """Review state classifies the v0.2.0 structural change boundary."""
+    _module, tables, _writes = snapshot_runtime
+    _seed_snapshot(spark_session, tables, "same", "unchanged", datetime(2026, 3, 1), ["key-two"])
+    # The seed helper derives fp-key-two; align it to the current catalogue fingerprint.
+    rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CONTRACT"].collect()]
+    rows[-1]["schema_fingerprint"] = "fp-two"
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame(
+        rows, metadata_table_schema_registry()["METADATA_DATA_CONTRACT"],
+    )
+    unchanged = public_widget(agreement_id="unchanged", spark_session=spark_session)
+    assert unchanged["dataset_reviews"][0]["schema_status"] == "Unchanged"
+
+    _seed_snapshot(spark_session, tables, "old", "changed", datetime(2026, 3, 2), ["key-one"])
+    rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CONTRACT"].collect()]
+    rows[-1]["schema_fingerprint"] = "fp-old"
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame(
+        rows, metadata_table_schema_registry()["METADATA_DATA_CONTRACT"],
+    )
+    changed = public_widget(agreement_id="changed", spark_session=spark_session)
+    review = changed["dataset_reviews"][0]
+    assert review["schema_status"] == "Breaking schema change"
+    assert review["contracted_schema"][0]["data_type"] == "int"
+    assert review["current_fingerprint"] == "fp-new"
+    assert review["schema_diff"]["changed_data_types"]
+    assert changed["schema_baseline_will_change"] is True
+    assert "accept the current catalogue schema" in changed["_controls"]["baseline_warning"].value
+
+    # Make the old type identical so only the newly observed name column is additive.
+    catalogue_rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CATALOGUE"].collect()]
+    catalogue_rows[0]["data_type"] = "long"
+    tables["METADATA_DATA_CATALOGUE"] = spark_session.createDataFrame(
+        catalogue_rows, tables["METADATA_DATA_CATALOGUE"].schema,
+    )
+    additive = public_widget(agreement_id="changed", spark_session=spark_session)
+    assert additive["dataset_reviews"][0]["schema_status"] == "Additive schema change"
+
+
+def test_removed_column_is_breaking(snapshot_runtime, spark_session):
+    """A contracted column absent from the current fingerprint is breaking."""
+    _module, tables, _writes = snapshot_runtime
+    extra = spark_session.createDataFrame([
+        ("key-two", "old-extra", "fp-two-old", "dev", "Warehouse", "curated", "finance", "summary", "legacy", "string", datetime(2026, 1, 1)),
+        ("key-two", "col-total", "fp-two-old", "dev", "Warehouse", "curated", "finance", "summary", "total", "decimal", datetime(2026, 1, 1)),
+    ], tables["METADATA_DATA_CATALOGUE"].schema)
+    tables["METADATA_DATA_CATALOGUE"] = tables["METADATA_DATA_CATALOGUE"].unionByName(extra)
+    _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 3, 1), ["key-two"])
+    rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CONTRACT"].collect()]
+    rows[-1]["schema_fingerprint"] = "fp-two-old"
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame(
+        rows, metadata_table_schema_registry()["METADATA_DATA_CONTRACT"],
+    )
+    state = public_widget(agreement_id="agreement", spark_session=spark_session)
+    assert state["dataset_reviews"][0]["schema_status"] == "Breaking schema change"
+    assert state["dataset_reviews"][0]["schema_diff"]["removed_columns"][0]["column_name"] == "legacy"
 
 
 def test_latest_inventory_loads_without_combining_older_history(snapshot_runtime, spark_session):
@@ -314,13 +422,47 @@ def test_inventory_add_remove_and_duplicate_prevention(snapshot_runtime, spark_s
     assert state["inventory_count"] == 1
 
 
+def test_catalogue_selection_shows_exact_schema_before_add(snapshot_runtime, spark_session):
+    """Each logical dataset appears once and selection exposes the baseline to add."""
+    _module, _tables, _writes = snapshot_runtime
+    state = public_widget(agreement_id="agreement", spark_session=spark_session)
+    controls = state["_controls"]
+    option_keys = [value for _label, value in controls["available"].options]
+    assert option_keys.count("key-one") == 1
+
+    controls["available"].value = "key-one"
+    selected = state["get_selected_dataset_review"]()
+    assert selected["metadata_table_key"] == "key-one"
+    assert selected["current_fingerprint"] == "fp-new"
+    assert selected["contracted_fingerprint"] is None
+    assert [row["column_name"] for row in selected["current_schema"]] == ["id", "name"]
+    assert "Current columns:</b> 2" in controls["selected_schema"].value
+    assert controls["add"].description == "Add this schema to contract"
+
+
+def test_one_snapshot_cannot_write_competing_fingerprints_for_one_dataset(
+    snapshot_runtime, spark_session,
+):
+    """A complete activity contains one row per agreement and logical dataset key."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement_id="agreement", metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    state["inventory_metadata_ids"] = ["key-one", "key-one"]
+    state["_controls"]["save"].click()
+    saved_rows = writes[0][2]
+    assert [(row["metadata_table_key"], row["schema_fingerprint"]) for row in saved_rows] == [
+        ("key-one", "fp-new"),
+    ]
+
+
 def test_successive_snapshots_append_complete_inventories_and_preserve_history(snapshot_runtime, spark_session):
     """Five, six, then four dataset saves remain immutable and resolve latest correctly."""
     _module, tables, writes = snapshot_runtime
     extra = spark_session.createDataFrame([
-        (f"key-{index}", f"fp-{index}", "dev", "Lakehouse", "raw", "sales", f"table_{index}", datetime(2026, 2, 1))
+        (f"key-{index}", f"col-{index}", f"fp-{index}", "dev", "Lakehouse", "raw", "sales", f"table_{index}", "id", "long", datetime(2026, 2, 1))
         for index in range(4, 8)
-    ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
+    ], "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, column_name string, data_type string, _committed_at timestamp")
     tables["METADATA_DATA_CATALOGUE"] = tables["METADATA_DATA_CATALOGUE"].unionByName(extra)
     five = ["key-one", "key-two", "key-three", "key-4", "key-5"]
     state = public_widget(agreement_id="agreement", metadata_ids=five, spark_session=spark_session)
@@ -361,6 +503,40 @@ def test_empty_inventory_is_rejected_without_writing(snapshot_runtime, spark_ses
     assert "at least one logical dataset" in controls["status"].value
 
 
+def test_save_accepts_current_schema_and_preserves_unavailable_baseline(
+    snapshot_runtime, spark_session,
+):
+    """Available datasets advance while unavailable retained datasets keep their fingerprint."""
+    _module, tables, _writes = snapshot_runtime
+    _seed_snapshot(
+        spark_session, tables, "old", "agreement", datetime(2026, 1, 1),
+        ["key-one", "historical-key"],
+    )
+    state = public_widget(agreement_id="agreement", spark_session=spark_session)
+    state["_controls"]["save"].click()
+    saved = {row["metadata_table_key"]: row["schema_fingerprint"] for row in state["get_rows"]()}
+    assert saved == {"key-one": "fp-new", "historical-key": "fp-historical-key"}
+
+
+def test_new_dataset_without_current_fingerprint_is_rejected(snapshot_runtime, spark_session):
+    """Catalogue membership alone cannot create a contract row with an empty baseline."""
+    _module, tables, writes = snapshot_runtime
+    rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CATALOGUE"].collect()]
+    rows.append({
+        **rows[0], "metadata_table_key": "invalid", "metadata_column_key": "invalid-col",
+        "schema_fingerprint": "", "column_name": "id", "_committed_at": datetime(2026, 4, 1),
+    })
+    tables["METADATA_DATA_CATALOGUE"] = spark_session.createDataFrame(
+        rows, tables["METADATA_DATA_CATALOGUE"].schema,
+    )
+    state = public_widget(
+        agreement_id="agreement", metadata_ids=["invalid"], spark_session=spark_session,
+    )
+    state["_controls"]["save"].click()
+    assert writes == []
+    assert "valid current catalogue schema fingerprint" in state["_controls"]["status"].value
+
+
 def test_other_agreements_and_historical_rows_are_unchanged(snapshot_runtime, spark_session):
     """Saving one agreement only appends and never mutates existing rows."""
     _module, tables, _writes = snapshot_runtime
@@ -378,8 +554,8 @@ def test_html_values_are_escaped(snapshot_runtime, spark_session):
     """Agreement and catalogue metadata cannot inject notebook HTML."""
     _module, tables, _writes = snapshot_runtime
     tables["METADATA_DATA_CATALOGUE"] = spark_session.createDataFrame([
-        ("html", "fp", "dev", "Lakehouse", "<b>raw</b>", "sales", "orders", datetime(2026, 1, 1)),
-    ], "metadata_table_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, _committed_at timestamp")
+        ("html", "html-col", "fp", "dev", "Lakehouse", "<b>raw</b>", "sales", "orders", "<img>", "string", datetime(2026, 1, 1)),
+    ], "metadata_table_key string, metadata_column_key string, schema_fingerprint string, environment_name string, store_type string, layer string, schema_name string, table_name string, column_name string, data_type string, _committed_at timestamp")
     state = public_widget(
         agreement={"agreement_id": "agreement", "agreement_name": "<script>alert(1)</script>"},
         spark_session=spark_session,
