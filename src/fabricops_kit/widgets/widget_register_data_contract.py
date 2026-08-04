@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from copy import deepcopy
 from datetime import datetime
 import html
 from typing import Any
@@ -115,6 +116,78 @@ def _latest_catalogue_rows(catalogue, environment_name: str) -> list[dict[str, A
     return [dict(latest[key], metadata_table_key=key) for key in sorted(latest)]
 
 
+def _catalogue_schema_rows(
+    catalogue,
+    environment_name: str | None,
+    metadata_table_key: str,
+    schema_fingerprint: str,
+) -> list[dict[str, str]]:
+    """Return one normalized catalogue schema without profiling measurements."""
+    from pyspark.sql import functions as F
+
+    if not metadata_table_key or not schema_fingerprint:
+        return []
+    matching = catalogue.filter(
+        (F.col("metadata_table_key") == metadata_table_key)
+        & (F.col("schema_fingerprint") == schema_fingerprint)
+    )
+    if environment_name is not None:
+        matching = matching.filter(F.col("environment_name") == environment_name)
+    rows = matching.select("metadata_column_key", "column_name", "data_type").collect()
+    normalized = {
+        (
+            str(row["metadata_column_key"] or ""),
+            str(row["column_name"] or ""),
+            str(row["data_type"] or ""),
+        ) for row in rows
+    }
+    result = [{
+        "metadata_column_key": metadata_column_key,
+        "column_name": column_name,
+        "data_type": data_type,
+    } for metadata_column_key, column_name, data_type in normalized]
+    return sorted(result, key=lambda row: (
+        row["column_name"].casefold(), row["metadata_column_key"], row["data_type"],
+    ))
+
+
+def _compare_schemas(
+    contracted_schema: list[dict[str, str]],
+    current_schema: list[dict[str, str]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Compare schemas by stable column key and retain readable names."""
+    contracted = {row["metadata_column_key"]: row for row in contracted_schema}
+    current = {row["metadata_column_key"]: row for row in current_schema}
+    shared = sorted(contracted.keys() & current.keys())
+    unchanged: list[dict[str, Any]] = []
+    changed_types: list[dict[str, Any]] = []
+    renamed: list[dict[str, Any]] = []
+    for key in shared:
+        before, after = contracted[key], current[key]
+        if before["data_type"] != after["data_type"]:
+            changed_types.append({
+                "metadata_column_key": key,
+                "column_name": after["column_name"],
+                "contracted_data_type": before["data_type"],
+                "current_data_type": after["data_type"],
+            })
+        else:
+            unchanged.append(dict(after))
+        if before["column_name"] != after["column_name"]:
+            renamed.append({
+                "metadata_column_key": key,
+                "contracted_column_name": before["column_name"],
+                "current_column_name": after["column_name"],
+            })
+    return {
+        "unchanged_columns": unchanged,
+        "added_columns": [dict(current[key]) for key in sorted(current.keys() - contracted.keys())],
+        "removed_columns": [dict(contracted[key]) for key in sorted(contracted.keys() - current.keys())],
+        "changed_data_types": changed_types,
+        "renamed_columns": renamed,
+    }
+
+
 def _base_dataset_label(row: dict[str, Any]) -> str:
     """Build a readable physical-coordinate label without empty segments."""
     return " / ".join(
@@ -216,7 +289,7 @@ def widget_register_data_contract(
     spark_session=None,
     context=None,
 ):
-    """Manage an immutable snapshot inventory for one Data Agreement.
+    """Review and record schema-aware immutable Data Contract inventories.
 
     Parameters
     ----------
@@ -249,7 +322,10 @@ def widget_register_data_contract(
         Mutable inventory state containing ``latest_activity_id``,
         ``latest_committed_at``, editable membership identities,
         ``saved_activity_id``, ``get_rows``, ``get_snapshot``, and notebook
-        controls under ``_controls``. Activity and commit values come directly
+        controls under ``_controls``. ``dataset_reviews`` and
+        ``get_schema_review`` expose the contracted and current fingerprints,
+        complete structural schemas, differences, and display classifications
+        without requiring callers to parse HTML. Activity and commit values come directly
         from the standard FabricOps audit fields rather than dedicated schema
         columns.
 
@@ -262,15 +338,30 @@ def widget_register_data_contract(
 
     Notes
     -----
-    This is an immutable snapshot-based inventory of logical datasets linked
-    to a Data Agreement. Each explicit save builds the FabricOps audit fields
+    This widget selects catalogue datasets covered by an agreement and freezes
+    each current schema fingerprint in an immutable inventory snapshot. It
+    resolves the actual contracted schema from historical catalogue rows,
+    compares it with the current active-environment catalogue schema, and
+    displays additive and breaking structural differences. Catalogue datasets
+    appear once by logical ``metadata_table_key``; selecting one previews the
+    exact latest active-environment schema and fingerprint before it is added.
+    Each explicit save
+    records the currently displayed schema version in the data contract, builds the FabricOps audit fields
     once and appends the complete current membership list. ``_activity_id``
     groups the save and ``_committed_at`` orders saves, while the widget displays
     only the latest inventory. Historical rows are never updated or deleted.
+    Within each activity, ``agreement_id + metadata_table_key`` is unique and
+    identifies exactly one recorded ``schema_fingerprint``.
     Catalogue discovery is restricted to the active environment, but logical
     ``metadata_table_key`` membership remains environment-independent.
     An unsaved agreement draft cannot create an inventory snapshot; select an
     existing agreement or save the new agreement first.
+
+    In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
+    and guardrails and guardrail results remain separate future workflows.
+    Granularity, semantic calculation changes, data quality, freshness,
+    sensitivity, and PII are not enforced by this widget. This widget does not
+    claim Open Data Contract Standard completeness.
 
     Examples
     --------
@@ -308,10 +399,14 @@ def widget_register_data_contract(
             "inventory_metadata_ids": [], "inventory_count": 0,
             "unknown_initial_metadata_ids": initial_ids, "has_unsaved_changes": False,
             "saved_activity_id": None, "saved_metadata_ids": [], "error": message,
+            "dataset_reviews": [], "contract_schema_will_change": False,
+            "selected_dataset_review": None,
             "_controls": {},
         }
         state["get_rows"] = lambda: []
         state["get_snapshot"] = lambda: {"header": None, "memberships": []}
+        state["get_schema_review"] = lambda: []
+        state["get_selected_dataset_review"] = lambda: None
         return state
 
     config, env, resolved = resolve_fabric_context(context=context)
@@ -344,11 +439,13 @@ def widget_register_data_contract(
 
     search = widgets.Text(value="", placeholder="Search catalogue...", **widget_common(widgets, "Search catalogue"))
     available = widgets.Select(options=[], **widget_common(widgets, "Add datasets"))
-    add = widgets.Button(description="Add selected dataset")
+    add = widgets.Button(description="Add table to contract")
     inventory = widgets.Select(options=[], **widget_common(widgets, "Existing inventory"))
     remove = widgets.Button(description="Remove selected dataset")
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
+    selected_schema = widgets.HTML(value="<i>Select a catalogue dataset to review its current schema.</i>")
+    contract_schema_warning = widgets.HTML(value="")
     status = widgets.HTML(value="")
     execution_output = widgets.Output()
     agreement_text = widgets.HTML(value=f"<b>Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
@@ -363,10 +460,132 @@ def widget_register_data_contract(
         "unknown_initial_metadata_ids": unknown_ids,
         "has_unsaved_changes": inventory_ids != saved_ids,
         "saved_activity_id": None, "saved_metadata_ids": [],
+        "dataset_reviews": [], "contract_schema_will_change": False,
+        "selected_dataset_review": None,
     }
 
     def readable_label(key: str) -> str:
         return option_by_id.get(key, f"Unavailable catalogue dataset — {_short_key(key)}")
+
+    def build_dataset_review(key: str) -> dict[str, Any]:
+        contracted_by_id = {str(row["metadata_table_key"]): row for row in latest_rows}
+        contracted_fingerprint = str(
+            contracted_by_id.get(key, {}).get("schema_fingerprint") or ""
+        ) or None
+        current_fingerprint = str(rows_by_id.get(key, {}).get("schema_fingerprint") or "") or None
+        contracted_schema = _catalogue_schema_rows(
+            catalogue, None, key, contracted_fingerprint or "",
+        )
+        current_schema = _catalogue_schema_rows(
+            catalogue, env, key, current_fingerprint or "",
+        )
+        difference = _compare_schemas(contracted_schema, current_schema)
+        if current_fingerprint is None:
+            schema_status = "Unavailable in current catalogue"
+        elif contracted_fingerprint is None:
+            schema_status = "New"
+        elif difference["removed_columns"] or difference["changed_data_types"]:
+            schema_status = "Breaking schema change"
+        elif difference["added_columns"]:
+            schema_status = "Additive schema change"
+        elif contracted_fingerprint != current_fingerprint:
+            schema_status = "Schema fingerprint changed"
+        else:
+            schema_status = "Unchanged"
+        return {
+            "metadata_table_key": key,
+            "dataset_label": readable_label(key),
+            "contracted_fingerprint": contracted_fingerprint,
+            "current_fingerprint": current_fingerprint,
+            "contracted_schema": contracted_schema,
+            "current_schema": current_schema,
+            "schema_diff": difference,
+            "schema_status": schema_status,
+            "contract_schema_will_change": bool(
+                contracted_fingerprint and current_fingerprint
+                and contracted_fingerprint != current_fingerprint
+            ),
+        }
+
+    def build_dataset_reviews(current: list[str]) -> list[dict[str, Any]]:
+        return [build_dataset_review(key) for key in current]
+
+    def render_schema(review: dict[str, Any], field: str) -> str:
+        rows = review[field]
+        if not rows:
+            return "<i>Not available</i>"
+        body = "".join(
+            f"<tr><td>{html.escape(row['column_name'])}</td>"
+            f"<td>{html.escape(row['data_type'])}</td>"
+            f"<td><code>{html.escape(_short_key(row['metadata_column_key']))}</code></td></tr>"
+            for row in rows
+        )
+        return (
+            "<div style='max-height:180px;overflow:auto'><table style='width:100%;font-size:12px'>"
+            "<thead><tr><th>Column</th><th>Type</th><th>Key</th></tr></thead>"
+            f"<tbody>{body}</tbody></table></div>"
+        )
+
+    def render_review(review: dict[str, Any]) -> str:
+        difference = review["schema_diff"]
+        contracted = html.escape(review["contracted_fingerprint"] or "Not available")
+        current = html.escape(review["current_fingerprint"] or "Not available")
+
+        def difference_rows(field: str, label: str) -> str:
+            rows = difference[field]
+            if not rows:
+                return ""
+            def type_label(row: dict[str, Any]) -> str:
+                if field == "changed_data_types":
+                    return (
+                        f"{row['contracted_data_type']} → {row['current_data_type']}"
+                    )
+                return str(row.get("data_type") or "")
+            values = "".join(
+                f"<li><code>{html.escape(row['column_name'])}</code> — "
+                f"{html.escape(type_label(row))}</li>"
+                for row in rows
+            )
+            return f"<b>{label}</b><ul style='margin-top:2px'>{values}</ul>"
+
+        differences = "".join([
+            difference_rows("added_columns", "Added"),
+            difference_rows("removed_columns", "Removed"),
+            difference_rows("changed_data_types", "Changed data types"),
+        ])
+        if not differences:
+            differences = (
+                "<b>Schema difference:</b> The fingerprint changed, but the available "
+                "catalogue rows do not expose the precise difference."
+                if review["schema_status"] == "Schema fingerprint changed"
+                else "<b>Schema difference:</b> No structural differences"
+            )
+        return (
+            "<div style='border:1px solid #ddd;padding:12px'>"
+            f"<h4 style='margin-top:0'>{html.escape(review['dataset_label'])}</h4>"
+            f"<b>Status:</b> {html.escape(review['schema_status'])}<br>"
+            f"<b>Contracted fingerprint:</b> <code title='{contracted}'>"
+            f"{html.escape(_short_key(contracted))}</code><br>"
+            f"<b>Current fingerprint:</b> <code title='{current}'>"
+            f"{html.escape(_short_key(current))}</code><br>"
+            f"<b>Current columns:</b> {len(review['current_schema'])}<br><br>"
+            f"{differences}<br><b>Current schema to record</b>"
+            f"{render_schema(review, 'current_schema')}"
+            + (
+                f"<br><b>Contracted schema</b>{render_schema(review, 'contracted_schema')}"
+                if review["contracted_fingerprint"] else ""
+            )
+            + "</div>"
+        )
+
+    def select_review(key: str) -> None:
+        key = str(key or "")
+        review = build_dataset_review(key) if key else None
+        state["selected_dataset_review"] = review
+        selected_schema.value = (
+            render_review(review) if review else
+            "<i>Select a catalogue or inventory dataset to review its schema.</i>"
+        )
 
     def refresh_controls(*_args: Any) -> None:
         current = list(state["inventory_metadata_ids"])
@@ -382,10 +601,21 @@ def widget_register_data_contract(
         add.disabled = True
         state["inventory_count"] = len(current)
         state["has_unsaved_changes"] = current != saved_ids
+        state["dataset_reviews"] = build_dataset_reviews(current)
+        state["contract_schema_will_change"] = any(
+            review["contract_schema_will_change"] for review in state["dataset_reviews"]
+        )
+        contract_schema_warning.value = (
+            "<div style='padding:8px;border-left:4px solid #d97706'><b>Warning:</b> "
+            "Saving records the currently displayed schema version in the data contract.</div>"
+            if state["contract_schema_will_change"] else ""
+        )
         summary.value = (
             f"<b>Current inventory count:</b> {len(current)}<br>"
             f"<b>Unsaved changes:</b> {'Yes' if state['has_unsaved_changes'] else 'No'}"
         )
+        selected_key = str(inventory.value or available.value or "")
+        select_review(selected_key)
 
     def set_editor_enabled(enabled: bool) -> None:
         for control in (search, available, inventory, remove, save):
@@ -440,6 +670,12 @@ def widget_register_data_contract(
     def select_available(change: dict[str, Any]) -> None:
         if change.get("name") == "value":
             add.disabled = not bool(state.get("agreement_id") and change.get("new"))
+            if change.get("new"):
+                select_review(str(change["new"]))
+
+    def select_inventory(change: dict[str, Any]) -> None:
+        if change.get("name") == "value" and change.get("new"):
+            select_review(str(change["new"]))
 
     def remove_selected(_button: Any = None) -> None:
         key = str(inventory.value or "")
@@ -466,15 +702,28 @@ def widget_register_data_contract(
         summary, rows = _latest_inventory(frame, str(state["agreement_id"]))
         return {"header": summary, "memberships": rows}
 
+    def get_schema_review() -> list[dict[str, Any]]:
+        return deepcopy(state["dataset_reviews"])
+
+    def get_selected_dataset_review() -> dict[str, Any] | None:
+        return deepcopy(state["selected_dataset_review"])
+
     def save_inventory(_button: Any = None) -> None:
         nonlocal latest_summary
         if not state.get("agreement_id"):
             status.value = "Select or save an agreement before saving an inventory."
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
-        current = [key for key in current if key in rows_by_id or key in saved_ids]
         if not current:
             status.value = "An inventory save must contain at least one logical dataset."
+            return
+        invalid_new = [
+            key for key in current
+            if key not in saved_ids
+            and not str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
+        ]
+        if invalid_new:
+            status.value = "New datasets require a valid current catalogue schema fingerprint before saving."
             return
         audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
         activity_id = str(audit["_activity_id"])
@@ -512,6 +761,7 @@ def widget_register_data_contract(
 
     search.observe(refresh_controls, names="value")
     available.observe(select_available, names="value")
+    inventory.observe(select_inventory, names="value")
     add.on_click(add_selected)
     remove.on_click(remove_selected)
     save.on_click(save_inventory)
@@ -524,9 +774,13 @@ def widget_register_data_contract(
         )
     state["get_rows"] = get_rows
     state["get_snapshot"] = get_snapshot
+    state["get_schema_review"] = get_schema_review
+    state["get_selected_dataset_review"] = get_selected_dataset_review
     state["_controls"] = {
         "agreement": agreement_text, "environment": environment_text,
         "summary": summary, "inventory": inventory, "remove": remove,
+        "schema_review": selected_schema, "selected_schema": selected_schema,
+        "contract_schema_warning": contract_schema_warning,
         "search": search, "available": available, "add": add, "save": save,
         "status": status, "execution_output": execution_output,
     }
@@ -548,12 +802,24 @@ def widget_register_data_contract(
     details_section = form_section(
         widgets,
         title="Contract details",
-        children=[summary, inventory, action_row(widgets, [remove])],
+        children=[summary, inventory, action_row(widgets, [remove]), contract_schema_warning],
     )
     catalogue_section = form_section(
         widgets,
         title="Related catalogue datasets",
-        children=[search, available, action_row(widgets, [add])],
+        children=[
+            search,
+            widgets.HBox(
+                [
+                    widgets.VBox([available]),
+                    widgets.VBox([selected_schema, action_row(widgets, [add])]),
+                ],
+                layout=widgets.Layout(
+                    display="grid", grid_template_columns="minmax(240px, 1fr) minmax(360px, 2fr)",
+                    gap="16px", align_items="start",
+                ),
+            ),
+        ],
     )
     actions = form_section(
         widgets, title="Save contract", children=[action_row(widgets, [save])]
@@ -565,7 +831,7 @@ def widget_register_data_contract(
     container = form_page(
         widgets,
         title="Data Contract Creation Widget",
-        description="Create data contracts that link data catalogues to data agreements",
+        description="Review catalogue schemas and record exact schema versions in immutable agreement inventories",
         children=[relationship_section, details_section, catalogue_section, actions, result_section],
     )
     state["_controls"].update(
