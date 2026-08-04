@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Review catalogue schemas and accept immutable agreement inventory baselines.
+Review catalogue schemas and record exact schema versions in immutable agreement inventories.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:273`
+`fabricops_kit/widgets/widget_register_data_contract.py:282`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L273-L828">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L282-L846">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,7 +87,7 @@ Mutable inventory state with audit activity details, unsaved edits, structured p
 
 ### Return interpretation
 
-dataset_reviews exposes complete schemas and stable-key differences for the editable latest inventory; each save appends one complete non-empty baseline without changing history.
+dataset_reviews exposes complete schemas and stable-key differences for the editable latest inventory; each save records one exact schema version per logical dataset without changing history.
 
 ## Raises / Errors
 
@@ -111,12 +111,12 @@ displays additive and breaking structural differences. Catalogue datasets
 appear once by logical ``metadata_table_key``; selecting one previews the
 exact latest active-environment schema and fingerprint before it is added.
 Each explicit save
-accepts the current fingerprint as the new contracted baseline, builds the FabricOps audit fields
+records the currently displayed schema version in the data contract, builds the FabricOps audit fields
 once and appends the complete current membership list. ``_activity_id``
 groups the save and ``_committed_at`` orders saves, while the widget displays
 only the latest inventory. Historical rows are never updated or deleted.
 Within each activity, ``agreement_id + metadata_table_key`` is unique and
-identifies exactly one accepted ``schema_fingerprint``.
+identifies exactly one recorded ``schema_fingerprint``.
 Catalogue discovery is restricted to the active environment, but logical
 ``metadata_table_key`` membership remains environment-independent.
 An unsaved agreement draft cannot create an inventory snapshot; select an
