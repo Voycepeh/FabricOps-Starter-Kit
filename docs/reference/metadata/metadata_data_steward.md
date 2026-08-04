@@ -2,6 +2,14 @@
 
 **Purpose:** Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 14 |
+| Business columns | 6 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

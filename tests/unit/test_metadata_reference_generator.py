@@ -51,6 +51,18 @@ def _schema_rows_from_page(table_name: str) -> list[dict[str, str]]:
     return rows
 
 
+def _column_summary_from_page(table_name: str) -> dict[str, int]:
+    """Return generated column-summary counts parsed from one metadata page."""
+    text = _page_path(table_name).read_text(encoding="utf-8")
+    return {
+        category: int(count)
+        for category, count in re.findall(
+            r"\| (Total columns|Business columns|Audit columns) \| (\d+) \|",
+            text,
+        )
+    }
+
+
 def test_metadata_reference_contract_covers_canonical_registry() -> None:
     """Every canonical metadata table must exist in the registry and owner contract."""
     registry = metadata_table_schema_registry()
@@ -100,6 +112,45 @@ def test_generated_metadata_pages_drop_nullable_and_respect_audit_fields() -> No
                 assert audit_field in rendered_field_names
             else:
                 assert audit_field not in rendered_field_names
+
+
+def test_generated_metadata_page_column_summary_matches_canonical_schema() -> None:
+    """A representative page should classify canonical audit fields and reconcile totals."""
+    table_name = "METADATA_DATA_CATALOGUE"
+    rows = metadata_table_schema_rows(metadata_table_schema_registry()[table_name])
+    audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
+    expected_audit = sum(row["name"] in audit_names for row in rows)
+    summary = _column_summary_from_page(table_name)
+
+    assert summary == {
+        "Total columns": len(rows),
+        "Business columns": len(rows) - expected_audit,
+        "Audit columns": expected_audit,
+    }
+    assert summary["Business columns"] + summary["Audit columns"] == summary["Total columns"]
+
+
+def test_metadata_column_counts_supports_schema_without_audit_columns() -> None:
+    """Business-only schemas should still report a zero-valued audit category."""
+    counts = generator._metadata_column_counts(
+        [{"name": "metadata_table_key"}, {"name": "schema_fingerprint"}],
+        audit_column_names={name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS},
+    )
+
+    assert counts == {"total": 2, "business": 2, "audit": 0}
+
+
+def test_generated_metadata_pages_include_summary_and_detailed_schema() -> None:
+    """Every table page should render the stable summary before its detailed schema."""
+    for table_name in CANONICAL_METADATA_TABLES:
+        text = _page_path(table_name).read_text(encoding="utf-8")
+
+        assert "## Column summary\n\n| Column category | Count |" in text
+        assert "| Total columns |" in text
+        assert "| Business columns |" in text
+        assert "| Audit columns |" in text
+        assert text.index("## Column summary") < text.index("## Implemented schema")
+        assert "| Column | Data type | Managed by | Description |" in text
 
 
 def test_metadata_owner_rendering_links_public_functions_and_shows_internal_sources() -> None:

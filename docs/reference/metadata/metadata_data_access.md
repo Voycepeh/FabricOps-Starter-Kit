@@ -2,6 +2,14 @@
 
 **Purpose:** Access-review rows reserved for implemented metadata access evidence.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 22 |
+| Business columns | 14 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

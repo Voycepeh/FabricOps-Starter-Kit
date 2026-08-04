@@ -2,6 +2,14 @@
 
 **Purpose:** Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 11 |
+| Business columns | 3 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

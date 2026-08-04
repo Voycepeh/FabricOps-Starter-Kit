@@ -2,6 +2,14 @@
 
 **Purpose:** Compact per-column summary statistics captured from a profiled dataset snapshot.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 32 |
+| Business columns | 24 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

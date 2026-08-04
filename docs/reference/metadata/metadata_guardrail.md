@@ -2,6 +2,14 @@
 
 **Purpose:** Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 54 |
+| Business columns | 46 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

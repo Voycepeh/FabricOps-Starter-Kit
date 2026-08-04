@@ -2,6 +2,14 @@
 
 **Purpose:** Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 21 |
+| Business columns | 13 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
