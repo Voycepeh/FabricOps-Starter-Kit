@@ -62,10 +62,9 @@ def widget_enrich_table_metadata(
     current_values = _enrichment.latest_enrichment_values(enrichment_rows)
     classification_options, personal_identifier_options, _, _ = _enrichment.enrichment_control_options(config)
     property_labels = {
-        "Business_context": "Business context",
+        "Description": "Description",
         "Classification": "Classification",
         "Personal_identifier": "Personal identifier",
-        "Business_name": "Business name",
     }
     row_controls = []
     panels = []
@@ -87,10 +86,9 @@ def widget_enrich_table_metadata(
         classification_choices = [value for value in classification_choices if value]
         personal_identifier_choices = [value for value in personal_identifier_choices if value]
         controls = {
-            "Business_context": widgets.Textarea(value=original["Business_context"], description=property_labels["Business_context"], rows=2, layout=widgets.Layout(width="600px")),
+            "Description": widgets.Textarea(value=original["Description"], description=property_labels["Description"], rows=2, layout=widgets.Layout(width="600px")),
             "Classification": widgets.Dropdown(options=["", *classification_choices], value=original["Classification"], description=property_labels["Classification"], layout=widgets.Layout(width="600px")),
             "Personal_identifier": widgets.Dropdown(options=["", *personal_identifier_choices], value=original["Personal_identifier"], description=property_labels["Personal_identifier"], layout=widgets.Layout(width="600px")),
-            "Business_name": widgets.Text(value=original["Business_name"], description=property_labels["Business_name"], layout=widgets.Layout(width="600px")),
         }
         state_labels = {name: widgets.HTML(value="") for name in property_labels}
         item = {"metadata_key": metadata_key, "column_name": str(_enrichment._value(row, "column_name")), "values": controls, "original_values": original, "states": state_labels}

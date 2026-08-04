@@ -4345,9 +4345,9 @@ def generate_metadata_reference_pages() -> None:
                 "", "## Examples", "",
                 "| enrichment_level | metadata_key | enrichment_type | value |",
                 "| --- | --- | --- | --- |",
-                "| table | tbl_abc | Business_context | Student enrolment records |",
+                "| table | tbl_abc | Description | Student enrolment records |",
                 "| table | tbl_abc | Classification | Highly sensitive |",
-                "| column | col_xyz | Business_context | Unique student identifier |",
+                "| column | col_xyz | Description | Unique student identifier |",
                 "| column | col_xyz | Personal_identifier | Direct PII |",
                 "", "The catalogue remains the source of table and column identity. New enrichment types do not require a schema change.",
             ])
