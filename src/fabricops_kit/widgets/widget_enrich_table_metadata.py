@@ -75,6 +75,7 @@ def widget_enrich_table_metadata(
     --------
     widget_view_data_catalogue
         Browse catalogue profile evidence without editing enrichment.
+
     """
     config, env, resolved = resolve_fabric_context(context=context)
     widgets = importlib.import_module("ipywidgets")
@@ -109,6 +110,7 @@ def widget_enrich_table_metadata(
     originals: dict[tuple[str, str], dict[str, str]] = {}
     selected: dict[str, Any] = {"table_key": "", "item_token": ""}
     state_holder: dict[str, Any] = {}
+    detail_state = {"is_rendering": False}
 
     def pane_layout(basis: str) -> Any:
         return widgets.Layout(
@@ -139,6 +141,8 @@ def widget_enrich_table_metadata(
         return {name: str(controls[name].value or "") for name in names}
 
     def remember_draft(*_: Any) -> None:
+        if detail_state["is_rendering"]:
+            return
         level, key = selected_identity()
         if not level or not key or controls["Description"].disabled:
             return
@@ -171,19 +175,27 @@ def widget_enrich_table_metadata(
             + (f" · <b>Data type:</b> {html.escape(str(item['data_type']))} · <b>Status:</b> {item['status']}" if level == "column" else "")
             + "</small>"
         )
-        description.value = values.get("Description", "")
-        classification.options = options_with_current(classification_options, values.get("Classification", ""))
-        classification.value = values.get("Classification", "")
-        personal.options = options_with_current(personal_options, values.get("Personal_identifier", ""))
-        personal.value = values.get("Personal_identifier", "")
-        personal.layout.display = "none" if level == "table" else ""
-        for control in controls.values():
-            control.disabled = removed
-        save_button.disabled = removed
+        detail_state["is_rendering"] = True
+        try:
+            description.value = values.get("Description", "")
+            classification.options = options_with_current(classification_options, values.get("Classification", ""))
+            classification.value = values.get("Classification", "")
+            personal.options = options_with_current(personal_options, values.get("Personal_identifier", ""))
+            personal.value = values.get("Personal_identifier", "")
+            personal.layout.display = "none" if level == "table" else ""
+            for control in controls.values():
+                control.disabled = removed
+            save_button.disabled = removed
+        finally:
+            detail_state["is_rendering"] = False
         if removed:
             unsaved.value = "This column is not part of the latest schema. Existing enrichment is shown for historical reference."
         else:
-            remember_draft()
+            unsaved.value = (
+                "<b>Unsaved changes</b>"
+                if (level, key) in drafts and drafts[(level, key)] != originals[(level, key)]
+                else ""
+            )
 
     def refresh_column_options(*_: Any) -> None:
         browser = state_holder.get("state")

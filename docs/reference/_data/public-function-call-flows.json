@@ -7180,7 +7180,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 296,
+      "source_end_line": 308,
       "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
       "source_start_line": 26,
       "supports_live_contract": false,
@@ -44468,7 +44468,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 296,
+          "source_end_line": 308,
           "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
           "source_start_line": 26,
           "supports_live_contract": false,
@@ -48136,7 +48136,7 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_enrich_table_metadata(*, spark_session: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 296,
+      "source_end_line": 308,
       "source_path": "src/fabricops_kit/widgets/widget_enrich_table_metadata.py",
       "source_start_line": 26,
       "summary": "Browse catalogue history and maintain table or column enrichment.",

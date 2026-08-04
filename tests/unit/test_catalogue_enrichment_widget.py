@@ -38,15 +38,18 @@ def test_catalogue_browser_uses_canonical_identity_and_complete_latest_fingerpri
     assert [(row["metadata_column_key"], row["data_type"], row["last_observed_at"]) for row in removed] == [("col-legacy", "string", "2026-01-01")]
 
 
-def _build_widget(monkeypatch):
+def _build_widget(monkeypatch, *, auto_observe=False):
     module = importlib.import_module("fabricops_kit.widgets.widget_enrich_table_metadata")
-    _install_fake_notebook_widgets(monkeypatch)
+    _install_fake_notebook_widgets(monkeypatch, auto_observe=auto_observe)
     reads = []
     writes = []
     existing = [
         {"enrichment_id": "1", "enrichment_level": "column", "metadata_key": "col-id", "enrichment_type": "Description", "value": "Identifier", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "2", "enrichment_level": "column", "metadata_key": "col-id", "enrichment_type": "Classification", "value": "retired-label", "_committed_at": "2026-01-01", "_activity_id": "a"},
         {"enrichment_id": "3", "enrichment_level": "column", "metadata_key": "col-legacy", "enrichment_type": "Description", "value": "Historical", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "4", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Description", "value": "Student name", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "5", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "6", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Personal_identifier", "value": "none", "_committed_at": "2026-01-01", "_activity_id": "a"},
     ]
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *a, **k: reads.append(1) or _catalogue_rows())
     monkeypatch.setattr(shared, "read_enrichment_records", lambda *a, **k: existing)
@@ -114,6 +117,27 @@ def test_change_detection_drafts_removed_read_only_and_search_without_reads(monk
     widget["table_search"]._observer({"name": "value", "new": "engineering"})
     assert len(reads) == 1
     assert list(widget["table_selector"].options) == [("Students — Engineering Production / curated", "table-students-2")]
+
+
+def test_selection_hydration_does_not_create_or_cross_contaminate_drafts(monkeypatch):
+    """Realistic value observers stay suspended while a new detail is hydrated."""
+    widget, _, _ = _build_widget(monkeypatch, auto_observe=True)
+    widget["table_selector"].value = "table-students"
+    widget["column_selector"].value = "column:col-id"
+    assert widget["controls"]["Description"].value == "Identifier"
+    assert widget["controls"]["Classification"].value == "retired-label"
+    assert widget["drafts"] == {}
+
+    widget["column_selector"].value = "column:col-name"
+
+    assert widget["controls"]["Description"].value == "Student name"
+    assert widget["controls"]["Classification"].value == "public"
+    assert widget["controls"]["Personal_identifier"].value == "none"
+    assert widget["drafts"] == {}
+    widget["column_selector"].value = "column:col-id"
+    assert widget["controls"]["Description"].value == "Identifier"
+    assert widget["controls"]["Classification"].value == "retired-label"
+    assert widget["drafts"] == {}
 
 
 def test_empty_description_is_not_written(monkeypatch):

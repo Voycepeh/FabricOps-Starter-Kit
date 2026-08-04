@@ -38,30 +38,44 @@ def active_fabric_context(monkeypatch):
     return context
 
 
-def _install_fake_notebook_widgets(monkeypatch):
+def _install_fake_notebook_widgets(monkeypatch, *, auto_observe=False):
     """Install minimal ipywidgets/IPython fakes for widget unit tests."""
     import sys
     import types
 
     class Widget:
         def __init__(self, *args, **kwargs):
+            self._observers = []
             options = kwargs.get("options", [])
             self.options = options
             if "value" in kwargs:
-                self.value = kwargs["value"]
+                self._value = kwargs["value"]
             elif options:
                 first = options[0]
-                self.value = first[1] if isinstance(first, tuple) and len(first) == 2 else first
+                self._value = first[1] if isinstance(first, tuple) and len(first) == 2 else first
             else:
-                self.value = ""
+                self._value = ""
             self.description = kwargs.get("description", "")
             self.layout = kwargs.get("layout") or types.SimpleNamespace(display="")
             self.button_style = kwargs.get("button_style", "")
             self.disabled = kwargs.get("disabled", False)
             self.rows = kwargs.get("rows", None)
 
+        @property
+        def value(self):
+            return self._value
+
+        @value.setter
+        def value(self, value):
+            previous = self._value
+            self._value = value
+            if auto_observe and previous != value:
+                for callback in self._observers:
+                    callback({"name": "value", "old": previous, "new": value})
+
         def observe(self, callback, names=None):
             self._observer = callback
+            self._observers.append(callback)
 
         def on_click(self, callback):
             self._click = callback
