@@ -2,6 +2,14 @@
 
 **Purpose:** Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 16 |
+| Business columns | 8 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

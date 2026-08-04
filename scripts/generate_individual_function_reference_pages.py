@@ -4280,9 +4280,24 @@ def _metadata_table_purpose(table_name: str, table_purposes: dict[str, str]) -> 
     return table_purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
 
 
+def _metadata_column_counts(
+    rows: list[dict[str, Any]],
+    *,
+    audit_column_names: set[str],
+) -> dict[str, int]:
+    """Return reconciled business, audit, and total counts for schema rows."""
+    total = len(rows)
+    audit = sum(str(row["name"]) in audit_column_names for row in rows)
+    business = total - audit
+    if business + audit != total:
+        raise RuntimeError("Metadata column counts do not reconcile to the schema total.")
+    return {"total": total, "business": business, "audit": audit}
+
+
 def generate_metadata_reference_pages() -> None:
     """Generate metadata table reference pages from the canonical schema registry."""
     from fabricops_kit.config.metadata_schemas import (
+        AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
@@ -4299,6 +4314,7 @@ def generate_metadata_reference_pages() -> None:
         )
     table_purposes, column_owners = parse_metadata_reference_contract()
     public_callable_set = public_callable_names()
+    audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
     index_lines = [
@@ -4319,10 +4335,19 @@ def generate_metadata_reference_pages() -> None:
             "",
         ])
         rows = metadata_table_schema_rows(registry[table_name])
+        column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
         lines = [
             f"# {table_name}",
             "",
             f"**Purpose:** {purpose}",
+            "",
+            "## Column summary",
+            "",
+            "| Column category | Count |",
+            "| --- | ---: |",
+            f"| Total columns | {column_counts['total']} |",
+            f"| Business columns | {column_counts['business']} |",
+            f"| Audit columns | {column_counts['audit']} |",
             "",
             "## Implemented schema",
             "",

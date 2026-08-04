@@ -2,6 +2,14 @@
 
 **Purpose:** Runtime guardrail outcomes written by pipeline enforcement.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 26 |
+| Business columns | 18 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

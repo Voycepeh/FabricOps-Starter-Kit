@@ -2,6 +2,14 @@
 
 **Purpose:** Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 20 |
+| Business columns | 12 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

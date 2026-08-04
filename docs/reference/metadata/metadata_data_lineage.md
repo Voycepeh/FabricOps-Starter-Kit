@@ -2,6 +2,14 @@
 
 **Purpose:** Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 21 |
+| Business columns | 13 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

@@ -2,6 +2,14 @@
 
 **Purpose:** Observed table and column identities used for governed catalogue review and runtime comparisons.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 18 |
+| Business columns | 10 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |

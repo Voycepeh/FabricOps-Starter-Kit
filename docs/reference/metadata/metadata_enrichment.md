@@ -2,6 +2,14 @@
 
 **Purpose:** Append-only generic descriptive and governance values for catalogue table and column identities.
 
+## Column summary
+
+| Column category | Count |
+| --- | ---: |
+| Total columns | 13 |
+| Business columns | 5 |
+| Audit columns | 8 |
+
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
