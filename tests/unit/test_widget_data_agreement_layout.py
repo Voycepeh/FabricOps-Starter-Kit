@@ -66,6 +66,15 @@ def _render_contract(monkeypatch):
             "table_name": "orders",
         }],
     )
+    monkeypatch.setattr(
+        contract_widget,
+        "_catalogue_schema_rows",
+        lambda *args: [{
+            "metadata_column_key": "column-1",
+            "column_name": "example_column",
+            "data_type": "string",
+        }],
+    )
     monkeypatch.setattr(contract_widget, "_latest_inventory", lambda *args: (None, []))
     monkeypatch.setattr(contract_widget, "_display_widget", lambda value: None)
     return contract_widget.widget_register_data_contract(
