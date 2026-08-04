@@ -125,7 +125,7 @@ METADATA_TABLE_PURPOSES = {
     "METADATA_DATA_PROFILED_FREQUENCY": "Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.",
     "METADATA_DATA_LINEAGE": "Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.",
     "METADATA_DATA_ACCESS": "Access-review rows reserved for implemented metadata access evidence.",
-    "METADATA_ENRICHMENT": "Append-only enrichment intent and approved business context for governed tables and columns.",
+    "METADATA_ENRICHMENT": "Append-only generic descriptive and governance values for catalogue table and column identities.",
     "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
     "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
 }
@@ -311,93 +311,14 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_ENRICHMENT": {
         "__default__": [
             "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
+            "fabricops_kit.widgets.shared.build_enrichment_records",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "metadata_table_key": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._approved_column_identity",
-        ],
-        "metadata_column_key": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._approved_column_identity",
-        ],
-        "enrichment_rule_key": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.config.metadata_keys._build_dq_rule_key",
-        ],
-        "enrichment_payload_json": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "business_name": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "business_description": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "business_meaning": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "column_description": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "classification": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "sensitivity_label": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "pii_flag": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "pii_type": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "data_domain": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "data_owner": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "data_steward": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "usage_notes": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "quality_notes": [
-            "fabricops_kit.widgets.shared.build_enrichment_rule_records",
-            "fabricops_kit.widgets.shared._enrichment_payload_from_review",
-        ],
-        "reviewed_by": [
-            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "reviewed_at": [
-            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "review_decision": [
-            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "review_comment": [
-            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
+        "enrichment_id": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "enrichment_level": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "metadata_key": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "enrichment_type": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "value": ["fabricops_kit.widgets.shared.build_enrichment_records"],
     },
     "METADATA_GUARDRAIL": {
         "__default__": [

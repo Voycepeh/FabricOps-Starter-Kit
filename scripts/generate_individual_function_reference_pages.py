@@ -172,12 +172,8 @@ METADATA_FIELD_DESCRIPTIONS = {
     "expected_value_json": "Serialized expected value payload for the guardrail outcome.",
     "actual_value_json": "Serialized actual value payload for the guardrail outcome.",
     "result_payload_json": "Serialized full runtime result payload written for the guardrail outcome.",
-    "enrichment_rule_id": "Stable identifier for the enrichment rule row.",
-    "enrichment_rule_version": "Version recorded for the enrichment rule row.",
-    "enrichment_rule_key": "Stable key used to group lifecycle versions of the same enrichment rule.",
     "enrichment_scope": "Whether the enrichment row applies to a table or column.",
     "enrichment_type": "Enrichment type recorded for the row.",
-    "enrichment_payload_json": "Serialized enrichment payload stored for the row.",
     "business_name": "Business-friendly name recorded for the table or column.",
     "business_description": "Business description recorded for the table or column.",
     "business_meaning": "Business meaning recorded for the table or column.",
@@ -191,7 +187,6 @@ METADATA_FIELD_DESCRIPTIONS = {
     "data_steward": "Business steward recorded for the row.",
     "usage_notes": "Usage notes recorded for the row.",
     "quality_notes": "Quality notes recorded for the row.",
-    "supersedes_enrichment_rule_id": "Enrichment rule identifier superseded by the current row.",
 }
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
@@ -199,7 +194,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_PROFILED": ["profile_and_register_table", "widget_select_guardrail_target"],
     "METADATA_DATA_LINEAGE": ["profile_and_register_table"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
-    "METADATA_ENRICHMENT": ["widget_enrich_table_metadata", "widget_review_guardrail_governance"],
+    "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
     "METADATA_GUARDRAIL": [
         "widget_author_schema_freshness_profile_rules",
@@ -2854,9 +2849,7 @@ ROLE_TAGS_BY_NAME = {
     "_business_agreement_snapshot": ["internal_normalizer", "agreement_payload_normalizer"],
     "render_searchable_selector": ["internal_adapter", "widget_rendering_adapter"],
     "_selected_catalogue_rows_for_enrichment": ["internal_resolver", "catalogue_table_resolver"],
-    "build_enrichment_rule_records": ["internal_normalizer", "rule_payload_normalizer"],
     "_build_metadata_table_key": ["utility_function", "metadata_key_formatter"],
-    "apply_governance_enrichment_action": ["internal_normalizer", "rule_payload_normalizer"],
     "apply_governance_rule_action": ["internal_normalizer", "rule_payload_normalizer"],
     "load_rule_review_history": ["internal_resolver", "rule_catalogue_resolver"],
 
@@ -4343,6 +4336,21 @@ def generate_metadata_reference_pages() -> None:
                 f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
                 f"{_metadata_field_description(table_name, column)} |"
             )
+        if table_name == "METADATA_ENRICHMENT":
+            lines.extend([
+                "", "## Breaking pre-release replacement", "",
+                "This intentionally breaking schema replaces the previous enrichment lifecycle and payload model. Existing development `METADATA_ENRICHMENT` tables must be recreated; no automated migration or compatibility support is provided. Values to retain may be exported and manually reshaped before recreation.",
+                "", "## Grain", "", "One row per enrichment level + metadata key + enrichment type + append event.",
+                "", "## Current value", "", "The latest appended row for `enrichment_level` + `metadata_key` + `enrichment_type` is current, ordered by `_committed_at`, `_activity_id`, and `enrichment_id`. Empty values are rejected, so clearing is deferred to a future change.",
+                "", "## Examples", "",
+                "| enrichment_level | metadata_key | enrichment_type | value |",
+                "| --- | --- | --- | --- |",
+                "| table | tbl_abc | Business_context | Student enrolment records |",
+                "| table | tbl_abc | Classification | Highly sensitive |",
+                "| column | col_xyz | Business_context | Unique student identifier |",
+                "| column | col_xyz | Personal_identifier | Direct PII |",
+                "", "The catalogue remains the source of table and column identity. New enrichment types do not require a schema change.",
+            ])
         related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
         if related_functions:
             lines.extend(["", "## Related function reference", ""])

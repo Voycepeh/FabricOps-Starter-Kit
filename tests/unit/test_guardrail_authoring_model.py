@@ -629,60 +629,30 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
 
 
-def test_enrichment_widget_builds_rows_options_custom_fields_and_writes_only_enrichment(monkeypatch):
-    """Verify consolidated enrichment widgets build and persist only metadata enrichment rows."""
+def test_enrichment_widget_writes_one_row_per_populated_type(monkeypatch):
+    """The enrichment widget emits independent canonical property rows."""
     _install_fake_notebook_widgets(monkeypatch)
     import types
-
     from fabricops_kit.widgets import shared as widget_shared
 
     class Spark:
-        def createDataFrame(self, rows):
+        def createDataFrame(self, rows, schema=None):
             return rows
 
     writes = []
     monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
-    config = types.SimpleNamespace(
-        governance_config=types.SimpleNamespace(
-            sensitivity_labels=["classified", "restricted", "public"],
-            pii_classifications=["direct PII", "indirect PII", "none"],
-            enrichment_context_widget={"custom_fields": [{"key": "business_owner_notes", "label": "Business Owner Notes", "type": "textarea"}]},
-            enrichment_classification_widget={"custom_fields": [{"key": "retention_class", "label": "Retention Class", "type": "select", "options": ["standard", "long_term", "temporary"]}]},
-        )
-    )
-    state = {
-        "environment_name": "dev",
-        "dataset_name": "sales",
-        "table_name": "orders_target",
-        "metadata_table_key": "dev:sales:orders_target",
-        "profile_run_id": "target-run-before-write",
-        "profile_stage": "target",
-        "catalogue_profile_rows": [
-            {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders_target", "column_name": "order_id", "data_type": "string", "profile_run_id": "target-run-before-write", "profile_stage": "target"},
-            {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders_target", "column_name": "amount", "data_type": "double", "profile_run_id": "target-run-before-write", "profile_stage": "target"},
-        ],
-    }
-
+    config = types.SimpleNamespace()
+    state = {"profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"column_name": "order_id", "metadata_column_key": "col-order", "profile_run_id": "run", "profile_stage": "target"}]}
     widget = widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=Spark())
-
-    assert len(widget["rows"]) == 2
-    assert list(widget["rows"][0]["sensitivity_label"].options) == ["classified", "restricted", "public"]
-    assert list(widget["rows"][0]["pii_classification"].options) == ["direct PII", "indirect PII", "none"]
-    assert "business_owner_notes" in widget["rows"][0]["context_extra_fields"]
-    assert "retention_class" in widget["rows"][0]["classification_extra_fields"]
-
-    enrichment_records = widget["build_records"]()
-    assert {record["column_name"] for record in enrichment_records} == {"amount", "order_id"}
-    assert {record["review_status"] for record in enrichment_records} == {"self_approved"}
-    assert all(record["is_active"] for record in enrichment_records)
-    assert all(record["enrichment_payload_json"] for record in enrichment_records)
-
+    values = widget["rows"][0]["values"]
+    values["Business_context"].value = "Order identity"
+    values["Classification"].value = "Sensitive"
+    records = widget["build_records"]()
+    assert [(row["enrichment_type"], row["value"]) for row in records] == [("Business_context", "Order identity"), ("Classification", "Sensitive")]
+    assert all(row["metadata_key"] == "col-order" and row["enrichment_level"] == "column" for row in records)
+    assert all("enrichment_payload_json" not in row and "review_status" not in row for row in records)
     widget["save"]()
     assert [table for table, _ in writes] == [governance_review.ENRICHMENT_TABLE]
-    assert governance_review.GUARDRAIL_TABLE not in [table for table, _ in writes]
-    assert governance_review.GUARDRAIL_RESULTS_TABLE not in [table for table, _ in writes]
-    assert governance_review.CATALOGUE_TABLE not in [table for table, _ in writes]
-
 
 
 def test_new_authoring_lifecycle_draft_submit_apply_now_and_ungoverned():
@@ -733,41 +703,6 @@ def test_formal_review_context_and_lifecycles():
     assert replaced[1]["supersedes_record_id"] == "r1"
 
 
-def test_enrichment_governance_approved_lifecycle_from_record_table(monkeypatch):
-    """Verify legacy approved enrichment writes full lifecycle fields."""
-    written = []
-
-    class Spark:
-        def createDataFrame(self, records):
-            return records
-
-    monkeypatch.setattr(governance_review, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: written.append((table, frame)))
-    monkeypatch.setattr(governance_review, "configured_lakehouse_schema", lambda *args, **kwargs: None)
-    profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "metadata_table_key": "t", "metadata_column_key": "c"}]
-    result = governance_review.record_table_governance(
-        None,
-        "dev",
-        profile_rows,
-        spark_session=Spark(),
-        enrichment_reviews=[{"column_name": "status", "business_description": "Status", "commit": True}],
-        approved_by="steward@example.com",
-    )
-    record = result["enrichment_rules"][0]
-    assert record["activation_state"] == "active"
-    assert record["review_state"] == "governance_approved"
-    assert record["review_status"] == "governance_approved"
-    assert record["is_active"] is True
-    assert record["requires_governance_review"] is False
-    assert record["requires_post_review"] is False
-    assert record["reviewed_by"]
-    assert record["reviewed_at"]
-    assert record["review_decision"] == "approved"
-    assert record["activated_by"]
-    assert record["activated_at"]
-    assert record["effective_from"]
-
-
-
 def test_authoring_widgets_stamp_02_and_03_sources(monkeypatch):
     """Verify authoring widgets stamp notebook type and creator role by context."""
     _install_fake_notebook_widgets(monkeypatch)
@@ -780,23 +715,6 @@ def test_authoring_widgets_stamp_02_and_03_sources(monkeypatch):
     assert engineering["created_by_role"] == "engineering"
     assert governance["source_notebook_type"] == "03_governance"
     assert governance["created_by_role"] == "governance"
-
-
-def test_enrichment_widget_exposes_required_authoring_actions(monkeypatch):
-    """Verify enrichment authoring exposes draft, submit, and apply-now lifecycle paths."""
-    _install_fake_notebook_widgets(monkeypatch)
-    import types
-
-    config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"], enrichment_context_widget={"custom_fields": []}, enrichment_classification_widget={"custom_fields": []}))
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "order_id", "data_type": "int", "profile_run_id": "run", "profile_stage": "target"}], "governance_mode": "governed", "approval_policy": "approval_required"}
-    widget = widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=object())
-
-    assert widget["save_draft_button"].description == "Save draft"
-    assert widget["submit_button"].description == "Submit for governance review"
-    assert widget["apply_now_button"].description == "Apply now"
-    assert widget["build_records"](action="draft")[0]["review_state"] == "draft"
-    assert widget["build_records"](action="submit")[0]["review_state"] == "pending_governance_review"
-    assert widget["build_records"](action="apply_now")[0]["review_state"] == "active_pending_governance_review"
 
 
 def test_review_guardrail_governance_actions_and_replace_mapping(monkeypatch):

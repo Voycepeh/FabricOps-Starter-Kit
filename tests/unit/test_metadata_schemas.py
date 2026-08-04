@@ -57,3 +57,17 @@ def test_profiled_frequency_schema_is_normalized_and_ordered():
         *[(name, f"{kind.title()}Type" if kind != "integer" else "IntegerType", nullable) for name, kind, nullable in AUDIT_SCHEMA_FIELDS],
     ]
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields] == expected
+
+
+def test_enrichment_schema_is_minimal_generic_contract():
+    """Enrichment has five required business fields and standard audit fields only."""
+    schema = metadata_table_schema_registry()["METADATA_ENRICHMENT"]
+    expected_names = [
+        "enrichment_id", "enrichment_level", "metadata_key", "enrichment_type", "value",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
+    ]
+    assert schema.fieldNames() == expected_names
+    assert all(field.nullable is False for field in schema.fields)
+    assert all(type(field.dataType).__name__ == ("TimestampType" if field.name == "_committed_at" else "StringType") for field in schema.fields)
+    removed = {"enrichment_rule_id", "metadata_table_key", "metadata_column_key", "enrichment_payload_json", "review_status", "activation_state", "is_active", "effective_from"}
+    assert removed.isdisjoint(schema.fieldNames())

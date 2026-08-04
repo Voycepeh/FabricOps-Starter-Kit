@@ -57,7 +57,6 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
 
     catalogue = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.PROFILED_TABLE, spark_session=spark_session)
     rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.GUARDRAIL_TABLE, spark_session=spark_session)
-    enrichment_rules = _governance_review._read_metadata_table_or_empty(config, env, _governance_review.ENRICHMENT_TABLE, spark_session=spark_session)
     if not catalogue:
         raise ValueError("METADATA_DATA_PROFILED has no guardrail targets.")
 
@@ -88,7 +87,6 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
         environment_name, dataset_name, table_name, metadata_table_key = target_dropdown.value
         table_rows = _governance_review._filter_table_rows(catalogue, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
         table_rules = _governance_review._filter_table_rows(rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
-        table_enrichment_rules = _governance_review._filter_table_rows(enrichment_rules, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
         policy = _governance_review.resolve_table_governance_policy(table_rows, environment_name=environment_name, dataset_name=dataset_name, table_name=table_name, metadata_table_key=metadata_table_key)
         latest = sorted(table_rows, key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""), reverse=True)[0]
         columns = sorted({str(row.get("column_name") or "") for row in table_rows if row.get("column_name")})
@@ -104,13 +102,12 @@ def _guardrail_target_selection_widget_workflow(*, spark_session: Any, context: 
                 "columns": columns,
                 "catalogue_profile_rows": table_rows,
                 "existing_rules": table_rules,
-                "existing_enrichment_rules": table_enrichment_rules,
                 **policy,
             }
         )
         governance_badge.value = f"<b>Governance:</b> {state['governance_mode']} · <b>Approval policy:</b> {state['approval_policy']} · <b>Bypass allowed:</b> {state['approval_bypass_allowed']}"
         profile_preview.value = f"<b>Profile rows:</b> {len(table_rows)} · <b>Columns:</b> {', '.join(columns) if columns else '(none)'}"
-        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)} · <b>Existing enrichment rows:</b> {len(table_enrichment_rules)}"
+        rules_preview.value = f"<b>Existing guardrail rules:</b> {len(table_rules)}"
 
     target_dropdown.observe(refresh, names="value")
     refresh()
