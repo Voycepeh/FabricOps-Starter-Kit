@@ -7,14 +7,23 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Render a consolidated column enrichment widget.
+Browse catalogue history and maintain metadata enrichment.
+
+<div class="reference-docstring-intro" markdown="1">
+
+Select a logical table, browse its latest and historical columns, and
+maintain table- or column-level enrichment. Current columns are editable;
+columns absent from the latest schema fingerprint are shown as removed and
+remain read-only for historical reference.
+
+</div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_enrich_table_metadata.py:12`
+`fabricops_kit/widgets/widget_enrich_table_metadata.py:26`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L12-L134">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L26-L308">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,7 +46,6 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_enrich_table_metadata(
-    guardrail_state: Mapping[str, Any],
     spark_session: Any,
     context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
@@ -49,8 +57,8 @@ def widget_enrich_table_metadata(
 
 <div class="reference-example-usage" markdown="1">
 
->>> state = {"catalogue_profile_rows": [{"column_name": "student_id", "metadata_column_key": "col_xyz"}]}
->>> result = widget_enrich_table_metadata(state, spark_session=spark)
+>>> browser = widget_enrich_table_metadata(spark_session=spark)
+>>> state = browser.get("selected_table_state", {})
 
 </div>
 
@@ -58,37 +66,37 @@ def widget_enrich_table_metadata(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `guardrail_state` | `Mapping[str, Any]` | Yes | Selected target state containing catalogue/profile column identities. |
-| `spark_session` | `Any` | Yes | Fabric Spark session used to append enrichment records. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to read the canonical catalogue and append enrichment records through the configured metadata target. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context initialized by ``00_env_config``. |
 
 ## Returns
 
-Widget state containing editable row controls, record builders, and a save callback for enrichment intent and classification metadata.
+Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.
 
 ### Return interpretation
 
-The returned state can be inspected in tests or notebooks; invoking save appends rows only to METADATA_ENRICHMENT.
+Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.
 
 ## Raises / Errors
 
-Raises validation, widget, Spark, or metadata routing errors when selected target state is incomplete or the configured metadata lakehouse cannot be written.
+Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.
 
 ### Common failure causes
 
-- The selected guardrail target has no column-level evidence.
-- Configured custom fields omit a field name.
-- Metadata lakehouse writes cannot be routed through 00_env_config.
+- The metadata catalogue has no logical tables.
+- A table or current column lacks its canonical metadata key.
+- Metadata lakehouse reads or writes cannot be routed through 00_env_config.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Current values are loaded from ``METADATA_ENRICHMENT`` and prepopulated.
-Saving appends one row for each changed or new property and skips unchanged
-values. Empty inputs are skipped; clearing a current value is not supported
-by this pre-release model. Classification and personal-identifier controls
-use the configured governance options.
+Table enrichment supports ``Description`` and ``Classification``. Column
+enrichment additionally supports ``Personal_identifier``. Existing values,
+including values removed from current dropdown configuration, are preserved.
+Saving appends only non-empty changed values to ``METADATA_ENRICHMENT``;
+repeated unchanged saves produce no write. This workflow is independent of
+guardrail target selection and keeps unsaved drafts in memory while open.
 
 </div>
 

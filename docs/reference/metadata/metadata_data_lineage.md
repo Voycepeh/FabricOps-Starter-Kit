@@ -6,8 +6,8 @@
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 21 |
-| Business columns | 13 |
+| Total columns | 14 |
+| Business columns | 6 |
 | Audit columns | 8 |
 
 ## Implemented schema
