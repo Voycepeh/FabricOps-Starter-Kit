@@ -12,9 +12,9 @@ Render a consolidated column enrichment widget.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_enrich_table_metadata.py:14`
+`fabricops_kit/widgets/widget_enrich_table_metadata.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L14-L50">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L12-L134">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,8 +40,6 @@ def widget_enrich_table_metadata(
     guardrail_state: Mapping[str, Any],
     spark_session: Any,
     context: dict[str, Any] | None=None,
-    source_notebook_type: str='02_pipeline',
-    created_by_role: str='engineering',
 ) -> dict[str, Any]:
 ```
 
@@ -49,17 +47,20 @@ def widget_enrich_table_metadata(
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+>>> state = {"catalogue_profile_rows": [{"column_name": "student_id", "metadata_column_key": "col_xyz"}]}
+>>> result = widget_enrich_table_metadata(state, spark_session=spark)
+
+</div>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `guardrail_state` | `Mapping[str, Any]` | Yes | Guardrail target state containing table identity and catalogue profile rows for enrichment. |
-| `spark_session` | `Any` | Yes | Fabric Spark session used when committing enrichment metadata rows. |
+| `guardrail_state` | `Mapping[str, Any]` | Yes | Selected target state containing catalogue/profile column identities. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to append enrichment records. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
-| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
-| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
 
 ## Returns
 
@@ -78,6 +79,18 @@ Raises validation, widget, Spark, or metadata routing errors when selected targe
 - The selected guardrail target has no column-level evidence.
 - Configured custom fields omit a field name.
 - Metadata lakehouse writes cannot be routed through 00_env_config.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Current values are loaded from ``METADATA_ENRICHMENT`` and prepopulated.
+Saving appends one row for each changed or new property and skips unchanged
+values. Empty inputs are skipped; clearing a current value is not supported
+by this pre-release model. Classification and personal-identifier controls
+use the configured governance options.
+
+</div>
 
 ## See also
 

@@ -14,7 +14,7 @@ Render interactive controls for reviewing proposed and bypassed guardrail rules.
 
 `fabricops_kit/widgets/widget_review_guardrail_governance.py:15`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L15-L39">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_review_guardrail_governance.py#L15-L38">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -53,7 +53,7 @@ Example usage not documented yet.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Guardrail state with existing enrichment and guardrail rule records to review. |
+| `state` | `Mapping[str, Any]` | Yes | Guardrail state with existing guardrail rule records to review. |
 | `spark_session` | `Any` | No | Fabric Spark session used when saving governance review decisions. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
 

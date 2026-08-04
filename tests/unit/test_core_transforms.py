@@ -9,7 +9,8 @@ from tests.helpers import FakeSpark, framework_config
 
 from fabricops_kit.widgets.shared import (
     _build_dq_rule_records,
-    build_enrichment_rule_records,
+    build_enrichment_records,
+    latest_enrichment_values,
 )
 
 pytestmark = pytest.mark.unit
@@ -61,27 +62,35 @@ def test_profile_helper_returns_notebook_ready_structure():
 
 
 
-def test_governance_review_builders_commit_only_human_approved_records():
-    """Verify governed intent builders commit only human-approved records."""
-    profile_rows = _profile_rows()
-    enrichment = build_enrichment_rule_records(
-        profile_rows,
-        [
-            {"column_name": "order_id", "business_description": "reviewed only", "commit": False},
-            {"column_name": "amount", "business_description": "Approved amount", "sensitivity_label": "restricted", "commit": True},
-        ],
-        state={"governance_mode": "governed", "approval_policy": "approval_required"},
-        actor="reviewer",
-    )
-    dq = _build_dq_rule_records(
-        profile_rows,
-        [{"rule_id": "amount_positive", "columns": ["amount"], "rule_type": "greater_than", "value": 0, "review_status": "governance_approved", "commit": True}],
-    )
+def test_generic_enrichment_builder_and_latest_values(monkeypatch):
+    """Build independent generic rows and resolve deterministic current values."""
+    audit = {name: "2026-01-01T00:00:00Z" if name == "_committed_at" else "audit" for name in gr.STANDARD_RUNTIME_AUDIT_COLUMNS}
+    monkeypatch.setattr(gr, "build_runtime_audit_fields", lambda **_kwargs: audit)
+    records = build_enrichment_records([
+        {"enrichment_level": "table", "metadata_key": "table-key", "enrichment_type": "Description", "value": "Orders"},
+        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Description", "value": "Old", "enrichment_id": "a"},
+        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Description", "value": "Current", "enrichment_id": "b"},
+        {"enrichment_level": "column", "metadata_key": "col-amount", "enrichment_type": "Classification", "value": "Sensitive"},
+    ], config=object(), env="dev")
+    assert set(records[0]) == {"enrichment_id", "enrichment_level", "metadata_key", "enrichment_type", "value", *gr.STANDARD_RUNTIME_AUDIT_COLUMNS}
+    latest = latest_enrichment_values(records)
+    assert latest[("column", "col-amount", "Description")]["value"] == "Current"
+    assert len(latest) == 3
 
-    assert [row["metadata_column_key"] for row in enrichment] == ["col-amount"]
-    assert enrichment[0]["review_status"] == "pending_governance_review"
-    assert enrichment[0]["enrichment_payload_json"]
-    assert dq[0]["rule_key"]
+
+@pytest.mark.parametrize("field", ["metadata_key", "enrichment_type", "value"])
+def test_enrichment_builder_rejects_empty_required_values(field):
+    """Reject blank generic enrichment values."""
+    row = {"enrichment_level": "column", "metadata_key": "col", "enrichment_type": "Description", "value": "Meaning"}
+    row[field] = ""
+    with pytest.raises(ValueError, match=field):
+        build_enrichment_records([row])
+
+
+def test_enrichment_builder_rejects_unsupported_level():
+    """Only table and column identities are supported."""
+    with pytest.raises(ValueError, match="table.*column"):
+        build_enrichment_records([{"enrichment_level": "dataset", "metadata_key": "x", "enrichment_type": "x", "value": "x"}])
 
 
 def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
@@ -114,14 +123,6 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         "dev",
         _profile_rows(),
         spark_session=FakeSpark(),
-        enrichment_reviews=[
-            {
-                "column_name": "amount",
-                "business_description": "Approved amount",
-                "classification": "financial",
-                "commit": True,
-            }
-        ],
         guardrail_rule_reviews=[
             {
                 "rule_id": "amount_positive",
@@ -136,49 +137,26 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         approved_by="reviewer",
     )
 
-    assert set(result) == {"enrichment_rules", "guardrail_rules", "readiness_summary"}
+    assert set(result) == {"guardrail_rules", "readiness_summary"}
     assert "column_context" not in result
     assert "column_classification" not in result
     assert "governance_review" not in result
-    assert [table for table, _ in writes] == [gr.ENRICHMENT_TABLE, gr.GUARDRAIL_TABLE]
+    assert [table for table, _ in writes] == [gr.GUARDRAIL_TABLE]
 
 
-def test_load_rule_review_history_reads_enrichment_and_guardrail_rows():
-    """Verify approval history is derived from append-only rule rows."""
-    rows = [
-        {
-            "enrichment_rule_id": "enrich-1",
-            "enrichment_rule_version": "v1",
-            "metadata_table_key": "table-key",
-            "metadata_column_key": "col-amount",
-            "column_name": "amount",
-            "enrichment_type": "classification",
-            "review_status": "proposed",
-            "is_active": False,
-            "submitted_by": "engineer",
-            "submitted_at": "2026-01-01T00:00:00Z",
-        },
-        {
-            "rule_id": "guardrail-1",
-            "rule_version": "v2",
-            "metadata_table_key": "table-key",
-            "metadata_column_key": "col-amount",
-            "column_name": "amount",
-            "guardrail_type": "dq",
-            "review_status": "governance_approved",
-            "is_active": True,
-            "reviewed_by": "steward",
-            "reviewed_at": "2026-01-02T00:00:00Z",
-        },
-    ]
-
+def test_load_rule_review_history_reads_guardrail_rows():
+    """Verify approval history remains specific to append-only guardrail rules."""
+    rows = [{
+        "rule_id": "guardrail-1", "rule_version": "v2",
+        "metadata_table_key": "table-key", "metadata_column_key": "col-amount",
+        "column_name": "amount", "guardrail_type": "dq",
+        "review_status": "governance_approved", "is_active": True,
+        "reviewed_by": "steward", "reviewed_at": "2026-01-02T00:00:00Z",
+    }]
     history = gr.load_rule_review_history(rows, metadata_column_key="col-amount")
-
-    assert [entry["rule_id"] for entry in history] == ["guardrail-1", "enrich-1"]
-    assert [entry["record_type"] for entry in history] == ["guardrail", "enrichment"]
+    assert [entry["rule_id"] for entry in history] == ["guardrail-1"]
+    assert history[0]["record_type"] == "guardrail"
     assert history[0]["rule_version"] == "v2"
-    assert history[1]["rule_version"] == "v1"
-
 
 def test_catalogue_profile_loader_uses_physical_identity_helper(monkeypatch):
     """Verify loader delegates table matching to the shared physical identity helper."""

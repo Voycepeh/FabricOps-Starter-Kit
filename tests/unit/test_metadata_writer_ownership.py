@@ -147,7 +147,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
     source = _function_source("widgets/shared.py", "record_table_governance")
 
     assert "GUARDRAIL_TABLE" in source
-    assert "ENRICHMENT_TABLE" in source
+    assert "ENRICHMENT_TABLE" not in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
 
 
@@ -199,12 +199,12 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
 
     assert "PROFILED_TABLE" in selector_source
     assert "GUARDRAIL_TABLE" in selector_source
-    assert "ENRICHMENT_TABLE" in selector_source
+    assert "ENRICHMENT_TABLE" not in selector_source
     assert "_read_metadata_table_or_empty" in selector_source
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
     assert "_write_rule_records" in review_widget_source
-    assert "_write_enrichment_records" in review_widget_source
+    assert "_write_enrichment_records" not in review_widget_source
     assert "_write_governance_policy_record" not in review_widget_source
     assert "METADATA_GOVERNANCE_REVIEWS" not in review_widget_source
 

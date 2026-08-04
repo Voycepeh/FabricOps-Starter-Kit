@@ -23,8 +23,7 @@ def widget_review_guardrail_governance(
     Parameters
     ----------
     state : Mapping[str, Any]
-        Guardrail state with existing enrichment and guardrail rule records to
-        review.
+        Guardrail state with existing guardrail rule records to review.
     spark_session : Any, optional
         Fabric Spark session used when saving governance review decisions.
     context : dict[str, Any], optional
@@ -46,8 +45,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
     ----------
     state : mapping
         Handover state from :func:`widget_select_guardrail_target`. The state may
-        include ``existing_rules`` from ``METADATA_GUARDRAIL`` and
-        ``existing_enrichment_rules`` from ``METADATA_ENRICHMENT``.
+        include ``existing_rules`` from ``METADATA_GUARDRAIL``.
     spark_session : Any, optional
         Spark session used for save actions.
     context : dict[str, Any], optional
@@ -57,8 +55,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
     Returns
     -------
     dict[str, Any]
-        Widget state with controls and callable action helpers for guardrail and
-        enrichment lifecycle decisions.
+        Widget state with controls and callable guardrail review actions.
 
     """
     config, env, _context = resolve_fabric_context(context=context)
@@ -66,16 +63,11 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
     from IPython import display as ip
 
     guardrail_rules = [dict(row, _record_kind="guardrail") for row in list(state.get("existing_rules") or [])]
-    enrichment_rules = [dict(row, _record_kind="enrichment") for row in list(state.get("existing_enrichment_rules") or state.get("existing_enrichment") or [])]
-    all_records = guardrail_rules + enrichment_rules
+    all_records = guardrail_rules
     reviewable = [row for row in all_records if str(row.get("review_state") or row.get("review_status") or "") in {"pending_governance_review", "active_pending_governance_review", "self_approved", "governance_approved"}]
 
     def _label(row: Mapping[str, Any], idx: int) -> tuple[str, int]:
-        kind = str(row.get("_record_kind") or "guardrail")
-        if kind == "enrichment":
-            label = f"enrichment · {row.get('review_status')} · {row.get('enrichment_type') or 'metadata_enrichment'} · {row.get('column_name') or '_table'}"
-        else:
-            label = f"guardrail · {row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}"
+        label = f"guardrail · {row.get('review_status')} · {row.get('guardrail_type')} · {row.get('rule_type')} · {row.get('column_name') or '_table'}"
         return label, idx
 
     record_options = [_label(row, idx) for idx, row in enumerate(reviewable)]
@@ -100,12 +92,8 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
 
     def save_record_action(action: str) -> dict[str, Any]:
         selected = _selected_record_row()
-        if selected.get("_record_kind") == "enrichment":
-            row = _governance_review.apply_governance_enrichment_action(selected, action, supersedes_enrichment_rule_id=replacement_key.value, config=config)
-            target_table = _governance_review.ENRICHMENT_TABLE
-        else:
-            row = _governance_review.apply_governance_rule_action(selected, action, superseded_by_rule_key=replacement_key.value, config=config)
-            target_table = _governance_review.GUARDRAIL_TABLE
+        row = _governance_review.apply_governance_rule_action(selected, action, superseded_by_rule_key=replacement_key.value, config=config)
+        target_table = _governance_review.GUARDRAIL_TABLE
         rows_to_write = row if isinstance(row, list) else [row]
         for review_row in rows_to_write:
             review_row.pop("_record_kind", None)
@@ -113,10 +101,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
         if spark_session is None or config is None or env is None:
             message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save review action."
             return row
-        if target_table == _governance_review.ENRICHMENT_TABLE:
-            _governance_review._write_enrichment_records(rows_to_write, config=config, env=env, spark_session=spark_session)
-        else:
-            _governance_review._write_rule_records(rows_to_write, config=config, env=env, spark_session=spark_session)
+        _governance_review._write_rule_records(rows_to_write, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {action} review event to {target_table}.</b>"
         return row
 
@@ -127,9 +112,9 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
     deactivate_button.on_click(lambda _: save_record_action("deactivate"))
 
     ui = widgets.VBox([
-        widgets.HTML("<h3>Governance policy, enrichment review, and guardrail review</h3>"),
-        widgets.HTML("<p>03_governance owns the standard governance review workflow. Review enrichment intent from METADATA_ENRICHMENT and guardrail rule intent from METADATA_GUARDRAIL with the same lifecycle controls.</p>"),
-        widgets.HTML("<p><b>Filters:</b> Enrichment requests · Guardrail requests · Bypass pending review · Active approved · Rejected · Superseded · View approval logs.</p>"),
+        widgets.HTML("<h3>Governance policy and guardrail review</h3>"),
+        widgets.HTML("<p>03_governance owns the standard governance review workflow. Review guardrail rule intent from METADATA_GUARDRAIL.</p>"),
+        widgets.HTML("<p><b>Filters:</b> Guardrail requests · Bypass pending review · Active approved · Rejected · Superseded · View approval logs.</p>"),
         status,
         widgets.HTML("<h4>Proposed, bypassed, and active records requiring governance decisions</h4>"),
         selected_record,

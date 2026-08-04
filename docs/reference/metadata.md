@@ -42,7 +42,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_ENRICHMENT](metadata/metadata_enrichment.md)**
 
-    Append-only enrichment intent and approved business context for governed tables and columns.
+    Append-only generic descriptive and governance values for catalogue table and column identities.
 
 -   **[METADATA_GUARDRAIL](metadata/metadata_guardrail.md)**
 
