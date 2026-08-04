@@ -662,7 +662,13 @@ def test_enrichment_widget_writes_one_row_per_populated_type(monkeypatch):
     assert [(row["enrichment_type"], row["value"]) for row in records] == [("Business_context", "Order identity"), ("Personal_identifier", "direct PII")]
     assert all(row["metadata_key"] == "col-order" and row["enrichment_level"] == "column" for row in records)
     assert all("enrichment_payload_json" not in row and "review_status" not in row for row in records)
-    widget["save"]()
+    first_save = widget["save"]()
+    second_save = widget["save"]()
+    assert len(first_save["enrichment_records"]) == 2
+    assert second_save == {"enrichment_records": []}
+    assert widget["status"].value == "No enrichment changes to save."
+    assert widget["rows"][0]["states"]["Business_context"].value == "<small>existing</small>"
+    assert widget["rows"][0]["states"]["Personal_identifier"].value == "<small>existing</small>"
     assert [table for table, _ in writes] == [governance_review.ENRICHMENT_TABLE]
 
 

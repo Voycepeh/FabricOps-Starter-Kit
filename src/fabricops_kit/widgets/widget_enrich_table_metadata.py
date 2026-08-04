@@ -69,6 +69,13 @@ def widget_enrich_table_metadata(
     }
     row_controls = []
     panels = []
+
+    def refresh_item_state(item: dict[str, Any]) -> None:
+        for enrichment_type, control in item["values"].items():
+            before = item["original_values"][enrichment_type]
+            state = "changed" if before and control.value != before else "existing" if before else "new"
+            item["states"][enrichment_type].value = f"<small>{state}</small>"
+
     for row in profile_rows:
         metadata_key = str(_enrichment._value(row, "metadata_column_key"))
         original = {
@@ -89,10 +96,7 @@ def widget_enrich_table_metadata(
         item = {"metadata_key": metadata_key, "column_name": str(_enrichment._value(row, "column_name")), "values": controls, "original_values": original, "states": state_labels}
 
         def refresh_state(*_: Any, item: dict[str, Any] = item) -> None:
-            for enrichment_type, control in item["values"].items():
-                before = item["original_values"][enrichment_type]
-                state = "changed" if before and control.value != before else "existing" if before else "new"
-                item["states"][enrichment_type].value = f"<small>{state}</small>"
+            refresh_item_state(item)
 
         for control in controls.values():
             control.observe(refresh_state, names="value")
@@ -114,7 +118,15 @@ def widget_enrich_table_metadata(
 
     def save() -> dict[str, list[dict[str, Any]]]:
         records = build_records()
+        if not records:
+            status.value = "No enrichment changes to save."
+            return {"enrichment_records": []}
         _enrichment.write_enrichment_records(records, config=config, env=env, spark_session=spark_session)
+        items_by_key = {item["metadata_key"]: item for item in row_controls}
+        for record in records:
+            item = items_by_key[record["metadata_key"]]
+            item["original_values"][record["enrichment_type"]] = record["value"]
+            refresh_item_state(item)
         status.value = f"Saved {len(records)} enrichment row(s) to METADATA_ENRICHMENT."
         return {"enrichment_records": records}
 
