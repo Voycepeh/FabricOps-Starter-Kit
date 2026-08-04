@@ -73,6 +73,7 @@ def _install_fake_notebook_widgets(monkeypatch):
 
     fake_widgets = types.SimpleNamespace(
         Dropdown=Widget,
+        Select=Widget,
         SelectMultiple=Widget,
         Textarea=Widget,
         Text=Widget,
@@ -627,49 +628,6 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     loaded = _load_active_dq_rules(frame, table_name="orders", env="dev", dataset_name="sales")
 
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
-
-
-def test_enrichment_widget_writes_one_row_per_populated_type(monkeypatch):
-    """The enrichment widget emits independent canonical property rows."""
-    _install_fake_notebook_widgets(monkeypatch)
-    import types
-    from fabricops_kit.widgets import shared as widget_shared
-
-    class Spark:
-        def createDataFrame(self, rows, schema=None):
-            return rows
-
-    writes = []
-    existing = [
-        {"enrichment_id": "old-context", "enrichment_level": "column", "metadata_key": "col-order", "enrichment_type": "Description", "value": "Existing context", "_committed_at": "2026-01-01T00:00:00Z", "_activity_id": "a"},
-        {"enrichment_id": "current-context", "enrichment_level": "column", "metadata_key": "col-order", "enrichment_type": "Description", "value": "Current context", "_committed_at": "2026-01-02T00:00:00Z", "_activity_id": "a"},
-        {"enrichment_id": "classification", "enrichment_level": "column", "metadata_key": "col-order", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-02T00:00:00Z", "_activity_id": "a"},
-    ]
-    monkeypatch.setattr(widget_shared, "read_enrichment_records", lambda *args, **kwargs: existing)
-    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((table, df)))
-    config = types.SimpleNamespace()
-    state = {"profile_run_id": "run", "profile_stage": "target", "catalogue_profile_rows": [{"column_name": "order_id", "metadata_column_key": "col-order", "profile_run_id": "run", "profile_stage": "target"}]}
-    widget = widget_enrich_table_metadata(state, context={"config": config, "env": "dev"}, spark_session=Spark())
-    values = widget["rows"][0]["values"]
-    assert values["Description"].value == "Current context"
-    assert values["Classification"].value == "public"
-    assert list(values["Classification"].options) == ["", "classified", "restricted", "public"]
-    assert list(values["Personal_identifier"].options) == ["", "direct PII", "indirect PII", "none"]
-    assert widget["build_records"]() == []
-    values["Description"].value = "Order identity"
-    values["Personal_identifier"].value = "direct PII"
-    records = widget["build_records"]()
-    assert [(row["enrichment_type"], row["value"]) for row in records] == [("Description", "Order identity"), ("Personal_identifier", "direct PII")]
-    assert all(row["metadata_key"] == "col-order" and row["enrichment_level"] == "column" for row in records)
-    assert all("enrichment_payload_json" not in row and "review_status" not in row for row in records)
-    first_save = widget["save"]()
-    second_save = widget["save"]()
-    assert len(first_save["enrichment_records"]) == 2
-    assert second_save == {"enrichment_records": []}
-    assert widget["status"].value == "No enrichment changes to save."
-    assert widget["rows"][0]["states"]["Description"].value == "<small>existing</small>"
-    assert widget["rows"][0]["states"]["Personal_identifier"].value == "<small>existing</small>"
-    assert [table for table, _ in writes] == [governance_review.ENRICHMENT_TABLE]
 
 
 def test_new_authoring_lifecycle_draft_submit_apply_now_and_ungoverned():

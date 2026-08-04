@@ -2158,3 +2158,117 @@ def build_catalogue_widget(
         )
     )
     return state
+
+
+def catalogue_table_options(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Return deterministic, uniquely labelled logical catalogue tables.
+
+    Canonical ``metadata_table_key`` values remain the option values.  Labels
+    use the physical catalogue coordinates and add the environment and a short
+    key only when the readable coordinates are not unique.
+    """
+    latest: dict[str, dict[str, Any]] = {}
+    for raw in rows:
+        row = dict(raw)
+        key = str(row.get("metadata_table_key") or "").strip()
+        if not key:
+            continue
+        rank = tuple(
+            str(row.get(field) or "")
+            for field in ("_committed_at", "_activity_id", "schema_fingerprint", "metadata_column_key")
+        )
+        current = latest.get(key)
+        if current is None or rank > current["_browser_rank"]:
+            row["_browser_rank"] = rank
+            latest[key] = row
+
+    def base_label(row: Mapping[str, Any]) -> str:
+        table = str(row.get("table_name") or "(unnamed table)")
+        location = " / ".join(
+            value for value in (
+                str(row.get("layer") or "").strip(),
+                str(row.get("schema_name") or "").strip(),
+            ) if value
+        )
+        return f"{table} — {location}" if location else table
+
+    counts = Counter(base_label(row) for row in latest.values())
+    options = []
+    for key, raw in latest.items():
+        row = {name: value for name, value in raw.items() if name != "_browser_rank"}
+        label = base_label(row)
+        if counts[label] > 1:
+            environment = str(row.get("environment_name") or "").strip()
+            store = str(row.get("store_type") or "").strip()
+            context = " / ".join(value for value in (environment, store) if value)
+            label = f"{label} ({context or key})"
+        options.append({**row, "metadata_table_key": key, "label": label})
+    return sorted(options, key=lambda row: (str(row["label"]).casefold(), str(row["metadata_table_key"])))
+
+
+def catalogue_table_browser_state(
+    catalogue_rows: Iterable[Mapping[str, Any]],
+    metadata_table_key: str,
+    current_enrichment: Mapping[tuple[str, str, str], Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Resolve the latest complete schema and historical columns for a table."""
+    key = str(metadata_table_key or "").strip()
+    if not key:
+        raise ValueError("The selected logical table is missing metadata_table_key.")
+    rows = [dict(row) for row in catalogue_rows if str(row.get("metadata_table_key") or "") == key]
+    if not rows:
+        raise ValueError("The selected logical table has no catalogue schema rows.")
+
+    def rank(row: Mapping[str, Any]) -> tuple[str, ...]:
+        return tuple(
+            str(row.get(field) or "")
+            for field in ("_committed_at", "_activity_id", "schema_fingerprint", "metadata_column_key")
+        )
+
+    latest_event = max(rows, key=rank)
+    fingerprint = str(latest_event.get("schema_fingerprint") or "").strip()
+    if not fingerprint:
+        raise ValueError("The selected logical table has no latest schema fingerprint.")
+    latest_rows = [row for row in rows if str(row.get("schema_fingerprint") or "") == fingerprint]
+    current_keys = {str(row.get("metadata_column_key") or "").strip() for row in latest_rows}
+    observations: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        column_key = str(row.get("metadata_column_key") or "").strip()
+        if column_key:
+            observations.setdefault(column_key, []).append(row)
+    columns = []
+    for column_key, history in observations.items():
+        recent = max(history, key=rank)
+        first = min(history, key=rank)
+        level_values = {
+            enrichment_type: str(current_enrichment.get(("column", column_key, enrichment_type), {}).get("value") or "")
+            for enrichment_type in ("Description", "Classification", "Personal_identifier")
+        }
+        columns.append({
+            "column_name": str(recent.get("column_name") or ""),
+            "metadata_column_key": column_key,
+            "data_type": str(recent.get("data_type") or ""),
+            "status": "current" if column_key in current_keys else "removed",
+            "first_observed_at": first.get("_committed_at"),
+            "last_observed_at": recent.get("_committed_at"),
+            "latest_schema_membership": column_key in current_keys,
+            "enrichment_values": level_values,
+        })
+    columns.sort(key=lambda row: (row["status"] != "current", row["column_name"].casefold(), row["metadata_column_key"]))
+    identity = dict(max(rows, key=rank))
+    table_values = {
+        enrichment_type: str(current_enrichment.get(("table", key, enrichment_type), {}).get("value") or "")
+        for enrichment_type in ("Description", "Classification")
+    }
+    return {
+        "table_identity": identity,
+        "metadata_table_key": key,
+        "table_name": str(identity.get("table_name") or ""),
+        "latest_schema_fingerprint": fingerprint,
+        "latest_schema_timestamp": latest_event.get("_committed_at"),
+        "latest_schema_rows": sorted(latest_rows, key=lambda row: (str(row.get("column_name") or "").casefold(), str(row.get("metadata_column_key") or ""))),
+        "all_historical_columns": columns,
+        "current_columns": [row for row in columns if row["status"] == "current"],
+        "removed_columns": [row for row in columns if row["status"] == "removed"],
+        "current_enrichment_values": {"table": table_values, "columns": {row["metadata_column_key"]: row["enrichment_values"] for row in columns}},
+    }
