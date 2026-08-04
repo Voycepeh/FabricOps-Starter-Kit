@@ -385,7 +385,7 @@ def _write_lineage_participation(
     normalized_fingerprint = _require_non_empty_string(schema_fingerprint, "schema_fingerprint")
     normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
-    activity_id = _require_non_empty_string(audit.get("_activity_id"), "activity_id")
+    activity_id = audit["_activity_id"]
     event_id = _lineage_event_id(
         activity_id=activity_id,
         metadata_table_key=normalized_key,
@@ -396,18 +396,11 @@ def _write_lineage_participation(
         LINEAGE_TABLE,
         {
             "lineage_event_id": event_id,
-            "activity_id": activity_id,
-            "notebook_id": _require_non_empty_string(audit.get("_notebook_id"), "notebook_id"),
-            "notebook_name": _require_non_empty_string(audit.get("_notebook_name"), "notebook_name"),
-            "workspace_id": _require_non_empty_string(audit.get("_workspace_id"), "workspace_id"),
-            "workspace_name": _require_non_empty_string(audit.get("_workspace_name"), "workspace_name"),
             "metadata_table_key": normalized_key,
             "schema_fingerprint": normalized_fingerprint,
             "profile_role": normalized_role,
             "profiled_at": profiled_at,
-            "committed_by": _require_non_empty_string(audit.get("_committed_by"), "committed_by"),
             "environment_name": env,
-            "metadata_lakehouse_name": audit.get("_metadata_lakehouse_name"),
             **audit,
         },
     )
@@ -692,13 +685,13 @@ def profile_and_register_table(
     or produced as an output during the current notebook activity. A
     ``profile_role="source"`` value means the DataFrame was used as an input.
     A ``profile_role="target"`` value means the DataFrame was produced as an
-    output. Key lineage fields include ``lineage_event_id``,
-    ``activity_id``, ``notebook_id``, ``notebook_name``, ``workspace_id``,
-    ``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
-    ``profile_role``, ``profiled_at``, ``committed_by``,
-    ``environment_name``, ``metadata_lakehouse_name``, and the standard audit
-    fields. ``lineage_event_id`` is deterministically derived from
-    ``activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
+    output. Lineage-specific fields are ``lineage_event_id``,
+    ``metadata_table_key``, ``schema_fingerprint``, ``profile_role``,
+    ``profiled_at``, and ``environment_name``. The standard eight underscore
+    audit fields are the sole execution-context contract. ``profiled_at`` is
+    the dataset profile snapshot time, while ``_committed_at`` is the metadata
+    write time. ``lineage_event_id`` is deterministically derived from
+    ``_activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
     ``profile_role``.
 
     What the notebook receives: a Spark DataFrame containing one profiling

@@ -1241,6 +1241,33 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
             )
 
 
+def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
+    """Verify the breaking lineage schema has one authoritative execution context."""
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
+
+    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
+    audit_names = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
+    assert schema.fieldNames() == [
+        "lineage_event_id",
+        "metadata_table_key",
+        "schema_fingerprint",
+        "profile_role",
+        "profiled_at",
+        "environment_name",
+        *audit_names,
+    ]
+    assert all(not field.nullable for field in schema.fields if field.name in audit_names)
+    assert {
+        "activity_id",
+        "notebook_id",
+        "notebook_name",
+        "workspace_id",
+        "workspace_name",
+        "committed_by",
+        "metadata_lakehouse_name",
+    }.isdisjoint(schema.fieldNames())
+
+
 def test_metadata_audit_schema_nullability_contract():
     """Verify canonical metadata audit columns preserve physical nullability."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry

@@ -782,22 +782,15 @@ def test_catalogue_dataframe_from_profiled_deduplicates_identity_rows(spark_sess
 
 
 def test_lineage_schema_is_table_participation_contract():
-    """Verify lineage keeps exactly one unprefixed runtime identity contract."""
+    """Verify lineage uses only the shared audit contract for runtime context."""
     schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
     assert schema.fieldNames() == [
         "lineage_event_id",
-        "activity_id",
-        "notebook_id",
-        "notebook_name",
-        "workspace_id",
-        "workspace_name",
         "metadata_table_key",
         "schema_fingerprint",
         "profile_role",
         "profiled_at",
-        "committed_by",
         "environment_name",
-        "metadata_lakehouse_name",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -811,10 +804,22 @@ def test_lineage_schema_is_table_participation_contract():
     assert type(fields["metadata_table_key"].dataType).__name__ == "StringType"
     assert type(fields["profile_role"].dataType).__name__ == "StringType"
     assert fields["lineage_event_id"].nullable is False
-    assert fields["activity_id"].nullable is False
     assert fields["metadata_table_key"].nullable is False
     assert fields["schema_fingerprint"].nullable is False
     assert fields["profile_role"].nullable is False
+    removed_context = {
+        "activity_id",
+        "notebook_id",
+        "notebook_name",
+        "workspace_id",
+        "workspace_name",
+        "committed_by",
+        "metadata_lakehouse_name",
+    }
+    assert removed_context.isdisjoint(schema.fieldNames())
+    assert all(fields[name].nullable is False for name in AUDIT_COLUMNS)
+    assert fields["profiled_at"].nullable is False
+    assert fields["_committed_at"].nullable is False
     obsolete = {
         "lineage_id",
         "dataset_name",
@@ -827,6 +832,55 @@ def test_lineage_schema_is_table_participation_contract():
         "transformation_steps_json",
     }
     assert obsolete.isdisjoint(schema.fieldNames())
+
+
+def test_lineage_writer_uses_audit_context_and_activity_for_idempotent_identity(spark_session, monkeypatch):
+    """Verify lineage writes canonical audit context and a stable activity-based event ID."""
+    module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
+    profiled_at = datetime(2026, 1, 1, 10, 30)
+    committed_at = datetime(2026, 1, 1, 10, 31)
+    audit = {
+        "_committed_by": "tester",
+        "_committed_at": committed_at,
+        "_workspace_id": "workspace-1",
+        "_workspace_name": "Workspace One",
+        "_notebook_id": "notebook-1",
+        "_notebook_name": "Notebook One",
+        "_metadata_lakehouse_name": "metadata_lh",
+        "_activity_id": "activity-1",
+    }
+    captured = []
+    monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **_kwargs: audit)
+    monkeypatch.setattr(module, "_upsert_lineage_event", lambda **kwargs: captured.append(kwargs["lineage_df"]))
+
+    arguments = {
+        "metadata_table_key": "lakehouse|raw||customers",
+        "schema_fingerprint": "schema-1",
+        "profile_role": "source",
+        "profiled_at": profiled_at,
+        "config": object(),
+        "env": "dev",
+        "context": {},
+        "spark_session": spark_session,
+    }
+    module._write_lineage_participation(**arguments)
+    module._write_lineage_participation(**arguments)
+
+    rows = [dataframe.collect()[0].asDict() for dataframe in captured]
+    expected_event_id = module._lineage_event_id(
+        activity_id=audit["_activity_id"],
+        metadata_table_key=arguments["metadata_table_key"],
+        schema_fingerprint=arguments["schema_fingerprint"],
+        profile_role=arguments["profile_role"],
+    )
+    assert len(rows) == 2
+    assert rows[0] == rows[1]
+    assert rows[0]["lineage_event_id"] == expected_event_id
+    assert set(rows[0]) == set(metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames())
+    assert all(rows[0][name] == value for name, value in audit.items())
+    assert rows[0]["profiled_at"] == profiled_at
+    assert rows[0]["_committed_at"] == committed_at
+    assert rows[0]["profiled_at"] != rows[0]["_committed_at"]
 
 
 def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeypatch, registered):

@@ -34,7 +34,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
 
-    Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.
+    Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.
 
 -   **[METADATA_DATA_ACCESS](metadata/metadata_data_access.md)**
 

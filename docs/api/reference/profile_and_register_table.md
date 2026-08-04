@@ -27,9 +27,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:473`
+`fabricops_kit/pipeline/profile_and_register_table.py:466`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L473-L824">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L466-L817">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -244,13 +244,13 @@ structure and can create a new catalogue snapshot.
 or produced as an output during the current notebook activity. A
 ``profile_role="source"`` value means the DataFrame was used as an input.
 A ``profile_role="target"`` value means the DataFrame was produced as an
-output. Key lineage fields include ``lineage_event_id``,
-``activity_id``, ``notebook_id``, ``notebook_name``, ``workspace_id``,
-``workspace_name``, ``metadata_table_key``, ``schema_fingerprint``,
-``profile_role``, ``profiled_at``, ``committed_by``,
-``environment_name``, ``metadata_lakehouse_name``, and the standard audit
-fields. ``lineage_event_id`` is deterministically derived from
-``activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
+output. Lineage-specific fields are ``lineage_event_id``,
+``metadata_table_key``, ``schema_fingerprint``, ``profile_role``,
+``profiled_at``, and ``environment_name``. The standard eight underscore
+audit fields are the sole execution-context contract. ``profiled_at`` is
+the dataset profile snapshot time, while ``_committed_at`` is the metadata
+write time. ``lineage_event_id`` is deterministically derived from
+``_activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
 ``profile_role``.
 
 What the notebook receives: a Spark DataFrame containing one profiling
