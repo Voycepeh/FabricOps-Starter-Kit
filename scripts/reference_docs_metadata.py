@@ -123,7 +123,7 @@ METADATA_TABLE_PURPOSES = {
     "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
     "METADATA_DATA_PROFILED": "Compact per-column summary statistics captured from a profiled dataset snapshot.",
     "METADATA_DATA_PROFILED_FREQUENCY": "Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.",
-    "METADATA_DATA_LINEAGE": "Runtime lineage participation rows that connect a profiled dataset snapshot to a Fabric activity.",
+    "METADATA_DATA_LINEAGE": "Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.",
     "METADATA_DATA_ACCESS": "Access-review rows reserved for implemented metadata access evidence.",
     "METADATA_ENRICHMENT": "Append-only generic descriptive and governance values for catalogue table and column identities.",
     "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
@@ -263,26 +263,6 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
             "fabricops_kit.pipeline.profile_and_register_table._lineage_event_id",
         ],
-        "activity_id": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
-        "notebook_id": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
-        "notebook_name": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
-        "workspace_id": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
-        "workspace_name": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
         "metadata_table_key": [
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
             "fabricops_kit.config.metadata_keys._build_metadata_table_key",
@@ -294,14 +274,6 @@ METADATA_COLUMN_OWNERS = {
         "profiled_at": [
             "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
             "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-        ],
-        "committed_by": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
-        ],
-        "metadata_lakehouse_name": [
-            "fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation",
-            "fabricops_kit.config.audit.build_runtime_audit_fields",
         ],
     },
     "METADATA_DATA_ACCESS": {
