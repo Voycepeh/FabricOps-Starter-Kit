@@ -58,7 +58,7 @@ def widget_enrich_table_metadata(
 <div class="reference-example-usage" markdown="1">
 
 >>> browser = widget_enrich_table_metadata(spark_session=spark)
->>> browser["selected_table_state"]["latest_schema_fingerprint"]
+>>> state = browser.get("selected_table_state", {})
 
 </div>
 

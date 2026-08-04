@@ -44428,7 +44428,7 @@
       "depth": 7,
       "direct_call_count": 12,
       "discontinued_in": null,
-      "examples": ">>> browser = widget_enrich_table_metadata(spark_session=spark)\n>>> browser[\"selected_table_state\"][\"latest_schema_fingerprint\"]",
+      "examples": ">>> browser = widget_enrich_table_metadata(spark_session=spark)\n>>> state = browser.get(\"selected_table_state\", {})",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_schemas.py",

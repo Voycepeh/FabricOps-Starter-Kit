@@ -69,7 +69,7 @@ def widget_enrich_table_metadata(
     Examples
     --------
     >>> browser = widget_enrich_table_metadata(spark_session=spark)
-    >>> browser["selected_table_state"]["latest_schema_fingerprint"]
+    >>> state = browser.get("selected_table_state", {})
 
     See Also
     --------
