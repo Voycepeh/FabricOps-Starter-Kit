@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field as dataclass_field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import hashlib
 import json
 from typing import Any, Iterable, Mapping
@@ -819,7 +819,7 @@ def _json(value: Any) -> str:
         return value
     return json.dumps(value, sort_keys=True)
 
-def _enrichment_options(config: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
+def enrichment_control_options(config: Any) -> tuple[list[str], list[str], list[dict[str, Any]], list[dict[str, Any]]]:
     """Return configured column metadata enrichment controls."""
     governance = getattr(config, "governance_config", None)
     sensitivity = list(getattr(governance, "sensitivity_labels", None) or SENSITIVITY_LABELS)
@@ -933,10 +933,22 @@ def latest_enrichment_values(rows: Any) -> dict[tuple[str, str, str], dict[str, 
     for raw in source or []:
         row = raw.asDict(recursive=True) if hasattr(raw, "asDict") else dict(raw)
         key = (str(row.get("enrichment_level") or ""), str(row.get("metadata_key") or ""), str(row.get("enrichment_type") or ""))
-        order = tuple(str(row.get(name) or "") for name in ("_committed_at", "_activity_id", "enrichment_id"))
+        committed_at = row.get("_committed_at")
+        committed_text = str(committed_at or "").strip().replace("Z", "+00:00")
+        try:
+            committed_value = committed_at if isinstance(committed_at, datetime) else datetime.fromisoformat(committed_text)
+            if committed_value.tzinfo is None:
+                committed_value = committed_value.replace(tzinfo=timezone.utc)
+            committed_order = (1, committed_value.timestamp())
+        except ValueError:
+            committed_order = (0, committed_text)
+        order = (committed_order, str(row.get("_activity_id") or ""), str(row.get("enrichment_id") or ""))
         current = latest.get(key)
-        if current is None or order > tuple(str(current.get(name) or "") for name in ("_committed_at", "_activity_id", "enrichment_id")):
+        if current is None or order > current["_enrichment_sort_key"]:
+            row["_enrichment_sort_key"] = order
             latest[key] = row
+    for row in latest.values():
+        row.pop("_enrichment_sort_key", None)
     return latest
 
 
@@ -954,6 +966,11 @@ def write_enrichment_records(records: list[dict[str, Any]], *, config: Any, env:
         context={"config": config, "env": env},
         mode="append",
     )
+
+
+def read_enrichment_records(config: Any, env: str, *, spark_session: Any) -> list[dict[str, Any]]:
+    """Read enrichment append events from the configured metadata target."""
+    return _read_metadata_table_or_empty(config, env, ENRICHMENT_TABLE, spark_session=spark_session)
 
 def resolve_table_governance_policy(governance_rows: Any, *, environment_name: str = "", dataset_name: str = "", table_name: str = "", metadata_table_key: str = "") -> dict[str, Any]:
     """Return the latest active table-level governance policy.
@@ -1581,14 +1598,13 @@ def record_table_governance(
     profile_rows: list[dict[str, Any]],
     *,
     spark_session: Any,
-    enrichment_reviews: list[dict[str, Any]] | None = None,
     guardrail_rule_reviews: list[dict[str, Any]] | None = None,
     approved_by: str | None = None,
     readiness_selection: dict[str, Any] | None = None,
     evaluate_readiness: bool = False,
     mode: str = "append",
 ) -> dict[str, Any]:
-    """Persist governed enrichment and guardrail rule intent.
+    """Persist governed guardrail rule intent.
 
     Parameters
     ----------
@@ -1601,9 +1617,6 @@ def record_table_governance(
         Column-profile rows loaded for the selected catalogue table.
     spark_session : pyspark.sql.SparkSession
         Spark session used to create DataFrames for metadata writes.
-    enrichment_reviews : list of dict, optional
-        Human-reviewed enrichment payload rows. Committed rows are written only
-        to ``METADATA_ENRICHMENT``.
     guardrail_rule_reviews : list of dict, optional
         Human-reviewed guardrail rule rows. DQ rows use
         ``review_status="governance_approved"`` and are written only to
@@ -1622,13 +1635,10 @@ def record_table_governance(
     Returns
     -------
     dict[str, Any]
-        Records written for ``enrichment_rules`` and ``guardrail_rules`` plus an
-        optional non-persistent ``readiness_summary``.
+        Records written for ``guardrail_rules`` plus an optional non-persistent
+        ``readiness_summary``.
 
     """
-    enrichment_records = build_enrichment_records(
-        enrichment_reviews or [], config=config, env=env, actor=approved_by
-    )
     guardrail_records = _build_dq_rule_records(
         profile_rows,
         guardrail_rule_reviews or [],
@@ -1636,10 +1646,7 @@ def record_table_governance(
         env=env,
         approved_by=approved_by,
     )
-    writes = {
-        ENRICHMENT_TABLE: enrichment_records,
-        GUARDRAIL_TABLE: [dict(record, guardrail_type=record.get("guardrail_type") or "dq") for record in guardrail_records],
-    }
+    writes = {GUARDRAIL_TABLE: [dict(record, guardrail_type=record.get("guardrail_type") or "dq") for record in guardrail_records]}
     for table_name, records in writes.items():
         if records:
             write_lakehouse_table_core(spark_session.createDataFrame([coerce_metadata_row_types(table_name, record) for record in records]), table_name, target="metadata", schema=configured_lakehouse_schema(config, env, "metadata"), context={"config": config, "env": env}, mode=mode)
@@ -1657,7 +1664,6 @@ def record_table_governance(
         )
 
     return {
-        "enrichment_rules": enrichment_records,
         "guardrail_rules": guardrail_records,
         "readiness_summary": readiness_summary,
     }

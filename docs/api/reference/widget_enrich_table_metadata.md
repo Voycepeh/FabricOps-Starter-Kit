@@ -14,7 +14,7 @@ Render a consolidated column enrichment widget.
 
 `fabricops_kit/widgets/widget_enrich_table_metadata.py:12`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L12-L95">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L12-L124">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -84,8 +84,11 @@ Raises validation, widget, Spark, or metadata routing errors when selected targe
 
 <div class="reference-docstring-notes" markdown="1">
 
-Each populated property is one append-only row. Empty inputs are skipped;
-clearing a current value is not supported by this pre-release model.
+Current values are loaded from ``METADATA_ENRICHMENT`` and prepopulated.
+Saving appends one row for each changed or new property and skips unchanged
+values. Empty inputs are skipped; clearing a current value is not supported
+by this pre-release model. Classification and personal-identifier controls
+use the configured governance options.
 
 </div>
 

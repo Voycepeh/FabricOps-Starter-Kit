@@ -147,7 +147,7 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
     source = _function_source("widgets/shared.py", "record_table_governance")
 
     assert "GUARDRAIL_TABLE" in source
-    assert "ENRICHMENT_TABLE" in source
+    assert "ENRICHMENT_TABLE" not in source
     assert "GUARDRAIL_RESULTS_TABLE" not in source
 
 

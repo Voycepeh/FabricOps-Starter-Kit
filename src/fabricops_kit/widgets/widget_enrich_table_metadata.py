@@ -38,8 +38,11 @@ def widget_enrich_table_metadata(
 
     Notes
     -----
-    Each populated property is one append-only row. Empty inputs are skipped;
-    clearing a current value is not supported by this pre-release model.
+    Current values are loaded from ``METADATA_ENRICHMENT`` and prepopulated.
+    Saving appends one row for each changed or new property and skips unchanged
+    values. Empty inputs are skipped; clearing a current value is not supported
+    by this pre-release model. Classification and personal-identifier controls
+    use the configured governance options.
 
     Examples
     --------
@@ -55,6 +58,9 @@ def widget_enrich_table_metadata(
     if not profile_rows:
         raise ValueError("Selected target has no column metadata identities.")
 
+    enrichment_rows = _enrichment.read_enrichment_records(config, env, spark_session=spark_session)
+    current_values = _enrichment.latest_enrichment_values(enrichment_rows)
+    classification_options, personal_identifier_options, _, _ = _enrichment.enrichment_control_options(config)
     property_labels = {
         "Business_context": "Business context",
         "Classification": "Classification",
@@ -64,13 +70,36 @@ def widget_enrich_table_metadata(
     row_controls = []
     panels = []
     for row in profile_rows:
-        controls = {
-            name: widgets.Textarea(value="", description=label, rows=2, layout=widgets.Layout(width="600px"))
-            for name, label in property_labels.items()
+        metadata_key = str(_enrichment._value(row, "metadata_column_key"))
+        original = {
+            enrichment_type: str(current_values.get(("column", metadata_key, enrichment_type), {}).get("value") or "")
+            for enrichment_type in property_labels
         }
-        item = {"metadata_key": str(_enrichment._value(row, "metadata_column_key")), "column_name": str(_enrichment._value(row, "column_name")), "values": controls}
+        classification_choices = list(dict.fromkeys([*classification_options, original["Classification"]]))
+        personal_identifier_choices = list(dict.fromkeys([*personal_identifier_options, original["Personal_identifier"]]))
+        classification_choices = [value for value in classification_choices if value]
+        personal_identifier_choices = [value for value in personal_identifier_choices if value]
+        controls = {
+            "Business_context": widgets.Textarea(value=original["Business_context"], description=property_labels["Business_context"], rows=2, layout=widgets.Layout(width="600px")),
+            "Classification": widgets.Dropdown(options=["", *classification_choices], value=original["Classification"], description=property_labels["Classification"], layout=widgets.Layout(width="600px")),
+            "Personal_identifier": widgets.Dropdown(options=["", *personal_identifier_choices], value=original["Personal_identifier"], description=property_labels["Personal_identifier"], layout=widgets.Layout(width="600px")),
+            "Business_name": widgets.Text(value=original["Business_name"], description=property_labels["Business_name"], layout=widgets.Layout(width="600px")),
+        }
+        state_labels = {name: widgets.HTML(value="") for name in property_labels}
+        item = {"metadata_key": metadata_key, "column_name": str(_enrichment._value(row, "column_name")), "values": controls, "original_values": original, "states": state_labels}
+
+        def refresh_state(*_: Any, item: dict[str, Any] = item) -> None:
+            for enrichment_type, control in item["values"].items():
+                before = item["original_values"][enrichment_type]
+                state = "changed" if before and control.value != before else "existing" if before else "new"
+                item["states"][enrichment_type].value = f"<small>{state}</small>"
+
+        for control in controls.values():
+            control.observe(refresh_state, names="value")
+        refresh_state()
         row_controls.append(item)
-        panels.append(widgets.VBox([widgets.HTML(f"<b>{item['column_name']}</b>"), *controls.values()]))
+        field_rows = [widgets.VBox([controls[name], state_labels[name]]) for name in property_labels]
+        panels.append(widgets.VBox([widgets.HTML(f"<b>{item['column_name']}</b>"), *field_rows]))
 
     status = widgets.HTML(value="")
 
@@ -79,7 +108,7 @@ def widget_enrich_table_metadata(
             {"enrichment_level": "column", "metadata_key": item["metadata_key"], "enrichment_type": enrichment_type, "value": control.value}
             for item in row_controls
             for enrichment_type, control in item["values"].items()
-            if control.value.strip()
+            if control.value.strip() and control.value != item["original_values"][enrichment_type]
         ]
         return _enrichment.build_enrichment_records(inputs, config=config, env=env)
 

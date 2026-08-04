@@ -123,14 +123,6 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         "dev",
         _profile_rows(),
         spark_session=FakeSpark(),
-        enrichment_reviews=[
-            {
-                "enrichment_level": "column",
-                "metadata_key": "col-amount",
-                "enrichment_type": "Business_context",
-                "value": "Approved amount",
-            }
-        ],
         guardrail_rule_reviews=[
             {
                 "rule_id": "amount_positive",
@@ -145,11 +137,11 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
         approved_by="reviewer",
     )
 
-    assert set(result) == {"enrichment_rules", "guardrail_rules", "readiness_summary"}
+    assert set(result) == {"guardrail_rules", "readiness_summary"}
     assert "column_context" not in result
     assert "column_classification" not in result
     assert "governance_review" not in result
-    assert [table for table, _ in writes] == [gr.ENRICHMENT_TABLE, gr.GUARDRAIL_TABLE]
+    assert [table for table, _ in writes] == [gr.GUARDRAIL_TABLE]
 
 
 def test_load_rule_review_history_reads_guardrail_rows():
