@@ -8,7 +8,7 @@ import importlib
 import pytest
 
 import fabricops_kit
-from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.widgets import widget_register_data_contract as public_widget
 from fabricops_kit.widgets.widget_register_data_contract import (
     _agreement_details,
@@ -99,6 +99,8 @@ class _FakeWidgets:
     """Widget module double for deterministic headless behavior tests."""
 
     Text = _FakeWidget
+    Textarea = _FakeWidget
+    Checkbox = _FakeWidget
     Select = _FakeWidget
     HTML = _FakeWidget
     Button = _FakeWidget
@@ -229,6 +231,7 @@ def snapshot_runtime(monkeypatch, spark_session):
     tables = {
         "METADATA_DATA_CATALOGUE": catalogue,
         "METADATA_DATA_CONTRACT": spark_session.createDataFrame([], registry["METADATA_DATA_CONTRACT"]),
+        "METADATA_ENRICHMENT": spark_session.createDataFrame([], registry["METADATA_ENRICHMENT"]),
     }
     writes: list[tuple[str, str, list[dict]]] = []
     tick = {"value": 0}
@@ -640,6 +643,71 @@ def test_html_values_are_escaped(snapshot_runtime, spark_session):
     assert "&lt;script&gt;" in state["_controls"]["agreement"].value
     labels_by_key = {value: label for label, value in state["_controls"]["available"].options}
     assert "<b>raw</b>" in labels_by_key["html"]
+
+
+def test_enrichment_editor_uses_stable_identities_and_separate_save(snapshot_runtime, spark_session):
+    """Descriptions survive fingerprints and only changed current fields append."""
+    _module, tables, writes = snapshot_runtime
+    registry = metadata_table_schema_registry()
+    audit = {
+        "_committed_by": "seed", "_committed_at": datetime(2026, 7, 1),
+        "_workspace_id": "w", "_workspace_name": "w", "_notebook_id": "n",
+        "_notebook_name": "n", "_metadata_lakehouse_name": "m", "_activity_id": "enrich-old",
+    }
+    rows = [
+        {"enrichment_rule_id": "table-v1", "enrichment_rule_version": "1", "enrichment_rule_key": "table-key",
+         "metadata_table_key": "key-one", "metadata_column_key": "", "table_name": "orders",
+         "column_name": "", "enrichment_scope": "table", "business_description": "Orders table",
+         "activation_state": "active", "is_active": True, **audit},
+        {"enrichment_rule_id": "column-v1", "enrichment_rule_version": "1", "enrichment_rule_key": "column-key",
+         "metadata_table_key": "key-one", "metadata_column_key": "col-id", "table_name": "orders",
+         "column_name": "id", "enrichment_scope": "column", "column_description": "Stable identifier",
+         "activation_state": "active", "is_active": True, **audit},
+    ]
+    tables["METADATA_ENRICHMENT"] = spark_session.createDataFrame(
+        [coerce_metadata_row_types("METADATA_ENRICHMENT", row) for row in rows],
+        registry["METADATA_ENRICHMENT"],
+    )
+    state = public_widget(agreement_id="agreement", spark_session=spark_session)
+    state["_controls"]["available"].value = "key-one"
+    assert state["selected_table_enrichment"]["business_description"] == "Orders table"
+    editor = {row["metadata_column_key"]: row for row in state["get_enrichment_editor_rows"]()}
+    assert editor["col-id"]["business_description"] == "Stable identifier"
+    assert editor["col-name"]["business_description"] == ""
+    state["_controls"]["table_description"].value = "Orders for reporting <safe>"
+    state["_controls"]["save_descriptions"].click()
+    enrichment_writes = [rows for name, _mode, rows in writes if name == "METADATA_ENRICHMENT"]
+    assert len(enrichment_writes) == 1
+    assert len(enrichment_writes[0]) == 1
+    saved = enrichment_writes[0][0]
+    assert saved["business_description"] == "Orders for reporting <safe>"
+    assert saved["column_description"] in (None, "")
+    assert saved["_committed_by"] == "tester"
+    assert state["last_enrichment_save_result"]["table_saved"] is True
+
+
+def test_removed_enrichment_rows_are_scoped_read_only_and_escaped(snapshot_runtime, spark_session):
+    """Only the contracted/current difference appears with catalogue observation time."""
+    _module, tables, _writes = snapshot_runtime
+    extra = spark_session.createDataFrame([
+        ("key-one", "col-removed", "fp-old", "dev", "Lakehouse", "raw", "sales", "orders", "legacy", "string", datetime(2026, 1, 20)),
+        ("key-one", "col-historical", "fp-ancient", "dev", "Lakehouse", "raw", "sales", "orders", "ancient", "string", datetime(2025, 1, 1)),
+    ], tables["METADATA_DATA_CATALOGUE"].schema)
+    tables["METADATA_DATA_CATALOGUE"] = tables["METADATA_DATA_CATALOGUE"].unionByName(extra)
+    _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 3, 1), ["key-one"])
+    contract_rows = [row.asDict(recursive=True) for row in tables["METADATA_DATA_CONTRACT"].collect()]
+    contract_rows[-1]["schema_fingerprint"] = "fp-old"
+    tables["METADATA_DATA_CONTRACT"] = spark_session.createDataFrame(
+        contract_rows, metadata_table_schema_registry()["METADATA_DATA_CONTRACT"],
+    )
+    state = public_widget(agreement_id="agreement", spark_session=spark_session)
+    assert state["show_removed_columns"] is False
+    assert state["removed_column_rows"][0]["metadata_column_key"] == "col-removed"
+    assert state["removed_column_rows"][0]["editable"] is False
+    assert state["removed_column_rows"][0]["last_observed"] == datetime(2026, 1, 20)
+    assert all(row["metadata_column_key"] != "col-historical" for row in state["removed_column_rows"])
+    state["_controls"]["show_removed_columns"].value = True
+    assert state["show_removed_columns"] is True
 
 
 def test_missing_widgets_is_actionable_and_non_destructive(monkeypatch, capsys):

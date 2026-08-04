@@ -20,11 +20,13 @@ from fabricops_kit.widgets.shared import (
     form_section,
     require_ipywidgets,
     widget_common,
+    build_enrichment_rule_records,
 )
 
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
+ENRICHMENT_TABLE = "METADATA_ENRICHMENT"
 
 
 def _display_widget(value: Any) -> None:
@@ -188,6 +190,56 @@ def _compare_schemas(
     }
 
 
+def _latest_active_enrichments(enrichments) -> dict[tuple[str, str], dict[str, Any]]:
+    """Return deterministic latest active enrichment rows by stable identity."""
+    rows = [row.asDict(recursive=True) for row in enrichments.collect()]
+    latest: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        if row.get("is_active") is False or str(row.get("activation_state") or "active").lower() != "active":
+            continue
+        key = (
+            str(row.get("metadata_table_key") or "").strip(),
+            str(row.get("metadata_column_key") or "").strip(),
+        )
+        if not key[0]:
+            continue
+        rank = (
+            _commit_sort_value(row.get("_committed_at")),
+            str(row.get("enrichment_rule_version") or ""),
+            str(row.get("enrichment_rule_id") or ""),
+        )
+        current = latest.get(key)
+        current_rank = (
+            _commit_sort_value(current.get("_committed_at")),
+            str(current.get("enrichment_rule_version") or ""),
+            str(current.get("enrichment_rule_id") or ""),
+        ) if current else None
+        if current_rank is None or rank > current_rank:
+            latest[key] = row
+    return latest
+
+
+def _removed_column_observations(catalogue, table_key: str, column_keys: set[str]) -> dict[str, dict[str, Any]]:
+    """Resolve the last catalogue observation for specifically removed columns."""
+    if not column_keys:
+        return {}
+    from pyspark.sql import functions as F
+
+    rows = catalogue.filter(F.col("metadata_table_key") == table_key).select(
+        "metadata_column_key", "column_name", "data_type", "_committed_at",
+    ).collect()
+    latest: dict[str, dict[str, Any]] = {}
+    for value in rows:
+        row = value.asDict(recursive=True)
+        key = str(row.get("metadata_column_key") or "")
+        if key not in column_keys:
+            continue
+        current = latest.get(key)
+        if current is None or _commit_sort_value(row.get("_committed_at")) > _commit_sort_value(current.get("_committed_at")):
+            latest[key] = row
+    return latest
+
+
 def _base_dataset_label(row: dict[str, Any]) -> str:
     """Build a readable physical-coordinate label without empty segments."""
     return " / ".join(
@@ -324,7 +376,9 @@ def widget_register_data_contract(
         ``saved_activity_id``, ``get_rows``, ``get_snapshot``, and notebook
         controls under ``_controls``. ``dataset_reviews`` and
         ``get_schema_review`` expose the contracted and current fingerprints,
-        complete structural schemas, differences, and display classifications
+        complete structural schemas, differences, and display classifications.
+        Enrichment state and defensive-copy getters expose current and removed
+        description rows, unsaved edits, and the last description-save result
         without requiring callers to parse HTML. Activity and commit values come directly
         from the standard FabricOps audit fields rather than dedicated schema
         columns.
@@ -357,8 +411,16 @@ def widget_register_data_contract(
     An unsaved agreement draft cannot create an inventory snapshot; select an
     existing agreement or save the new agreement first.
 
-    In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
-    and guardrails and guardrail results remain separate future workflows.
+    The latest catalogue schema and its fingerprint remain contract-owned. Table
+    and current-column business descriptions are edited separately against stable
+    catalogue identities and appended to ``METADATA_ENRICHMENT`` only through
+    ``Save descriptions``. Removed contracted columns can be displayed as muted,
+    read-only historical context; their last-observed dates come from catalogue
+    observations. Contract inventory and description saves are independent
+    explicit actions and report failures separately.
+
+    Schema comparison remains informational. Guardrails and guardrail results
+    remain separate future workflows.
     Granularity, semantic calculation changes, data quality, freshness,
     sensitivity, and PII are not enforced by this widget. This widget does not
     claim Open Data Contract Standard completeness.
@@ -401,12 +463,18 @@ def widget_register_data_contract(
             "saved_activity_id": None, "saved_metadata_ids": [], "error": message,
             "dataset_reviews": [], "contract_schema_will_change": False,
             "selected_dataset_review": None,
+            "selected_table_enrichment": None, "selected_column_enrichments": {},
+            "enrichment_editor_rows": [], "show_removed_columns": False,
+            "removed_column_rows": [], "has_unsaved_enrichment_changes": False,
+            "last_enrichment_save_result": None,
             "_controls": {},
         }
         state["get_rows"] = lambda: []
         state["get_snapshot"] = lambda: {"header": None, "memberships": []}
         state["get_schema_review"] = lambda: []
         state["get_selected_dataset_review"] = lambda: None
+        state["get_enrichment_editor_rows"] = lambda: []
+        state["get_removed_column_rows"] = lambda: []
         return state
 
     config, env, resolved = resolve_fabric_context(context=context)
@@ -424,6 +492,11 @@ def widget_register_data_contract(
         CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
     )
+    enrichments = read_lakehouse_table_core(
+        ENRICHMENT_TABLE, target=target, schema=schema,
+        spark_session=spark_session, context=runtime_context,
+    )
+    enrichment_by_identity = _latest_active_enrichments(enrichments)
     latest_summary, latest_rows = (
         _latest_inventory(memberships, resolved_agreement_id)
         if resolved_agreement_id else (None, [])
@@ -445,6 +518,13 @@ def widget_register_data_contract(
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
     selected_schema = widgets.HTML(value="<i>Select a catalogue dataset to review its current schema.</i>")
+    table_description = widgets.Textarea(
+        value="", rows=3, **widget_common(widgets, "Table business description", textarea=True),
+    )
+    show_removed = widgets.Checkbox(value=False, description="Show removed columns")
+    column_editor = widgets.VBox([])
+    save_descriptions = widgets.Button(description="Save descriptions", button_style="primary")
+    enrichment_status = widgets.HTML(value="")
     contract_schema_warning = widgets.HTML(value="")
     status = widgets.HTML(value="")
     execution_output = widgets.Output()
@@ -462,7 +542,14 @@ def widget_register_data_contract(
         "saved_activity_id": None, "saved_metadata_ids": [],
         "dataset_reviews": [], "contract_schema_will_change": False,
         "selected_dataset_review": None,
+        "selected_table_enrichment": None, "selected_column_enrichments": {},
+        "enrichment_editor_rows": [], "show_removed_columns": False,
+        "removed_column_rows": [], "has_unsaved_enrichment_changes": False,
+        "last_enrichment_save_result": None,
     }
+    editor_controls: dict[str, Any] = {}
+    original_descriptions: dict[str, str] = {}
+    selected_enrichment_key = {"value": ""}
 
     def readable_label(key: str) -> str:
         return option_by_id.get(key, f"Unavailable catalogue dataset — {_short_key(key)}")
@@ -578,6 +665,96 @@ def widget_register_data_contract(
             + "</div>"
         )
 
+    def sync_enrichment_state(*_args: Any) -> None:
+        rows = []
+        changed = table_description.value != original_descriptions.get("", "")
+        for key, control in editor_controls.items():
+            row = dict(getattr(control, "_fabricops_row", {}))
+            row["business_description"] = str(control.value or "")
+            rows.append(row)
+            changed = changed or control.value != original_descriptions.get(key, "")
+        state["enrichment_editor_rows"] = rows
+        state["has_unsaved_enrichment_changes"] = changed
+
+    def render_enrichment_editor(review: dict[str, Any] | None) -> None:
+        previous_key = selected_enrichment_key["value"]
+        draft_table = str(table_description.value or "")
+        draft_columns = {column_key: str(control.value or "") for column_key, control in editor_controls.items()}
+        editor_controls.clear()
+        original_descriptions.clear()
+        key = str((review or {}).get("metadata_table_key") or "")
+        selected_enrichment_key["value"] = key
+        table_row = enrichment_by_identity.get((key, ""))
+        table_value = str((table_row or {}).get("business_description") or "")
+        table_description.value = draft_table if previous_key == key else table_value
+        original_descriptions[""] = table_value
+        state["selected_table_enrichment"] = deepcopy(table_row)
+        column_enrichments: dict[str, dict[str, Any]] = {}
+        current_rows = []
+        added = {
+            row["metadata_column_key"] for row in (review or {}).get("schema_diff", {}).get("added_columns", [])
+        }
+        for row in (review or {}).get("current_schema", []):
+            column_key = row["metadata_column_key"]
+            enrichment = enrichment_by_identity.get((key, column_key))
+            if enrichment:
+                column_enrichments[column_key] = deepcopy(enrichment)
+            value = str((enrichment or {}).get("column_description") or "")
+            control = widgets.Text(
+                value=draft_columns.get(column_key, value) if previous_key == key else value,
+                description="", layout=widgets.Layout(width="100%"),
+            )
+            editor_row = {
+                **row, "status": "Added" if column_key in added else "Current",
+                "business_description": value, "editable": True,
+            }
+            control._fabricops_row = editor_row
+            control.observe(sync_enrichment_state, names="value")
+            editor_controls[column_key] = control
+            original_descriptions[column_key] = value
+            current_rows.append(widgets.HBox([
+                widgets.HTML(value=f"<b>{html.escape(editor_row['status'])}</b>", layout=widgets.Layout(width="70px")),
+                widgets.HTML(value=html.escape(row["column_name"]), layout=widgets.Layout(width="180px")),
+                widgets.HTML(value=html.escape(row["data_type"]), layout=widgets.Layout(width="130px")),
+                control,
+            ]))
+        removed_keys = {
+            row["metadata_column_key"] for row in (review or {}).get("schema_diff", {}).get("removed_columns", [])
+        }
+        observations = _removed_column_observations(catalogue, key, removed_keys)
+        removed_rows = []
+        removed_widgets = []
+        for column_key in sorted(removed_keys):
+            observation = observations.get(column_key, {})
+            enrichment = enrichment_by_identity.get((key, column_key))
+            value = str((enrichment or {}).get("column_description") or "")
+            removed_row = {
+                "status": "Removed", "metadata_table_key": key,
+                "metadata_column_key": column_key,
+                "column_name": str(observation.get("column_name") or ""),
+                "data_type": str(observation.get("data_type") or ""),
+                "business_description": value,
+                "last_observed": observation.get("_committed_at"), "editable": False,
+            }
+            removed_rows.append(removed_row)
+            observed = str(removed_row["last_observed"] or "")[:10]
+            removed_widgets.append(widgets.HTML(value=(
+                "<div style='display:grid;grid-template-columns:70px 180px 130px 1fr 100px;"
+                "gap:8px;color:#777;background:#f3f3f3;padding:6px'>"
+                f"<b>Removed</b><span>{html.escape(removed_row['column_name'])}</span>"
+                f"<span>{html.escape(removed_row['data_type'])}</span>"
+                f"<span>{html.escape(value)}</span><span>{html.escape(observed)}</span></div>"
+            )))
+        state["selected_column_enrichments"] = column_enrichments
+        state["removed_column_rows"] = removed_rows
+        state["show_removed_columns"] = bool(show_removed.value)
+        header = widgets.HTML(value=(
+            "<div style='display:grid;grid-template-columns:70px 180px 130px 1fr;gap:8px'>"
+            "<b>Status</b><b>Column</b><b>Data type</b><b>Business description</b></div>"
+        ))
+        column_editor.children = tuple([header, *current_rows, *(removed_widgets if show_removed.value else [])])
+        sync_enrichment_state()
+
     def select_review(key: str) -> None:
         key = str(key or "")
         review = build_dataset_review(key) if key else None
@@ -586,6 +763,7 @@ def widget_register_data_contract(
             render_review(review) if review else
             "<i>Select a catalogue or inventory dataset to review its schema.</i>"
         )
+        render_enrichment_editor(review)
 
     def refresh_controls(*_args: Any) -> None:
         current = list(state["inventory_metadata_ids"])
@@ -708,6 +886,87 @@ def widget_register_data_contract(
     def get_selected_dataset_review() -> dict[str, Any] | None:
         return deepcopy(state["selected_dataset_review"])
 
+    def get_enrichment_editor_rows() -> list[dict[str, Any]]:
+        sync_enrichment_state()
+        return deepcopy(state["enrichment_editor_rows"])
+
+    def get_removed_column_rows() -> list[dict[str, Any]]:
+        return deepcopy(state["removed_column_rows"])
+
+    def toggle_removed(change: dict[str, Any]) -> None:
+        if change.get("name") == "value":
+            state["show_removed_columns"] = bool(change.get("new"))
+            render_enrichment_editor(state.get("selected_dataset_review"))
+
+    def save_enrichment(_button: Any = None) -> None:
+        sync_enrichment_state()
+        key = selected_enrichment_key["value"]
+        review = state.get("selected_dataset_review") or {}
+        changed_reviews: list[dict[str, Any]] = []
+        table_changed = table_description.value != original_descriptions.get("", "")
+        if table_changed:
+            previous = enrichment_by_identity.get((key, ""), {})
+            changed_reviews.append({
+                "commit": True, "metadata_table_key": key, "metadata_column_key": "",
+                "table_name": str(rows_by_id.get(key, {}).get("table_name") or ""),
+                "column_name": "", "business_description": str(table_description.value or ""),
+                "supersedes_enrichment_rule_id": str(previous.get("enrichment_rule_id") or ""),
+            })
+        changed_columns = []
+        for column_key, control in editor_controls.items():
+            if control.value == original_descriptions.get(column_key, ""):
+                continue
+            row = control._fabricops_row
+            previous = enrichment_by_identity.get((key, column_key), {})
+            changed_reviews.append({
+                "commit": True, "metadata_table_key": key, "metadata_column_key": column_key,
+                "table_name": str(rows_by_id.get(key, {}).get("table_name") or ""),
+                "column_name": row["column_name"], "column_description": str(control.value or ""),
+                "supersedes_enrichment_rule_id": str(previous.get("enrichment_rule_id") or ""),
+            })
+            changed_columns.append(column_key)
+        if not changed_reviews:
+            result = {"status": "unchanged", "table_saved": False, "column_keys_saved": []}
+            state["last_enrichment_save_result"] = result
+            enrichment_status.value = "No description changes to save."
+            return
+        profiles = [{
+            **row, "metadata_table_key": key,
+            "environment_name": env,
+            "table_name": str(rows_by_id.get(key, {}).get("table_name") or ""),
+        } for row in review.get("current_schema", [])]
+        try:
+            records = build_enrichment_rule_records(
+                profiles, changed_reviews, state={}, config=None, env=env,
+                action="submit", source_notebook_type="02_pipeline",
+            )
+            audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+            records = [{**record, **audit} for record in records]
+            registry = metadata_table_schema_registry()
+            frame = spark_session.createDataFrame(
+                [coerce_metadata_row_types(ENRICHMENT_TABLE, row) for row in records],
+                schema=registry[ENRICHMENT_TABLE],
+            )
+            write_lakehouse_table_core(
+                frame, ENRICHMENT_TABLE, target=target, schema=schema,
+                mode="append", context=runtime_context,
+            )
+        except Exception as exc:
+            result = {"status": "failed", "table_saved": False, "column_keys_saved": [], "error": str(exc)}
+            state["last_enrichment_save_result"] = result
+            enrichment_status.value = f"Description save failed: {html.escape(str(exc))}"
+            return
+        for record in records:
+            identity = (str(record["metadata_table_key"]), str(record["metadata_column_key"] or ""))
+            enrichment_by_identity[identity] = record
+        result = {"status": "saved", "table_saved": table_changed, "column_keys_saved": changed_columns}
+        state["last_enrichment_save_result"] = result
+        render_enrichment_editor(review)
+        enrichment_status.value = (
+            f"Saved {'1 table description' if table_changed else 'no table description'} "
+            f"and {len(changed_columns)} column description(s) to METADATA_ENRICHMENT."
+        )
+
     def save_inventory(_button: Any = None) -> None:
         nonlocal latest_summary
         if not state.get("agreement_id"):
@@ -739,11 +998,15 @@ def widget_register_data_contract(
         clear = getattr(execution_output, "clear_output", None)
         if clear is not None:
             clear(wait=True)
-        with execution_output:
-            _append_inventory(
-                membership_rows=rows, target=target, schema=schema,
-                spark_session=spark_session, context=runtime_context,
-            )
+        try:
+            with execution_output:
+                _append_inventory(
+                    membership_rows=rows, target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                )
+        except Exception as exc:
+            status.value = f"Contract inventory save failed: {html.escape(str(exc))}"
+            return
         latest_summary = {
             "activity_id": activity_id, "agreement_id": state["agreement_id"],
             "committed_at": saved_at, "linked_dataset_count": len(current),
@@ -765,6 +1028,9 @@ def widget_register_data_contract(
     add.on_click(add_selected)
     remove.on_click(remove_selected)
     save.on_click(save_inventory)
+    save_descriptions.on_click(save_enrichment)
+    show_removed.observe(toggle_removed, names="value")
+    table_description.observe(sync_enrichment_state, names="value")
     agreement_selector = (agreement or {}).get("existing_record")
     if agreement_selector is not None and hasattr(agreement_selector, "observe"):
         agreement_selector.observe(
@@ -776,12 +1042,17 @@ def widget_register_data_contract(
     state["get_snapshot"] = get_snapshot
     state["get_schema_review"] = get_schema_review
     state["get_selected_dataset_review"] = get_selected_dataset_review
+    state["get_enrichment_editor_rows"] = get_enrichment_editor_rows
+    state["get_removed_column_rows"] = get_removed_column_rows
     state["_controls"] = {
         "agreement": agreement_text, "environment": environment_text,
         "summary": summary, "inventory": inventory, "remove": remove,
         "schema_review": selected_schema, "selected_schema": selected_schema,
         "contract_schema_warning": contract_schema_warning,
         "search": search, "available": available, "add": add, "save": save,
+        "table_description": table_description, "show_removed_columns": show_removed,
+        "column_editor": column_editor, "save_descriptions": save_descriptions,
+        "enrichment_status": enrichment_status,
         "status": status, "execution_output": execution_output,
     }
     refresh_controls()
@@ -812,7 +1083,17 @@ def widget_register_data_contract(
             widgets.HBox(
                 [
                     widgets.VBox([available]),
-                    widgets.VBox([selected_schema, action_row(widgets, [add])]),
+                    widgets.VBox([
+                        selected_schema,
+                        widgets.HTML(value=(
+                            "<p><i>The schema is read from the latest catalogue observation. "
+                            "Business descriptions are stored separately against the stable table "
+                            "and column identities.</i></p>"
+                        )),
+                        table_description, show_removed, column_editor,
+                        action_row(widgets, [save_descriptions]), enrichment_status,
+                        action_row(widgets, [add]),
+                    ], layout=widgets.Layout(max_height="640px", overflow="auto", width="100%")),
                 ],
                 layout=widgets.Layout(
                     display="grid", grid_template_columns="minmax(240px, 1fr) minmax(360px, 2fr)",

@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Review catalogue schemas and record exact schema versions in immutable agreement inventories.
+Review catalogue schemas, record exact contract schema versions, and maintain separate business-description enrichment.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:282`
+`fabricops_kit/widgets/widget_register_data_contract.py:334`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L282-L846">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L334-L1127">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,11 +83,11 @@ def widget_register_data_contract(
 
 ## Returns
 
-Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.
+Mutable state with audit activity details, structured schema and enrichment editor rows, separate unsaved indicators and save results, and defensive-copy getters.
 
 ### Return interpretation
 
-dataset_reviews exposes complete schemas and stable-key differences for the editable latest inventory; each save records one exact schema version per logical dataset without changing history.
+dataset_reviews exposes complete schemas and stable-key differences; enrichment editor state exposes current and removed description rows without HTML parsing. Contract saves record fingerprints while description saves append separate enrichment rows.
 
 ## Raises / Errors
 
@@ -122,8 +122,16 @@ Catalogue discovery is restricted to the active environment, but logical
 An unsaved agreement draft cannot create an inventory snapshot; select an
 existing agreement or save the new agreement first.
 
-In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
-and guardrails and guardrail results remain separate future workflows.
+The latest catalogue schema and its fingerprint remain contract-owned. Table
+and current-column business descriptions are edited separately against stable
+catalogue identities and appended to ``METADATA_ENRICHMENT`` only through
+``Save descriptions``. Removed contracted columns can be displayed as muted,
+read-only historical context; their last-observed dates come from catalogue
+observations. Contract inventory and description saves are independent
+explicit actions and report failures separately.
+
+Schema comparison remains informational. Guardrails and guardrail results
+remain separate future workflows.
 Granularity, semantic calculation changes, data quality, freshness,
 sensitivity, and PII are not enforced by this widget. This widget does not
 claim Open Data Contract Standard completeness.
