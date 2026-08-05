@@ -871,7 +871,7 @@ def widget_register_data_contract(
                 ],
                 layout=widgets.Layout(
                     display="grid", grid_template_columns="minmax(240px, 1fr) minmax(360px, 2fr)",
-                    gap="16px", align_items="start",
+                    gap="16px", align_items="flex-start",
                 ),
             ),
         ],
