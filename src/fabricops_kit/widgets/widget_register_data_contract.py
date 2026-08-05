@@ -55,10 +55,10 @@ def _usage_label(value: str) -> str:
 def _agreement_approved_usages(agreement: dict[str, Any] | None, agreement_id: str | None) -> list[str]:
     """Resolve approved usages from the selected parent agreement state."""
     supplied = agreement or {}
-    row = supplied
-    if not str(agreement_id or "").strip() and "existing_record" in supplied:
+    selected_id = str(agreement_id or "").strip()
+    if not selected_id and "existing_record" in supplied:
         selected_id = str(getattr(supplied.get("existing_record"), "value", "") or "").strip()
-        row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
+    row = (supplied.get("existing_records_by_id") or {}).get(selected_id, supplied)
     return _parse_approved_usage_json(row.get("approved_usage_json"))
 
 
@@ -773,6 +773,7 @@ def widget_register_data_contract(
             agreement_approved_usages=allowed_usage,
             approved_usages=[usage for usage in loaded_usage if usage in allowed_usage],
         )
+        approved_usage_checkboxes.clear()
         agreement_text.value = f"<b>Parent Data Agreement:</b> {html.escape(selected_label)}"
         status.value = (
             "Unsaved contract changes were preserved for the previous agreement."

@@ -788,6 +788,57 @@ def test_contract_usage_options_refresh_when_parent_agreement_changes(snapshot_r
     assert "research" not in checkboxes
 
 
+
+def test_switching_agreements_restores_new_saved_contract_usage(snapshot_runtime, spark_session):
+    """Loaded contract usages for a newly selected agreement win over old checkbox state."""
+    _module, tables, _writes = snapshot_runtime
+    _seed_snapshot(
+        spark_session, tables, "a", "agreement-a", datetime(2026, 1, 1), ["key-one"],
+        approved_usage_json='["research"]',
+    )
+    _seed_snapshot(
+        spark_session, tables, "b", "agreement-b", datetime(2026, 1, 2), ["key-two"],
+        approved_usage_json='["external"]',
+    )
+    selector = _FakeWidgets.Select(options=[("A", "agreement-a"), ("B", "agreement-b")], value="agreement-a")
+    agreement_state = {
+        "existing_record": selector,
+        "existing_records_by_id": {
+            "agreement-a": {"agreement_id": "agreement-a", "agreement_name": "A", "approved_usage_json": '["research"]'},
+            "agreement-b": {"agreement_id": "agreement-b", "agreement_name": "B", "approved_usage_json": '["external"]'},
+        },
+    }
+    state = public_widget(agreement=agreement_state, spark_session=spark_session)
+    assert state["_controls"]["approved_usage_checkboxes"]["research"].value is True
+
+    selector.value = "agreement-b"
+
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    assert list(checkboxes) == ["external"]
+    assert checkboxes["external"].value is True
+
+
+def test_explicit_agreement_id_uses_matching_agreement_state_usages(snapshot_runtime, spark_session):
+    """Explicit agreement_id still resolves approved usages from agreement widget state."""
+    _module, _tables, _writes = snapshot_runtime
+    selector = _FakeWidgets.Select(options=[("A", "agreement-a"), ("B", "agreement-b")], value="agreement-a")
+    agreement_state = {
+        "existing_record": selector,
+        "existing_records_by_id": {
+            "agreement-a": {"agreement_id": "agreement-a", "approved_usage_json": '["research"]'},
+            "agreement-b": {"agreement_id": "agreement-b", "approved_usage_json": '["external"]'},
+        },
+    }
+
+    state = public_widget(
+        agreement=agreement_state, agreement_id="agreement-b",
+        metadata_ids=["key-one"], spark_session=spark_session,
+    )
+
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    assert list(checkboxes) == ["external"]
+    assert state["agreement_id"] == "agreement-b"
+
 def test_existing_contract_usages_restore_only_when_parent_permits(snapshot_runtime, spark_session):
     """Existing saved usages are restored only when the parent still permits them."""
     _module, tables, _writes = snapshot_runtime
