@@ -150,37 +150,33 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
 
     def _save(_: Any) -> None:
         save.disabled = True
+        status.value = ""
         clear = getattr(output, "clear_output", None)
         if clear is not None:
             clear(wait=True)
-        with output:
-            try:
-                values = {
-                    key: widget.value.strip() if isinstance(widget.value, str) else widget.value
-                    for key, widget in form.items()
-                }
-                missing = _missing_required(values)
-                if missing:
-                    status.value = "Data steward was not saved. Complete the required fields."
-                    print("Cannot save data steward.\n\nComplete the following required fields:")
-                    for label in missing:
-                        print(f"• {label}")
-                    return
-                extras = collect_custom_fields(widget_config, custom)
-                if selected.value:
-                    values["steward_id"] = selected.value
-                    values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
-                row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
-                _refresh_existing_options(row["steward_id"])
-                for callback in after_save_callbacks:
-                    callback(row)
-                status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
-                print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
-            except Exception as exc:
-                status.value = f"Data steward was not saved: {exc}"
-                print(f"Error: {exc}")
-            finally:
-                _sync_save_state()
+        try:
+            values = {
+                key: widget.value.strip() if isinstance(widget.value, str) else widget.value
+                for key, widget in form.items()
+            }
+            missing = _missing_required(values)
+            if missing:
+                status.value = "Data steward was not saved. Complete the required fields."
+                return
+            extras = collect_custom_fields(widget_config, custom)
+            if selected.value:
+                values["steward_id"] = selected.value
+                values["_existing_steward_role"] = row_lookup.get(selected.value, {}).get("steward_role", "")
+            row = _create_or_update_data_steward(spark=spark, config=config, env=env, values=values, custom_fields=extras)
+            _refresh_existing_options(row["steward_id"])
+            for callback in after_save_callbacks:
+                callback(row)
+            status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
+            print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
+        except Exception as exc:
+            status.value = f"Data steward was not saved: {exc}"
+        finally:
+            _sync_save_state()
 
     save.on_click(_save)
     detail_fields = [form[field] for field in fields]

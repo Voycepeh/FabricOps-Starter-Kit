@@ -30,6 +30,7 @@ _WIDGET_STYLE = {"description_width": "initial"}
 _WIDGET_FIELD_MIN_WIDTH = "0"
 _WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
+FORM_PAGE_MAX_HEIGHT = "720px"
 
 
 def require_ipywidgets():
@@ -81,9 +82,19 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
         ),
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
     )
+    body = widgets.VBox(
+        list(children),
+        layout=widgets.Layout(
+            width="100%",
+            max_height=FORM_PAGE_MAX_HEIGHT,
+            overflow_y="auto",
+            overflow_x="hidden",
+            gap="12px",
+        ),
+    )
     page = widgets.VBox(
-        [header, *children],
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="12px"),
+        [header, body],
+        layout=widgets.Layout(width="100%", height="auto", gap="12px"),
     )
     add_class = getattr(page, "add_class", None)
     if callable(add_class):

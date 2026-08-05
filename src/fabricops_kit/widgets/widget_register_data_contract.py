@@ -835,70 +835,76 @@ def widget_register_data_contract(
 
     def save_inventory(_button: Any = None) -> None:
         nonlocal latest_summary
-        if not state.get("agreement_id"):
-            status.value = "Select or save an agreement before saving an inventory."
-            return
-        current = list(dict.fromkeys(state["inventory_metadata_ids"]))
-        selected_usage_json = _serialize_contract_approved_usages(
-            selected_approved_usages(), list(state.get("agreement_approved_usages") or [])
-        )
-        state["approved_usages"] = _parse_approved_usage_json(selected_usage_json)
-        fingerprints_changed = any(
-            str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
-            != str(next((row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""))
-            for key in current if key in saved_ids and key in rows_by_id
-        )
-        if current == saved_ids and not fingerprints_changed:
-            state["has_unsaved_changes"] = False
-            status.value = "No contract changes to save."
-            return
-        if not current:
-            status.value = "An inventory save must contain at least one logical dataset."
-            return
-        invalid_new = [
-            key for key in current
-            if key not in saved_ids
-            and not str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
-        ]
-        if invalid_new:
-            status.value = "New datasets require a valid current catalogue schema fingerprint before saving."
-            return
-        audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
-        activity_id = str(audit["_activity_id"])
-        saved_at = audit["_committed_at"]
-        rows = [{
-            "agreement_id": state["agreement_id"],
-            "metadata_table_key": key,
-            "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
-                (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
-            )),
-            "approved_usage_json": selected_usage_json,
-            **audit,
-        } for key in current]
+        save.disabled = True
+        status.value = ""
         clear = getattr(execution_output, "clear_output", None)
         if clear is not None:
             clear(wait=True)
-        with execution_output:
+        try:
+            if not state.get("agreement_id"):
+                status.value = "Select or save an agreement before saving an inventory."
+                return
+            current = list(dict.fromkeys(state["inventory_metadata_ids"]))
+            selected_usage_json = _serialize_contract_approved_usages(
+                selected_approved_usages(), list(state.get("agreement_approved_usages") or [])
+            )
+            state["approved_usages"] = _parse_approved_usage_json(selected_usage_json)
+            fingerprints_changed = any(
+                str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
+                != str(next((row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""))
+                for key in current if key in saved_ids and key in rows_by_id
+            )
+            if current == saved_ids and not fingerprints_changed:
+                state["has_unsaved_changes"] = False
+                status.value = "No contract changes to save."
+                return
+            if not current:
+                status.value = "An inventory save must contain at least one logical dataset."
+                return
+            invalid_new = [
+                key for key in current
+                if key not in saved_ids
+                and not str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
+            ]
+            if invalid_new:
+                status.value = "New datasets require a valid current catalogue schema fingerprint before saving."
+                return
+            audit = build_runtime_audit_fields(config=config, env=env, runtime_context=runtime_context)
+            activity_id = str(audit["_activity_id"])
+            saved_at = audit["_committed_at"]
+            rows = [{
+                "agreement_id": state["agreement_id"],
+                "metadata_table_key": key,
+                "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
+                    (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
+                )),
+                "approved_usage_json": selected_usage_json,
+                **audit,
+            } for key in current]
             _append_inventory(
                 membership_rows=rows, target=target, schema=schema,
                 spark_session=spark_session, context=runtime_context,
             )
-        latest_summary = {
-            "activity_id": activity_id, "agreement_id": state["agreement_id"],
-            "committed_at": saved_at, "linked_dataset_count": len(current),
-        }
-        latest_rows[:] = rows
-        saved_ids[:] = current
-        state.update(
-            latest_activity_id=activity_id, latest_committed_at=saved_at,
-            inventory_metadata_ids=list(current), inventory_count=len(current),
-            has_unsaved_changes=False, saved_activity_id=activity_id,
-            saved_metadata_ids=list(current),
-            approved_usages=_parse_approved_usage_json(selected_usage_json),
-            pending_additions=[], pending_removals=[],
-        )
-        refresh_controls()
-        status.value = f"Saved inventory with {len(current)} logical datasets."
+            latest_summary = {
+                "activity_id": activity_id, "agreement_id": state["agreement_id"],
+                "committed_at": saved_at, "linked_dataset_count": len(current),
+            }
+            latest_rows[:] = rows
+            saved_ids[:] = current
+            state.update(
+                latest_activity_id=activity_id, latest_committed_at=saved_at,
+                inventory_metadata_ids=list(current), inventory_count=len(current),
+                has_unsaved_changes=False, saved_activity_id=activity_id,
+                saved_metadata_ids=list(current),
+                approved_usages=_parse_approved_usage_json(selected_usage_json),
+                pending_additions=[], pending_removals=[],
+            )
+            refresh_controls()
+            status.value = f"Saved inventory with {len(current)} logical datasets."
+        except Exception as exc:
+            status.value = f"Contract inventory was not saved: {exc}"
+        finally:
+            save.disabled = not bool(state.get("agreement_id"))
 
     search.observe(refresh_controls, names="value")
     available.observe(select_available, names="value")
