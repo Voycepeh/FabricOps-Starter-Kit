@@ -15,6 +15,7 @@ from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session, read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.widgets.shared import (
     action_row,
+    checkbox_group,
     execution_log_section,
     form_grid,
     form_page,
@@ -29,8 +30,9 @@ CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
+
 def _parse_approved_usage_json(value: Any) -> list[str]:
-    """Return approved usages from a persisted JSON list without granting defaults."""
+    """Return approved usages from a JSON list without granting defaults."""
     try:
         selected = json.loads(str(value or "[]"))
     except json.JSONDecodeError as exc:
@@ -39,33 +41,37 @@ def _parse_approved_usage_json(value: Any) -> list[str]:
         raise ValueError("approved_usage_json must be a JSON list of strings.")
     result: list[str] = []
     for item in selected:
-        value = item.strip()
-        if value and value not in result:
-            result.append(value)
+        usage = item.strip()
+        if usage and usage not in result:
+            result.append(usage)
     return result
 
 
+def _usage_label(value: str) -> str:
+    """Return the checkbox label for a usage value."""
+    return value.replace("_", " ").title()
+
+
 def _agreement_approved_usages(agreement: dict[str, Any] | None, agreement_id: str | None) -> list[str]:
-    """Resolve approved usages for the selected parent agreement only."""
+    """Resolve approved usages from the selected parent agreement state."""
     supplied = agreement or {}
-    explicit = str(agreement_id or "").strip()
     row = supplied
-    if not explicit and "existing_record" in supplied:
+    if not str(agreement_id or "").strip() and "existing_record" in supplied:
         selected_id = str(getattr(supplied.get("existing_record"), "value", "") or "").strip()
         row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
     return _parse_approved_usage_json(row.get("approved_usage_json"))
 
 
 def _serialize_contract_approved_usages(selected: Any, parent_usages: list[str]) -> str:
-    """Serialize contract usages after enforcing the parent-agreement subset."""
+    """Serialize contract usages after enforcing agreement inheritance."""
     selected_values = [str(value).strip() for value in (selected or []) if str(value).strip()]
-    unknown = sorted(set(selected_values).difference(parent_usages))
-    if unknown:
+    invalid = sorted(set(selected_values).difference(parent_usages))
+    if invalid:
         raise ValueError(
-            "Contract approved usages must be a subset of the parent Data Agreement approved usages. "
-            "Invalid value(s): " + ", ".join(unknown)
+            "Data Contract approved usages must be a subset of the parent Data Agreement approved usages. "
+            "Invalid value(s): " + ", ".join(invalid)
         )
-    ordered = [option for option in parent_usages if option in selected_values]
+    ordered = [usage for usage in parent_usages if usage in selected_values]
     return json.dumps(ordered, separators=(",", ":"), ensure_ascii=False)
 
 def _display_widget(value: Any) -> None:
@@ -483,11 +489,8 @@ def widget_register_data_contract(
     add = widgets.Button(description="Add table to contract")
     inventory = widgets.Select(options=[], **widget_common(widgets, "Existing inventory"))
     remove = widgets.Button(description="Remove selected dataset")
-    approved_usage = widgets.SelectMultiple(
-        options=[(option, option) for option in parent_approved_usages],
-        value=(),
-        **widget_common(widgets, "Approved usages"),
-    )
+    approved_usage_checkboxes: dict[str, Any] = {}
+    approved_usage_box = widgets.VBox([])
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
     selected_schema = widgets.HTML(value="<i>Select a catalogue dataset to review its current schema.</i>")
@@ -512,7 +515,7 @@ def widget_register_data_contract(
         "pending_additions": [key for key in inventory_ids if key not in saved_ids],
         "pending_removals": [],
         "agreement_approved_usages": list(parent_approved_usages),
-        "approved_usages": [value for value in saved_contract_usages if value in parent_approved_usages],
+        "approved_usages": [usage for usage in saved_contract_usages if usage in parent_approved_usages],
     }
     agreement_drafts: dict[str, list[str]] = {}
 
@@ -664,12 +667,21 @@ def widget_register_data_contract(
             "<i>Select a catalogue or inventory dataset to review its schema.</i>"
         )
 
+    def selected_approved_usages() -> list[str]:
+        return [usage for usage, checkbox in approved_usage_checkboxes.items() if checkbox.value]
+
     def refresh_usage_options() -> None:
         allowed = list(state.get("agreement_approved_usages") or [])
-        current = list(approved_usage.value or ()) or list(state.get("approved_usages") or [])
-        current = [value for value in current if value in allowed]
-        approved_usage.options = [(option, option) for option in allowed]
-        approved_usage.value = tuple(current)
+        current = selected_approved_usages() or list(state.get("approved_usages") or [])
+        current = [usage for usage in current if usage in allowed]
+        approved_usage_checkboxes.clear()
+        approved_usage_checkboxes.update({
+            usage: widgets.Checkbox(value=usage in current, description=_usage_label(usage))
+            for usage in allowed
+        })
+        approved_usage_box.children = (
+            checkbox_group(widgets, label="Approved usages", checkboxes=approved_usage_checkboxes.values()),
+        )
         state["approved_usages"] = current
 
     def refresh_controls(*_args: Any) -> None:
@@ -743,6 +755,7 @@ def widget_register_data_contract(
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
         latest_summary, loaded_rows = _latest_inventory(memberships, selected_id)
         loaded_usage = _parse_approved_usage_json(loaded_rows[0].get("approved_usage_json")) if loaded_rows else []
+        allowed_usage = _parse_approved_usage_json(selected_row.get("approved_usage_json"))
         activity_id = str((latest_summary or {}).get("activity_id") or "") or None
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
@@ -757,11 +770,8 @@ def widget_register_data_contract(
             inventory_metadata_ids=current, inventory_count=len(current),
             has_unsaved_changes=current != saved_ids,
             saved_activity_id=None, saved_metadata_ids=[],
-            agreement_approved_usages=_parse_approved_usage_json(selected_row.get("approved_usage_json")),
-            approved_usages=[
-                value for value in loaded_usage
-                if value in _parse_approved_usage_json(selected_row.get("approved_usage_json"))
-            ],
+            agreement_approved_usages=allowed_usage,
+            approved_usages=[usage for usage in loaded_usage if usage in allowed_usage],
         )
         agreement_text.value = f"<b>Parent Data Agreement:</b> {html.escape(selected_label)}"
         status.value = (
@@ -825,13 +835,8 @@ def widget_register_data_contract(
             status.value = "Select or save an agreement before saving an inventory."
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
-        if not state.get("agreement_approved_usages"):
-            raise ValueError(
-                "Parent Data Agreement approved usages are required; contract approved usages must be "
-                "a subset of the parent Data Agreement approved usages."
-            )
         selected_usage_json = _serialize_contract_approved_usages(
-            approved_usage.value, list(state.get("agreement_approved_usages") or [])
+            selected_approved_usages(), list(state.get("agreement_approved_usages") or [])
         )
         state["approved_usages"] = _parse_approved_usage_json(selected_usage_json)
         fingerprints_changed = any(
@@ -896,7 +901,6 @@ def widget_register_data_contract(
     inventory.observe(select_inventory, names="value")
     add.on_click(add_selected)
     remove.on_click(remove_selected)
-    approved_usage.observe(lambda _change: refresh_usage_options(), names="value")
     save.on_click(save_inventory)
     agreement_selector = (agreement or {}).get("existing_record")
     if agreement_selector is not None and hasattr(agreement_selector, "observe"):
@@ -914,7 +918,8 @@ def widget_register_data_contract(
         "summary": summary, "inventory": inventory, "remove": remove,
         "schema_review": selected_schema, "selected_schema": selected_schema,
         "contract_schema_warning": contract_schema_warning,
-        "approved_usage": approved_usage,
+        "approved_usage_checkboxes": approved_usage_checkboxes,
+        "approved_usage_box": approved_usage_box,
         "search": search, "available": available, "add": add, "save": save,
         "status": status, "execution_output": execution_output,
     }
@@ -936,10 +941,7 @@ def widget_register_data_contract(
     details_section = form_section(
         widgets,
         title="Contract details",
-        children=[
-            summary, widgets.HTML(value="<b>Approved usages</b>"), approved_usage,
-            inventory, action_row(widgets, [remove]), contract_schema_warning,
-        ],
+        children=[summary, approved_usage_box, inventory, action_row(widgets, [remove]), contract_schema_warning],
     )
     catalogue_section = form_section(
         widgets,

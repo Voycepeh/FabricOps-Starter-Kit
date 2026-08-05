@@ -105,7 +105,6 @@ class _FakeWidgets:
 
     Text = _FakeWidget
     Select = _FakeWidget
-    SelectMultiple = _FakeWidget
     HTML = _FakeWidget
     Button = _FakeWidget
     Output = _FakeOutput
@@ -720,6 +719,102 @@ def test_html_values_are_escaped(snapshot_runtime, spark_session):
     assert "<b>raw</b>" in labels_by_key["html"]
 
 
+
+def test_contract_approved_usage_options_inherit_parent_agreement(snapshot_runtime, spark_session):
+    """One inherited usage is the only visible contract checkbox and saved value."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement={"agreement_id": "agreement", "approved_usage_json": '["research"]'},
+        metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    assert list(checkboxes) == ["research"]
+    assert checkboxes["research"].description == "Research"
+    checkboxes["research"].value = True
+    state["_controls"]["save"].click()
+    assert writes[0][2][0]["approved_usage_json"] == '["research"]'
+
+
+def test_contract_approved_usage_accepts_valid_subset(snapshot_runtime, spark_session):
+    """Multiple inherited usages permit any valid subset and hide other options."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement={
+            "agreement_id": "agreement",
+            "approved_usage_json": '["internal single domain","research"]',
+        },
+        metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    assert list(checkboxes) == ["internal single domain", "research"]
+    assert checkboxes["internal single domain"].description == "Internal Single Domain"
+    assert "external" not in checkboxes
+    checkboxes["research"].value = True
+    state["_controls"]["save"].click()
+    assert writes[0][2][0]["approved_usage_json"] == '["research"]'
+
+
+def test_invalid_contract_usages_are_rejected_during_save(snapshot_runtime, spark_session):
+    """Stale or programmatic selections cannot bypass parent agreement validation."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement={"agreement_id": "agreement", "approved_usage_json": '["research"]'},
+        metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    state["_controls"]["approved_usage_checkboxes"]["external"] = _FakeWidget(value=True)
+    with pytest.raises(ValueError, match="subset of the parent Data Agreement approved usages"):
+        state["_controls"]["save"].click()
+    assert writes == []
+
+
+def test_contract_usage_options_refresh_when_parent_agreement_changes(snapshot_runtime, spark_session):
+    """Changing the selected agreement refreshes options and clears invalid selections."""
+    _module, _tables, _writes = snapshot_runtime
+    selector = _FakeWidgets.Select(options=[("A", "agreement-a"), ("B", "agreement-b")], value="agreement-a")
+    agreement_state = {
+        "existing_record": selector,
+        "existing_records_by_id": {
+            "agreement-a": {"agreement_id": "agreement-a", "agreement_name": "A", "approved_usage_json": '["research","external"]'},
+            "agreement-b": {"agreement_id": "agreement-b", "agreement_name": "B", "approved_usage_json": '["external"]'},
+        },
+    }
+    state = public_widget(agreement=agreement_state, metadata_ids=["key-one"], spark_session=spark_session)
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    checkboxes["research"].value = True
+    checkboxes["external"].value = True
+    selector.value = "agreement-b"
+    assert list(checkboxes) == ["external"]
+    assert checkboxes["external"].value is True
+    assert "research" not in checkboxes
+
+
+def test_existing_contract_usages_restore_only_when_parent_permits(snapshot_runtime, spark_session):
+    """Existing saved usages are restored only when the parent still permits them."""
+    _module, tables, _writes = snapshot_runtime
+    _seed_snapshot(
+        spark_session, tables, "old", "agreement", datetime(2026, 1, 1), ["key-one"],
+        approved_usage_json='["research","external"]',
+    )
+    state = public_widget(
+        agreement={"agreement_id": "agreement", "approved_usage_json": '["research"]'},
+        spark_session=spark_session,
+    )
+    checkboxes = state["_controls"]["approved_usage_checkboxes"]
+    assert list(checkboxes) == ["research"]
+    assert checkboxes["research"].value is True
+
+
+def test_missing_parent_approved_usages_grants_no_contract_options(snapshot_runtime, spark_session):
+    """An agreement with no usages leaves the contract with no usage checkboxes."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement={"agreement_id": "agreement", "approved_usage_json": "[]"},
+        metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    assert state["_controls"]["approved_usage_checkboxes"] == {}
+    state["_controls"]["save"].click()
+    assert writes[0][2][0]["approved_usage_json"] == "[]"
+
 def test_missing_widgets_is_actionable_and_non_destructive(monkeypatch, capsys):
     """Missing optional UI support returns before metadata reads or writes."""
     module = importlib.import_module("fabricops_kit.widgets.widget_register_data_contract")
@@ -730,101 +825,6 @@ def test_missing_widgets_is_actionable_and_non_destructive(monkeypatch, capsys):
     assert "Install widgets" in state["error"]
     assert "inventory unavailable" in capsys.readouterr().out
 
-
-
-def test_contract_approved_usage_options_inherit_parent_agreement(snapshot_runtime, spark_session):
-    """One inherited usage is the only contract option and saved value."""
-    _module, _tables, writes = snapshot_runtime
-    state = public_widget(
-        agreement={
-            "agreement_id": "agreement",
-            "agreement_name": "Agreement",
-            "approved_usage_json": '["research"]',
-        },
-        metadata_ids=["key-one"],
-        spark_session=spark_session,
-    )
-    usage = state["_controls"]["approved_usage"]
-    assert usage.options == [("research", "research")]
-    usage.value = ("research",)
-    state["_controls"]["save"].click()
-    assert writes[0][2][0]["approved_usage_json"] == '["research"]'
-
-
-def test_contract_approved_usage_accepts_valid_subset(snapshot_runtime, spark_session):
-    """Multiple inherited usages allow any valid subset only."""
-    _module, _tables, writes = snapshot_runtime
-    state = public_widget(
-        agreement={
-            "agreement_id": "agreement",
-            "agreement_name": "Agreement",
-            "approved_usage_json": '["internal single domain","research"]',
-        },
-        metadata_ids=["key-one"],
-        spark_session=spark_session,
-    )
-    assert state["_controls"]["approved_usage"].options == [
-        ("internal single domain", "internal single domain"),
-        ("research", "research"),
-    ]
-    state["_controls"]["approved_usage"].value = ("research",)
-    state["_controls"]["save"].click()
-    assert writes[0][2][0]["approved_usage_json"] == '["research"]'
-
-
-def test_contract_usage_options_refresh_when_parent_agreement_changes(snapshot_runtime, spark_session):
-    """Changing the agreement selector immediately refreshes inherited usage options."""
-    _module, _tables, _writes = snapshot_runtime
-    selector = _FakeWidgets.Select(options=[("A", "agreement-a"), ("B", "agreement-b")], value="agreement-a")
-    agreement_state = {
-        "existing_record": selector,
-        "existing_records_by_id": {
-            "agreement-a": {"agreement_id": "agreement-a", "agreement_name": "A", "approved_usage_json": '["research"]'},
-            "agreement-b": {"agreement_id": "agreement-b", "agreement_name": "B", "approved_usage_json": '["external"]'},
-        },
-    }
-    state = public_widget(agreement=agreement_state, metadata_ids=["key-one"], spark_session=spark_session)
-    usage = state["_controls"]["approved_usage"]
-    assert usage.options == [("research", "research")]
-    usage.value = ("research",)
-    selector.value = "agreement-b"
-    assert usage.options == [("external", "external")]
-    assert usage.value == ()
-
-
-def test_invalid_contract_usages_are_rejected_during_save(snapshot_runtime, spark_session):
-    """Direct stale widget state cannot save usages outside the parent agreement."""
-    _module, _tables, writes = snapshot_runtime
-    state = public_widget(
-        agreement={"agreement_id": "agreement", "approved_usage_json": '["research"]'},
-        metadata_ids=["key-one"], spark_session=spark_session,
-    )
-    state["_controls"]["approved_usage"]._value = ("external",)
-    with pytest.raises(ValueError, match="subset of the parent Data Agreement approved usages"):
-        state["_controls"]["save"].click()
-    assert writes == []
-
-
-def test_editing_contract_retains_only_parent_permitted_usages(snapshot_runtime, spark_session):
-    """Loaded saved selections are filtered to current parent agreement approvals."""
-    _module, tables, _writes = snapshot_runtime
-    _seed_snapshot(spark_session, tables, "old", "agreement", datetime(2026, 1, 1), ["key-one"], approved_usage_json='["research","external"]')
-    state = public_widget(
-        agreement={"agreement_id": "agreement", "approved_usage_json": '["research"]'},
-        spark_session=spark_session,
-    )
-    assert state["_controls"]["approved_usage"].options == [("research", "research")]
-    assert state["_controls"]["approved_usage"].value == ("research",)
-
-
-def test_missing_parent_approved_usages_do_not_grant_all_options(snapshot_runtime, spark_session):
-    """Empty parent usage approvals leave no options and block persistence."""
-    _module, _tables, writes = snapshot_runtime
-    state = public_widget(agreement={"agreement_id": "agreement"}, metadata_ids=["key-one"], spark_session=spark_session)
-    assert state["_controls"]["approved_usage"].options == []
-    with pytest.raises(ValueError, match="Parent Data Agreement approved usages are required"):
-        state["_controls"]["save"].click()
-    assert writes == []
 
 def test_public_exports_expose_preview_callable():
     """Normal public paths expose the snapshot inventory callable."""

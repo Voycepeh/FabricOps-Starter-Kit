@@ -112,16 +112,16 @@ def test_agreement_json_validation_and_deterministic_serialization():
     assert json.loads(documents) == expected
     assert agreement_widget._deserialize_supporting_documents(documents) == expected
     assert agreement_widget._serialize_approved_usage(
-        ["external", "internal cross domain"], ["internal cross domain", "internal single domain", "research", "external"]
-    ) == '["internal cross domain","external"]'
+        ["external", "internal"], ["internal", "research", "external"]
+    ) == '["internal","external"]'
     with pytest.raises(ValueError, match="both a label and a location"):
         agreement_widget._serialize_supporting_documents([{"label": "Request", "location": ""}])
     with pytest.raises(ValueError, match="both a label and a location"):
         agreement_widget._serialize_supporting_documents([{"label": "", "location": "Files/request.pdf"}])
     with pytest.raises(ValueError, match="At least one"):
-        agreement_widget._serialize_approved_usage([], ["internal cross domain"])
+        agreement_widget._serialize_approved_usage([], ["internal"])
     with pytest.raises(ValueError, match="unconfigured"):
-        agreement_widget._deserialize_approved_usage('["retired"]', ["internal cross domain"])
+        agreement_widget._deserialize_approved_usage('["retired"]', ["internal"])
 
 
 def test_agreement_two_party_append_only_identity_and_no_change(monkeypatch):
@@ -271,22 +271,6 @@ class _FakeWidgets:
     Textarea = _FakeWidget
     DatePicker = _FakeWidget
     Checkbox = _FakeWidget
-    class SelectMultiple(_FakeWidget):
-        """SelectMultiple test double preserving tuple values."""
-
-        def __init__(self, value=None, options=None, children=None, **kwargs):
-            self.value = value
-            self.options = options or []
-            self.children = children or []
-            self.callbacks = []
-            self.click_callbacks = []
-            self.disabled = False
-            self.description = kwargs.get("description", "")
-            self.placeholder = kwargs.get("placeholder", "")
-            self.layout = kwargs.get("layout")
-            self.selected_index = 0
-            self.titles = {}
-
 
     class Dropdown(_FakeWidget):
         """Dropdown test double that validates underlying option values."""
@@ -341,7 +325,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     monkeypatch.setattr(agreement, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(agreement_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
-    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [agreement_row(agreement_id="33333333-3333-4333-8333-333333333333", agreement_version="1.0.0", supporting_documents_json="[]", approved_usage_json='["internal cross domain"]', custom_fields_json='{"consumer_group":"ODI"}')])
+    monkeypatch.setattr(agreement_widget, "list_data_agreements", lambda *args, **kwargs: [agreement_row(agreement_id="33333333-3333-4333-8333-333333333333", agreement_version="1.0.0", supporting_documents_json="[]", approved_usage_json='["internal"]', custom_fields_json='{"consumer_group":"ODI"}')])
     monkeypatch.setattr(agreement_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(), steward_row(steward_id="22222222-2222-4222-8222-222222222222")])
     monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row(custom_fields_json='{"group":"Shared Services"}')])
 
@@ -471,7 +455,7 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
     assert controls["recipient_steward_selector"].options
     controls["provider_steward_selector"].value = ""
     controls["recipient_steward_selector"].value = ""
-    controls["approved_usage"].value = ("internal cross domain",)
+    controls["approved_usage_checkboxes"]["internal cross domain"].value = True
     controls["save_button"].click_callbacks[0](None)
     assert "provider_steward_id" in controls["status"].value
     assert "recipient_steward_id" in controls["status"].value
