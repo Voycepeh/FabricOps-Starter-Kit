@@ -127,7 +127,7 @@ def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
     text = _visible_text(controls["container"])
 
     for label in (
-        "Approved usage",
+        "Approved usages",
         "Provider Data Steward",
         "Recipient Data Steward",
         "Search provider data stewards",
@@ -135,11 +135,13 @@ def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
         "Document name",
         "Document link",
         "Execution log",
+        "Custom columns",
     ):
         assert label in text
-    assert "Optional" not in text
+    assert "Approved usage</" not in text
     assert {key: (box.description, box.value) for key, box in controls["approved_usage_checkboxes"].items()} == {
-        "internal": ("Internal", False),
+        "internal cross domain": ("Internal Cross Domain", False),
+        "internal single domain": ("Internal Single Domain", False),
         "research": ("Research", False),
         "external": ("External", False),
     }
@@ -158,7 +160,7 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
 
     monkeypatch.setattr(agreement_widget, "_create_or_update_data_agreement", save)
     controls = _render(monkeypatch)
-    controls["approved_usage_checkboxes"]["internal"].value = True
+    controls["approved_usage_checkboxes"]["internal cross domain"].value = True
     controls["save_button"].click_callbacks[0](None)
 
     assert message in capsys.readouterr().out

@@ -357,13 +357,26 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         title="Supporting documents",
         children=[supporting_documents, add_supporting_document_button],
     )
-    custom_row = widgets.HBox(list(custom.values()), layout=row_layout)
     scope_section = form_section(
         widgets,
         title="Agreement scope or classification",
         children=[
-            checkbox_group(widgets, label="Approved usage", checkboxes=approved_usage_checkboxes.values()),
-            custom_row,
+            checkbox_group(widgets, label="Approved usages", checkboxes=approved_usage_checkboxes.values()),
+            widgets.VBox(
+                [
+                    widgets.HTML(
+                        value=(
+                            '<div style="color:#0f548c;font-size:14px;font-weight:600;'
+                            'margin-bottom:4px;">Custom columns</div>'
+                        )
+                    ),
+                    form_grid(widgets, custom.values()),
+                ],
+                layout=widgets.Layout(
+                    width="100%", height="auto", overflow="visible",
+                    border="1px solid #d7e7f5", padding="10px 12px",
+                ),
+            ) if custom else widgets.VBox([]),
         ],
     )
     selection_section = form_section(

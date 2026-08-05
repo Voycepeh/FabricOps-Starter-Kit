@@ -371,7 +371,7 @@ class DataAgreementConfig:
                 "expiry_date",
                 "business_purpose",
             ],
-            "approved_usage_options": ["internal", "research", "external"],
+            "approved_usage_options": ["internal cross domain", "internal single domain", "research", "external"],
             "custom_fields": [],
         }
     )

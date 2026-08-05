@@ -196,7 +196,23 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             form_section(
                 widgets,
                 title="Contact or supporting information",
-                children=[form_grid(widgets, custom.values())],
+                children=[
+                    widgets.VBox(
+                        [
+                            widgets.HTML(
+                                value=(
+                                    '<div style="color:#0f548c;font-size:14px;font-weight:600;'
+                                    'margin-bottom:4px;">Custom columns</div>'
+                                )
+                            ),
+                            form_grid(widgets, custom.values()),
+                        ],
+                        layout=widgets.Layout(
+                            width="auto", height="auto", overflow="visible",
+                            border="1px solid #d7e7f5", padding="10px 12px",
+                        ),
+                    )
+                ],
             )
         )
     actions = form_section(

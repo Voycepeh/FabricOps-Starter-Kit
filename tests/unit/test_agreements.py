@@ -143,7 +143,7 @@ def test_agreement_two_party_append_only_identity_and_no_change(monkeypatch):
     unchanged = agreement_widget._create_or_update_data_agreement(
         spark=object(), config=agreement_config(), env="dev", values=agreement_row(), selected_agreement=created
     )
-    changed_values = agreement_row(approved_usage=["internal", "research"])
+    changed_values = agreement_row(approved_usage=["internal single domain", "research"])
     updated = agreement_widget._create_or_update_data_agreement(
         spark=object(), config=agreement_config(), env="dev", values=changed_values, selected_agreement=created
     )
@@ -455,7 +455,7 @@ def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):
     assert controls["recipient_steward_selector"].options
     controls["provider_steward_selector"].value = ""
     controls["recipient_steward_selector"].value = ""
-    controls["approved_usage_checkboxes"]["internal"].value = True
+    controls["approved_usage_checkboxes"]["internal cross domain"].value = True
     controls["save_button"].click_callbacks[0](None)
     assert "provider_steward_id" in controls["status"].value
     assert "recipient_steward_id" in controls["status"].value

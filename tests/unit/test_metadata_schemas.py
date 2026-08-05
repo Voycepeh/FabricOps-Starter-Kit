@@ -22,7 +22,7 @@ def test_data_contract_uses_one_snapshot_membership_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in registry
     assert membership_names == [
-        "agreement_id", "metadata_table_key", "schema_fingerprint", *audit_names,
+        "agreement_id", "metadata_table_key", "schema_fingerprint", "approved_usage_json", *audit_names,
     ]
     abandoned = {
         "contract_id", "contract_version", "contract_status", "effective_from",

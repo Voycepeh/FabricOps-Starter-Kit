@@ -69,7 +69,7 @@ def agreement_config(*, metadata_tables: dict[str, str] | None = None) -> Simple
                     "expiry_date",
                     "business_purpose",
                 ],
-                "approved_usage_options": ["internal", "research", "external"],
+                "approved_usage_options": ["internal cross domain", "internal single domain", "research", "external"],
                 "custom_fields": [
                     {"key": "consumer_group", "label": "Consumer group", "type": "select", "options": ["ODI"]}
                 ],
@@ -103,7 +103,7 @@ def agreement_row(**overrides: Any) -> dict[str, Any]:
         "expiry_date": "2026-12-31",
         "business_purpose": "Governed reporting",
         "supporting_documents": [],
-        "approved_usage": ["internal"],
+        "approved_usage": ["internal cross domain"],
     }
     row.update(overrides)
     return row
