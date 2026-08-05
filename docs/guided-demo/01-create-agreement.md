@@ -2,33 +2,19 @@
 
 Run `01_agreement` in the Governance workspace after Step 0 to capture steward and agreement context before pipeline execution. This notebook supports two governance stages: establish the Data Agreement first, then return later to register one or more Data Contracts after the relevant catalogue and validation evidence exists.
 
-## What to do
+Run it in the Governance workspace 
 
-1. Reuse the `CONFIG` and `ENV` values from `00_env_config`.
-2. Enter demo steward details, including role, contact, and effective dates.
-3. Create a public-safe Data Agreement with a readable name, domain, recipient, business purpose, usage flags, and readiness notes.
+## Start by making sure you have selected the correct Environment & %run 00_env_config
+![Setup](../assets/01/Setup.png)
 
-### Stage A: Establish the Data Agreement
+### 1. Populate the data steward table
+![Steward](../assets/01/Setward.png)
 
-Create the overarching governance agreement between the accountable producer and consumer parties. The agreement defines the purpose, scope, ownership, permitted use, and governance conditions for sharing data. It does not yet define the exact tables or technical delivery promise.
+### 2. Poplulate the data agreement table between 2 data steward 
+![Agreement](../assets/01/Agreement.png)
 
-### Stage B: Register the Data Contract
+![Agreement 2](../assets/01/Agreement(2).png)
 
-After the engineering and review workflow has produced catalogue and validation evidence, register a machine-readable Data Contract under the selected Data Agreement. In the current FabricOps metadata model, the contract links the parent agreement to authorised catalogue tables and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide broader technical and quality context for those tables. One Data Agreement can govern multiple Data Contracts.
-
-The visible widget configuration comes from `DATA_AGREEMENT_CONFIG` in `00_env_config`. Edit steward role options, visible columns, and custom fields there rather than hardcoding dropdown values in `01_agreement` or downstream notebooks.
-
-## Expected evidence
-
-The configured metadata target receives steward and agreement rows during Stage A. `02_pipeline` and `03_review` later produce catalogue, lineage, profile, and validation evidence. During Stage B, `01_agreement` registers Data Contract rows under the selected Data Agreement without changing the notebook execution order or evidence requirements.
-
-| Intake step | Metadata written |
-| ----------- | ---------------- |
-| Data steward intake | `METADATA_DATA_STEWARD` rows with steward identity, lifecycle fields, optional custom fields, and audit columns. |
-| Agreement intake | `METADATA_DATA_AGREEMENT` rows with agreement identity, selected steward context, usage fields, optional custom fields, and audit columns. |
-| Contract registration | `METADATA_DATA_CONTRACT` rows linking the parent Data Agreement to authorised catalogue tables and their schema fingerprints, together with runtime audit fields. |
-Previous: [Step 0: Set up the operating environment](run-environment-setup.md).
+### Fow now thats it , a final missing link is to link agreement created here to the data catalgoue created in `02 pipeline` but we will revist this in step 5 [Step 5: Create data contract](05-create-data-contract.md)
 
 Next, continue to [Step 2: Run the first Development pipeline](run-pipeline.md).
-
-See also: [List of Metadata Tables](../reference/metadata.md) and [List of Functions](../reference/index.md).
