@@ -23,6 +23,10 @@ from fabricops_kit.widgets.widget_register_data_contract import (
 pytestmark = pytest.mark.unit
 
 
+class TraitError(ValueError):
+    """Local stand-in for ipywidgets layout validation failures."""
+
+
 class _FakeWidget:
     """Small observable widget double matching controls used by the inventory."""
 
@@ -90,6 +94,9 @@ class _FakeLayout:
     """Record layout keyword arguments used by shared form helpers."""
 
     def __init__(self, **kwargs):
+        if kwargs.get("align_items") == "start":
+            msg = "The 'align_items' trait of a Layout instance does not accept 'start'."
+            raise TraitError(msg)
         self.kwargs = kwargs
 
 

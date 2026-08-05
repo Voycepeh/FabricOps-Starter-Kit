@@ -188,6 +188,14 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     assert controls["container"].layout.kwargs["height"] == "auto"
     assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
 
+    landscape = controls["container"].children[1]
+    catalogue_section = next(
+        child for child in landscape.children[1].children
+        if "Related catalogue datasets" in _visible_text(child)
+    )
+    catalogue_selector_layout = catalogue_section.children[2].layout
+    assert catalogue_selector_layout.kwargs["align_items"] == "flex-start"
+
 
 def test_contract_save_preserves_complete_execution_output(monkeypatch, capsys):
     """Do not filter the technical Lakehouse destination emitted during a save."""
