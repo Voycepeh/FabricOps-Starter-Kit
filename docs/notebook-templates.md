@@ -24,9 +24,7 @@ Run it in each workspace before running the other FabricOps notebooks.
 
 ## `01_agreement`
 
-Creates data stewards and records a data agreement between them before pipeline development begins.
-
-After the pipeline has been reviewed and validated, the same notebook creates the data contract, links the registered data tables to the agreement, and records the data steward sign-off required before promotion to Engineering Production.
+Supports two governance stages. First, it creates data stewards and establishes the overarching Data Agreement between the producer and consumer stewards. After the relevant catalogue and validation evidence is available, the same notebook registers one or more machine-readable Data Contracts under that agreement before promotion to Engineering Production.
 
 [Open `01_agreement.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_agreement.ipynb){ .md-button }
 

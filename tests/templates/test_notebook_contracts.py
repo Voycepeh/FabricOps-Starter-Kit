@@ -196,6 +196,9 @@ def test_01_agreement_registers_one_logical_draft_contract_after_agreement():
     assert source.count("widget_register_data_contract(") == 1
     assert "logical `metadata_table_key`" in source
     assert "rather than duplicated for each environment" in source
+    assert "## 4. Establish the Data Agreement" in source
+    assert "## 5. Register a Data Contract" in source
+    assert "One Data Agreement can govern multiple Data Contracts" in source
 
 
 def test_02_pipeline_reviews_only_current_notebook_lineage_after_profiling():

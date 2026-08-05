@@ -340,7 +340,9 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert len(form_flow.children) == 5
     agreement_header = agreement_controls["container"].children[0]
     assert "Data Agreement Creation Widget" in agreement_header.value
-    assert "Create or update data agreements between two data stewards" in agreement_header.value
+    assert "Governance-level agreement" in agreement_header.value
+    assert "Specific datasets and technical delivery terms" in agreement_header.value
+    assert "schema versions" not in agreement_header.value
     assert "background:#0f6cbd" in agreement_header.value
     assert agreement_controls["container"].layout.kwargs["width"] == "100%"
     assert "widgets.Tab" not in inspect.getsource(agreement_widget.widget_render_data_agreement)

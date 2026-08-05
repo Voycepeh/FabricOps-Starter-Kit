@@ -29,7 +29,7 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 0. **Set up the operating environment** — Create the Fabric workspaces, create the required lakehouses and warehouses, configure a "00_env_config" notebook in every workspace, and create the metadata tables in the Governance workspace.
 
-1. **Governance workflow 1** — In the Governance workspace, use "01_agreement" to create data stewards and create a data agreement between data stewards.
+1. **Governance workflow 1** — In the Governance workspace, use "01_agreement" to create data stewards and establish the overarching Data Agreement between accountable producer and consumer stewards.
 
 2. **Engineering workflow 1** — In the Engineering Development workspace, use "02_pipeline" to extract, transform, and load data from one data store to another. Profile source and target tables, then write data catalogue, data profiled, and data lineage metadata.
 
@@ -37,7 +37,7 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 4. **Engineering workflow 2** — In the Engineering Development workspace, use "02_pipeline" to wire in the guardrail rules defined during review, then run the pipeline and make sure it fails or warns users as configured.
 
-5. **Governance workflow 3** — In the Governance workspace, use "01_agreement" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get the data steward to sign off on the contract.
+5. **Governance workflow 3** — In the Governance workspace, return to "01_agreement" to register one or more machine-readable Data Contracts under the selected Data Agreement after catalogue and validation evidence exists, then get the data steward to sign off on the contract.
 
 6. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
 
@@ -47,11 +47,11 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-FabricOps uses these connected [Metadata Tables](../reference/metadata/) to carry governance context through the workflow.
+FabricOps uses these connected [Metadata Tables](reference/metadata.md) to carry governance context through the workflow. Data Agreements establish the overarching governance relationship between producer and consumer parties. Machine-readable Data Contracts define the specific datasets and delivery promises authorised under each agreement.
 
 The data catalogue sits at the centre of the model. It identifies each governed dataset and connects its profiling, lineage, access, enrichment, guardrails, and guardrail results.
 
-A data contract then binds the validated catalogue entry to a data agreement, connecting what engineering produced to its approved purpose, owners, and production expectations.
+A Data Contract then binds authorised catalogue tables to a parent Data Agreement, connecting what engineering produced to the approved purpose, accountable parties, quality expectations, and production delivery terms. One Data Agreement can govern multiple Data Contracts.
 
 The "02_pipeline" workflow creates and reviews this metadata during exploration. The "03_review" workflow applies the approved controls and produces the repeatable production pipeline.
 

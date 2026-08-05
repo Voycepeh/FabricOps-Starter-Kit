@@ -950,9 +950,10 @@ def parse_metadata_reference_overview() -> list[str]:
     intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
     caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
     diagram = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM", "")).strip()
-    if not intro or not caption or not diagram:
+    agreement_contract = str(namespace.get("METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION", "")).strip()
+    if not intro or not caption or not diagram or not agreement_contract:
         raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
-    return [intro, "", caption, "", diagram]
+    return [intro, "", caption, "", diagram, "", agreement_contract]
 
 
 def parse_metadata_reference_contract() -> tuple[dict[str, str], dict[str, dict[str, list[Any]]]]:

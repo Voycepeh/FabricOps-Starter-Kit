@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Select an agreement, manage its allocated tables, and review each table’s latest schema and enrichment context.
+Register dataset-level Data Contract tables under a parent Data Agreement.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/widgets/widget_register_data_contract.py:252`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L252-L909">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L252-L913">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

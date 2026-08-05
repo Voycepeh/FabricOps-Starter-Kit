@@ -1,6 +1,6 @@
 # METADATA_DATA_AGREEMENT
 
-**Purpose:** Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
+**Purpose:** Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.
 
 ## Column summary
 

@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-**Purpose:** Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
+**Purpose:** Machine-readable dataset-level delivery promises governed by Data Agreements, including authorised catalogue tables and schema fingerprints.
 
 ## Column summary
 

@@ -6,6 +6,18 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
+## Data Agreement versus Data Contract
+
+A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.
+
+A Data Contract is the machine-readable operational promise for a specific dataset or data product governed by that agreement. It defines what the producer will deliver to the consumer, including the authorised tables, schema expectations, quality expectations, refresh commitments, and other technical delivery terms.
+
+One Data Agreement can govern multiple Data Contracts.
+
+The agreement answers: Why and under what governance arrangement may this data be shared?
+
+The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?
+
 <div class="grid cards" markdown>
 
 -   **[METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)**
@@ -14,11 +26,11 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_AGREEMENT](metadata/metadata_data_agreement.md)**
 
-    Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
+    Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-    Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
+    Machine-readable dataset-level delivery promises governed by Data Agreements, including authorised catalogue tables and schema fingerprints.
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 
