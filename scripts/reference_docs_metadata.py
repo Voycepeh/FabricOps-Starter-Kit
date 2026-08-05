@@ -109,6 +109,15 @@ METADATA_REFERENCE_OVERVIEW_INTRO = (
     "These pages are generated from the implemented metadata setup schema registry used by `00_env_config`."
 )
 
+METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
+    "## Data Agreement versus Data Contract\n\n"
+    "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
+    "A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.\n\n"
+    "One Data Agreement can govern multiple Data Contracts.\n\n"
+    "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
+    "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
+)
+
 METADATA_REFERENCE_MODEL_DIAGRAM = "![FabricOps metadata model](../assets/fabricops-metadata-model.png)"
 
 METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
@@ -118,8 +127,8 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_PURPOSES = {
     "METADATA_DATA_STEWARD": "Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.",
-    "METADATA_DATA_AGREEMENT": "Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.",
-    "METADATA_DATA_CONTRACT": "Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.",
+    "METADATA_DATA_AGREEMENT": "Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.",
+    "METADATA_DATA_CONTRACT": "Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.",
     "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
     "METADATA_DATA_PROFILED": "Compact per-column summary statistics captured from a profiled dataset snapshot.",
     "METADATA_DATA_PROFILED_FREQUENCY": "Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.",
@@ -784,10 +793,9 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_render_data_agreement',
   'template_notebook': '01_agreement',
   'template_segment': 'Agreement intake',
-  'expanded_purpose': 'Renders the data agreement intake widget used to capture agreement '
-                      'identity, scope, and business metadata for later notebook workflows.',
-  'when_to_use': 'Use in 01_agreement after steward context exists and before pipeline or '
-                 'governance notebooks need an approved agreement selection.',
+  'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching '
+                      'governance arrangement between accountable producer and consumer stewards, including purpose, scope, permitted use, and review context.',
+  'when_to_use': 'Use in 01_agreement after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.',
   'glossary_terms': ['notebook template'],
   'returns': 'Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.',
   'raises': 'Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.',
@@ -1574,17 +1582,17 @@ PUBLIC_SYMBOL_DOCS = [
  {'kind': 'function',
   'module': 'widgets.widget_register_data_contract',
   'function_type': 'callable',
-  'summary_override': 'Select an agreement, manage its allocated tables, and review each table’s latest schema and enrichment context.',
+  'summary_override': 'Register dataset-level Data Contract tables under a parent Data Agreement.',
   'symbol_name': 'widget_register_data_contract',
   'template_notebook': '01_agreement',
-  'template_segment': 'Agreement intake',
-  'use_when': 'Use in 01_agreement to add or remove contract tables and review contracted versus latest schema plus read-only enrichment context.',
+  'template_segment': 'Contract registration',
+  'use_when': 'Use in 01_agreement after catalogue and validation evidence exists to register authorised tables and schema fingerprints under a parent Data Agreement.',
   'parameters': 'See the source docstring for agreement resolution, initial metadata identities, metadata target, Spark session, and context parameters.',
   'returns': 'Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
   'related_functions': ['widget_render_data_agreement', 'widget_view_agreement_catalogue', 'widget_enrich_table_metadata'],
-  'expanded_purpose': 'An immutable inventory of logical datasets linked to a Data Agreement. Tables can be added to or removed from an in-memory contract draft. The right panel compares contracted and latest fingerprints, shows current and removed columns (including each removed column’s last-observed date), and displays latest table- and column-level enrichment as read-only catalogue context. Enrichment must be maintained through widget_enrich_table_metadata. One explicit save persists only contract membership and schema fingerprint metadata.',
-  'when_to_use': 'Use to manage allocated tables, review actual contracted and latest schemas, and inspect read-only enrichment before explicitly saving the contract draft.',
+  'expanded_purpose': 'A dataset-level contract inventory governed by a parent Data Agreement. Tables can be added to or removed from an in-memory contract draft. The right panel compares contracted and latest fingerprints, shows current and removed columns (including each removed column’s last-observed date), and displays latest table- and column-level enrichment as read-only catalogue context. Enrichment must be maintained through widget_enrich_table_metadata. One explicit save persists only contract membership and schema fingerprint metadata. One Data Agreement can govern multiple Data Contracts.',
+  'when_to_use': 'Use to manage authorised catalogue tables, review actual contracted and latest schemas, and inspect read-only enrichment before explicitly saving the contract draft under the selected parent Data Agreement.',
   'do_not_use_when': 'Do not use to edit enrichment, descriptions, classifications, personal-identifier values, guardrails, or agreement metadata.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],
   'return_interpretation': 'dataset_reviews exposes complete schemas, removed-column history, stable-key differences, and read-only enrichment; each changed save records one exact schema version per logical dataset without changing enrichment.',
@@ -1824,12 +1832,13 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                           'Metadata routing is unavailable when '
                                                           'the widget tries to persist records.']},
  'widget_render_data_agreement': {'expanded_purpose': 'Renders the data agreement intake widget '
-                                                      'used to capture agreement identity, scope, '
-                                                      'and business metadata for later notebook '
-                                                      'workflows.',
+                                                      'used to capture the overarching governance '
+                                                      'arrangement between accountable producer and '
+                                                      'consumer stewards, including purpose, scope, '
+                                                      'permitted use, and review context.',
                                   'when_to_use': 'Use in 01_agreement after steward context exists '
-                                                 'and before pipeline or governance notebooks need '
-                                                 'an approved agreement selection.',
+                                                 'to establish the parent governance agreement '
+                                                 'before technical Data Contracts are registered.',
                                   'glossary_terms': ['notebook template'],
                                   'return_interpretation': 'The rendered widget collects agreement '
                                                            'input; downstream helpers can only use '

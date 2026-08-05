@@ -6,6 +6,18 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
+## Data Agreement versus Data Contract
+
+A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.
+
+A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.
+
+One Data Agreement can govern multiple Data Contracts.
+
+The agreement answers: Why and under what governance arrangement may this data be shared?
+
+The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?
+
 <div class="grid cards" markdown>
 
 -   **[METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)**
@@ -14,11 +26,11 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 -   **[METADATA_DATA_AGREEMENT](metadata/metadata_data_agreement.md)**
 
-    Agreement records that describe approved use, steward, recipient, and lifecycle context, including responsibility effective periods.
+    Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-    Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
+    Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 

@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-**Purpose:** Logical dataset memberships grouped into immutable agreement inventories by runtime audit activity.
+**Purpose:** Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
 
 ## Column summary
 

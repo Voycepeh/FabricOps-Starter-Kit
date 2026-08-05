@@ -461,6 +461,7 @@ def test_agreement_state_selection_reloads_inventory_and_disables_when_empty(
     selector.value = "agreement-a"
     assert state["agreement_id"] == "agreement-a"
     assert state["agreement_label"] == "Agreement A"
+    assert "Parent Data Agreement" in state["_controls"]["agreement"].value
     assert state["latest_activity_id"] == "a"
     assert state["inventory_metadata_ids"] == ["key-one", "key-three"]
     assert state["_controls"]["save"].disabled is False

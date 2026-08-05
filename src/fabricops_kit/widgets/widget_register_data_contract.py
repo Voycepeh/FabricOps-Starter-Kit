@@ -446,7 +446,7 @@ def widget_register_data_contract(
     contract_schema_warning = widgets.HTML(value="")
     status = widgets.HTML(value="")
     execution_output = widgets.Output()
-    agreement_text = widgets.HTML(value=f"<b>Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
+    agreement_text = widgets.HTML(value=f"<b>Parent Data Agreement:</b> {html.escape(agreement_label or 'Select an agreement')}")
     environment_text = widgets.HTML(value=f"<b>Environment:</b> {html.escape(env)}")
 
     state: dict[str, Any] = {
@@ -674,7 +674,7 @@ def widget_register_data_contract(
                 inventory_count=0, has_unsaved_changes=False,
                 saved_activity_id=None, saved_metadata_ids=[],
             )
-            agreement_text.value = "<b>Agreement:</b> Select or save an agreement first"
+            agreement_text.value = "<b>Parent Data Agreement:</b> Select or save an agreement first"
             status.value = "Select an existing agreement or save a new agreement before maintaining its dataset inventory."
             set_editor_enabled(False)
             refresh_controls()
@@ -697,7 +697,7 @@ def widget_register_data_contract(
             has_unsaved_changes=current != saved_ids,
             saved_activity_id=None, saved_metadata_ids=[],
         )
-        agreement_text.value = f"<b>Agreement:</b> {html.escape(selected_label)}"
+        agreement_text.value = f"<b>Parent Data Agreement:</b> {html.escape(selected_label)}"
         status.value = (
             "Unsaved contract changes were preserved for the previous agreement."
             if previous_id and previous_id != selected_id and previous_id in agreement_drafts
@@ -851,7 +851,7 @@ def widget_register_data_contract(
 
     relationship_section = form_section(
         widgets,
-        title="Agreement and catalogue relationship",
+        title="Data Agreement → Data Contract → Authorised tables",
         children=[form_grid(widgets, [agreement_text, environment_text])],
     )
     details_section = form_section(
@@ -894,7 +894,11 @@ def widget_register_data_contract(
     container = form_page(
         widgets,
         title="Data Contract Creation Widget",
-        description="Review catalogue schemas and record exact schema versions in immutable agreement inventories",
+        description=(
+            "Dataset-level delivery promise: records the tables authorised under the selected "
+            "Data Agreement and the schema fingerprints associated with the registered "
+            "contract inventory."
+        ),
         children=[landscape],
     )
     state["_controls"].update(

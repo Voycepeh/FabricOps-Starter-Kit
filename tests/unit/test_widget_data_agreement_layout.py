@@ -188,11 +188,15 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     text = _visible_text(controls["container"])
 
     for label in (
-        "Agreement and catalogue relationship", "Contract details",
+        "Data Agreement → Data Contract → Authorised tables", "Contract details",
         "Related catalogue datasets", "Save contract", "Save result",
         "Execution log", "Search catalogue", "Existing inventory",
     ):
         assert label in text
+    assert "Dataset-level delivery promise" in text
+    assert "Parent Data Agreement" in text
+    assert "schema fingerprints" in text
+    assert "machine-readable technical terms" not in text
     assert "Optional" not in text
     assert controls["save"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "auto"
