@@ -519,8 +519,8 @@ def test_setup_metadata_tables_unsafe_missing_column_still_raises(monkeypatch):
     assert "store_type" in result["table_results"]["METADATA_DATA_CATALOGUE"]["message"]
 
 
-def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullability(monkeypatch):
-    """Verify setup validates physical audit nullability on existing tables."""
+def test_setup_metadata_tables_accepts_existing_tables_with_nullable_physical_audit_fields(monkeypatch):
+    """Verify setup ignores Spark physical nullability for existing tables."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
@@ -545,17 +545,17 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
         def count(self):
             raise AssertionError("active steward readiness must not use count")
 
-    def wrong_nullability(schema):
+    def spark_nullable_schema(schema):
         field_type = type(schema.fields[0])
         schema_type = type(schema)
-        fields = []
-        for field in schema.fields:
-            nullable = True if field.name == "_activity_id" else field.nullable
-            fields.append(field_type(field.name, field.dataType, nullable))
-        return schema_type(fields)
+        return schema_type([field_type(field.name, field.dataType, True) for field in schema.fields])
 
-    tables = {name: Table(schema) for name, schema in registry.items()}
-    tables["METADATA_DATA_PROFILED"] = Table(wrong_nullability(registry["METADATA_DATA_PROFILED"]))
+    canonical_activity_field = next(
+        field for field in registry["METADATA_DATA_PROFILED"].fields if field.name == "_activity_id"
+    )
+    assert canonical_activity_field.nullable is False
+
+    tables = {name: Table(spark_nullable_schema(schema)) for name, schema in registry.items()}
     monkeypatch.setattr(setup_module, "read_lakehouse_table_core", lambda table_name, **_kwargs: tables[table_name])
     monkeypatch.setattr(
         setup_module,
@@ -564,8 +564,9 @@ def test_setup_metadata_tables_rejects_existing_tables_with_wrong_audit_nullabil
     )
 
     result = setup_metadata_tables(spark=object(), config=framework_config(), env="dev", verbose=False)
-    assert result["status"] == "partial_failure"
-    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    assert "METADATA_DATA_PROFILED" in result["validated_tables"]
 
 
 def test_setup_metadata_tables_rejects_existing_tables_with_wrong_canonical_type(monkeypatch):
@@ -646,8 +647,8 @@ def test_profiled_validation_rejects_only_legacy_frequency_json_addition():
     _validate_existing_metadata_schema("METADATA_DATA_CATALOGUE", additive_catalogue, catalogue)
 
 
-def test_profiled_frequency_validation_checks_required_type_and_nullability():
-    """Verify every required normalized child field retains strict physical validation."""
+def test_profiled_frequency_validation_checks_required_columns_and_types():
+    """Verify every required normalized child field retains physical column and type validation."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
     from fabricops_kit.config.setup_metadata_tables import _validate_existing_metadata_schema
 
@@ -657,17 +658,6 @@ def test_profiled_frequency_validation_checks_required_type_and_nullability():
     missing_value = schema_type([field for field in schema.fields if field.name != "value"])
     with pytest.raises(ValueError, match=r"missing required column\(s\): value"):
         _validate_existing_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", missing_value, schema)
-
-    wrong_nullability = schema_type(
-        [
-            field_type(field.name, field.dataType, True) if field.name == "frequency_count" else field
-            for field in schema.fields
-        ]
-    )
-    with pytest.raises(ValueError, match="frequency_count nullability expected False but found True"):
-        _validate_existing_metadata_schema(
-            "METADATA_DATA_PROFILED_FREQUENCY", wrong_nullability, schema
-        )
 
     string_type = next(field.dataType for field in schema.fields if field.name == "value")
     wrong_type = schema_type(

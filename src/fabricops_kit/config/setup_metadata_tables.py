@@ -39,10 +39,6 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
         existing_type = metadata_schema_type_name(existing_field.dataType)
         if existing_type != expected_type:
             mismatches.append(f"{name} type expected {expected_type} but found {existing_type}")
-        if bool(existing_field.nullable) != bool(expected_field.nullable):
-            mismatches.append(
-                f"{name} nullability expected {expected_field.nullable} but found {existing_field.nullable}"
-            )
     if mismatches:
         raise ValueError(
             f"{table_name} physical schema does not match the canonical FabricOps metadata schema: "
@@ -302,8 +298,11 @@ def setup_metadata_tables(
     ``_notebook_name``, ``_metadata_lakehouse_name``, and ``_activity_id``.
 
     Existing tables are validated for required column names and
-    compatible Spark data types and nullability. The legacy ``frequency_json``
-    column specifically fails ``METADATA_DATA_PROFILED`` validation; unrelated
+    compatible Spark data types. Physical Spark/Delta nullability is
+    intentionally not compared because persisted Fabric tables may report
+    fields as nullable regardless of the canonical logical requirement. The
+    legacy ``frequency_json`` column specifically fails
+    ``METADATA_DATA_PROFILED`` validation; unrelated
     metadata tables continue to permit additive columns.
     Because normalized frequency persistence is a breaking physical-schema
     change, existing metadata tables may need recreation through this setup
