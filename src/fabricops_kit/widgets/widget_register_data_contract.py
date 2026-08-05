@@ -895,9 +895,9 @@ def widget_register_data_contract(
         widgets,
         title="Data Contract Creation Widget",
         description=(
-            "Dataset-level delivery promise: defines the specific data that the producer commits "
-            "to provide under the selected Data Agreement, including the authorised tables and "
-            "machine-readable technical terms."
+            "Dataset-level delivery promise: records the tables authorised under the selected "
+            "Data Agreement and the schema fingerprints associated with the registered "
+            "contract inventory."
         ),
         children=[landscape],
     )

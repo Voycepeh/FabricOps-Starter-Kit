@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-**Purpose:** Machine-readable dataset-level delivery promises governed by Data Agreements, including authorised catalogue tables and schema fingerprints.
+**Purpose:** Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
 
 ## Column summary
 

@@ -112,7 +112,7 @@ METADATA_REFERENCE_OVERVIEW_INTRO = (
 METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION = (
     "## Data Agreement versus Data Contract\n\n"
     "A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.\n\n"
-    "A Data Contract is the machine-readable operational promise for a specific dataset or data product governed by that agreement. It defines what the producer will deliver to the consumer, including the authorised tables, schema expectations, quality expectations, refresh commitments, and other technical delivery terms.\n\n"
+    "A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.\n\n"
     "One Data Agreement can govern multiple Data Contracts.\n\n"
     "The agreement answers: Why and under what governance arrangement may this data be shared?\n\n"
     "The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?"
@@ -128,7 +128,7 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 METADATA_TABLE_PURPOSES = {
     "METADATA_DATA_STEWARD": "Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.",
     "METADATA_DATA_AGREEMENT": "Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.",
-    "METADATA_DATA_CONTRACT": "Machine-readable dataset-level delivery promises governed by Data Agreements, including authorised catalogue tables and schema fingerprints.",
+    "METADATA_DATA_CONTRACT": "Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.",
     "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
     "METADATA_DATA_PROFILED": "Compact per-column summary statistics captured from a profiled dataset snapshot.",
     "METADATA_DATA_PROFILED_FREQUENCY": "Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.",
@@ -1591,7 +1591,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
   'related_functions': ['widget_render_data_agreement', 'widget_view_agreement_catalogue', 'widget_enrich_table_metadata'],
-  'expanded_purpose': 'A machine-readable, dataset-level delivery promise governed by a parent Data Agreement. Tables can be added to or removed from an in-memory contract draft. The right panel compares contracted and latest fingerprints, shows current and removed columns (including each removed column’s last-observed date), and displays latest table- and column-level enrichment as read-only catalogue context. Enrichment must be maintained through widget_enrich_table_metadata. One explicit save persists only contract membership and schema fingerprint metadata. One Data Agreement can govern multiple Data Contracts.',
+  'expanded_purpose': 'A dataset-level contract inventory governed by a parent Data Agreement. Tables can be added to or removed from an in-memory contract draft. The right panel compares contracted and latest fingerprints, shows current and removed columns (including each removed column’s last-observed date), and displays latest table- and column-level enrichment as read-only catalogue context. Enrichment must be maintained through widget_enrich_table_metadata. One explicit save persists only contract membership and schema fingerprint metadata. One Data Agreement can govern multiple Data Contracts.',
   'when_to_use': 'Use to manage authorised catalogue tables, review actual contracted and latest schemas, and inspect read-only enrichment before explicitly saving the contract draft under the selected parent Data Agreement.',
   'do_not_use_when': 'Do not use to edit enrichment, descriptions, classifications, personal-identifier values, guardrails, or agreement metadata.',
   'glossary_terms': ['metadata catalogue', 'metadata lakehouse', 'data contract'],

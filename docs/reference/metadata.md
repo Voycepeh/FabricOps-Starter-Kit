@@ -10,7 +10,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
 
 A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.
 
-A Data Contract is the machine-readable operational promise for a specific dataset or data product governed by that agreement. It defines what the producer will deliver to the consumer, including the authorised tables, schema expectations, quality expectations, refresh commitments, and other technical delivery terms.
+A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.
 
 One Data Agreement can govern multiple Data Contracts.
 
@@ -30,7 +30,7 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
 -   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-    Machine-readable dataset-level delivery promises governed by Data Agreements, including authorised catalogue tables and schema fingerprints.
+    Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 

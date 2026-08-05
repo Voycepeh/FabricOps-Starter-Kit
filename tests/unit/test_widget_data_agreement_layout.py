@@ -195,6 +195,8 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
         assert label in text
     assert "Dataset-level delivery promise" in text
     assert "Parent Data Agreement" in text
+    assert "schema fingerprints" in text
+    assert "machine-readable technical terms" not in text
     assert "Optional" not in text
     assert controls["save"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "auto"

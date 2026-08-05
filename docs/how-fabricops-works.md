@@ -51,7 +51,7 @@ FabricOps uses these connected [Metadata Tables](reference/metadata.md) to carry
 
 The data catalogue sits at the centre of the model. It identifies each governed dataset and connects its profiling, lineage, access, enrichment, guardrails, and guardrail results.
 
-A Data Contract then binds authorised catalogue tables to a parent Data Agreement, connecting what engineering produced to the approved purpose, accountable parties, quality expectations, and production delivery terms. One Data Agreement can govern multiple Data Contracts.
+A Data Contract then links authorised catalogue tables and their schema fingerprints to a parent Data Agreement. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide broader technical and quality context for those tables. One Data Agreement can govern multiple Data Contracts.
 
 The "02_pipeline" workflow creates and reviews this metadata during exploration. The "03_review" workflow applies the approved controls and produces the repeatable production pipeline.
 

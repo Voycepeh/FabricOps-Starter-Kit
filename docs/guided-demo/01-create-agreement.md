@@ -14,7 +14,7 @@ Create the overarching governance agreement between the accountable producer and
 
 ### Stage B: Register the Data Contract
 
-After the engineering and review workflow has produced catalogue and validation evidence, register a machine-readable Data Contract under the selected Data Agreement. The contract records the specific data that the producer promises to provide to the consumer and the technical terms governing that delivery. One Data Agreement can govern multiple Data Contracts.
+After the engineering and review workflow has produced catalogue and validation evidence, register a machine-readable Data Contract under the selected Data Agreement. In the current FabricOps metadata model, the contract links the parent agreement to authorised catalogue tables and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide broader technical and quality context for those tables. One Data Agreement can govern multiple Data Contracts.
 
 The visible widget configuration comes from `DATA_AGREEMENT_CONFIG` in `00_env_config`. Edit steward role options, visible columns, and custom fields there rather than hardcoding dropdown values in `01_agreement` or downstream notebooks.
 
@@ -26,7 +26,7 @@ The configured metadata target receives steward and agreement rows during Stage 
 | ----------- | ---------------- |
 | Data steward intake | `METADATA_DATA_STEWARD` rows with steward identity, lifecycle fields, optional custom fields, and audit columns. |
 | Agreement intake | `METADATA_DATA_AGREEMENT` rows with agreement identity, selected steward context, usage fields, optional custom fields, and audit columns. |
-| Contract registration | `METADATA_DATA_CONTRACT` rows with the parent agreement, authorised catalogue tables, schema fingerprint metadata, contract version, status, and audit columns. |
+| Contract registration | `METADATA_DATA_CONTRACT` rows linking the parent Data Agreement to authorised catalogue tables and their schema fingerprints, together with runtime audit fields. |
 Previous: [Step 0: Set up the operating environment](run-environment-setup.md).
 
 Next, continue to [Step 2: Run the first Development pipeline](run-pipeline.md).
