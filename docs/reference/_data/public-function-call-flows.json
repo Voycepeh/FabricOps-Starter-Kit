@@ -535,9 +535,9 @@
       "function_name": "_steward_label",
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._steward_label",
       "reason": "Defined in src but not reached from any public function flow",
-      "source_end_line": 243,
+      "source_end_line": 222,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 241,
+      "source_start_line": 220,
       "suggested_action": "review_for_deletion_or_connection"
     }
   ],
@@ -7838,9 +7838,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._create_or_update_data_steward",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 270,
+      "source_end_line": 249,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 246,
+      "source_start_line": 225,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7859,9 +7859,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._generate_steward_id",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 238,
+      "source_end_line": 217,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 235,
+      "source_start_line": 214,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7880,9 +7880,9 @@
       "qualified_name": "fabricops_kit.widgets.widget_render_data_steward._steward_label",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 243,
+      "source_end_line": 222,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-      "source_start_line": 241,
+      "source_start_line": 220,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -7908,7 +7908,7 @@
       "release_versions": [
         "0.1.0"
       ],
-      "source_end_line": 232,
+      "source_end_line": 211,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 35,
       "supports_live_contract": false,
@@ -59662,7 +59662,7 @@
           "release_versions": [
             "0.1.0"
           ],
-          "source_end_line": 232,
+          "source_end_line": 211,
           "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
           "source_start_line": 35,
           "supports_live_contract": false,
@@ -61383,9 +61383,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 270,
+          "source_end_line": 249,
           "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-          "source_start_line": 246,
+          "source_start_line": 225,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -63172,9 +63172,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 238,
+          "source_end_line": 217,
           "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
-          "source_start_line": 235,
+          "source_start_line": 214,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -63239,7 +63239,7 @@
         "large_width_or_depth"
       ],
       "signature": "def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None=None) -> dict[str, Any]",
-      "source_end_line": 232,
+      "source_end_line": 211,
       "source_path": "src/fabricops_kit/widgets/widget_render_data_steward.py",
       "source_start_line": 35,
       "summary": "Render append-only data steward create/update maintenance.",
