@@ -92,8 +92,18 @@ def test_shared_form_containers_expand_without_scrollbars():
         assert container.layout.kwargs["height"] == "auto"
         assert container.layout.kwargs["overflow"] == "visible"
 
+    css = page.children[0].value
+    assert ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;" in css
+    assert ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}" in css
+
+    common = shared.widget_common(_FakeWidgets, "Example")
+    assert common["layout"].kwargs["width"] == "100%"
+    assert common["layout"].kwargs["min_width"] == "0"
+    assert common["layout"].kwargs["max_width"] == "100%"
+
     grid = shared.form_grid(_FakeWidgets, [_FakeWidget(), _FakeWidget()])
-    assert grid.layout.kwargs["grid_template_columns"] == "repeat(auto-fit, minmax(260px, 1fr))"
+    assert grid.layout.kwargs["grid_template_columns"] == "repeat(auto-fit, minmax(min(100%, 280px), 1fr))"
+    assert grid.layout.kwargs["grid_gap"] == "16px 24px"
 
 
 def test_long_search_results_are_bounded_without_scrolling_the_form():

@@ -26,8 +26,9 @@ from fabricops_kit.config.metadata_schemas import (
 )
 
 
-_WIDGET_STYLE = {"description_width": "150px"}
-_WIDGET_LAYOUT_WIDTH = "600px"
+_WIDGET_STYLE = {"description_width": "initial"}
+_WIDGET_FIELD_MIN_WIDTH = "0"
+_WIDGET_FIELD_WIDTH = "100%"
 _TEXTAREA_HEIGHT = "80px"
 
 
@@ -48,7 +49,7 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
     common: dict[str, Any] = {"description": description, "style": dict(_WIDGET_STYLE)}
     layout_class = getattr(widgets_module, "Layout", None)
     if layout_class is not None:
-        kwargs = {"width": _WIDGET_LAYOUT_WIDTH}
+        kwargs = {"width": _WIDGET_FIELD_WIDTH, "min_width": _WIDGET_FIELD_MIN_WIDTH, "max_width": "100%"}
         if textarea:
             kwargs["height"] = _TEXTAREA_HEIGHT
         common["layout"] = layout_class(**kwargs)
@@ -58,9 +59,21 @@ def widget_common(widgets_module: Any, description: str, *, textarea: bool = Fal
 
 def form_page(widgets: Any, *, title: str, description: str, children: Iterable[Any]) -> Any:
     """Compose a full-width widget form with a consistent page header."""
+    field_style = (
+        "<style>"
+        ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;"
+        "min-width:0;max-width:100%;}"
+        ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}"
+        ".fabricops-form .widget-label{display:block;width:100%;max-width:100%;}"
+        ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
+        ".fabricops-form .widget-textarea textarea{width:100%;min-width:0;max-width:100%;box-sizing:border-box;}"
+        ".fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
+        "</style>"
+    )
     header = widgets.HTML(
         value=(
-            '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
+            field_style
+            + '<div style="background:#0f6cbd;color:#fff;padding:16px 20px;'
             'border-radius:8px;">'
             f'<div style="font-size:21px;font-weight:600;line-height:1.3;">{_html_escape(title)}</div>'
             f'<div style="font-size:13px;line-height:1.4;margin-top:3px;opacity:.9;">{_html_escape(description)}</div>'
@@ -68,10 +81,14 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
         ),
         layout=widgets.Layout(width="100%", height="auto", overflow="visible"),
     )
-    return widgets.VBox(
+    page = widgets.VBox(
         [header, *children],
         layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="12px"),
     )
+    add_class = getattr(page, "add_class", None)
+    if callable(add_class):
+        add_class("fabricops-form")
+    return page
 
 
 def form_section(widgets: Any, *, title: str, children: Iterable[Any]) -> Any:
@@ -99,8 +116,8 @@ def form_grid(widgets: Any, children: Iterable[Any]) -> Any:
             width="100%",
             height="auto",
             overflow="visible",
-            grid_template_columns="repeat(auto-fit, minmax(260px, 1fr))",
-            grid_gap="10px 16px",
+            grid_template_columns="repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+            grid_gap="16px 24px",
         ),
     )
 
