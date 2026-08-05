@@ -257,6 +257,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
 
     def _save(_: Any) -> None:
         save.disabled = True
+        status.value = ""
         try:
             values = {
                 key: to_iso_date(widget.value) if key in {"start_date", "expiry_date"} else widget.value
@@ -270,16 +271,15 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             ]
             draft.clear()
             draft.update(values)
-            with execution_output:
-                row = _create_or_update_data_agreement(
-                    spark=spark,
-                    config=config,
-                    env=env,
-                    values=draft,
-                    selected_agreement=row_lookup.get(selected.value) if selected.value else None,
-                    custom_fields=collect_custom_fields(widget_config, custom),
-                    active_steward_ids=active_steward_ids,
-                )
+            row = _create_or_update_data_agreement(
+                spark=spark,
+                config=config,
+                env=env,
+                values=draft,
+                selected_agreement=row_lookup.get(selected.value) if selected.value else None,
+                custom_fields=collect_custom_fields(widget_config, custom),
+                active_steward_ids=active_steward_ids,
+            )
             if row.get("_fabricops_no_change"):
                 _set_status(str(row.get("_fabricops_message", "No changes detected.")))
             else:

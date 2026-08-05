@@ -170,6 +170,56 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
     assert controls["save_button"].disabled is False
 
 
+def test_agreement_save_validation_error_stays_in_status_and_later_success_recovers(monkeypatch, capsys):
+    """Handle Fabric validation failures without notebook-level output or stale status."""
+    attempts = []
+    callbacks = []
+    refreshes = []
+
+    def save(**kwargs):
+        attempts.append(kwargs)
+        assert controls["status"].value == ""
+        if len(attempts) == 1:
+            raise ValueError("expiry_date must be on or after start_date.")
+        return agreement_row(agreement_id="33333333-3333-4333-8333-333333333333", agreement_version="1.0.0")
+
+    monkeypatch.setattr(agreement_widget, "_create_or_update_data_agreement", save)
+    controls = _render(monkeypatch)
+    controls["status"].value = '<span style="color:#107c10">Previous status</span>'
+    controls["after_save_callbacks"].append(callbacks.append)
+    original_refresh_rows = controls["existing_record"].refresh_rows
+
+    def refresh_rows(rows, selected=None):
+        refreshes.append((list(rows), selected))
+        original_refresh_rows(rows, selected)
+
+    controls["existing_record"].refresh_rows = refresh_rows
+    controls["approved_usage_checkboxes"]["internal cross domain"].value = True
+
+    controls["save_button"].click_callbacks[0](None)
+
+    first_output = capsys.readouterr()
+    assert first_output.out == ""
+    assert first_output.err == ""
+    assert "Error: expiry_date must be on or after start_date." in controls["status"].value
+    assert "cannot access local variable 'row'" not in controls["status"].value
+    assert callbacks == []
+    assert refreshes == []
+    assert controls["save_button"].disabled is False
+
+    controls["save_button"].click_callbacks[0](None)
+
+    second_output = capsys.readouterr()
+    assert second_output.out == ""
+    assert second_output.err == ""
+    assert "Saved Orders Agreement (33333333-3333-4333-8333-333333333333 v1.0.0)." in controls["status"].value
+    assert "expiry_date must be on or after start_date" not in controls["status"].value
+    assert callbacks == [controls["existing_records_by_id"]["33333333-3333-4333-8333-333333333333"]]
+    assert refreshes[-1][1] == "33333333-3333-4333-8333-333333333333"
+    assert controls["existing_record"].value == "33333333-3333-4333-8333-333333333333"
+    assert "Agreement ID: 33333333-3333-4333-8333-333333333333" in controls["identity_context"].value
+
+
 def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     """Compose steward maintenance with one form flow and hidden technical output."""
     controls = _render_steward(monkeypatch)
