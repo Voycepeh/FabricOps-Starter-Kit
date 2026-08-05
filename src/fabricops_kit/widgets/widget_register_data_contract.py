@@ -189,40 +189,9 @@ def _compare_schemas(
     }
 
 
-def _base_dataset_label(row: dict[str, Any]) -> str:
-    """Build a readable physical-coordinate label without empty segments."""
-    return " / ".join(
-        str(row.get(field) or "").strip()
-        for field in ("layer", "schema_name", "table_name")
-        if str(row.get(field) or "").strip()
-    )
-
-
 def _short_key(key: str) -> str:
     """Return a deterministic compact identity for fallback labels."""
     return key if len(key) <= 12 else f"{key[:8]}…{key[-4:]}"
-
-
-def _dataset_options(rows: list[dict[str, Any]]) -> list[tuple[str, str]]:
-    """Return uniquely labelled options whose values remain canonical keys."""
-    base_counts: dict[str, int] = {}
-    for row in rows:
-        label = _base_dataset_label(row)
-        base_counts[label] = base_counts.get(label, 0) + 1
-    provisional = []
-    for row in rows:
-        label = _base_dataset_label(row)
-        if base_counts[label] > 1:
-            store = str(row.get("store_type") or "").strip()
-            label = f"{store} — {label}" if store else label
-        provisional.append((label, str(row["metadata_table_key"])))
-    label_counts: dict[str, int] = {}
-    for label, _key in provisional:
-        label_counts[label] = label_counts.get(label, 0) + 1
-    return sorted([
-        (f"{label} — {_short_key(key)}" if label_counts[label] > 1 else label, key)
-        for label, key in provisional
-    ], key=lambda option: (option[0].casefold(), option[1]))
 
 
 def _latest_inventory(memberships, agreement_id: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
@@ -661,6 +630,9 @@ def widget_register_data_contract(
         state["has_unsaved_changes"] = current != saved_ids
         state["pending_additions"] = [key for key in current if key not in saved_ids]
         state["pending_removals"] = [key for key in saved_ids if key not in current_set]
+        agreement_key = str(state.get("agreement_id") or "")
+        if agreement_key and not state["has_unsaved_changes"]:
+            agreement_drafts.pop(agreement_key, None)
         state["dataset_reviews"] = build_dataset_reviews(current)
         state["contract_schema_will_change"] = any(
             review["contract_schema_will_change"] for review in state["dataset_reviews"]
@@ -686,8 +658,12 @@ def widget_register_data_contract(
         nonlocal latest_summary
         selected_id = str(selected_id or "").strip()
         previous_id = str(state.get("agreement_id") or "")
-        if previous_id and state.get("has_unsaved_changes"):
-            agreement_drafts[previous_id] = list(state["inventory_metadata_ids"])
+        if previous_id:
+            previous_current = list(state["inventory_metadata_ids"])
+            if previous_current == saved_ids:
+                agreement_drafts.pop(previous_id, None)
+            else:
+                agreement_drafts[previous_id] = previous_current
         if not selected_id:
             latest_summary = None
             latest_rows.clear()

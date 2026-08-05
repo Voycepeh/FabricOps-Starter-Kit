@@ -12,8 +12,6 @@ from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.widgets import widget_register_data_contract as public_widget
 from fabricops_kit.widgets.widget_register_data_contract import (
     _agreement_details,
-    _base_dataset_label,
-    _dataset_options,
     _latest_catalogue_rows,
     _latest_inventory,
     _catalogue_schema_rows,
@@ -120,20 +118,6 @@ def test_agreement_and_initial_identity_normalization():
         _agreement_details({}, " ")
     with pytest.raises(TypeError, match="non-string sequence"):
         _normalize_initial_ids("one")
-
-
-def test_dataset_labels_remain_readable_unique_and_canonical():
-    """Physical labels omit blanks and progressively disambiguate duplicate locations."""
-    rows = [
-        {"metadata_table_key": "key-a", "store_type": "Lakehouse", "layer": "raw", "schema_name": "sales", "table_name": "orders"},
-        {"metadata_table_key": "key-b", "store_type": "Warehouse", "layer": "raw", "schema_name": "sales", "table_name": "orders"},
-        {"metadata_table_key": "key-c", "store_type": "Lakehouse", "layer": "raw", "schema_name": "", "table_name": "customers"},
-    ]
-    options = _dataset_options(rows)
-    assert _base_dataset_label(rows[2]) == "raw / customers"
-    assert ("Lakehouse — raw / sales / orders", "key-a") in options
-    assert ("Warehouse — raw / sales / orders", "key-b") in options
-    assert {value for _label, value in options} == {"key-a", "key-b", "key-c"}
 
 
 def test_latest_catalogue_and_snapshot_resolution_are_deterministic(spark_session):
@@ -478,6 +462,44 @@ def test_agreement_state_selection_reloads_inventory_and_disables_when_empty(
     assert state["agreement_id"] == "agreement-b"
     assert state["latest_activity_id"] == "b"
     assert state["inventory_metadata_ids"] == ["key-two", "key-three"]
+
+
+def test_reverted_agreement_draft_is_not_restored_after_switching(
+    snapshot_runtime, spark_session,
+):
+    """Returning a draft to the saved membership clears the per-agreement cache."""
+    _module, tables, _writes = snapshot_runtime
+    _seed_snapshot(spark_session, tables, "a", "agreement-a", datetime(2026, 1, 1), ["key-one"])
+    _seed_snapshot(spark_session, tables, "b", "agreement-b", datetime(2026, 1, 2), ["key-three"])
+    selector = _FakeWidgets.Select(options=[("A", "agreement-a"), ("B", "agreement-b")], value="agreement-a")
+    agreement_state = {
+        "existing_record": selector,
+        "existing_records_by_id": {
+            "agreement-a": {"agreement_id": "agreement-a", "agreement_name": "Agreement A"},
+            "agreement-b": {"agreement_id": "agreement-b", "agreement_name": "Agreement B"},
+        },
+    }
+    state = public_widget(agreement=agreement_state, spark_session=spark_session)
+    controls = state["_controls"]
+    assert state["inventory_metadata_ids"] == ["key-one"]
+
+    controls["available"].value = "key-two"
+    controls["add"].click()
+    assert state["inventory_metadata_ids"] == ["key-one", "key-two"]
+
+    selector.value = "agreement-b"
+    assert state["inventory_metadata_ids"] == ["key-three"]
+    selector.value = "agreement-a"
+    assert state["inventory_metadata_ids"] == ["key-one", "key-two"]
+
+    controls["inventory"].value = "key-two"
+    controls["remove"].click()
+    assert state["inventory_metadata_ids"] == ["key-one"]
+    assert state["has_unsaved_changes"] is False
+
+    selector.value = "agreement-b"
+    selector.value = "agreement-a"
+    assert state["inventory_metadata_ids"] == ["key-one"]
 
 
 def test_inventory_add_remove_and_duplicate_prevention(snapshot_runtime, spark_session):
