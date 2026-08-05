@@ -70,13 +70,13 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     _refresh_lookup(existing_rows)
     selected_selector = render_searchable_selector(
         widgets=widgets,
-        label="Existing data steward",
+        label="Select or create steward",
         rows=existing_rows,
         label_fn=_steward_label,
         value_fn=_row_id,
         placeholder="Search stewards...",
         search_fields=["steward_name", "steward_role", "contact", "steward_id"],
-        context_fields=[("steward_name", "Steward name"), ("steward_role", "Role"), ("contact", "Contact"), ("steward_id", "Steward ID")],
+        context_fields=None,
         empty_label="Create new steward",
         search_label="Search data stewards",
     )
@@ -125,7 +125,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
     if isinstance(callbacks, list) and callbacks:
         callbacks.insert(0, callbacks.pop())
 
-    save = widgets.Button(description="Save")
+    save = widgets.Button(description="Save steward")
     output = widgets.Output()
     status = widgets.HTML(value="")
     required_labels = {
@@ -174,7 +174,7 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
                 _refresh_existing_options(row["steward_id"])
                 for callback in after_save_callbacks:
                     callback(row)
-                status.value = f"Saved data steward: {row.get('steward_name', '')}"
+                status.value = f"Data steward saved successfully: {row.get('steward_name', '')}"
                 print(f"Saved data steward: {row.get('steward_name', '')} ({row['steward_id']})")
             except Exception as exc:
                 status.value = f"Data steward was not saved: {exc}"
@@ -195,38 +195,17 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
         supporting_sections.append(
             form_section(
                 widgets,
-                title="Contact or supporting information",
-                children=[
-                    widgets.VBox(
-                        [
-                            widgets.HTML(
-                                value=(
-                                    '<div style="color:#0f548c;font-size:14px;font-weight:600;'
-                                    'margin-bottom:4px;">Custom columns</div>'
-                                )
-                            ),
-                            form_grid(widgets, custom.values()),
-                        ],
-                        layout=widgets.Layout(
-                            width="auto", height="auto", overflow="visible",
-                            border="1px solid #d7e7f5", padding="10px 12px",
-                        ),
-                    )
-                ],
+                title="Additional information",
+                children=[form_grid(widgets, custom.values())],
             )
         )
-    actions = form_section(
-        widgets, title="Save steward", children=[action_row(widgets, [save])]
-    )
+    actions = action_row(widgets, [save])
     log_section = execution_log_section(widgets, output)
-    result_section = form_section(
-        widgets, title="Save result", children=[status, log_section]
-    )
     container = form_page(
         widgets,
-        title="Data Steward Creation Widget",
+        title="Data Steward",
         description="Create or update data stewards",
-        children=[selection_section, details_section, *supporting_sections, actions, result_section],
+        children=[selection_section, details_section, *supporting_sections, actions, status],
     )
     ip.display(container)
     return {"container": container, "existing_record": selected, "existing_record_search": selected_selector["search"], "existing_record_context": selected_selector["context"], "existing_records_by_id": row_lookup, "identity_context": None, "fields": form, "custom_fields": custom, "refresh_stewards_button": None, "refresh_existing_options": _refresh_existing_options, "refresh_steward_options": None, "after_save_callbacks": after_save_callbacks, "save_button": save, "status": status, "output": output, "execution_output": output, "execution_log_section": log_section}

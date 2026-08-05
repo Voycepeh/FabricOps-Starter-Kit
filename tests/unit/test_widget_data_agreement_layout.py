@@ -42,13 +42,16 @@ def _visible_text(widget):
     return " ".join(values)
 
 
-def _render_steward(monkeypatch):
+def _render_steward(monkeypatch, *, custom_fields=None, stewards=None):
     config = agreement_config()
+    if custom_fields is not None:
+        config.data_agreement_config.data_steward_widget["custom_fields"] = custom_fields
+    steward_rows = [steward_row()] if stewards is None else stewards
     monkeypatch.setattr(steward_widget, "resolve_fabric_context", lambda context=None: (config, "dev", {}))
     monkeypatch.setitem(sys.modules, "IPython", SimpleNamespace(display=SimpleNamespace(display=lambda value: None)))
     monkeypatch.setattr(steward_widget, "require_ipywidgets", lambda: _FakeWidgets)
     monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
-    monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: [steward_row()])
+    monkeypatch.setattr(steward_widget, "list_data_stewards", lambda *args, **kwargs: steward_rows)
     return steward_widget.widget_render_data_steward(spark=object())
 
 
@@ -167,20 +170,110 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
     assert controls["save_button"].disabled is False
 
 
-def test_steward_form_uses_labelled_shared_sections(monkeypatch):
-    """Compose steward maintenance without fixed-height form containers."""
+def test_steward_form_uses_simplified_visible_layout(monkeypatch):
+    """Compose steward maintenance with one form flow and hidden technical output."""
     controls = _render_steward(monkeypatch)
     text = _visible_text(controls["container"])
 
     for label in (
-        "Steward selection", "Steward details", "Save steward", "Save result",
-        "Execution log", "Search data stewards", "Existing data steward",
+        "Data Steward", "Create or update data stewards", "Steward selection",
+        "Steward details", "Additional information", "Search data stewards",
+        "Select or create steward", "Save steward",
     ):
         assert label in text
+    for removed in (
+        "Data Steward Creation Widget", "Existing data steward",
+        "Contact or supporting information", "Custom columns", "Save result",
+        "Execution log", "Steward name:</b>", "Role:</b>", "Contact:</b>",
+        "Steward ID:</b>",
+    ):
+        assert removed not in text
     assert "Optional" not in text
+    assert controls["save_button"].description == "Save steward"
     assert controls["save_button"].click_callbacks
     assert controls["container"].layout.kwargs["height"] == "auto"
     assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
+    assert controls["execution_log_section"] not in controls["container"].children
+
+
+def test_steward_additional_information_renders_only_for_custom_fields(monkeypatch):
+    """Show the custom field section only when configured."""
+    controls = _render_steward(monkeypatch, custom_fields=[])
+    text = _visible_text(controls["container"])
+
+    assert "Additional information" not in text
+    assert controls["custom_fields"] == {}
+
+
+def test_steward_selector_search_population_and_save_paths_remain_unchanged(monkeypatch, capsys):
+    """Keep selector filtering, form population, custom fields, and create/update saves working."""
+    writes = []
+    rows = [
+        steward_row(custom_fields_json='{"group":"Shared Services"}'),
+        steward_row(
+            steward_id="22222222-2222-4222-8222-222222222222",
+            steward_name="Analytics Steward",
+            steward_role="Governance Reviewer",
+            contact="analytics@example.com",
+            custom_fields_json='{"group":"Analytics"}',
+        ),
+    ]
+
+    def save(**kwargs):
+        values = dict(kwargs["values"])
+        row = {
+            "steward_id": values.get("steward_id") or "33333333-3333-4333-8333-333333333333",
+            "steward_name": values["steward_name"],
+            "steward_role": values["steward_role"],
+            "contact": values["contact"],
+            "custom_fields": kwargs["custom_fields"],
+        }
+        writes.append(row)
+        print("Writing Lakehouse steward row")
+        return row
+
+    monkeypatch.setattr(steward_widget, "_create_or_update_data_steward", save)
+    controls = _render_steward(monkeypatch, stewards=rows)
+
+    search = controls["existing_record_search"]
+    search.value = "Analytics"
+    search.callbacks[0]({"name": "value"})
+    assert controls["existing_record"].options == [
+        ("Create new steward", ""),
+        (
+            "Analytics Steward | Governance Reviewer | analytics@example.com",
+            "22222222-2222-4222-8222-222222222222",
+        ),
+    ]
+
+    controls["existing_record"].value = "22222222-2222-4222-8222-222222222222"
+    controls["existing_record"].callbacks[0]({
+        "name": "value",
+        "new": "22222222-2222-4222-8222-222222222222",
+    })
+    assert controls["fields"]["steward_name"].value == "Analytics Steward"
+    assert controls["fields"]["steward_role"].value == "Governance Reviewer"
+    assert controls["fields"]["contact"].value == "analytics@example.com"
+    assert controls["custom_fields"]["group"].value == "Analytics"
+
+    controls["save_button"].click_callbacks[0](None)
+    assert writes[-1]["steward_id"] == "22222222-2222-4222-8222-222222222222"
+    assert writes[-1]["custom_fields"] == {"group": "Analytics"}
+    assert controls["status"].value == "Data steward saved successfully: Analytics Steward"
+    assert "22222222-2222-4222-8222-222222222222" not in controls["status"].value
+    assert "Writing Lakehouse steward row" in capsys.readouterr().out
+
+    controls["existing_record"].value = ""
+    controls["existing_record"].callbacks[0]({"name": "value", "new": ""})
+    controls["fields"]["steward_name"].value = "New Steward"
+    controls["fields"]["steward_role"].value = "Data Owner"
+    controls["fields"]["contact"].value = "new@example.com"
+    controls["custom_fields"]["group"].value = "New group"
+    controls["save_button"].click_callbacks[0](None)
+
+    assert writes[-1]["steward_id"] == "33333333-3333-4333-8333-333333333333"
+    assert writes[-1]["custom_fields"] == {"group": "New group"}
+    assert controls["status"].value == "Data steward saved successfully: New Steward"
 
 
 def test_contract_form_uses_labelled_shared_sections(monkeypatch):

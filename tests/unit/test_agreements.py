@@ -378,7 +378,8 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert "effective_from" not in steward_controls["fields"]
     assert "effective_to" not in steward_controls["fields"]
     steward_header = steward_controls["container"].children[0]
-    assert "Data Steward Creation Widget" in steward_header.value
+    assert "Data Steward" in steward_header.value
+    assert "Data Steward Creation Widget" not in steward_header.value
     assert "background:#0f6cbd" in steward_header.value
 
 
