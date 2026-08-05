@@ -21,6 +21,7 @@ from fabricops_kit.widgets.shared import (
     require_ipywidgets,
     widget_common,
 )
+from fabricops_kit.widgets import shared as _catalogue_browser
 
 
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
@@ -208,7 +209,7 @@ def _dataset_options(rows: list[dict[str, Any]]) -> list[tuple[str, str]]:
     for row in rows:
         label = _base_dataset_label(row)
         base_counts[label] = base_counts.get(label, 0) + 1
-    provisional: list[tuple[str, str]] = []
+    provisional = []
     for row in rows:
         label = _base_dataset_label(row)
         if base_counts[label] > 1:
@@ -289,7 +290,7 @@ def widget_register_data_contract(
     spark_session=None,
     context=None,
 ):
-    """Review and record schema-aware immutable Data Contract inventories.
+    """Manage agreement tables and review schema and enrichment context.
 
     Parameters
     ----------
@@ -338,7 +339,8 @@ def widget_register_data_contract(
 
     Notes
     -----
-    This widget selects catalogue datasets covered by an agreement and freezes
+    Select an agreement, manage its allocated tables, and review each table's
+    latest schema and enrichment context. This widget selects catalogue datasets covered by an agreement and freezes
     each current schema fingerprint in an immutable inventory snapshot. It
     resolves the actual contracted schema from historical catalogue rows,
     compares it with the current active-environment catalogue schema, and
@@ -357,8 +359,13 @@ def widget_register_data_contract(
     An unsaved agreement draft cannot create an inventory snapshot; select an
     existing agreement or save the new agreement first.
 
-    In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
-    and guardrails and guardrail results remain separate future workflows.
+    Current and historically removed columns are shown in the detail panel;
+    removed columns include their last-observed timestamp. Latest table- and
+    column-level enrichment is resolved by canonical metadata keys and is
+    strictly read-only. Maintain enrichment with
+    ``widget_enrich_table_metadata``. Saving writes only contract membership
+    and schema fingerprint metadata; it never writes enrichment records.
+    Schema comparison is informational, and guardrails and guardrail results remain separate workflows.
     Granularity, semantic calculation changes, data quality, freshness,
     sensitivity, and PII are not enforced by this widget. This widget does not
     claim Open Data Contract Standard completeness.
@@ -383,6 +390,7 @@ def widget_register_data_contract(
     --------
     widget_render_data_agreement
     widget_view_agreement_catalogue
+    widget_enrich_table_metadata
 
     """
     resolved_agreement_id, agreement_label = _agreement_details(agreement, agreement_id)
@@ -417,9 +425,30 @@ def widget_register_data_contract(
         spark_session=spark_session, context=runtime_context,
     )
     catalogue_rows = _latest_catalogue_rows(catalogue, env)
+    catalogue_history = [
+        row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        for row in catalogue.collect()
+    ] if hasattr(catalogue, "collect") else list(catalogue_rows)
+    catalogue_history = [
+        row for row in catalogue_history
+        if str(row.get("environment_name") or env) == env
+    ]
     rows_by_id = {row["metadata_table_key"]: row for row in catalogue_rows}
-    all_options = _dataset_options(catalogue_rows)
+    shared_options = _catalogue_browser.catalogue_table_options(catalogue_history)
+    all_options = [
+        (str(option["label"]), str(option["metadata_table_key"]))
+        for option in shared_options
+    ]
     option_by_id = {key: label for label, key in all_options}
+    enrichment_error = ""
+    try:
+        enrichment_rows = _catalogue_browser.read_enrichment_records(
+            config, env, spark_session=spark_session,
+        )
+        current_enrichment = _catalogue_browser.latest_enrichment_values(enrichment_rows)
+    except Exception as exc:
+        current_enrichment = {}
+        enrichment_error = f"Unable to read METADATA_ENRICHMENT: {exc}"
     memberships = read_lakehouse_table_core(
         CONTRACT_TABLE, target=target, schema=schema,
         spark_session=spark_session, context=runtime_context,
@@ -462,7 +491,11 @@ def widget_register_data_contract(
         "saved_activity_id": None, "saved_metadata_ids": [],
         "dataset_reviews": [], "contract_schema_will_change": False,
         "selected_dataset_review": None,
+        "enrichment_read_error": enrichment_error,
+        "pending_additions": [key for key in inventory_ids if key not in saved_ids],
+        "pending_removals": [],
     }
+    agreement_drafts: dict[str, list[str]] = {}
 
     def readable_label(key: str) -> str:
         return option_by_id.get(key, f"Unavailable catalogue dataset — {_short_key(key)}")
@@ -472,7 +505,16 @@ def widget_register_data_contract(
         contracted_fingerprint = str(
             contracted_by_id.get(key, {}).get("schema_fingerprint") or ""
         ) or None
-        current_fingerprint = str(rows_by_id.get(key, {}).get("schema_fingerprint") or "") or None
+        try:
+            browser_state = _catalogue_browser.catalogue_table_browser_state(
+                catalogue_history, key, current_enrichment,
+            )
+        except ValueError:
+            browser_state = None
+        current_fingerprint = (
+            str(browser_state.get("latest_schema_fingerprint") or "") or None
+            if browser_state else None
+        )
         contracted_schema = _catalogue_schema_rows(
             catalogue, None, key, contracted_fingerprint or "",
         )
@@ -505,6 +547,15 @@ def widget_register_data_contract(
                 contracted_fingerprint and current_fingerprint
                 and contracted_fingerprint != current_fingerprint
             ),
+            "catalogue_browser_state": deepcopy(browser_state),
+            "latest_schema_timestamp": (
+                browser_state.get("latest_schema_timestamp") if browser_state else None
+            ),
+            "current_columns": deepcopy(browser_state.get("current_columns", [])) if browser_state else [],
+            "removed_columns": deepcopy(browser_state.get("removed_columns", [])) if browser_state else [],
+            "table_enrichment": deepcopy(
+                browser_state.get("current_enrichment_values", {}).get("table", {})
+            ) if browser_state else {},
         }
 
     def build_dataset_reviews(current: list[str]) -> list[dict[str, Any]]:
@@ -575,6 +626,13 @@ def widget_register_data_contract(
                 f"<br><b>Contracted schema</b>{render_schema(review, 'contracted_schema')}"
                 if review["contracted_fingerprint"] else ""
             )
+            + "<hr><h4>Catalogue context</h4>"
+            + (
+                _catalogue_browser.render_read_only_catalogue_detail(
+                    review["catalogue_browser_state"]
+                ) if review["catalogue_browser_state"] else
+                "<i>Latest catalogue schema is unavailable.</i>"
+            )
             + "</div>"
         )
 
@@ -601,6 +659,8 @@ def widget_register_data_contract(
         add.disabled = True
         state["inventory_count"] = len(current)
         state["has_unsaved_changes"] = current != saved_ids
+        state["pending_additions"] = [key for key in current if key not in saved_ids]
+        state["pending_removals"] = [key for key in saved_ids if key not in current_set]
         state["dataset_reviews"] = build_dataset_reviews(current)
         state["contract_schema_will_change"] = any(
             review["contract_schema_will_change"] for review in state["dataset_reviews"]
@@ -625,6 +685,9 @@ def widget_register_data_contract(
     def load_agreement(selected_id: str) -> None:
         nonlocal latest_summary
         selected_id = str(selected_id or "").strip()
+        previous_id = str(state.get("agreement_id") or "")
+        if previous_id and state.get("has_unsaved_changes"):
+            agreement_drafts[previous_id] = list(state["inventory_metadata_ids"])
         if not selected_id:
             latest_summary = None
             latest_rows.clear()
@@ -647,7 +710,9 @@ def widget_register_data_contract(
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
         valid_initial = [key for key in initial_ids if key in rows_by_id]
-        current = list(dict.fromkeys([*saved_ids, *valid_initial]))
+        current = agreement_drafts.get(
+            selected_id, list(dict.fromkeys([*saved_ids, *valid_initial])),
+        )
         state.update(
             agreement_id=selected_id, agreement_label=selected_label,
             latest_activity_id=activity_id,
@@ -657,7 +722,11 @@ def widget_register_data_contract(
             saved_activity_id=None, saved_metadata_ids=[],
         )
         agreement_text.value = f"<b>Agreement:</b> {html.escape(selected_label)}"
-        status.value = ""
+        status.value = (
+            "Unsaved contract changes were preserved for the previous agreement."
+            if previous_id and previous_id != selected_id and previous_id in agreement_drafts
+            else ""
+        )
         set_editor_enabled(True)
         refresh_controls()
 
@@ -714,6 +783,15 @@ def widget_register_data_contract(
             status.value = "Select or save an agreement before saving an inventory."
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
+        fingerprints_changed = any(
+            str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
+            != str(next((row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""))
+            for key in current if key in saved_ids and key in rows_by_id
+        )
+        if current == saved_ids and not fingerprints_changed:
+            state["has_unsaved_changes"] = False
+            status.value = "No contract changes to save."
+            return
         if not current:
             status.value = "An inventory save must contain at least one logical dataset."
             return
@@ -755,6 +833,7 @@ def widget_register_data_contract(
             inventory_metadata_ids=list(current), inventory_count=len(current),
             has_unsaved_changes=False, saved_activity_id=activity_id,
             saved_metadata_ids=list(current),
+            pending_additions=[], pending_removals=[],
         )
         refresh_controls()
         status.value = f"Saved inventory with {len(current)} logical datasets."
@@ -812,7 +891,7 @@ def widget_register_data_contract(
             widgets.HBox(
                 [
                     widgets.VBox([available]),
-                    widgets.VBox([selected_schema, action_row(widgets, [add])]),
+                    widgets.VBox([action_row(widgets, [add])]),
                 ],
                 layout=widgets.Layout(
                     display="grid", grid_template_columns="minmax(240px, 1fr) minmax(360px, 2fr)",
@@ -828,11 +907,19 @@ def widget_register_data_contract(
     result_section = form_section(
         widgets, title="Save result", children=[status, log_section]
     )
+    landscape = widgets.HBox(
+        [
+            widgets.VBox([relationship_section, actions, result_section], layout=widgets.Layout(flex="1 1 25%", min_width="220px")),
+            widgets.VBox([details_section, catalogue_section], layout=widgets.Layout(flex="1 1 30%", min_width="260px")),
+            widgets.VBox([selected_schema], layout=widgets.Layout(flex="1 1 45%", min_width="320px", overflow="auto")),
+        ],
+        layout=widgets.Layout(display="flex", flex_flow="row wrap", gap="12px", align_items="stretch"),
+    )
     container = form_page(
         widgets,
         title="Data Contract Creation Widget",
         description="Review catalogue schemas and record exact schema versions in immutable agreement inventories",
-        children=[relationship_section, details_section, catalogue_section, actions, result_section],
+        children=[landscape],
     )
     state["_controls"].update(
         container=container,

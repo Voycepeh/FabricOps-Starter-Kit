@@ -498,6 +498,53 @@ def test_inventory_add_remove_and_duplicate_prevention(snapshot_runtime, spark_s
     assert state["inventory_count"] == 1
 
 
+def test_repeated_unchanged_save_does_not_append_a_second_snapshot(
+    snapshot_runtime, spark_session,
+):
+    """The contract writer is invoked once for one changed draft."""
+    _module, _tables, writes = snapshot_runtime
+    state = public_widget(
+        agreement_id="agreement", metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    state["_controls"]["save"].click()
+    state["_controls"]["save"].click()
+    assert len(writes) == 1
+    assert state["_controls"]["status"].value == "No contract changes to save."
+
+
+def test_contract_detail_reuses_read_only_catalogue_enrichment(
+    snapshot_runtime, spark_session, monkeypatch,
+):
+    """Canonical table and column keys resolve context without enrichment controls."""
+    module, _tables, _writes = snapshot_runtime
+    enrichment_rows = [
+        {
+            "enrichment_id": "t", "enrichment_level": "table",
+            "metadata_key": "key-one", "enrichment_type": "Description",
+            "value": "Orders table", "_committed_at": "2026-01-01",
+        },
+        {
+            "enrichment_id": "c", "enrichment_level": "column",
+            "metadata_key": "col-id", "enrichment_type": "Classification",
+            "value": "internal", "_committed_at": "2026-01-01",
+        },
+    ]
+    monkeypatch.setattr(
+        module._catalogue_browser, "read_enrichment_records",
+        lambda *args, **kwargs: enrichment_rows,
+    )
+    state = public_widget(
+        agreement_id="agreement", metadata_ids=["key-one"], spark_session=spark_session,
+    )
+    review = state["dataset_reviews"][0]
+    assert review["table_enrichment"]["Description"] == "Orders table"
+    assert review["current_columns"][0]["enrichment_values"]["Classification"] == "internal"
+    detail = state["_controls"]["selected_schema"].value
+    assert "read-only" in detail
+    assert "Orders table" in detail
+    assert "Save enrichment" not in detail
+
+
 def test_catalogue_selection_shows_exact_schema_before_add(snapshot_runtime, spark_session):
     """Each logical dataset appears once and selection exposes the schema to record."""
     _module, _tables, _writes = snapshot_runtime

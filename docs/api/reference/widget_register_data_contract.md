@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Review catalogue schemas and record exact schema versions in immutable agreement inventories.
+Select an agreement, manage its allocated tables, and review each table’s latest schema and enrichment context.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_register_data_contract.py:282`
+`fabricops_kit/widgets/widget_register_data_contract.py:283`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L282-L846">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_register_data_contract.py#L283-L933">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -87,7 +87,7 @@ Mutable inventory state with audit activity details, unsaved edits, structured p
 
 ### Return interpretation
 
-dataset_reviews exposes complete schemas and stable-key differences for the editable latest inventory; each save records one exact schema version per logical dataset without changing history.
+dataset_reviews exposes complete schemas, removed-column history, stable-key differences, and read-only enrichment; each changed save records one exact schema version per logical dataset without changing enrichment.
 
 ## Raises / Errors
 
@@ -103,7 +103,8 @@ Raises when an agreement ID cannot be resolved or configured metadata cannot be 
 
 <div class="reference-docstring-notes" markdown="1">
 
-This widget selects catalogue datasets covered by an agreement and freezes
+Select an agreement, manage its allocated tables, and review each table's
+latest schema and enrichment context. This widget selects catalogue datasets covered by an agreement and freezes
 each current schema fingerprint in an immutable inventory snapshot. It
 resolves the actual contracted schema from historical catalogue rows,
 compares it with the current active-environment catalogue schema, and
@@ -122,8 +123,13 @@ Catalogue discovery is restricted to the active environment, but logical
 An unsaved agreement draft cannot create an inventory snapshot; select an
 existing agreement or save the new agreement first.
 
-In v0.2.0 schema comparison is informational. Enrichment is not yet wired,
-and guardrails and guardrail results remain separate future workflows.
+Current and historically removed columns are shown in the detail panel;
+removed columns include their last-observed timestamp. Latest table- and
+column-level enrichment is resolved by canonical metadata keys and is
+strictly read-only. Maintain enrichment with
+``widget_enrich_table_metadata``. Saving writes only contract membership
+and schema fingerprint metadata; it never writes enrichment records.
+Schema comparison is informational, and guardrails and guardrail results remain separate workflows.
 Granularity, semantic calculation changes, data quality, freshness,
 sensitivity, and PII are not enforced by this widget. This widget does not
 claim Open Data Contract Standard completeness.
