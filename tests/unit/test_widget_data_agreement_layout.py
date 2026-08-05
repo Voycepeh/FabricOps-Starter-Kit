@@ -99,8 +99,7 @@ def test_shared_form_containers_expand_without_scrollbars():
     header, body = page.children
     assert body.children == [section]
     assert body.layout.kwargs["max_height"] == shared.FORM_PAGE_MAX_HEIGHT
-    assert body.layout.kwargs["overflow_y"] == "auto"
-    assert body.layout.kwargs["overflow_x"] == "hidden"
+    assert body.layout.kwargs["overflow"] == "hidden auto"
 
     css = header.value
     assert ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;" in css
@@ -131,8 +130,21 @@ def test_shared_form_page_bounds_short_and_long_pages_with_preserved_body_order(
         body = page.children[1]
         assert body.children == expected_children
         assert body.layout.kwargs["max_height"] == "720px"
-        assert body.layout.kwargs["overflow_y"] == "auto"
-        assert body.layout.kwargs["overflow_x"] == "hidden"
+        assert body.layout.kwargs["overflow"] == "hidden auto"
+
+
+
+def test_shared_form_page_uses_real_ipywidgets_layout_traits_when_available():
+    """Reject removed ipywidgets layout trait names in the shared form body."""
+    real_widgets = pytest.importorskip("ipywidgets")
+
+    page = shared.form_page(real_widgets, title="Title", description="Description", children=[real_widgets.HTML("Body")])
+
+    body = page.children[1]
+    assert body.layout.max_height == shared.FORM_PAGE_MAX_HEIGHT
+    assert body.layout.overflow == "hidden auto"
+    assert not hasattr(body.layout, "overflow_x")
+    assert not hasattr(body.layout, "overflow_y")
 
 
 def test_long_search_results_are_bounded_without_scrolling_the_form():

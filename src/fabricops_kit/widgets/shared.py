@@ -87,8 +87,7 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
         layout=widgets.Layout(
             width="100%",
             max_height=FORM_PAGE_MAX_HEIGHT,
-            overflow_y="auto",
-            overflow_x="hidden",
+            overflow="hidden auto",
             gap="12px",
         ),
     )

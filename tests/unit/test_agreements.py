@@ -285,9 +285,32 @@ class _FakeWidgets:
             super().__init__(value=value, options=options, **kwargs)
 
     class Layout:
-        """Minimal layout test double."""
+        """Minimal layout test double that rejects unsupported ipywidgets traits."""
+
+        _SUPPORTED_TRAITS = {
+            "align_items",
+            "border",
+            "display",
+            "flex",
+            "flex_flow",
+            "font_family",
+            "gap",
+            "grid_gap",
+            "grid_template_columns",
+            "height",
+            "justify_content",
+            "max_height",
+            "max_width",
+            "min_width",
+            "overflow",
+            "padding",
+            "width",
+        }
 
         def __init__(self, **kwargs):
+            unknown = set(kwargs) - self._SUPPORTED_TRAITS
+            if unknown:
+                raise TypeError(f"Unsupported fake Layout traits: {sorted(unknown)}")
             self.kwargs = kwargs
 
 

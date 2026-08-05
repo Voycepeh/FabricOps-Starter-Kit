@@ -15,14 +15,14 @@
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
     },
     "public_function_call_flows_json": {
-      "generated_at_sgt": "05 Aug 2026, 8:35 PM SGT",
-      "generated_at_utc": "2026-08-05T12:35:22.462653Z",
+      "generated_at_sgt": "05 Aug 2026, 8:48 PM SGT",
+      "generated_at_utc": "2026-08-05T12:48:30.803629Z",
       "generator": "scripts/generate_public_function_call_flows_json.py",
       "label": "Public function call-flow data",
       "output_path": "docs/reference/_data/public-function-call-flows.json"
     }
   },
-  "last_generated_at_sgt": "05 Aug 2026, 8:36 PM SGT",
-  "last_generated_at_utc": "2026-08-05T12:36:22.359983Z",
+  "last_generated_at_sgt": "05 Aug 2026, 8:48 PM SGT",
+  "last_generated_at_utc": "2026-08-05T12:48:30.803629Z",
   "schema": "fabricops_generated_artifact_timestamps_v1"
 }
