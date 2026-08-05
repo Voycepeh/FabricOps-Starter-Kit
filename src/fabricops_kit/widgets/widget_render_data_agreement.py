@@ -19,8 +19,8 @@ from fabricops_kit.widgets.shared import (
     form_page,
     form_grid,
     execution_log_section,
-    checkbox_group,
     action_row,
+    widget_common,
     deserialize_custom_fields,
     get_widget_visible_fields,
     list_data_stewards,
@@ -133,9 +133,11 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         or any(not option.strip() for option in usage_options)
     ):
         raise ValueError("approved_usage_options must contain unique, non-empty values.")
-    approved_usage_checkboxes = {
-        option: widgets.Checkbox(value=False, description=option.replace("_", " ").title()) for option in usage_options
-    }
+    approved_usage = widgets.SelectMultiple(
+        options=[(option, option) for option in usage_options],
+        value=(),
+        **widget_common(widgets, "Approved usages"),
+    )
 
     supporting_document_rows: list[dict[str, Any]] = []
     supporting_documents = widgets.VBox([])
@@ -244,8 +246,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         if not documents:
             _add_document_row()
         selected_usage = _deserialize_approved_usage(row.get("approved_usage_json"), usage_options) if row else []
-        for option, checkbox in approved_usage_checkboxes.items():
-            checkbox.value = option in selected_usage
+        approved_usage.value = tuple(selected_usage)
         identity_context.value = _agreement_identity_text(row or None)
         draft.clear()
         draft.update(row)
@@ -265,9 +266,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
             values["supporting_documents"] = [
                 {"label": row["label"].value, "location": row["location"].value} for row in supporting_document_rows
             ]
-            values["approved_usage"] = [
-                option for option, checkbox in approved_usage_checkboxes.items() if checkbox.value
-            ]
+            values["approved_usage"] = list(approved_usage.value or ())
             draft.clear()
             draft.update(values)
             with execution_output:
@@ -362,7 +361,8 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         widgets,
         title="Agreement scope or classification",
         children=[
-            checkbox_group(widgets, label="Approved usage", checkboxes=approved_usage_checkboxes.values()),
+            widgets.HTML(value="<b>Approved usages</b>"),
+            approved_usage,
             custom_row,
         ],
     )
@@ -410,7 +410,7 @@ def widget_render_data_agreement(*, spark: Any, context: dict[str, Any] | None =
         "supporting_documents": supporting_document_rows,
         "supporting_documents_container": supporting_documents,
         "add_supporting_document_button": add_supporting_document_button,
-        "approved_usage_checkboxes": approved_usage_checkboxes,
+        "approved_usage": approved_usage,
         "custom_fields": custom,
         "refresh_stewards_button": refresh_stewards,
         "refresh_existing_options": _refresh_existing_options,

@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from copy import deepcopy
 from datetime import datetime
 import html
+import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -27,6 +28,45 @@ from fabricops_kit.widgets import shared as _catalogue_browser
 CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
+
+def _parse_approved_usage_json(value: Any) -> list[str]:
+    """Return approved usages from a persisted JSON list without granting defaults."""
+    try:
+        selected = json.loads(str(value or "[]"))
+    except json.JSONDecodeError as exc:
+        raise ValueError("approved_usage_json must be a JSON list.") from exc
+    if not isinstance(selected, list) or any(not isinstance(item, str) for item in selected):
+        raise ValueError("approved_usage_json must be a JSON list of strings.")
+    result: list[str] = []
+    for item in selected:
+        value = item.strip()
+        if value and value not in result:
+            result.append(value)
+    return result
+
+
+def _agreement_approved_usages(agreement: dict[str, Any] | None, agreement_id: str | None) -> list[str]:
+    """Resolve approved usages for the selected parent agreement only."""
+    supplied = agreement or {}
+    explicit = str(agreement_id or "").strip()
+    row = supplied
+    if not explicit and "existing_record" in supplied:
+        selected_id = str(getattr(supplied.get("existing_record"), "value", "") or "").strip()
+        row = (supplied.get("existing_records_by_id") or {}).get(selected_id, {})
+    return _parse_approved_usage_json(row.get("approved_usage_json"))
+
+
+def _serialize_contract_approved_usages(selected: Any, parent_usages: list[str]) -> str:
+    """Serialize contract usages after enforcing the parent-agreement subset."""
+    selected_values = [str(value).strip() for value in (selected or []) if str(value).strip()]
+    unknown = sorted(set(selected_values).difference(parent_usages))
+    if unknown:
+        raise ValueError(
+            "Contract approved usages must be a subset of the parent Data Agreement approved usages. "
+            "Invalid value(s): " + ", ".join(unknown)
+        )
+    ordered = [option for option in parent_usages if option in selected_values]
+    return json.dumps(ordered, separators=(",", ":"), ensure_ascii=False)
 
 def _display_widget(value: Any) -> None:
     """Display a widget when the optional IPython runtime is available."""
@@ -363,6 +403,7 @@ def widget_register_data_contract(
 
     """
     resolved_agreement_id, agreement_label = _agreement_details(agreement, agreement_id)
+    parent_approved_usages = _agreement_approved_usages(agreement, agreement_id)
     initial_ids = _normalize_initial_ids(metadata_ids)
     try:
         widgets = require_ipywidgets()
@@ -378,6 +419,7 @@ def widget_register_data_contract(
             "saved_activity_id": None, "saved_metadata_ids": [], "error": message,
             "dataset_reviews": [], "contract_schema_will_change": False,
             "selected_dataset_review": None,
+            "agreement_approved_usages": [], "approved_usages": [],
             "_controls": {},
         }
         state["get_rows"] = lambda: []
@@ -427,6 +469,7 @@ def widget_register_data_contract(
         if resolved_agreement_id else (None, [])
     )
     latest_activity_id = str((latest_summary or {}).get("activity_id") or "") or None
+    saved_contract_usages = _parse_approved_usage_json(latest_rows[0].get("approved_usage_json")) if latest_rows else []
     saved_ids = [str(row["metadata_table_key"]) for row in latest_rows]
     valid_initial_ids = [key for key in initial_ids if key in rows_by_id]
     inventory_ids = (
@@ -440,6 +483,11 @@ def widget_register_data_contract(
     add = widgets.Button(description="Add table to contract")
     inventory = widgets.Select(options=[], **widget_common(widgets, "Existing inventory"))
     remove = widgets.Button(description="Remove selected dataset")
+    approved_usage = widgets.SelectMultiple(
+        options=[(option, option) for option in parent_approved_usages],
+        value=(),
+        **widget_common(widgets, "Approved usages"),
+    )
     save = widgets.Button(description="Save inventory", button_style="primary")
     summary = widgets.HTML(value="")
     selected_schema = widgets.HTML(value="<i>Select a catalogue dataset to review its current schema.</i>")
@@ -463,6 +511,8 @@ def widget_register_data_contract(
         "enrichment_read_error": enrichment_error,
         "pending_additions": [key for key in inventory_ids if key not in saved_ids],
         "pending_removals": [],
+        "agreement_approved_usages": list(parent_approved_usages),
+        "approved_usages": [value for value in saved_contract_usages if value in parent_approved_usages],
     }
     agreement_drafts: dict[str, list[str]] = {}
 
@@ -614,7 +664,16 @@ def widget_register_data_contract(
             "<i>Select a catalogue or inventory dataset to review its schema.</i>"
         )
 
+    def refresh_usage_options() -> None:
+        allowed = list(state.get("agreement_approved_usages") or [])
+        current = list(approved_usage.value or ()) or list(state.get("approved_usages") or [])
+        current = [value for value in current if value in allowed]
+        approved_usage.options = [(option, option) for option in allowed]
+        approved_usage.value = tuple(current)
+        state["approved_usages"] = current
+
     def refresh_controls(*_args: Any) -> None:
+        refresh_usage_options()
         current = list(state["inventory_metadata_ids"])
         current_set = set(current)
         inventory.options = [(readable_label(key), key) for key in current]
@@ -673,6 +732,7 @@ def widget_register_data_contract(
                 latest_committed_at=None, inventory_metadata_ids=[],
                 inventory_count=0, has_unsaved_changes=False,
                 saved_activity_id=None, saved_metadata_ids=[],
+                agreement_approved_usages=[], approved_usages=[],
             )
             agreement_text.value = "<b>Parent Data Agreement:</b> Select or save an agreement first"
             status.value = "Select an existing agreement or save a new agreement before maintaining its dataset inventory."
@@ -682,6 +742,7 @@ def widget_register_data_contract(
         selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
         latest_summary, loaded_rows = _latest_inventory(memberships, selected_id)
+        loaded_usage = _parse_approved_usage_json(loaded_rows[0].get("approved_usage_json")) if loaded_rows else []
         activity_id = str((latest_summary or {}).get("activity_id") or "") or None
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
@@ -696,6 +757,11 @@ def widget_register_data_contract(
             inventory_metadata_ids=current, inventory_count=len(current),
             has_unsaved_changes=current != saved_ids,
             saved_activity_id=None, saved_metadata_ids=[],
+            agreement_approved_usages=_parse_approved_usage_json(selected_row.get("approved_usage_json")),
+            approved_usages=[
+                value for value in loaded_usage
+                if value in _parse_approved_usage_json(selected_row.get("approved_usage_json"))
+            ],
         )
         agreement_text.value = f"<b>Parent Data Agreement:</b> {html.escape(selected_label)}"
         status.value = (
@@ -759,6 +825,15 @@ def widget_register_data_contract(
             status.value = "Select or save an agreement before saving an inventory."
             return
         current = list(dict.fromkeys(state["inventory_metadata_ids"]))
+        if not state.get("agreement_approved_usages"):
+            raise ValueError(
+                "Parent Data Agreement approved usages are required; contract approved usages must be "
+                "a subset of the parent Data Agreement approved usages."
+            )
+        selected_usage_json = _serialize_contract_approved_usages(
+            approved_usage.value, list(state.get("agreement_approved_usages") or [])
+        )
+        state["approved_usages"] = _parse_approved_usage_json(selected_usage_json)
         fingerprints_changed = any(
             str(rows_by_id.get(key, {}).get("schema_fingerprint") or "")
             != str(next((row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""))
@@ -788,6 +863,7 @@ def widget_register_data_contract(
             "schema_fingerprint": str(rows_by_id.get(key, {}).get("schema_fingerprint") or next(
                 (row.get("schema_fingerprint") for row in latest_rows if row.get("metadata_table_key") == key), ""
             )),
+            "approved_usage_json": selected_usage_json,
             **audit,
         } for key in current]
         clear = getattr(execution_output, "clear_output", None)
@@ -809,6 +885,7 @@ def widget_register_data_contract(
             inventory_metadata_ids=list(current), inventory_count=len(current),
             has_unsaved_changes=False, saved_activity_id=activity_id,
             saved_metadata_ids=list(current),
+            approved_usages=_parse_approved_usage_json(selected_usage_json),
             pending_additions=[], pending_removals=[],
         )
         refresh_controls()
@@ -819,6 +896,7 @@ def widget_register_data_contract(
     inventory.observe(select_inventory, names="value")
     add.on_click(add_selected)
     remove.on_click(remove_selected)
+    approved_usage.observe(lambda _change: refresh_usage_options(), names="value")
     save.on_click(save_inventory)
     agreement_selector = (agreement or {}).get("existing_record")
     if agreement_selector is not None and hasattr(agreement_selector, "observe"):
@@ -836,6 +914,7 @@ def widget_register_data_contract(
         "summary": summary, "inventory": inventory, "remove": remove,
         "schema_review": selected_schema, "selected_schema": selected_schema,
         "contract_schema_warning": contract_schema_warning,
+        "approved_usage": approved_usage,
         "search": search, "available": available, "add": add, "save": save,
         "status": status, "execution_output": execution_output,
     }
@@ -857,7 +936,10 @@ def widget_register_data_contract(
     details_section = form_section(
         widgets,
         title="Contract details",
-        children=[summary, inventory, action_row(widgets, [remove]), contract_schema_warning],
+        children=[
+            summary, widgets.HTML(value="<b>Approved usages</b>"), approved_usage,
+            inventory, action_row(widgets, [remove]), contract_schema_warning,
+        ],
     )
     catalogue_section = form_section(
         widgets,

@@ -78,7 +78,7 @@ def _render_contract(monkeypatch):
     monkeypatch.setattr(contract_widget, "_latest_inventory", lambda *args: (None, []))
     monkeypatch.setattr(contract_widget, "_display_widget", lambda value: None)
     return contract_widget.widget_register_data_contract(
-        agreement_id="agreement-1", metadata_ids=["dataset-1"], spark_session=object()
+        agreement={"agreement_id": "agreement-1", "approved_usage_json": '["research"]'}, metadata_ids=["dataset-1"], spark_session=object()
     )
 
 
@@ -138,11 +138,14 @@ def test_agreement_form_has_meaningful_groups_and_unclipped_output(monkeypatch):
     ):
         assert label in text
     assert "Optional" not in text
-    assert {key: (box.description, box.value) for key, box in controls["approved_usage_checkboxes"].items()} == {
-        "internal": ("Internal", False),
-        "research": ("Research", False),
-        "external": ("External", False),
-    }
+    assert controls["approved_usage"].description == "Approved usages"
+    assert controls["approved_usage"].options == [
+        ("internal cross domain", "internal cross domain"),
+        ("internal single domain", "internal single domain"),
+        ("research", "research"),
+        ("external", "external"),
+    ]
+    assert controls["approved_usage"].value == ()
     assert controls["save_button"].click_callbacks
     assert controls["existing_record"].callbacks
     assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
@@ -158,7 +161,7 @@ def test_save_preserves_emitted_lakehouse_output_and_restores_button(monkeypatch
 
     monkeypatch.setattr(agreement_widget, "_create_or_update_data_agreement", save)
     controls = _render(monkeypatch)
-    controls["approved_usage_checkboxes"]["internal"].value = True
+    controls["approved_usage"].value = ("internal cross domain",)
     controls["save_button"].click_callbacks[0](None)
 
     assert message in capsys.readouterr().out
