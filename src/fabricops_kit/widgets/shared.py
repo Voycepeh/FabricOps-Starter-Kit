@@ -61,11 +61,13 @@ def form_page(widgets: Any, *, title: str, description: str, children: Iterable[
     """Compose a full-width widget form with a consistent page header."""
     field_style = (
         "<style>"
+        ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;"
+        "min-width:0;max-width:100%;}"
+        ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}"
         ".fabricops-form .widget-label{display:block;width:100%;max-width:100%;}"
-        ".fabricops-form .widget-inline-hbox .widget-label{margin-bottom:6px;}"
         ".fabricops-form .widget-text input,.fabricops-form .widget-dropdown select,"
         ".fabricops-form .widget-textarea textarea{width:100%;min-width:0;max-width:100%;box-sizing:border-box;}"
-        ".fabricops-form .widget-inline-hbox,.fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
+        ".fabricops-form .widget-hbox{min-width:0;max-width:100%;}"
         "</style>"
     )
     header = widgets.HTML(
