@@ -2272,3 +2272,58 @@ def catalogue_table_browser_state(
         "removed_columns": [row for row in columns if row["status"] == "removed"],
         "current_enrichment_values": {"table": table_values, "columns": {row["metadata_column_key"]: row["enrichment_values"] for row in columns}},
     }
+
+
+def render_read_only_catalogue_detail(state: Mapping[str, Any]) -> str:
+    """Render schema history and enrichment context without authoring controls."""
+    def shown(value: Any) -> str:
+        return (
+            _html_escape(value) if str(value or "").strip()
+            else "<span style='color:#6b7280'>Not provided</span>"
+        )
+
+    table_values = state.get("current_enrichment_values", {}).get("table", {})
+    table_context = "".join(
+        f"<div><b>{_html_escape(name)}:</b> {shown(table_values.get(name))}</div>"
+        for name in ("Description", "Classification")
+    )
+
+    def column_rows(rows: Iterable[Mapping[str, Any]], *, removed: bool) -> str:
+        body = []
+        for row in rows:
+            enrichment = row.get("enrichment_values", {})
+            removed_detail = (
+                f"<br><span style='color:#6b7280'><b>Removed</b> · Last observed: "
+                f"{shown(row.get('last_observed_at'))}</span>" if removed else ""
+            )
+            body.append(
+                "<tr style='color:#6b7280' >" if removed else "<tr>"
+            )
+            body.append(
+                f"<td>{shown(row.get('column_name'))}{removed_detail}</td>"
+                f"<td>{shown(row.get('data_type'))}</td>"
+                f"<td>{shown(enrichment.get('Description'))}</td>"
+                f"<td>{shown(enrichment.get('Classification'))}</td>"
+                f"<td>{shown(enrichment.get('Personal_identifier'))}</td></tr>"
+            )
+        return "".join(body) or "<tr><td colspan='5'><i>None</i></td></tr>"
+
+    header = (
+        "<thead><tr><th>Column</th><th>Type</th><th>Description</th>"
+        "<th>Classification</th><th>Personal identifier</th></tr></thead>"
+    )
+    return (
+        f"<h4>{shown(state.get('table_name'))}</h4>"
+        "<div><b>metadata_table_key:</b> <code>"
+        f"{shown(state.get('metadata_table_key'))}</code></div>"
+        "<div><b>Latest fingerprint:</b> <code>"
+        f"{shown(state.get('latest_schema_fingerprint'))}</code></div>"
+        f"<div><b>Latest schema timestamp:</b> {shown(state.get('latest_schema_timestamp'))}</div>"
+        f"<h5>Table enrichment (read-only)</h5>{table_context}"
+        "<h5>Current columns</h5><div style='overflow:auto'>"
+        f"<table style='width:100%;font-size:12px'>{header}<tbody>"
+        f"{column_rows(state.get('current_columns', []), removed=False)}</tbody></table></div>"
+        "<h5>Removed columns</h5><div style='overflow:auto'>"
+        f"<table style='width:100%;font-size:12px'>{header}<tbody>"
+        f"{column_rows(state.get('removed_columns', []), removed=True)}</tbody></table></div>"
+    )
