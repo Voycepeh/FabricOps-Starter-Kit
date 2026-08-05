@@ -753,9 +753,11 @@ def widget_register_data_contract(
             return
         selected_row = (agreement or {}).get("existing_records_by_id", {}).get(selected_id, {})
         selected_label = str(selected_row.get("agreement_name") or selected_id).strip() or selected_id
+        previous_usage = selected_approved_usages()
         latest_summary, loaded_rows = _latest_inventory(memberships, selected_id)
         loaded_usage = _parse_approved_usage_json(loaded_rows[0].get("approved_usage_json")) if loaded_rows else []
         allowed_usage = _parse_approved_usage_json(selected_row.get("approved_usage_json"))
+        restored_usage = loaded_usage if loaded_rows else previous_usage
         activity_id = str((latest_summary or {}).get("activity_id") or "") or None
         latest_rows[:] = loaded_rows
         saved_ids[:] = [str(row["metadata_table_key"]) for row in loaded_rows]
@@ -771,9 +773,10 @@ def widget_register_data_contract(
             has_unsaved_changes=current != saved_ids,
             saved_activity_id=None, saved_metadata_ids=[],
             agreement_approved_usages=allowed_usage,
-            approved_usages=[usage for usage in loaded_usage if usage in allowed_usage],
+            approved_usages=[usage for usage in restored_usage if usage in allowed_usage],
         )
-        approved_usage_checkboxes.clear()
+        if loaded_rows:
+            approved_usage_checkboxes.clear()
         agreement_text.value = f"<b>Parent Data Agreement:</b> {html.escape(selected_label)}"
         status.value = (
             "Unsaved contract changes were preserved for the previous agreement."
