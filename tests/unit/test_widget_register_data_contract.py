@@ -105,6 +105,7 @@ class _FakeWidgets:
 
     Text = _FakeWidget
     Select = _FakeWidget
+    Checkbox = _FakeWidget
     HTML = _FakeWidget
     Button = _FakeWidget
     Output = _FakeOutput
