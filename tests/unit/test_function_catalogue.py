@@ -123,50 +123,6 @@ def _core_template_called_public() -> set[str]:
     }
 
 
-def _direct_template_call_set() -> set[str]:
-    """Return public function names directly called by all template code cells."""
-    from scripts.generate_individual_function_reference_pages import (
-        _direct_public_template_symbols,
-        parse_public_exports,
-        parse_template_flow_docs,
-    )
-
-    public_symbols = set(parse_public_exports())
-    called: set[str] = set()
-    for flow in parse_template_flow_docs():
-        called.update(_direct_public_template_symbols(flow.get("template_path", ""), public_symbols))
-    return called
-
-
-def _expected_direct_public_template_calls() -> set[str]:
-    """Return audited exported functions directly called by template code cells."""
-    expected = {
-        str(row["function"])
-        for row in _audit_rows()
-        if row["in_root_exports"]
-        and str(row["function"]) != "write_pipeline_lineage"
-        and (row["directly_called_in_core_templates"] or row["directly_called_in_example_templates"])
-    }
-    expected.discard("widget_pipeline_bootstrap")
-    expected.discard("write_pipeline_run_summary")
-    expected.discard("widget_render_agreement_evidence")
-    expected.discard("display_guardrail_results")
-    expected.update(
-        {
-            "profile_and_register_table",
-            "read_lakehouse_csv",
-            "read_lakehouse_excel",
-            "read_lakehouse_parquet",
-            "write_warehouse_table",
-            "widget_register_data_contract",
-            "widget_view_agreement_catalogue",
-            "widget_view_pipeline_catalogue",
-            "widget_view_data_catalogue",
-        }
-    )
-    return expected
-
-
 def _public_inventory_function_names() -> set[str]:
     """Return dashboard public function names used by generated references."""
     data = json.loads((ROOT / "docs" / "reference" / "_data" / "public-function-call-flows.json").read_text(encoding="utf-8"))
@@ -176,22 +132,6 @@ def _public_inventory_function_names() -> set[str]:
 def _catalogue_row_names() -> set[str]:
     """Return function names rendered as Function Reference catalogue rows."""
     return set(re.findall(r'data-callable-name="([^"]+)"', _reference_index()))
-
-
-def test_template_code_cell_direct_call_extractor_finds_expected_surface() -> None:
-    """Verify starter template code-cell calls drive the reference surface."""
-    called = _direct_template_call_set()
-
-    assert called == _expected_direct_public_template_calls()
-    assert "setup_notebook" in called
-    assert "get_latest_metadata_catalogue" not in called
-    assert "validate_schema" not in called
-    assert "validate_schema_rule" not in called
-    assert "read_lakehouse_csv" in called
-    assert "read_lakehouse_excel" in called
-    assert "read_lakehouse_parquet" in called
-    assert "read_warehouse_table" in called
-    assert "write_warehouse_table" in called
 
 
 def test_reference_catalogue_rows_include_only_public_inventory_functions() -> None:

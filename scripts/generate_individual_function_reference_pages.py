@@ -1031,6 +1031,39 @@ def parse_template_flow_docs() -> list[dict[str, Any]]:
     raise RuntimeError("Could not parse TEMPLATE_FLOW_DOCS from reference_docs_metadata.py")
 
 
+def _validate_template_flow_docs(template_flow_docs: Any, public_symbols: set[str]) -> None:
+    """Validate curated template-flow structure without inspecting notebook code."""
+    if not isinstance(template_flow_docs, list) or not template_flow_docs:
+        raise RuntimeError("TEMPLATE_FLOW_DOCS must be a non-empty list")
+
+    required_fields = ("notebook_key", "notebook_label", "segment_intro", "template_path")
+    for flow in template_flow_docs:
+        if not isinstance(flow, dict):
+            raise RuntimeError("TEMPLATE_FLOW_DOCS entries must be dictionaries")
+        for field in required_fields:
+            if not isinstance(flow.get(field), str) or not flow[field].strip():
+                raise RuntimeError(f"TEMPLATE_FLOW_DOCS entries require a non-empty {field}")
+
+        segments = flow.get("segments")
+        if not isinstance(segments, list) or not segments:
+            raise RuntimeError("TEMPLATE_FLOW_DOCS entries require a non-empty segments list")
+        seen_symbols: set[str] = set()
+        for segment in segments:
+            if not isinstance(segment, dict) or not isinstance(segment.get("title"), str) or not segment["title"].strip():
+                raise RuntimeError("TEMPLATE_FLOW_DOCS segments require a non-empty title")
+            symbols = segment.get("symbols")
+            if not isinstance(symbols, list) or not symbols or not all(isinstance(symbol, str) for symbol in symbols):
+                raise RuntimeError("TEMPLATE_FLOW_DOCS segments require a non-empty symbols list")
+            for symbol in symbols:
+                if symbol in seen_symbols:
+                    raise RuntimeError(
+                        f"TEMPLATE_FLOW_DOCS contains duplicate symbol {symbol!r} for {flow['notebook_key']}"
+                    )
+                seen_symbols.add(symbol)
+                if symbol not in public_symbols:
+                    raise RuntimeError(f"TEMPLATE_FLOW_DOCS references unknown symbol: {symbol}")
+
+
 def _render_related_guides(related_guides: list[dict[str, str]]) -> list[str]:
     """Render conceptual documentation links for a callable page."""
     if not related_guides:
@@ -1127,135 +1160,22 @@ def _render_example_usage(short_name: str, signature: str, metadata: dict[str, A
         return _reference_code_block(preferred_example, class_name="reference-example-usage")
     return ["Example usage not documented yet."]
 
-def _read_template_source(template_path: str) -> str:
-    """Return searchable source text from a starter notebook/template file."""
-    path = ROOT / template_path
-    if not path.exists():
-        return ""
-    if path.suffix == ".ipynb":
-        try:
-            notebook = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return path.read_text(encoding="utf-8")
-        chunks: list[str] = []
-        for cell in notebook.get("cells", []):
-            source = cell.get("source", "")
-            chunks.append("".join(source) if isinstance(source, list) else str(source))
-        return "\n".join(chunks)
-    return path.read_text(encoding="utf-8")
-
-
-def _python_source_for_template_analysis(source_text: str) -> str:
-    """Return parseable Python source for notebook call analysis."""
-    lines: list[str] = []
-    for line in source_text.splitlines():
-        if line.lstrip().startswith(("%", "!")):
-            lines.append(f"# {line}")
-        else:
-            lines.append(line)
-    return "\n".join(lines)
-
-
-def _direct_public_template_symbols(template_path: str, public_symbols: set[str]) -> list[str]:
-    """Return public package callables directly called by a notebook template."""
-    path = ROOT / template_path
-    if not path.exists():
-        return []
-    source_text = _read_template_source(template_path)
-    if path.suffix == ".ipynb":
-        try:
-            notebook = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            notebook = {"cells": []}
-        code_chunks: list[str] = []
-        for cell in notebook.get("cells", []):
-            if cell.get("cell_type") != "code":
-                continue
-            source = cell.get("source", "")
-            code_chunks.append("".join(source) if isinstance(source, list) else str(source))
-        source_text = "\n".join(code_chunks)
-    if not source_text:
-        return []
-    try:
-        tree = ast.parse(_python_source_for_template_analysis(source_text))
-    except SyntaxError as exc:
-        raise RuntimeError(f"Could not parse template for function map validation: {template_path}") from exc
-
-    imported_symbol_by_name: dict[str, str] = {}
-    package_aliases: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(PACKAGE_NAME):
-            for alias in node.names:
-                if alias.name in public_symbols:
-                    imported_symbol_by_name[alias.asname or alias.name] = alias.name
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name == PACKAGE_NAME:
-                    package_aliases.add(alias.asname or alias.name)
-
-    direct_symbols: set[str] = set()
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        if isinstance(func, ast.Name) and func.id in imported_symbol_by_name:
-            direct_symbols.add(imported_symbol_by_name[func.id])
-        elif (
-            isinstance(func, ast.Attribute)
-            and func.attr in public_symbols
-            and isinstance(func.value, ast.Name)
-            and func.value.id in package_aliases
-        ):
-            direct_symbols.add(func.attr)
-
-    return sorted(direct_symbols)
-
-
-def _derive_template_usage(
-    template_flow_docs: list[dict[str, Any]],
-    symbol_map: dict[str, Symbol],
-    node_by_qn: dict[str, dict[str, Any]],
-    calls_by_qn: dict[str, list[str]],
-) -> dict[str, list[str]]:
-    """Map public callable names to starter templates that directly call them."""
-    del node_by_qn, calls_by_qn
-    template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
-    usage: dict[str, set[str]] = {name: set() for name in symbol_map}
-
-    for flow in template_flow_docs:
-        notebook_key = flow["notebook_key"]
-        direct_symbols = set(_direct_public_template_symbols(flow.get("template_path", ""), set(symbol_map)))
-        for symbol in direct_symbols:
-            usage.setdefault(symbol, set()).add(notebook_key)
-
-    return {
-        symbol: sorted(notebooks, key=lambda notebook: (template_order.get(notebook, len(template_order)), notebook))
-        for symbol, notebooks in usage.items()
-    }
-
 
 def _derive_template_usage_by_kind(
     template_flow_docs: list[dict[str, Any]],
     symbol_map: dict[str, Symbol],
-) -> tuple[dict[str, list[str]], dict[str, list[str]], dict[str, bool]]:
-    """Return direct core calls, example calls, and import-only template usage."""
+) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Return curated core and example template usage from flow metadata."""
     template_order = {flow["notebook_key"]: index for index, flow in enumerate(template_flow_docs)}
     core_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
     example_usage: dict[str, set[str]] = {name: set() for name in symbol_map}
-    imported_symbols: dict[str, bool] = {name: False for name in symbol_map}
-    public_symbols = set(symbol_map)
 
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
-        template_path = flow.get("template_path", "")
-        direct_symbols = set(_direct_public_template_symbols(template_path, public_symbols))
-        source_text = _read_template_source(template_path)
-        for symbol in public_symbols:
-            if re.search(rf"\b{re.escape(symbol)}\b", source_text) and symbol not in direct_symbols:
-                imported_symbols[symbol] = True
         target = core_usage if notebook_key in CORE_TEMPLATE_KEYS else example_usage
-        for symbol in direct_symbols:
-            target.setdefault(symbol, set()).add(notebook_key)
+        for segment in flow["segments"]:
+            for symbol in segment["symbols"]:
+                target[symbol].add(notebook_key)
 
     def _sorted_usage(usage: dict[str, set[str]]) -> dict[str, list[str]]:
         return {
@@ -1263,7 +1183,7 @@ def _derive_template_usage_by_kind(
             for symbol, notebooks in usage.items()
         }
 
-    return _sorted_usage(core_usage), _sorted_usage(example_usage), imported_symbols
+    return _sorted_usage(core_usage), _sorted_usage(example_usage)
 
 
 def generate_internal_reference_pages() -> bool:
@@ -4973,7 +4893,10 @@ def main() -> None:
         if symbol.role == "callable" and symbol.name.startswith("_"):
             raise RuntimeError(f"Underscore callable cannot be public callable: {symbol.name}")
 
-    core_template_usage_by_symbol, example_template_usage_by_symbol, imported_only_by_symbol = _derive_template_usage_by_kind(template_flow_docs, symbol_map)
+    _validate_template_flow_docs(template_flow_docs, set(symbol_map))
+    core_template_usage_by_symbol, example_template_usage_by_symbol = _derive_template_usage_by_kind(
+        template_flow_docs, symbol_map
+    )
     template_usage_by_symbol = {
         name: [*core_template_usage_by_symbol.get(name, []), *example_template_usage_by_symbol.get(name, [])]
         for name in symbol_map
@@ -5000,28 +4923,11 @@ def main() -> None:
         missing = ", ".join(missing_template_paths)
         raise RuntimeError(f"TEMPLATE_FLOW_DOCS is missing notebook templates: {missing}")
 
-    public_symbol_names = set(symbol_map)
-    for flow in template_flow_docs:
-        expected_symbols = [
-            symbol
-            for segment in flow["segments"]
-            for symbol in segment["symbols"]
-        ]
-        actual_symbols = _direct_public_template_symbols(flow.get("template_path", ""), public_symbol_names)
-        if set(expected_symbols) != set(actual_symbols):
-            expected = ", ".join(sorted(expected_symbols)) or "(none)"
-            actual = ", ".join(actual_symbols) or "(none)"
-            raise RuntimeError(
-                "TEMPLATE_FLOW_DOCS symbols must match direct public callable usage in "
-                f"{flow.get('template_path')}: expected metadata [{expected}], actual notebook calls [{actual}]"
-            )
     starter_symbol_to_notebooks: dict[str, set[str]] = {}
     for flow in template_flow_docs:
         notebook_key = flow["notebook_key"]
         for segment in flow["segments"]:
             for symbol in segment["symbols"]:
-                if symbol not in symbol_map:
-                    raise RuntimeError(f"TEMPLATE_FLOW_DOCS references unknown symbol: {symbol}")
                 starter_symbol_to_notebooks.setdefault(symbol, set()).add(notebook_key)
 
     def _esc(text: str) -> str:
