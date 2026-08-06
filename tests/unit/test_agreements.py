@@ -429,7 +429,10 @@ def test_steward_widget_blocks_missing_required_fields_before_persistence(monkey
 
     message = capsys.readouterr().out
     assert message == ""
-    assert controls["status"].value == "Data steward was not saved. Complete the required fields."
+    assert controls["status"].value == (
+        "Data steward was not saved. Complete the following required fields: "
+        "Steward name, Contact."
+    )
 
 
 def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatch):

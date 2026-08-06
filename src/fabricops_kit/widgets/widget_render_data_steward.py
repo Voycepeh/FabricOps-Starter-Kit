@@ -161,7 +161,10 @@ def widget_render_data_steward(*, spark: Any, context: dict[str, Any] | None = N
             }
             missing = _missing_required(values)
             if missing:
-                status.value = "Data steward was not saved. Complete the required fields."
+                status.value = (
+                    "Data steward was not saved. Complete the following required fields: "
+                    f"{', '.join(missing)}."
+                )
                 return
             extras = collect_custom_fields(widget_config, custom)
             if selected.value:

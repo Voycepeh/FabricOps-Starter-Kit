@@ -885,24 +885,28 @@ def widget_register_data_contract(
                 membership_rows=rows, target=target, schema=schema,
                 spark_session=spark_session, context=runtime_context,
             )
-            latest_summary = {
-                "activity_id": activity_id, "agreement_id": state["agreement_id"],
-                "committed_at": saved_at, "linked_dataset_count": len(current),
-            }
-            latest_rows[:] = rows
-            saved_ids[:] = current
-            state.update(
-                latest_activity_id=activity_id, latest_committed_at=saved_at,
-                inventory_metadata_ids=list(current), inventory_count=len(current),
-                has_unsaved_changes=False, saved_activity_id=activity_id,
-                saved_metadata_ids=list(current),
-                approved_usages=_parse_approved_usage_json(selected_usage_json),
-                pending_additions=[], pending_removals=[],
-            )
-            refresh_controls()
-            status.value = f"Saved inventory with {len(current)} logical datasets."
         except Exception as exc:
             status.value = f"Contract inventory was not saved: {exc}"
+        else:
+            try:
+                latest_summary = {
+                    "activity_id": activity_id, "agreement_id": state["agreement_id"],
+                    "committed_at": saved_at, "linked_dataset_count": len(current),
+                }
+                latest_rows[:] = rows
+                saved_ids[:] = current
+                state.update(
+                    latest_activity_id=activity_id, latest_committed_at=saved_at,
+                    inventory_metadata_ids=list(current), inventory_count=len(current),
+                    has_unsaved_changes=False, saved_activity_id=activity_id,
+                    saved_metadata_ids=list(current),
+                    approved_usages=_parse_approved_usage_json(selected_usage_json),
+                    pending_additions=[], pending_removals=[],
+                )
+                refresh_controls()
+                status.value = f"Saved inventory with {len(current)} logical datasets."
+            except Exception as exc:
+                status.value = f"Contract inventory was saved, but the widget could not be refreshed: {exc}"
         finally:
             save.disabled = not bool(state.get("agreement_id"))
 

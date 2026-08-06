@@ -392,7 +392,10 @@ def test_steward_save_required_error_and_later_success_replaces_status(monkeypat
     controls["fields"]["steward_name"].value = ""
     controls["save_button"].click_callbacks[0](None)
 
-    assert controls["status"].value == "Data steward was not saved. Complete the required fields."
+    assert controls["status"].value == (
+        "Data steward was not saved. Complete the following required fields: "
+        "Steward name, Contact."
+    )
     assert callbacks == []
     assert capsys.readouterr().out == ""
 
@@ -486,3 +489,28 @@ def test_contract_save_error_stays_in_status_and_later_success_recovers(monkeypa
     assert state["latest_activity_id"] == "activity-2"
     assert callbacks_kwargs[-1]["membership_rows"][0]["agreement_id"] == "agreement-1"
     assert "execution_output" in controls
+
+
+def test_contract_post_write_refresh_failure_reports_committed_save(monkeypatch):
+    """Do not describe a committed inventory write as an unsuccessful save."""
+    writes = []
+    monkeypatch.setattr(contract_widget, "_append_inventory", lambda **kwargs: writes.append(kwargs))
+    monkeypatch.setattr(
+        contract_widget,
+        "build_runtime_audit_fields",
+        lambda **kwargs: {"_activity_id": "activity-1", "_committed_at": "2026-08-03"},
+    )
+    state = _render_contract(monkeypatch)
+
+    def fail_refresh(*args, **kwargs):
+        raise RuntimeError("refresh failed")
+
+    monkeypatch.setattr(contract_widget, "checkbox_group", fail_refresh)
+    state["_controls"]["save"].click_callbacks[0](None)
+
+    assert len(writes) == 1
+    assert state["latest_activity_id"] == "activity-1"
+    assert state["_controls"]["status"].value == (
+        "Contract inventory was saved, but the widget could not be refreshed: refresh failed"
+    )
+    assert "was not saved" not in state["_controls"]["status"].value
