@@ -2,7 +2,9 @@
 
 Run `01_agreement` in the Governance workspace after Step 0 to capture steward and agreement context before pipeline execution. This notebook supports two governance stages: establish the Data Agreement first, then return later to register one or more Data Contracts after the relevant catalogue and validation evidence exists.
 
-Run it in the Governance workspace 
+The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to control the agreement form fields and widget behaviour. Review the [configuration reference](../api/reference/data_agreement_config.md) when you need to understand or customise those settings.
+
+## What to do
 
 ## Start by making sure you have selected the correct Environment & %run 00_env_config
 ![Setup](../assets/01/Setup.png)
