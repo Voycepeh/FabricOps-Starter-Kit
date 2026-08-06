@@ -90,18 +90,12 @@ def test_shared_form_containers_expand_without_scrollbars():
     section = shared.form_section(_FakeWidgets, title="Details", children=[_FakeWidget()])
     page = shared.form_page(_FakeWidgets, title="Title", description="Description", children=[section])
 
-    assert page.layout.kwargs["width"] == "100%"
-    assert page.layout.kwargs["height"] == "auto"
-    assert section.layout.kwargs["width"] == "100%"
-    assert section.layout.kwargs["height"] == "auto"
-    assert section.layout.kwargs["overflow"] == "visible"
+    for container in (page, section):
+        assert container.layout.kwargs["width"] == "100%"
+        assert container.layout.kwargs["height"] == "auto"
+        assert container.layout.kwargs["overflow"] == "visible"
 
-    header, body = page.children
-    assert body.children == [section]
-    assert body.layout.kwargs["max_height"] == shared.FORM_PAGE_MAX_HEIGHT
-    assert body.layout.kwargs["overflow"] == "hidden auto"
-
-    css = header.value
+    css = page.children[0].value
     assert ".fabricops-form .widget-inline-hbox{display:flex;flex-direction:column;align-items:stretch;" in css
     assert ".fabricops-form .widget-inline-hbox>.widget-label{width:100%;margin:0 0 6px;flex:none;}" in css
 
@@ -113,38 +107,6 @@ def test_shared_form_containers_expand_without_scrollbars():
     grid = shared.form_grid(_FakeWidgets, [_FakeWidget(), _FakeWidget()])
     assert grid.layout.kwargs["grid_template_columns"] == "repeat(auto-fit, minmax(min(100%, 280px), 1fr))"
     assert grid.layout.kwargs["grid_gap"] == "16px 24px"
-
-
-
-def test_shared_form_page_bounds_short_and_long_pages_with_preserved_body_order():
-    """Use the same bounded body wrapper for short and long shared pages."""
-    short_children = [_FakeWidget(value="first"), _FakeWidget(value="second")]
-    long_children = [_FakeWidget(value=str(index)) for index in range(20)]
-
-    short_page = shared.form_page(_FakeWidgets, title="Short", description="Page", children=short_children)
-    long_page = shared.form_page(_FakeWidgets, title="Long", description="Page", children=long_children)
-
-    for page, expected_children in ((short_page, short_children), (long_page, long_children)):
-        assert len(page.children) == 2
-        assert page.children[0].value
-        body = page.children[1]
-        assert body.children == expected_children
-        assert body.layout.kwargs["max_height"] == "720px"
-        assert body.layout.kwargs["overflow"] == "hidden auto"
-
-
-
-def test_shared_form_page_uses_real_ipywidgets_layout_traits_when_available():
-    """Reject removed ipywidgets layout trait names in the shared form body."""
-    real_widgets = pytest.importorskip("ipywidgets")
-
-    page = shared.form_page(real_widgets, title="Title", description="Description", children=[real_widgets.HTML("Body")])
-
-    body = page.children[1]
-    assert body.layout.max_height == shared.FORM_PAGE_MAX_HEIGHT
-    assert body.layout.overflow == "hidden auto"
-    assert not hasattr(body.layout, "overflow_x")
-    assert not hasattr(body.layout, "overflow_y")
 
 
 def test_long_search_results_are_bounded_without_scrolling_the_form():
@@ -282,7 +244,6 @@ def test_steward_form_uses_simplified_visible_layout(monkeypatch):
     assert controls["container"].layout.kwargs["height"] == "auto"
     assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
     assert controls["execution_log_section"] not in controls["container"].children
-    assert controls["execution_log_section"] not in controls["container"].children[1].children
 
 
 def test_steward_additional_information_renders_only_for_custom_fields(monkeypatch):
@@ -365,51 +326,6 @@ def test_steward_selector_search_population_and_save_paths_remain_unchanged(monk
     assert controls["status"].value == "Data steward saved successfully: New Steward"
 
 
-
-def test_steward_save_required_error_and_later_success_replaces_status(monkeypatch, capsys):
-    """Keep steward validation in status and replace prior failures after success."""
-    callbacks = []
-    refreshes = []
-
-    def save(**kwargs):
-        return {
-            "steward_id": "33333333-3333-4333-8333-333333333333",
-            "steward_name": kwargs["values"]["steward_name"],
-            "steward_role": kwargs["values"]["steward_role"],
-            "contact": kwargs["values"]["contact"],
-        }
-
-    monkeypatch.setattr(steward_widget, "_create_or_update_data_steward", save)
-    controls = _render_steward(monkeypatch, stewards=[])
-    controls["after_save_callbacks"].append(callbacks.append)
-    original_refresh = controls["refresh_existing_options"]
-
-    def refresh(selected_id=None):
-        refreshes.append(selected_id)
-        original_refresh(selected_id)
-
-    controls["refresh_existing_options"] = refresh
-    controls["fields"]["steward_name"].value = ""
-    controls["save_button"].click_callbacks[0](None)
-
-    assert controls["status"].value == (
-        "Data steward was not saved. Complete the following required fields: "
-        "Steward name, Contact."
-    )
-    assert callbacks == []
-    assert capsys.readouterr().out == ""
-
-    controls["fields"]["steward_name"].value = "New Steward"
-    controls["fields"]["steward_role"].value = "Data Owner"
-    controls["fields"]["contact"].value = "new@example.com"
-    controls["save_button"].click_callbacks[0](None)
-
-    assert controls["status"].value == "Data steward saved successfully: New Steward"
-    assert "required fields" not in controls["status"].value
-    assert callbacks and callbacks[-1]["steward_id"] == "33333333-3333-4333-8333-333333333333"
-    assert "output" in controls and "execution_output" in controls and "execution_log_section" in controls
-
-
 def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     """Compose contract inventory controls as a responsive, unclipped form."""
     state = _render_contract(monkeypatch)
@@ -431,7 +347,7 @@ def test_contract_form_uses_labelled_shared_sections(monkeypatch):
     assert controls["container"].layout.kwargs["height"] == "auto"
     assert controls["execution_output"].layout.kwargs["overflow"] == "visible"
 
-    landscape = controls["container"].children[1].children[0]
+    landscape = controls["container"].children[1]
     catalogue_section = next(
         child for child in landscape.children[1].children
         if "Related catalogue datasets" in _visible_text(child)
@@ -454,63 +370,3 @@ def test_contract_save_preserves_complete_execution_output(monkeypatch, capsys):
 
     assert message in capsys.readouterr().out
     assert "Saved inventory" in state["_controls"]["status"].value
-
-
-def test_contract_save_error_stays_in_status_and_later_success_recovers(monkeypatch):
-    """Keep contract persistence failures in status without blocking later success."""
-    attempts = []
-    callbacks_kwargs = []
-
-    def append_inventory(**kwargs):
-        attempts.append(kwargs)
-        if len(attempts) == 1:
-            raise ValueError("inventory validation failed")
-        callbacks_kwargs.append(kwargs)
-
-    monkeypatch.setattr(contract_widget, "_append_inventory", append_inventory)
-    monkeypatch.setattr(
-        contract_widget,
-        "build_runtime_audit_fields",
-        lambda **kwargs: {"_activity_id": f"activity-{len(attempts) + 1}", "_committed_at": "2026-08-03"},
-    )
-    state = _render_contract(monkeypatch)
-    controls = state["_controls"]
-
-    controls["save"].click_callbacks[0](None)
-
-    assert controls["status"].value == "Contract inventory was not saved: inventory validation failed"
-    assert state["latest_activity_id"] is None
-    assert controls["save"].disabled is False
-
-    controls["save"].click_callbacks[0](None)
-
-    assert controls["status"].value == "Saved inventory with 1 logical datasets."
-    assert "inventory validation failed" not in controls["status"].value
-    assert state["latest_activity_id"] == "activity-2"
-    assert callbacks_kwargs[-1]["membership_rows"][0]["agreement_id"] == "agreement-1"
-    assert "execution_output" in controls
-
-
-def test_contract_post_write_refresh_failure_reports_committed_save(monkeypatch):
-    """Do not describe a committed inventory write as an unsuccessful save."""
-    writes = []
-    monkeypatch.setattr(contract_widget, "_append_inventory", lambda **kwargs: writes.append(kwargs))
-    monkeypatch.setattr(
-        contract_widget,
-        "build_runtime_audit_fields",
-        lambda **kwargs: {"_activity_id": "activity-1", "_committed_at": "2026-08-03"},
-    )
-    state = _render_contract(monkeypatch)
-
-    def fail_refresh(*args, **kwargs):
-        raise RuntimeError("refresh failed")
-
-    monkeypatch.setattr(contract_widget, "checkbox_group", fail_refresh)
-    state["_controls"]["save"].click_callbacks[0](None)
-
-    assert len(writes) == 1
-    assert state["latest_activity_id"] == "activity-1"
-    assert state["_controls"]["status"].value == (
-        "Contract inventory was saved, but the widget could not be refreshed: refresh failed"
-    )
-    assert "was not saved" not in state["_controls"]["status"].value

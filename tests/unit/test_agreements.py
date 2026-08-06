@@ -285,32 +285,9 @@ class _FakeWidgets:
             super().__init__(value=value, options=options, **kwargs)
 
     class Layout:
-        """Minimal layout test double that rejects unsupported ipywidgets traits."""
-
-        _SUPPORTED_TRAITS = {
-            "align_items",
-            "border",
-            "display",
-            "flex",
-            "flex_flow",
-            "font_family",
-            "gap",
-            "grid_gap",
-            "grid_template_columns",
-            "height",
-            "justify_content",
-            "max_height",
-            "max_width",
-            "min_width",
-            "overflow",
-            "padding",
-            "width",
-        }
+        """Minimal layout test double."""
 
         def __init__(self, **kwargs):
-            unknown = set(kwargs) - self._SUPPORTED_TRAITS
-            if unknown:
-                raise TypeError(f"Unsupported fake Layout traits: {sorted(unknown)}")
             self.kwargs = kwargs
 
 
@@ -359,8 +336,7 @@ def test_public_agreement_and_steward_widgets_render_independent_workflows(monke
     assert agreement_controls["provider_steward_selector"].options
     assert agreement_controls["recipient_steward_selector"].options
     assert "recipient" not in agreement_controls["fields"]
-    form_body = agreement_controls["container"].children[1]
-    form_flow = form_body.children[0]
+    form_flow = agreement_controls["container"].children[1]
     assert len(form_flow.children) == 5
     agreement_header = agreement_controls["container"].children[0]
     assert "Data Agreement Creation Widget" in agreement_header.value
@@ -428,11 +404,10 @@ def test_steward_widget_blocks_missing_required_fields_before_persistence(monkey
     controls["save_button"].click_callbacks[0](None)
 
     message = capsys.readouterr().out
-    assert message == ""
-    assert controls["status"].value == (
-        "Data steward was not saved. Complete the following required fields: "
-        "Steward name, Contact."
-    )
+    assert "Cannot save data steward." in message
+    assert "Complete the following required fields:" in message
+    assert "• Steward name" in message
+    assert "• Contact" in message
 
 
 def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatch):

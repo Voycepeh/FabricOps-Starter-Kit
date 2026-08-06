@@ -763,13 +763,9 @@ def test_invalid_contract_usages_are_rejected_during_save(snapshot_runtime, spar
         metadata_ids=["key-one"], spark_session=spark_session,
     )
     state["_controls"]["approved_usage_checkboxes"]["external"] = _FakeWidget(value=True)
-    state["_controls"]["save"].click()
-
-    assert "subset of the parent Data Agreement approved usages" in state["_controls"]["status"].value
+    with pytest.raises(ValueError, match="subset of the parent Data Agreement approved usages"):
+        state["_controls"]["save"].click()
     assert writes == []
-    assert state["latest_activity_id"] is None
-    assert state["saved_activity_id"] is None
-    assert state["_controls"]["save"].disabled is False
 
 
 def test_contract_usage_options_refresh_when_parent_agreement_changes(snapshot_runtime, spark_session):

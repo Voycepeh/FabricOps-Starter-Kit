@@ -15,17 +15,6 @@ from fabricops_kit.widgets.shared import build_catalogue_widget, dataset_label, 
 pytestmark = pytest.mark.unit
 
 
-def _widget_with_value_containing(widget, text):
-    """Find a visible descendant whose value contains the requested text."""
-    if text in str(getattr(widget, "value", "") or ""):
-        return widget
-    for child in getattr(widget, "children", ()):
-        match = _widget_with_value_containing(child, text)
-        if match is not None:
-            return match
-    return None
-
-
 def test_public_catalogue_widgets_replace_catch_all():
     """The three scoped widgets replace the removed catch-all export."""
     assert callable(fabricops_kit.widget_view_agreement_catalogue)
@@ -164,9 +153,7 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     )
 
     page = displayed[0]
-    context_widget = _widget_with_value_containing(page, "<b>Notebook:</b>")
-    assert context_widget is not None
-    visible_html = context_widget.value
+    visible_html = page.children[1].children[1].value
     assert "<b>Notebook:</b> Customer &lt;pipeline&gt;" in visible_html
     assert "Customer <pipeline>" not in visible_html
     assert "<b>Environment:</b> dev" in visible_html
@@ -202,8 +189,7 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     assert state["_controls"]["dataset"].value == "\x1fdataset-key"
     assert len(read_calls) == 3
 
-    selected_details = _widget_with_value_containing(page, "<b>Schema version:</b>")
-    assert selected_details is not None
+    selected_details = page.children[3].children[1]
     state["_controls"]["schema_fingerprint"].value = "previous-fingerprint"
     assert "<b>Schema version:</b> previous-fingerprint" in selected_details.value
     state["_controls"]["schema_fingerprint"].value = "fingerprint"
