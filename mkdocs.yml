@@ -42,6 +42,7 @@ nav:
       - Data Contract: reference/metadata/metadata_data_contract.md
       - Data Catalogue: reference/metadata/metadata_data_catalogue.md
       - Data Profiled: reference/metadata/metadata_data_profiled.md
+      - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
       - Data Lineage: reference/metadata/metadata_data_lineage.md
       - Data Access: reference/metadata/metadata_data_access.md
       - Enrichment: reference/metadata/metadata_enrichment.md
