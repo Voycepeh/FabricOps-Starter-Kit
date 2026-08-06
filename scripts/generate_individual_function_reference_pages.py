@@ -78,7 +78,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
     "environment_name": "Environment name recorded for the metadata row.",
     "store_type": "Configured Fabric store type recorded for the profiled dataset.",
-    "layer": "Configured data layer recorded for the profiled dataset.",
+    "layer": "The configured medallion layer where the table is stored.",
     "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
     "table_name": "Physical table name recorded for the metadata row.",
     "column_name": "Physical column name recorded for the metadata row.",
