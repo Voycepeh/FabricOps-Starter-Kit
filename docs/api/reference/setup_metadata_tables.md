@@ -1,18 +1,19 @@
 # `setup_metadata_tables`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
 <span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Create missing FabricOps metadata tables and check existing table columns and Spark data types.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Creates any FabricOps metadata tables that are missing and checks that
-existing tables have the required columns and Spark data types. The
+Creates missing metadata tables and validates existing metadata tables
+against the canonical registry for the installed FabricOps version. The
 function finds the metadata lakehouse configured for the selected
 environment, creates missing tables as empty Delta tables, leaves valid
 existing tables in place, reports invalid existing tables as failed, and
@@ -30,7 +31,7 @@ guardrail results.
 
 `fabricops_kit/config/setup_metadata_tables.py:131`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L131-L459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L131-L465">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -137,13 +138,19 @@ and reports readiness presence: ``1`` when at least one active steward
 exists and ``0`` otherwise. It is not a complete active steward population
 count.
 
-Metadata tables created or validated from
+The canonical registry may expand in later compatible FabricOps releases.
+In v0.2.0, metadata tables created or validated from
 ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
 ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
 ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
-``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
+``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
 ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
 ``METADATA_GUARDRAIL_RESULTS``.
+
+Of that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,
+``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
+``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.
+Every other metadata schema in the registry remains Preview.
 
 Detailed table contents:
 
@@ -238,18 +245,59 @@ their respective FabricOps workflows.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.2.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 35 |
 
 ### Release history
 
 | Status | Version |
 | --- | --- |
 | Preview | 0.1.0 |
+| Live | 0.2.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_field_names</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._is_missing_table_error</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.validate_framework_config</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.read_lakehouse_table_core</code></li>
+<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
+</ul>
 
 
 </details>

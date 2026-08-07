@@ -250,8 +250,8 @@ def test_profile_and_register_table_imports_shared_profiler_directly():
     assert "approx" + "_count_distinct" not in shared_source
 
 
-def test_profile_registration_call_flow_records_authoritative_frequency_callable():
-    """Verify registration directly reuses the required public frequency implementation."""
+def test_profile_registration_call_flow_records_shared_frequency_implementation():
+    """Verify registration reuses the shared frequency implementation without a public-to-public call."""
     payload = json.loads(Path("docs/reference/_data/public-function-call-flows.json").read_text(encoding="utf-8"))
     flow = next(row for row in payload["public_functions"] if row["function_name"] == "profile_and_register_table")
     direct_callees = {
@@ -262,10 +262,9 @@ def test_profile_registration_call_flow_records_authoritative_frequency_callable
     assert "fabricops_kit.pipeline.shared.build_profile_dataframe" in direct_callees
     assert "Type 1" not in direct_callees["fabricops_kit.pipeline.shared.build_profile_dataframe"]["violation_types"]
 
-    frequency_callable = "fabricops_kit.pipeline.profile_frequency_distribution.profile_frequency_distribution"
+    frequency_callable = "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe"
     assert frequency_callable in direct_callees
-    assert "Type 1" in direct_callees[frequency_callable]["violation_types"]
-    assert "fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe" not in direct_callees
+    assert "Type 1" not in direct_callees[frequency_callable]["violation_types"]
 
 
 def test_profile_and_register_table_signature_requires_profile_role():
@@ -435,7 +434,7 @@ def test_profile_and_register_table_empty_frequency_selection_writes_compact_par
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     monkeypatch.setattr(
         module,
-        "profile_frequency_distribution",
+        "build_frequency_distribution_dataframe",
         lambda *_args, **_kwargs: pytest.fail("empty selection must not invoke frequency profiling"),
     )
 
@@ -465,7 +464,7 @@ def test_profile_and_register_table_writes_normalized_frequency_rows(
         calls.append((df, columns, top_n))
         return _frequency_df(spark_session)
 
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
     result = profile_and_register_table(
         source,
         profile_role="source",
@@ -512,7 +511,7 @@ def test_profile_and_register_table_automatic_skips_produce_no_fake_child_rows(
         selected.extend(columns)
         return profile_frequency_distribution(df, columns=columns, top_n=top_n)
 
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
     result = profile_and_register_table(
         source, profile_role="source", target="raw", table_name="automatic"
     )
@@ -537,7 +536,7 @@ def test_profile_and_register_table_explicit_frequency_overrides_threshold(
         selected.extend(columns)
         return profile_frequency_distribution(df, columns=columns, top_n=top_n)
 
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
     profile_and_register_table(
         source,
         profile_role="source",
@@ -962,7 +961,7 @@ def test_profile_and_register_table_uses_caller_frequency_profile_df_only_for_fr
         seen.append(df)
         return profile_frequency_distribution(df, columns=columns, top_n=top_n)
 
-    monkeypatch.setattr(module, "profile_frequency_distribution", frequency)
+    monkeypatch.setattr(module, "build_frequency_distribution_dataframe", frequency)
     result = profile_and_register_table(
         source,
         profile_role="source",
@@ -1000,7 +999,7 @@ def test_profile_and_register_table_empty_selection_does_not_validate_frequency_
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
     monkeypatch.setattr(
         module,
-        "profile_frequency_distribution",
+        "build_frequency_distribution_dataframe",
         lambda *_args, **_kwargs: pytest.fail("frequency profiler must not run"),
     )
     result = profile_and_register_table(

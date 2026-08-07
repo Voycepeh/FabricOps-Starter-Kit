@@ -290,13 +290,16 @@ def test_repository_manifest_lifecycle_authority() -> None:
     excel = next(item for item in payload["public_functions"] if item["function_name"] == "read_lakehouse_excel")
     assert excel["lifecycle_status"] == "live"
     assert excel["live_since"] == "0.1.0"
-    assert excel["release_history"] == [{"version": "0.1.0", "status": "live"}]
+    assert excel["release_history"] == [
+        {"version": "0.1.0", "status": "live"},
+        {"version": "0.2.0", "status": "live"},
+    ]
 
     preview = next(item for item in payload["public_functions"] if item["function_name"] == "display_guardrail_results")
     assert preview["lifecycle_status"] == "preview"
     assert preview["live_since"] is None
 
-    manifest = flows.load_release_manifests()[0]
+    manifest = flows.load_release_manifests()[-1]
     expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live")
     assert payload["release_contract"]["live_public_function_count"] == expected_live
 
