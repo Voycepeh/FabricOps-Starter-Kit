@@ -245,7 +245,7 @@ def test_release_contract_pages_render_live_manifest_snapshot():
     assert ri.ROOT / "docs" / "releases" / "index.md" in paths
     assert ri.ROOT / "docs" / "releases" / version / "index.md" in paths
     assert (ri.ROOT / "docs" / "releases" / version).exists()
-    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-07-11 |" in content
+    assert f"| [FabricOps Starter Kit {version}]({version}/) | 2026-08-07 |" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
 
 
@@ -321,8 +321,8 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Stable Fabric lakehouse and warehouse read/write helpers as the only Live v0.1.0 public API surface." in notes
-    assert "first supported FabricOps Starter Kit release" in notes
+    assert "Promoted `setup_metadata_tables()` to the supported Live public API." in notes
+    assert "normalized frequency, and profiling-lineage metadata schemas to Live" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -333,15 +333,15 @@ def test_missing_release_notes_fail_generation_clearly(tmp_path):
         ri.extract_changelog_notes("9.9.9", changelog)
 
 
-def test_release_manifest_lifecycle_counts_match_initial_release_baseline():
-    """Verify maintainer-owned lifecycle classifications match the initial release baseline."""
+def test_release_manifest_lifecycle_counts_match_v020_release():
+    """Verify maintainer-owned lifecycle classifications match the v0.2.0 release."""
     manifest = ri._load_manifest(ri.manifest_path(ri.read_package_version()))
     assert manifest is not None
-    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 9
+    assert sum(1 for item in manifest["functions"] if item["status"] == "live") == 13
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 0
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 4
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
@@ -363,7 +363,7 @@ def test_release_overview_lists_live_release_with_inventory():
     assert "## Release history" in content
     assert "No completed FabricOps Starter Kit releases have been published yet." not in content
     assert "## In preparation" not in content
-    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-07-11 |" in content
+    assert f"| [FabricOps Starter Kit {ri.read_package_version()}]({ri.read_package_version()}/) | 2026-08-07 |" in content
     assert "functions/read_lakehouse_table.md" not in content
 
 
@@ -403,7 +403,7 @@ def test_release_detail_pages_are_rendered_for_live_release():
     base = ri.ROOT / "docs" / "releases" / ri.read_package_version()
 
     assert (base / "functions" / "read_lakehouse_excel.md").exists()
-    assert not (base / "metadata" / "metadata_data_catalogue.md").exists()
+    assert (base / "metadata" / "metadata_data_catalogue.md").exists()
 
 
 def test_no_release_table_uses_raw_source_path_columns():
@@ -416,7 +416,8 @@ def test_no_release_table_uses_raw_source_path_columns():
 
 def test_generated_release_pages_have_required_notice():
     """Verify generated release pages declare their generated ownership."""
-    prefix = "<!-- Generated file. Edit docs/releases/manifests/0.1.0.yml or the authoritative source metadata and regenerate. -->"
+    version = ri.read_package_version()
+    prefix = f"<!-- Generated file. Edit docs/releases/manifests/{version}.yml or the authoritative source metadata and regenerate. -->"
     release_root = ri.ROOT / "docs" / "releases" / ri.read_package_version()
     for path in release_root.glob("**/*.md"):
         content = path.read_text(encoding="utf-8")
@@ -456,7 +457,7 @@ def test_metadata_manifest_records_schema_since_and_fingerprint():
     assert manifest is not None
     agreement = next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_DATA_AGREEMENT")
     assert agreement["status"] == "preview"
-    assert agreement["schema_since"] == "0.1.0"
+    assert agreement["schema_since"] == "0.2.0"
     assert len(agreement["schema_fingerprint"]) == 64
 
 

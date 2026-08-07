@@ -32,6 +32,56 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Upgrade instructions
 
+## [0.2.0] - 2026-08-07
+
+### Added
+
+- Expanded the supported FabricOps workflow from notebook setup and Fabric data movement to metadata setup, dataframe profiling, catalogue registration, normalized frequency evidence, and profiling lineage.
+
+### Changed
+
+- Promoted `setup_metadata_tables()` to the supported Live public API.
+- Promoted `profile_dataframe()`, `profile_frequency_distribution()`, and `profile_and_register_table()` to Live.
+- Promoted the catalogue, profile, normalized frequency, and profiling-lineage metadata schemas to Live.
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+### Python package
+
+### Notebook templates
+
+### Metadata model
+
+- `METADATA_DATA_CATALOGUE`, `METADATA_DATA_PROFILED`, `METADATA_DATA_PROFILED_FREQUENCY`, and `METADATA_DATA_LINEAGE` are Live in v0.2.0.
+- All other metadata schemas remain Preview.
+
+### Documentation
+
+### Breaking changes
+
+### Known limitations
+
+- Steward, agreement, contract, access, enrichment, guardrail, and guardrail-results schemas remain Preview.
+- Governance, authoring, review, and guardrail widgets remain Preview.
+- Notebook templates, skills, samples, guided demos, DQ assets, and environment resources remain independently maintained outside the formal package release contract.
+- `setup_metadata_tables()` does not automatically migrate, overwrite, or delete incompatible existing metadata tables.
+- Existing metadata environments using the legacy `frequency_json` design may require recreation or an explicit migration before using the normalized frequency schema.
+
+### Upgrade instructions
+
+- Upgrade the Fabric Environment custom library to the v0.2.0 wheel.
+- Restart notebook sessions after the Environment library update.
+- Existing v0.1.0 Live read/write calls should remain compatible.
+- Run `setup_metadata_tables()` in a development metadata Lakehouse after upgrading.
+- Review failed-table results before recreating or migrating an incompatible existing table.
+- Do not silently destroy existing metadata records.
+
 ## [0.1.0] - 2026-07-11
 
 ### Added

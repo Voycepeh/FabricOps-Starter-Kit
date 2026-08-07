@@ -18,8 +18,7 @@ from fabricops_kit.io.shared import (
     resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
-from fabricops_kit.pipeline.profile_frequency_distribution import profile_frequency_distribution
-from fabricops_kit.pipeline.shared import build_profile_dataframe
+from fabricops_kit.pipeline.shared import build_frequency_distribution_dataframe, build_profile_dataframe
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 PROFILED_FREQUENCY_TABLE = "METADATA_DATA_PROFILED_FREQUENCY"
@@ -566,8 +565,8 @@ def profile_and_register_table(
        columns and all-null columns produce no child frequency rows. Explicit non-empty
        ``frequency_columns`` bypass this threshold, while
        ``frequency_columns=[]`` skips frequency profiling entirely.
-    3. Call ``profile_frequency_distribution`` to produce flattened frequency
-       rows for the selected columns.
+    3. Produce flattened frequency rows for the selected columns using the
+       same calculation exposed by ``profile_frequency_distribution``.
     4. Resolve each frequency row to its parent ``metadata_column_key`` and
        prepare it with the same ``profiled_at`` snapshot timestamp.
     5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
@@ -768,7 +767,7 @@ def profile_and_register_table(
         frequency_source_df, _frequency_scope = _validate_frequency_profile_dataframe(
             df, frequency_profile_df, selected_columns
         )
-        frequency_df = profile_frequency_distribution(
+        frequency_df = build_frequency_distribution_dataframe(
             frequency_source_df, columns=selected_columns, top_n=frequency_top_n
         )
         frequency_metadata_df = _frequency_metadata_dataframe(

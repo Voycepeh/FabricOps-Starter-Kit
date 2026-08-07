@@ -140,8 +140,8 @@ def setup_metadata_tables(
 ) -> dict[str, Any]:
     """Create or check the FabricOps metadata tables for one environment.
 
-    Creates any FabricOps metadata tables that are missing and checks that
-    existing tables have the required columns and Spark data types. The
+    Creates missing metadata tables and validates existing metadata tables
+    against the canonical registry for the installed FabricOps version. The
     function finds the metadata lakehouse configured for the selected
     environment, creates missing tables as empty Delta tables, leaves valid
     existing tables in place, reports invalid existing tables as failed, and
@@ -235,13 +235,19 @@ def setup_metadata_tables(
     exists and ``0`` otherwise. It is not a complete active steward population
     count.
 
-    Metadata tables created or validated from
+    The canonical registry may expand in later compatible FabricOps releases.
+    In v0.2.0, metadata tables created or validated from
     ``metadata_table_schema_registry()`` are ``METADATA_DATA_STEWARD``,
     ``METADATA_DATA_AGREEMENT``, ``METADATA_DATA_CONTRACT``,
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
-    ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
+    ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
     ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
     ``METADATA_GUARDRAIL_RESULTS``.
+
+    Of that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,
+    ``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
+    ``METADATA_DATA_LINEAGE`` are Live schemas with compatibility guarantees.
+    Every other metadata schema in the registry remains Preview.
 
     Detailed table contents:
 

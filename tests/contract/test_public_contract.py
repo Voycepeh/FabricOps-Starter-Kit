@@ -33,7 +33,7 @@ CONFIG_PUBLIC_MODEL_QUALIFIED_NAMES = {
     "fabricops_kit.config.shared.ConfigSmokeCheckResult",
     "fabricops_kit.config.shared.NotebookSetupContext",
 }
-LEGACY_APPROVED_V1_CALLABLES = {
+LIVE_V010_CALLABLES = {
     "setup_notebook",
     "read_lakehouse_table",
     "write_lakehouse_table",
@@ -43,6 +43,12 @@ LEGACY_APPROVED_V1_CALLABLES = {
     "read_warehouse_table",
     "read_warehouse_query",
     "write_warehouse_table",
+}
+EXPECTED_LIVE_V020_CALLABLES = LIVE_V010_CALLABLES | {
+    "setup_metadata_tables",
+    "profile_and_register_table",
+    "profile_dataframe",
+    "profile_frequency_distribution",
 }
 
 REMOVED_LEGACY_ALIASES = {
@@ -127,16 +133,16 @@ def _signature_snapshot(function):
 
 
 def test_supported_public_api_contract_has_release_count_and_stable_names():
-    """Verify the v0.1.0 Live public API contract includes setup and Fabric I/O functions."""
+    """Verify the v0.2.0 Live public API contract includes approved promotions."""
     message = (
-        "The supported public API surface for v0.1.0 must remain setup_notebook "
-        "plus the eight Live Fabric I/O functions. Update SUPPORTED_PUBLIC_API "
+        "The supported public API surface for v0.2.0 must contain the approved "
+        "metadata setup and profiling promotions plus the v0.1.0 Live functions. Update SUPPORTED_PUBLIC_API "
         "and release docs intentionally if this changes."
     )
 
-    assert len(SUPPORTED_PUBLIC_API) == 9, message
-    assert len(set(SUPPORTED_PUBLIC_API)) == 9
-    assert APPROVED_V1_CALLABLES == LEGACY_APPROVED_V1_CALLABLES
+    assert len(SUPPORTED_PUBLIC_API) == 13, message
+    assert len(set(SUPPORTED_PUBLIC_API)) == 13
+    assert APPROVED_V1_CALLABLES == EXPECTED_LIVE_V020_CALLABLES
 
 
 def test_supported_public_api_imports_are_callable_and_root_exported():
@@ -177,7 +183,10 @@ def test_setup_notebook_lifecycle_metadata_is_live_since_v010():
 
     assert setup_row["lifecycle_status"] == "live"
     assert setup_row["live_since"] == "0.1.0"
-    assert setup_row["release_history"] == [{"status": "live", "version": "0.1.0"}]
+    assert setup_row["release_history"] == [
+        {"status": "live", "version": "0.1.0"},
+        {"status": "live", "version": "0.2.0"},
+    ]
 
 
 def test_supported_public_api_signature_snapshot_is_lightweight_and_stable():
@@ -197,7 +206,7 @@ def test_generated_callable_manifest_matches_approved_v1_list():
     root = Path(__file__).parents[2]
     manifest = json.loads((root / "docs" / "reference" / "_data" / "manifest.json").read_text(encoding="utf-8"))
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
-    assert (APPROVED_V1_CALLABLES - {"widget_view_data_contract"}).issubset(manifest_callables)
+    assert LIVE_V010_CALLABLES.issubset(manifest_callables)
 
 
 def test_notebook_templates_call_only_approved_v1_surface():
@@ -237,8 +246,8 @@ def test_template_function_map_matches_actual_template_calls_and_pages():
     manifest_callables = {row["callable_name"] for row in manifest["callables"]}
     called = _template_called_fabricops_functions()
 
-    assert (APPROVED_V1_CALLABLES - {"widget_view_data_contract"}).issubset(manifest_callables)
-    assert called <= manifest_callables | {"widget_view_data_contract"}
+    assert LIVE_V010_CALLABLES.issubset(manifest_callables)
+    assert called <= manifest_callables | APPROVED_V1_CALLABLES | {"widget_view_data_contract"}
     current_public_callables = set(fabricops_kit.__all__)
     for callable_name in manifest_callables & current_public_callables:
         canonical_page = root / "docs" / "api" / "reference" / f"{callable_name}.md"
@@ -318,12 +327,11 @@ def test_individual_reference_generation_script_succeeds_without_module_docs():
     assert '<div class="reference-source-card" markdown="1">' in function_text
     assert 'reference-lifecycle-chip-prominent">Live</span>' in function_text
     assert 'Live since 0.1.0' in (root / "docs" / "api" / "reference" / "read_lakehouse_excel.md").read_text(encoding="utf-8")
-    preview_text = (root / "docs" / "api" / "reference" / "setup_metadata_tables.md").read_text(encoding="utf-8")
-    assert 'reference-lifecycle-chip-prominent">Preview</span>' in preview_text
-    assert "not part of the supported Live release contract" in preview_text
-    assert "backward-compatibility guarantees" in preview_text
-    assert "Live since —" not in preview_text
-    assert "Changes to its signature, behaviour" not in preview_text
+    live_text = (root / "docs" / "api" / "reference" / "setup_metadata_tables.md").read_text(encoding="utf-8")
+    assert 'reference-lifecycle-chip-prominent">Live</span>' in live_text
+    assert "part of the supported FabricOps public contract" in live_text
+    assert "Live since 0.2.0" in live_text
+    assert "Changes to its signature, behaviour" in live_text
     assert "<summary>Maintainer architecture details</summary>" in function_text
     assert function_text.rfind("## Contract impact") > function_text.find("## See also")
     assert "| Contract classification | Live public function |" in function_text

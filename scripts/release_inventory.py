@@ -413,7 +413,16 @@ def _release_inventory_sections(manifest: dict[str, Any], version: str, live: di
     return sections
 
 
-def _function_page(version: str, item: dict[str, Any], notice: str) -> str:
+def _frozen_source_evidence(manifest: dict[str, Any], item: dict[str, Any]) -> str:
+    """Return release-tag source evidence for one generated asset page."""
+    source_ref = manifest["source_ref"]
+    owner = manifest.get("github_owner") or "Voycepeh"
+    repo = manifest.get("github_repo") or "FabricOps-Starter-Kit"
+    source_url = f"https://github.com/{owner}/{repo}/blob/{source_ref}/{item['source_path']}"
+    return f"Frozen source ref: `{source_ref}`\n\n[View frozen source]({source_url})"
+
+
+def _function_page(version: str, item: dict[str, Any], notice: str, manifest: dict[str, Any]) -> str:
     details = _function_details(item)
     params, returns, notes = _function_sections(details["doc"])
     return f"""{notice}
@@ -427,6 +436,8 @@ Package version: `{version}`
 Qualified callable: `{item['qualified_name']}`
 
 Source path: `{item['source_path']}`
+
+{_frozen_source_evidence(manifest, item)}
 
 Signature: `{details['signature']}`
 
@@ -450,9 +461,9 @@ Signature: `{details['signature']}`
 """
 
 
-def _metadata_page(version: str, item: dict[str, Any], notice: str) -> str:
+def _metadata_page(version: str, item: dict[str, Any], notice: str, manifest: dict[str, Any]) -> str:
     rows = _metadata_rows(item["name"])
-    lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Live since: `{item.get('live_since', version)}`", "", f"Schema since: `{item.get('schema_since', version)}`", "", f"Schema fingerprint: `{item.get('schema_fingerprint', 'Not recorded')}`", "", f"Source path: `{item['source_path']}`", "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
+    lines = [notice, "", f"# `{item['name']}`", "", release_status_chip("live"), "", f"Package version: `{version}`", "", f"Live since: `{item.get('live_since', version)}`", "", f"Schema since: `{item.get('schema_since', version)}`", "", f"Schema fingerprint: `{item.get('schema_fingerprint', 'Not recorded')}`", "", f"Source path: `{item['source_path']}`", "", _frozen_source_evidence(manifest, item), "", "Managed by: `fabricops_kit.config.metadata_schemas.metadata_table_schema_registry`", "", f"Description: {_description(item, 'metadata_tables')}", "", "## Schema", "", "| Column name | Data type | Nullable | Managed by | Description |", "| --- | --- | --- | --- | --- |"]
     for row in rows:
         lines.append(f"| `{row['name']}` | `{row['type']}` | {row['nullable']} | FabricOps metadata schema registry | `{row['name']}` field in `{item['name']}`. |")
     lines.extend(["", "[Back to release overview](../index.md)"])
@@ -631,9 +642,9 @@ def render_release_pages() -> list[Path]:
         for item in items:
             page = group_dir / _page_name(item["name"])
             if group == "functions":
-                content = _function_page(version, item, notice)
+                content = _function_page(version, item, notice, manifest)
             else:
-                content = _metadata_page(version, item, notice)
+                content = _metadata_page(version, item, notice, manifest)
             page.write_text(content, encoding="utf-8")
             paths.append(page)
 

@@ -1,11 +1,12 @@
 # `profile_and_register_table`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.2.0</span>
 <span class="reference-chip reference-chip-muted">Public function</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Profile a Spark DataFrame, save a profiling snapshot, update catalogue records, and record source or target activity.
 
@@ -27,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:466`
+`fabricops_kit/pipeline/profile_and_register_table.py:465`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L466-L817">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L465-L816">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -125,8 +126,8 @@ Processing flow:
    columns and all-null columns produce no child frequency rows. Explicit non-empty
    ``frequency_columns`` bypass this threshold, while
    ``frequency_columns=[]`` skips frequency profiling entirely.
-3. Call ``profile_frequency_distribution`` to produce flattened frequency
-   rows for the selected columns.
+3. Produce flattened frequency rows for the selected columns using the
+   same calculation exposed by ``profile_frequency_distribution``.
 4. Resolve each frequency row to its parent ``metadata_column_key`` and
    prepare it with the same ``profiled_at`` snapshot timestamp.
 5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
@@ -302,12 +303,83 @@ no compatibility or automatic migration layer is provided.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.2.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 60 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.2.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.config.audit._context_get</code></li>
+<li><code>fabricops_kit.config.audit._require_audit_values</code></li>
+<li><code>fabricops_kit.config.audit._runtime_context</code></li>
+<li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
+<li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_keys._build_metadata_column_key</code></li>
+<li><code>fabricops_kit.config.metadata_keys._build_metadata_table_key</code></li>
+<li><code>fabricops_kit.config.metadata_keys._stable_metadata_key</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.configured_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared.normalize_write_mode</code></li>
+<li><code>fabricops_kit.io.shared.repartition_dataframe_for_write</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_target_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_lakehouse_table_core</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._automatic_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._lineage_event_id</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._normalize_choice</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._replace_frequency_rows</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._require_non_empty_string</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._resolve_physical_identity</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._scalar_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._selected_frequency_columns</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_lineage_event</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._validate_frequency_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation</code></li>
+<li><code>fabricops_kit.pipeline.shared._profile_column_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared._profile_percent_expr</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
+</ul>
 
 
 </details>
