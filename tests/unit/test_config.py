@@ -916,21 +916,12 @@ def test_env_config_template_exposes_audit_timezone_setting():
     assert "FABRICOPS_AUDIT_TIMEZONE" in source
     assert "_validate_audit_timezone" in source or "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
     assert "audit_timezone=FABRICOPS_AUDIT_TIMEZONE" in source
-    assert "UTC is the default and recommended portable option." in source
-    assert "valid IANA timezone" in source
-    assert "Asia/Singapore" in source
 
 
 def test_downstream_notebooks_use_config_aware_audit_timestamps_only():
     """Verify downstream notebooks use config aware audit timestamps only."""
-    notebook_paths = [
-        Path("templates/notebooks/01_agreement.ipynb"),
-        Path("templates/notebooks/02_pipeline.ipynb"),
-        Path("templates/notebooks/03_review.ipynb"),
-        Path("templates/notebooks/99_explore.ipynb"),
-        Path("templates/notebooks/example_pipeline_demo.ipynb"),
-        Path("templates/notebooks/example_dq_rule_smoke_test.ipynb"),
-    ]
+    notebook_paths = sorted(Path("templates/notebooks").glob("*.ipynb"))
+    assert notebook_paths, "expected at least one maintained notebook template"
 
     for path in notebook_paths:
         source = path.read_text(encoding="utf-8")

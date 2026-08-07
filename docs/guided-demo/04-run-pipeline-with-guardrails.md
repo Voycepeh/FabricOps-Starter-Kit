@@ -1,12 +1,12 @@
 # Step 4: Rerun the Development pipeline with guardrails
 
-Rerun `02_pipeline` in the Engineering Development workspace after Step 3 has defined approved guardrails. This workflow starts with the same read, profile, transform, profile, and write pattern described in [Step 2: Run the first Development pipeline](run-pipeline.md). It then adds active guardrail retrieval, evaluation, severity handling, and continuation decisions before critical publication steps.
+Rerun `02_pipeline` in the Engineering Development workspace after Step 3 has defined approved guardrails. This workflow starts with the same read, profile, transform, profile, and write pattern described in [Step 2: Run the first Development pipeline](02-run-pipeline.md). It then adds active guardrail retrieval, evaluation, severity handling, and continuation decisions before critical publication steps.
 
 Use this step to wire in the guardrail rules defined in Step 3, run the pipeline, and verify that the configured guardrails warn users or fail the pipeline as intended.
 
 ## Prerequisite pipeline evidence
 
-The guarded pipeline still records the same standard evidence described in [Step 2: Run the first Development pipeline](run-pipeline.md):
+The guarded pipeline still records the same standard evidence described in [Step 2: Run the first Development pipeline](02-run-pipeline.md):
 
 - `METADATA_DATA_CATALOGUE` for physical table and column identity snapshots;
 - `METADATA_DATA_PROFILED` for statistical, frequency, and schema evidence per column; and
@@ -97,6 +97,6 @@ A guarded run produces the normal pipeline evidence plus guardrail results:
 
 The additional behavior is that continuation may be denied before unsafe publication.
 
-Previous: [Step 3: Review catalogue evidence and define guardrails](review-guardrails.md).
+Previous: [Step 3: Review catalogue evidence and define guardrails](03-enrich-guardrails.md).
 
-Next, continue to [Step 5: Create the Data Contract and record steward sign-off](create-data-contract.md).
+Next, continue to [Step 5: Create the Data Contract and record steward sign-off](05-create-data-contract.md).

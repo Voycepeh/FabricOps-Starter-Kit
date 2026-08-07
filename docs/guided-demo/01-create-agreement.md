@@ -19,4 +19,4 @@ The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to cont
 
 ### For now thats it, a final missing link is to link agreement created here to the data catalgoue created in `02 pipeline` but we will revist this in step 5 [Step 5: Create data contract](05-create-data-contract.md)
 
-Next, continue to [Step 2: Run the first Development pipeline](run-pipeline.md).
+Next, continue to [Step 2: Run the first Development pipeline](02-run-pipeline.md).

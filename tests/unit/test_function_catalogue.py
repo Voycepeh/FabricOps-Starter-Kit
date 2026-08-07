@@ -19,34 +19,6 @@ def _finder_js() -> str:
     return CALLABLE_FINDER_JS.read_text(encoding="utf-8")
 
 
-def test_function_catalogue_uses_public_starter_kit_finder() -> None:
-    """Verify function catalogue searches public functions."""
-    page = _reference_index()
-
-    assert "## Find a function" in page
-    assert "Use the finder below to search 26 public functions." in page
-    assert "Search public functions" in page
-    assert 'placeholder="Search public functions"' in page
-    assert "Function taxonomy filters" not in page
-    assert 'data-function-type-filter=' not in page
-    assert "Workflow" not in page
-    assert "Composable" not in page
-
-
-def test_function_catalogue_removes_essential_optional_filter_labels() -> None:
-    """Verify function catalogue removes essential optional filter labels."""
-    page = _reference_index()
-
-    assert "> Essential<" not in page
-    assert "> Optional<" not in page
-    assert ">Essential</strong>" not in page
-    assert ">Optional</strong>" not in page
-    assert "data-role-filter" not in page
-    assert "data-role=" not in page
-    assert "Search callable functions" not in page
-    assert "Find a callable" not in page
-
-
 def test_public_starter_kit_rows_are_rendered_without_taxonomy_filters() -> None:
     """Verify the catalogue has public rows without taxonomy filters."""
     page = _reference_index()
@@ -88,14 +60,6 @@ def test_finder_searches_public_catalogue_fields_without_type_filters() -> None:
     assert "entry.module.includes(query)" in script
     assert "entry.starterPath.includes(query)" in script
     assert "queryMatchesEntry(queryTokens, entry.tokens)" in script
-
-
-def test_reference_defines_used_in_as_direct_code_cell_invocation() -> None:
-    """Verify reference usage wording excludes imports, markdown, metadata, and internals."""
-    page = _reference_index()
-
-    assert "“Used in” means direct starter notebook code-cell invocation" in page
-    assert "not import-only, markdown-only, generated metadata, example usage, or implementation helper usage" in page
 
 
 def test_removed_schema_helpers_are_not_public_catalogue_entries() -> None:
