@@ -204,6 +204,7 @@ DataFrame, or automatically cache or persist the returned DataFrame.
 | Status | Version |
 | --- | --- |
 | Live | 0.1.0 |
+| Live | 0.2.0 |
 
 ### Live-critical dependencies
 

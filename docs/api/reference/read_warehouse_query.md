@@ -153,6 +153,7 @@ Warehouse engine, and transfers only the resulting dataset to Spark.
 | Status | Version |
 | --- | --- |
 | Live | 0.1.0 |
+| Live | 0.2.0 |
 
 ### Live-critical dependencies
 

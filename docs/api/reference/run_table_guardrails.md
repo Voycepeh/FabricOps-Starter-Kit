@@ -126,6 +126,7 @@ Raises ValueError when required runtime context such as spark_session or run_id 
 | Status | Version |
 | --- | --- |
 | Preview | 0.1.0 |
+| Preview | 0.2.0 |
 
 
 </details>
