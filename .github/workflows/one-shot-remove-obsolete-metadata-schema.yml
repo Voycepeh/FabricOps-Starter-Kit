@@ -1,0 +1,55 @@
+name: One-shot obsolete metadata schema cleanup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/one-shot-remove-obsolete-metadata-schema.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Remove obsolete metadata schema overrides
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          changed = []
+          replacements = 0
+          for path in sorted(Path("templates/notebooks").glob("*.ipynb")):
+              text = path.read_text(encoding="utf-8")
+              count = text.count('    "    schema=METADATA_SCHEMA,\\n",\n')
+              if count:
+                  text = text.replace('    "    schema=METADATA_SCHEMA,\\n",\n', "")
+                  path.write_text(text, encoding="utf-8")
+                  changed.append(str(path))
+                  replacements += count
+
+          if replacements == 0:
+              raise SystemExit("No obsolete schema=METADATA_SCHEMA notebook arguments were found")
+
+          workflow = Path(".github/workflows/one-shot-remove-obsolete-metadata-schema.yml")
+          workflow.unlink()
+
+          print(f"Removed {replacements} obsolete metadata schema override(s):")
+          for path in changed:
+              print(f"  {path}")
+          PY
+
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add templates/notebooks .github/workflows/one-shot-remove-obsolete-metadata-schema.yml
+          git commit -m "Remove obsolete metadata schema overrides"
+          git push origin HEAD:main
