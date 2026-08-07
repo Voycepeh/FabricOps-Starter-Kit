@@ -45,8 +45,8 @@ The consumer team can read approved Engineering Production data through configur
 
 The walkthrough does not create or update governed agreement, contract, enrichment, guardrail, lineage, or production pipeline state. Its normal outputs are project-specific analysis, experiments, models, reports, profiles, and notebook displays.
 
-Previous: [Step 6: Promote the validated pipeline to Production](promote-to-production.md).
+Previous: [Step 6: Promote the validated pipeline to Production](06-promote-to-production.md).
 
-Supporting guide: [Understand FabricOps widgets and metadata outputs](explore-metadata-outputs.md).
+Supporting guide: [Understand FabricOps widgets and metadata outputs](99-explore-via-notebook.md).
 
 Return to the [Guided Demo overview](../guided-demo.md).

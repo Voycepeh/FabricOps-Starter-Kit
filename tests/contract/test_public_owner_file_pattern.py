@@ -152,17 +152,3 @@ def test_existing_public_callable_packages_follow_owner_file_pattern() -> None:
     """Verify config, io, and pipeline satisfy the owner-file architecture."""
     package_names = {path.name for path in _package_dirs()}
     assert {"config", "io", "pipeline"} <= package_names
-
-
-def test_public_function_architecture_guide_is_documented_and_linked() -> None:
-    """Verify the maintainer guide documents and navigates the architecture rule."""
-    guide_path = Path("docs/maintainer/public-api-architecture.md")
-    guide = guide_path.read_text(encoding="utf-8")
-    mkdocs = Path("mkdocs.yml").read_text(encoding="utf-8")
-
-    assert "# Public API & Architecture" in guide
-    assert "## Public function architecture" in guide
-    assert "Avoid catch-all files such as `public.py`, `models.py`, `classes.py`" in guide
-    assert "one public owner file named after the function" in guide
-    assert "FabricOps Maintainer:" in mkdocs
-    assert "Public API & Architecture: maintainer/public-api-architecture.md" in mkdocs

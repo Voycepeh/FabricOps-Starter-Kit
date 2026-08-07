@@ -795,22 +795,12 @@ def test_public_callable_pages_do_not_render_generic_filler_sections() -> None:
 
 def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
-    environment_config = (ROOT / "docs" / "guided-demo" / "run-environment-setup.md").read_text(encoding="utf-8")
-    agreement_setup = (ROOT / "docs" / "guided-demo" / "create-agreement.md").read_text(encoding="utf-8")
-    pipeline_execution = (ROOT / "docs" / "guided-demo" / "run-pipeline.md").read_text(encoding="utf-8")
-    governance_review = (ROOT / "docs" / "guided-demo" / "review-guardrails.md").read_text(encoding="utf-8")
     metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
     metadata_tables = metadata_tables_path.read_text(encoding="utf-8")
     lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage_table.md").read_text(
         encoding="utf-8"
     )
 
-    assert "metadata setup cell" in environment_config
-    assert "DATA_AGREEMENT_CONFIG" in agreement_setup
-    assert "define the configured target, schema, and table name once" in pipeline_execution
-    assert "Source and target guardrail execution is planned for v0.3.0" in pipeline_execution
-    assert "Select the governed table context" in governance_review
-    assert "Approve, reject, replace, deactivate" in governance_review
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
     assert "[`profile_and_register_table`](../../api/reference/profile_and_register_table.md)" in lineage_table

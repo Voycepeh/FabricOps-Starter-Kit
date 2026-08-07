@@ -13,6 +13,8 @@ FabricOps keeps a deliberately small pytest suite:
 
 Unit tests should remain fast and deterministic. Integration tests use local fakes and mocks; they must not require a live workspace. Spark tests should be limited to behaviour that cannot be trusted through mocks. Contract tests protect importability, essential schemas, and supported template workflows without checking exact wording or notebook presentation.
 
+Every test must identify the meaningful behavioural or public-contract regression it prevents. Prefer structural parsing for notebooks and generated artifacts; do not freeze equivalent SQL formatting, serialized source text, or documentation prose.
+
 ## Shared fixtures
 
 `tests/conftest.py` provides reusable fixtures for:

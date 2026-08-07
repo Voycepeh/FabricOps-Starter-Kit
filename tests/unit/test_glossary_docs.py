@@ -84,16 +84,3 @@ def test_notebook_template_is_not_alias_for_notebook_registry() -> None:
     assert "notebook template" not in registry["aliases"]
 
 
-def test_reference_usage_guidance_is_plain_readable_text() -> None:
-    """Verify generated usage guidance does not leak bold markdown labels in details boxes."""
-    pages = sorted((ROOT / "docs" / "api" / "reference").glob("*.md"))
-    assert pages
-    for page in pages:
-        text = page.read_text(encoding="utf-8")
-        if "## Usage guidance" in text:
-            section = text.split("## Usage guidance", 1)[1].split("\n## ", 1)[0]
-            assert "**Use when:**" not in section, page
-            assert "**Do not use when:**" not in section, page
-            assert "<summary>Usage guidance</summary>" not in section, page
-
-

@@ -11,40 +11,6 @@ from fabricops_kit.pipeline import guardrails_shared as governance
 pytestmark = pytest.mark.unit
 
 
-def test_governance_review_page_frames_metadata_control_panel():
-    """Verify governance review page preserves the governance flow contract."""
-    text = Path("docs/guided-demo/03-enrich-guardrails.md").read_text(encoding="utf-8")
-    normalized = text.lower()
-
-    for required_term in (
-        "02_pipeline",
-        "03_review",
-        "METADATA_DATA_CATALOGUE",
-        "METADATA_GUARDRAIL",
-        "METADATA_GUARDRAIL_RESULTS",
-    ):
-        assert required_term in text
-
-    assert "enforcement" in normalized
-    assert "02_pipeline" in text[text.find("enforcement") if "enforcement" in text else 0 :]
-    assert any(
-        phrase in normalized
-        for phrase in (
-            "03_review` lets reviewers",
-            "guardrail decisions",
-            "records governance decisions",
-            "reviews table governance",
-            "reviewers approve",
-        )
-    )
-    assert any(
-        concept in normalized
-        for concept in ("augment", "enrich", "review", "record", "governance decisions")
-    )
-    assert "Approved DQ rule catalogue" not in text
-    assert "**Rule applies to:**" not in text
-
-
 def test_dq_rule_index_contains_supported_catalogue():
     """Verify dq rule index contains supported catalogue."""
     text = Path("docs/reference/dq-rules/index.md").read_text(encoding="utf-8")

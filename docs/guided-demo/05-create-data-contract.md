@@ -14,8 +14,8 @@ Use `01_agreement` to link a selected Data Agreement to the logical datasets it 
 
 Each agreement links once to each logical `metadata_table_key`. Development and Production use the same logical key and do not require duplicate contract membership, while their catalogue, profile, lineage, guardrail, and other evidence remains stored and reviewed as separate environment-specific metadata observations.
 
-Previous: [Step 4: Rerun the Development pipeline with guardrails](run-pipeline-with-guardrails.md).
+Previous: [Step 4: Rerun the Development pipeline with guardrails](04-run-pipeline-with-guardrails.md).
 
-Next, continue to [Step 6: Promote the validated pipeline to Production](promote-to-production.md). That later demonstration step does not make contract approval, signing, or automatic environment promotion part of the v0.2.0 Data Contract workflow.
+Next, continue to [Step 6: Promote the validated pipeline to Production](06-promote-to-production.md). That later demonstration step does not make contract approval, signing, or automatic environment promotion part of the v0.2.0 Data Contract workflow.
 
 See also: [METADATA_DATA_CONTRACT](../reference/metadata/metadata_data_contract.md) and [List of Metadata Tables](../reference/metadata.md).

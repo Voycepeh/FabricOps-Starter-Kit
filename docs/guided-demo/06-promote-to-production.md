@@ -16,8 +16,8 @@ This step moves the approved, repeatable pipeline into the workspace that owns s
 
 The promoted Production run uses the approved contract context and writes durable Production outputs. Runtime metadata remains routed through the configured metadata target so Production operation stays connected to the signed-off governance evidence.
 
-Previous: [Step 5: Create the Data Contract and record steward sign-off](create-data-contract.md).
+Previous: [Step 5: Create the Data Contract and record steward sign-off](05-create-data-contract.md).
 
-You have completed the required Guided Demo workflow. Optional inspection can continue in [Explore Metadata Outputs](explore-metadata-outputs.md).
+You have completed the required Guided Demo workflow. Optional inspection can continue in [Explore Metadata Outputs](99-explore-via-notebook.md).
 
 See also: [How FabricOps Works](../how-fabricops-works.md) and [Notebook Templates](../notebook-templates.md).

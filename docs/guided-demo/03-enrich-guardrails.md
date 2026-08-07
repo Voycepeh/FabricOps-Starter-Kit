@@ -48,8 +48,8 @@ Active guardrail records can be consumed by `02_pipeline`. Draft, pending, rejec
 
 Guardrail and enrichment review decisions are appended to their metadata tables, and active rules become available to runtime enforcement. Future `02_pipeline` runs depend on these active records to evaluate approved expectations.
 
-Previous: [Step 2: Run the first Development pipeline](run-pipeline.md).
+Previous: [Step 2: Run the first Development pipeline](02-run-pipeline.md).
 
-Next, continue to [Step 4: Rerun the Development pipeline with guardrails](run-pipeline-with-guardrails.md).
+Next, continue to [Step 4: Rerun the Development pipeline with guardrails](04-run-pipeline-with-guardrails.md).
 
 See also: [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md) and [List of DQ Rules](../reference/dq-rules/index.md).

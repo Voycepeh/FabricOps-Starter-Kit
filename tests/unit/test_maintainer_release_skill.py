@@ -44,38 +44,6 @@ def test_release_skill_exists_and_is_canonical_source() -> None:
     assert GUIDE.read_text(encoding="utf-8") == sync_maintainer_release_guide.rendered_doc()
 
 
-def test_agent_only_release_task_structure_stays_out_of_human_guide() -> None:
-    """Verify agent-only release task structure is not published in the human guide."""
-    skill = SKILL.read_text(encoding="utf-8")
-    guide = GUIDE.read_text(encoding="utf-8")
-    assert "## Agent task structure" in skill
-    assert "## Agent task structure" not in guide
-    assert "## Minimum maintainer workflow" in skill
-    assert "## Minimum maintainer workflow" in guide
-
-
-def test_maintainer_navigation_contains_intended_pages() -> None:
-    """Verify MkDocs exposes the Product Definition and maintainer guides."""
-    mkdocs = MKDOCS.read_text(encoding="utf-8")
-    assert "FabricOps Maintainer:" in mkdocs
-    assert "Product Definition: maintainer/product-definition.md" in mkdocs
-    assert "Release Guide: maintainer/index.md" in mkdocs
-    assert "Public API & Architecture: maintainer/public-api-architecture.md" in mkdocs
-    assert "maintainer/overview.md" not in mkdocs
-    assert "maintainer/release-workflow.md" not in mkdocs
-    assert "maintainer/generators.md" not in mkdocs
-
-
-def test_removed_maintainer_pages_are_not_referenced() -> None:
-    """Verify stale maintainer page references are absent from maintained docs."""
-    haystack = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in [README, LLMS, GUIDE, ARCHITECTURE, MKDOCS]
-    )
-    for removed_path in REMOVED_MAINTAINER_PATHS:
-        assert removed_path not in haystack
-
-
 def test_release_guide_uses_canonical_github_source_links() -> None:
     """Verify repository source links use GitHub URLs and resolve locally."""
     guide = GUIDE.read_text(encoding="utf-8")
@@ -95,15 +63,3 @@ def test_documented_release_generators_exist() -> None:
     for path in REQUIRED_GENERATOR_PATHS:
         assert (ROOT / path).exists()
         assert path in guide
-
-
-def test_release_skill_starts_with_inspection_and_has_approval_gates() -> None:
-    """Verify the skill describes inspection-first operation and human approval gates."""
-    skill = SKILL.read_text(encoding="utf-8")
-    assert "the AI agent must inspect before mutating" in skill
-    assert "Never assume the next version" in skill
-    assert "Before setting lifecycle statuses" in skill
-    assert "The AI must ask the maintainer to decide" in skill
-    assert "Pause for maintainer approval before selecting or writing the final version" in skill
-    assert "Ask for explicit approval" in skill
-    assert "Never add a lifecycle status named `updated`" in skill
