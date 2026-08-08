@@ -8,6 +8,14 @@ This skill is the operational source of truth for FabricOps release preparation.
 
 End-user setup and notebook walkthrough content stays in the [Guided Demo](../guided-demo.md). Maintainer-only release curation, packaging, publishing, and recovery guidance belongs here.
 
+## Workflow ownership
+
+FabricOps has one canonical repository validation path. `.github/workflows/ci.yml` owns Ruff, pytest, generated-artifact validation, the strict MkDocs build, package build/check, and the installed-wheel smoke test. On successful pushes to `main`, that same workflow uploads the already-built `site/` artifact and deploys it to GitHub Pages.
+
+`.github/workflows/release.yml` owns only tag and release-specific work: release identity checks, release inventory validation, final publication artifact build/check, checksums, release-note extraction, and GitHub Release publication. This skill must verify canonical CI instead of repeating its generic validation commands.
+
+If generic validation changes, update CI rather than duplicating the change in Pages, Release, or this skill.
+
 ## Minimum maintainer workflow
 
 1. Identify the target version from `pyproject.toml`, the intended manifest under `docs/releases/manifests/`, and the candidate commit with `git rev-parse HEAD`.
@@ -16,7 +24,7 @@ End-user setup and notebook walkthrough content stays in the [Guided Demo](../gu
 4. Verify release notes in `CHANGELOG.md`, package metadata in `pyproject.toml`, release pages under `docs/releases/`, dashboard data where intentionally refreshed, and standalone function pages where applicable to the release scope.
 5. Repair release presentation by fixing the proper source file, manifest, changelog, metadata, or generator. Do not change function implementations merely to repair release presentation.
 6. Verify generated outputs originate from their documented generator; do not hand-edit generated pages or inventories as source of truth.
-7. Run the existing release validation commands documented below, especially `PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z` for the target tag.
+7. Confirm the candidate commit has passed `.github/workflows/ci.yml`, then run the release-specific commands documented below, especially `PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z` and `PYTHONPATH=src python scripts/generate_release_inventory.py --check`.
 8. Stop and report blockers instead of tagging an unverified release. Final reports must say either **READY TO TAG** or **NOT READY TO TAG** with supporting evidence.
 
 ## Choose the correct execution environment
@@ -31,10 +39,9 @@ Codex Cloud may be used for:
 2. Lifecycle curation.
 3. Release PR preparation.
 4. Generator execution.
-5. Tests, linting and documentation validation.
-6. Package and wheel builds.
-7. Final release preflight.
-8. Reporting whether the repository is ready to tag.
+5. Canonical CI status verification.
+6. Release-specific preflight.
+7. Reporting whether the repository is ready to tag.
 
 Codex Cloud must not be assumed capable of:
 
@@ -163,10 +170,10 @@ Default release workflow:
 5. Set `source_ref` to the intended annotated release tag, such as `v0.1.0`.
 6. Finalise the changelog.
 7. Generate and commit frozen release documentation using the tag reference.
-8. Validate package version, manifest version, source tag, generated function/metadata release pages, tests, documentation, and wheel artifacts.
+8. Validate package version, manifest version, source tag, and generated function/metadata release pages, and confirm canonical CI succeeds for the candidate commit.
 9. Merge the release PR into `main`. The release PR may be squash-merged or rebased because frozen source documentation depends on the release tag, not an intermediate PR commit.
-10. Stage A: run release preflight in Codex Cloud, Codex Desktop, or another supported environment and report whether the release is ready to tag. Codex Cloud must stop here and provide the exact local tag command.
-11. Stage B: in Codex Desktop or another authenticated local environment, refresh `main`, create the local annotated tag, pause for explicit maintainer approval, and push only the approved tag.
+10. Stage A: run release-specific preflight in Codex Cloud, Codex Desktop, or another supported environment and report whether the release is ready to tag. Codex Cloud must stop here and provide the exact local tag command.
+11. Stage B: in Codex Desktop or another authenticated local environment, refresh `main`, confirm the resulting `main` commit passed canonical CI, create the local annotated tag, pause for explicit maintainer approval, and push only the approved tag.
 12. Allow the tag-triggered GitHub Actions workflow to build and publish the GitHub Release.
 13. Verify the workflow result, GitHub Release assets, and frozen source links from the authenticated local environment.
 
@@ -349,21 +356,11 @@ git diff -- docs/releases/manifests docs/releases docs/api/reference docs/refere
 
 Success means generated changes match the approved release decisions and no unrelated generated dashboard or reference output is included. If unexpected generated artifacts appear, revert them or explain why they are intentionally part of the release PR.
 
-## 12. Test and build
+## 12. Canonical CI gate
 
-Run release-compatible checks when dependencies are available:
+Do not maintain or rerun the generic CI checklist here. `.github/workflows/ci.yml` is authoritative for Ruff, pytest, generated-artifact validation, strict MkDocs build, package build/check, and installed-wheel smoke testing.
 
-```bash
-uv sync --frozen
-uv run ruff check .
-uv run pytest
-uv run mkdocs build --strict
-uv build
-uvx twine check dist/*
-```
-
-If the AI cannot run a command because of credentials, missing dependencies, unavailable network, or Fabric access, it must explain why, provide the exact manual action, state the expected result, wait for confirmation, and continue from the next verifiable step.
-
+Before release preparation is considered validated, confirm the candidate commit has a successful FabricOps CI run. If CI is missing, pending, cancelled, or failed, stop and fix CI rather than reproducing those checks in this skill.
 
 A release may validly contain zero Live metadata contracts. Notebook templates are living applications of the FabricOps package; do not copy, freeze, version, package, or stamp them during package release preparation. Their `Tested with FabricOps` table is manually maintained only after Voyce Peh tests the notebook in Microsoft Fabric.
 
@@ -376,7 +373,7 @@ The release PR targets `main` and should contain only release-preparation change
 - New and Updated assets where evidence exists
 - generated artifacts included
 - changelog draft
-- tests run
+- canonical CI result
 - unresolved manual steps
 
 Ask for final approval before opening or finalising the PR when required.
@@ -385,32 +382,27 @@ Ask for final approval before opening or finalising the PR when required.
 
 Stage A may run in Codex Cloud, Codex Desktop, or another environment with the required dependencies. It is a release-readiness check only. It must not create or push a tag when running in Codex Cloud.
 
-The preflight has only two blocking groups: public function checks and metadata schema checks. Public function checks may validate package version consistency, public exports, function signatures, function compatibility classification, function documentation, wheel/build outputs, and public-function release notes. Metadata schema checks may validate required metadata tables, columns, data types, nullability, schema compatibility, breaking-change classification, and metadata release notes.
+The preflight has only two release-specific blocking groups: public function checks and metadata schema checks. Public function checks may validate package version consistency, public exports, function signatures, function compatibility classification, function documentation, and public-function release notes. Metadata schema checks may validate required metadata tables, columns, data types, nullability, schema compatibility, breaking-change classification, and metadata release notes.
 
 The preflight must:
 
-1. Validate package, manifest, changelog, and tag alignment for the formal release scope.
-2. Run targeted public function and metadata schema tests.
-3. Run full validation where supported.
-4. Build distributions.
-5. Confirm no tracked files changed.
-6. Report whether the release is ready.
+1. Confirm canonical CI succeeded for the candidate commit.
+2. Validate package, manifest, changelog, and intended tag alignment for the formal release scope.
+3. Validate the release inventory.
+4. Confirm no tracked files changed during release-specific checks.
+5. Report whether the release is ready.
 
 Notebook templates, template snapshots, skills, DQ validation, sample generation, and environment resource bundles must not block package release preflight.
 
-Recommended checks include:
+Release-specific checks are:
 
 ```bash
 PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z
-uv run ruff check .
-uv run pytest
-uv run mkdocs build --strict
-uv build
-uvx twine check dist/*
+PYTHONPATH=src python scripts/generate_release_inventory.py --check
 git status --short
 ```
 
-`git status --short` must be clean after validation and builds. If validation fails before tag creation, create a focused fix PR against `main`; do not tag a failing release.
+`git status --short` must be clean after release-specific checks. If preflight fails before tag creation, create a focused fix PR against `main`; do not tag a failing release.
 
 ## 15. Stage B: tag and publish
 
@@ -435,6 +427,7 @@ Requirements:
 3. `git ls-remote origin` must succeed.
 4. `gh auth status` must show an authenticated account when `gh` is used for workflow and release inspection.
 5. The authenticated account must have permission to push tags to the repository.
+6. Canonical FabricOps CI must have succeeded for the exact current `main` SHA.
 
 If any check fails, stop before creating the tag. Do not bypass authentication, disable protections, or force-push.
 
@@ -447,6 +440,7 @@ git pull --ff-only origin main
 git status --short
 
 PYTHONPATH=src python scripts/check_release_ready.py vX.Y.Z
+PYTHONPATH=src python scripts/generate_release_inventory.py --check
 
 git tag --list vX.Y.Z
 git ls-remote --tags origin refs/tags/vX.Y.Z refs/tags/vX.Y.Z^{}
@@ -463,8 +457,7 @@ Stop immediately before pushing the tag. Ask for explicit approval and show the 
 - local annotated tag
 - resolved tag target
 - release-readiness result
-- test result
-- built artifact names
+- canonical CI result
 
 Push the tag only after explicit maintainer approval:
 
@@ -483,12 +476,14 @@ The tag workflow must:
 1. Verify the pushed tag matches the package version.
 2. Verify the manifest version matches the tag.
 3. Verify `source_ref` equals the pushed tag.
-4. Run lint, tests, and strict documentation validation.
-5. Build wheel and source distribution.
-6. Validate distributions.
-7. Smoke-test the installed wheel.
-9. Generate checksums.
-10. Create the GitHub Release and attach its assets.
+4. Validate the release inventory.
+5. Build the final wheel and source distribution from the tagged commit.
+6. Validate the distributions being published.
+7. Generate checksums.
+8. Extract the matching changelog release notes.
+9. Create the GitHub Release and attach its assets.
+
+It must not rerun Ruff, pytest, strict MkDocs, generic generated-artifact validation, individual reference regeneration, or the installed-wheel smoke test. Those checks belong to canonical CI and must have passed before the tag is created.
 
 After the tag workflow completes, verify the GitHub Release contains:
 
@@ -535,6 +530,7 @@ GitHub Releases and tags are immutable release evidence. Prefer deprecating a ba
 | New/Updated labels | Deterministic where supported | AI labels uncertain updates as proposed interpretations. |
 | Changelog wording | Human-approved | AI drafts; maintainer approves. |
 | Generated release pages | Deterministic rendering | AI regenerates and reviews; do not hand-edit. |
+| Generic repository validation and Pages deployment | CI workflow | AI verifies the candidate commit passed canonical CI. |
 | Build artifacts and checksums | Tag workflow | AI verifies published assets. |
 | Canonical frozen source reference | Human-approved manifest field | Use `source_ref: vX.Y.Z`; resolved commit SHA is audit metadata only. |
 | Tag creation | Human-approved automation | AI pauses before creating or pushing tags. |
