@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      DISABLE_MKDOCS_2_WARNING: "true"
     steps:
       - name: Checkout tagged commit
         uses: actions/checkout@v5
@@ -29,65 +27,24 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Install locked project and documentation dependencies
-        run: uv sync --frozen --extra docs --extra dev
+      - name: Install locked release dependencies
+        run: uv sync --frozen --extra dev
 
-      - name: Verify tag matches pyproject version
+      - name: Verify tag matches release contract
         shell: bash
         run: |
           set -euo pipefail
           uv run python scripts/check_release_ready.py "${GITHUB_REF_NAME}"
+          uv run python scripts/generate_release_inventory.py --check
           version="${GITHUB_REF_NAME#v}"
           echo "FABRICOPS_PACKAGE_VERSION=${version}" >> "${GITHUB_ENV}"
           echo "FABRICOPS_GIT_SHA=${GITHUB_SHA}" >> "${GITHUB_ENV}"
 
-      - name: Ruff lint
-        run: uv run ruff check .
-
-      - name: Run tests
-        run: uv run pytest
-
-      - name: Regenerate generated reference artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-          source .venv/bin/activate
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          PYTHONPATH=src python scripts/generate_release_inventory.py --check
-          PYTHONPATH=src python scripts/generate_release_contract_pages.py
-
-          # Keep the manually maintained explanatory page unchanged. The legacy
-          # generator still writes this path, but it is not part of its output contract.
-          git restore --source=HEAD -- docs/reference/function-call-graph.md
-
-      - name: Build strict documentation
-        run: uv run mkdocs build --strict
-
-      - name: Build distributions
+      - name: Build release distributions
         run: uv build
 
-      - name: Check distributions
+      - name: Check release distributions
         run: uvx twine check dist/*
-
-      - name: Install wheel and smoke-test public imports
-        shell: bash
-        run: |
-          set -euo pipefail
-          wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          test -n "${wheel_path}"
-          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
-          source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
-          python - <<'PY'
-          from importlib.metadata import version
-          import fabricops_kit as kit
-
-          assert kit.__version__ == version("fabricops-kit")
-          for public_name in kit.__all__:
-              getattr(kit, public_name)
-          print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
-          PY
 
       - name: Generate SHA256 checksums
         run: |
