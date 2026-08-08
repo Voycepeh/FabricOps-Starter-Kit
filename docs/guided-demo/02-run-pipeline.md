@@ -141,9 +141,9 @@ This demonstration covers the FabricOps functions used for file ingestion, Lakeh
 | `read_warehouse_table()`           | FabricOps v0.1.0 | Read a complete named Warehouse table                                                       |
 | `read_warehouse_query()`           | FabricOps v0.1.0 | Execute caller-provided SQL against a Warehouse                                             |
 | `write_warehouse_table()`          | FabricOps v0.1.0 | Write a Spark DataFrame to a Warehouse table                                                |
-| `profile_dataframe()`              | FabricOps v0.1.5 | Generate column-level profiling statistics for a DataFrame                                  |
-| `profile_frequency_distribution()` | FabricOps v0.1.5 | Generate value-frequency distributions for selected DataFrame columns                       |
-| `profile_and_register_table()`     | FabricOps v0.1.5 | Profile a table and register the resulting profile metadata in the FabricOps metadata model |
+| `profile_dataframe()`              | FabricOps v0.2.0 | Generate column-level profiling statistics for a DataFrame                                  |
+| `profile_frequency_distribution()` | FabricOps v0.2.0 | Generate value-frequency distributions for selected DataFrame columns                       |
+| `profile_and_register_table()`     | FabricOps v0.2.0 | Profile a table and register the resulting profile metadata in the FabricOps metadata model |
 
 
 After completing this step, continue to [Step 3: Review catalogue evidence and define guardrails](03-enrich-guardrails.md).
