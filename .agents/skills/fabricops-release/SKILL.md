@@ -115,6 +115,7 @@ Run only generators required for the release scope. Do not manually edit generat
 | Public call-flow JSON | `PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py` | `docs/reference/_data/public-function-call-flows.json` |
 | Individual function references | `PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py` | `docs/api/reference/*.md`, `docs/reference/index.md`, `docs/reference/function-call-graph.md` |
 | Release inventory | `PYTHONPATH=src python scripts/generate_release_inventory.py` | `docs/releases/manifests/<version>.yml` |
+| Release inventory implementation | `scripts/release_inventory.py` | Shared implementation used by the release inventory entry point |
 | Release contract pages | `PYTHONPATH=src python scripts/generate_release_contract_pages.py` | `docs/releases/<version>/`, `docs/releases/index.md` |
 | Dashboard | `PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py` | `docs/assets/public-function-call-flows-dashboard.html` |
 
