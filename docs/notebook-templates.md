@@ -1,6 +1,6 @@
 # Notebook Templates
 
-FabricOps provides four editable Microsoft Fabric notebook templates for configuring the workspaces, registering governance metadata, running data pipelines, defining guardrails, approving data contracts, and exploring data.
+FabricOps provides four editable Microsoft Fabric notebook templates for configuring the workspaces, registering governance metadata, running data pipelines, defining guardrails, preparing Data Contracts for promotion, and exploring data.
 
 [Open all notebook templates on GitHub](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks){ .md-button .md-button--primary }
 
@@ -24,7 +24,7 @@ Run it in each workspace before running the other FabricOps notebooks.
 
 ## `01_governance`
 
-Owns the complete Governance lifecycle in one persistent notebook. Use it before Engineering to establish Data Stewards and the Data Agreement, then return after `02_pipeline` has produced evidence to register Data Contracts, review catalogue and profile evidence, enrich metadata, author guardrails, and complete formal Governance review.
+Owns the complete Governance lifecycle in one persistent notebook. Use it before Engineering to establish Data Stewards and the Data Agreement, then return after `02_pipeline` has produced evidence to read that catalogue and profile evidence, enrich the Data Catalogue, define guardrails, and later create the Data Contract that prepares the validated ETL workflow for promotion.
 
 The operating model is **Governance → Engineering → Governance**: `01_governance` → `02_pipeline` → `01_governance`.
 
@@ -62,4 +62,4 @@ It does not create data agreements, data contracts, enrichment records, or guard
 
 </div>
 
-Follow the [Guided Demo](guided-demo.md) to create the agreement, run the Development pipeline, define guardrails, validate the pipeline, approve the data contract, and promote the pipeline to Production.
+Follow the [Guided Demo](guided-demo.md) to create the agreement, run the Development pipeline, define guardrails, re-validate the pipeline, prepare the Data Contract, and promote the pipeline to Production.

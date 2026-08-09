@@ -145,7 +145,6 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_enrich_table_metadata",
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
-        "widget_review_guardrail_governance",
     }
 
     assert required_functions <= {node.id for tree in (

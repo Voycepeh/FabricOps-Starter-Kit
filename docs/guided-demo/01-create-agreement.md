@@ -1,6 +1,6 @@
-# Step 1: Create data stewards, establish an agreement, and later register contracts
+# Step 1: Create Data Stewards and Data Agreements
 
-Run `01_governance` in the Governance workspace after Step 0 to capture steward and agreement context before pipeline execution. This notebook supports two governance stages: establish the Data Agreement first, then return later to register one or more Data Contracts after the relevant catalogue and validation evidence exists.
+Run `01_governance` in the Governance workspace after Step 0 to create the Data Stewards and establish Data Agreements between two accountable stewards before pipeline execution.
 
 The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to control the agreement form fields and widget behaviour. Review that configuration in `00_env_config` when you need to understand or customise those settings.
 

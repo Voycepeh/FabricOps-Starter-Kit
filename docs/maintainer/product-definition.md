@@ -41,12 +41,13 @@ FabricOps shows the operating flow through the three core workspaces only: Gover
 | Step | Stage | Canonical workflow step |
 | ---- | ----- | ----------------------- |
 | 0 | Set up the operating environment | Create the Fabric workspaces, create the required lakehouses and warehouses, configure "00_env_config" in every workspace, and create the metadata tables in Governance. |
-| 1 | Governance workflow 1 | In Governance, use "01_governance" to create data stewards and create a data agreement between data stewards. |
-| 2 | Engineering workflow 1 | In Engineering Development, use "02_pipeline" for ETL between data stores, then profile source and target tables and write data catalogue, data profiled, and data lineage metadata. |
-| 3 | Governance workflow 2 | In Governance, use "01_governance" to pick from the data catalogue table, add descriptions and classifications, and define guardrails such as schema enforcement and data quality. |
-| 4 | Engineering workflow 2 | In Engineering Development, use "02_pipeline" to wire in the guardrail rules and make sure the pipeline fails or warns users as configured. |
-| 5 | Governance workflow 3 | In Governance, use "01_governance" to pick from the data catalogue table, create a data contract linking the data tables to the data agreement, and get data steward sign-off. |
-| 6 | Engineering workflow 3 | In Engineering Production, promote the "02_pipeline" that was completed in Engineering Development. |
+| 1 | Governance — Create Data Stewards and Data Agreements | In `01_governance`, create Data Stewards and establish Data Agreements between two accountable stewards. |
+| 2 | Engineering — ETL, profile data, and build the Data Catalogue | In Engineering Development, use `02_pipeline` for ETL, profiling, and Data Catalogue and technical evidence creation. |
+| 3 | Governance — Enrich the Data Catalogue and define guardrails | In `01_governance`, read the evidence written by `02_pipeline`, enrich the Data Catalogue, and define guardrails. |
+| 4 | Engineering — Re-validate ETL with guardrails | Rerun `02_pipeline` and confirm warning, blocking, and validation behaviour. |
+| 5 | Governance — Create the Data Contract and prepare for promotion | In `01_governance`, link governed Data Catalogues to the Data Agreement and prepare the ETL contract and governance sign-off for release management. |
+| 6 | Engineering — Promote to Production | Promote the validated `02_pipeline` workflow from Development to Production. |
+| 7 | Consumer — Use approved Production data directly | Use `99_explore` to consume approved Production data for analytics, AI, BI, or downstream project use. |
 
 ## Product components
 

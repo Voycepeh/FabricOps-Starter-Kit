@@ -469,9 +469,8 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_select_guardrail_target',
                             'widget_enrich_table_metadata',
                             'widget_author_schema_freshness_profile_rules',
-                            'widget_author_dq_rules',
-                            'widget_review_guardrail_governance'],
-                'title': 'Agreement, contract, evidence, guardrails, and review'}],
+                            'widget_author_dq_rules'],
+                'title': 'Agreement, contract, evidence, enrichment, and guardrails'}],
   'template_path': 'templates/notebooks/01_governance.ipynb'},
  {'notebook_key': '02_pipeline',
   'notebook_label': '`02_pipeline`',
@@ -1637,8 +1636,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Render interactive controls for reviewing proposed and bypassed guardrail '
                       'rules.',
   'symbol_name': 'widget_review_guardrail_governance',
-  'template_notebook': '01_governance',
-  'template_segment': 'Governance review',
+  'template_segment': 'Optional governance review controls',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
   'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
@@ -1650,8 +1648,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders governance review controls for reviewing '
                       'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
                       'supersede actions.',
-  'when_to_use': 'Use in 01_governance after selecting a guardrail target to perform human review '
-                 'of enrichment and guardrail rule intent.',
+  'when_to_use': 'Use directly only when explicitly adopting the preview review controls; this helper is not a required stage in the current seven-stage template workflow.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or profiles '
                      'generation; it is an interactive governance review widget.',
   'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],

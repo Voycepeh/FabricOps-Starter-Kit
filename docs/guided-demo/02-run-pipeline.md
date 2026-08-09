@@ -146,4 +146,4 @@ This demonstration covers the FabricOps functions used for file ingestion, Lakeh
 | `profile_and_register_table()`     | FabricOps v0.2.0 | Profile a table and register the resulting profile metadata in the FabricOps metadata model |
 
 
-After completing this step, continue to [Step 3: Review catalogue evidence and define guardrails](03-enrich-guardrails.md).
+After completing this step, continue to [Step 3: Enrich the Data Catalogue and define guardrails](03-enrich-guardrails.md).
