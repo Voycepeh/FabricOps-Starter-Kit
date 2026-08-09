@@ -808,12 +808,35 @@
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
-      "function_name": "_build_metadata_column_key",
+      "function_name": "_stable_metadata_key",
       "function_type": "private_function",
       "lifecycle_status": "internal",
       "live_impact_level": "transitive_live_dependency",
       "live_since": null,
-      "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+      "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
+      "release_history": [],
+      "release_versions": [],
+      "source_end_line": 14,
+      "source_path": "src/fabricops_kit/config/metadata_keys.py",
+      "source_start_line": 10,
+      "supports_live_contract": true,
+      "transitive_live_dependent_count": 1,
+      "transitive_live_dependents": [
+        "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
+      ]
+    },
+    {
+      "contract_classification": "live_critical_internal",
+      "contract_display": "Live-critical internal",
+      "direct_live_dependent_count": 0,
+      "direct_live_dependents": [],
+      "discontinued_in": null,
+      "function_name": "build_metadata_column_key",
+      "function_type": "shared_function",
+      "lifecycle_status": "internal",
+      "live_impact_level": "transitive_live_dependency",
+      "live_since": null,
+      "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
       "release_history": [],
       "release_versions": [],
       "source_end_line": 24,
@@ -833,12 +856,12 @@
         "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
       ],
       "discontinued_in": null,
-      "function_name": "_build_metadata_table_key",
-      "function_type": "private_function",
+      "function_name": "build_metadata_table_key",
+      "function_type": "shared_function",
       "lifecycle_status": "internal",
       "live_impact_level": "direct_live_dependency",
       "live_since": null,
-      "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+      "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
       "release_history": [],
       "release_versions": [],
       "source_end_line": 19,
@@ -847,29 +870,6 @@
       "supports_live_contract": true,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
-    },
-    {
-      "contract_classification": "live_critical_internal",
-      "contract_display": "Live-critical internal",
-      "direct_live_dependent_count": 0,
-      "direct_live_dependents": [],
-      "discontinued_in": null,
-      "function_name": "_stable_metadata_key",
-      "function_type": "private_function",
-      "lifecycle_status": "internal",
-      "live_impact_level": "transitive_live_dependency",
-      "live_since": null,
-      "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
-      "release_history": [],
-      "release_versions": [],
-      "source_end_line": 14,
-      "source_path": "src/fabricops_kit/config/metadata_keys.py",
-      "source_start_line": 10,
-      "supports_live_contract": true,
-      "transitive_live_dependent_count": 1,
-      "transitive_live_dependents": [
-        "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
-      ]
     },
     {
       "contract_classification": "live_critical_internal",
@@ -9694,7 +9694,7 @@
       "width": 1
     },
     {
-      "architecture_violation_count": 2,
+      "architecture_violation_count": 0,
       "contract_classification": "live_public_function",
       "contract_display": "Live \u00b7 Live since 0.2.0",
       "contract_risk": "live",
@@ -10207,15 +10207,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 2,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -10245,7 +10245,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -11215,12 +11215,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -11230,15 +11225,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
-          "function_name": "_build_metadata_column_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_column_key",
+          "function_type": "shared_function",
           "inline_candidate": true,
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
           "promote_to_shared_candidate": false,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -11250,12 +11245,8 @@
           "transitive_live_dependents": [
             "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
           ],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -11274,7 +11265,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -11292,12 +11283,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -11309,15 +11295,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 2,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -11327,12 +11313,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -11351,7 +11333,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -17550,7 +17532,7 @@
         }
       ],
       "function_name": "profile_and_register_table",
-      "has_architecture_violation": true,
+      "has_architecture_violation": false,
       "has_large_width_or_depth": true,
       "lifecycle_status": "live",
       "live_critical_dependencies": [
@@ -17558,9 +17540,9 @@
         "fabricops_kit.config.audit._require_audit_values",
         "fabricops_kit.config.audit._valid_audit_value",
         "fabricops_kit.config.audit.build_runtime_audit_fields",
-        "fabricops_kit.config.metadata_keys._build_metadata_column_key",
-        "fabricops_kit.config.metadata_keys._build_metadata_table_key",
         "fabricops_kit.config.metadata_keys._stable_metadata_key",
+        "fabricops_kit.config.metadata_keys.build_metadata_column_key",
+        "fabricops_kit.config.metadata_keys.build_metadata_table_key",
         "fabricops_kit.config.metadata_schemas._coerce_metadata_value",
         "fabricops_kit.config.metadata_schemas.audit_schema_fields",
         "fabricops_kit.config.metadata_schemas.build_metadata_schema",
@@ -17676,8 +17658,7 @@
       ],
       "public_import_path": "fabricops_kit.profile_and_register_table",
       "public_signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table",
       "raises_documentation": "ValueError\n    If the role, target, configured store, schema, or table identity is invalid.\nRuntimeError\n    If Delta replacement support is unavailable, or lineage registration\n    fails after profile and catalogue registration succeed.",
@@ -17692,46 +17673,9 @@
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
           "severity": "warning",
           "signal": "large_width_or_depth"
-        },
-        {
-          "evidence": [
-            {
-              "depth": 2,
-              "function_name": "_build_metadata_column_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
-              "source_end_line": 24,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 22,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 2,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            }
-          ],
-          "message": "Public flow contains deterministic architecture violation edges.",
-          "severity": "error",
-          "signal": "architecture_violation"
         }
       ],
-      "refactor_summary": "Review 2 refactor signal(s): large_width_or_depth, architecture_violation.",
+      "refactor_summary": "Review 1 refactor signal(s): large_width_or_depth.",
       "release_history": [
         {
           "status": "live",
@@ -17744,8 +17688,7 @@
       "returns_documentation": "pyspark.sql.DataFrame\n    A Spark DataFrame containing one canonical profiling record for each\n    eligible column in the supplied DataFrame. This is the same DataFrame\n    appended to ``METADATA_DATA_PROFILED`` and includes physical asset\n    identity, compact statistical metrics, schema identity, and runtime\n    audit fields. Flattened child frequency rows, generated catalogue rows,\n    and the lineage event are not returned.",
       "scope": 60,
       "signals": [
-        "large_width_or_depth",
-        "architecture_violation"
+        "large_width_or_depth"
       ],
       "signature": "def profile_and_register_table(df, *, profile_role, target, table_name, schema=None, frequency_columns=None, frequency_top_n: int | None=None, frequency_max_distinct_percent: float | None=80.0, frequency_profile_df=None)",
       "source_end_line": 816,
@@ -22757,7 +22700,7 @@
       "width": 3
     },
     {
-      "architecture_violation_count": 11,
+      "architecture_violation_count": 6,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -22855,12 +22798,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -22872,15 +22810,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 3,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.shared._run_table_guardrails_workflow",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -22890,12 +22828,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -22914,7 +22848,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -26720,12 +26654,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -26737,15 +26666,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 3,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -26755,12 +26684,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -26779,7 +26704,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -31297,12 +31222,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -31314,15 +31234,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 3,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -31332,12 +31252,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -31356,7 +31272,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -33123,12 +33039,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -33140,15 +33051,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 3,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -33158,12 +33069,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -33182,7 +33089,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -36417,12 +36324,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Shared function calls a private function from another file.",
-              "type": "Type 4"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -36434,15 +36336,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 3,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": false,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.pipeline.shared.write_catalogue_evidence",
-          "promote_to_shared_candidate": true,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -36452,12 +36354,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Shared function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 4"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -36476,7 +36374,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": false,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -38241,21 +38139,6 @@
           "evidence": [
             {
               "depth": 2,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 2,
               "function_name": "_check_schema_rule_runtime",
               "function_type": "private_function",
               "qualified_name": "fabricops_kit.pipeline.guardrails_shared._check_schema_rule_runtime",
@@ -38315,21 +38198,6 @@
               ]
             },
             {
-              "depth": 4,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
               "depth": 3,
               "function_name": "_write_guardrail_result_row",
               "function_type": "private_function",
@@ -38342,21 +38210,6 @@
               ],
               "violation_types": [
                 "Type 4"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
               ]
             },
             {
@@ -38372,36 +38225,6 @@
               ],
               "violation_types": [
                 "Type 5"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 3,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Shared function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 4"
               ]
             }
           ],
@@ -41060,7 +40883,7 @@
       "width": 4
     },
     {
-      "architecture_violation_count": 11,
+      "architecture_violation_count": 9,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -41655,12 +41478,7 @@
           ]
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -41670,15 +41488,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
-          "function_name": "_build_metadata_column_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_column_key",
+          "function_type": "shared_function",
           "inline_candidate": true,
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.widgets.shared._base_guardrail_rule_record",
           "promote_to_shared_candidate": false,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -41690,12 +41508,8 @@
           "transitive_live_dependents": [
             "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
           ],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -41714,7 +41528,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -41732,12 +41546,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -41749,15 +41558,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": true,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.widgets.shared._base_guardrail_rule_record",
           "promote_to_shared_candidate": false,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -41767,12 +41576,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -41791,7 +41596,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -43648,36 +43453,6 @@
               ]
             },
             {
-              "depth": 4,
-              "function_name": "_build_metadata_column_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
-              "source_end_line": 24,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 22,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
               "depth": 6,
               "function_name": "_audit_timestamp_value",
               "function_type": "private_function",
@@ -43789,7 +43564,7 @@
       "width": 1
     },
     {
-      "architecture_violation_count": 11,
+      "architecture_violation_count": 9,
       "contract_classification": "preview_public_function",
       "contract_display": "Preview",
       "contract_risk": "preview",
@@ -44466,12 +44241,7 @@
           ]
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -44481,15 +44251,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
-          "function_name": "_build_metadata_column_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_column_key",
+          "function_type": "shared_function",
           "inline_candidate": true,
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.widgets.shared._base_guardrail_rule_record",
           "promote_to_shared_candidate": false,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -44501,12 +44271,8 @@
           "transitive_live_dependents": [
             "fabricops_kit.pipeline.profile_and_register_table.profile_and_register_table"
           ],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -44525,7 +44291,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_column_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -44543,12 +44309,7 @@
           "violation_types": []
         },
         {
-          "architecture_violations": [
-            {
-              "detail": "Private function calls a private function from another file.",
-              "type": "Type 5"
-            }
-          ],
+          "architecture_violations": [],
           "call_count_from_parent": 1,
           "contract_classification": "live_critical_internal",
           "contract_display": "Live-critical internal",
@@ -44560,15 +44321,15 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
-          "function_name": "_build_metadata_table_key",
-          "function_type": "private_function",
+          "function_name": "build_metadata_table_key",
+          "function_type": "shared_function",
           "inline_candidate": true,
           "lifecycle_status": "internal",
           "live_impact_level": "direct_live_dependency",
           "live_since": null,
           "parent_qualified_name": "fabricops_kit.widgets.shared._base_guardrail_rule_record",
           "promote_to_shared_candidate": false,
-          "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "recursive": false,
           "release_history": [],
           "release_versions": [],
@@ -44578,12 +44339,8 @@
           "supports_live_contract": true,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
-          "violation_details": [
-            "Private function calls a private function from another file."
-          ],
-          "violation_types": [
-            "Type 5"
-          ]
+          "violation_details": [],
+          "violation_types": []
         },
         {
           "architecture_violations": [],
@@ -44602,7 +44359,7 @@
           "lifecycle_status": "internal",
           "live_impact_level": "transitive_live_dependency",
           "live_since": null,
-          "parent_qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
+          "parent_qualified_name": "fabricops_kit.config.metadata_keys.build_metadata_table_key",
           "promote_to_shared_candidate": true,
           "qualified_name": "fabricops_kit.config.metadata_keys._stable_metadata_key",
           "recursive": false,
@@ -46369,36 +46126,6 @@
               "source_end_line": 31,
               "source_path": "src/fabricops_kit/config/metadata_keys.py",
               "source_start_line": 27,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "_build_metadata_column_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_column_key",
-              "source_end_line": 24,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 22,
-              "violation_details": [
-                "Private function calls a private function from another file."
-              ],
-              "violation_types": [
-                "Type 5"
-              ]
-            },
-            {
-              "depth": 4,
-              "function_name": "_build_metadata_table_key",
-              "function_type": "private_function",
-              "qualified_name": "fabricops_kit.config.metadata_keys._build_metadata_table_key",
-              "source_end_line": 19,
-              "source_path": "src/fabricops_kit/config/metadata_keys.py",
-              "source_start_line": 17,
               "violation_details": [
                 "Private function calls a private function from another file."
               ],
@@ -77057,9 +76784,9 @@
     "fabricops_kit.config.audit._valid_audit_value",
     "fabricops_kit.config.audit.build_runtime_audit_fields",
     "fabricops_kit.config.metadata_keys._build_dq_rule_key",
-    "fabricops_kit.config.metadata_keys._build_metadata_column_key",
-    "fabricops_kit.config.metadata_keys._build_metadata_table_key",
     "fabricops_kit.config.metadata_keys._stable_metadata_key",
+    "fabricops_kit.config.metadata_keys.build_metadata_column_key",
+    "fabricops_kit.config.metadata_keys.build_metadata_table_key",
     "fabricops_kit.config.metadata_schemas._coerce_metadata_value",
     "fabricops_kit.config.metadata_schemas.audit_schema_fields",
     "fabricops_kit.config.metadata_schemas.build_metadata_schema",

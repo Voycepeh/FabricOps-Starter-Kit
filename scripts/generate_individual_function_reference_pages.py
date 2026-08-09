@@ -2770,7 +2770,7 @@ ROLE_TAGS_BY_NAME = {
     "_business_agreement_snapshot": ["internal_normalizer", "agreement_payload_normalizer"],
     "render_searchable_selector": ["internal_adapter", "widget_rendering_adapter"],
     "_selected_catalogue_rows_for_enrichment": ["internal_resolver", "catalogue_table_resolver"],
-    "_build_metadata_table_key": ["utility_function", "metadata_key_formatter"],
+    "build_metadata_table_key": ["utility_function", "metadata_key_formatter"],
     "apply_governance_rule_action": ["internal_normalizer", "rule_payload_normalizer"],
     "load_rule_review_history": ["internal_resolver", "rule_catalogue_resolver"],
 

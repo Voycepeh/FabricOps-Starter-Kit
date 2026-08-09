@@ -14,12 +14,12 @@ def _stable_metadata_key(*parts: Any) -> str:
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def _build_metadata_table_key(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
+def build_metadata_table_key(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
     """Return the environment-independent logical identity for a table."""
     return _stable_metadata_key(store_type, layer, schema_name, table_name)
 
 
-def _build_metadata_column_key(metadata_table_key: Any, column_name: Any) -> str:
+def build_metadata_column_key(metadata_table_key: Any, column_name: Any) -> str:
     """Return the environment-independent logical identity for a column."""
     return _stable_metadata_key(metadata_table_key, column_name)
 

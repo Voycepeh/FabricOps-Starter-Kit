@@ -15,8 +15,8 @@ import pytest
 
 from fabricops_kit.config import FabricStore
 from fabricops_kit.config.metadata_keys import (
-    _build_metadata_column_key as _metadata_column_key,
-    _build_metadata_table_key as _metadata_table_key,
+    build_metadata_column_key as _metadata_column_key,
+    build_metadata_table_key as _metadata_table_key,
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.pipeline import profile_and_register_table as public_profile_and_register_table

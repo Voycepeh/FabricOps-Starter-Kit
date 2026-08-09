@@ -14,8 +14,8 @@
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys._build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `metadata_column_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys._build_metadata_column_key` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_column_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys.build_metadata_column_key` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `schema_fingerprint` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint` | Deterministic fingerprint for the observed or governed schema snapshot. |
 | `environment_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Environment name recorded for the metadata row. |
 | `store_type` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._catalogue_dataframe_from_profiled` | Configured Fabric store type recorded for the profiled dataset. |

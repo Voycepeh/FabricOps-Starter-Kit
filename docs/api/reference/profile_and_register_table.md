@@ -323,9 +323,9 @@ no compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_keys._build_metadata_column_key</code></li>
-<li><code>fabricops_kit.config.metadata_keys._build_metadata_table_key</code></li>
 <li><code>fabricops_kit.config.metadata_keys._stable_metadata_key</code></li>
+<li><code>fabricops_kit.config.metadata_keys.build_metadata_column_key</code></li>
+<li><code>fabricops_kit.config.metadata_keys.build_metadata_table_key</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>

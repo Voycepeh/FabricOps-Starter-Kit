@@ -8,7 +8,7 @@ import math
 from typing import Any, Sequence
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_keys import _build_metadata_column_key, _build_metadata_table_key
+from fabricops_kit.config.metadata_keys import build_metadata_column_key, build_metadata_table_key
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
@@ -277,9 +277,9 @@ def _canonical_profiled_dataframe(
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
-    metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
+    metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
     column_key_udf = F.udf(
-        lambda column_name: _build_metadata_column_key(metadata_table_key, column_name), T.StringType()
+        lambda column_name: build_metadata_column_key(metadata_table_key, column_name), T.StringType()
     )
     schema_fingerprint = _schema_fingerprint(source_df)
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
@@ -794,7 +794,7 @@ def profile_and_register_table(
     )
     catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
-    metadata_table_key = _build_metadata_table_key(
+    metadata_table_key = build_metadata_table_key(
         normalized_store_type, normalized_target, normalized_schema, normalized_table
     )
     try:

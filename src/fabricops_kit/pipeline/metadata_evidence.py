@@ -7,7 +7,7 @@ import uuid
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_keys import _build_metadata_table_key
+from fabricops_kit.config.metadata_keys import build_metadata_table_key
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 
@@ -41,7 +41,7 @@ def _write_guardrail_result_row(
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "metadata_table_key": str(
             result.get("metadata_table_key")
-            or _build_metadata_table_key(store_type, layer, schema_name, table_name)
+            or build_metadata_table_key(store_type, layer, schema_name, table_name)
         ),
         "environment_name": env,
         "dataset_name": dataset_name,

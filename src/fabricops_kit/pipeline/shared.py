@@ -9,7 +9,7 @@ from typing import Any, Mapping
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.metadata_keys import _build_metadata_table_key
+from ..config.metadata_keys import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
 
@@ -904,7 +904,7 @@ def _run_table_guardrails_workflow(
         layer = str(table_config.get("layer") or table_config.get("fabric_store_target") or stage)
         schema_name = table_config.get("schema_name", table_config.get("schema"))
         dataframe = table_config["df"]
-        metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
+        metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
 
         profiles[table_key] = build_profile_dataframe(
             dataframe,
@@ -1151,7 +1151,7 @@ def write_catalogue_evidence(
         store_type = str(definition.get("kind") or definition.get("target_kind") or "lakehouse")
         layer = str(definition.get("layer") or definition.get("fabric_store_target") or stage)
         schema_name = definition.get("schema_name", definition.get("schema"))
-        metadata_table_key = _build_metadata_table_key(store_type, layer, schema_name, table_name)
+        metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
         profile_evidence_rows = list(stability_result.get("profile_evidence_rows") or [])
         if not profile_evidence_rows:
             profile_evidence_rows = [

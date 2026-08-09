@@ -32,12 +32,14 @@ def test_runtime_audit_fields_resolve_fabric_context_and_allow_overrides(fake_no
 
 def test_metadata_key_builders_are_stable_for_governance_and_dq_rules():
     """Verify metadata key builders are stable for governance and dq rules."""
-    table_key = metadata_keys._build_metadata_table_key(" Lakehouse ", "Silver", "dbo", "Orders")
-    column_key = metadata_keys._build_metadata_column_key(table_key, "Order_ID")
+    table_key = metadata_keys.build_metadata_table_key(" Lakehouse ", "Silver", "dbo", "Orders")
+    column_key = metadata_keys.build_metadata_column_key(table_key, "Order_ID")
     dq_key = metadata_keys._build_dq_rule_key("dev", "sales", "orders", "order_id_required")
 
-    assert table_key == metadata_keys._build_metadata_table_key("lakehouse", "silver", "DBO", "orders")
-    assert column_key == metadata_keys._build_metadata_column_key(table_key, " order_id ")
+    assert table_key == metadata_keys.build_metadata_table_key("lakehouse", "silver", "DBO", "orders")
+    assert column_key == metadata_keys.build_metadata_column_key(table_key, " order_id ")
+    assert table_key == "8aaef3ca85884ac51f0e3467eff843c88367e3cd5d59c8ba16c196570189fbed"
+    assert column_key == "0b9d37afaaf22424e6e3697d005a31bee42f3333a7ef6c4bd0d28448e9ad2842"
     assert dq_key == metadata_keys._build_dq_rule_key("DEV", "SALES", "ORDERS", " order_id_required ")
     assert len({table_key, column_key, dq_key}) == 3
     assert all(len(value) == 64 for value in (table_key, column_key, dq_key))
@@ -271,7 +273,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
     spark = FakeSpark()
     config = framework_config()
     config.path_config.paths["prod"] = config.path_config.paths["dev"]
-    expected = metadata_keys._build_metadata_table_key("lakehouse", "raw", None, "orders")
+    expected = metadata_keys.build_metadata_table_key("lakehouse", "raw", None, "orders")
 
     for env in ("dev", "prod"):
         metadata_evidence._write_guardrail_result_row(
