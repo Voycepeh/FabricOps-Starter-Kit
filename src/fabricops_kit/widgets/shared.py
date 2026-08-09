@@ -344,7 +344,7 @@ GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
 GUARDRAIL_REVIEW_STATUSES = ["draft", "pending_governance_review", "active_pending_governance_review", "self_approved", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
 ACTIVATION_STATES = ["active", "pending", "inactive"]
 REVIEW_STATES = ["draft", "pending_governance_review", "active_pending_governance_review", "governance_approved", "rejected_by_governance", "superseded", "inactive"]
-SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "03_governance"]
+SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "01_governance"]
 CREATED_BY_ROLES = ["engineering", "governance", "system"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
@@ -1034,9 +1034,9 @@ def _is_no_approval_required(policy: Mapping[str, Any]) -> bool:
     return str(policy.get("governance_mode") or "ungoverned").lower() == "ungoverned" or str(policy.get("approval_policy") or "").lower() == "no_approval_required"
 
 def _assert_governance_review_context(source_notebook_type: str) -> None:
-    """Block formal review outside the ``03_governance`` notebook context."""
-    if source_notebook_type != "03_governance":
-        raise PermissionError("Formal governance review actions are only allowed from 03_governance.")
+    """Block formal review outside the ``01_governance`` notebook context."""
+    if source_notebook_type != "01_governance":
+        raise PermissionError("Formal governance review actions are only allowed from 01_governance.")
 
 def _lifecycle_fields(*, activation_state: str, review_state: str, actor: str, now: str, created_by_role: str = "engineering", source_notebook_type: str = "02_pipeline", activation_reason: str = "", requires_governance_review: bool = False, requires_post_review: bool = False) -> dict[str, Any]:
     """Build standardized lifecycle fields for enrichment and guardrail rows."""
@@ -1085,7 +1085,7 @@ def guardrail_authoring_status(policy: Mapping[str, Any], *, bypass_reason: str 
         Runtime configuration used for timestamp formatting.
     action : {"save", "draft", "submit", "apply_now"}, default="save"
         Authoring action selected by the notebook user.
-    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+    source_notebook_type : {"02_pipeline", "01_governance"}, default="02_pipeline"
         Notebook type that created the record.
     created_by_role : {"engineering", "governance", "system"}, default="engineering"
         Role that created the record.
@@ -1108,7 +1108,7 @@ def _record_identity(row: Mapping[str, Any]) -> str:
     """Return the stable lifecycle record identity for rule or enrichment rows."""
     return str(row.get("rule_id") or row.get("rule_key") or "")
 
-def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", replacement: Mapping[str, Any] | None = None, source_notebook_type: str = "03_governance", config: Any = None) -> dict[str, Any] | list[dict[str, Any]]:
+def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor: str | None = None, superseded_by_rule_key: str = "", replacement: Mapping[str, Any] | None = None, source_notebook_type: str = "01_governance", config: Any = None) -> dict[str, Any] | list[dict[str, Any]]:
     """Return append-only governance action row(s) for a guardrail rule.
 
     Parameters
@@ -1124,8 +1124,8 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
         Replacement rule key for supersede/replace actions.
     replacement : mapping, optional
         Replacement rule values when action is ``replace``.
-    source_notebook_type : str, default="03_governance"
-        Must be ``03_governance`` for formal review decisions.
+    source_notebook_type : str, default="01_governance"
+        Must be ``01_governance`` for formal review decisions.
     config : Any, optional
         Runtime configuration used for timestamps.
 
@@ -1141,7 +1141,7 @@ def apply_governance_rule_action(rule: Mapping[str, Any], action: str, *, actor:
     reviewer = _resolve_action_by(actor)
     legacy_supersede = action == "supersede"
     action = "replace" if legacy_supersede else action
-    common = {"source_notebook_type": "03_governance", "created_by_role": "governance", "reviewed_by": reviewer, "reviewed_at": now, "review_comment": str(row.get("review_comment") or ""), "requires_governance_review": False, "requires_post_review": False}
+    common = {"source_notebook_type": "01_governance", "created_by_role": "governance", "reviewed_by": reviewer, "reviewed_at": now, "review_comment": str(row.get("review_comment") or ""), "requires_governance_review": False, "requires_post_review": False}
     if action in {"approve", "approve_and_activate"}:
         row.update(common | {"activation_state": "active", "is_active": True, "review_state": "governance_approved", "review_status": "governance_approved", "approved_by": reviewer, "approved_at": now, "review_decision": "approved", "activated_by": row.get("activated_by") or reviewer, "activated_at": row.get("activated_at") or now, "effective_from": row.get("effective_from") or now})
     elif action == "reject":
@@ -1837,7 +1837,7 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             "approved_at": str(rule.get("approved_at") or now),
             "suggestion_json": _json(rule.get("suggestion_json") or rule.get("suggestion")),
             "action_type": action_type,
-            "source_notebook_type": str(rule.get("source_notebook_type") or "03_governance"),
+            "source_notebook_type": str(rule.get("source_notebook_type") or "01_governance"),
             "source_notebook_id": str(rule.get("source_notebook_id") or ""),
             "source_workspace_id": str(rule.get("source_workspace_id") or ""),
             "superseded_by_rule_key": str(rule.get("superseded_by_rule_key") or ""),

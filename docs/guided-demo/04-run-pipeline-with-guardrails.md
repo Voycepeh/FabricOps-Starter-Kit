@@ -1,6 +1,6 @@
 # Step 4: Rerun the Development pipeline with guardrails
 
-Rerun `02_pipeline` in the Engineering Development workspace after Step 3 has defined approved guardrails. This workflow starts with the same read, profile, transform, profile, and write pattern described in [Step 2: Run the first Development pipeline](02-run-pipeline.md). It then adds active guardrail retrieval, evaluation, severity handling, and continuation decisions before critical publication steps.
+Rerun `02_pipeline` in the Engineering Development workspace after Step 3 has defined guardrails. This workflow starts with the same read, profile, transform, profile, and write pattern described in [Step 2: Run the first Development pipeline](02-run-pipeline.md). It then adds active guardrail retrieval, evaluation, severity handling, and continuation decisions before critical publication steps.
 
 Use this step to wire in the guardrail rules defined in Step 3, run the pipeline, and verify that the configured guardrails warn users or fail the pipeline as intended.
 
@@ -32,7 +32,7 @@ read
 
 1. Read the source DataFrame.
 2. Profile and register the source.
-3. Load active source guardrails approved through governance.
+3. Load the active source guardrails defined by Governance.
 4. Evaluate source guardrails.
 5. Stop or continue based on severity and continuation results.
 6. Apply transformation logic.
@@ -44,9 +44,9 @@ read
 
 ## Where rules come from
 
-Runtime does not invent rules. It retrieves active guardrail definitions that governance has reviewed and activated in `METADATA_GUARDRAIL`.
+Runtime does not invent rules. It retrieves the active guardrail definitions created through the Governance workflow in `METADATA_GUARDRAIL`.
 
-Those records describe rule identity, rule type, table or column scope, parameters, severity, activation state, review state, and audit context. `02_pipeline` uses active rules as the executable expectations for the current source or target evaluation point.
+Those records describe rule identity, rule type, table or column scope, parameters, severity, activation state, and audit context. `02_pipeline` uses active rules as the executable expectations for the current source or target evaluation point.
 
 ## Profile mode and enforcement mode
 
@@ -97,6 +97,6 @@ A guarded run produces the normal pipeline evidence plus guardrail results:
 
 The additional behavior is that continuation may be denied before unsafe publication.
 
-Previous: [Step 3: Review catalogue evidence and define guardrails](03-enrich-guardrails.md).
+Previous: [Step 3: Enrich the Data Catalogue and define guardrails](03-enrich-guardrails.md).
 
 Next, continue to [Step 5: Create the Data Contract and record steward sign-off](05-create-data-contract.md).

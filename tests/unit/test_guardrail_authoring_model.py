@@ -664,14 +664,14 @@ def test_new_authoring_lifecycle_draft_submit_apply_now_and_ungoverned():
 
 
 def test_formal_review_context_and_lifecycles():
-    """Verify formal review actions are 03-only and produce new lifecycle states."""
+    """Verify formal review actions are Governance-only and produce new lifecycle states."""
     pending = {"rule_key": "r1", "rule_id": "r1", "activation_state": "pending", "review_state": "pending_governance_review", "is_active": False}
     active_pending = {**pending, "activation_state": "active", "review_state": "active_pending_governance_review", "is_active": True}
 
     try:
         governance_review.apply_governance_rule_action(pending, "approve", source_notebook_type="02_pipeline")
     except PermissionError as exc:
-        assert "03_governance" in str(exc)
+        assert "01_governance" in str(exc)
     else:
         raise AssertionError("02_pipeline formal review was not blocked")
 
@@ -692,17 +692,17 @@ def test_formal_review_context_and_lifecycles():
     assert replaced[1]["supersedes_record_id"] == "r1"
 
 
-def test_authoring_widgets_stamp_02_and_03_sources(monkeypatch):
+def test_authoring_widgets_stamp_engineering_and_governance_sources(monkeypatch):
     """Verify authoring widgets stamp notebook type and creator role by context."""
     _install_fake_notebook_widgets(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required"}
 
     engineering = widget_author_dq_rules(state, selected_columns=["order_id"])["build_batch_records"](action="submit")[0]
-    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="03_governance", created_by_role="governance")["build_batch_records"](action="submit")[0]
+    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="01_governance", created_by_role="governance")["build_batch_records"](action="submit")[0]
 
     assert engineering["source_notebook_type"] == "02_pipeline"
     assert engineering["created_by_role"] == "engineering"
-    assert governance["source_notebook_type"] == "03_governance"
+    assert governance["source_notebook_type"] == "01_governance"
     assert governance["created_by_role"] == "governance"
 
 

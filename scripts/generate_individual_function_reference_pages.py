@@ -39,7 +39,7 @@ INTERNAL_REFERENCE_DIR = ROOT / "docs" / "reference" / "internal"
 GITHUB_REPO_URL = "https://github.com/Voycepeh/FabricOps-Starter-Kit"
 DEFAULT_SOURCE_REF = "main"
 GENERATE_INTERNAL_REFERENCE_PAGES_ENV = "FABRICOPS_GENERATE_INTERNAL_REFERENCE_PAGES"
-CORE_TEMPLATE_KEYS = {"00_env_config", "01_agreement", "02_pipeline", "03_review", "99_explore"}
+CORE_TEMPLATE_KEYS = {"00_env_config", "01_governance", "02_pipeline", "99_explore"}
 AUDIT_FIELD_DESCRIPTIONS = {
     "_committed_by": "User principal or runtime identity that committed the metadata row.",
     "_committed_at": "Timestamp when the metadata row was committed.",

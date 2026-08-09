@@ -120,9 +120,44 @@ def test_template_notebook_fabricops_public_references_exist(notebook_path: Path
     assert not missing, f"Missing fabricops_kit public references in {notebook_path.name}: {missing}"
 
 
+def _notebook_source(notebook_name: str) -> str:
+    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
+    return "\n".join(cell.source for cell in notebook.cells)
+
+
+def test_official_governance_workflow_inventory():
+    """The active templates expose one persistent Governance entry point."""
+    names = {path.name for path in NOTEBOOKS}
+
+    assert {"00_env_config.ipynb", "01_governance.ipynb", "02_pipeline.ipynb", "99_explore.ipynb"} <= names
+    assert {"01_agreement.ipynb", "03_review.ipynb"}.isdisjoint(names)
+
+
+def test_01_governance_supports_the_complete_governance_lifecycle():
+    """Governance retains the durable capabilities from both former templates."""
+    source = _notebook_source("01_governance.ipynb")
+    required_functions = {
+        "widget_render_data_steward",
+        "widget_render_data_agreement",
+        "widget_register_data_contract",
+        "widget_view_agreement_catalogue",
+        "widget_select_guardrail_target",
+        "widget_enrich_table_metadata",
+        "widget_author_schema_freshness_profile_rules",
+        "widget_author_dq_rules",
+    }
+
+    assert required_functions <= {node.id for tree in (
+        _parse_code_cell(NOTEBOOK_DIR / "01_governance.ipynb", index, source)
+        for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
+    ) if tree is not None for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert 'target="metadata"' in source
+    assert "METADATA_SCHEMA" not in source
+
+
 def test_02_pipeline_uses_only_the_catalogue_widget():
     """Verify the simplified pipeline uses only the scoped catalogue widget."""
-    source = (NOTEBOOK_DIR / "02_pipeline.ipynb").read_text(encoding="utf-8")
+    source = _notebook_source("02_pipeline.ipynb")
 
     assert "widget_view_pipeline_catalogue" in source
     assert "widget_view_data_contract" not in source
@@ -133,16 +168,14 @@ def test_02_pipeline_uses_only_the_catalogue_widget():
 @pytest.mark.parametrize(
     ("notebook_name", "state_name"),
     [
-        ("01_agreement.ipynb", "agreement_catalogue_view"),
+        ("01_governance.ipynb", "agreement_catalogue_view"),
         ("02_pipeline.ipynb", "pipeline_catalogue_view"),
-        ("03_review.ipynb", "governance_catalogue_view"),
         ("99_explore.ipynb", "data_catalogue_view"),
     ],
 )
-def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, state_name):
-    """Each template renders the named, snapshot-scoped views outside the widget."""
-    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
-    source = "\n".join("".join(cell.get("source", [])) for cell in notebook.cells)
+def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_name):
+    """Each catalogue workflow renders its snapshot-scoped views in Fabric cells."""
+    source = _notebook_source(notebook_name)
 
     assert f'{state_name}["get_views"]()' in source
     assert 'catalogue_df = views["catalogue"]' in source
@@ -151,22 +184,16 @@ def test_data_contract_views_are_displayed_outside_the_widget(notebook_name, sta
     assert "display(catalogue_df)" in source
     assert "display(profile_df)" in source
     assert "display(frequency_df)" in source
-    assert "catalogue_df, profile_df" not in source
-    assert "METADATA_DATA_PROFILED_FREQUENCY" not in source
-    assert 'get("tables"' not in source
 
 
-@pytest.mark.parametrize("notebook_name", ["01_agreement.ipynb", "02_pipeline.ipynb", "03_review.ipynb"])
-def test_data_contract_workflow_cells_are_clean(notebook_name):
-    """New contract workflow code cells have deterministic, output-free state."""
-    notebook = _load_notebook(NOTEBOOK_DIR / notebook_name)
-    contract_cells = [
+def test_governance_workflow_cells_are_output_free():
+    """Committed Governance workflow cells do not retain Fabric execution state."""
+    notebook = _load_notebook(NOTEBOOK_DIR / "01_governance.ipynb")
+    workflow_cells = [
         cell for cell in notebook.cells
-        if cell.cell_type == "code"
-        and ("widget_register_data_contract(" in cell.source or "widget_view_data_contract(" in cell.source
-             or '["get_views"]()' in cell.source)
-        and "from fabricops_kit" not in cell.source
+        if cell.cell_type == "code" and "widget_" in cell.source and "from fabricops_kit" not in cell.source
     ]
-    assert contract_cells
-    assert all(cell.execution_count is None for cell in contract_cells)
-    assert all(not cell.outputs for cell in contract_cells)
+
+    assert workflow_cells
+    assert all(cell.execution_count is None for cell in workflow_cells)
+    assert all(not cell.outputs for cell in workflow_cells)

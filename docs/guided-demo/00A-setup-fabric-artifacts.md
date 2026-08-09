@@ -60,13 +60,12 @@ Download the notebooks from the GitHub [`templates/notebooks`](https://github.co
 | Notebook        | Purpose                                                                             |
 | --------------- | ----------------------------------------------------------------------------------- |
 | `00_env_config` | Configures workspaces, lakehouses, warehouse, metadata routing, and audit settings. |
-| `01_agreement`  | Records steward and agreement metadata.                                             |
+| `01_governance` | Manages steward, agreement, contract, enrichment, guardrail, and review workflows.  |
 | `02_pipeline`   | Processes data, profiles outputs, checks guardrails, and records evidence.          |
-| `03_review`     | Reviews collected metadata, enrichment intent, and guardrail intent.                |
 | `99_explore`    | Uses approved Production data for project exploration, AI, or BI work.              |
 
 ```
-Suggested to keep prefix and add task or project name behind for your own use `01_agreement_projectname` , `02_pipeline_emaildata` 
+Suggested to keep prefix and add task or project name behind for your own use `01_governance_projectname` , `02_pipeline_emaildata`
 ```
 
 ## 5. Upload the data files that will be used in the guided demo

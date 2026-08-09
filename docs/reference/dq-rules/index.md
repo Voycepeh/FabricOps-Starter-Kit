@@ -13,7 +13,7 @@ Each rule below shows:
 - **Rule**: the `rule_type` value to store in `METADATA_GUARDRAIL_RULES` for rows with `guardrail_type="dq"`.
 - **When to use it**: the plain-language reason a reviewer would approve the rule.
 - **Required parameters**: the minimum fields that must be present in the rule JSON. Most rules also include `rule_type`, `severity`, and a description in the approved metadata row.
-- **Example JSON**: a small public-safe example that can be adapted in `03_governance`.
+- **Example JSON**: a small public-safe example that can be adapted in `01_governance`.
 - **Reference**: a link to the detailed rule page.
 
 Use the smallest named rule that expresses the expectation. Save `expression_true` for trusted reviewers when no simpler FabricOps-native rule fits.

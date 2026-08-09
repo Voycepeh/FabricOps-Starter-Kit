@@ -118,7 +118,7 @@ def _dq_rule_authoring_widget_workflow(
         helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
     bypass_reason : str, optional
         Initial approval-bypass reason.
-    source_notebook_type : {"02_pipeline", "03_governance"}, default="02_pipeline"
+    source_notebook_type : {"02_pipeline", "01_governance"}, default="02_pipeline"
         Notebook type stamped on authored records.
     created_by_role : {"engineering", "governance", "system"}, default="engineering"
         Role stamped on authored records.

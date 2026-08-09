@@ -81,7 +81,7 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
             "currentWorkspaceId": "workspace-id",
             "currentWorkspaceName": "Workspace",
             "currentNotebookId": "notebook-id",
-            "currentNotebookName": "01_agreement",
+            "currentNotebookName": "01_governance",
             "activityId": "activity-id",
         },
     )
