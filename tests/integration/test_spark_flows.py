@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from fabricops_kit.config.shared import resolve_runtime_context
 from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules, _prepare_dq_profile_input_rows, _run_active_dq_guardrail
 from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, _check_schema_runtime
 from tests.helpers import framework_config
@@ -30,6 +31,11 @@ def runtime_context(**overrides):
         else:
             context[key] = value
     return context
+
+
+def resolved_runtime_context(**overrides):
+    """Return deterministic canonical runtime identity for audit consumers."""
+    return resolve_runtime_context(context=runtime_context(**overrides), active_context={})
 
 
 def test_prepare_dq_profile_input_rows_uses_configured_audit_timezone(spark_session):
@@ -195,7 +201,10 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
         }
     ]
 
-    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context())
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(),
+    )
     config = framework_config()
 
     governance_authoring.record_table_governance(
@@ -277,12 +286,18 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
     monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     config = framework_config()
-    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-dq-001"))
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-001"),
+    )
 
     _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-001", write_results=False)
     assert writes == []
 
-    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-dq-002"))
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-002"),
+    )
     _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-002", write_results=True)
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
@@ -641,7 +656,10 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
     writes = []
     monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
-    monkeypatch.setattr("fabricops_kit.config.audit._runtime_context", lambda: runtime_context(activity_id="activity-result-001"))
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(activity_id="activity-result-001"),
+    )
 
     metadata_evidence._write_guardrail_result_row(
         spark_session=spark_session,
