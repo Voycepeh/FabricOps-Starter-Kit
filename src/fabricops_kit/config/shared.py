@@ -328,7 +328,7 @@ class GovernanceConfig:
 
 @dataclass(frozen=True)
 class DataAgreementConfig:
-    """Editable ``01_agreement`` table names and widget definitions.
+    """Editable ``01_governance`` table names and widget definitions.
 
     Parameters
     ----------
@@ -339,7 +339,7 @@ class DataAgreementConfig:
         Custom fields are rendered dynamically and persisted in
         ``custom_fields_json`` instead of becoming physical table columns.
     steward_role_options : list[str]
-        Controlled Data Steward role labels rendered by ``01_agreement`` as the
+        Controlled Data Steward role labels rendered by ``01_governance`` as the
         ``steward_role`` dropdown.
 
     """

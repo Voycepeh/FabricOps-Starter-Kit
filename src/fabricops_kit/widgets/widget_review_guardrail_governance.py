@@ -113,7 +113,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
 
     ui = widgets.VBox([
         widgets.HTML("<h3>Governance policy and guardrail review</h3>"),
-        widgets.HTML("<p>03_governance owns the standard governance review workflow. Review guardrail rule intent from METADATA_GUARDRAIL.</p>"),
+        widgets.HTML("<p>01_governance owns the standard governance review workflow. Review guardrail rule intent from METADATA_GUARDRAIL.</p>"),
         widgets.HTML("<p><b>Filters:</b> Guardrail requests · Bypass pending review · Active approved · Rejected · Superseded · View approval logs.</p>"),
         status,
         widgets.HTML("<h4>Proposed, bypassed, and active records requiring governance decisions</h4>"),

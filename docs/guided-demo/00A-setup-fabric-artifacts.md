@@ -12,31 +12,31 @@ After completing this page, continue to [Step 00B: Set up the 00 env config file
 4. Template notebooks
 5. Demo datasets & files
 
-## 1. Create the Fabric workspaces
+## 1. Create the Fabric workspaces 
 
 Open Microsoft Fabric and create or select a safe workspace for testing.
 
 For the full governed workflow, prepare these workspaces
 
 1. A governance workspace
-2. A engineering development workspace
-3. A engineeering production workspace
+2. A engineering development workspace 
+3. A engineeering production workspace 
 
 ```
-For demo purpose you can simply create a singular demo workspace.
+For demo purpose you can simply create a singular demo workspace. 
 ```
 
-## 2. Create the Lakehouse and Warehouses
+## 2. Create the Lakehouse and Warehouses 
 
 1. Open The Governance workspace and create a lakehouse object name it 'METADATA'
 2. Open The Engineering dev workspace and create a bronze lakehouse , a silver lakehouse and a gold warehouse - feel free to rename accordingly
-3. Read up on medallion structure https://learn.microsoft.com/en-us/azure/databricks/lakehouse/medallion
+3. Read up on medallion structure https://learn.microsoft.com/en-us/azure/databricks/lakehouse/medallion 
 4. Read up on lakehouse vs warehouse https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse
 5. Repeat step 2 for The Engineering prod workspace make sure the naming of the lakehouse and warehouse are exactly the same
 
 ```
 For demo purpose you can simply create all these objects in the same demo workspace
-in our case we simply renamed bronze - source , silver - unified , gold - product
+in our case we simply renamed bronze - source , silver - unified , gold - product 
 ```
 
 ![Fabric workspace setup example](../assets/00A/Objects.png)
@@ -87,6 +87,6 @@ You should now have:
 * The required lakehouses and warehouses
 * Fabric Environment with the FabricOps wheel installed
 * Editable copies of the guided demo notebooks
-* The demo data files so you can follow the guided demo directly
+* The demo data files so you can follow the guided demo directly 
 
 Next, continue to [Step 00B: Set up the 00 env config file](00B-run-environment-setup.md).

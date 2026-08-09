@@ -35,7 +35,7 @@ automatically inject configuration into every downstream function.
 
 `fabricops_kit/config/setup_notebook.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L226">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_notebook.py#L20-L224">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -133,9 +133,8 @@ Startup flow:
 11. Return an overall readiness status.
 
 Supported notebook naming patterns currently include ``00_env_config``,
-``01_agreement`` and suffixed variants, ``02_pipeline`` and suffixed
-variants, ``03_governance`` and suffixed variants, and ``99_explore`` and
-suffixed variants.
+``01_governance`` and suffixed variants, ``02_pipeline`` and suffixed
+variants, and ``99_explore`` and suffixed variants.
 
 Each resolved target contains the configured Fabric store identity needed
 by downstream functions, such as workspace identity, Fabric item identity,

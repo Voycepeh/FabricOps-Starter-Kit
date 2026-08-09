@@ -185,6 +185,19 @@ def test_setup_notebook_resolves_environment_paths_and_reports_invalid_targets(f
         setup_notebook(config=config, env="dev", required_targets=["missing"])
 
 
+def test_setup_notebook_uses_consolidated_governance_name_contract(fake_notebookutils):
+    """Accept 01_governance and reject the removed Governance notebook type."""
+    config = framework_config()
+
+    governance = setup_notebook(config=config, env="dev", required_targets=["source"], notebook_name="01_governance_orders")
+    legacy = setup_notebook(config=config, env="dev", required_targets=["source"], notebook_name="03_governance_orders")
+
+    governance_check = next(check for check in governance.validation_results if check.name == "notebook_naming")
+    legacy_check = next(check for check in legacy.validation_results if check.name == "notebook_naming")
+    assert governance_check.status == "pass"
+    assert legacy_check.status == "fail"
+
+
 def test_config_objects_copy_nested_agreement_defaults_and_validate_paths():
     """Verify config objects copy nested agreement defaults and validate paths."""
     source = {"visible_columns": ["steward_name"], "custom_fields": [{"key": "group", "options": ["A"]}]}
