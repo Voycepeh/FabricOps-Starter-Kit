@@ -36,6 +36,7 @@ jobs:
           set -euo pipefail
           uv run python scripts/check_release_ready.py "${GITHUB_REF_NAME}"
           uv run python scripts/generate_release_inventory.py --check
+          uv run python scripts/release_navigation.py --check
           version="${GITHUB_REF_NAME#v}"
           echo "FABRICOPS_PACKAGE_VERSION=${version}" >> "${GITHUB_ENV}"
           echo "FABRICOPS_GIT_SHA=${GITHUB_SHA}" >> "${GITHUB_ENV}"
