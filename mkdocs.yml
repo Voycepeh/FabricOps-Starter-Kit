@@ -34,6 +34,7 @@ nav:
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md
+      - 0.2.0: releases/0.2.0/index.md
       - 0.1.0: releases/0.1.0/index.md
   - List of Metadata Tables:
       - Overview: reference/metadata.md
