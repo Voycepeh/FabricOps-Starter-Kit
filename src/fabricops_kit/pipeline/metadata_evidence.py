@@ -7,7 +7,7 @@ import uuid
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_keys import build_metadata_table_key
+from fabricops_kit.config.shared import build_metadata_table_key
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 

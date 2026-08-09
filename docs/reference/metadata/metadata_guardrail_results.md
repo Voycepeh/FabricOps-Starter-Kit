@@ -18,7 +18,7 @@
 | `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable identifier for the guardrail rule row. |
 | `result_id` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable identifier for the runtime result payload. |
 | `rule_key` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Stable key used to group lifecycle versions of the same guardrail or enrichment rule. |
-| `metadata_table_key` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row`, `fabricops_kit.config.metadata_keys.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_table_key` | `string` | `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row`, `fabricops_kit.config.shared.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Environment name recorded for the metadata row. |
 | `dataset_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Dataset name recorded for the metadata row. |
 | `table_name` | `string` | [`run_table_guardrails`](../../api/reference/run_table_guardrails.md), `fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row` | Physical table name recorded for the metadata row. |

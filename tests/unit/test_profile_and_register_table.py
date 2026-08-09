@@ -14,7 +14,7 @@ from types import ModuleType
 import pytest
 
 from fabricops_kit.config import FabricStore
-from fabricops_kit.config.metadata_keys import (
+from fabricops_kit.config.shared import (
     build_metadata_column_key as _metadata_column_key,
     build_metadata_table_key as _metadata_table_key,
 )
