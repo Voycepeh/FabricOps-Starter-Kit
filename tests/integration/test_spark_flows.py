@@ -650,7 +650,7 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
-    from fabricops_kit.config.metadata_keys import _build_metadata_table_key
+    from fabricops_kit.config.shared import build_metadata_table_key
     from fabricops_kit.pipeline import metadata_evidence
 
     writes = []
@@ -679,7 +679,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
-    expected_table_key = _build_metadata_table_key("lakehouse", "raw", None, "orders")
+    expected_table_key = build_metadata_table_key("lakehouse", "raw", None, "orders")
     assert written_row["metadata_table_key"] == expected_table_key
     assert written_row["environment_name"] == "dev"
     assert written_row["guardrail_type"] == "freshness"

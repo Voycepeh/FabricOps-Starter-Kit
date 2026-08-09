@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 import re
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -920,3 +920,23 @@ def _validate_metadata_table_registration(
         "show_tables_statement": None,
         "optional_documented_tables": [],
     }
+
+
+def _stable_metadata_key(*parts: Any) -> str:
+    import hashlib
+    import json
+
+    payload = [
+        {"is_null": part is None, "value": None if part is None else str(part).strip().lower()} for part in parts
+    ]
+    return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def build_metadata_table_key(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
+    """Return the environment-independent logical identity for a table."""
+    return _stable_metadata_key(store_type, layer, schema_name, table_name)
+
+
+def build_metadata_column_key(metadata_table_key: Any, column_name: Any) -> str:
+    """Return the environment-independent logical identity for a column."""
+    return _stable_metadata_key(metadata_table_key, column_name)

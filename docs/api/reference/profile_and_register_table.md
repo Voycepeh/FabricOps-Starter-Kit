@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:465`
+`fabricops_kit/pipeline/profile_and_register_table.py:469`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L465-L816">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L469-L820">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -323,16 +323,16 @@ no compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_keys._build_metadata_column_key</code></li>
-<li><code>fabricops_kit.config.metadata_keys._build_metadata_table_key</code></li>
-<li><code>fabricops_kit.config.metadata_keys._stable_metadata_key</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared._stable_metadata_key</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_metadata_column_key</code></li>
+<li><code>fabricops_kit.config.shared.build_metadata_table_key</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>

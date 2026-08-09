@@ -15,7 +15,7 @@
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
 | `lineage_event_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.pipeline.profile_and_register_table._lineage_event_id` | Deterministic runtime lineage event identifier. |
-| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.config.metadata_keys._build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.config.shared.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `schema_fingerprint` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint` | Deterministic fingerprint for the observed or governed schema snapshot. |
 | `profile_role` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Whether the profiled dataset participated as a source or target. |
 | `profiled_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Timestamp when the dataset profile snapshot was captured. |

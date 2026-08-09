@@ -14,8 +14,8 @@
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys._build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `metadata_column_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.metadata_keys._build_metadata_column_key` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.shared.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_column_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.config.shared.build_metadata_column_key` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `environment_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Environment name recorded for the metadata row. |
 | `store_type` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Configured Fabric store type recorded for the profiled dataset. |
 | `layer` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | The configured medallion layer where the table is stored. |

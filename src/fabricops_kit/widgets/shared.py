@@ -11,14 +11,14 @@ import json
 from typing import Any, Iterable, Mapping
 import uuid
 
-from fabricops_kit.config.shared import DEFAULT_STEWARD_ROLE_OPTIONS, get_current_audit_timestamp, resolve_fabric_context
+from fabricops_kit.config import shared as config_shared
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     read_lakehouse_table_core,
     write_lakehouse_table_core,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
-from fabricops_kit.config.metadata_keys import _build_dq_rule_key, _build_metadata_column_key, _build_metadata_table_key
+from fabricops_kit.config.metadata_keys import _build_dq_rule_key
 from fabricops_kit.config.metadata_schemas import (
     CANONICAL_METADATA_TABLES,
     coerce_metadata_row_types,
@@ -363,7 +363,7 @@ def get_current_notebook_lineage_scope(
     """Return historical dataset roles and IDs for the active pipeline notebook."""
     from pyspark.sql import functions as F
 
-    config, env, resolved = resolve_fabric_context(context=context)
+    config, env, resolved = config_shared.resolve_fabric_context(context=context)
     runtime = resolved.get("runtime_metadata") or {}
     workspace_id = str(resolved.get("workspace_id") or runtime.get("workspace_id") or "").strip()
     notebook_id = str(resolved.get("notebook_id") or runtime.get("notebook_id") or "").strip()
@@ -670,7 +670,7 @@ def to_bool(value: Any) -> bool:
 
 def _audit_date(config: Any = None) -> date:
     """Return today in the configured FabricOps audit timezone."""
-    return datetime.fromisoformat(get_current_audit_timestamp(config=config)).date()
+    return datetime.fromisoformat(config_shared.get_current_audit_timestamp(config=config)).date()
 
 def active_steward(row: dict[str, Any], config: Any = None) -> bool:
     """Return whether a steward person record is active."""
@@ -796,10 +796,10 @@ def _approved_column_identity(profile_row: dict[str, Any], review_row: dict[str,
     table_key = str(
         _value(profile_row, "metadata_table_key")
         or review_row.get("metadata_table_key")
-        or _build_metadata_table_key(store_type, layer, schema_name, table)
+        or config_shared.build_metadata_table_key(store_type, layer, schema_name, table)
     )
     return {
-        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or _build_metadata_column_key(table_key, col)),
+        "metadata_column_key": str(_value(profile_row, "metadata_column_key") or review_row.get("metadata_column_key") or config_shared.build_metadata_column_key(table_key, col)),
         "metadata_table_key": table_key,
         "environment_name": environment,
         "dataset_name": dataset,
@@ -1217,7 +1217,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     env = str(state.get("environment_name") or "")
     dataset = str(state.get("dataset_name") or "")
     table = str(state.get("table_name") or "")
-    table_key = str(state.get("metadata_table_key") or _build_metadata_table_key(
+    table_key = str(state.get("metadata_table_key") or config_shared.build_metadata_table_key(
         state.get("store_type", "lakehouse"), state.get("layer", state.get("fabric_store_target", "")),
         state.get("schema_name"), table,
     ))
@@ -1234,7 +1234,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     committed_at = _audit_timestamp_value(config)
     actor_value = _resolve_action_by(actor)
     pending = lifecycle.get("review_state") == "pending_governance_review"
-    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": _build_metadata_column_key(table_key, column_name) if column_name else "", "metadata_table_key": table_key, "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
+    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": config_shared.build_metadata_column_key(table_key, column_name) if column_name else "", "metadata_table_key": table_key, "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""
@@ -1438,7 +1438,7 @@ def _catalogue_physical_identity(row: dict[str, Any]) -> dict[str, str]:
     table = str(_value(row, "table_name"))
     table_key = str(_first_present(row, ["physical_asset_id", "metadata_table_key"], ""))
     if not table_key:
-        table_key = _build_metadata_table_key(asset_kind or "lakehouse", schema_or_layer, _value(row, "schema_name", None), table)
+        table_key = config_shared.build_metadata_table_key(asset_kind or "lakehouse", schema_or_layer, _value(row, "schema_name", None), table)
     return {
         "environment_name": env,
         "asset_kind": asset_kind,
@@ -1522,7 +1522,7 @@ def _evaluate_governance_readiness(
     first_profile = profile_rows[0]
     dataset_name = str(_value(first_profile, "dataset_name") or selection.get("dataset_name") or "")
     table_name = str(_value(first_profile, "table_name") or selection.get("table_name") or "")
-    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or _build_metadata_table_key(
+    table_key = str(_value(first_profile, "metadata_table_key") or selection.get("metadata_table_key") or config_shared.build_metadata_table_key(
         _value(first_profile, "store_type", selection.get("store_type", "lakehouse")),
         _value(first_profile, "layer", selection.get("layer", selection.get("fabric_store_target", ""))),
         _value(first_profile, "schema_name", selection.get("schema_name")), table_name,
