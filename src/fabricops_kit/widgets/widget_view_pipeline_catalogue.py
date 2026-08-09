@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
 from fabricops_kit.io.shared import read_lakehouse_table_core
 from fabricops_kit.widgets.shared import build_catalogue_widget, collect_catalogue_inventory
 
@@ -19,7 +19,7 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     schema : str, optional
         Metadata lakehouse schema override.
     context : object, optional
-        Active FabricOps context used to resolve stable notebook identity.
+        Explicit FabricOps context used to resolve stable notebook identity.
 
     Returns
     -------
@@ -31,10 +31,15 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     Raises
     ------
     ValueError
-        If stable notebook identity is unavailable.
+        If stable notebook identity is unavailable after checking the active
+        FabricOps context and current Microsoft Fabric runtime.
 
     Notes
     -----
+    Notebook and workspace identity are resolved, in order, from an explicitly
+    injected FabricOps context, the active FabricOps context and its runtime
+    metadata, and the current Microsoft Fabric notebook runtime.
+
     The compact profile defaults to the latest ``profiled_at`` snapshot.
     Frequencies are limited to the selected profile column and matched through
     both ``metadata_column_key`` and ``profiled_at`` so historical snapshots
@@ -48,12 +53,15 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
 
     """
     config, environment_name, resolved = resolve_fabric_context(context=context)
-    runtime = resolved.get("runtime_metadata") or {}
-    notebook_id = str(resolved.get("notebook_id") or runtime.get("notebook_id") or "").strip()
-    notebook_name = str(resolved.get("notebook_name") or runtime.get("notebook_name") or notebook_id).strip()
-    workspace_id = str(resolved.get("workspace_id") or runtime.get("workspace_id") or "").strip()
+    runtime = resolve_runtime_context(context=context)
+    notebook_id = str(runtime.get("notebook_id") or "").strip()
+    notebook_name = str(runtime.get("notebook_name") or notebook_id).strip()
+    workspace_id = str(runtime.get("workspace_id") or "").strip()
     if not notebook_id:
-        raise ValueError("Current notebook_id is required to resolve pipeline catalogue inventory.")
+        raise ValueError(
+            "Unable to resolve the current notebook_id from the active FabricOps context "
+            "or Fabric runtime context."
+        )
     runtime_context = {"config": config, "env": environment_name, **resolved}
     from pyspark.sql import functions as F
     lineage = read_lakehouse_table_core("METADATA_DATA_LINEAGE", target=target, schema=schema, spark_session=spark_session, context=runtime_context)

@@ -14,7 +14,7 @@ Select a Source or Target dataset linked to the current notebook through data li
 
 `fabricops_kit/widgets/widget_view_pipeline_catalogue.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py#L10-L78">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py#L10-L86">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -63,7 +63,7 @@ def widget_view_pipeline_catalogue(
 | `spark_session` | `object` | No | Spark session override. |
 | `target` | `str` | No | Configured metadata FabricStore target. |
 | `schema` | `str \| None` | No | Metadata lakehouse schema override. |
-| `context` | `object` | No | Active FabricOps context used to resolve stable notebook identity. |
+| `context` | `object` | No | Explicit FabricOps context used to resolve stable notebook identity. |
 
 ## Returns
 
@@ -79,11 +79,16 @@ Call state["get_views"]() to receive exactly catalogue_df and profile_df for nat
 ## Raises / Errors
 
 ValueError
-    If stable notebook identity is unavailable.
+    If stable notebook identity is unavailable after checking the active
+    FabricOps context and current Microsoft Fabric runtime.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
+
+Notebook and workspace identity are resolved, in order, from an explicitly
+injected FabricOps context, the active FabricOps context and its runtime
+metadata, and the current Microsoft Fabric notebook runtime.
 
 The compact profile defaults to the latest ``profiled_at`` snapshot.
 Frequencies are limited to the selected profile column and matched through
