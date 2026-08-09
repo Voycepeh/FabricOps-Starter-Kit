@@ -108,6 +108,65 @@ def resolve_fabric_context(
     return config, str(resolved_env), resolved
 
 
+def resolve_runtime_context(
+    *,
+    context: dict[str, Any] | None = None,
+    active_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve canonical identity values from FabricOps and Fabric runtime contexts."""
+
+    def _valid(value: Any) -> bool:
+        if value is None:
+            return False
+        text = str(value).strip()
+        return bool(text) and text.lower() not in {"none", "unknown", "unknown_notebook"}
+
+    def _get(source: Any, key: str) -> Any:
+        try:
+            if isinstance(source, dict):
+                return source.get(key)
+            getter = getattr(source, "get", None)
+            return getter(key) if callable(getter) else getattr(source, key, None)
+        except Exception:
+            return None
+
+    def _canonicalize(source: Any) -> dict[str, Any]:
+        runtime_metadata = _get(source, "runtime_metadata") or {}
+        aliases = {
+            "workspace_id": ("workspace_id", "currentWorkspaceId", "workspaceId"),
+            "workspace_name": ("workspace_name", "currentWorkspaceName", "workspaceName"),
+            "notebook_id": ("notebook_id", "currentNotebookId", "notebookId"),
+            "notebook_name": ("notebook_name", "currentNotebookName", "notebookName"),
+            "user_name": ("user_name", "userName"),
+            "user_id": ("user_id", "userId"),
+            "activity_id": ("activity_id", "activityId"),
+        }
+        values = {}
+        for canonical, keys in aliases.items():
+            candidates = (*(_get(source, key) for key in keys), *(_get(runtime_metadata, key) for key in keys))
+            values[canonical] = next((value for value in candidates if _valid(value)), None)
+        return values
+
+    if active_context is None:
+        try:
+            active_context = get_default_fabric_context()
+        except RuntimeError:
+            active_context = {}
+
+    try:
+        import notebookutils  # type: ignore
+
+        live_context = getattr(getattr(notebookutils, "runtime", None), "context", None) or {}
+    except Exception:
+        live_context = {}
+
+    sources = (_canonicalize(context or {}), _canonicalize(active_context or {}), _canonicalize(live_context))
+    return {
+        key: next((source[key] for source in sources if _valid(source.get(key))), None)
+        for key in sources[0]
+    }
+
+
 # ---------------------------------------------------------------------------
 # Validator layer: audit and framework validation
 # ---------------------------------------------------------------------------
@@ -861,4 +920,3 @@ def _validate_metadata_table_registration(
         "show_tables_statement": None,
         "optional_documented_tables": [],
     }
-

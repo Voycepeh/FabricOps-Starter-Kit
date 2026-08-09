@@ -321,7 +321,6 @@ no compatibility or automatic migration layer is provided.
 <ul class="reference-compact-list">
 <li><code>fabricops_kit.config.audit._context_get</code></li>
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
-<li><code>fabricops_kit.config.audit._runtime_context</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
 <li><code>fabricops_kit.config.metadata_keys._build_metadata_column_key</code></li>
@@ -339,6 +338,7 @@ no compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>

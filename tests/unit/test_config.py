@@ -27,6 +27,7 @@ from fabricops_kit.config.shared import (
     _validate_metadata_table_registration,
     get_default_fabric_context,
     resolve_fabric_context,
+    resolve_runtime_context,
 )
 from tests.helpers import framework_config, store
 
@@ -81,6 +82,64 @@ def test_resolve_fabric_context_uses_env_only():
     assert resolved_config is config
     assert env == "dev"
     assert context["env"] == "dev"
+
+
+def test_runtime_context_resolver_normalizes_fabric_keys_and_precedence(fake_notebookutils):
+    """Canonical runtime identity prefers explicit and active values per field."""
+    fake_notebookutils.runtime.context.clear()
+    fake_notebookutils.runtime.context.update(
+        currentWorkspaceId="live-current-workspace",
+        workspaceId="live-fallback-workspace",
+        notebookId="live-notebook",
+        notebookName="live-notebook-name",
+        userId="live-user",
+        activityId="live-activity",
+    )
+
+    resolved = resolve_runtime_context(
+        context={"notebook_id": "explicit-notebook", "workspace_id": "unknown"},
+        active_context={
+            "runtime_metadata": {
+                "workspace_id": "active-workspace",
+                "notebook_name": "active-notebook-name",
+            }
+        },
+    )
+
+    assert resolved == {
+        "workspace_id": "active-workspace",
+        "workspace_name": None,
+        "notebook_id": "explicit-notebook",
+        "notebook_name": "active-notebook-name",
+        "user_name": None,
+        "user_id": "live-user",
+        "activity_id": "live-activity",
+    }
+
+
+def test_runtime_audit_fields_use_canonical_runtime_resolver(monkeypatch):
+    """Audit construction consumes the shared canonical runtime representation."""
+    from fabricops_kit.config import audit
+
+    canonical = {
+        "workspace_id": "workspace-id",
+        "workspace_name": "Workspace",
+        "notebook_id": "notebook-id",
+        "notebook_name": "Notebook",
+        "user_name": "user@example.com",
+        "user_id": None,
+        "activity_id": "activity-id",
+    }
+    monkeypatch.setattr(audit, "resolve_runtime_context", lambda **_kwargs: canonical)
+
+    fields = audit.build_runtime_audit_fields(
+        committed_at="2026-08-09T00:00:00+00:00",
+        metadata_lakehouse_name="Metadata",
+    )
+
+    assert fields["_notebook_id"] == "notebook-id"
+    assert fields["_workspace_id"] == "workspace-id"
+    assert fields["_committed_by"] == "user@example.com"
 
 
 def test_governance_config_uses_widget_custom_fields_contract():

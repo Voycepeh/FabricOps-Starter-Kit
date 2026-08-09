@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from .shared import get_current_audit_timestamp, get_store
+from .shared import get_current_audit_timestamp, get_store, resolve_runtime_context
 
 
 def _audit_timestamp_value(config: Any = None) -> datetime:
@@ -37,38 +37,11 @@ def _safe_str(value: Any) -> str:
     return "" if value is None else str(value)
 
 
-def _runtime_context() -> dict[str, Any]:
-    try:
-        import notebookutils  # type: ignore
-    except Exception:
-        return {}
-
-    runtime = getattr(notebookutils, "runtime", None)
-    context = getattr(runtime, "context", None)
-    if context is None:
-        return {}
-
-    keys = [
-        "currentWorkspaceId",
-        "currentWorkspaceName",
-        "currentNotebookId",
-        "currentNotebookName",
-        "workspaceId",
-        "workspaceName",
-        "notebookId",
-        "notebookName",
-        "userId",
-        "userName",
-        "activityId",
-    ]
-    return {key: _context_get(context, key) for key in keys}
-
-
 def _resolve_action_by(action_by: str | None = None) -> str:
     if action_by:
         return str(action_by)
-    context = _runtime_context()
-    return str(_context_get(context, "userName", "userId") or "unknown")
+    context = resolve_runtime_context()
+    return str(_context_get(context, "user_name", "user_id") or "unknown")
 
 
 def _valid_audit_value(value: Any) -> bool:
@@ -135,7 +108,7 @@ def build_runtime_audit_fields(
         activity ID.
 
     """
-    context = {**_runtime_context(), **(runtime_context or {})}
+    context = resolve_runtime_context(context=runtime_context)
 
     def _first_valid(*keys: str) -> Any:
         for key in keys:
@@ -156,14 +129,14 @@ def build_runtime_audit_fields(
         resolved_metadata_lakehouse = get_store(config=config, env=env, target="metadata").name
 
     values = {
-        user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("userName", "userId"),
+        user_field: committed_by if _valid_audit_value(committed_by) else _first_valid("user_name", "user_id"),
         timestamp_field: timestamp_value,
-        workspace_id_field: _first_valid("currentWorkspaceId", "workspaceId"),
-        workspace_field: _first_valid("currentWorkspaceName", "workspaceName"),
-        notebook_id_field: _first_valid("currentNotebookId", "notebookId"),
-        notebook_field: _first_valid("currentNotebookName", "notebookName"),
+        workspace_id_field: _first_valid("workspace_id"),
+        workspace_field: _first_valid("workspace_name"),
+        notebook_id_field: _first_valid("notebook_id"),
+        notebook_field: _first_valid("notebook_name"),
         metadata_lakehouse_field: resolved_metadata_lakehouse,
-        activity_field: _first_valid("activityId"),
+        activity_field: _first_valid("activity_id"),
     }
     _require_audit_values(values)
     values[user_field] = str(values[user_field]).strip()

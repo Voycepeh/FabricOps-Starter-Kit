@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import importlib
 import inspect
 import sys
 import types
@@ -58,6 +59,130 @@ def test_widgets_document_named_normalized_frequency_views():
         assert 'views["frequency"]' in source
         assert "metadata_column_key`` and ``profiled_at" in source
         assert "get_data_contract_views" not in source
+
+
+def _run_pipeline_widget(monkeypatch, *, context=None):
+    """Run the pipeline widget with lightweight lineage and rendering fakes."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_pipeline_catalogue")
+
+    comparisons = []
+
+    class Expression:
+        def __init__(self, name):
+            self.name = name
+
+        def __eq__(self, value):
+            comparisons.append((self.name, value))
+            return self
+
+        def __and__(self, _other):
+            return self
+
+    class Frame:
+        def filter(self, _predicate):
+            return self
+
+        def select(self, *_columns):
+            return self
+
+        def distinct(self):
+            return self
+
+        def collect(self):
+            return [{"profile_role": "Source", "metadata_table_key": "table-key"}]
+
+    functions = types.ModuleType("pyspark.sql.functions")
+    functions.col = Expression
+    sql = types.ModuleType("pyspark.sql")
+    sql.functions = functions
+    pyspark = types.ModuleType("pyspark")
+    pyspark.sql = sql
+    monkeypatch.setitem(sys.modules, "pyspark", pyspark)
+    monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
+    monkeypatch.setitem(sys.modules, "pyspark.sql.functions", functions)
+    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
+    monkeypatch.setattr(
+        module,
+        "collect_catalogue_inventory",
+        lambda *_args: [{"metadata_table_key": "table-key"}],
+    )
+    monkeypatch.setattr(module, "build_catalogue_widget", lambda **kwargs: kwargs)
+    explicit = {"config": object(), "env": "dev", **(context or {})}
+    result = module.widget_view_pipeline_catalogue(context=explicit)
+    return result, comparisons
+
+
+def test_pipeline_widget_resolves_current_fabric_identity(monkeypatch, fake_notebookutils):
+    """Current Fabric keys resolve end to end and scope workspace lineage."""
+    fake_notebookutils.runtime.context.clear()
+    fake_notebookutils.runtime.context.update(
+        currentNotebookId="live-notebook",
+        currentNotebookName="Live Notebook",
+        currentWorkspaceId="live-workspace",
+        currentWorkspaceName="Live Workspace",
+    )
+
+    result, comparisons = _run_pipeline_widget(monkeypatch)
+
+    assert result["selection_context"]["notebook_id"] == "live-notebook"
+    assert result["selection_context"]["notebook_name"] == "Live Notebook"
+    assert result["display_context"]["Notebook"] == "Live Notebook"
+    assert ("notebook_id", "live-notebook") in comparisons
+    assert ("environment_name", "dev") in comparisons
+    assert ("workspace_id", "live-workspace") in comparisons
+
+
+def test_pipeline_widget_resolves_fallback_fabric_identity(monkeypatch, fake_notebookutils):
+    """Fallback Fabric keys resolve end to end when current keys are absent."""
+    fake_notebookutils.runtime.context.clear()
+    fake_notebookutils.runtime.context.update(
+        notebookId="fallback-notebook",
+        notebookName="Fallback Notebook",
+        workspaceId="fallback-workspace",
+        workspaceName="Fallback Workspace",
+    )
+
+    result, comparisons = _run_pipeline_widget(monkeypatch)
+
+    assert result["selection_context"]["notebook_id"] == "fallback-notebook"
+    assert result["selection_context"]["notebook_name"] == "Fallback Notebook"
+    assert result["display_context"]["Notebook"] == "Fallback Notebook"
+    assert ("workspace_id", "fallback-workspace") in comparisons
+
+
+def test_pipeline_widget_explicit_identity_wins_live_runtime(monkeypatch, fake_notebookutils):
+    """Explicit canonical identity overrides conflicting live Fabric values."""
+    fake_notebookutils.runtime.context.update(
+        currentNotebookId="live-notebook",
+        currentNotebookName="Live Notebook",
+        currentWorkspaceId="live-workspace",
+    )
+    explicit = {
+        "notebook_id": "explicit-notebook",
+        "notebook_name": "Explicit Notebook",
+        "workspace_id": "explicit-workspace",
+    }
+
+    result, comparisons = _run_pipeline_widget(monkeypatch, context=explicit)
+
+    assert result["selection_context"]["notebook_id"] == "explicit-notebook"
+    assert result["display_context"]["Notebook"] == "Explicit Notebook"
+    assert ("workspace_id", "explicit-workspace") in comparisons
+    assert ("notebook_id", "live-notebook") not in comparisons
+
+
+def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake_notebookutils):
+    """The widget adds no identity arguments and reports exhausted resolution."""
+    signature = inspect.signature(fabricops_kit.widget_view_pipeline_catalogue)
+    assert list(signature.parameters) == ["spark_session", "target", "schema", "context"]
+
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_pipeline_catalogue")
+    fake_notebookutils.runtime.context.clear()
+    with pytest.raises(
+        ValueError,
+        match="active FabricOps context or Fabric runtime context",
+    ):
+        module.widget_view_pipeline_catalogue(context={"config": object(), "env": "dev"})
 
 
 def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatch, spark_session):
