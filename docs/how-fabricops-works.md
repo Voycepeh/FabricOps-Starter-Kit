@@ -29,15 +29,15 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 0. **Set up the operating environment** — Create the Fabric workspaces, create the required lakehouses and warehouses, configure a "00_env_config" notebook in every workspace, and create the metadata tables in the Governance workspace.
 
-1. **Governance workflow 1** — In the Governance workspace, use "01_agreement" to create data stewards and establish the overarching Data Agreement between accountable producer and consumer stewards.
+1. **Governance workflow 1** — In the Governance workspace, use "01_governance" to create data stewards and establish the overarching Data Agreement between accountable producer and consumer stewards.
 
 2. **Engineering workflow 1** — In the Engineering Development workspace, use "02_pipeline" to extract, transform, and load data from one data store to another. Profile source and target tables, then write data catalogue, data profiled, and data lineage metadata.
 
-3. **Governance workflow 2** — In the Governance workspace, use "03_review" to pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality.
+3. **Governance workflow 2** — In the Governance workspace, use "01_governance" to pick from the data catalogue table, add descriptions and classifications to selected tables, and define guardrails such as schema enforcement and data quality.
 
 4. **Engineering workflow 2** — In the Engineering Development workspace, use "02_pipeline" to wire in the guardrail rules defined during review, then run the pipeline and make sure it fails or warns users as configured.
 
-5. **Governance workflow 3** — In the Governance workspace, return to "01_agreement" to register one or more machine-readable Data Contracts under the selected Data Agreement after catalogue and validation evidence exists, then get the data steward to sign off on the contract.
+5. **Governance workflow 3** — In the Governance workspace, return to "01_governance" to register one or more machine-readable Data Contracts under the selected Data Agreement after catalogue and validation evidence exists, then get the data steward to sign off on the contract.
 
 6. **Engineering workflow 3** — In the Engineering Production workspace, promote the "02_pipeline" that was completed in Engineering Development.
 
@@ -53,7 +53,7 @@ The data catalogue sits at the centre of the model. It identifies each governed 
 
 A Data Contract then links authorised catalogue tables and their schema fingerprints to a parent Data Agreement. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide broader technical and quality context for those tables. One Data Agreement can govern multiple Data Contracts.
 
-The "02_pipeline" workflow creates and reviews this metadata during exploration. The "03_review" workflow applies the approved controls and produces the repeatable production pipeline.
+The `02_pipeline` workflow produces data and evidence and runs approved controls. Governance returns to the same `01_governance` notebook to review that evidence, enrich metadata, author guardrails, and record formal decisions before Engineering promotes the repeatable pipeline.
 
 ## Development and Production
 

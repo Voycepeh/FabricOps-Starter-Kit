@@ -14,9 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = ROOT / "templates" / "notebooks"
 TEMPLATE_NAMES = (
     "00_env_config.ipynb",
-    "01_agreement.ipynb",
+    "01_governance.ipynb",
     "02_pipeline.ipynb",
-    "03_review.ipynb",
     "99_explore.ipynb",
 )
 HEADER_MARKER = "## Tested with FabricOps"

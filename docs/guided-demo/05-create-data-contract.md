@@ -1,10 +1,10 @@
 # Step 5: Create the draft Data Contract
 
-Use `01_agreement` to link a selected Data Agreement to the logical datasets it governs. Data Contract status remains draft in v0.2.0; signing, approval, and promotion are not implemented by this step.
+Use `01_governance` to link a selected Data Agreement to the logical datasets it governs. Data Contract status remains draft in v0.2.0; signing, approval, and promotion are not implemented by this step.
 
 ## What to do
 
-1. Open `01_agreement` in the Governance workspace.
+1. Open `01_governance` in the Governance workspace.
 2. Run `00_env_config`, then select or create the relevant Data Steward records.
 3. Select or create the Data Agreement.
 4. Select registered logical datasets discovered from the active environment.

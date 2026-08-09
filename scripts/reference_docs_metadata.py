@@ -459,15 +459,20 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'segments': [{'symbols': ['FabricStore', 'PathConfig', 'GovernanceConfig', 'DataAgreementConfig', 'FrameworkConfig', 'setup_notebook', 'setup_metadata_tables'],
                 'title': 'Environment setup'}],
   'template_path': 'templates/notebooks/00_env_config.ipynb'},
- {'notebook_key': '01_agreement',
-  'notebook_label': '`01_agreement`',
-  'segment_intro': 'Standalone steward and agreement intake followed by draft Data Contract registration.',
+ {'notebook_key': '01_governance',
+  'notebook_label': '`01_governance`',
+  'segment_intro': 'Persistent Governance lifecycle before and after Engineering evidence production.',
   'segments': [{'symbols': ['widget_render_data_steward',
                             'widget_render_data_agreement',
                             'widget_register_data_contract',
-                            'widget_view_agreement_catalogue'],
-                'title': 'Agreement and draft contract intake'}],
-  'template_path': 'templates/notebooks/01_agreement.ipynb'},
+                            'widget_view_agreement_catalogue',
+                            'widget_select_guardrail_target',
+                            'widget_enrich_table_metadata',
+                            'widget_author_schema_freshness_profile_rules',
+                            'widget_author_dq_rules',
+                            'widget_review_guardrail_governance'],
+                'title': 'Agreement, contract, evidence, guardrails, and review'}],
+  'template_path': 'templates/notebooks/01_governance.ipynb'},
  {'notebook_key': '02_pipeline',
   'notebook_label': '`02_pipeline`',
   'segment_intro': 'Simple v0.2 Lakehouse-first pipeline with complete-table Warehouse read and '
@@ -488,19 +493,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                {'symbols': ['widget_view_pipeline_catalogue'],
                 'title': 'Review registered metadata'}],
   'template_path': 'templates/notebooks/02_pipeline.ipynb'},
- {'notebook_key': '03_review',
-  'notebook_label': '`03_review`',
-  'segment_intro': 'Agreement-scoped Data Contract and guardrail governance review.',
-  'segments': [{'symbols': ['widget_render_data_steward',
-                            'widget_render_data_agreement',
-                            'widget_view_agreement_catalogue',
-                            'widget_select_guardrail_target',
-                            'widget_enrich_table_metadata',
-                            'widget_author_schema_freshness_profile_rules',
-                            'widget_author_dq_rules',
-                            'widget_review_guardrail_governance'],
-                'title': 'Agreement and guardrail governance review'}],
-  'template_path': 'templates/notebooks/03_review.ipynb'},
  {'notebook_key': '99_explore',
   'notebook_label': '`99_explore`',
   'segment_intro': 'Optional discovery, profiling, troubleshooting, investigation, and ad hoc '
@@ -591,7 +583,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Agreement table and widget configuration.',
   'purpose': 'Define agreement metadata table names and steward/agreement widget fields.',
   'symbol_name': 'DataAgreementConfig',
-  'use_when': 'Use in 00_env_config to customize 01_agreement metadata and widget behavior.',
+  'use_when': 'Use in 00_env_config to customize 01_governance metadata and widget behavior.',
   'when_to_use': ['Use through the supported FabricOps root import surface.'],
   'parameters': 'metadata_tables, data_steward_widget, data_agreement_widget, and steward_role_options.',
   'returns': 'Validated DataAgreementConfig object.',
@@ -774,11 +766,11 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Render the standalone data-steward intake widget.',
   'symbol_name': 'widget_render_data_steward',
-  'template_notebook': '01_agreement',
+  'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
   'expanded_purpose': 'Renders the data steward intake widget so a notebook user can capture '
                       'steward contact and ownership details for an agreement workflow.',
-  'when_to_use': 'Use in 01_agreement when collecting or updating data steward details before '
+  'when_to_use': 'Use in 01_governance when collecting or updating data steward details before '
                  'creating a data agreement.',
   'glossary_terms': ['notebook template'],
   'returns': 'Notebook widget state or rendered widget result used to save steward details to METADATA_DATA_STEWARD.',
@@ -798,11 +790,11 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Render the standalone data-agreement intake widget.',
   'symbol_name': 'widget_render_data_agreement',
-  'template_notebook': '01_agreement',
+  'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
   'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching '
                       'governance arrangement between accountable producer and consumer stewards, including purpose, scope, permitted use, and review context.',
-  'when_to_use': 'Use in 01_agreement after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.',
+  'when_to_use': 'Use in 01_governance after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.',
   'glossary_terms': ['notebook template'],
   'returns': 'Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.',
   'raises': 'Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.',
@@ -1478,7 +1470,7 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
   'symbol_name': 'widget_enrich_table_metadata',
-  'template_notebook': '03_review',
+  'template_notebook': '01_governance',
   'template_segment': 'Guardrail governance review',
   'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.',
   'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
@@ -1499,7 +1491,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Render an interactive target selector for guardrail authoring and '
                       'governance review.',
   'symbol_name': 'widget_select_guardrail_target',
-  'template_notebook': '02_pipeline / 03_review',
+  'template_notebook': '02_pipeline / 01_governance',
   'template_segment': 'Guardrail authoring',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
@@ -1512,7 +1504,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
-  'when_to_use': 'Use at the start of 02_pipeline authoring or 03_review when a user '
+  'when_to_use': 'Use at the start of 02_pipeline authoring or 01_governance when a user '
                  'must choose which profiled table to work on.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
                      'selector reads metadata and prepares widget state only.',
@@ -1560,9 +1552,9 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Select a dataset linked to an agreement through its registered data contracts, then load its catalogue and profile DataFrames for native Fabric rendering.',
   'symbol_name': 'widget_view_agreement_catalogue',
-  'template_notebook': '01_agreement',
+  'template_notebook': '01_governance',
   'template_segment': 'Agreement catalogue',
-  'use_when': 'Use in 01_agreement to inspect only catalogue and profile evidence linked to the selected agreement.',
+  'use_when': 'Use in 01_governance to inspect only catalogue and profile evidence linked to the selected agreement.',
   'related_functions': ['widget_register_data_contract'],
   'return_interpretation': 'Call state["get_views"]() to receive exactly catalogue_df and profile_df for native Fabric display.'},
  {'kind': 'function',
@@ -1591,9 +1583,9 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Register dataset-level Data Contract tables under a parent Data Agreement.',
   'symbol_name': 'widget_register_data_contract',
-  'template_notebook': '01_agreement',
+  'template_notebook': '01_governance',
   'template_segment': 'Contract registration',
-  'use_when': 'Use in 01_agreement after catalogue and validation evidence exists to register authorised tables and schema fingerprints under a parent Data Agreement.',
+  'use_when': 'Use in 01_governance after catalogue and validation evidence exists to register authorised tables and schema fingerprints under a parent Data Agreement.',
   'parameters': 'See the source docstring for agreement resolution, initial metadata identities, metadata target, Spark session, and context parameters.',
   'returns': 'Mutable inventory state with audit activity details, unsaved edits, structured per-dataset schema reviews, and snapshot getter callables.',
   'raises': 'Raises when an agreement ID cannot be resolved or configured metadata cannot be read or safely written.',
@@ -1645,7 +1637,7 @@ PUBLIC_SYMBOL_DOCS = [
   'summary_override': 'Render interactive controls for reviewing proposed and bypassed guardrail '
                       'rules.',
   'symbol_name': 'widget_review_guardrail_governance',
-  'template_notebook': '03_review',
+  'template_notebook': '01_governance',
   'template_segment': 'Governance review',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
@@ -1658,7 +1650,7 @@ PUBLIC_SYMBOL_DOCS = [
   'expanded_purpose': 'Renders governance review controls for reviewing '
                       'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
                       'supersede actions.',
-  'when_to_use': 'Use in 03_review after selecting a guardrail target to perform human review '
+  'when_to_use': 'Use in 01_governance after selecting a guardrail target to perform human review '
                  'of enrichment and guardrail rule intent.',
   'do_not_use_when': 'Do not use for automatic pipeline enforcement or profiles '
                      'generation; it is an interactive governance review widget.',
@@ -1823,7 +1815,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
  'widget_render_data_steward': {'expanded_purpose': 'Renders the data steward intake widget so a '
                                                     'notebook user can capture steward contact and '
                                                     'ownership details for an agreement workflow.',
-                                'when_to_use': 'Use in 01_agreement when collecting or updating '
+                                'when_to_use': 'Use in 01_governance when collecting or updating '
                                                'data steward details before creating a data '
                                                'agreement.',
                                 'glossary_terms': ['notebook template'],
@@ -1843,7 +1835,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'arrangement between accountable producer and '
                                                       'consumer stewards, including purpose, scope, '
                                                       'permitted use, and review context.',
-                                  'when_to_use': 'Use in 01_agreement after steward context exists '
+                                  'when_to_use': 'Use in 01_governance after steward context exists '
                                                  'to establish the parent governance agreement '
                                                  'before technical Data Contracts are registered.',
                                   'glossary_terms': ['notebook template'],
@@ -2167,7 +2159,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                         'governance policy to create the handover '
                                                         'state for guardrail authoring or review.',
                                     'when_to_use': 'Use at the start of 02_pipeline authoring or '
-                                                   '03_review when a user must choose '
+                                                   '01_governance when a user must choose '
                                                    'which profiled table to work on.',
                                     'do_not_use_when': 'Do not use for automatic pipeline '
                                                        'enforcement or to write metadata; this '
@@ -2257,7 +2249,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                             'proposed or bypass-active enrichment and guardrail '
                                                             'rules, and applying approve, reject, '
                                                             'or supersede actions.',
-                                        'when_to_use': 'Use in 03_review after selecting a '
+                                        'when_to_use': 'Use in 01_governance after selecting a '
                                                        'guardrail target to perform human review '
                                                        'of enrichment and guardrail rule intent.',
                                         'do_not_use_when': 'Do not use for automatic pipeline '

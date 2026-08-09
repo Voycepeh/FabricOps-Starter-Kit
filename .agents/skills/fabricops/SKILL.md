@@ -36,7 +36,7 @@ Start with the existing generated function reference system. Do not replace it w
 ## Notebook workflow ownership
 
 - `00_env_config` owns environment selection, runtime setup, and metadata target configuration.
-- `01_agreement` owns agreement and steward context.
+- `01_governance` owns agreement and steward context.
 - Profiling or review notebooks own discovery, suggested metadata, and review evidence.
 - Pipeline notebooks own executable validation, enforcement, lineage, and run evidence.
 - Handover outputs should be assembled from approved metadata and runtime evidence rather than ad hoc notebook-only state.
