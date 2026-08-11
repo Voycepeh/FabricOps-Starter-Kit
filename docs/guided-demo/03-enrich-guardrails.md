@@ -1,32 +1,42 @@
-# Step 3: Enrich the Data Catalogue and define guardrails
+# Step 3: Enrich the Data Catalogue and define Guardrails
 
-Run `01_governance` after `02_pipeline` has profiled the ETL inputs and outputs. `02_pipeline` writes the Data Catalogue, Profile, and supporting technical evidence into metadata; Governance reads that evidence rather than creating a separate copy.
+**Return to `01_governance` after `02_pipeline` has produced the Data Catalogue and Data Profiled evidence. Governance reads that evidence, enriches it, and defines Guardrails.**
+
+## Before you begin
+
+Confirm that Step 2 completed successfully and the relevant Data Catalogue and Data Profiled records exist in the configured metadata target.
 
 ## What to do
 
-1. Open `01_governance` after pipeline catalogue and profile evidence exists.
-2. Select the governed dataset and inspect the Catalogue and Profile evidence written by `02_pipeline`.
-3. Add or refine business descriptions, classifications, stewardship context, and other Data Catalogue enrichment.
-4. Define schema, freshness, profile-behaviour, and data-quality guardrails for the ETL workflow.
-5. Rerun `02_pipeline` so Engineering can re-validate the workflow with those guardrails.
+1. Open `01_governance` in the Governance workspace.
+2. Select the governed dataset.
+3. Inspect the Data Catalogue and Data Profiled evidence written by `02_pipeline`.
+4. Add or refine Enrichment such as business descriptions, classifications, and stewardship context.
+5. Define schema, freshness, profile-behaviour, and data-quality Guardrails for the ETL workflow.
+6. Save the approved Governance records.
 
 ## Governance responsibilities
 
-Keep observed Engineering evidence separate from Governance enrichment and guardrail intent:
-
 | Metadata area | Governance responsibility |
-| ------------- | ------------------------- |
+| --- | --- |
 | `METADATA_DATA_CATALOGUE` | Read the observed table and column evidence written by `02_pipeline`. |
 | `METADATA_ENRICHMENT` | Add descriptive business context and classifications. |
-| `METADATA_GUARDRAIL` | Define executable guardrail intent for the ETL workflow. |
+| `METADATA_GUARDRAIL` | Define executable Guardrail intent for the ETL workflow. |
 | `METADATA_GUARDRAIL_RESULTS` | Inspect runtime outcomes written by Engineering; do not edit them as observed evidence. |
 
-## Expected evidence
+!!! important "Keep observed evidence and Governance intent separate"
 
-Governance enrichment and guardrail intent are stored in the configured metadata target. The observed Catalogue and Profile evidence remains owned by the `02_pipeline` workflow.
+    Governance does not create another copy of the Data Catalogue or Data Profiled records. It reads Engineering evidence and adds Enrichment and Guardrail intent around it.
 
-Previous: [Step 2: Run the first Development pipeline](02-run-pipeline.md).
+## Expected result
 
-Next, continue to [Step 4: Rerun the Development pipeline with guardrails](04-run-pipeline-with-guardrails.md).
+You should now have:
+
+- reviewed Engineering evidence
+- approved Enrichment records
+- Guardrails ready for `02_pipeline` to evaluate
+
+**Previous:** [Step 2: Run the Common Pipeline Patterns](02-run-pipeline.md)  
+**Next:** [Step 4: Rerun the Development pipeline with Guardrails](04-run-pipeline-with-guardrails.md)
 
 See also: [METADATA_ENRICHMENT](../reference/metadata/metadata_enrichment.md), [METADATA_GUARDRAIL](../reference/metadata/metadata_guardrail.md), and [List of DQ Rules](../reference/dq-rules/index.md).
