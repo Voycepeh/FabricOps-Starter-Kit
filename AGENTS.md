@@ -68,7 +68,7 @@ Preview callables are not covered by Live backward-compatibility guarantees. Pre
 
 Discontinued callables do not imply current support. Preserve historical behaviour only when explicitly required.
 
-When breaking cleanup is authorized, Clearly identify every changed public contract in the PR summary and do not add compatibility layers unless requested.
+When breaking cleanup is authorized, clearly identify every changed public contract in the PR summary and do not add compatibility layers unless requested.
 
 ## Function architecture
 
@@ -186,6 +186,23 @@ Validation builds do not make generated files on `main` current unless those fil
 - Do not manually edit generated reference pages as source of truth.
 - `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
 - `Managed by` entries should identify exact source functions when traceable.
+
+### Human-facing documentation readability
+
+Human-facing pages should be scannable before they are read in detail. Use the documentation-maintenance skill for the full pattern, and apply these repository-wide defaults:
+
+- Prefer **page title → short lead sentence → visual/table → short sections → focused callout → next action**.
+- Start major sections with a short bold summary sentence when it helps readers understand the point quickly.
+- Break long prose into descriptive `##` and `###` sections, bullets, numbered steps, or compact tables.
+- Use Material admonitions only for important notes, warnings, and rules. Avoid excessive boxes.
+- Use collapsible `???` detail blocks for optional background, exceptions, troubleshooting, and long secondary explanations.
+- Do not repeat a diagram's full meaning in several paragraphs directly below it.
+- Procedure pages should normally end with an expected result and a clear next step.
+- Prefer existing Markdown and MkDocs Material patterns before adding custom HTML or decorative components.
+- Preserve exact FabricOps terminology and do not replace canonical repo terms with generic alternatives.
+- Keep layouts readable on mobile as well as desktop.
+
+The Maintainer Release Guide has a separate source-of-truth rule: `.agents/skills/fabricops-release/SKILL.md` owns the workflow and `docs/maintainer/index.md` is synchronised from it. Change the skill first rather than independently editing the published guide.
 
 ### Public API docstrings
 
