@@ -35,7 +35,7 @@ This does not prevent teams from using pandas or other tools for appropriate exp
 
 ## The governance and engineering loop workflow
 
-**Set up → Govern → Engineer → Validate → Contract → Promote → Consume**
+**FabricOps uses a governed loop between Governance and Engineering Development before a validated pipeline is promoted to Engineering Production.**
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
