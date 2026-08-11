@@ -1,8 +1,8 @@
 # FabricOps Guided Demo
 
-The Guided Demo is the canonical step-by-step execution guide for FabricOps. It explains what to create, configure, open, run, and inspect from initial Fabric preparation through Production promotion and project-specific consumption.
+**The Guided Demo is the step-by-step execution path from initial Fabric preparation to governed Production consumption.**
 
-Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) as the notebook download and implementation handoff.
+Read [How FabricOps Works](how-fabricops-works.md) first for the architecture and operating model. Use [Notebook Templates](notebook-templates.md) for the notebook downloads.
 
 ## Required execution sequence
 
@@ -18,10 +18,31 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 | 6. Engineering — Promote to Production | Engineering Production | Promoted `02_pipeline` | [Promote the validated pipeline to Production](guided-demo/06-promote-to-production.md) |
 | 7. Consumer — Use approved Production data directly | Project-Specific Consumer | `99_explore` | [Consume approved Production data with FabricOps IO and profiling](guided-demo/99-explore-via-notebook.md) |
 
+## Workflow overview
+
+**Prepare → Govern → Engineer → Validate → Contract → Promote → Consume**
+
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-Step 0 is split into two preparation stages. Step 0A creates the required Fabric workspaces, lakehouses, warehouses, Environment, installed FabricOps wheel, and copied notebook templates. Step 0B configures `00_env_config` and creates or validates the Governance metadata tables.
+### Preparation
 
-Promotion follows Step 5, where Governance creates the Data Contract and prepares the ETL contract and governance sign-off for release management. Step 6 promotes the validated `02_pipeline` from Engineering Development into Engineering Production.
+Step 0 is split into two stages:
 
-After approved Production outputs are available, Step 7 uses `99_explore` in one or more project-specific consumer workspaces for exploration, AI, and BI consumption. Consumer workspaces read approved Engineering Production data and do not replace or duplicate the governed production pipeline.
+- **0A** creates the required Fabric workspaces, lakehouses, warehouses, Environment, installed FabricOps wheel, and copied notebook templates.
+- **0B** configures `00_env_config` and creates or validates the Governance metadata tables.
+
+### Promotion
+
+Governance creates the Data Contract in Step 5 and prepares the ETL contract and governance sign-off. Step 6 promotes the validated `02_pipeline` from Engineering Development into Engineering Production.
+
+### Consumption
+
+After approved Production outputs are available, Step 7 uses `99_explore` in one or more project-specific consumer workspaces for exploration, AI, and BI consumption.
+
+!!! note "Consumer workspaces stay downstream"
+
+    Consumer workspaces read approved Engineering Production data. They do not replace or duplicate the governed production pipeline.
+
+## Start the demo
+
+[Prepare Fabric artifacts](guided-demo/00A-setup-fabric-artifacts.md)
