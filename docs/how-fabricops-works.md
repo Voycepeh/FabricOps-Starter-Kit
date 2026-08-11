@@ -39,7 +39,7 @@ This does not prevent teams from using pandas or other tools for appropriate exp
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
-Read the [Guided Demo](guided-demo/) to execute the workflow. Download the notebooks from [Notebook Templates](notebook-templates.md).
+Read the [Guided Demo](guided-demo.md) to execute the workflow. Download the notebooks from [Notebook Templates](notebook-templates.md).
 
 ### 0. Set up the operating environment
 
