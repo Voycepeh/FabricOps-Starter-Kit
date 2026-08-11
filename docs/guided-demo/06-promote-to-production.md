@@ -1,23 +1,39 @@
 # Step 6: Promote the validated pipeline to Production
 
-Promote the validated `02_pipeline` from Engineering Development into the Engineering Production workspace only after the Step 5 Data Contract is signed off.
+**Promote the validated `02_pipeline` into Engineering Production only after Step 5 has completed the Data Contract and Governance sign-off.**
 
-This step moves the approved, repeatable pipeline into the workspace that owns stable recurring execution and durable Production outputs.
+Engineering Production owns stable recurring execution and durable Production outputs.
+
+## Before you begin
+
+Confirm that:
+
+- the Step 5 Data Contract is complete
+- Governance sign-off is recorded
+- the Development `02_pipeline` has passed its required Guardrails
 
 ## What to do
 
-1. Confirm Step 5 is complete and the Data Contract has steward sign-off.
-2. Copy or deploy the validated `02_pipeline` from Engineering Development to Engineering Production using your team's normal Fabric promotion process.
-3. Confirm the Production `02_pipeline` uses the Production `00_env_config` and Production data targets.
+1. Copy or deploy the validated `02_pipeline` from Engineering Development to Engineering Production using your team's normal Fabric promotion process.
+2. Confirm the promoted notebook uses the Production `00_env_config`.
+3. Confirm Production source, unified, and product targets resolve correctly.
 4. Run or schedule the promoted pipeline according to the required operational cadence.
-5. Confirm downstream AI, BI, or other consumers use the trusted Production outputs, subject to the appropriate access controls.
+5. Confirm downstream AI, BI, and other consumers use the approved Production outputs with the appropriate access controls.
 
-## Expected evidence
+!!! important "Production rule"
 
-The promoted Production run uses the approved contract context and writes durable Production outputs. Runtime metadata remains routed through the configured metadata target so Production operation stays connected to the signed-off governance evidence.
+    Do not treat the Development notebook or Development outputs as the durable Production workflow. The promoted `02_pipeline` should run against Production configuration and remain tied to the approved Data Contract.
 
-Previous: [Step 5: Create the Data Contract and prepare for promotion](05-create-data-contract.md).
+## Expected result
 
-You have completed the required Guided Demo workflow. Optional inspection can continue in [Explore Metadata Outputs](99-explore-via-notebook.md).
+You should now have:
+
+- the validated `02_pipeline` in Engineering Production
+- Production configuration and targets in use
+- durable Production outputs
+- runtime metadata still connected to the approved governance context
+
+**Previous:** [Step 5: Create the Data Contract and prepare for promotion](05-create-data-contract.md)  
+**Next:** [Step 7: Consume approved Production data](99-explore-via-notebook.md)
 
 See also: [How FabricOps Works](../how-fabricops-works.md) and [Notebook Templates](../notebook-templates.md).
