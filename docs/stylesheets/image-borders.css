@@ -8,3 +8,32 @@
 .md-content__inner {
   padding-bottom: 3rem;
 }
+
+/* Improve visual rhythm on long documentation pages. */
+.md-typeset h2 {
+  margin-top: 2.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.md-typeset h3 {
+  margin-top: 1.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol,
+.md-typeset table {
+  margin-bottom: 1rem;
+}
+
+.md-typeset h2 + p,
+.md-typeset h3 + p {
+  margin-top: 0;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  margin-top: 1rem;
+  margin-bottom: 1.25rem;
+}
