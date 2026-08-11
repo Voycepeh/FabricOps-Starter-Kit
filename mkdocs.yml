@@ -133,3 +133,4 @@ extra_css:
   - stylesheets/layout-wide.css
   - stylesheets/fabric-theme.css
   - stylesheets/table-controls.css
+  - stylesheets/image-borders.css
