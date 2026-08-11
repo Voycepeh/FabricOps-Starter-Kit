@@ -1,22 +1,45 @@
 # Step 1: Create Data Stewards and Data Agreements
 
-Run `01_governance` in the Governance workspace after Step 0 to create the Data Stewards and establish Data Agreements between two accountable stewards before pipeline execution.
+**Use `01_governance` in the Governance workspace to establish accountable Data Stewards and the Data Agreement before Engineering starts.**
 
-The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to control the agreement form fields and widget behaviour. Review that configuration in `00_env_config` when you need to understand or customise those settings.
+The agreement workflow uses `DATA_AGREEMENT_CONFIG` from `00_env_config` to control form fields and widget behaviour.
+
+## Before you begin
+
+Confirm that:
+
+- the correct Fabric Environment is attached
+- `00_env_config` has been run
+- the Governance metadata tables are available
+
+![Setup](../assets/01/Setup.png)
 
 ## What to do
 
-## Start by making sure you have selected the correct Environment & %run 00_env_config
-![Setup](../assets/01/Setup.png)
+### 1. Create the Data Stewards
 
-### 1. Populate the data steward table
+Populate the Data Steward records for the accountable parties.
+
 ![Steward](../assets/01/Steward.png)
 
-### 2. Poplulate the data agreement table between 2 data steward 
+### 2. Create the Data Agreement
+
+Create the Data Agreement between the relevant Data Stewards.
+
 ![Agreement](../assets/01/Agreement.png)
 
 ![Agreement 2](../assets/01/Agreement(2).png)
 
-### For now thats it, a final missing link is to link agreement created here to the data catalgoue created in `02 pipeline` but we will revist this in step 5 [Step 5: Create data contract](05-create-data-contract.md)
+!!! note "The Data Contract comes later"
 
-Next, continue to [Step 2: Run the first Development pipeline](02-run-pipeline.md).
+    At this stage the agreement exists before the Data Catalogue has been created. Step 5 returns to `01_governance` after `02_pipeline` has produced the engineering evidence and links the governed Data Catalogue to the Data Agreement through a Data Contract.
+
+## Expected result
+
+You should now have:
+
+- accountable Data Steward records
+- a Data Agreement describing the governance relationship
+- the governance foundation needed before running the Development pipeline
+
+**Next:** [Step 2: Run the Common Pipeline Patterns](02-run-pipeline.md)
