@@ -1,11 +1,22 @@
+<div class="fabricops-landing" markdown="1">
+
+# FabricOps documentation
+
+FabricOps is a lightweight starter kit that connects:
+
+**Governance → Data engineering → AI and BI analytics**
+
+Governance defines ownership and approval. Data engineering develops pipelines and records how data was prepared and checked. Approved pipelines are promoted from Engineering Development to Engineering Production, where AI and BI analytics can use approved Production data.
+
+<section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
+
 ## What is FabricOps?
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams 
-quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
 
 - Governance
 - Data engineering
@@ -30,13 +41,15 @@ FabricOps consists of:
 - A set of shared metadata tables that connects governance and engineering activities
 - A guided demo to help teams understand and adopt the workflow quickly
 - Technical documentation for the notebook templates, metadata tables, and individual functions
+
 </div>
 
 ## Quick Links
 
+<div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="how-fabricops-works/">
     <span class="fabricops-landing-card__title">How FabricOps Works</span>
-    <span class="fabricops-landing-card__body">Understand the workspace, notebook and metadata architecture, engineering + governance workflow and development production promotion .</span>
+    <span class="fabricops-landing-card__body">Understand the workspace, notebook and metadata architecture, engineering + governance workflow and development production promotion.</span>
   </a>
 
   <a class="fabricops-landing-card" href="guided-demo/">
@@ -48,6 +61,7 @@ FabricOps consists of:
     <span class="fabricops-landing-card__title">Releases</span>
     <span class="fabricops-landing-card__body">View published releases and their included assets.</span>
   </a>
+</div>
 
 ## Technical lookup
 
@@ -64,7 +78,7 @@ FabricOps consists of:
 
   <a class="fabricops-landing-card" href="reference/metadata/">
     <span class="fabricops-landing-card__title"><!-- FABRICOPS_METADATA_TABLE_COUNT --><strong>11</strong><span> metadata tables</span><!-- /FABRICOPS_METADATA_TABLE_COUNT --></span>
-    <span class="fabricops-landing-card__body">Read every metadata table's purpose, schema, and know which functions write to them .</span>
+    <span class="fabricops-landing-card__body">Read every metadata table's purpose, schema, and know which functions write to them.</span>
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
@@ -75,19 +89,19 @@ FabricOps consists of:
 
 ## Maintain FabricOps
 
+<div class="fabricops-card-grid">
   <a class="fabricops-landing-card" href="function-call-graph/">
     <span class="fabricops-landing-card__title">Function Call Graph</span>
-    <span class="fabricops-landing-card__body">Monitor public function architecture violation, their underlying call-flows and nested fucntions within it for optimization and code cleanliness.</span>
+    <span class="fabricops-landing-card__body">Monitor public function architecture violations, their underlying call flows and nested functions for optimization and code cleanliness.</span>
   </a>
-  
-<div class="fabricops-card-grid">
+
   <a class="fabricops-landing-card" href="maintainer/">
     <span class="fabricops-landing-card__title">Maintainer Guide</span>
-    <span class="fabricops-landing-card__body">Based of the skills a human readable version of the repository maintenance and release workflow.</span>
+    <span class="fabricops-landing-card__body">Based on the skills, a human-readable version of the repository maintenance and release workflow.</span>
   </a>
 
   <a class="fabricops-landing-card" href="maintainer/product-definition/">
     <span class="fabricops-landing-card__title">Product Definition</span>
-    <span class="fabricops-landing-card__body">The original foundational product terminology, responsibilities, and workflow that i use as truth.</span>
+    <span class="fabricops-landing-card__body">The original foundational product terminology, responsibilities, and workflow used as truth.</span>
   </a>
 </div>
