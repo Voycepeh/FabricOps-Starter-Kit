@@ -63,9 +63,3 @@ It does not create data agreements, data contracts, enrichment records, or guard
 </div>
 
 Follow the [Guided Demo](guided-demo.md) to create the agreement, run the Development pipeline, define guardrails, re-validate the pipeline, prepare the Data Contract, and promote the pipeline to Production.
-
-## Using the templates with AI assistants
-
-The notebook responsibilities do not change when an AI assistant is involved. `00_env_config` remains the source of FabricOps configuration, and `01_governance` remains the Governance workflow. `02_pipeline` remains the place for repeatable ETL, profiling, Data Catalogue, Data Lineage, Guardrail evaluation, and Production promotion. `99_explore` remains the place for one-off exploration and project-specific analytics, AI, BI, and data science work.
-
-Prefer existing FabricOps helper and orchestrator functions rather than recreating the same logic inline. AI-generated changes still require review. See [AI-assisted Data Teams](ai-assisted-data-teams.md) for examples and scope boundaries.

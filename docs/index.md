@@ -45,13 +45,7 @@ The workflow connects:
 
 - **Governance:** Data Stewards, Data Agreements, Enrichment, Guardrails, and Data Contracts.
 - **Data engineering:** ETL, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Guardrail Results, and Development-to-Production promotion.
-- **AI and BI analytics:** approved Production data for Power BI, analysis, data science, and AI-assisted workflows.
-
-## People first, with clearer context for AI assistance
-
-FabricOps is designed for people first. Its standardized notebooks, FabricOps metadata tables, and documented functions can also give AI assistants clearer context while they work within the same established workflow. FabricOps does not provide an AI model or agent framework.
-
-See [AI-assisted Data Teams](ai-assisted-data-teams.md) for practical examples and scope boundaries.
+- **AI and BI analytics:** approved Production data for Power BI, analysis, and data science.
 
 </div>
 

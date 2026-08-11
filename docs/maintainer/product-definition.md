@@ -57,6 +57,12 @@ The shared metadata model connects governance intent with engineering evidence. 
 
 The guided demo provides maintained execution instructions for learning the workflow. The technical documentation provides detailed contracts for notebook templates, metadata tables, and Python APIs.
 
+## AI-assisted data work
+
+FabricOps is designed primarily as a lightweight operating workflow for data teams. Its standardized notebooks, FabricOps helper and orchestrator functions, FabricOps metadata tables, and approved Production data can also provide useful context for AI-assisted engineering, Governance, analytics, and data science work.
+
+FabricOps does not provide an AI model, agent framework, or multi-agent runtime. Future improvements may explore reusable instructions or resources that help AI assistants work more consistently with the existing FabricOps workflow.
+
 ## Future product direction: analysis preservation
 
 The Engineering Development workspace is intentionally disposable. When important "99_explore" work must be reproduced later, FabricOps should support an analysis archive or analysis packet that preserves enough context to understand and rerun the work. This is a future product direction, not a fully implemented production capability.

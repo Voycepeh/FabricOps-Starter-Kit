@@ -24,4 +24,4 @@ Step 0 is split into two preparation stages. Step 0A creates the required Fabric
 
 Promotion follows Step 5, where Governance creates the Data Contract and prepares the ETL contract and governance sign-off for release management. Step 6 promotes the validated `02_pipeline` from Engineering Development into Engineering Production.
 
-After approved Production outputs are available, Step 7 uses `99_explore` in one or more Project-Specific Consumer workspaces for analytics, AI, BI, data science, and AI-assisted exploration. These workspaces read approved Production data from Engineering Production; this work does not replace or duplicate the governed Production pipeline.
+After approved Production outputs are available, Step 7 uses `99_explore` in one or more project-specific consumer workspaces for exploration, AI, and BI consumption. Consumer workspaces read approved Engineering Production data and do not replace or duplicate the governed production pipeline.

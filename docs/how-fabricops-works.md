@@ -63,12 +63,6 @@ Governance then creates the Data Contract. The validated `02_pipeline` is promot
 
 Downstream users therefore receive more than a table. Where relevant, they can also inspect its Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
 
-### AI and BI analytics
-
-Power BI and analysts can work from approved Production data. Data science and AI-assisted workflows can use the same approved Production data for exploration and project work. FabricOps does not choose or provide the AI model or agent framework; its role is to provide the existing FabricOps workflow, FabricOps metadata tables, and FabricOps helper and orchestrator functions around the data.
-
-See [AI-assisted Data Teams](ai-assisted-data-teams.md) for practical ways to use this context without creating a parallel workflow.
-
 ## Development and Production
 
 Engineering Development is used for exploration, development, profiling, testing, and review. Development data and temporary notebooks may be cleaned regularly, so teams should avoid treating the workspace as durable production storage.
