@@ -31,11 +31,11 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 1. **Governance — Create Data Stewards and Data Agreements** — In `01_governance`, create the Data Stewards and establish Data Agreements between two accountable stewards.
 
-2. **Engineering — ETL, profile the data, and build the Data Catalogue** — In Engineering Development, run `02_pipeline` to perform ETL, profile the data, and write the Data Catalogue and supporting profile and technical evidence.
+2. **Engineering — ETL, profile the data, and build the Data Catalogue** — In Engineering Development, run `02_pipeline` to perform ETL, profile the data, and write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records.
 
-3. **Governance — Enrich the Data Catalogue and define guardrails** — Return to `01_governance` to read the Catalogue and Profile evidence written by `02_pipeline`, enrich the Data Catalogue, and define guardrails for the ETL workflow.
+3. **Governance — Enrich the Data Catalogue and define Guardrails** — Return to `01_governance` to read the Data Catalogue and Data Profiled records written by `02_pipeline`, write Enrichment, and define Guardrails for the ETL workflow.
 
-4. **Engineering — Re-validate the ETL workflow with guardrail rules** — Rerun `02_pipeline` with the defined guardrails and confirm that warning, blocking, and validation behaviour works as intended.
+4. **Engineering — Re-validate the ETL workflow with Guardrails** — Rerun `02_pipeline` with the approved Guardrails and confirm that warning, blocking, and validation behaviour works as intended.
 
 5. **Governance — Create the Data Contract and prepare for promotion** — In `01_governance`, create the Data Contract linking the governed Data Catalogues to the Data Agreement, then finalise the ETL contract and governance sign-off in preparation for promotion and release management.
 
@@ -47,13 +47,27 @@ The operating flow uses three core FabricOps workspaces: Governance, Engineering
 
 ![FabricOps metadata model](assets/fabricops-metadata-model.png)
 
-FabricOps uses these connected [Metadata Tables](reference/metadata.md) to carry governance context through the workflow. Data Agreements establish the overarching governance relationship between producer and consumer parties. Machine-readable Data Contracts define the specific datasets and delivery promises authorised under each agreement.
+FabricOps uses these connected [FabricOps metadata tables](reference/metadata.md) to carry Governance information through the workflow. Data Agreements establish the relationship between producer and consumer parties. Machine-readable Data Contracts define the specific datasets and delivery promises authorised under each agreement.
 
-The data catalogue sits at the centre of the model. It identifies each governed dataset and connects its profiling, lineage, access, enrichment, guardrails, and guardrail results.
+The Data Catalogue sits at the centre of the model. It identifies each dataset and connects Data Profiled, Data Profiled Frequency, Data Lineage, Data Access, Enrichment, Guardrail, and Guardrail Results records.
 
-A Data Contract then links authorised catalogue tables and their schema fingerprints to a parent Data Agreement. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide broader technical and quality context for those tables. One Data Agreement can govern multiple Data Contracts.
+A Data Contract then links authorised Data Catalogue tables and their schema fingerprints to a parent Data Agreement. Related Enrichment, Guardrail, Data Profiled, Data Profiled Frequency, and Data Lineage records describe those tables. One Data Agreement can govern multiple Data Contracts.
 
-The `02_pipeline` workflow writes catalogue and profile evidence into metadata; `01_governance` reads that evidence for enrichment, guardrail definition, and Data Contract preparation. Governance does not create a second copy of the observed evidence.
+The `02_pipeline` workflow writes Data Catalogue and Data Profiled records; `01_governance` reads those records for Enrichment, Guardrail definition, and Data Contract preparation. Governance does not create a second copy of those observed records.
+
+## How the implemented pieces connect
+
+`02_pipeline` performs ETL, profiles source and target data, and writes Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records. Governance reads the Data Catalogue and Data Profiled records, then writes approved Enrichment and Guardrail records. `02_pipeline` reads those records, evaluates the Guardrails, and writes Guardrail Results.
+
+Governance then creates the Data Contract. The validated `02_pipeline` is promoted from Engineering Development to Engineering Production, and AI and BI analytics consume approved Production data.
+
+Downstream users therefore receive more than a table. Where relevant, they can also inspect its Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
+
+### AI and BI analytics
+
+Power BI and analysts can work from approved Production data. Data science and AI-assisted workflows can use the same approved Production data for exploration and project work. FabricOps does not choose or provide the AI model or agent framework; its role is to provide the existing FabricOps workflow, FabricOps metadata tables, and FabricOps helper and orchestrator functions around the data.
+
+See [AI-assisted Data Teams](ai-assisted-data-teams.md) for practical ways to use this context without creating a parallel workflow.
 
 ## Development and Production
 

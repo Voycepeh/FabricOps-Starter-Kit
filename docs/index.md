@@ -2,9 +2,11 @@
 
 # FabricOps documentation
 
-FabricOps connects governance, data engineering, and AI or BI analytics through one standardized Microsoft Fabric workflow.
+FabricOps is a lightweight starter kit that connects:
 
-Governance defines ownership, agreements, enrichment, and guardrails. Engineering develops pipelines and captures metadata evidence. Approved pipelines are promoted to Production, where they provide stable and governed data products for downstream AI and BI consumption.
+**Governance → Data engineering → AI and BI analytics**
+
+Governance defines ownership and approval. Data engineering develops pipelines and records how data was prepared and checked. Approved pipelines are promoted from Engineering Development to Engineering Production, where AI and BI analytics can use approved Production data.
 
 
 <section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
@@ -15,7 +17,7 @@ Governance defines ownership, agreements, enrichment, and guardrails. Engineerin
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main roles:
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main areas:
 
 - Governance
 - Data engineering
@@ -39,7 +41,17 @@ FabricOps consists of:
 
 By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
 
-This provides the AI and BI consumption layer with a stable, governed, and reusable data foundation to work from.
+The workflow connects:
+
+- **Governance:** Data Stewards, Data Agreements, Enrichment, Guardrails, and Data Contracts.
+- **Data engineering:** ETL, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Guardrail Results, and Development-to-Production promotion.
+- **AI and BI analytics:** approved Production data for Power BI, analysis, data science, and AI-assisted workflows.
+
+## People first, with clearer context for AI assistance
+
+FabricOps is designed for people first. Its standardized notebooks, FabricOps metadata tables, and documented functions can also give AI assistants clearer context while they work within the same established workflow. FabricOps does not provide an AI model or agent framework.
+
+See [AI-assisted Data Teams](ai-assisted-data-teams.md) for practical examples and scope boundaries.
 
 </div>
 
@@ -102,4 +114,3 @@ This provides the AI and BI consumption layer with a stable, governed, and reusa
     <span class="fabricops-landing-card__body">The original foundational product terminology, responsibilities, and workflow that i use as truth.</span>
   </a>
 </div>
-
