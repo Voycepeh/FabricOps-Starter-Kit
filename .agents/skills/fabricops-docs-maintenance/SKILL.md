@@ -7,11 +7,11 @@ description: Use when cleaning up, reorganizing, or updating FabricOps documenta
 
 ## Purpose
 
-Guide documentation cleanup and restructuring so FabricOps keeps one canonical home for each topic and avoids duplicating generated or maintained content.
+Guide documentation cleanup and restructuring so FabricOps keeps one canonical home for each topic, avoids duplicated content, and stays easy to scan on desktop and mobile.
 
 ## When to use this skill
 
-Use this skill for docs-only edits under `README.md`, `docs/`, and related MkDocs configuration when the task is cleanup, consolidation, restructuring, or user/maintainer guidance.
+Use this skill for docs-only edits under `README.md`, `docs/`, and related MkDocs configuration when the task is cleanup, consolidation, restructuring, readability improvement, or user/maintainer guidance.
 
 Do not use this skill to manually maintain generated callable reference pages, release contract pages, or dashboard output. Use the source metadata or generator that owns those artifacts instead.
 
@@ -28,15 +28,66 @@ Classify the requested content before creating or moving files:
 
 Update the canonical destination for the classification instead of creating another overlapping page.
 
+## Documentation readability pattern
+
+Human-facing documentation should be easy to scan before it is read in detail. Prefer a consistent page rhythm:
+
+1. Page title.
+2. One short lead sentence that explains the purpose or outcome.
+3. A diagram, table, or compact summary where it genuinely helps.
+4. Short sections with descriptive `##` and `###` headings.
+5. Focused callouts for important rules, warnings, or notes.
+6. Collapsible secondary detail when useful but not required for the main flow.
+7. A clear next action or related page near the end.
+
+Use these patterns deliberately:
+
+- Start major sections with a short **bold summary sentence** when it helps readers understand the point before reading details.
+- Keep paragraphs compact. If a paragraph contains multiple responsibilities, stages, or decisions, split it into subsections, bullets, or a table.
+- Prefer descriptive headings such as `## Engineering Production` over unlabeled transitions buried inside prose.
+- Use Material admonitions such as `!!! note`, `!!! important`, and `!!! warning` for information that should stand out. Keep them focused and avoid turning every paragraph into a box.
+- Use `??? info` or another collapsible detail block for background explanation, exceptions, troubleshooting, or optional detail that would otherwise interrupt the main reading flow.
+- Use tables for comparisons and ownership matrices, not for long narrative content.
+- Use numbered steps for actions that must be performed in order.
+- Use code blocks for code, commands, paths, and compact flow notation. Do not use code blocks as generic prose callouts.
+- Preserve useful diagrams and screenshots, but do not repeat the diagram's full meaning in several paragraphs directly below it.
+- End user-facing procedure pages with an `Expected result` or equivalent outcome and a clear `Next` link where appropriate.
+- Keep terminology exactly aligned with FabricOps canonical terms such as Governance, Engineering Development, Engineering Production, Project-Specific Consumer, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Enrichment, Guardrails, Guardrail Results, Data Agreement, and Data Contract.
+
+### Guided Demo page pattern
+
+Guided Demo action pages should normally follow this structure where applicable:
+
+```text
+# Step X: Action
+
+Short purpose or outcome.
+
+## Before you begin
+## What to do
+## Expected result
+
+Previous / Next
+```
+
+Use additional sections only where the step genuinely needs them. Long technical explanation should sit under a descriptive subsection or collapsible block rather than forming a wall of text.
+
+### Maintainer page pattern
+
+Maintainer pages may be more detailed, but should still use strong hierarchy. Keep mandatory rules visible in normal page flow and move optional rationale, examples, or recovery detail into collapsible sections when that makes the procedure easier to follow.
+
+The Release Guide is special: `.agents/skills/fabricops-release/SKILL.md` is the operational source of truth and `docs/maintainer/index.md` is synchronised from it. Do not independently beautify or rewrite `docs/maintainer/index.md`. Update the release skill first and use the repository's synchronisation path so the two do not drift.
+
 ## Context to inspect
 
-- `AGENTS.md`, especially "Documentation and API reference rules", "Generated reference artifacts and Codex runs", and "What to update when changing X".
+- `AGENTS.md`, especially documentation, generated-artifact, and verification rules.
 - `README.md` for concise repository navigation.
 - `mkdocs.yml` for current navigation, redirects if present, hooks, and docs plugins.
 - Existing pages in `docs/`, especially `docs/how-fabricops-works.md`, `docs/guided-demo.md`, `docs/guided-demo/`, `docs/notebook-templates.md`, `docs/maintainer/`, and `docs/releases/`.
 - Source docstrings in `src/fabricops_kit/` and `scripts/reference_docs_metadata.py` before changing generated callable documentation.
 - `src/fabricops_kit/config/metadata_schemas.py` and `scripts/generate_individual_function_reference_pages.py` before changing generated metadata table documentation.
 - Existing images under `docs/assets/` before deleting or replacing them.
+- `.agents/skills/fabricops-release/SKILL.md` before changing the published Maintainer Release Guide.
 
 ## Implementation workflow
 
@@ -46,24 +97,28 @@ Update the canonical destination for the classification instead of creating anot
 4. Keep the root `README.md` concise and navigation-focused.
 5. Treat guided demos as user-facing operating guides where appropriate.
 6. Put maintainer-only procedures in `docs/maintainer/`.
-7. Preserve useful existing images when restructuring pages; remove only assets that are unused, public-safe to remove, and not referenced.
-8. Do not touch the homepage or documentation navigation unless the task explicitly requires it or a moved page would break navigation.
-9. Update `mkdocs.yml` only when navigation, page paths, or included docs files actually change.
-10. For generated callable documentation, update source docstrings or metadata instead of editing generated pages directly.
-11. For metadata reference work, inspect `metadata_schemas.py` and the generator first, update schema/ownership source metadata, regenerate, and never manually fix an individual metadata page.
-12. Metadata schema pages must not document Spark nullability and must use exact column-level writer ownership rather than generic component labels.
-13. Run the metadata-page freshness validation for explicitly scoped metadata generator/reference work and commit only `docs/reference/metadata.md` plus `docs/reference/metadata/*.md`.
+7. Improve scanning with headings, bold lead sentences, compact paragraphs, tables, focused admonitions, and collapsible secondary detail before introducing new custom HTML components.
+8. Preserve useful existing images when restructuring pages; remove only assets that are unused, public-safe to remove, and not referenced.
+9. Do not touch the homepage or documentation navigation unless the task explicitly requires it or a moved page would break navigation.
+10. Update `mkdocs.yml` only when navigation, page paths, or included docs files actually change.
+11. For generated callable documentation, update source docstrings or metadata instead of editing generated pages directly.
+12. For metadata reference work, inspect `metadata_schemas.py` and the generator first, update schema/ownership source metadata, regenerate, and never manually fix an individual metadata page.
+13. Metadata schema pages must not document Spark nullability and must use exact column-level writer ownership rather than generic component labels.
+14. Run the metadata-page freshness validation for explicitly scoped metadata generator/reference work and commit only `docs/reference/metadata.md` plus `docs/reference/metadata/*.md`.
+15. For the Maintainer Release Guide, update `.agents/skills/fabricops-release/SKILL.md` first and keep the published guide synchronised from that source.
 
 ## Constraints
 
 - Do not duplicate explanations across the homepage, implementation guide, guided demos, function pages, and maintainer reference.
+- Do not create visual noise with excessive cards, admonitions, emojis, or decorative components. FabricOps remains a lightweight starter kit and the documentation should feel lightweight too.
 - Do not manually edit generated callable reference pages under `docs/api/reference/`, `docs/reference/index.md`, or dashboard HTML in `docs/assets/public-function-call-flows-dashboard.html` for a docs cleanup PR.
+- Do not independently edit `docs/maintainer/index.md` when the intended change belongs to the release workflow source skill.
 - Do not change FabricOps package behavior, public APIs, notebook templates, release versions, or generated release contracts unless explicitly requested.
 - Keep examples public-safe: no real tenant IDs, workspace IDs, production data, secrets, internal URLs, or production screenshots.
 
 ## Expected output
 
-A docs maintenance change should contain only the focused Markdown, image reference, or `mkdocs.yml` edits needed for the task. It should not include generated API reference or dashboard diffs unless the PR is explicitly a generated-reference refresh.
+A docs maintenance change should contain only the focused Markdown, image reference, CSS, skill, `AGENTS.md`, or `mkdocs.yml` edits needed for the task. It should not include generated API reference or dashboard diffs unless the PR is explicitly a generated-reference refresh.
 
 ## Verification
 
@@ -75,10 +130,13 @@ uv run mkdocs build --strict
 
 Also review:
 
+- desktop and mobile readability of changed human-facing pages when practical
 - internal links in changed Markdown files
+- heading hierarchy and table-of-contents usefulness
 - `git diff -- docs/api/reference docs/reference/index.md docs/assets/public-function-call-flows-dashboard.html` to confirm generated API pages and dashboard output were not unintentionally modified
-- `git diff -- README.md docs mkdocs.yml` for duplicated explanations or unintended navigation changes
+- `git diff -- README.md docs mkdocs.yml AGENTS.md .agents/skills/fabricops-docs-maintenance/SKILL.md` for duplicated explanations or unintended navigation changes
+- release-skill and published-release-guide synchronisation when the release guide is in scope
 
 ## Completion report
 
-Report the content classification, canonical pages changed, whether navigation changed, whether generated files were avoided, and the exact validation commands and results.
+Report the content classification, canonical pages changed, readability patterns applied, whether navigation changed, whether generated files were avoided, whether release-guide synchronisation was involved, and the exact validation commands and results.
