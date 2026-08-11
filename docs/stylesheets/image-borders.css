@@ -3,3 +3,8 @@
   border: 1px solid var(--md-default-fg-color--lightest);
   border-radius: 4px;
 }
+
+/* Add breathing room between page content and the footer. */
+.md-content__inner {
+  padding-bottom: 3rem;
+}
