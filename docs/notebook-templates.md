@@ -1,6 +1,6 @@
 # Notebook Templates
 
-FabricOps provides four editable Microsoft Fabric notebook templates for configuring the workspaces, registering governance metadata, running data pipelines, defining guardrails, preparing Data Contracts for promotion, and exploring data.
+**FabricOps provides four editable Microsoft Fabric notebook templates that cover environment setup, Governance, repeatable Engineering pipelines, and downstream exploration.**
 
 [Open all notebook templates on GitHub](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks){ .md-button .md-button--primary }
 
@@ -10,11 +10,18 @@ FabricOps provides four editable Microsoft Fabric notebook templates for configu
 
 ## `00_env_config`
 
-Creates and stores the FabricOps configuration used by the other notebooks.
+**Controls the shared FabricOps operating configuration.**
 
-It contains the Governance, Engineering Development, and Engineering Production workspace settings; lakehouse and warehouse names; metadata table routing; package settings; runtime validation; audit settings; and widget settings.
+Use it to define:
 
-Run it in each workspace before running the other FabricOps notebooks.
+- Governance, Engineering Development, and Engineering Production workspace settings
+- Lakehouse and Warehouse names and paths
+- metadata table routing
+- package and runtime settings
+- audit settings
+- widget settings
+
+Run it in each workspace before using the other FabricOps notebooks.
 
 [Open `00_env_config.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/00_env_config.ipynb){ .md-button }
 
@@ -24,9 +31,17 @@ Run it in each workspace before running the other FabricOps notebooks.
 
 ## `01_governance`
 
-Owns the complete Governance lifecycle in one persistent notebook. Use it before Engineering to establish Data Stewards and the Data Agreement, then return after `02_pipeline` has produced evidence to read that catalogue and profile evidence, enrich the Data Catalogue, define guardrails, and later create the Data Contract that prepares the validated ETL workflow for promotion.
+**Owns the Governance lifecycle around the engineering workflow.**
 
-The operating model is **Governance → Engineering → Governance**: `01_governance` → `02_pipeline` → `01_governance`.
+Use it to:
+
+- create Data Stewards and Data Agreements
+- review Data Catalogue and Data Profiled evidence written by `02_pipeline`
+- add Enrichment
+- define Guardrails
+- create the Data Contract before promotion
+
+The operating pattern is **Governance → Engineering → Governance**: `01_governance` → `02_pipeline` → `01_governance`.
 
 [Open `01_governance.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/01_governance.ipynb){ .md-button }
 
@@ -36,11 +51,19 @@ The operating model is **Governance → Engineering → Governance**: `01_govern
 
 ## `02_pipeline`
 
-Reads source data, transforms it, and writes the output to a Fabric lakehouse or warehouse.
+**Runs repeatable ETL, profiling, metadata registration, and Guardrail evaluation.**
 
-It profiles the source and target tables, writes Data Catalogue, Data Profiled, and Data Lineage metadata, reads approved enrichment and guardrail rules, evaluates those rules, and writes the guardrail results.
+Use it to:
 
-Develop and validate this notebook in Engineering Development, then promote the completed notebook to Engineering Production.
+- read source data
+- transform the data
+- profile source and target tables
+- write Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage records
+- read approved Enrichment and Guardrails
+- evaluate Guardrails and write Guardrail Results
+- write the approved target output
+
+Develop and validate this notebook in Engineering Development, then promote the validated notebook to Engineering Production.
 
 [Open `02_pipeline.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/02_pipeline.ipynb){ .md-button }
 
@@ -50,11 +73,19 @@ Develop and validate this notebook in Engineering Development, then promote the 
 
 ## `99_explore`
 
-Reads data and FabricOps metadata for one-off analysis in Engineering Development.
+**Supports project-specific exploration of approved data and FabricOps metadata.**
 
-Use it to inspect datasets, test transformation logic, investigate data-quality issues, and explore Data Catalogue, Data Profiled, Data Lineage, Enrichment, Guardrail, and Guardrail Results records.
+Use it to:
 
-It does not create data agreements, data contracts, enrichment records, or guardrail rules. Move repeatable ingestion and transformation work into `02_pipeline`.
+- inspect approved datasets
+- test analysis or transformation ideas
+- investigate data-quality issues
+- explore Data Catalogue, Data Profiled, Data Lineage, Enrichment, Guardrail, and Guardrail Results records
+- support AI, BI, and data analysis in a Project-Specific Consumer workspace
+
+!!! note "Keep repeatable preparation in `02_pipeline`"
+
+    `99_explore` is for analysis and experimentation. Move preparation that must become stable, recurring, or operational into the governed `02_pipeline` workflow.
 
 [Open `99_explore.ipynb`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/99_explore.ipynb){ .md-button }
 
@@ -62,4 +93,6 @@ It does not create data agreements, data contracts, enrichment records, or guard
 
 </div>
 
-Follow the [Guided Demo](guided-demo.md) to create the agreement, run the Development pipeline, define guardrails, re-validate the pipeline, prepare the Data Contract, and promote the pipeline to Production.
+## Next step
+
+Follow the [Guided Demo](guided-demo.md) to create the Data Agreement, run the Development pipeline, define Guardrails, re-validate the pipeline, create the Data Contract, promote to Production, and consume approved Production data.
