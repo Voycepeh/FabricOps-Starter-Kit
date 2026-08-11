@@ -1,43 +1,17 @@
-<div class="fabricops-landing" markdown="1">
-
-# FabricOps documentation
-
-FabricOps is a lightweight starter kit that connects:
-
-**Governance → Data engineering → AI and BI analytics**
-
-Governance defines ownership and approval. Data engineering develops pipelines and records how data was prepared and checked. Approved pipelines are promoted from Engineering Development to Engineering Production, where AI and BI analytics can use approved Production data.
-
-
-<section class="fabricops-delivery-model" aria-labelledby="what-is-fabricops" markdown="1">
-
 ## What is FabricOps?
 
 <p class="fabricops-architecture-image">
   <img src="assets/fabricops-roles.png" alt="FabricOps roles working from a shared governed foundation">
 </p>
 
-FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams across three main areas:
+FabricOps, short for Fabric Operations, is a plug-and-play, lightweight starter kit that helps data teams 
+quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform
 
 - Governance
 - Data engineering
 - AI and BI analytics
 
-It helps these teams quickly set up and adopt an out-of-the-box workflow within the Microsoft Fabric platform.
-
 </section>
-
-## What is included?
-
-FabricOps consists of:
-
-- A Python package containing out-of-the-box helper and orchestrator functions
-- Standardized Python notebook templates that weave these functions into reusable workflows
-- A shared metadata model that connects governance and engineering activities
-- A guided demo to help teams understand and adopt the workflow quickly
-- Technical documentation for the notebook templates, metadata tables, and individual functions
-
-## What problem does it solve?
 
 By standardizing these workflows, FabricOps ensures that essential metadata and governance processes are built directly into engineering pipelines.
 
@@ -45,8 +19,17 @@ The workflow connects:
 
 - **Governance:** Data Stewards, Data Agreements, Enrichment, Guardrails, and Data Contracts.
 - **Data engineering:** ETL, Data Catalogue, Data Profiled, Data Profiled Frequency, Data Lineage, Guardrail Results, and Development-to-Production promotion.
-- **AI and BI analytics:** approved Production data for Power BI, analysis, and data science.
+- **AI and BI analytics:** approved Production data for Power BI, fabric data agents, data analysis, and data science.
 
+## What is included?
+
+FabricOps consists of:
+
+- A Python package containing out-of-the-box helper and orchestrator functions
+- Standardized Python notebook templates that weave these functions into reusable workflows
+- A set of shared metadata tables that connects governance and engineering activities
+- A guided demo to help teams understand and adopt the workflow quickly
+- Technical documentation for the notebook templates, metadata tables, and individual functions
 </div>
 
 ## Quick Links
