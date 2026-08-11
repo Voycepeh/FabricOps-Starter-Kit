@@ -1,11 +1,8 @@
-# Step 2: Run the Common Pipelines Patterns
+# Step 2: Run the Common Pipeline Patterns
 
-Use `02_pipeline` in the Engineering Development workspace to demonstrate how FabricOps reads from files, Lakehouse tables and Query Warehouse tables and write to them respectively.
-
+**Use `02_pipeline` in Engineering Development to demonstrate FabricOps file, Lakehouse, Warehouse, profiling, and metadata-registration patterns.**
 
 ```text
-Demo Includes: 
-
 Files → Lakehouse and Warehouse
 Lakehouse → transformation → Warehouse
 Warehouse → SQL query → Lakehouse
@@ -13,21 +10,21 @@ Warehouse → SQL query → Lakehouse
 
 ## Before you begin
 
-Complete [Step 0B: Set up the operating environment](00B-run-environment-setup.md) before running this notebook.
+Complete [Step 0B: Set up the operating environment](00B-run-environment-setup.md).
 
-Confirm that `00_env_config` defines these medallion layers. 
+Confirm that `00_env_config` defines these stores:
 
 | Layer | Item type | Purpose |
 | --- | --- | --- |
-| `source` | Lakehouse | Stores the four source files and receives the final Demo 3 output |
-| `unified` | Lakehouse | Receives the Lakehouse table created in Demo 1 |
-| `product` | Warehouse | Receives the Warehouse tables created in Demo 1 and Demo 2 |
+| `source` | Lakehouse | Stores the source files and receives the final Demo 3 output. |
+| `unified` | Lakehouse | Receives the Lakehouse table created in Demo 1. |
+| `product` | Warehouse | Receives the Warehouse tables created in Demo 1 and Demo 2. |
 
-For simplicity we use `demo` schema for all managed Lakehouse and Warehouse tables.
+For simplicity, the demo uses the `demo` schema for managed Lakehouse and Warehouse tables.
 
-## 0. Upload the demo files
+## 1. Upload the demo files
 
-In the Source Lakehouse, upload the four files into the following folder:
+Upload the demo files to the Source Lakehouse under:
 
 ```text
 Files/DemoData/
@@ -37,113 +34,114 @@ Files/DemoData/
 └── warehouse_data_demo.csv
 ```
 
-You can download it from here if you havent already done so [`templates/DemoData/`](../../templates/DemoData/).
+The files are available from [`templates/DemoData/`](../../templates/DemoData/).
 
-Then go to your soruce lakehouse , click get data and upload files 
+![Upload demo files](../assets/02/Upload_Files.png)
 
-![alt text](../assets/02/Upload_Files.png)
+## 2. Open and configure `02_pipeline`
 
+Open `02_pipeline` in Engineering Development.
 
-## 1. Open `02_pipeline`
-
-Open `02_pipeline` in the Engineering Development workspace.
-
-Attach the same Fabric Environment used by `00_env_config`, then restart the notebook session if the Environment or installed FabricOps package changed.
-
-## 2. Import the FabricOps IO functions
-
-Run the notebook setup cell from the template first. Then import the IO functions used in this demonstration.
+Attach the same Fabric Environment used by `00_env_config`, restart the notebook session if required, then run the setup and FabricOps import cells.
 
 ![Config](../assets/02/Config.png)
 
+## 3. Read the Excel file
 
-### 3. Read the excel_file_demo.xlsx
+Use `read_lakehouse_excel()` for an Excel workbook stored in the Source Lakehouse `Files` area.
 
-Use `read_lakehouse_excel()` for an Excel workbook stored in the Source Lakehouse `Files` area. 
+![Read Excel](../assets/02/Read_Excel.png)
 
-![alt text](../assets/02/Read_Excel.png)
-![alt text](../assets/02/Read_Excel_Profile.png)
-This reads the first worksheet and returns a Spark DataFrame.
+![Profile Excel](../assets/02/Read_Excel_Profile.png)
 
-### 4. Read the parquet_file_demo.parquet
+The helper reads the worksheet into a Spark DataFrame that can then be profiled or transformed.
 
-Use `read_lakehouse_parquet()` for the Parquet file stored in the Source Lakehouse `Files` area. 
+## 4. Read the Parquet file
 
-![alt text](../assets/02/Read_Parquet.png)
+Use `read_lakehouse_parquet()` for the Parquet file stored in the Source Lakehouse `Files` area.
 
-## 5. Read the Lakehouse_data_demo.csv & write it to a Lakehouse
+![Read Parquet](../assets/02/Read_Parquet.png)
 
-Use `read_lakehouse_csv()` to read the CSV file intended for the Lakehouse Demo.
+## 5. Read CSV, transform, and write to a Lakehouse
 
-![alt text](../assets/02/Read_CSV_LH_DEMO.png)
+Use `read_lakehouse_csv()` to read the CSV intended for the Lakehouse demo.
 
-Scroll all the way down in the 02 Pipeline template where you see `5. User define transformation` here you are able to do whatever transformation on the source dataframes you ingested earlier . `Pro tip:` Just use Ms Copilot and define what you want to achieve its preety decent at writing code.
+![Read CSV for Lakehouse](../assets/02/Read_CSV_LH_DEMO.png)
 
-![alt text](../assets/02/Transform_DF.png)
+### Apply transformation logic
 
-Scroll all the way down in the 02 Pipeline template where you see `7. Write and profile the target (Lakehouse)` Run this to write to the Unified Lakehouse, 
+Use the **User defined transformation** section in `02_pipeline` for visible project-specific transformations.
 
-Note that we have commented out the partion_by and repartion_by parameters? 
-`Pro tip` You can use that to do parallel processing with pyspark its faster but takes up more compute , `be sure to use it on a proper partion column like date not datetime `else you will end up with a `multiple small files` problem which end up making the write and table read extremely slow.
+![Transform DataFrame](../assets/02/Transform_DF.png)
 
-![alt text](../assets/02/Write_LH.png)
+### Write and profile the target
 
-If you noticed we have written to 3 tables
+Run the Lakehouse target write section to write into the Unified Lakehouse and register the target evidence.
 
-Optional: You can also display what we have just written `Note` frequency rows for columns with lesser than 80% distinct rate are being created and saved automatically; `display(target_profile_df)` just shows the compact summary.
+![Write Lakehouse](../assets/02/Write_LH.png)
 
-![alt text](../assets/02/Read_Written_LH.png)
+!!! tip "Partitioning"
 
-## 6. Read the Warehouse_data_demo.csv & write it to a warehouse
+    `partition_by` and `repartition_by` can help with large workloads, but they should be used only when they fit the data shape. A poor partition key can create many small files and make reads and writes slower.
 
-Use read_lakehouse_csv() to read the CSV file intended for the Warehouse Demo.
+You can then inspect the written table and compact profile summary.
 
-![alt text](../assets/02/Read_CSV_WH_DEMO.png)
+![Read written Lakehouse table](../assets/02/Read_Written_LH.png)
 
-Unlike Lakehouse before we can write to a Warehouse schema it need to be created via SQL first. So go to your warehouse and run `Create Schema demo`
+!!! note "Frequency profiling"
 
-![alt text](../assets/02/create_schema.png)
+    Frequency rows for eligible columns are created and persisted by the profiling workflow. Displaying `target_profile_df` shows the compact profile summary, not the full frequency table.
 
-Go back and Scroll all the way down in the 02 Pipeline template where you see `Alternative 7. Write and profile the target (Warehouse)` Run this to write to the warehouse, for simplicity we will just write the source_df directly to warehouse without transformation.
+## 6. Read CSV and write to a Warehouse
 
-![alt text](../assets/02/Write_WH.png)
+Use `read_lakehouse_csv()` to read the CSV intended for the Warehouse demo.
 
+![Read CSV for Warehouse](../assets/02/Read_CSV_WH_DEMO.png)
 
+Create the target Warehouse schema first:
 
-## 7. Read a table from the Warehouse via a query & write it into a lakehouse via parallel processing
+```sql
+CREATE SCHEMA demo
+```
 
-Use `read_warehouse_query` or `read_warehouse_table` which you can think of it as simply select * to read the warehouse table we loaded in earlier 
+![Create Warehouse schema](../assets/02/create_schema.png)
 
-![alt text](../assets/02/Read_WH.png)
+Then run the Warehouse target write section. For the demo, the source DataFrame can be written directly without an additional transformation.
 
-Note that as we focus on using pyspark, reading from warehouse means we need to convert spark to sql and back... 
-so lakehouse provide us with much better performance especially when data gets bigger, 
+![Write Warehouse](../assets/02/Write_WH.png)
 
-A test I carried out was reading 35 million rows of data via warehouse via this `read_warehouse_query` method , tooks ~5+ mins but if the data is already in a lakehouse it just takes ~9 seconds. `Pro tip` wherever possible store the data into lakehouse for your processing needs especially if you need to do heavy processing then you can leverage on pyspark parallel processing.
+## 7. Read from Warehouse and write back to Lakehouse
 
-Ok , Scroll all the way down in the 02 Pipeline template where you see `7. Write and profile the target (Lakehouse)` lets change a few parameters now, then run it just to showcase how to run in parallel processing.
+Use `read_warehouse_query()` or `read_warehouse_table()` to read the Warehouse table created earlier.
 
-![alt text](../assets/02/Write_LH_Parallel.png)
+![Read Warehouse](../assets/02/Read_WH.png)
 
-`Pro tip` parallel processing only make sense when data is big , ie for this small demo dataset it is actually slower because it needs to split the files and store them seperately (37 seconds - parallel process vs 21 seconds single processing). `Feel free to experiment and see what works but rule of thumb the bigger the dataset the better parallel processing becomes`
+For Spark-heavy processing, Lakehouse data is often more natural because the data is already available to Spark without an additional Warehouse query path.
 
-## Conclusion
+??? info "Why the demo also shows parallel processing"
 
-This demonstration covers the FabricOps functions used for file ingestion, Lakehouse and Warehouse data movement, data profiling, frequency analysis, and metadata registration.
+    This step also demonstrates repartitioning before a Lakehouse write. Parallel processing can help on larger datasets, but it adds overhead on small datasets. Test the pattern against the real workload instead of assuming more partitions are always faster.
 
-| Function  | Available since  | Demonstrated purpose            |
-| ------------------- | ---------------- | ------------------------------- |
-| `read_lakehouse_csv()`             | FabricOps v0.1.0 | Read CSV files from a configured Lakehouse `Files` area                                     |
-| `read_lakehouse_excel()`           | FabricOps v0.1.0 | Read an Excel worksheet from a configured Lakehouse `Files` area                            |
-| `read_lakehouse_parquet()`         | FabricOps v0.1.0 | Read Parquet files from a configured Lakehouse `Files` area                                 |
-| `read_lakehouse_table()`           | FabricOps v0.1.0 | Read a managed Lakehouse table                                                              |
-| `write_lakehouse_table()`          | FabricOps v0.1.0 | Write a Spark DataFrame as a managed Lakehouse table                                        |
-| `read_warehouse_table()`           | FabricOps v0.1.0 | Read a complete named Warehouse table                                                       |
-| `read_warehouse_query()`           | FabricOps v0.1.0 | Execute caller-provided SQL against a Warehouse                                             |
-| `write_warehouse_table()`          | FabricOps v0.1.0 | Write a Spark DataFrame to a Warehouse table                                                |
-| `profile_dataframe()`              | FabricOps v0.2.0 | Generate column-level profiling statistics for a DataFrame                                  |
-| `profile_frequency_distribution()` | FabricOps v0.2.0 | Generate value-frequency distributions for selected DataFrame columns                       |
-| `profile_and_register_table()`     | FabricOps v0.2.0 | Profile a table and register the resulting profile metadata in the FabricOps metadata model |
+![Write Lakehouse in parallel](../assets/02/Write_LH_Parallel.png)
 
+## Functions demonstrated
 
-After completing this step, continue to [Step 3: Enrich the Data Catalogue and define guardrails](03-enrich-guardrails.md).
+| Function | Available since | Demonstrated purpose |
+| --- | --- | --- |
+| `read_lakehouse_csv()` | FabricOps v0.1.0 | Read CSV files from a configured Lakehouse `Files` area. |
+| `read_lakehouse_excel()` | FabricOps v0.1.0 | Read an Excel worksheet from a configured Lakehouse `Files` area. |
+| `read_lakehouse_parquet()` | FabricOps v0.1.0 | Read Parquet files from a configured Lakehouse `Files` area. |
+| `read_lakehouse_table()` | FabricOps v0.1.0 | Read a managed Lakehouse table. |
+| `write_lakehouse_table()` | FabricOps v0.1.0 | Write a Spark DataFrame as a managed Lakehouse table. |
+| `read_warehouse_table()` | FabricOps v0.1.0 | Read a complete named Warehouse table. |
+| `read_warehouse_query()` | FabricOps v0.1.0 | Execute caller-provided SQL against a Warehouse. |
+| `write_warehouse_table()` | FabricOps v0.1.0 | Write a Spark DataFrame to a Warehouse table. |
+| `profile_dataframe()` | FabricOps v0.2.0 | Generate column-level profiling statistics for a DataFrame. |
+| `profile_frequency_distribution()` | FabricOps v0.2.0 | Generate value-frequency distributions for selected DataFrame columns. |
+| `profile_and_register_table()` | FabricOps v0.2.0 | Profile a table and register the resulting profile metadata in the FabricOps metadata model. |
+
+## Expected result
+
+You should now have demonstrated the standard FabricOps IO and profiling patterns across files, Lakehouse, and Warehouse targets, with Data Catalogue, Data Profiled, Data Profiled Frequency where applicable, and Data Lineage evidence written by the pipeline workflow.
+
+**Next:** [Step 3: Enrich the Data Catalogue and define Guardrails](03-enrich-guardrails.md)
