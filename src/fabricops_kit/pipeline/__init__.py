@@ -1,5 +1,6 @@
 """Pipeline evidence and orchestration helpers."""
 
+from fabricops_kit.pipeline.detect_source_changes import detect_source_changes
 from fabricops_kit.pipeline.display_guardrail_results import display_guardrail_results
 from fabricops_kit.pipeline.guardrails_shared import (
     enforce_freshness,
@@ -12,6 +13,7 @@ from fabricops_kit.pipeline.profile_frequency_distribution import profile_freque
 from fabricops_kit.pipeline.run_table_guardrails import run_table_guardrails
 
 __all__ = [
+    "detect_source_changes",
     "display_guardrail_results",
     "enforce_freshness",
     "enforce_profile_behavior",

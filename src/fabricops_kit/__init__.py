@@ -27,6 +27,7 @@ from .io import (
     write_warehouse_table,
 )
 from .pipeline import (
+    detect_source_changes,
     display_guardrail_results,
     profile_and_register_table,
     profile_dataframe,
@@ -58,6 +59,7 @@ IO_EXPORTS = (
 )
 
 PIPELINE_EXPORTS = (
+    "detect_source_changes",
     "profile_and_register_table",
     "profile_dataframe",
     "profile_frequency_distribution",
