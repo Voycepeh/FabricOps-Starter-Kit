@@ -685,7 +685,7 @@ PUBLIC_SYMBOL_DOCS = [
   'template_segment': 'Source guardrails',
   'use_when': 'Use after schema and freshness checks to compare current and previous source observations.',
   'do_not_use_when': 'Do not use as target merge policy or a persistent CDC framework.',
-  'parameters': 'current and previous data, partition and logical key columns, range configuration, source pattern, comparison scope, and mutable window.',
+  'parameters': 'current and previous data, partition and logical key columns, range configuration, source pattern, comparison scope, mutable window, and an explicit version column for versioned sources.',
   'returns': 'Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.',
   'side_effects': 'None. It does not merge or write target data.',
   'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',

@@ -969,6 +969,7 @@ def _run_table_guardrails_workflow(
                 source_pattern=table_config.get("source_pattern", "snapshot"),
                 comparison_scope=table_config.get("comparison_scope", "complete"),
                 refresh_days=table_config.get("refresh_days", 0),
+                version_column=table_config.get("version_column"),
                 reference_date=table_config.get("change_reference_date"),
                 include_row_changes=table_config.get("include_row_changes", False),
             )

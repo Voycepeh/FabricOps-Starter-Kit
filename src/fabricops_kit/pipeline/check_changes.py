@@ -16,6 +16,7 @@ def check_changes(
     source_pattern: str = "snapshot",
     comparison_scope: str = "complete",
     refresh_days: int = 0,
+    version_column: str | None = None,
     reference_date: date | datetime | str | None = None,
     include_row_changes: bool = False,
 ) -> dict:
@@ -40,10 +41,15 @@ def check_changes(
     source_pattern : {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
         Explicit source behavior; it is never inferred from table naming.
     comparison_scope : {"complete", "partitions", "partial"}
-        Completeness of the current observation. Deletions are reported only
-        for ``complete`` comparisons.
+        Completeness of the current observation. ``complete`` can prove global
+        deletions, ``partitions`` can prove deletions only inside supplied
+        complete partitions, and ``partial`` never infers deletions.
     refresh_days : int, default=0
-        Number of days in the expected mutable window.
+        Number of days in the expected mutable window. Zero means only values
+        dated on ``reference_date`` are recent.
+    version_column : str, optional
+        Column used to select the latest row per logical key. Required when
+        ``source_pattern="versioned"``.
     reference_date : date, datetime, str, optional
         End of the recent mutable window.
     include_row_changes : bool, default=False
@@ -78,6 +84,7 @@ def check_changes(
         source_pattern=source_pattern,
         comparison_scope=comparison_scope,
         refresh_days=refresh_days,
+        version_column=version_column,
         reference_date=reference_date,
         include_row_changes=include_row_changes,
     )
