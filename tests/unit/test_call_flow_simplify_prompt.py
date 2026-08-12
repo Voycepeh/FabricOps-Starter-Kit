@@ -18,5 +18,13 @@ def test_dashboard_exposes_codex_simplify_prompt_pack() -> None:
     assert "Remove unnecessary branching, duplication, wrappers, indirection, and dead implementation" in html
     assert "Keep public behaviour, accepted inputs, outputs, schemas, side effects, persisted contracts, audit behaviour, and documented errors unchanged." in html
     assert "Respect Type 1 to Type 5 architecture rules; do not introduce new architecture violations." in html
+    assert "Establish a behavioural baseline before editing" in html
+    assert "Run the same targeted tests after simplification" in html
+    assert "Do not change the function's behaviour as part of simplification." in html
+    assert "If behaviour equivalence cannot be demonstrated with existing tests" in html
+    assert "keep/revert the original implementation" in html
+    assert "function exportSimplifyPacket(){try{" in html
+    assert "Simplify packet export failed" in html
+    assert html.count("Download Codex cleanup packet") == 1
     assert "Downloaded Codex/GPT-ready simplify packet." in html
     assert "$('downloadSimplifyPacket').onclick=()=>exportSimplifyPacket()" in html
