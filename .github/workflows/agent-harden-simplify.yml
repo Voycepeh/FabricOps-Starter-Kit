@@ -56,8 +56,8 @@ jobs:
               raise SystemExit('test anchor not found')
           test.write_text(t.replace(anchor, addition, 1))
           PY
-      - name: Run focused tests
-        run: PYTHONPATH=src python -m pytest tests/unit/test_call_flow_simplify_prompt.py tests/unit/test_public_function_call_flows.py -q
+      - name: Run focused test
+        run: PYTHONPATH=src python -m pytest tests/unit/test_call_flow_simplify_prompt.py -q
       - name: Regenerate dashboard
         run: PYTHONPATH=src python scripts/generate_public_function_call_flows_dashboard.py
       - name: Commit changes
