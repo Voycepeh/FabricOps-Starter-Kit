@@ -38,6 +38,7 @@ nav:
       - Profile and understand data: solutions/profile-data.md
       - Automatic Data Lineage: solutions/capture-data-lineage.md
       - Validate a source before ETL: solutions/validate-a-data-source-before-etl.md
+      - Source change detection and incremental reads: solutions/source-change-detection.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md

@@ -9,6 +9,7 @@ The FabricOps Solution Bank shows practical data problems already solved by the 
 | [Profile and understand your data](profile-data.md) | Produce repeatable column profiles and useful frequency distributions before deciding how to transform, validate, or govern data. |
 | [Capture Data Lineage automatically in `02_pipeline`](capture-data-lineage.md) | Record source and target participation as part of the standard pipeline workflow rather than maintaining lineage separately. |
 | [Validate a data source before ETL](validate-a-data-source-before-etl.md) | Check source schema, freshness, and previously observed data changes before transformation or writes begin. |
+| [Detect source changes and plan incremental reads](source-change-detection.md) | Observe large Warehouse or Lakehouse sources cheaply before deciding whether to perform a restricted business-data read. |
 
 !!! note "Implementation-backed solutions only"
 
