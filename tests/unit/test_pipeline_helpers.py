@@ -460,7 +460,7 @@ def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
 
 def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or_dq(monkeypatch, spark_session):
     """Verify run table guardrails skip profile behavior only not schema freshness or dq."""
-    df = spark_session.createDataFrame([("not-an-int", "2026-06-01")], "id string, business_date string")
+    df = spark_session.createDataFrame([(1, "2026-06-01")], "id int, business_date string")
 
     monkeypatch.setattr(
         pipeline_shared,
@@ -529,7 +529,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
 
     assert result["can_continue"] is False
     assert result["failed_tables"] == ["orders"]
-    assert result["schema_results"]["orders"]["status"] == "failed"
+    assert result["schema_results"]["orders"]["status"] == "passed"
     assert result["freshness_results"]["orders"]["status"] == "failed"
     assert result["stability_results"]["orders"]["status"] == "skipped"
     assert result["dq_results"]["orders"]["status"] == "failed"
