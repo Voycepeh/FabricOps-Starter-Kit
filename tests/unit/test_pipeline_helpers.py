@@ -210,8 +210,8 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
         return {"status": "written"}
 
     monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", fake_profile)
-    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", fake_validate)
-    monkeypatch.setattr(pipeline_shared, "enforce_freshness", fake_freshness)
+    monkeypatch.setattr(pipeline_shared, "run_schema_check", fake_validate)
+    monkeypatch.setattr(pipeline_shared, "run_freshness_check", fake_freshness)
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", fake_stability)
     monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", fake_dq)
     monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", fake_catalogue)
@@ -256,6 +256,7 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert result["summary"] == {
         "schema_results": result["schema_results"],
         "freshness_results": result["freshness_results"],
+        "changes_results": result["changes_results"],
         "stability_results": result["stability_results"],
         "dq_results": result["dq_results"],
         "catalogue_status": result["catalogue_status"],
@@ -263,8 +264,8 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     }
     assert table_configs[0]["df"] == "df_good_checked"
     assert ("profile", "df_bad") in calls
-    assert ("freshness", "df_bad") in calls
-    assert ("stability", "orders_bad", result["profiles"]["bad"]) in calls
+    assert ("freshness", "df_bad") not in calls
+    assert not any(call[0] == "stability" and call[1] == "orders_bad" for call in calls)
     assert catalogue_calls
     assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
     assert catalogue_calls[0][2]["freshness_results"] == result["freshness_results"]
@@ -281,8 +282,8 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
             return rows
 
     monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
-    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_schema_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_freshness_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "_run_active_dq_guardrail", lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []})
     monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
@@ -306,7 +307,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
         spark_session=Spark(),
     )
 
-    assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "dq"]
+    assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "changes", "dq"]
     assert all("run_id" not in write for write in result_writes)
 
 def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypatch):
@@ -314,8 +315,8 @@ def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypat
     stability_calls = []
 
     monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
-    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_schema_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_freshness_check", lambda *args, **kwargs: {"status": "skipped", "can_continue": True})
 
     def fake_stability(*args, **kwargs):
         stability_calls.append(kwargs)
@@ -373,8 +374,8 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
     stopped = []
 
     monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe})
-    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
-    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_schema_check", lambda dataframe, expected_schema, *, preset="strict": {"status": "failed", "can_continue": False})
+    monkeypatch.setattr(pipeline_shared, "run_freshness_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"status": "written"})
     monkeypatch.setattr(pipeline_shared, "stop_if_failed", lambda result: stopped.append(result))
@@ -404,33 +405,33 @@ def test_run_table_guardrails_stop_on_failure_delegates_to_standard_stopper(monk
 
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     """Verify schema guardrail strict and allow new columns behavior."""
-    from fabricops_kit.pipeline.guardrails_shared import _check_schema_runtime
+    from fabricops_kit.pipeline.guardrails_shared import run_schema_check
 
     happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
     additive_df = spark_session.createDataFrame([(1, "new", "extra")], "id int, status string, source_file string")
     incompatible_df = spark_session.createDataFrame([("1", "new")], "id string, status string")
     expected_schema = {"id": "int", "status": "string"}
 
-    happy = _check_schema_runtime(happy_df, expected_schema, preset="strict")
+    happy = run_schema_check(happy_df, expected_schema, preset="strict")
     assert happy["status"] == "passed"
     assert happy["can_continue"] is True
 
-    strict_additive = _check_schema_runtime(additive_df, expected_schema, preset="strict")
+    strict_additive = run_schema_check(additive_df, expected_schema, preset="strict")
     assert strict_additive["status"] == "failed"
     assert strict_additive["can_continue"] is False
     assert strict_additive["unexpected_columns"] == ["source_file"]
 
-    allowed_additive = _check_schema_runtime(additive_df, expected_schema, preset="allow_new_columns")
+    allowed_additive = run_schema_check(additive_df, expected_schema, preset="allow_new_columns")
     assert allowed_additive["status"] == "warning"
     assert allowed_additive["can_continue"] is True
     assert allowed_additive["unexpected_columns"] == ["source_file"]
 
-    incompatible = _check_schema_runtime(incompatible_df, expected_schema, preset="strict")
+    incompatible = run_schema_check(incompatible_df, expected_schema, preset="strict")
     assert incompatible["status"] == "failed"
     assert incompatible["can_continue"] is False
     assert incompatible["datatype_mismatches"] == [{"column": "id", "expected": "int", "actual": "string"}]
 
-    incompatible_allow_new = _check_schema_runtime(incompatible_df, expected_schema, preset="allow_new_columns")
+    incompatible_allow_new = run_schema_check(incompatible_df, expected_schema, preset="allow_new_columns")
     assert incompatible_allow_new["status"] == "failed"
     assert incompatible_allow_new["can_continue"] is False
 
@@ -598,8 +599,8 @@ def test_run_table_guardrails_uses_active_context_defaults(monkeypatch):
     monkeypatch.setattr(widgets_shared_module, "_ACTIVE_PIPELINE_CONTEXT", active)
     monkeypatch.setattr(pipeline_shared, "resolve_fabric_context", lambda context=None: ("config", "dev", context))
     monkeypatch.setattr(pipeline_shared, "build_profile_dataframe", lambda *args, **kwargs: FakeDataFrame("profile"))
-    monkeypatch.setattr(pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
-    monkeypatch.setattr(pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_schema_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
+    monkeypatch.setattr(pipeline_shared, "run_freshness_check", lambda *args, **kwargs: {"status": "passed", "can_continue": True})
     captured = {}
     monkeypatch.setattr(
         pipeline_shared,

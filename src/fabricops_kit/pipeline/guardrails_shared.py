@@ -60,6 +60,172 @@ DQ_RULE_TYPES = [
     "expression_true",
 ]
 
+_SOURCE_PATTERNS = {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
+_COMPARISON_SCOPES = {"complete", "partitions", "partial"}
+
+
+def _source_rows(dataframe) -> list[dict]:
+    rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
+    if rows is None:
+        return []
+    if isinstance(rows, dict):
+        rows = [rows]
+    return [_row_to_dict(row) for row in rows]
+
+
+def _stable_source_value(value):
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): _stable_source_value(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_stable_source_value(item) for item in value]
+    return value
+
+
+def _source_hash(payload) -> str:
+    encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def run_changes_check(
+    dataframe,
+    previous_dataframe=None,
+    *,
+    partition_columns: list[str] | tuple[str, ...] | None = None,
+    key_columns: list[str] | tuple[str, ...] | None = None,
+    non_key_columns: list[str] | tuple[str, ...] | None = None,
+    range_column: str | None = None,
+    source_pattern: str = "snapshot",
+    comparison_scope: str = "complete",
+    refresh_days: int = 0,
+    reference_date: date | datetime | str | None = None,
+    include_row_changes: bool = False,
+) -> dict:
+    """Run the shared deterministic changes implementation."""
+    pattern = str(source_pattern).strip().lower()
+    scope = str(comparison_scope).strip().lower()
+    if pattern not in _SOURCE_PATTERNS:
+        raise ValueError("source_pattern must be one of: snapshot, incremental_append, mutable_incremental, versioned")
+    if scope not in _COMPARISON_SCOPES:
+        raise ValueError("comparison_scope must be one of: complete, partitions, partial")
+    if isinstance(refresh_days, bool):
+        raise ValueError("refresh_days must be a non-negative integer")
+    try:
+        refresh_days = int(refresh_days)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("refresh_days must be a non-negative integer") from exc
+    if refresh_days < 0:
+        raise ValueError("refresh_days must be a non-negative integer")
+
+    current = _source_rows(dataframe)
+    previous = _source_rows(previous_dataframe)
+    partitions = tuple(partition_columns or ([range_column] if range_column else []))
+    keys = tuple(key_columns or ())
+    all_columns = sorted({str(column) for row in current + previous for column in row})
+    missing = [column for column in (*partitions, *keys) if column not in all_columns]
+    if missing:
+        raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
+    if not keys:
+        raise ValueError("key_columns must contain at least one logical key column")
+
+    def keyed(rows):
+        output = {}
+        for row in rows:
+            identity = tuple(row.get(column) for column in keys)
+            if any(value is None for value in identity):
+                raise ValueError("logical key columns must not contain null values")
+            key_hash = _source_hash(identity)
+            if key_hash in output:
+                raise ValueError("logical key columns must uniquely identify rows")
+            content_columns = tuple(non_key_columns or [column for column in all_columns if column not in keys])
+            output[key_hash] = (row, _source_hash([(column, row.get(column)) for column in content_columns]))
+        return output
+
+    def observations(rows):
+        grouped: dict[tuple, list[dict]] = {}
+        for row in rows:
+            partition = tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
+            grouped.setdefault(partition, []).append(row)
+        result = []
+        for partition, members in sorted(grouped.items(), key=lambda item: str(item[0])):
+            values = [row.get(range_column) for row in members if range_column and row.get(range_column) is not None]
+            row_hashes = sorted(_source_hash([(column, row.get(column)) for column in all_columns]) for row in members)
+            result.append({
+                "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
+                "row_count": len(members),
+                "min_value": _stable_source_value(min(values)) if values else None,
+                "max_value": _stable_source_value(max(values)) if values else None,
+                "fingerprint": _source_hash(row_hashes),
+            })
+        return result
+
+    current_observations = observations(current)
+    previous_observations = observations(previous)
+    previous_by_partition = {_source_hash(item["partition"]): item for item in previous_observations}
+    changed_partitions, new_partitions = [], []
+    for item in current_observations:
+        old = previous_by_partition.get(_source_hash(item["partition"]))
+        if old is None:
+            new_partitions.append(item["partition"])
+        elif old["fingerprint"] != item["fingerprint"]:
+            changed_partitions.append(item["partition"])
+
+    current_by_key, previous_by_key = keyed(current), keyed(previous)
+    inserted_keys = sorted(set(current_by_key) - set(previous_by_key))
+    shared_keys = set(current_by_key) & set(previous_by_key)
+    updated_keys = sorted(key for key in shared_keys if current_by_key[key][1] != previous_by_key[key][1])
+    deleted_keys = sorted(set(previous_by_key) - set(current_by_key)) if scope == "complete" else []
+    today = _coerce_date(reference_date) if reference_date is not None else date.today()
+    if today is None:
+        raise ValueError("reference_date must be a date, datetime, or ISO date string")
+    recent_start = today - timedelta(days=refresh_days)
+    recent, historical = [], []
+    for key_hash in updated_keys:
+        row = current_by_key[key_hash][0]
+        observed = _coerce_date(row.get(range_column)) if range_column else None
+        (recent if observed is not None and observed >= recent_start else historical).append(key_hash)
+
+    current_values = [row.get(range_column) for row in current if range_column and row.get(range_column) is not None]
+    previous_values = [row.get(range_column) for row in previous if range_column and row.get(range_column) is not None]
+    previous_max = max(previous_values) if previous_values else None
+    unseen_values = [value for value in current_values if previous_max is None or value > previous_max]
+    changed = bool(inserted_keys or updated_keys or deleted_keys or changed_partitions or new_partitions)
+    result = {
+        "status": "changed" if changed else "unchanged",
+        "can_continue": True,
+        "check_type": "changes",
+        "guardrail_type": "changes",
+        "changed": changed,
+        "source_pattern": pattern,
+        "comparison_scope": scope,
+        "partition_observations": current_observations,
+        "changed_partitions": changed_partitions,
+        "new_partitions": new_partitions,
+        "recent_changes": len(recent),
+        "historical_changes": len(historical),
+        "inserted_count": len(inserted_keys),
+        "updated_count": len(updated_keys),
+        "deleted_count": len(deleted_keys),
+        "deletions_provable": scope == "complete",
+        "current_observed_range": {"min": _stable_source_value(min(current_values)) if current_values else None, "max": _stable_source_value(max(current_values)) if current_values else None},
+        "previous_observed_range": {"min": _stable_source_value(min(previous_values)) if previous_values else None, "max": _stable_source_value(previous_max)},
+        "recent_mutable_range": {"start": recent_start.isoformat(), "end": today.isoformat()},
+        "new_unseen_range": {"min": _stable_source_value(min(unseen_values)) if unseen_values else None, "max": _stable_source_value(max(unseen_values)) if unseen_values else None},
+        "message": "Source changes detected." if changed else "Source is unchanged.",
+    }
+    if include_row_changes:
+        result["row_changes"] = {
+            "inserted": inserted_keys,
+            "updated": updated_keys,
+            "deleted": deleted_keys,
+            "recent": recent,
+            "historical": historical,
+        }
+    return result
+
 
 # ---------------------------------------------------------------------------
 # Resolver layer
@@ -133,7 +299,7 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
 # Internal workflow layer
 # ---------------------------------------------------------------------------
 
-def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
+def run_schema_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
     """Apply an internal runtime schema rule check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It translates the latest
@@ -142,29 +308,29 @@ def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_
     """
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
-        return _check_schema_runtime(dataframe, {}, preset="monitor_only")
+        return run_schema_check(dataframe, {}, preset="monitor_only")
     params = _parse_rule_parameters(rule)
     expected = params.get("data_types") or params.get("expected_data_types") or {}
     selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
     expected_schema = {column: expected.get(column, "") for column in selected_columns}
     rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
     preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-    result = _check_schema_runtime(dataframe, expected_schema, preset=preset)
+    result = run_schema_check(dataframe, expected_schema, preset=preset)
     result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     return _apply_bypass_post_review_warning(result, rule)
 
 
-def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
+def run_freshness_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
     """Enforce freshness using the latest active freshness rule row."""
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
-        return enforce_freshness(dataframe, None, None, reference_date=reference_date)
+        return run_freshness_check(dataframe, None, None, reference_date=reference_date)
     params = _parse_rule_parameters(rule)
     rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
     if rule_type == "skip":
-        result = enforce_freshness(dataframe, None, None, reference_date=reference_date)
+        result = run_freshness_check(dataframe, None, None, reference_date=reference_date)
     else:
-        result = enforce_freshness(
+        result = run_freshness_check(
             dataframe,
             params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name"),
             params.get("max_lag_days"),
@@ -366,7 +532,7 @@ _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 # Validator layer
 # ---------------------------------------------------------------------------
 
-def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
     """Apply an internal runtime schema check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
@@ -625,7 +791,7 @@ def _iso_date_value(value) -> str:
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
 
 
-def enforce_freshness(
+def run_freshness_check(
     dataframe,
     freshness_column: str | None,
     max_lag_days: int | str | None,
@@ -724,6 +890,28 @@ def enforce_freshness(
         message=message,
     )
     return base_result
+
+
+def enforce_freshness(
+    dataframe,
+    freshness_column: str | None,
+    max_lag_days: int | str | None,
+    severity: str = "blocking",
+    *,
+    reference_date: date | datetime | str | None = None,
+) -> dict:
+    """Enforce freshness through the shared freshness-check implementation.
+
+    This established public name remains compatible while
+    :func:`check_freshness` provides the check-oriented API.
+    """
+    return run_freshness_check(
+        dataframe,
+        freshness_column,
+        max_lag_days,
+        severity=severity,
+        reference_date=reference_date,
+    )
 
 
 # ---------------------------------------------------------------------------
