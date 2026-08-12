@@ -1,10 +1,12 @@
 """Focused source change detection tests."""
 
+import inspect
 from datetime import date, timedelta
 
 import pytest
 
 from fabricops_kit.pipeline.shared import detect_source_changes_core
+from fabricops_kit.pipeline import shared as pipeline_shared
 
 
 def _df(spark, rows):
@@ -20,6 +22,15 @@ def _result(spark, previous, current, **kwargs):
         source_pattern="mutable_incremental",
         **kwargs,
     )
+
+
+def test_partition_fingerprint_uses_mergeable_aggregates():
+    """Partition hashing must not materialize every row hash in an array."""
+    source = inspect.getsource(pipeline_shared._fingerprints)
+    assert "collect_list" not in source
+    assert "sort_array" not in source
+    assert "bit_xor" in source
+    assert "row_hash_sum" in source
 
 
 def test_order_does_not_change_fingerprint(spark_session):

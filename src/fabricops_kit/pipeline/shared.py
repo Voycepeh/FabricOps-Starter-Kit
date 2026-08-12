@@ -964,7 +964,12 @@ def _run_table_guardrails_workflow(
                 )
 
             previous_df = table_config.get("previous_observation_df")
-            if previous_df is None:
+            if not _result_can_continue(freshness_results[table_key]):
+                change_results[table_key] = {
+                    "status": "skipped", "can_continue": True,
+                    "message": "Change check skipped because freshness validation blocked continuation.",
+                }
+            elif previous_df is None:
                 change_results[table_key] = {
                     "status": "skipped", "can_continue": True,
                     "message": "Change check skipped because no previous observation was supplied.",
@@ -1350,10 +1355,19 @@ def _assert_keys(state, identity, label):
 def _fingerprints(state):
     from pyspark.sql import functions as F
 
-    return state.groupBy(F.col("_partition").alias("partition_value")).agg(
-        F.count("*").alias("row_count"), F.min("key_hash").alias("min_key"), F.max("key_hash").alias("max_key"),
-        F.sha2(F.concat_ws("|", F.sort_array(F.collect_list(F.concat_ws(":", "key_hash", "non_key_hash")))), 256)
-        .alias("partition_hash"),
+    aggregates = state.groupBy(F.col("_partition").alias("partition_value")).agg(
+        F.count("*").alias("row_count"),
+        F.min("key_hash").alias("min_key"),
+        F.max("key_hash").alias("max_key"),
+        F.expr("bit_xor(xxhash64(key_hash, non_key_hash))").alias("row_hash_xor"),
+        F.expr("sum(cast(xxhash64(key_hash, non_key_hash) as decimal(38,0)))").alias("row_hash_sum"),
+    )
+    return aggregates.withColumn(
+        "partition_hash",
+        F.sha2(
+            F.concat_ws("|", "row_count", "min_key", "max_key", "row_hash_xor", "row_hash_sum"),
+            256,
+        ),
     )
 
 
@@ -1427,5 +1441,13 @@ def _detect(current_df, previous_df, *, key_columns, incremental_column, refresh
 
 
 def detect_source_changes_core(current_df, previous_df, *, key_columns, incremental_column=None, refresh_days=7, source_pattern="snapshot", version_columns=None, comparison_scope="complete", include_row_changes=True):
-    """Return source change facts for the guardrail orchestration workflow."""
+    """Return source change facts for the guardrail orchestration workflow.
+
+    ``source_pattern`` records the configured storage pattern for read planning;
+    ``versioned`` additionally requires version identity columns. Comparison
+    completeness and deletion validity are controlled explicitly by
+    ``comparison_scope`` rather than inferred from the descriptive pattern.
+    ``previous_df`` is orchestration input for this initial capability, not a
+    durable observation service.
+    """
     return _detect(current_df, previous_df, key_columns=key_columns, incremental_column=incremental_column, refresh_days=refresh_days, source_pattern=source_pattern, version_columns=version_columns, comparison_scope=comparison_scope, include_row_changes=include_row_changes)

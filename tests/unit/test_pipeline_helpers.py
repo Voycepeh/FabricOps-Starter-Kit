@@ -273,6 +273,47 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert catalogue_calls[0][2]["freshness_results"] == result["freshness_results"]
 
 
+def test_blocking_freshness_skips_source_change_detection(monkeypatch):
+    """A blocking freshness result prevents comparison against stale input."""
+    monkeypatch.setattr(
+        pipeline_shared, "build_profile_dataframe", lambda dataframe, **kwargs: {"profile_for": dataframe}
+    )
+    monkeypatch.setattr(
+        pipeline_shared, "_check_schema_runtime", lambda *args, **kwargs: {"status": "passed", "can_continue": True}
+    )
+    monkeypatch.setattr(
+        pipeline_shared, "enforce_freshness", lambda *args, **kwargs: {"status": "failed", "can_continue": False}
+    )
+    monkeypatch.setattr(
+        pipeline_shared, "enforce_profile_behavior", lambda *args, **kwargs: {"status": "passed", "can_continue": True}
+    )
+    monkeypatch.setattr(
+        pipeline_shared, "_run_active_dq_guardrail",
+        lambda *args, **kwargs: {"status": "passed", "can_continue": True, "checks": []},
+    )
+    monkeypatch.setattr(pipeline_shared, "write_catalogue_evidence", lambda *args, **kwargs: {"orders": "written"})
+
+    def unexpected_change_detection(*args, **kwargs):
+        raise AssertionError("blocking freshness must skip detect_source_changes_core")
+
+    monkeypatch.setattr(pipeline_shared, "detect_source_changes_core", unexpected_change_detection)
+    result = pipeline.run_table_guardrails(
+        [{
+            "key": "orders", "df": "current", "previous_observation_df": "previous",
+            "table_name": "orders", "stage": "source", "expected_schema": {"id": "bigint"},
+            "freshness_column": "received_date", "freshness_max_lag_days": 1,
+        }],
+        context={"config": {}, "env": "dev"}, run_id="run-1", spark_session="spark",
+    )
+
+    assert result["freshness_results"]["orders"]["status"] == "failed"
+    assert result["change_results"]["orders"] == {
+        "status": "skipped",
+        "can_continue": True,
+        "message": "Change check skipped because freshness validation blocked continuation.",
+    }
+
+
 
 
 def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch):
