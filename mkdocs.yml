@@ -31,6 +31,12 @@ nav:
       - Step 5 - Create Data Contract: guided-demo/05-create-data-contract.md
       - Step 6 - Promote to Production: guided-demo/06-promote-to-production.md
       - Optional - Data Exploration for consumers: guided-demo/99-explore-via-notebook.md
+  - Solution Bank:
+      - Overview: solutions/index.md
+      - Multiple Fabric items: solutions/multiple-fabric-items.md
+      - Warehouse SQL in PySpark: solutions/warehouse-query.md
+      - Profile and understand data: solutions/profile-data.md
+      - Automatic Data Lineage: solutions/capture-data-lineage.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md
