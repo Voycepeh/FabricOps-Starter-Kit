@@ -34,7 +34,8 @@ def check_changes(
         Non-null columns that uniquely identify a logical row.
     non_key_columns : sequence of str, optional
         Columns whose content identifies an update. Defaults to all non-key
-        columns.
+        columns, except that a versioned source's ``version_column`` is used
+        only for latest-record resolution unless explicitly included here.
     range_column : str, optional
         Date, timestamp, or ordered range column used for recent and unseen
         range classification.

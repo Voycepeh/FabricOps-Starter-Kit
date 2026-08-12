@@ -317,6 +317,17 @@ def _strip_internal_observation_fields(observations):
     return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
 
 
+def _changes_content_columns(columns, keys, non_key_columns, pattern, version_column):
+    """Resolve content columns without treating version metadata as business data."""
+    if non_key_columns is not None:
+        return tuple(non_key_columns)
+    return tuple(
+        column
+        for column in columns
+        if column not in keys and not (pattern == "versioned" and column == version_column)
+    )
+
+
 def run_changes_check(
     dataframe,
     previous_dataframe=None,
@@ -354,7 +365,7 @@ def run_changes_check(
         missing = [column for column in required if column not in columns]
         if missing:
             raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = tuple(non_key_columns or [column for column in columns if column not in keys])
+        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
         if pattern == "versioned":
             current, previous = _spark_resolve_versions(current, keys, version_column), _spark_resolve_versions(previous, keys, version_column)
         _validate_spark_logical_keys(current, keys)
@@ -370,7 +381,7 @@ def run_changes_check(
         missing = [column for column in required if column not in columns]
         if missing:
             raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
-        content_columns = tuple(non_key_columns or [column for column in columns if column not in keys])
+        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
         if pattern == "versioned":
             current, previous = _local_latest_versions(current, keys, version_column), _local_latest_versions(previous, keys, version_column)
         _validate_local_logical_keys(current, keys)

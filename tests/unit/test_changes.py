@@ -106,6 +106,28 @@ def test_versioned_uses_latest_version_per_key():
     assert result["updated_count"] == 1
 
 
+def test_version_only_increment_is_not_a_business_update():
+    """A newer version with identical business content is unchanged by default."""
+    previous = [{"id": 1, "day": "2026-08-12", "version": 1, "value": "same"}]
+    current = [{"id": 1, "day": "2026-08-12", "version": 2, "value": "same"}]
+    result = check(current, previous, source_pattern="versioned", version_column="version")
+    assert result["updated_count"] == 0
+
+
+def test_explicit_version_content_detects_version_only_update():
+    """Callers may explicitly treat the version field as row content."""
+    previous = [{"id": 1, "day": "2026-08-12", "version": 1, "value": "same"}]
+    current = [{"id": 1, "day": "2026-08-12", "version": 2, "value": "same"}]
+    result = check(
+        current,
+        previous,
+        source_pattern="versioned",
+        version_column="version",
+        non_key_columns=["day", "value", "version"],
+    )
+    assert result["updated_count"] == 1
+
+
 def test_mutable_incremental_surfaces_historical_mutation():
     """Mutable incremental semantics explicitly flag changes outside the window."""
     previous = [{"id": 1, "day": "2026-07-01", "value": "old"}]
