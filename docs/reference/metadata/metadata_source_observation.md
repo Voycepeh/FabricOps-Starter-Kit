@@ -6,8 +6,8 @@
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 19 |
-| Business columns | 11 |
+| Total columns | 21 |
+| Business columns | 13 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -15,11 +15,13 @@
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
 | `source_id` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Identifier stored for `source_id`. |
+| `observation_definition_id` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Identifier stored for `observation_definition_id`. |
 | `source_type` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_type`. |
 | `source_target` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_target`. |
 | `source_schema` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_schema`. |
 | `source_table` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_table`. |
 | `partition_value` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `partition_value`. |
+| `is_present` | `boolean` | [`observe_source`](../../api/reference/observe_source.md) | Boolean state recorded for `is_present`. |
 | `row_count` | `long` | [`observe_source`](../../api/reference/observe_source.md) | Observed total row count in the profiled dataset snapshot. |
 | `observed_min` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `observed_min`. |
 | `observed_max` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `observed_max`. |

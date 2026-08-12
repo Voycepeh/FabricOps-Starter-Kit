@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import hashlib
+import json
 import re
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
+from fabricops_kit.config.shared import is_table_not_found_error
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     get_spark_session,
@@ -83,6 +85,7 @@ def _compact_rows(frame: Any, partition_columns: list[str]) -> list[dict[str, An
         evidence = f"{partition_value}|{count}|{minimum}|{maximum}|{checksum}"
         compact.append({
             "partition_value": partition_value,
+            "is_present": True,
             "row_count": count,
             "observed_min": None if minimum is None else str(minimum),
             "observed_max": None if maximum is None else str(maximum),
@@ -120,19 +123,25 @@ def _observe_lakehouse(
 
 
 def _load_previous(
-    source_id: str, *, spark_session: Any, config: Any, env: str, metadata_schema: str | None
+    source_id: str, observation_definition_id: str, *, spark_session: Any, config: Any, env: str,
+    metadata_schema: str | None,
 ) -> list[dict[str, Any]]:
     try:
         frame = read_lakehouse_table_core(
             OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
             spark_session=spark_session, context={"config": config, "env": env},
         )
-    except Exception:
-        return []
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return []
+        raise RuntimeError(f"Unable to load source observation history for {source_id!r}: {exc}") from exc
     rows = (
-        frame.where(frame.source_id == source_id)
+        frame.where(
+            (frame.source_id == source_id)
+            & (frame.observation_definition_id == observation_definition_id)
+        )
         .orderBy(frame.observed_at.desc())
-        .select("partition_value", "row_count", "observed_min", "observed_max", "fingerprint", "observed_at")
+        .select("partition_value", "is_present", "row_count", "observed_min", "observed_max", "fingerprint", "observed_at")
         .collect()
     )
     latest: dict[str, dict[str, Any]] = {}
@@ -143,12 +152,14 @@ def _load_previous(
 
 
 def _persist(
-    rows: list[dict[str, Any]], source: dict[str, Any], source_id: str, observed_at: datetime,
+    rows: list[dict[str, Any]], source: dict[str, Any], source_id: str,
+    observation_definition_id: str, observed_at: datetime,
     *, spark_session: Any, config: Any, env: str, metadata_schema: str | None,
 ) -> None:
     audit = build_runtime_audit_fields(config=config, env=env)
     values = [{
-        **row, "source_id": source_id, "source_type": source["source_type"],
+        **row, "source_id": source_id, "observation_definition_id": observation_definition_id,
+        "source_type": source["source_type"],
         "source_target": source["target"], "source_schema": source.get("schema"),
         "source_table": source["table_name"], "observed_at": observed_at, **audit,
     } for row in rows]
@@ -164,8 +175,6 @@ def _persist(
 
 def _read_predicate(partition_columns: list[str], partition_values: list[str]) -> str | None:
     if not partition_values:
-        return None
-    if len(partition_columns) != 1:
         return None
     column = partition_columns[0]
     escaped = [value.replace("'", "''") for value in partition_values]
@@ -187,7 +196,8 @@ def observe_source(
         ``lakehouse``), logical ``target``, ``table_name``, and optional
         ``schema`` and ``partition_predicate`` values.
     partition_columns : list[str]
-        Columns defining independently readable source partitions.
+        A one-item list defining independently readable source partitions.
+        Composite partition definitions are not supported in this Preview API.
     range_column : str
         Column used for compact minimum and maximum evidence.
     fingerprint_columns : list[str]
@@ -208,9 +218,10 @@ def observe_source(
     Returns
     -------
     dict[str, Any]
-        Compact observations, changed and new partitions, and a read-only
-        ``read_predicate``. ``requires_read`` is false when every current
-        partition matches its latest stored observation.
+        Compact observations, changed, new, and removed partitions, and a
+        read-only ``read_predicate``. ``requires_read`` is false only when the
+        current partition set and every fingerprint match the latest stored
+        observation under the same observation definition.
 
     Raises
     ------
@@ -226,6 +237,10 @@ def observe_source(
     Lakehouse aggregation remains distributed and projects only observation
     columns. The source is always read-only; history is appended to
     ``METADATA_SOURCE_OBSERVATION`` in the configured metadata Lakehouse.
+    A deterministic ``observation_definition_id`` binds history to the chosen
+    partition, range, fingerprint columns, and partition predicate. Removed
+    partitions are persisted as absence tombstones so a later reappearance is
+    detected as a change.
 
     Examples
     --------
@@ -254,13 +269,27 @@ def observe_source(
     if not normalized["target"]:
         raise ValueError("source.target is required.")
     partitions = _columns(partition_columns, "partition_columns")
+    if len(partitions) != 1:
+        raise ValueError("partition_columns must contain exactly one column in this Preview API.")
     range_value = _identifier(range_column, "range_column")
     fingerprints = _columns(fingerprint_columns, "fingerprint_columns")
     spark = get_spark_session(spark_session)
     runtime_context = {**(context or {}), "config": config, "env": env}
     source_id = str(source.get("source_id") or f"{source_type}:{normalized['target']}:{source.get('schema') or ''}:{normalized['table_name']}")
+    definition = {
+        "fingerprint_columns": fingerprints,
+        "partition_column": partitions[0],
+        "partition_predicate": normalized["partition_predicate"],
+        "range_column": range_value,
+    }
+    observation_definition_id = hashlib.sha256(
+        json.dumps(definition, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
-    previous = _load_previous(source_id, spark_session=spark, config=config, env=env, metadata_schema=metadata_schema)
+    previous = _load_previous(
+        source_id, observation_definition_id, spark_session=spark, config=config,
+        env=env, metadata_schema=metadata_schema,
+    )
     if source_type == "warehouse":
         if not source.get("schema"):
             raise ValueError("source.schema is required for Warehouse observation.")
@@ -270,21 +299,35 @@ def observe_source(
         current = _observe_lakehouse(normalized, partitions, range_value, fingerprints, spark_session=spark, context=runtime_context)
         query = None
     previous_by_partition = {str(row["partition_value"]): row for row in previous}
+    current_partitions = {str(row["partition_value"]) for row in current}
     new_partitions, changed_partitions = [], []
     for row in current:
         prior = previous_by_partition.get(row["partition_value"])
         if prior is None:
             new_partitions.append(row["partition_value"])
-        elif prior["fingerprint"] != row["fingerprint"]:
+        elif not prior.get("is_present", True) or prior["fingerprint"] != row["fingerprint"]:
             changed_partitions.append(row["partition_value"])
+    removed_partitions = sorted(
+        partition for partition, row in previous_by_partition.items()
+        if row.get("is_present", True) and partition not in current_partitions
+    )
     affected = [*changed_partitions, *new_partitions]
     observed_at = datetime.now(UTC)
     if persist:
-        _persist(current, normalized, source_id, observed_at, spark_session=spark, config=config, env=env, metadata_schema=metadata_schema)
+        tombstones = [{
+            "partition_value": partition, "is_present": False, "row_count": 0,
+            "observed_min": None, "observed_max": None, "fingerprint": "removed",
+        } for partition in removed_partitions]
+        _persist(
+            [*current, *tombstones], normalized, source_id, observation_definition_id, observed_at,
+            spark_session=spark, config=config, env=env, metadata_schema=metadata_schema,
+        )
     return {
-        "source_id": source_id, "observations": current,
+        "source_id": source_id, "observation_definition_id": observation_definition_id,
+        "observations": current,
         "first_observation": not previous, "new_partitions": new_partitions,
-        "changed_partitions": changed_partitions, "requires_read": bool(affected),
+        "changed_partitions": changed_partitions, "removed_partitions": removed_partitions,
+        "requires_read": not previous or bool(affected) or bool(removed_partitions),
         "read_predicate": _read_predicate(partitions, affected),
         "warehouse_observation_query": query,
     }

@@ -90,6 +90,29 @@ def test_changed_and_new_partitions_produce_restricted_plan(monkeypatch):
     assert result["read_predicate"] == "[business_date] IN ('2026-08-10', '2026-08-11')"
 
 
+def test_removed_partition_requires_read(monkeypatch):
+    """A partition present in history but absent now is an explicit source change."""
+    old, _, _ = _run(monkeypatch, [_observation(), _observation("2026-08-11")], persist=False)
+    result, persisted, _ = _run(monkeypatch, [_observation()], previous=old["observations"])
+    assert result["removed_partitions"] == ["2026-08-11"]
+    assert result["requires_read"] is True
+    assert persisted[-1] == {
+        "partition_value": "2026-08-11", "is_present": False, "row_count": 0,
+        "observed_min": None, "observed_max": None, "fingerprint": "removed",
+    }
+
+
+def test_removed_partition_tombstone_prevents_false_unchanged_reappearance(monkeypatch):
+    """A partition returning after removal compares against its absence tombstone."""
+    previous = [{
+        "partition_value": "2026-08-11", "is_present": False, "row_count": 0,
+        "observed_min": None, "observed_max": None, "fingerprint": "removed",
+    }]
+    result, _, _ = _run(monkeypatch, [_observation("2026-08-11")], previous=previous)
+    assert result["changed_partitions"] == ["2026-08-11"]
+    assert result["requires_read"] is True
+
+
 def test_warehouse_observation_is_read_only_grouped_pushdown(monkeypatch):
     """Warehouse SQL is a compact, read-only grouped aggregate."""
     result, _, queries = _run(monkeypatch, [_observation()])
@@ -105,18 +128,26 @@ def test_previous_observation_loads_latest_fabricops_history(monkeypatch):
     older = _Row(partition_value="p", fingerprint="old", observed_at=datetime(2026, 1, 1, tzinfo=UTC))
     newer = _Row(partition_value="p", fingerprint="new", observed_at=datetime(2026, 1, 2, tzinfo=UTC))
 
+    class _Condition(tuple):
+        def __and__(self, other):
+            return ("and", self, other)
+
     class _Column:
         def __eq__(self, other):
-            return ("eq", other)
+            return _Condition(("eq", other))
 
         def desc(self):
             return self
 
     class _History(_CompactFrame):
-        source_id = observed_at = _Column()
+        source_id = observation_definition_id = observed_at = _Column()
 
         def where(self, condition):
-            assert condition == ("eq", "warehouse:warehouse:dbo:orders")
+            assert condition == (
+                "and",
+                ("eq", "warehouse:warehouse:dbo:orders"),
+                ("eq", "definition"),
+            )
             return self
 
         def orderBy(self, column):  # noqa: N802, ARG002
@@ -127,7 +158,7 @@ def test_previous_observation_loads_latest_fabricops_history(monkeypatch):
 
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *args, **kwargs: _History([newer, older]))
     rows = module._load_previous(
-        "warehouse:warehouse:dbo:orders", spark_session=object(), config=object(),
+        "warehouse:warehouse:dbo:orders", "definition", spark_session=object(), config=object(),
         env="dev", metadata_schema="metadata",
     )
     assert rows == [newer]
@@ -154,8 +185,9 @@ def test_observation_persistence_targets_fabricops_metadata(monkeypatch):
         lambda frame, table, **options: writes.append((table, options)),
     )
     module._persist(
-        [{"partition_value": "2026-08-10", "row_count": 1, "observed_min": "1", "observed_max": "1", "fingerprint": "hash"}],
-        _source(), "warehouse:warehouse:dbo:orders", datetime(2026, 1, 1, tzinfo=UTC),
+        [{"partition_value": "2026-08-10", "is_present": True, "row_count": 1, "observed_min": "1", "observed_max": "1", "fingerprint": "hash"}],
+        _source(), "warehouse:warehouse:dbo:orders", "definition",
+        datetime(2026, 1, 1, tzinfo=UTC),
         spark_session=_Spark(), config=object(), env="dev", metadata_schema="meta",
     )
     assert writes == [(module.OBSERVATION_TABLE, {
@@ -178,6 +210,71 @@ def test_invalid_source_configuration_fails_clearly(monkeypatch, source):
             source, partition_columns=["day"], range_column="id",
             fingerprint_columns=["id"], config=object(), env="dev", spark_session=object(),
         )
+
+
+def test_composite_partitions_are_rejected(monkeypatch):
+    """Preview observation requires one partition column so every plan is filterable."""
+    monkeypatch.setattr(module, "get_spark_session", lambda spark: object())
+    with pytest.raises(ValueError, match="exactly one"):
+        module.observe_source(
+            _source(), partition_columns=["year", "month"], range_column="id",
+            fingerprint_columns=["id"], config=object(), env="dev", spark_session=object(),
+        )
+
+
+@pytest.mark.parametrize(
+    ("override", "expected_different"),
+    [
+        ({"fingerprint_columns": ["id", "modified_at", "status"]}, True),
+        ({"range_column": "modified_at"}, True),
+        ({"source": {**_source(), "partition_predicate": "business_date >= '2026-08-01'"}}, True),
+    ],
+)
+def test_observation_definition_binds_history_to_configuration(monkeypatch, override, expected_different):
+    """Every fingerprint-affecting observation setting changes the definition ID."""
+    base, _, _ = _run(monkeypatch, [_observation()], persist=False)
+    captured = []
+    monkeypatch.setattr(module, "get_spark_session", lambda spark: object())
+    monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: "metadata")
+    monkeypatch.setattr(
+        module, "_load_previous",
+        lambda source_id, definition_id, **kwargs: captured.append(definition_id) or [],
+    )
+    monkeypatch.setattr(module, "read_warehouse_query_core", lambda *args, **kwargs: _CompactFrame([_observation()]))
+    arguments = {
+        "source": _source(), "partition_columns": ["business_date"],
+        "range_column": "id", "fingerprint_columns": ["id", "modified_at"],
+    }
+    arguments.update(override)
+    module.observe_source(
+        **arguments, config=object(), env="dev", spark_session=object(), persist=False,
+    )
+    assert (captured[0] != base["observation_definition_id"]) is expected_different
+
+
+def test_history_operational_failure_is_not_treated_as_first_run(monkeypatch):
+    """Only a missing history table may become an empty first observation."""
+    monkeypatch.setattr(
+        module, "read_lakehouse_table_core",
+        lambda *args, **kwargs: (_ for _ in ()).throw(PermissionError("access denied")),
+    )
+    with pytest.raises(RuntimeError, match="Unable to load"):
+        module._load_previous(
+            "source", "definition", spark_session=object(), config=object(),
+            env="dev", metadata_schema="metadata",
+        )
+
+
+def test_missing_history_table_is_first_run(monkeypatch):
+    """An expected missing-table error produces empty observation history."""
+    monkeypatch.setattr(
+        module, "read_lakehouse_table_core",
+        lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("table not found")),
+    )
+    assert module._load_previous(
+        "source", "definition", spark_session=object(), config=object(),
+        env="dev", metadata_schema="metadata",
+    ) == []
 
 
 def test_lakehouse_observation_projects_filters_and_aggregates(monkeypatch):

@@ -12,9 +12,9 @@ Observe source partitions cheaply and plan a restricted source read.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_source.py:175`
+`fabricops_kit/pipeline/observe_source.py:184`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_source.py#L175-L290">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_source.py#L184-L333">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -70,7 +70,7 @@ True
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `source` | `dict[str, Any]` | Yes | Explicit source configuration with ``source_type`` (``warehouse`` or ``lakehouse``), logical ``target``, ``table_name``, and optional ``schema`` and ``partition_predicate`` values. |
-| `partition_columns` | `list[str]` | Yes | Columns defining independently readable source partitions. |
+| `partition_columns` | `list[str]` | Yes | A one-item list defining independently readable source partitions. Composite partition definitions are not supported in this Preview API. |
 | `range_column` | `str` | Yes | Column used for compact minimum and maximum evidence. |
 | `fingerprint_columns` | `list[str]` | Yes | Narrow columns used by the distributed aggregate checksum. |
 | `config` | `Any` | Yes | FabricOps configuration containing the source and metadata targets. |
@@ -99,6 +99,10 @@ on the restricted source slice when deeper comparison is required.
 Lakehouse aggregation remains distributed and projects only observation
 columns. The source is always read-only; history is appended to
 ``METADATA_SOURCE_OBSERVATION`` in the configured metadata Lakehouse.
+A deterministic ``observation_definition_id`` binds history to the chosen
+partition, range, fingerprint columns, and partition predicate. Removed
+partitions are persisted as absence tombstones so a later reappearance is
+detected as a change.
 
 </div>
 

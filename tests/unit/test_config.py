@@ -1121,7 +1121,8 @@ def test_setup_metadata_tables_uses_public_config_validation_helper_only():
     """Verify setup metadata tables avoids cross-file private helper imports."""
     source = Path("src/fabricops_kit/config/setup_metadata_tables.py").read_text(encoding="utf-8")
 
-    assert "from .shared import FrameworkConfig, get_store, validate_framework_config" in source
+    assert "is_table_not_found_error" in source
+    assert "validate_framework_config" in source
     assert "_validate_framework_config" not in source
     assert "CANONICAL_METADATA_TABLES" in source
     assert "metadata_schema_type_name" in source

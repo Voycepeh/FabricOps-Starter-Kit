@@ -11,7 +11,7 @@ from .metadata_schemas import (
     metadata_table_field_names,
     metadata_table_schema_registry,
 )
-from .shared import FrameworkConfig, get_store, validate_framework_config
+from .shared import FrameworkConfig, get_store, is_table_not_found_error, validate_framework_config
 
 
 def _schema_fields_by_name(schema: Any) -> dict[str, Any]:
@@ -45,23 +45,6 @@ def _validate_existing_metadata_schema(table_name: str, existing_schema: Any, ex
             + "; ".join(mismatches)
             + "."
         )
-
-
-def _is_missing_table_error(exc: Exception) -> bool:
-    """Return whether an exception looks like a missing table/path."""
-    lowered = str(exc).lower()
-    return any(
-        marker in lowered
-        for marker in (
-            "not found",
-            "does not exist",
-            "doesn't exist",
-            "path does not exist",
-            "table_or_view_not_found",
-            "path_not_found",
-            "no such",
-        )
-    )
 
 
 def _result(table_name: str, status: str, message: str, *, error_type: str | None = None) -> dict[str, Any]:
@@ -360,7 +343,7 @@ def setup_metadata_tables(
                     table_name, target="metadata", schema=resolved_metadata_schema, spark_session=spark, context=context
                 )
             except Exception as exc:
-                if not _is_missing_table_error(exc):
+                if not is_table_not_found_error(exc):
                     raise RuntimeError(
                         f"Unable to read metadata table {table_name!r}. Original {type(exc).__name__}: {exc}"
                     ) from exc
