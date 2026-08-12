@@ -24,6 +24,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.pipeline.check_schema",
     "fabricops_kit.pipeline.check_freshness",
     "fabricops_kit.pipeline.check_changes",
+    "fabricops_kit.pipeline.observe_source.observe_source",
     "fabricops_kit.widgets.widget_render_data_agreement.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward.widget_render_data_steward",
     "fabricops_kit.widgets.widget_view_agreement_catalogue.widget_view_agreement_catalogue",
