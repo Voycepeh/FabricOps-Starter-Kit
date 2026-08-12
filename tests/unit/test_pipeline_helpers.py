@@ -476,7 +476,7 @@ def test_run_table_guardrails_skip_profile_behavior_only_not_schema_freshness_or
     )
     monkeypatch.setattr(
         pipeline_shared,
-        "enforce_freshness",
+        "run_freshness_check",
         lambda dataframe, freshness_column, max_lag_days, severity="blocking", **kwargs: {
             "status": "failed",
             "can_continue": False,
