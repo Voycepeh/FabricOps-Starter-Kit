@@ -68,7 +68,7 @@ Preview callables are not covered by Live backward-compatibility guarantees. Pre
 
 Discontinued callables do not imply current support. Preserve historical behaviour only when explicitly required.
 
-When breaking cleanup is authorized, clearly identify every changed public contract in the PR summary and do not add compatibility layers unless requested.
+When breaking cleanup is authorized, do not add compatibility layers unless requested. Clearly identify every changed public contract in the PR summary.
 
 ## Function architecture
 
