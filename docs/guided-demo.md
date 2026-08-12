@@ -20,7 +20,7 @@ Read [How FabricOps Works](how-fabricops-works.md) first for the architecture an
 
 ## Workflow overview
 
-**Prepare → Govern → Engineer → Validate → Contract → Promote → Consume**
+**Governance and Engineering Development work in a loop until the pipeline is validated and ready for promotion to Engineering Production.**
 
 ![FabricOps role workflow](assets/fabricops-role-workflow.png)
 
