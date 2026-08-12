@@ -134,6 +134,9 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
         set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
     )
+    assert {"guardrail_level", "metadata_column_key"}.issubset(
+        set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
+    )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
     profiled_fields = set(schemas["METADATA_DATA_PROFILED"].fieldNames())
     frequency_fields = set(schemas["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames())
@@ -172,6 +175,9 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
         set(schemas[governance_authoring.GUARDRAIL_RESULTS_TABLE].fieldNames())
     )
+    result_fields = {field.name: field for field in schemas[governance_authoring.GUARDRAIL_RESULTS_TABLE].fields}
+    assert result_fields["metadata_column_key"].nullable is True
+    assert result_fields["guardrail_level"].nullable is True
 
 
 def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_session):

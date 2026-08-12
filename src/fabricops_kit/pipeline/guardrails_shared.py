@@ -175,6 +175,32 @@ def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name
     return _apply_bypass_post_review_warning(result, rule)
 
 
+def source_change_rule_config(
+    rules_df,
+    *,
+    dataset_name: str,
+    table_name: str,
+    environment_name: str = "",
+    metadata_table_key: str = "",
+) -> dict[str, Any] | None:
+    """Return the latest active dataset-owned source-change rule configuration."""
+    rule = _select_table_guardrail_rule(
+        rules_df,
+        guardrail_type="change",
+        dataset_name=dataset_name,
+        table_name=table_name,
+        environment_name=environment_name,
+        metadata_table_key=metadata_table_key,
+    )
+    if not rule:
+        return None
+    return {
+        **_parse_rule_parameters(rule),
+        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+        "severity": _string_value(_catalogue_value(rule, "severity") or "warning"),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Public/shared guardrail exception model
 # ---------------------------------------------------------------------------

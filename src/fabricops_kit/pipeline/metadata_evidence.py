@@ -39,10 +39,12 @@ def _write_guardrail_result_row(
         "result_id": str(uuid.uuid4()),
         "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "guardrail_level": "column" if column_name else "table",
         "metadata_table_key": str(
             result.get("metadata_table_key")
             or build_metadata_table_key(store_type, layer, schema_name, table_name)
         ),
+        "metadata_column_key": result.get("metadata_column_key") or None,
         "environment_name": env,
         "dataset_name": dataset_name,
         "table_name": table_name,
@@ -55,7 +57,11 @@ def _write_guardrail_result_row(
         "reason": str(result.get("message") or result.get("reason") or ""),
         "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
         "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
-        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
+        "result_payload_json": json.dumps(
+            {key: value for key, value in result.items() if key not in {"dataframe", "row_changes"}},
+            default=str,
+            sort_keys=True,
+        ),
         **audit,
     }
     context = {"config": config, "env": env}

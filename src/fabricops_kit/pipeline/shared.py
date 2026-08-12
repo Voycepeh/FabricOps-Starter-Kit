@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 from functools import reduce
-from typing import Any, Mapping
+from operator import or_
+from typing import Any, Mapping, Sequence
 
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
 from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
@@ -293,6 +294,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     stop_if_failed,
     _check_schema_runtime,
     _check_schema_rule_runtime,
+    source_change_rule_config,
 )
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -453,6 +455,7 @@ def _next_action(guardrail: str, status: str) -> str:
     actions = {
         "schema": "Fix source data or update expected_schema.",
         "freshness": "Refresh source data or adjust freshness rule.",
+        "change": "Review the observed source changes and apply the configured pipeline policy.",
         "profile_behavior": "Review source change or approve reset in governance.",
         "dq": "Review failed DQ rules and source data.",
         "catalogue": "Check metadata lakehouse write configuration and permissions.",
@@ -539,6 +542,8 @@ def _guardrail_reason(guardrail: str, result: Mapping[str, Any]) -> str:
         )
     if guardrail == "freshness":
         return _freshness_reason(result)
+    if guardrail == "change":
+        return _result_reason(result) or "Source change check passed."
     if guardrail == "profile_behavior":
         return _profile_behavior_reason(result)
     if guardrail == "dq":
@@ -549,7 +554,10 @@ def _guardrail_reason(guardrail: str, result: Mapping[str, Any]) -> str:
 def _table_keys(result_bundle: Mapping[str, Any]) -> list[str]:
     """Return stable table keys present in a guardrail result bundle."""
     keys: set[str] = set()
-    for name in ("schema_results", "freshness_results", "stability_results", "dq_results", "catalogue_status"):
+    for name in (
+        "schema_results", "freshness_results", "change_results", "stability_results",
+        "dq_results", "catalogue_status",
+    ):
         value = result_bundle.get(name) or {}
         if isinstance(value, Mapping):
             keys.update(str(key) for key in value)
@@ -576,6 +584,7 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
         results = {
             "schema": (result_bundle.get("schema_results") or {}).get(table, {}),
             "freshness": (result_bundle.get("freshness_results") or {}).get(table, {}),
+            "change": (result_bundle.get("change_results") or {}).get(table, {}),
             "profile_behavior": (result_bundle.get("stability_results") or {}).get(table, {}),
             "dq": (result_bundle.get("dq_results") or {}).get(table, {}),
         }
@@ -583,7 +592,7 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
         failed_guardrail = "none"
         status = "passed"
         main_reason = "All blocking guardrails passed."
-        for guardrail in ("schema", "freshness", "profile_behavior", "dq"):
+        for guardrail in ("schema", "freshness", "change", "profile_behavior", "dq"):
             result = results[guardrail]
             if not _result_can_continue(result) or _result_status(result) == "failed":
                 failed_guardrail = guardrail
@@ -616,6 +625,7 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
                 "next_action": _next_action(failed_guardrail, status),
                 "schema": _result_status(results["schema"]),
                 "freshness": _result_status(results["freshness"]),
+                "change": _result_status(results["change"]),
                 "profile_behavior": _result_status(results["profile_behavior"]),
                 "dq": _result_status(results["dq"]),
                 "catalogue": str(catalogue_value or ""),
@@ -630,6 +640,7 @@ def build_guardrail_detail_rows(result_bundle: Mapping[str, Any]) -> list[dict[s
     result_groups = {
         "schema": result_bundle.get("schema_results") or {},
         "freshness": result_bundle.get("freshness_results") or {},
+        "change": result_bundle.get("change_results") or {},
         "profile_behavior": result_bundle.get("stability_results") or {},
         "dq": result_bundle.get("dq_results") or {},
     }
@@ -790,7 +801,7 @@ def _run_table_guardrails_workflow(
     """Run approved checks for configured source or target tables.
 
     Runs the approved checks for each configured source or target table. It
-    can check the schema, data freshness, profile changes, and data-quality
+    checks schema first, then freshness and source changes, followed by profile and data-quality
     rules, then returns a combined result showing whether the pipeline may
     continue.
 
@@ -801,7 +812,10 @@ def _run_table_guardrails_workflow(
         ``df``, and ``expected_schema``. Optional keys such as
         ``dataset_name``, ``stage``, ``schema_preset``, ``profile_mode``,
         ``profile_behavior_severity``, ``watermark_column``, ``dq_preset``,
-        and ``exclude_columns`` control the guardrail behavior.
+        ``exclude_columns``, ``previous_observation_df``, ``key_columns``,
+        ``incremental_column``, ``refresh_days``, ``source_pattern``, and
+        ``comparison_scope`` control the guardrail behavior. Source-change
+        checking is skipped when no previous observation is supplied.
     run_id : str, optional
         Current pipeline run identifier. When omitted, the active context from
         an active pipeline context is used.
@@ -831,7 +845,7 @@ def _run_table_guardrails_workflow(
     -------
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, freshness
-        results, profile behavior results, DQ results, catalogue status,
+        results, source change results, profile behavior results, DQ results, catalogue status,
         evidence definitions, concise ``summary``, ``can_continue``, and
         ``failed_tables``. Results remain separated by table key and guardrail
         type.
@@ -844,7 +858,7 @@ def _run_table_guardrails_workflow(
         ↓
     Load the approved guardrail rules
         ↓
-    Run schema, freshness, profile and DQ checks
+    Run schema, freshness, source change, profile and DQ checks
         ↓
     Save each guardrail outcome
     ``METADATA_GUARDRAIL_RESULTS``
@@ -854,7 +868,7 @@ def _run_table_guardrails_workflow(
     Return whether the pipeline can continue
 
     The returned bundle includes per-table profiles, schema results, freshness
-    results, profile-behavior results, DQ results, catalogue status, an
+    results, source-change results, profile-behavior results, DQ results, catalogue status, an
     overall summary, ``can_continue``, and failed tables. ``can_continue=True``
     means no blocking guardrail result requires the pipeline to stop.
     ``can_continue=False`` means the notebook should stop before writing the
@@ -890,6 +904,7 @@ def _run_table_guardrails_workflow(
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
     freshness_results: dict[str, Mapping[str, Any]] = {}
+    change_results: dict[str, Mapping[str, Any]] = {}
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
@@ -906,16 +921,10 @@ def _run_table_guardrails_workflow(
         dataframe = table_config["df"]
         metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
 
-        profiles[table_key] = build_profile_dataframe(
-            dataframe,
-            # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
-            # and unions those defaults with any table-specific exclude_columns.
-            exclude_columns=table_config.get("exclude_columns"),
-        )
-
         guardrail_rules_df = table_config.get("guardrail_rules_df")
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
+        change_rules_df = table_config.get("change_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
             schema_results[table_key] = _check_schema_rule_runtime(
                 dataframe,
@@ -932,22 +941,71 @@ def _run_table_guardrails_workflow(
                 preset=table_config.get("schema_preset", "strict"),
             )
 
-        if freshness_rules_df is not None:
-            freshness_results[table_key] = enforce_freshness_rule(
-                dataframe,
-                freshness_rules_df,
-                dataset_name=dataset_name,
-                table_name=table_name,
-                environment_name=env,
-                metadata_table_key=metadata_table_key,
-            )
+        if not _result_can_continue(schema_results[table_key]):
+            freshness_results[table_key] = {
+                "status": "skipped", "can_continue": True,
+                "message": "Freshness check skipped because schema validation failed.",
+            }
+            change_results[table_key] = {
+                "status": "skipped", "can_continue": True,
+                "message": "Change check skipped because schema validation failed.",
+            }
         else:
-            freshness_results[table_key] = enforce_freshness(
-                dataframe,
-                table_config.get("freshness_column"),
-                table_config.get("freshness_max_lag_days"),
-                severity=table_config.get("freshness_severity", "blocking"),
-            )
+            if freshness_rules_df is not None:
+                freshness_results[table_key] = enforce_freshness_rule(
+                    dataframe, freshness_rules_df, dataset_name=dataset_name, table_name=table_name,
+                    environment_name=env, metadata_table_key=metadata_table_key,
+                )
+            else:
+                freshness_results[table_key] = enforce_freshness(
+                    dataframe, table_config.get("freshness_column"),
+                    table_config.get("freshness_max_lag_days"),
+                    severity=table_config.get("freshness_severity", "blocking"),
+                )
+
+            previous_df = table_config.get("previous_observation_df")
+            if previous_df is None:
+                change_results[table_key] = {
+                    "status": "skipped", "can_continue": True,
+                    "message": "Change check skipped because no previous observation was supplied.",
+                }
+            else:
+                configured_rule = source_change_rule_config(
+                    change_rules_df,
+                    dataset_name=dataset_name,
+                    table_name=table_name,
+                    environment_name=env,
+                    metadata_table_key=metadata_table_key,
+                ) if change_rules_df is not None else None
+                change_config = {**table_config, **(configured_rule or {})}
+                facts = detect_source_changes_core(
+                    dataframe, previous_df,
+                    key_columns=change_config.get("key_columns"),
+                    incremental_column=change_config.get("incremental_column"),
+                    refresh_days=change_config.get("refresh_days", 7),
+                    source_pattern=change_config.get("source_pattern", "snapshot"),
+                    version_columns=change_config.get("version_columns"),
+                    comparison_scope=change_config.get("comparison_scope", "complete"),
+                    include_row_changes=change_config.get("include_row_changes", True),
+                )
+                historical = facts["has_historical_changes"]
+                severity = change_config.get("severity", change_config.get("change_severity", "warning"))
+                status = "passed"
+                if historical:
+                    status = "failed" if severity == "blocking" else "warning"
+                change_results[table_key] = {
+                    **facts,
+                    "status": status,
+                    "can_continue": not historical or severity != "blocking",
+                    "severity": severity,
+                    "rule_key": change_config.get("rule_key", "change_default"),
+                    "message": "Historical source drift detected." if historical else "Source change check passed.",
+                    "actual": {key: value for key, value in facts.items() if key != "row_changes"},
+                }
+
+        profiles[table_key] = build_profile_dataframe(
+            dataframe, exclude_columns=table_config.get("exclude_columns"),
+        )
 
         stability_results[table_key] = enforce_profile_behavior(
             spark_session,
@@ -1001,6 +1059,7 @@ def _run_table_guardrails_workflow(
             for guardrail_type, rule_type, guardrail_result in (
                 ("schema", table_config.get("schema_preset", "strict"), schema_results[table_key]),
                 ("freshness", table_config.get("freshness_column", "freshness"), freshness_results[table_key]),
+                ("change", table_config.get("source_pattern", "snapshot"), change_results[table_key]),
                 ("dq", table_config.get("dq_preset", "active_rules"), dq_results[table_key]),
             ):
                 _write_guardrail_result_row(
@@ -1022,6 +1081,7 @@ def _run_table_guardrails_workflow(
             for result in (
                 schema_results[table_key],
                 freshness_results[table_key],
+                change_results[table_key],
                 stability_results[table_key],
                 dq_results[table_key],
             )
@@ -1047,6 +1107,7 @@ def _run_table_guardrails_workflow(
     summary = {
         "schema_results": schema_results,
         "freshness_results": freshness_results,
+        "change_results": change_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -1056,6 +1117,7 @@ def _run_table_guardrails_workflow(
         "profiles": profiles,
         "schema_results": schema_results,
         "freshness_results": freshness_results,
+        "change_results": change_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -1215,3 +1277,155 @@ def write_catalogue_evidence(
             )
         statuses[name] = "written"
     return statuses
+
+
+# Source change detection helpers
+PATTERNS = {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
+SCOPES = {"complete", "partitions", "partial"}
+
+
+def _column_names(values: Sequence[str] | None, name: str) -> list[str]:
+    if values is None or isinstance(values, str) or not values:
+        raise ValueError(f"{name} must be a non-empty sequence of column names.")
+    result = [str(value).strip() for value in values]
+    if any(not value for value in result) or len(result) != len(set(result)):
+        raise ValueError(f"{name} must contain unique, non-empty column names.")
+    return result
+
+
+def _validate(current_df, previous_df, *, key_columns, incremental_column, refresh_days,
+              source_pattern, version_columns, comparison_scope):
+    keys = _column_names(key_columns, "key_columns")
+    versions = [] if version_columns is None else _column_names(version_columns, "version_columns")
+    pattern, scope = str(source_pattern).strip().lower(), str(comparison_scope).strip().lower()
+    if pattern not in PATTERNS:
+        raise ValueError(f"source_pattern must be one of: {', '.join(sorted(PATTERNS))}.")
+    if scope not in SCOPES:
+        raise ValueError(f"comparison_scope must be one of: {', '.join(sorted(SCOPES))}.")
+    if isinstance(refresh_days, bool) or not isinstance(refresh_days, int) or refresh_days <= 0:
+        raise ValueError("refresh_days must be a positive integer.")
+    if pattern == "versioned" and not versions:
+        raise ValueError("version_columns is required when source_pattern='versioned'.")
+    if pattern != "versioned" and versions:
+        raise ValueError("version_columns is only valid when source_pattern='versioned'.")
+    if incremental_column is not None and (not isinstance(incremental_column, str) or not incremental_column.strip()):
+        raise ValueError("incremental_column must be a non-empty column name when configured.")
+    incremental = incremental_column.strip() if incremental_column else None
+    required = keys + versions + ([incremental] if incremental else [])
+    for label, frame in (("current_df", current_df), ("previous_df", previous_df)):
+        missing = [column for column in required if column not in frame.columns]
+        if missing:
+            raise ValueError(f"{label} is missing required columns: {', '.join(missing)}.")
+    if set(current_df.columns) != set(previous_df.columns):
+        raise ValueError("current_df and previous_df must contain the same columns.")
+    return keys + versions, pattern, scope, incremental
+
+
+def _hash(columns):
+    from pyspark.sql import functions as F
+
+    encoded = [F.to_json(F.struct(F.col(column).alias("value"))) for column in columns]
+    return F.sha2(F.concat_ws("\u001f", *encoded), 256)
+
+
+def _state(df, identity, incremental):
+    from pyspark.sql import functions as F
+
+    attributes = [column for column in sorted(df.columns) if column not in identity]
+    result = df.withColumn("key_hash", _hash(identity)).withColumn(
+        "non_key_hash", _hash(attributes) if attributes else F.sha2(F.lit(""), 256)
+    )
+    return result.withColumn("_partition", F.col(incremental) if incremental else F.lit("__FULL_SOURCE__"))
+
+
+def _assert_keys(state, identity, label):
+    from pyspark.sql import functions as F
+
+    if state.where(reduce(or_, (F.col(column).isNull() for column in identity))).limit(1).count():
+        raise ValueError(f"{label} contains a null logical key.")
+    if state.groupBy("key_hash").count().where(F.col("count") > 1).limit(1).count():
+        raise ValueError(f"{label} contains non-unique configured logical keys.")
+
+
+def _fingerprints(state):
+    from pyspark.sql import functions as F
+
+    return state.groupBy(F.col("_partition").alias("partition_value")).agg(
+        F.count("*").alias("row_count"), F.min("key_hash").alias("min_key"), F.max("key_hash").alias("max_key"),
+        F.sha2(F.concat_ws("|", F.sort_array(F.collect_list(F.concat_ws(":", "key_hash", "non_key_hash")))), 256)
+        .alias("partition_hash"),
+    )
+
+
+def _one(df, expression):
+    return df.agg(expression.alias("value")).first()["value"]
+
+
+def _detect(current_df, previous_df, *, key_columns, incremental_column, refresh_days,
+            source_pattern, version_columns, comparison_scope, include_row_changes):
+    from pyspark.sql import functions as F
+
+    identity, pattern, scope, incremental = _validate(
+        current_df, previous_df, key_columns=key_columns, incremental_column=incremental_column,
+        refresh_days=refresh_days, source_pattern=source_pattern, version_columns=version_columns,
+        comparison_scope=comparison_scope,
+    )
+    current, previous = _state(current_df, identity, incremental), _state(previous_df, identity, incremental)
+    _assert_keys(current, identity, "current_df")
+    _assert_keys(previous, identity, "previous_df")
+    partitions = _fingerprints(current).alias("c").join(_fingerprints(previous).alias("p"), "partition_value", "full")
+    new_partitions = [r.partition_value for r in partitions.where(F.col("p.partition_hash").isNull()).collect()]
+    missing_valid = scope == "complete"
+    missing_partitions = ([r.partition_value for r in partitions.where(F.col("c.partition_hash").isNull()).collect()]
+                          if missing_valid else [])
+    changed_partitions = [r.partition_value for r in partitions.where(
+        F.col("c.partition_hash").isNotNull() & F.col("p.partition_hash").isNotNull()
+        & (F.col("c.partition_hash") != F.col("p.partition_hash"))).collect()]
+    joined = current.select("key_hash", "non_key_hash", "_partition").alias("c").join(
+        previous.select("key_hash", "non_key_hash", "_partition").alias("p"), "key_hash", "full")
+    comparable_deletion = F.lit(scope == "complete")
+    if scope == "partitions":
+        comparable_deletion = F.col("p._partition").isin(
+            [row.partition_value for row in _fingerprints(current).select("partition_value").collect()]
+        )
+    kind = (F.when(F.col("p.non_key_hash").isNull(), "inserted")
+            .when(F.col("c.non_key_hash").isNull(),
+                  F.when(comparable_deletion, "deleted").otherwise("not_comparable"))
+            .when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated").otherwise("unchanged"))
+    changes = joined.withColumn("change_type", kind).withColumn(
+        "incremental_value", F.coalesce(F.col("c._partition"), F.col("p._partition")))
+    source_min = source_max = previous_max = refresh_start = None
+    if incremental:
+        source_min, source_max = _one(current_df, F.min(incremental)), _one(current_df, F.max(incremental))
+        previous_max = _one(previous_df, F.max(incremental))
+        if source_max is not None:
+            refresh_start = _one(current_df, F.date_sub(F.lit(source_max).cast("date"), refresh_days))
+        changes = changes.withColumn("change_recency", F.when(
+            F.col("incremental_value").cast("date") >= F.lit(refresh_start), "recent").otherwise("historical"))
+    else:
+        changes = changes.withColumn("change_recency", F.lit("recent"))
+    classified = changes.where(F.col("change_type").isin("inserted", "updated", "deleted"))
+    raw_counts = {(r.change_recency, r.change_type): r["count"]
+                  for r in classified.groupBy("change_recency", "change_type").count().collect()}
+    counts = {when: {kind: raw_counts.get((when, kind), 0) for kind in ("inserted", "updated", "deleted")}
+              for when in ("recent", "historical")}
+    return {
+        "source_pattern": pattern, "comparison_scope": scope, "refresh_days": refresh_days,
+        "source_range": {"minimum": source_min, "maximum": source_max},
+        "previous_observed_maximum": previous_max,
+        "recent_mutable_range": {"start": refresh_start, "end": source_max},
+        "new_unseen_range": ({"start_exclusive": previous_max, "end_inclusive": source_max} if incremental else None),
+        "historical_comparison_range": ({"before": refresh_start} if incremental else None),
+        "partitions_checked": partitions.count(), "new_partitions": new_partitions,
+        "changed_partitions": changed_partitions, "missing_partitions": missing_partitions,
+        "missing_partition_detection_valid": missing_valid, "recent_changes": counts["recent"],
+        "historical_changes": counts["historical"], "row_changes": classified if include_row_changes else None,
+        "has_changes": classified.limit(1).count() > 0,
+        "has_historical_changes": sum(counts["historical"].values()) > 0,
+    }
+
+
+
+def detect_source_changes_core(current_df, previous_df, *, key_columns, incremental_column=None, refresh_days=7, source_pattern="snapshot", version_columns=None, comparison_scope="complete", include_row_changes=True):
+    """Return source change facts for the guardrail orchestration workflow."""
+    return _detect(current_df, previous_df, key_columns=key_columns, incremental_column=incremental_column, refresh_days=refresh_days, source_pattern=source_pattern, version_columns=version_columns, comparison_scope=comparison_scope, include_row_changes=include_row_changes)

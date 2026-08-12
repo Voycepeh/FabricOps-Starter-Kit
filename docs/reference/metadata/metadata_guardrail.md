@@ -6,8 +6,8 @@
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 54 |
-| Business columns | 46 |
+| Total columns | 55 |
+| Business columns | 47 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -17,6 +17,7 @@
 | `guardrail_rule_id` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable identifier for the guardrail rule row. |
 | `rule_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records`, `fabricops_kit.config.metadata_keys._build_dq_rule_key` | Stable key used to group lifecycle versions of the same guardrail or enrichment rule. |
 | `rule_id` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Rule identity stored by the authoring workflow. |
+| `guardrail_level` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Metadata Guardrail field `guardrail_level`. |
 | `metadata_column_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
 | `metadata_table_key` | `string` | `fabricops_kit.widgets.shared._base_guardrail_rule_record`, `fabricops_kit.widgets.shared._build_dq_rule_records` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | [`widget_author_schema_freshness_profile_rules`](../../api/reference/widget_author_schema_freshness_profile_rules.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Environment name recorded for the metadata row. |

@@ -252,10 +252,12 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     assert set(result["schema_results"]) == {"good", "bad"}
     assert set(result["freshness_results"]) == {"good", "bad"}
     assert set(result["stability_results"]) == {"good", "bad"}
+    assert set(result["change_results"]) == {"good", "bad"}
     assert result["dq_results"]["bad"]["status"] == "skipped"
     assert result["summary"] == {
         "schema_results": result["schema_results"],
         "freshness_results": result["freshness_results"],
+        "change_results": result["change_results"],
         "stability_results": result["stability_results"],
         "dq_results": result["dq_results"],
         "catalogue_status": result["catalogue_status"],
@@ -263,7 +265,8 @@ def test_run_table_guardrails_collects_results_and_returns_summary_before_report
     }
     assert table_configs[0]["df"] == "df_good_checked"
     assert ("profile", "df_bad") in calls
-    assert ("freshness", "df_bad") in calls
+    assert ("freshness", "df_bad") not in calls
+    assert result["change_results"]["bad"]["status"] == "skipped"
     assert ("stability", "orders_bad", result["profiles"]["bad"]) in calls
     assert catalogue_calls
     assert catalogue_calls[0][2]["schema_results"] == result["schema_results"]
@@ -306,7 +309,7 @@ def test_run_table_guardrails_writes_schema_freshness_and_dq_results(monkeypatch
         spark_session=Spark(),
     )
 
-    assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "dq"]
+    assert [write["guardrail_type"] for write in result_writes] == ["schema", "freshness", "change", "dq"]
     assert all("run_id" not in write for write in result_writes)
 
 def test_run_table_guardrails_profile_mode_defaults_and_explicit_modes(monkeypatch):

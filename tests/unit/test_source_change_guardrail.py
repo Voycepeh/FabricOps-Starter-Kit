@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from fabricops_kit.pipeline import detect_source_changes
+from fabricops_kit.pipeline.shared import detect_source_changes_core
 
 
 def _df(spark, rows):
@@ -12,7 +12,7 @@ def _df(spark, rows):
 
 
 def _result(spark, previous, current, **kwargs):
-    return detect_source_changes(
+    return detect_source_changes_core(
         _df(spark, current),
         _df(spark, previous),
         key_columns=["id"],
@@ -96,27 +96,27 @@ def test_invalid_columns_pattern_keys_and_version_semantics(spark_session):
     rows = [(1, date(2026, 8, 12), "a")]
     frame = _df(spark_session, rows)
     with pytest.raises(ValueError, match="missing required columns"):
-        detect_source_changes(frame, frame, key_columns=["missing"])
+        detect_source_changes_core(frame, frame, key_columns=["missing"])
     with pytest.raises(ValueError, match="missing required columns"):
-        detect_source_changes(frame, frame, key_columns=["id"], incremental_column="missing")
+        detect_source_changes_core(frame, frame, key_columns=["id"], incremental_column="missing")
     with pytest.raises(ValueError, match="source_pattern"):
-        detect_source_changes(frame, frame, key_columns=["id"], source_pattern="bronze")
+        detect_source_changes_core(frame, frame, key_columns=["id"], source_pattern="bronze")
     with pytest.raises(ValueError, match="version_columns is required"):
-        detect_source_changes(frame, frame, key_columns=["id"], source_pattern="versioned")
+        detect_source_changes_core(frame, frame, key_columns=["id"], source_pattern="versioned")
 
     duplicate = _df(spark_session, [*rows, (1, date(2026, 8, 13), "b")])
     with pytest.raises(ValueError, match="non-unique"):
-        detect_source_changes(duplicate, frame, key_columns=["id"])
+        detect_source_changes_core(duplicate, frame, key_columns=["id"])
     null_key = _df(spark_session, [(None, date(2026, 8, 12), "a")])
     with pytest.raises(ValueError, match="null logical key"):
-        detect_source_changes(null_key, frame, key_columns=["id"])
+        detect_source_changes_core(null_key, frame, key_columns=["id"])
 
 
 def test_versioned_source_uses_key_and_version_identity(spark_session):
     """Versioned rows use the configured composite version identity."""
     previous = _df(spark_session, [(1, date(2026, 8, 11), "v1")])
     current = _df(spark_session, [(1, date(2026, 8, 11), "v1"), (1, date(2026, 8, 12), "v2")])
-    result = detect_source_changes(
+    result = detect_source_changes_core(
         current, previous, key_columns=["id"], version_columns=["event_date"],
         incremental_column="event_date", source_pattern="versioned",
     )
