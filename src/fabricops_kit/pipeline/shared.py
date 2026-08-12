@@ -287,12 +287,13 @@ def build_profile_dataframe(df, *, exclude_columns=None):
 
 from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail
 from fabricops_kit.pipeline.guardrails_shared import (
-    enforce_freshness,
-    enforce_freshness_rule,
+    run_freshness_check,
+    run_freshness_rule_check,
     enforce_profile_behavior,
     stop_if_failed,
-    _check_schema_runtime,
-    _check_schema_rule_runtime,
+    run_schema_check,
+    run_schema_rule_check,
+    run_changes_check,
 )
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -831,7 +832,7 @@ def _run_table_guardrails_workflow(
     -------
     dict[str, Any]
         Guardrail result bundle containing profiles, schema results, freshness
-        results, profile behavior results, DQ results, catalogue status,
+        results, changes results, profile behavior results, DQ results, catalogue status,
         evidence definitions, concise ``summary``, ``can_continue``, and
         ``failed_tables``. Results remain separated by table key and guardrail
         type.
@@ -844,7 +845,7 @@ def _run_table_guardrails_workflow(
         ↓
     Load the approved guardrail rules
         ↓
-    Run schema, freshness, profile and DQ checks
+    Run schema, freshness, changes, profile and DQ checks
         ↓
     Save each guardrail outcome
     ``METADATA_GUARDRAIL_RESULTS``
@@ -860,7 +861,7 @@ def _run_table_guardrails_workflow(
     ``can_continue=False`` means the notebook should stop before writing the
     affected output.
 
-    This helper intentionally collects all per-table schema, freshness, profile behavior, and DQ
+    This helper intentionally collects all per-table schema, freshness, changes, profile behavior, and DQ
     results before reporting blocking failures. DQ results that return an
     annotated DataFrame update the corresponding table config ``df`` in place
     so downstream writes use the checked DataFrame. Metadata reads and writes
@@ -890,6 +891,7 @@ def _run_table_guardrails_workflow(
     profiles: dict[str, Any] = {}
     schema_results: dict[str, Mapping[str, Any]] = {}
     freshness_results: dict[str, Mapping[str, Any]] = {}
+    changes_results: dict[str, Mapping[str, Any]] = {}
     stability_results: dict[str, Mapping[str, Any]] = {}
     dq_results: dict[str, Mapping[str, Any]] = {}
     failed_tables: list[str] = []
@@ -906,18 +908,11 @@ def _run_table_guardrails_workflow(
         dataframe = table_config["df"]
         metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
 
-        profiles[table_key] = build_profile_dataframe(
-            dataframe,
-            # profile_dataframe automatically excludes FabricOps/DQ technical annotation columns
-            # and unions those defaults with any table-specific exclude_columns.
-            exclude_columns=table_config.get("exclude_columns"),
-        )
-
         guardrail_rules_df = table_config.get("guardrail_rules_df")
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
-            schema_results[table_key] = _check_schema_rule_runtime(
+            schema_results[table_key] = run_schema_rule_check(
                 dataframe,
                 schema_rules_df,
                 dataset_name=dataset_name,
@@ -926,14 +921,20 @@ def _run_table_guardrails_workflow(
                 metadata_table_key=metadata_table_key,
             )
         else:
-            schema_results[table_key] = _check_schema_runtime(
+            schema_results[table_key] = run_schema_check(
                 dataframe,
-                table_config["expected_schema"],
+                table_config.get("expected_schema", {}),
                 preset=table_config.get("schema_preset", "strict"),
             )
 
-        if freshness_rules_df is not None:
-            freshness_results[table_key] = enforce_freshness_rule(
+        schema_allows_continuation = bool(schema_results[table_key].get("can_continue", True))
+        if not schema_allows_continuation:
+            freshness_results[table_key] = {
+                "status": "skipped", "can_continue": True, "check_type": "freshness",
+                "message": "Freshness check skipped because the blocking schema prerequisite failed.",
+            }
+        elif freshness_rules_df is not None:
+            freshness_results[table_key] = run_freshness_rule_check(
                 dataframe,
                 freshness_rules_df,
                 dataset_name=dataset_name,
@@ -942,38 +943,87 @@ def _run_table_guardrails_workflow(
                 metadata_table_key=metadata_table_key,
             )
         else:
-            freshness_results[table_key] = enforce_freshness(
+            freshness_results[table_key] = run_freshness_check(
                 dataframe,
                 table_config.get("freshness_column"),
                 table_config.get("freshness_max_lag_days"),
                 severity=table_config.get("freshness_severity", "blocking"),
             )
 
-        stability_results[table_key] = enforce_profile_behavior(
-            spark_session,
+        freshness_allows_continuation = bool(freshness_results[table_key].get("can_continue", True))
+        changes_enabled = bool(table_config.get("change_key_columns"))
+        if not schema_allows_continuation or not freshness_allows_continuation:
+            changes_results[table_key] = {
+                "status": "skipped", "can_continue": True, "check_type": "changes",
+                "guardrail_type": "changes",
+                "message": "Changes check skipped because a blocking source prerequisite failed.",
+            }
+        elif changes_enabled:
+            changes_results[table_key] = run_changes_check(
+                dataframe,
+                table_config.get("previous_dataframe"),
+                partition_columns=table_config.get("change_partition_columns"),
+                key_columns=table_config.get("change_key_columns"),
+                non_key_columns=table_config.get("change_non_key_columns"),
+                range_column=table_config.get("change_range_column"),
+                source_pattern=table_config.get("source_pattern", "snapshot"),
+                comparison_scope=table_config.get("comparison_scope", "complete"),
+                refresh_days=table_config.get("refresh_days", 0),
+                version_column=table_config.get("version_column"),
+                reference_date=table_config.get("change_reference_date"),
+                include_row_changes=table_config.get("include_row_changes", False),
+            )
+        else:
+            changes_results[table_key] = {
+                "status": "skipped", "can_continue": True, "check_type": "changes",
+                "guardrail_type": "changes",
+                "message": "Changes check skipped because no logical key columns are configured.",
+            }
+
+        profiles[table_key] = build_profile_dataframe(
             dataframe,
-            CATALOGUE_TABLE,
-            dataset_name,
-            table_name,
-            stage=stage,
-            profile_mode=table_config.get("profile_mode"),
-            watermark_column=table_config.get("watermark_column"),
-            severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
-            rule_key=table_config.get("profile_behavior_rule_key", "profile_behavior_default"),
             exclude_columns=table_config.get("exclude_columns"),
-            exclude_run_id=run_id,
-            config=config,
-            env=env,
-            current_profile=profiles[table_key],
-            write_results=table_config.get("write_profile_behavior_results", True),
-            rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
-            rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
-            store_type=store_type,
-            layer=layer,
-            schema_name=schema_name,
         )
 
-        if table_config.get("dq_preset", "active_rules") == "skip":
+        prerequisites_allow_continuation = schema_allows_continuation and freshness_allows_continuation
+
+        if prerequisites_allow_continuation:
+            stability_results[table_key] = enforce_profile_behavior(
+                spark_session,
+                dataframe,
+                CATALOGUE_TABLE,
+                dataset_name,
+                table_name,
+                stage=stage,
+                profile_mode=table_config.get("profile_mode"),
+                watermark_column=table_config.get("watermark_column"),
+                severity=table_config.get("profile_behavior_severity", table_config.get("severity", "blocking")),
+                rule_key=table_config.get("profile_behavior_rule_key", "profile_behavior_default"),
+                exclude_columns=table_config.get("exclude_columns"),
+                exclude_run_id=run_id,
+                config=config,
+                env=env,
+                current_profile=profiles[table_key],
+                write_results=table_config.get("write_profile_behavior_results", True),
+                rules_table=table_config.get("profile_behavior_rules_table", "METADATA_GUARDRAIL"),
+                rules_df=table_config.get("profile_behavior_rules_df", guardrail_rules_df),
+                store_type=store_type,
+                layer=layer,
+                schema_name=schema_name,
+            )
+        else:
+            stability_results[table_key] = {
+                "status": "skipped", "can_continue": True, "check_type": "profile_behavior",
+                "message": "Profile behavior skipped because a blocking source prerequisite failed.",
+                "profile_evidence_rows": [],
+            }
+
+        if not prerequisites_allow_continuation:
+            dq_results[table_key] = {
+                "status": "skipped", "can_continue": True, "checks": [],
+                "message": "DQ guardrail skipped because a blocking source prerequisite failed.",
+            }
+        elif table_config.get("dq_preset", "active_rules") == "skip":
             dq_results[table_key] = {
                 "status": "skipped",
                 "can_continue": True,
@@ -1001,6 +1051,7 @@ def _run_table_guardrails_workflow(
             for guardrail_type, rule_type, guardrail_result in (
                 ("schema", table_config.get("schema_preset", "strict"), schema_results[table_key]),
                 ("freshness", table_config.get("freshness_column", "freshness"), freshness_results[table_key]),
+                ("changes", table_config.get("source_pattern", "snapshot"), changes_results[table_key]),
                 ("dq", table_config.get("dq_preset", "active_rules"), dq_results[table_key]),
             ):
                 _write_guardrail_result_row(
@@ -1022,6 +1073,7 @@ def _run_table_guardrails_workflow(
             for result in (
                 schema_results[table_key],
                 freshness_results[table_key],
+                changes_results[table_key],
                 stability_results[table_key],
                 dq_results[table_key],
             )
@@ -1047,6 +1099,7 @@ def _run_table_guardrails_workflow(
     summary = {
         "schema_results": schema_results,
         "freshness_results": freshness_results,
+        "changes_results": changes_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,
@@ -1056,6 +1109,7 @@ def _run_table_guardrails_workflow(
         "profiles": profiles,
         "schema_results": schema_results,
         "freshness_results": freshness_results,
+        "changes_results": changes_results,
         "stability_results": stability_results,
         "dq_results": dq_results,
         "catalogue_status": catalogue_status,

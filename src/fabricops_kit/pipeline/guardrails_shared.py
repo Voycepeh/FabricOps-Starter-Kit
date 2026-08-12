@@ -60,6 +60,392 @@ DQ_RULE_TYPES = [
     "expression_true",
 ]
 
+_SOURCE_PATTERNS = {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
+_COMPARISON_SCOPES = {"complete", "partitions", "partial"}
+
+
+def _is_spark_dataframe(dataframe) -> bool:
+    """Return whether a value exposes the Spark DataFrame contract used here."""
+    return dataframe is not None and hasattr(dataframe, "sparkSession") and hasattr(dataframe, "schema")
+
+
+def _local_source_rows(dataframe) -> list[dict]:
+    """Return local row mappings without accepting Spark DataFrames."""
+    if _is_spark_dataframe(dataframe):
+        raise TypeError("Spark DataFrames must use the distributed changes implementation")
+    if dataframe is None:
+        return []
+    rows = [dataframe] if isinstance(dataframe, dict) else dataframe
+    return [_row_to_dict(row) for row in rows]
+
+
+def _stable_source_value(value):
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): _stable_source_value(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_stable_source_value(item) for item in value]
+    return value
+
+
+def _source_hash(payload) -> str:
+    encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _validate_changes_configuration(source_pattern, comparison_scope, refresh_days, version_column):
+    pattern = str(source_pattern).strip().lower()
+    scope = str(comparison_scope).strip().lower()
+    if pattern not in _SOURCE_PATTERNS:
+        raise ValueError("source_pattern must be one of: snapshot, incremental_append, mutable_incremental, versioned")
+    if scope not in _COMPARISON_SCOPES:
+        raise ValueError("comparison_scope must be one of: complete, partitions, partial")
+    if isinstance(refresh_days, bool):
+        raise ValueError("refresh_days must be a non-negative integer")
+    try:
+        window_days = int(refresh_days)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("refresh_days must be a non-negative integer") from exc
+    if window_days < 0:
+        raise ValueError("refresh_days must be a non-negative integer")
+    if pattern == "versioned" and not str(version_column or "").strip():
+        raise ValueError("version_column is required when source_pattern='versioned'")
+    return pattern, scope, window_days
+
+
+def _partition_identity(row, partitions):
+    return tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
+
+
+def _local_latest_versions(rows, keys, version_column):
+    latest = {}
+    for row in rows:
+        identity = tuple(row.get(column) for column in keys)
+        if any(value is None for value in identity):
+            raise ValueError("logical key columns must not contain null values")
+        version = row.get(version_column)
+        if version is None:
+            raise ValueError("version_column must not contain null values")
+        if identity not in latest or version > latest[identity].get(version_column):
+            latest[identity] = row
+        elif version == latest[identity].get(version_column):
+            raise ValueError("version_column must uniquely order versions for each logical key")
+    return list(latest.values())
+
+
+def _validate_local_logical_keys(rows, keys):
+    seen = set()
+    for row in rows:
+        identity = tuple(row.get(column) for column in keys)
+        if any(value is None for value in identity):
+            raise ValueError("logical key columns must not contain null values")
+        key_hash = _source_hash(identity)
+        if key_hash in seen:
+            raise ValueError("logical key columns must uniquely identify rows")
+        seen.add(key_hash)
+
+
+def _local_partition_observations(rows, partitions, range_column, all_columns):
+    grouped = {}
+    for row in rows:
+        grouped.setdefault(_partition_identity(row, partitions), []).append(row)
+    observations = []
+    for partition, members in sorted(grouped.items(), key=lambda item: str(item[0])):
+        values = [row.get(range_column) for row in members if range_column and row.get(range_column) is not None]
+        row_hashes = sorted(_source_hash([(column, row.get(column)) for column in all_columns]) for row in members)
+        observations.append({
+            "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
+            "row_count": len(members),
+            "min_value": _stable_source_value(min(values)) if values else None,
+            "max_value": _stable_source_value(max(values)) if values else None,
+            "fingerprint": _source_hash(row_hashes),
+            "_partition_id": _source_hash(partition),
+        })
+    return observations
+
+
+def _changed_partition_sets(current_observations, previous_observations, scope):
+    current = {item["_partition_id"]: item for item in current_observations}
+    previous = {item["_partition_id"]: item for item in previous_observations}
+    changed = {key for key in current.keys() & previous.keys() if current[key]["fingerprint"] != previous[key]["fingerprint"]}
+    new = current.keys() - previous.keys()
+    missing = previous.keys() - current.keys() if scope == "complete" else set()
+    return changed, set(new), set(missing)
+
+
+def _classify_change_date(value, recent_start):
+    observed = _coerce_date(value)
+    return "recent" if observed is not None and observed >= recent_start else "historical"
+
+
+def _local_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
+                          partitions, keys, content_columns, range_column, scope, pattern, recent_start):
+    current = [row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions]
+    previous = [row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions]
+
+    def keyed(rows):
+        output = {}
+        for row in rows:
+            identity = tuple(row.get(column) for column in keys)
+            if any(value is None for value in identity):
+                raise ValueError("logical key columns must not contain null values")
+            key_hash = _source_hash(identity)
+            if key_hash in output:
+                raise ValueError("logical key columns must uniquely identify rows")
+            output[key_hash] = (row, _source_hash([(column, row.get(column)) for column in content_columns]))
+        return output
+
+    current_by_key, previous_by_key = keyed(current), keyed(previous)
+    inserted = sorted(set(current_by_key) - set(previous_by_key))
+    shared = set(current_by_key) & set(previous_by_key)
+    updated = sorted(key for key in shared if current_by_key[key][1] != previous_by_key[key][1])
+    deletion_allowed = scope in {"complete", "partitions"} and pattern != "incremental_append"
+    deleted = sorted(set(previous_by_key) - set(current_by_key)) if deletion_allowed else []
+    changes = {"inserted": inserted, "updated": updated, "deleted": deleted}
+    recent, historical = [], []
+    for change_type, hashes in changes.items():
+        source = previous_by_key if change_type == "deleted" else current_by_key
+        for key_hash in hashes:
+            classified = {"key_hash": key_hash, "change_type": change_type}
+            if range_column:
+                target = recent if _classify_change_date(source[key_hash][0].get(range_column), recent_start) == "recent" else historical
+                target.append(classified)
+    return changes, recent, historical
+
+
+def _spark_column(name):
+    from pyspark.sql import functions as F
+    return F.col(f"`{str(name).replace('`', '``')}`")
+
+
+def _spark_canonical_hash(columns):
+    from pyspark.sql import functions as F
+    struct = F.struct(*[_spark_column(column).alias(str(column)) for column in columns])
+    return F.sha2(F.to_json(struct, {"ignoreNullFields": "false"}), 256)
+
+
+def _spark_resolve_versions(dataframe, keys, version_column):
+    from pyspark.sql import functions as F
+    from pyspark.sql.window import Window
+    if dataframe.filter(_spark_column(version_column).isNull()).limit(1).count():
+        raise ValueError("version_column must not contain null values")
+    window = Window.partitionBy(*[_spark_column(column) for column in keys]).orderBy(_spark_column(version_column).desc())
+    ranked = dataframe.withColumn("__fabricops_version_rank", F.dense_rank().over(window))
+    if ranked.filter(F.col("__fabricops_version_rank") == 1).groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
+        raise ValueError("version_column must uniquely order versions for each logical key")
+    return ranked.filter(F.col("__fabricops_version_rank") == 1).drop("__fabricops_version_rank")
+
+
+def _validate_spark_logical_keys(dataframe, keys):
+    from functools import reduce
+    from pyspark.sql import functions as F
+    null_key = reduce(lambda left, right: left | right, [_spark_column(column).isNull() for column in keys])
+    if dataframe.filter(null_key).limit(1).count():
+        raise ValueError("logical key columns must not contain null values")
+    if dataframe.groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
+        raise ValueError("logical key columns must uniquely identify rows")
+
+
+def _spark_partition_frame(dataframe, partitions, range_column, all_columns):
+    from pyspark.sql import functions as F
+    partition_id = _spark_canonical_hash(partitions) if partitions else F.lit(_source_hash(("__FULL_SOURCE__",)))
+    row_hash = _spark_canonical_hash(all_columns)
+    prepared = dataframe.withColumn("__fabricops_partition_id", partition_id).withColumn("__fabricops_row_hash", row_hash)
+    grouping = ["__fabricops_partition_id", *partitions]
+    aggregates = [
+        F.count(F.lit(1)).alias("row_count"),
+        F.min("__fabricops_row_hash").alias("__min_hash"),
+        F.max("__fabricops_row_hash").alias("__max_hash"),
+        F.sum(F.xxhash64("__fabricops_row_hash").cast("decimal(38,0)")).alias("__hash_sum"),
+    ]
+    if range_column:
+        aggregates.extend([F.min(_spark_column(range_column)).alias("min_value"), F.max(_spark_column(range_column)).alias("max_value")])
+    grouped = prepared.groupBy(*grouping).agg(*aggregates)
+    grouped = grouped.withColumn(
+        "fingerprint",
+        F.sha2(F.concat_ws("|", F.col("row_count"), F.col("__min_hash"), F.col("__max_hash"), F.col("__hash_sum")), 256),
+    )
+    return prepared.drop("__fabricops_row_hash"), grouped
+
+
+def _collect_spark_observations(grouped, partitions):
+    from pyspark.sql import functions as F
+    rows = grouped.select("__fabricops_partition_id", *partitions, "row_count", "min_value" if "min_value" in grouped.columns else F.lit(None).alias("min_value"), "max_value" if "max_value" in grouped.columns else F.lit(None).alias("max_value"), "fingerprint").collect()
+    return [{
+        "partition": {column: _stable_source_value(row[column]) for column in partitions},
+        "row_count": row["row_count"],
+        "min_value": _stable_source_value(row["min_value"]),
+        "max_value": _stable_source_value(row["max_value"]),
+        "fingerprint": row["fingerprint"],
+        "_partition_id": row["__fabricops_partition_id"],
+    } for row in rows]
+
+
+def _spark_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
+                          keys, content_columns, range_column, scope, pattern, recent_start, include_row_changes):
+    from pyspark.sql import functions as F
+    current = current.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_current_partitions)))
+    previous = previous.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_previous_partitions)))
+    current = current.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
+    previous = previous.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
+    for dataframe in (current, previous):
+        if dataframe.groupBy("key_hash").count().filter(F.col("count") > 1).limit(1).count():
+            raise ValueError("logical key columns must uniquely identify rows")
+    current_rows = current.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
+    previous_rows = previous.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
+    joined = current_rows.alias("c").join(previous_rows.alias("p"), "key_hash", "full_outer")
+    deletion_allowed = scope in {"complete", "partitions"} and pattern != "incremental_append"
+    classified = joined.withColumn("change_type", F.when(F.col("p.non_key_hash").isNull(), "inserted").when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted").when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"))
+    classified = classified.filter(F.col("change_type").isNotNull())
+    change_date = F.coalesce(F.col("c.range_value"), F.col("p.range_value")).cast("date")
+    classified = classified.withColumn("age_class", F.when(change_date >= F.lit(recent_start), "recent").otherwise("historical") if range_column else F.lit(None).cast("string"))
+    counts = {row["change_type"]: row["count"] for row in classified.groupBy("change_type").count().collect()}
+    ages = {row["age_class"]: row["count"] for row in classified.filter(F.col("age_class").isNotNull()).groupBy("age_class").count().collect()}
+    row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
+    if include_row_changes:
+        for row in classified.select("key_hash", "change_type", "age_class").collect():
+            row_changes[row["change_type"]].append(row["key_hash"])
+            if row["age_class"]:
+                row_changes[row["age_class"]].append({"key_hash": row["key_hash"], "change_type": row["change_type"]})
+    return counts, ages, row_changes
+
+
+def _strip_internal_observation_fields(observations):
+    return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
+
+
+def _changes_content_columns(columns, keys, non_key_columns, pattern, version_column):
+    """Resolve content columns without treating version metadata as business data."""
+    if non_key_columns is not None:
+        return tuple(non_key_columns)
+    return tuple(
+        column
+        for column in columns
+        if column not in keys and not (pattern == "versioned" and column == version_column)
+    )
+
+
+def run_changes_check(
+    dataframe,
+    previous_dataframe=None,
+    *,
+    partition_columns: list[str] | tuple[str, ...] | None = None,
+    key_columns: list[str] | tuple[str, ...] | None = None,
+    non_key_columns: list[str] | tuple[str, ...] | None = None,
+    range_column: str | None = None,
+    source_pattern: str = "snapshot",
+    comparison_scope: str = "complete",
+    refresh_days: int = 0,
+    version_column: str | None = None,
+    reference_date: date | datetime | str | None = None,
+    include_row_changes: bool = False,
+) -> dict:
+    """Compare current and previous observations using tiered deterministic checks."""
+    pattern, scope, refresh_days = _validate_changes_configuration(source_pattern, comparison_scope, refresh_days, version_column)
+    keys = tuple(key_columns or ())
+    if not keys:
+        raise ValueError("key_columns must contain at least one logical key column")
+    partitions = tuple(partition_columns or ([range_column] if range_column else []))
+    today = _coerce_date(reference_date) if reference_date is not None else date.today()
+    if today is None:
+        raise ValueError("reference_date must be a date, datetime, or ISO date string")
+    recent_start = today - timedelta(days=refresh_days)
+    spark_mode = _is_spark_dataframe(dataframe)
+    if spark_mode != _is_spark_dataframe(previous_dataframe) and previous_dataframe is not None:
+        raise ValueError("current and previous observations must both be Spark DataFrames or both be local iterables")
+
+    if spark_mode:
+        current = dataframe
+        previous = previous_dataframe if previous_dataframe is not None else dataframe.sparkSession.createDataFrame([], dataframe.schema)
+        columns = sorted(set(current.columns) | set(previous.columns))
+        required = (*partitions, *keys, *((version_column,) if version_column else ()))
+        missing = [column for column in required if column not in columns]
+        if missing:
+            raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
+        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
+        if pattern == "versioned":
+            current, previous = _spark_resolve_versions(current, keys, version_column), _spark_resolve_versions(previous, keys, version_column)
+        _validate_spark_logical_keys(current, keys)
+        _validate_spark_logical_keys(previous, keys)
+        current_prepared, current_grouped = _spark_partition_frame(current, partitions, range_column, columns)
+        previous_prepared, previous_grouped = _spark_partition_frame(previous, partitions, range_column, columns)
+        current_observations = _collect_spark_observations(current_grouped, partitions)
+        previous_observations = _collect_spark_observations(previous_grouped, partitions)
+    else:
+        current, previous = _local_source_rows(dataframe), _local_source_rows(previous_dataframe)
+        columns = sorted({str(column) for row in current + previous for column in row})
+        required = (*partitions, *keys, *((version_column,) if version_column else ()))
+        missing = [column for column in required if column not in columns]
+        if missing:
+            raise ValueError(f"Configured changes columns do not exist: {', '.join(missing)}")
+        content_columns = _changes_content_columns(columns, keys, non_key_columns, pattern, version_column)
+        if pattern == "versioned":
+            current, previous = _local_latest_versions(current, keys, version_column), _local_latest_versions(previous, keys, version_column)
+        _validate_local_logical_keys(current, keys)
+        _validate_local_logical_keys(previous, keys)
+        current_observations = _local_partition_observations(current, partitions, range_column, columns)
+        previous_observations = _local_partition_observations(previous, partitions, range_column, columns)
+
+    changed_ids, new_ids, missing_ids = _changed_partition_sets(current_observations, previous_observations, scope)
+    current_ids = changed_ids | new_ids
+    previous_ids = changed_ids | (missing_ids if scope == "complete" else set())
+    if scope == "partitions":
+        previous_ids = changed_ids
+    row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
+    counts = {"inserted": 0, "updated": 0, "deleted": 0}
+    ages = {"recent": 0, "historical": 0}
+    if current_ids or previous_ids:
+        if spark_mode:
+            counts, ages, row_changes = _spark_row_comparison(
+                current_prepared, previous_prepared, relevant_current_partitions=current_ids,
+                relevant_previous_partitions=previous_ids, keys=keys, content_columns=content_columns,
+                range_column=range_column, scope=scope, pattern=pattern, recent_start=recent_start,
+                include_row_changes=include_row_changes,
+            )
+        else:
+            changes, recent, historical = _local_row_comparison(
+                current, previous, relevant_current_partitions=current_ids,
+                relevant_previous_partitions=previous_ids, partitions=partitions, keys=keys,
+                content_columns=content_columns, range_column=range_column, scope=scope,
+                pattern=pattern, recent_start=recent_start,
+            )
+            counts = {name: len(values) for name, values in changes.items()}
+            ages = {"recent": len(recent), "historical": len(historical)}
+            row_changes = {**changes, "recent": recent, "historical": historical}
+
+    current_values = [item["min_value"] for item in current_observations if item["min_value"] is not None] + [item["max_value"] for item in current_observations if item["max_value"] is not None]
+    previous_values = [item["min_value"] for item in previous_observations if item["min_value"] is not None] + [item["max_value"] for item in previous_observations if item["max_value"] is not None]
+    previous_max = max(previous_values) if previous_values else None
+    unseen_values = [value for value in current_values if previous_max is None or value > previous_max]
+    changed = bool(changed_ids or new_ids or missing_ids)
+    current_by_id = {item["_partition_id"]: item for item in current_observations}
+    result = {
+        "status": "changed" if changed else "unchanged", "can_continue": True,
+        "check_type": "changes", "guardrail_type": "changes", "changed": changed,
+        "source_pattern": pattern, "comparison_scope": scope,
+        "pattern_semantics": {"snapshot": "full_state", "incremental_append": "append_only", "mutable_incremental": "mutable_window", "versioned": "latest_version_per_key"}[pattern],
+        "partition_observations": _strip_internal_observation_fields(current_observations),
+        "changed_partitions": [current_by_id[key]["partition"] for key in sorted(changed_ids)],
+        "new_partitions": [current_by_id[key]["partition"] for key in sorted(new_ids)],
+        "recent_changes": ages.get("recent", 0), "historical_changes": ages.get("historical", 0),
+        "inserted_count": counts.get("inserted", 0), "updated_count": counts.get("updated", 0),
+        "deleted_count": counts.get("deleted", 0),
+        "deletions_provable": scope == "complete" or (scope == "partitions" and bool(partitions)),
+        "append_violation_count": counts.get("updated", 0) if pattern == "incremental_append" else 0,
+        "historical_mutation_detected": pattern == "mutable_incremental" and ages.get("historical", 0) > 0,
+        "current_observed_range": {"min": min(current_values) if current_values else None, "max": max(current_values) if current_values else None},
+        "previous_observed_range": {"min": min(previous_values) if previous_values else None, "max": previous_max},
+        "recent_mutable_range": {"start": recent_start.isoformat(), "end": today.isoformat(), "refresh_days": refresh_days},
+        "new_unseen_range": {"min": min(unseen_values) if unseen_values else None, "max": max(unseen_values) if unseen_values else None},
+        "message": "Source changes detected." if changed else "Source is unchanged.",
+    }
+    if include_row_changes:
+        result["row_changes"] = row_changes
+    return result
+
 
 # ---------------------------------------------------------------------------
 # Resolver layer
@@ -133,7 +519,7 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
 # Internal workflow layer
 # ---------------------------------------------------------------------------
 
-def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
+def run_schema_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
     """Apply an internal runtime schema rule check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It translates the latest
@@ -142,29 +528,29 @@ def _check_schema_rule_runtime(dataframe, rules_df, *, dataset_name: str, table_
     """
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
-        return _check_schema_runtime(dataframe, {}, preset="monitor_only")
+        return run_schema_check(dataframe, {}, preset="monitor_only")
     params = _parse_rule_parameters(rule)
     expected = params.get("data_types") or params.get("expected_data_types") or {}
     selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
     expected_schema = {column: expected.get(column, "") for column in selected_columns}
     rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
     preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-    result = _check_schema_runtime(dataframe, expected_schema, preset=preset)
+    result = run_schema_check(dataframe, expected_schema, preset=preset)
     result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     return _apply_bypass_post_review_warning(result, rule)
 
 
-def enforce_freshness_rule(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
+def run_freshness_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
     """Enforce freshness using the latest active freshness rule row."""
     rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
     if not rule:
-        return enforce_freshness(dataframe, None, None, reference_date=reference_date)
+        return run_freshness_check(dataframe, None, None, reference_date=reference_date)
     params = _parse_rule_parameters(rule)
     rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
     if rule_type == "skip":
-        result = enforce_freshness(dataframe, None, None, reference_date=reference_date)
+        result = run_freshness_check(dataframe, None, None, reference_date=reference_date)
     else:
-        result = enforce_freshness(
+        result = run_freshness_check(
             dataframe,
             params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name"),
             params.get("max_lag_days"),
@@ -366,7 +752,7 @@ _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 # Validator layer
 # ---------------------------------------------------------------------------
 
-def _check_schema_runtime(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
     """Apply an internal runtime schema check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
@@ -625,7 +1011,7 @@ def _iso_date_value(value) -> str:
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
 
 
-def enforce_freshness(
+def run_freshness_check(
     dataframe,
     freshness_column: str | None,
     max_lag_days: int | str | None,
@@ -724,6 +1110,28 @@ def enforce_freshness(
         message=message,
     )
     return base_result
+
+
+def enforce_freshness(
+    dataframe,
+    freshness_column: str | None,
+    max_lag_days: int | str | None,
+    severity: str = "blocking",
+    *,
+    reference_date: date | datetime | str | None = None,
+) -> dict:
+    """Enforce freshness through the shared freshness-check implementation.
+
+    This established public name remains compatible while
+    :func:`check_freshness` provides the check-oriented API.
+    """
+    return run_freshness_check(
+        dataframe,
+        freshness_column,
+        max_lag_days,
+        severity=severity,
+        reference_date=reference_date,
+    )
 
 
 # ---------------------------------------------------------------------------
