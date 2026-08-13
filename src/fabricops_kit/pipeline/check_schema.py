@@ -1,6 +1,6 @@
 """Public schema guardrail check."""
 
-from fabricops_kit.pipeline.guardrails_shared import run_schema_check, run_schema_rule_check
+from fabricops_kit.pipeline.guardrails_shared import schema_check_core
 
 
 def check_schema(
@@ -50,9 +50,9 @@ def check_schema(
 
     """
     if rules_df is not None:
-        return run_schema_rule_check(
+        return schema_check_core(
             dataframe,
-            rules_df,
+            rules_df=rules_df,
             dataset_name=dataset_name,
             table_name=table_name,
             environment_name=environment_name,
@@ -60,4 +60,4 @@ def check_schema(
         )
     if expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
-    return run_schema_check(dataframe, expected_schema, preset=preset)
+    return schema_check_core(dataframe, expected_schema, preset=preset)

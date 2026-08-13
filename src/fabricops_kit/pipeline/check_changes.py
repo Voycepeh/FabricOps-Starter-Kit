@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from fabricops_kit.pipeline.guardrails_shared import run_changes_check
+from fabricops_kit.pipeline.guardrails_shared import changes_check_core
 
 
 def check_changes(
@@ -75,7 +75,7 @@ def check_changes(
     True
 
     """
-    return run_changes_check(
+    return changes_check_core(
         dataframe,
         previous_dataframe,
         partition_columns=partition_columns,

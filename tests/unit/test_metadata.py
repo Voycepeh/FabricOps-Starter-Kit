@@ -143,7 +143,10 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'read_warehouse_table',
         'read_warehouse_query',
         'write_warehouse_table',
-    'profile_and_register_table',
+        'check_schema',
+        'check_freshness',
+        'check_changes',
+        'profile_and_register_table',
         'profile_dataframe',
         'profile_frequency_distribution',
         'display_guardrail_results',
@@ -241,16 +244,16 @@ def test_runtime_audit_fields_report_all_missing_and_reject_unknown():
 
 def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monkeypatch):
     """Verify metadata result writes fail before persistence when audit cannot resolve."""
-    from fabricops_kit.pipeline import metadata_evidence
+    from fabricops_kit.pipeline import guardrails_shared
 
     monkeypatch.setattr(
-        metadata_evidence,
+        guardrails_shared,
         "write_lakehouse_table_core",
         lambda *_args, **_kwargs: pytest.fail("metadata write should not run without audit fields"),
     )
 
     with pytest.raises(ValueError, match="Cannot build metadata audit fields"):
-        metadata_evidence._write_guardrail_result_row(
+        guardrails_shared.write_guardrail_result_row(
             spark_session=FakeSpark(),
             config=framework_config(),
             env="dev",
@@ -268,17 +271,17 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
 
 def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_notebookutils):
     """Verify guardrail evidence and catalogue registration share one key helper."""
-    from fabricops_kit.pipeline import metadata_evidence
+    from fabricops_kit.pipeline import guardrails_shared
 
     writes = []
-    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))
     spark = FakeSpark()
     config = framework_config()
     config.path_config.paths["prod"] = config.path_config.paths["dev"]
     expected = config_shared.build_metadata_table_key("lakehouse", "raw", None, "orders")
 
     for env in ("dev", "prod"):
-        metadata_evidence._write_guardrail_result_row(
+        guardrails_shared.write_guardrail_result_row(
             spark_session=spark,
             config=config,
             env=env,

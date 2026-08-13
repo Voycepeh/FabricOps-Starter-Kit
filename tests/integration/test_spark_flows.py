@@ -7,8 +7,8 @@ import json
 import pytest
 
 from fabricops_kit.config.shared import resolve_runtime_context
-from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules, _prepare_dq_profile_input_rows, _run_active_dq_guardrail
-from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, run_schema_check
+from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules, _prepare_dq_profile_input_rows, run_active_dq_guardrail
+from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, schema_check_core
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark
@@ -97,7 +97,7 @@ def test_prepare_dq_profile_input_rows_defaults_to_utc_without_config(spark_sess
 def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session):
     """Verify spark schema validation and latest dq metadata are stable."""
     df = spark_session.createDataFrame([{"id": 1, "amount": 10.0, "extra": "new"}])
-    schema_result = run_schema_check(df, {"id": "bigint", "amount": "double"}, preset="allow_new_columns")
+    schema_result = schema_check_core(df, {"id": "bigint", "amount": "double"}, preset="allow_new_columns")
     metadata_df = spark_session.createDataFrame(
         [
             {
@@ -255,7 +255,7 @@ def _dq_metadata_df(spark_session, rows):
     return spark_session.createDataFrame(rows, schema=schema)
 
 
-def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail returns passed when no active rules."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -263,7 +263,7 @@ def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sess
     metadata_df = _dq_metadata_df(spark_session, [])
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True
@@ -274,16 +274,15 @@ def test__run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sess
 
 
 
-def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
     """Verify DQ enforcement writes result rows only when enabled."""
     from fabricops_kit.pipeline import guardrails_shared as governance
-    import fabricops_kit.pipeline.metadata_evidence as metadata_evidence
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
     writes = []
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
-    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     config = framework_config()
     monkeypatch.setattr(
@@ -291,14 +290,14 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
         lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-001"),
     )
 
-    _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-001", write_results=False)
+    run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-001", write_results=False)
     assert writes == []
 
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
         lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-002"),
     )
-    _run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-002", write_results=True)
+    run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-002", write_results=True)
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     row = writes[0][0].collect()[0].asDict()
@@ -306,7 +305,7 @@ def test__run_active_dq_guardrail_result_write_toggle_targets_results(spark_sess
     assert row["_activity_id"] == "activity-dq-002"
     assert row["status"] == "passed"
 
-def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail warning failure can continue."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -337,7 +336,7 @@ def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, mo
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "warning"
     assert result["can_continue"] is True
@@ -348,7 +347,7 @@ def test__run_active_dq_guardrail_warning_failure_can_continue(spark_session, mo
 
 
 
-def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_warning_failure_adds_technical_columns_and_preserves_rows(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail warning failure adds technical columns and preserves rows."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -403,7 +402,7 @@ def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pre
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
     tagged_rows = {row["order_id"]: row.asDict() for row in result["dataframe"].collect()}
 
     assert result["status"] == "warning"
@@ -420,7 +419,7 @@ def test__run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pre
     assert result["summary"]["DQ_FAILED_ROW_PERCENT"] == 50.0
 
 
-def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail error failure blocks."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -451,7 +450,7 @@ def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatc
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -460,7 +459,7 @@ def test__run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatc
         stop_if_failed(result)
 
 
-def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail mixed warning and error failures return failed."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -510,14 +509,14 @@ def test__run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
     assert {check["status"] for check in result["checks"]} == {"failed", "warning"}
 
 
-def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_session, monkeypatch):
+def test_run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail supports current v1 metadata shape."""
     from fabricops_kit.pipeline import guardrails_shared as governance
 
@@ -548,7 +547,7 @@ def test__run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessi
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
 
-    result = _run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
+    result = run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True
@@ -651,17 +650,17 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
     from fabricops_kit.config.shared import build_metadata_table_key
-    from fabricops_kit.pipeline import metadata_evidence
+    from fabricops_kit.pipeline import guardrails_shared
 
     writes = []
-    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
         lambda **_kwargs: resolved_runtime_context(activity_id="activity-result-001"),
     )
 
-    metadata_evidence._write_guardrail_result_row(
+    guardrails_shared.write_guardrail_result_row(
         spark_session=spark_session,
         config=framework_config(),
         env="dev",

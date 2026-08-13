@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from fabricops_kit.pipeline.guardrails_shared import run_freshness_check, run_freshness_rule_check
+from fabricops_kit.pipeline.guardrails_shared import freshness_check_core
 
 
 def check_freshness(
@@ -48,16 +48,16 @@ def check_freshness(
 
     """
     if rules_df is not None:
-        return run_freshness_rule_check(
+        return freshness_check_core(
             dataframe,
-            rules_df,
+            rules_df=rules_df,
             dataset_name=dataset_name,
             table_name=table_name,
             environment_name=environment_name,
             metadata_table_key=metadata_table_key,
             reference_date=reference_date,
         )
-    return run_freshness_check(
+    return freshness_check_core(
         dataframe,
         freshness_column,
         max_lag_days,

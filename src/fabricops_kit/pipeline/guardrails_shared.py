@@ -16,10 +16,68 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from fabricops_kit.config.shared import get_current_audit_timestamp
+from fabricops_kit.config.audit import build_runtime_audit_fields
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+from fabricops_kit.config.shared import build_metadata_table_key, get_current_audit_timestamp
 from fabricops_kit.pipeline.shared import build_profile_dataframe
-from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
-from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
+from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+
+
+def write_guardrail_result_row(
+    *,
+    spark_session: Any,
+    config: Any,
+    env: str,
+    run_id: str,
+    dataset_name: str,
+    table_name: str,
+    store_type: str,
+    layer: str,
+    schema_name: str | None = None,
+    guardrail_type: str,
+    rule_type: str,
+    result: dict[str, Any],
+    rule_key: str = "",
+    column_name: str = "",
+    results_table: str = "METADATA_GUARDRAIL_RESULTS",
+) -> None:
+    """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
+    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
+        return
+    audit = build_runtime_audit_fields(config=config, env=env)
+    row = {
+        "guardrail_result_id": str(uuid4()),
+        "result_id": str(uuid4()),
+        "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "metadata_table_key": str(
+            result.get("metadata_table_key")
+            or build_metadata_table_key(store_type, layer, schema_name, table_name)
+        ),
+        "environment_name": env,
+        "dataset_name": dataset_name,
+        "table_name": table_name,
+        "column_name": column_name,
+        "guardrail_type": guardrail_type,
+        "rule_type": rule_type,
+        "status": str(result.get("status") or "not_run"),
+        "can_continue": bool(result.get("can_continue", True)),
+        "severity": str(result.get("severity") or "blocking"),
+        "reason": str(result.get("message") or result.get("reason") or ""),
+        "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
+        "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
+        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
+        **audit,
+    }
+    context = {"config": config, "env": env}
+    write_lakehouse_table_core(
+        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
+        results_table,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        context=context,
+        mode="append",
+    )
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
@@ -328,7 +386,7 @@ def _changes_content_columns(columns, keys, non_key_columns, pattern, version_co
     )
 
 
-def run_changes_check(
+def changes_check_core(
     dataframe,
     previous_dataframe=None,
     *,
@@ -518,48 +576,6 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
 # ---------------------------------------------------------------------------
 # Internal workflow layer
 # ---------------------------------------------------------------------------
-
-def run_schema_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
-    """Apply an internal runtime schema rule check for ``run_table_guardrails``.
-
-    This helper is not a notebook-facing callable. It translates the latest
-    active widget-authored schema guardrail rule into the runtime schema check
-    used by ``run_table_guardrails``.
-    """
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
-    if not rule:
-        return run_schema_check(dataframe, {}, preset="monitor_only")
-    params = _parse_rule_parameters(rule)
-    expected = params.get("data_types") or params.get("expected_data_types") or {}
-    selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
-    expected_schema = {column: expected.get(column, "") for column in selected_columns}
-    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
-    preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-    result = run_schema_check(dataframe, expected_schema, preset=preset)
-    result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
-    return _apply_bypass_post_review_warning(result, rule)
-
-
-def run_freshness_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
-    """Enforce freshness using the latest active freshness rule row."""
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
-    if not rule:
-        return run_freshness_check(dataframe, None, None, reference_date=reference_date)
-    params = _parse_rule_parameters(rule)
-    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
-    if rule_type == "skip":
-        result = run_freshness_check(dataframe, None, None, reference_date=reference_date)
-    else:
-        result = run_freshness_check(
-            dataframe,
-            params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name"),
-            params.get("max_lag_days"),
-            severity=_catalogue_value(rule, "severity") or "blocking",
-            reference_date=reference_date,
-        )
-    result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
-    return _apply_bypass_post_review_warning(result, rule)
-
 
 # ---------------------------------------------------------------------------
 # Public/shared guardrail exception model
@@ -752,7 +768,17 @@ _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 # Validator layer
 # ---------------------------------------------------------------------------
 
-def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+def schema_check_core(
+    dataframe,
+    expected_schema: dict[str, str] | None = None,
+    *,
+    preset: str = "strict",
+    rules_df=None,
+    dataset_name: str = "",
+    table_name: str = "",
+    environment_name: str = "",
+    metadata_table_key: str = "",
+) -> dict:
     """Apply an internal runtime schema check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
@@ -770,6 +796,16 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         changes, and unexpected columns. ``allow_new_columns`` blocks missing
         columns and datatype changes while reporting additional columns as a
         warning. ``monitor_only`` reports all differences without blocking.
+    rules_df : DataFrame or iterable of mappings, optional
+        Approved schema rules used instead of ``expected_schema``.
+    dataset_name : str, optional
+        Dataset identity used to select an approved rule.
+    table_name : str, optional
+        Table identity used to select an approved rule.
+    environment_name : str, optional
+        Environment identity used to select an approved rule.
+    metadata_table_key : str, optional
+        Canonical table identity used to select an approved rule.
 
     Returns
     -------
@@ -789,6 +825,24 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
     calling schema validation helpers directly.
 
     """
+    rule = None
+    rule_type = ""
+    if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
+        rules_df, expected_schema = expected_schema, None
+    if rules_df is not None:
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        if not rule:
+            expected_schema, preset = {}, "monitor_only"
+        else:
+            params = _parse_rule_parameters(rule)
+            expected = params.get("data_types") or params.get("expected_data_types") or {}
+            selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
+            expected_schema = {column: expected.get(column, "") for column in selected_columns}
+            rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
+            preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+    elif expected_schema is None:
+        raise ValueError("expected_schema is required when rules_df is not supplied")
+
     normalized_preset = str(preset).lower()
     if normalized_preset not in _SCHEMA_PRESETS:
         raise ValueError("preset must be one of: strict, allow_new_columns, monitor_only")
@@ -838,7 +892,7 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         if status == "passed"
         else f"Schema validation {status}: {len(missing_columns)} missing, {len(actual_unexpected)} unexpected, {len(datatype_mismatches)} datatype mismatch(es)."
     )
-    return {
+    result = {
         "status": status,
         "can_continue": can_continue,
         "checks": checks,
@@ -848,6 +902,10 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         "datatype_mismatches": datatype_mismatches,
         "preset": normalized_preset,
     }
+    if rule is not None:
+        result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+        return _apply_bypass_post_review_warning(result, rule)
+    return result
 
 
 def _normalize_profile(profile) -> dict | None:
@@ -1011,13 +1069,18 @@ def _iso_date_value(value) -> str:
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
 
 
-def run_freshness_check(
+def freshness_check_core(
     dataframe,
-    freshness_column: str | None,
-    max_lag_days: int | str | None,
+    freshness_column: str | None = None,
+    max_lag_days: int | str | None = None,
     severity: str = "blocking",
     *,
     reference_date: date | datetime | str | None = None,
+    rules_df=None,
+    dataset_name: str = "",
+    table_name: str = "",
+    environment_name: str = "",
+    metadata_table_key: str = "",
 ) -> dict:
     """Enforce that a DataFrame contains recent enough data.
 
@@ -1035,6 +1098,16 @@ def run_freshness_check(
         Whether stale data blocks continuation or returns a non-blocking warning.
     reference_date : date, datetime, str, optional
         Date used as "today" for comparison. Defaults to the current local date.
+    rules_df : DataFrame or iterable of mappings, optional
+        Approved freshness rules used instead of direct arguments.
+    dataset_name : str, optional
+        Dataset identity used to select an approved rule.
+    table_name : str, optional
+        Table identity used to select an approved rule.
+    environment_name : str, optional
+        Environment identity used to select an approved rule.
+    metadata_table_key : str, optional
+        Canonical table identity used to select an approved rule.
 
     Returns
     -------
@@ -1048,6 +1121,20 @@ def run_freshness_check(
     skips profile behavior enforcement; freshness still runs when configured.
 
     """
+    rule = None
+    rule_type = ""
+    if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
+        rules_df, freshness_column = freshness_column, None
+    if rules_df is not None:
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        if rule:
+            params = _parse_rule_parameters(rule)
+            rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
+            if rule_type != "skip":
+                freshness_column = params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name")
+                max_lag_days = params.get("max_lag_days")
+                severity = _catalogue_value(rule, "severity") or "blocking"
+
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()
     if normalized_severity not in {"blocking", "warning"}:
@@ -1067,8 +1154,10 @@ def run_freshness_check(
         "freshness_message": "Freshness check skipped because no freshness column is configured.",
         "message": "Freshness check skipped because no freshness column is configured.",
     }
+    if rule is not None:
+        base_result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     if not column:
-        return base_result
+        return _apply_bypass_post_review_warning(base_result, rule)
     if max_lag_days is None or str(max_lag_days).strip() == "":
         raise ValueError("max_lag_days is required when freshness_column is set")
     lag_days = int(max_lag_days)
@@ -1096,7 +1185,7 @@ def run_freshness_check(
             freshness_message=message,
             message=message,
         )
-        return base_result
+        return _apply_bypass_post_review_warning(base_result, rule)
 
     message = f"Freshness check failed: latest {column} is older than allowed lag."
     status = "failed" if normalized_severity == "blocking" else "warning"
@@ -1109,7 +1198,7 @@ def run_freshness_check(
         freshness_message=message,
         message=message,
     )
-    return base_result
+    return _apply_bypass_post_review_warning(base_result, rule)
 
 
 def enforce_freshness(
@@ -1125,7 +1214,7 @@ def enforce_freshness(
     This established public name remains compatible while
     :func:`check_freshness` provides the check-oriented API.
     """
-    return run_freshness_check(
+    return freshness_check_core(
         dataframe,
         freshness_column,
         max_lag_days,
@@ -1387,8 +1476,7 @@ def enforce_profile_behavior(
 
     if write_results and config is not None and env is not None:
         try:
-            from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
-            _write_guardrail_result_row(
+                        write_guardrail_result_row(
                 spark_session=spark, config=config, env=env, run_id=run_id,
                 dataset_name=dataset_name, table_name=table_name,
                 store_type=store_type, layer=layer or stage, schema_name=schema_name,
@@ -1539,35 +1627,29 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
     return rules
 
-def _latest_dq_rule_versions(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None):
-    """Resolve latest append-only DQ metadata rows by stable rule identity."""
+def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+    """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     if "rule_key" in columns:
-        partition_cols = ["rule_key"]
+        partition_columns = ["rule_key"]
     elif "rule_id" in columns:
-        partition_cols = ["rule_id"]
+        partition_columns = ["rule_id"]
     else:
-        partition_cols = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
-    order_cols = [name for name in ("_committed_at", "approved_at") if name in columns]
-    if not partition_cols:
+        partition_columns = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
+    if not partition_columns:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
-    scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
+    latest = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
     if env is not None and "environment_name" in columns:
-        scoped = scoped.filter(F.col("environment_name") == env)
+        latest = latest.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
-        scoped = scoped.filter(F.col("dataset_name") == dataset_name)
-    if not order_cols:
-        return scoped
-    w = Window.partitionBy(*[F.col(name) for name in partition_cols]).orderBy(*[F.col(name).desc_nulls_last() for name in order_cols])
-    return scoped.withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
-
-
-def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
-    """Load active DQ guardrail rules from append-only metadata rows."""
-    _, F, _ = _spark_sql_helpers()
-    columns = set(getattr(metadata_df, "columns", []))
-    latest = _latest_dq_rule_versions(metadata_df, table_name, env=env, dataset_name=dataset_name)
+        latest = latest.filter(F.col("dataset_name") == dataset_name)
+    order_columns = [name for name in ("_committed_at", "approved_at") if name in columns]
+    if order_columns:
+        window = Window.partitionBy(*[F.col(name) for name in partition_columns]).orderBy(
+            *[F.col(name).desc_nulls_last() for name in order_columns]
+        )
+        latest = latest.withColumn("_rn", F.row_number().over(window)).filter(F.col("_rn") == 1).drop("_rn")
     if "activation_state" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("activation_state"), F.lit(""))) == "active")
     elif "is_active" in columns:
@@ -1698,12 +1780,6 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))
 
-def _dq_check_status(severity: str, failed_count: int) -> str:
-    if failed_count <= 0:
-        return "passed"
-    return "failed" if str(severity).strip().lower() == "error" else "warning"
-
-
 def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Run DQ rules and return notebook guardrail check dictionaries."""
     _, F, _ = _spark_sql_helpers()
@@ -1720,7 +1796,7 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
         )
         severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
-        check_status = _dq_check_status(severity, failed_count)
+        check_status = "passed" if failed_count <= 0 else ("failed" if severity == "error" else "warning")
         check = {
             "check": "dq_rule",
             "table_name": table_name,
@@ -1778,37 +1854,6 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
     )
 
 
-def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
-    """Return the count of rows that failed at least one DQ rule."""
-    _, F, _ = _spark_sql_helpers()
-    if not rules:
-        return 0
-    failed_columns = [F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)) for rule in rules]
-    failed_row = failed_columns[0]
-    for column in failed_columns[1:]:
-        failed_row = failed_row + column
-    failed_rows = df.select(F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
-    return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
-
-
-def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
-    """Build aggregate DQ fields for catalogue/profile evidence."""
-    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
-    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
-    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
-    status = _summarize_dq_guardrail(checks)["status"]
-    return {
-        "DQ_STATUS": status,
-        "DQ_RULE_COUNT": len(checks),
-        "DQ_FAILED_RULE_COUNT": len(failed_checks),
-        "DQ_WARNING_RULE_COUNT": len(warning_checks),
-        "DQ_ERROR_RULE_COUNT": len(error_checks),
-        "DQ_FAILED_ROW_COUNT": failed_row_count,
-        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
-        "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
-    }
-
-
 def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
     if any(check.get("status") == "failed" for check in checks):
         status = "failed"
@@ -1839,7 +1884,7 @@ def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
     return frame
 
-def _run_active_dq_guardrail(
+def run_active_dq_guardrail(
     dataframe,
     config,
     env,
@@ -1910,16 +1955,43 @@ def _run_active_dq_guardrail(
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
-    failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
+    failed_row_count = 0
+    if rules:
+        _, F, _ = _spark_sql_helpers()
+        failed_columns = [
+            F.when(_dq_failed_expression(dataframe, rule), F.lit(1)).otherwise(F.lit(0))
+            for rule in rules
+        ]
+        failed_row = failed_columns[0]
+        for column in failed_columns[1:]:
+            failed_row = failed_row + column
+        failed_rows = dataframe.select(
+            F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed")
+        )
+        failed_row_count = int(
+            failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
+        )
     result = _summarize_dq_guardrail(checks)
     if any(str(rule.get("review_status") or "").lower() == "active_pending_governance_review" for rule in rules):
         warning = "Rule is active through approval bypass and requires governance post-review."
         result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
         result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
+    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
+    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
+    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
+    result["summary"] = {
+        "DQ_STATUS": result["status"],
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": len(failed_checks),
+        "DQ_WARNING_RULE_COUNT": len(warning_checks),
+        "DQ_ERROR_RULE_COUNT": len(error_checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
+    }
     if write_results:
-        _write_guardrail_result_row(
+        write_guardrail_result_row(
             spark_session=spark_session,
             config=config,
             env=env,

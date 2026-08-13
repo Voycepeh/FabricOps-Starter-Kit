@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from fabricops_kit.pipeline.shared import _run_table_guardrails_workflow
+from fabricops_kit.pipeline.shared import orchestrate_table_guardrails
 
 
 def run_table_guardrails(
@@ -25,7 +25,7 @@ def run_table_guardrails(
     table configuration, saves runtime outcomes where configured, and returns
     whether the notebook can continue.
     """
-    return _run_table_guardrails_workflow(
+    return orchestrate_table_guardrails(
         table_configs,
         run_id=run_id,
         context=context,
@@ -38,4 +38,4 @@ def run_table_guardrails(
     )
 
 
-run_table_guardrails.__doc__ = _run_table_guardrails_workflow.__doc__
+run_table_guardrails.__doc__ = orchestrate_table_guardrails.__doc__
