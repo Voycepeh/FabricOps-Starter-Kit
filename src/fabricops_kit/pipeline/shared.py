@@ -11,7 +11,7 @@ from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
-from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
+from fabricops_kit.pipeline.metadata_evidence import write_guardrail_result_row
 
 
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
@@ -285,15 +285,13 @@ def build_profile_dataframe(df, *, exclude_columns=None):
         out = out.unionByName(row)
     return out.select(*PROFILE_DATAFRAME_COLUMNS)
 
-from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail
+from fabricops_kit.pipeline.guardrails_shared import run_active_dq_guardrail
 from fabricops_kit.pipeline.guardrails_shared import (
-    run_freshness_check,
-    run_freshness_rule_check,
+    freshness_check_core,
     enforce_profile_behavior,
     stop_if_failed,
-    run_schema_check,
-    run_schema_rule_check,
-    run_changes_check,
+    schema_check_core,
+    changes_check_core,
 )
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -776,7 +774,7 @@ def _build_guardrail_evidence_definitions(table_configs: list[Mapping[str, Any]]
     return definitions
 
 
-def _run_table_guardrails_workflow(
+def orchestrate_table_guardrails(
     table_configs: list[dict[str, Any]],
     *,
     run_id: str | None = None,
@@ -912,16 +910,16 @@ def _run_table_guardrails_workflow(
         schema_rules_df = table_config.get("schema_rules_df", guardrail_rules_df)
         freshness_rules_df = table_config.get("freshness_rules_df", guardrail_rules_df)
         if schema_rules_df is not None:
-            schema_results[table_key] = run_schema_rule_check(
+            schema_results[table_key] = schema_check_core(
                 dataframe,
-                schema_rules_df,
+                rules_df=schema_rules_df,
                 dataset_name=dataset_name,
                 table_name=table_name,
                 environment_name=env,
                 metadata_table_key=metadata_table_key,
             )
         else:
-            schema_results[table_key] = run_schema_check(
+            schema_results[table_key] = schema_check_core(
                 dataframe,
                 table_config.get("expected_schema", {}),
                 preset=table_config.get("schema_preset", "strict"),
@@ -934,16 +932,16 @@ def _run_table_guardrails_workflow(
                 "message": "Freshness check skipped because the blocking schema prerequisite failed.",
             }
         elif freshness_rules_df is not None:
-            freshness_results[table_key] = run_freshness_rule_check(
+            freshness_results[table_key] = freshness_check_core(
                 dataframe,
-                freshness_rules_df,
+                rules_df=freshness_rules_df,
                 dataset_name=dataset_name,
                 table_name=table_name,
                 environment_name=env,
                 metadata_table_key=metadata_table_key,
             )
         else:
-            freshness_results[table_key] = run_freshness_check(
+            freshness_results[table_key] = freshness_check_core(
                 dataframe,
                 table_config.get("freshness_column"),
                 table_config.get("freshness_max_lag_days"),
@@ -959,7 +957,7 @@ def _run_table_guardrails_workflow(
                 "message": "Changes check skipped because a blocking source prerequisite failed.",
             }
         elif changes_enabled:
-            changes_results[table_key] = run_changes_check(
+            changes_results[table_key] = changes_check_core(
                 dataframe,
                 table_config.get("previous_dataframe"),
                 partition_columns=table_config.get("change_partition_columns"),
@@ -1031,7 +1029,7 @@ def _run_table_guardrails_workflow(
                 "message": "DQ guardrail skipped by preset.",
             }
         else:
-            dq_results[table_key] = _run_active_dq_guardrail(
+            dq_results[table_key] = run_active_dq_guardrail(
                 dataframe,
                 config,
                 env,
@@ -1054,7 +1052,7 @@ def _run_table_guardrails_workflow(
                 ("changes", table_config.get("source_pattern", "snapshot"), changes_results[table_key]),
                 ("dq", table_config.get("dq_preset", "active_rules"), dq_results[table_key]),
             ):
-                _write_guardrail_result_row(
+                write_guardrail_result_row(
                     spark_session=spark_session,
                     config=config,
                     env=env,

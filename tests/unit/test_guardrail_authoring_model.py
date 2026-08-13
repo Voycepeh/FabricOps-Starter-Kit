@@ -222,12 +222,12 @@ def _rule(**overrides):
 
 def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify schema rule rows are loaded and enforced."""
-    from fabricops_kit.pipeline.guardrails_shared import run_schema_rule_check
+    from fabricops_kit.pipeline.guardrails_shared import schema_check_core
 
     df = spark_session.createDataFrame([(1, "ok", "extra")], "order_id int, status string, extra string")
     rules = [_rule(rule_parameters_json=json.dumps({"columns": ["order_id", "status"], "data_types": {"order_id": "int", "status": "string"}}))]
 
-    result = run_schema_rule_check(df, rules, dataset_name="sales", table_name="orders")
+    result = schema_check_core(df, rules, dataset_name="sales", table_name="orders")
 
     assert result["status"] == "warning"
     assert result["can_continue"] is True
@@ -236,7 +236,7 @@ def test_schema_rules_from_guardrail_metadata_are_enforced(spark_session):
 
 def test_freshness_rules_from_guardrail_metadata_are_enforced(spark_session):
     """Verify freshness rule rows are loaded and enforced."""
-    from fabricops_kit.pipeline.guardrails_shared import run_freshness_rule_check
+    from fabricops_kit.pipeline.guardrails_shared import freshness_check_core
 
     df = spark_session.createDataFrame([("2026-06-14",)], "business_date string")
     rules = [
@@ -247,7 +247,7 @@ def test_freshness_rules_from_guardrail_metadata_are_enforced(spark_session):
         )
     ]
 
-    result = run_freshness_rule_check(df, rules, dataset_name="sales", table_name="orders", reference_date="2026-06-15")
+    result = freshness_check_core(df, rules, dataset_name="sales", table_name="orders", reference_date="2026-06-15")
 
     assert result["status"] == "passed"
     assert result["guardrail_type"] == "freshness"
@@ -300,7 +300,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     ])
     monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: rules_df)
 
-    result = dq_runtime._run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    result = dq_runtime.run_active_dq_guardrail(df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
@@ -309,19 +309,19 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
     """Verify active-pending-review rules use standard runtime warning metadata."""
-    from fabricops_kit.pipeline.guardrails_shared import run_freshness_rule_check, enforce_profile_behavior, run_schema_rule_check
+    from fabricops_kit.pipeline.guardrails_shared import freshness_check_core, enforce_profile_behavior, schema_check_core
 
     warning = "Rule is active through approval bypass and requires governance post-review."
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
     bypass_base = {"review_status": "active_pending_governance_review"}
 
-    schema = run_schema_rule_check(
+    schema = schema_check_core(
         schema_df,
         [_rule(**bypass_base, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
         dataset_name="sales",
         table_name="orders",
     )
-    freshness = run_freshness_rule_check(
+    freshness = freshness_check_core(
         spark_session.createDataFrame([("2026-06-14",)], "business_date string"),
         [_rule(**bypass_base, guardrail_type="freshness", rule_type="max_lag_days", rule_parameters_json=json.dumps({"freshness_column": "business_date", "max_lag_days": 2}))],
         dataset_name="sales",
@@ -345,7 +345,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
         _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
     ])
     monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
-    dq = dq_runtime._run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
+    dq = dq_runtime.run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
 
     for result in (schema, freshness, profile, dq):
         assert result["can_continue"] is True
@@ -594,7 +594,7 @@ def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
 
 def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
     """Verify only new active rule statuses are enforced for schema rules."""
-    from fabricops_kit.pipeline.guardrails_shared import run_schema_rule_check
+    from fabricops_kit.pipeline.guardrails_shared import schema_check_core
 
     class Frame:
         dtypes = [("order_id", "int")]
@@ -602,7 +602,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
 
     active_statuses = {"self_approved", "governance_approved", "active_pending_governance_review"}
     for status in active_statuses:
-        result = run_schema_rule_check(
+        result = schema_check_core(
             Frame(),
             [_rule(guardrail_type="schema", rule_type="strict", review_status=status, rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}}))],
             dataset_name="sales",
@@ -617,7 +617,7 @@ def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
         {key: value for key, value in _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})).items() if key != "is_active"},
         _rule(guardrail_type="schema", rule_type="strict", review_status="self_approved", dataset_name="", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
     ]:
-        result = run_schema_rule_check(Frame(), [inactive_rule], dataset_name="sales", table_name="orders")
+        result = schema_check_core(Frame(), [inactive_rule], dataset_name="sales", table_name="orders")
         assert result["preset"] == "monitor_only"
         assert "rule_key" not in result
 

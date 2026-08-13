@@ -143,7 +143,10 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'read_warehouse_table',
         'read_warehouse_query',
         'write_warehouse_table',
-    'profile_and_register_table',
+        'check_schema',
+        'check_freshness',
+        'check_changes',
+        'profile_and_register_table',
         'profile_dataframe',
         'profile_frequency_distribution',
         'display_guardrail_results',
@@ -250,7 +253,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
     )
 
     with pytest.raises(ValueError, match="Cannot build metadata audit fields"):
-        metadata_evidence._write_guardrail_result_row(
+        metadata_evidence.write_guardrail_result_row(
             spark_session=FakeSpark(),
             config=framework_config(),
             env="dev",
@@ -278,7 +281,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
     expected = config_shared.build_metadata_table_key("lakehouse", "raw", None, "orders")
 
     for env in ("dev", "prod"):
-        metadata_evidence._write_guardrail_result_row(
+        metadata_evidence.write_guardrail_result_row(
             spark_session=spark,
             config=config,
             env=env,

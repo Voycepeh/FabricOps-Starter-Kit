@@ -126,7 +126,7 @@ def test_catalogue_writer_targets_profiled_only():
 
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
-    for path, function_name in [("pipeline/metadata_evidence.py", "_write_guardrail_result_row")]:
+    for path, function_name in [("pipeline/metadata_evidence.py", "write_guardrail_result_row")]:
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
@@ -137,7 +137,7 @@ def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
     """Verify profile behavior enforcement writes outcomes to results, not catalogue."""
     source = _function_source("pipeline/guardrails_shared.py", "enforce_profile_behavior")
 
-    assert "_write_guardrail_result_row" in source
+    assert "write_guardrail_result_row" in source
     assert "profile_evidence_rows" in source
     assert '"METADATA_DATA_CATALOGUE"' not in source
 
@@ -154,15 +154,15 @@ def test_governance_rule_writer_targets_guardrail_rules_for_dq():
 
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
-    dq_source = _function_source("pipeline/guardrails_shared.py", "_run_active_dq_guardrail")
-    pipeline_source = _function_source("pipeline/shared.py", "_run_table_guardrails_workflow")
+    dq_source = _function_source("pipeline/guardrails_shared.py", "run_active_dq_guardrail")
+    pipeline_source = _function_source("pipeline/shared.py", "orchestrate_table_guardrails")
 
-    assert "_write_guardrail_result_row" in dq_source
+    assert "write_guardrail_result_row" in dq_source
     assert "write_results" in dq_source
     assert 'guardrail_type="dq"' in dq_source
     for guardrail_type in ('"schema"', '"freshness"', '"dq"'):
         assert guardrail_type in pipeline_source
-    assert "_write_guardrail_result_row" in pipeline_source
+    assert "write_guardrail_result_row" in pipeline_source
 
 
 def test_guardrail_result_writer_has_single_shared_implementation():
@@ -174,10 +174,10 @@ def test_guardrail_result_writer_has_single_shared_implementation():
         writer_definitions.extend(
             f"{path.relative_to(SRC).as_posix()}:{node.name}"
             for node in ast.walk(tree)
-            if isinstance(node, ast.FunctionDef) and node.name == "_write_guardrail_result_row"
+            if isinstance(node, ast.FunctionDef) and node.name == "write_guardrail_result_row"
         )
 
-    assert writer_definitions == ["pipeline/metadata_evidence.py:_write_guardrail_result_row"]
+    assert writer_definitions == ["pipeline/metadata_evidence.py:write_guardrail_result_row"]
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget wrappers delegate and workflows keep metadata ownership."""

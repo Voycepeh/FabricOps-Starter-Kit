@@ -1795,7 +1795,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     import scripts.generate_individual_function_reference_pages as generator
 
     public_qn = "fabricops_kit.pipeline.guardrails_shared.run_table_guardrails"
-    workflow_qn = "fabricops_kit.pipeline.guardrails_shared._run_table_guardrails_workflow"
+    workflow_qn = "fabricops_kit.pipeline.guardrails_shared.orchestrate_table_guardrails"
     core_qn = "fabricops_kit.profiling.profile_dataframe_core"
     private_core_qn = "fabricops_kit.profiling._profile_dataframe_core"
     distribution_qn = "fabricops_kit.profiling.build_distribution_summaries"
@@ -1804,7 +1804,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     node_by_qn = {
         public_qn: {"callable_name": "run_table_guardrails", "module_name": "pipeline", "callable_kind": "function"},
         other_public_qn: {"callable_name": "other_public", "module_name": "other", "callable_kind": "function"},
-        workflow_qn: {"callable_name": "_run_table_guardrails_workflow", "module_name": "pipeline", "callable_kind": "function"},
+        workflow_qn: {"callable_name": "orchestrate_table_guardrails", "module_name": "pipeline", "callable_kind": "function"},
         core_qn: {"callable_name": "profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
         private_core_qn: {"callable_name": "_profile_dataframe_core", "module_name": "profiling", "callable_kind": "function"},
         distribution_qn: {"callable_name": "build_distribution_summaries", "module_name": "profiling", "callable_kind": "function"},
@@ -1822,7 +1822,7 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     inventory = [
         _flow_test_inventory_row(public_qn, "run_table_guardrails", "pipeline", "public"),
         _flow_test_inventory_row(other_public_qn, "other_public", "other", "public"),
-        _flow_test_inventory_row(workflow_qn, "_run_table_guardrails_workflow", "pipeline", "private_helper", owner=public_qn),
+        _flow_test_inventory_row(workflow_qn, "orchestrate_table_guardrails", "pipeline", "private_helper", owner=public_qn),
         _flow_test_inventory_row(core_qn, "profile_dataframe_core", "profiling", "internal", used_by_count=2),
         _flow_test_inventory_row(private_core_qn, "_profile_dataframe_core", "profiling", "private_helper", owner=core_qn),
         _flow_test_inventory_row(distribution_qn, "build_distribution_summaries", "profiling", "private_helper", owner=core_qn),

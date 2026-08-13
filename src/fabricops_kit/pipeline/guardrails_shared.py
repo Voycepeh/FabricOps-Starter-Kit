@@ -19,7 +19,7 @@ from uuid import uuid4
 from fabricops_kit.config.shared import get_current_audit_timestamp
 from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
-from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
+from fabricops_kit.pipeline.metadata_evidence import write_guardrail_result_row
 
 
 _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
@@ -328,7 +328,7 @@ def _changes_content_columns(columns, keys, non_key_columns, pattern, version_co
     )
 
 
-def run_changes_check(
+def changes_check_core(
     dataframe,
     previous_dataframe=None,
     *,
@@ -518,48 +518,6 @@ def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
 # ---------------------------------------------------------------------------
 # Internal workflow layer
 # ---------------------------------------------------------------------------
-
-def run_schema_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "") -> dict:
-    """Apply an internal runtime schema rule check for ``run_table_guardrails``.
-
-    This helper is not a notebook-facing callable. It translates the latest
-    active widget-authored schema guardrail rule into the runtime schema check
-    used by ``run_table_guardrails``.
-    """
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
-    if not rule:
-        return run_schema_check(dataframe, {}, preset="monitor_only")
-    params = _parse_rule_parameters(rule)
-    expected = params.get("data_types") or params.get("expected_data_types") or {}
-    selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
-    expected_schema = {column: expected.get(column, "") for column in selected_columns}
-    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
-    preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
-    result = run_schema_check(dataframe, expected_schema, preset=preset)
-    result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
-    return _apply_bypass_post_review_warning(result, rule)
-
-
-def run_freshness_rule_check(dataframe, rules_df, *, dataset_name: str, table_name: str, environment_name: str = "", metadata_table_key: str = "", reference_date=None) -> dict:
-    """Enforce freshness using the latest active freshness rule row."""
-    rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
-    if not rule:
-        return run_freshness_check(dataframe, None, None, reference_date=reference_date)
-    params = _parse_rule_parameters(rule)
-    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
-    if rule_type == "skip":
-        result = run_freshness_check(dataframe, None, None, reference_date=reference_date)
-    else:
-        result = run_freshness_check(
-            dataframe,
-            params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name"),
-            params.get("max_lag_days"),
-            severity=_catalogue_value(rule, "severity") or "blocking",
-            reference_date=reference_date,
-        )
-    result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
-    return _apply_bypass_post_review_warning(result, rule)
-
 
 # ---------------------------------------------------------------------------
 # Public/shared guardrail exception model
@@ -752,7 +710,17 @@ _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
 # Validator layer
 # ---------------------------------------------------------------------------
 
-def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str = "strict") -> dict:
+def schema_check_core(
+    dataframe,
+    expected_schema: dict[str, str] | None = None,
+    *,
+    preset: str = "strict",
+    rules_df=None,
+    dataset_name: str = "",
+    table_name: str = "",
+    environment_name: str = "",
+    metadata_table_key: str = "",
+) -> dict:
     """Apply an internal runtime schema check for ``run_table_guardrails``.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
@@ -770,6 +738,16 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         changes, and unexpected columns. ``allow_new_columns`` blocks missing
         columns and datatype changes while reporting additional columns as a
         warning. ``monitor_only`` reports all differences without blocking.
+    rules_df : DataFrame or iterable of mappings, optional
+        Approved schema rules used instead of ``expected_schema``.
+    dataset_name : str, optional
+        Dataset identity used to select an approved rule.
+    table_name : str, optional
+        Table identity used to select an approved rule.
+    environment_name : str, optional
+        Environment identity used to select an approved rule.
+    metadata_table_key : str, optional
+        Canonical table identity used to select an approved rule.
 
     Returns
     -------
@@ -789,6 +767,24 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
     calling schema validation helpers directly.
 
     """
+    rule = None
+    rule_type = ""
+    if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
+        rules_df, expected_schema = expected_schema, None
+    if rules_df is not None:
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="schema", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        if not rule:
+            expected_schema, preset = {}, "monitor_only"
+        else:
+            params = _parse_rule_parameters(rule)
+            expected = params.get("data_types") or params.get("expected_data_types") or {}
+            selected_columns = params.get("columns") or params.get("selected_columns") or list(expected)
+            expected_schema = {column: expected.get(column, "") for column in selected_columns}
+            rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
+            preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+    elif expected_schema is None:
+        raise ValueError("expected_schema is required when rules_df is not supplied")
+
     normalized_preset = str(preset).lower()
     if normalized_preset not in _SCHEMA_PRESETS:
         raise ValueError("preset must be one of: strict, allow_new_columns, monitor_only")
@@ -838,7 +834,7 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         if status == "passed"
         else f"Schema validation {status}: {len(missing_columns)} missing, {len(actual_unexpected)} unexpected, {len(datatype_mismatches)} datatype mismatch(es)."
     )
-    return {
+    result = {
         "status": status,
         "can_continue": can_continue,
         "checks": checks,
@@ -848,6 +844,10 @@ def run_schema_check(dataframe, expected_schema: dict[str, str], *, preset: str 
         "datatype_mismatches": datatype_mismatches,
         "preset": normalized_preset,
     }
+    if rule is not None:
+        result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+        return _apply_bypass_post_review_warning(result, rule)
+    return result
 
 
 def _normalize_profile(profile) -> dict | None:
@@ -1011,13 +1011,18 @@ def _iso_date_value(value) -> str:
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
 
 
-def run_freshness_check(
+def freshness_check_core(
     dataframe,
-    freshness_column: str | None,
-    max_lag_days: int | str | None,
+    freshness_column: str | None = None,
+    max_lag_days: int | str | None = None,
     severity: str = "blocking",
     *,
     reference_date: date | datetime | str | None = None,
+    rules_df=None,
+    dataset_name: str = "",
+    table_name: str = "",
+    environment_name: str = "",
+    metadata_table_key: str = "",
 ) -> dict:
     """Enforce that a DataFrame contains recent enough data.
 
@@ -1035,6 +1040,16 @@ def run_freshness_check(
         Whether stale data blocks continuation or returns a non-blocking warning.
     reference_date : date, datetime, str, optional
         Date used as "today" for comparison. Defaults to the current local date.
+    rules_df : DataFrame or iterable of mappings, optional
+        Approved freshness rules used instead of direct arguments.
+    dataset_name : str, optional
+        Dataset identity used to select an approved rule.
+    table_name : str, optional
+        Table identity used to select an approved rule.
+    environment_name : str, optional
+        Environment identity used to select an approved rule.
+    metadata_table_key : str, optional
+        Canonical table identity used to select an approved rule.
 
     Returns
     -------
@@ -1048,6 +1063,20 @@ def run_freshness_check(
     skips profile behavior enforcement; freshness still runs when configured.
 
     """
+    rule = None
+    rule_type = ""
+    if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
+        rules_df, freshness_column = freshness_column, None
+    if rules_df is not None:
+        rule = _select_table_guardrail_rule(rules_df, guardrail_type="freshness", dataset_name=dataset_name, table_name=table_name, environment_name=environment_name, metadata_table_key=metadata_table_key)
+        if rule:
+            params = _parse_rule_parameters(rule)
+            rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
+            if rule_type != "skip":
+                freshness_column = params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name")
+                max_lag_days = params.get("max_lag_days")
+                severity = _catalogue_value(rule, "severity") or "blocking"
+
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()
     if normalized_severity not in {"blocking", "warning"}:
@@ -1067,8 +1096,10 @@ def run_freshness_check(
         "freshness_message": "Freshness check skipped because no freshness column is configured.",
         "message": "Freshness check skipped because no freshness column is configured.",
     }
+    if rule is not None:
+        base_result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     if not column:
-        return base_result
+        return _apply_bypass_post_review_warning(base_result, rule)
     if max_lag_days is None or str(max_lag_days).strip() == "":
         raise ValueError("max_lag_days is required when freshness_column is set")
     lag_days = int(max_lag_days)
@@ -1096,7 +1127,7 @@ def run_freshness_check(
             freshness_message=message,
             message=message,
         )
-        return base_result
+        return _apply_bypass_post_review_warning(base_result, rule)
 
     message = f"Freshness check failed: latest {column} is older than allowed lag."
     status = "failed" if normalized_severity == "blocking" else "warning"
@@ -1109,7 +1140,7 @@ def run_freshness_check(
         freshness_message=message,
         message=message,
     )
-    return base_result
+    return _apply_bypass_post_review_warning(base_result, rule)
 
 
 def enforce_freshness(
@@ -1125,7 +1156,7 @@ def enforce_freshness(
     This established public name remains compatible while
     :func:`check_freshness` provides the check-oriented API.
     """
-    return run_freshness_check(
+    return freshness_check_core(
         dataframe,
         freshness_column,
         max_lag_days,
@@ -1387,8 +1418,8 @@ def enforce_profile_behavior(
 
     if write_results and config is not None and env is not None:
         try:
-            from fabricops_kit.pipeline.metadata_evidence import _write_guardrail_result_row
-            _write_guardrail_result_row(
+            from fabricops_kit.pipeline.metadata_evidence import write_guardrail_result_row
+            write_guardrail_result_row(
                 spark_session=spark, config=config, env=env, run_id=run_id,
                 dataset_name=dataset_name, table_name=table_name,
                 store_type=store_type, layer=layer or stage, schema_name=schema_name,
@@ -1839,7 +1870,7 @@ def _read_guardrail_rule_metadata(config, env, *, spark_session=None):
         return frame.filter(F.lower(F.coalesce(F.col("guardrail_type"), F.lit(""))) == "dq")
     return frame
 
-def _run_active_dq_guardrail(
+def run_active_dq_guardrail(
     dataframe,
     config,
     env,
@@ -1919,7 +1950,7 @@ def _run_active_dq_guardrail(
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
     result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
     if write_results:
-        _write_guardrail_result_row(
+        write_guardrail_result_row(
             spark_session=spark_session,
             config=config,
             env=env,

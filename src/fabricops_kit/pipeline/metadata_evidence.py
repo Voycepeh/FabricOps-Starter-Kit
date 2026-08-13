@@ -12,7 +12,7 @@ from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 
 
-def _write_guardrail_result_row(
+def write_guardrail_result_row(
     *,
     spark_session: Any,
     config: Any,

@@ -239,7 +239,7 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
     assert gt_check["failed_count"] == 4
 
 
-def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
+def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
     """Verify the internal active DQ guardrail loads only active metadata rules."""
     df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
@@ -306,7 +306,7 @@ def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monk
 
     monkeypatch.setattr(governance, "read_lakehouse_table_core", fake_read)
 
-    result = governance._run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
+    result = governance.run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert reads == [("dev", "metadata", governance.GUARDRAIL_TABLE, {"schema": None, "spark_session": spark_session})]
     assert result["status"] == "failed"
@@ -317,7 +317,7 @@ def test__run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monk
     assert "_dq_check_status" in result["dataframe"].columns
 
 
-def test__run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
+def test_run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
     """Verify the internal active DQ guardrail returns passed when no active guardrail rules."""
     df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
     metadata = spark_session.createDataFrame(
@@ -343,7 +343,7 @@ def test__run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(m
     )
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
 
-    result = governance._run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
+    result = governance.run_active_dq_guardrail(df, framework_config(), "dev", "sales", "orders", spark_session=spark_session)
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True

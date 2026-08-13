@@ -3,7 +3,7 @@
 from __future__ import annotations
 import pytest
 
-from fabricops_kit.pipeline.guardrails_shared import enforce_profile_behavior, stop_if_failed, run_schema_check
+from fabricops_kit.pipeline.guardrails_shared import enforce_profile_behavior, stop_if_failed, schema_check_core
 
 pytestmark = pytest.mark.unit
 
@@ -18,9 +18,9 @@ def test_runtime_schema_check_supports_strict_allow_new_and_monitor_modes():
     df = FakeFrame([("id", "bigint"), ("amount", "double"), ("new_col", "string")])
     expected = {"id": "bigint", "amount": "double"}
 
-    strict = run_schema_check(df, expected, preset="strict")
-    allow_new = run_schema_check(df, expected, preset="allow_new_columns")
-    monitor = run_schema_check(FakeFrame([("id", "bigint")]), expected, preset="monitor_only")
+    strict = schema_check_core(df, expected, preset="strict")
+    allow_new = schema_check_core(df, expected, preset="allow_new_columns")
+    monitor = schema_check_core(FakeFrame([("id", "bigint")]), expected, preset="monitor_only")
 
     assert strict["status"] == "failed"
     assert strict["can_continue"] is False
@@ -29,7 +29,7 @@ def test_runtime_schema_check_supports_strict_allow_new_and_monitor_modes():
     assert monitor["status"] == "warning"
     assert monitor["can_continue"] is True
     with pytest.raises(ValueError, match="preset"):
-        run_schema_check(df, expected, preset="unknown")
+        schema_check_core(df, expected, preset="unknown")
 
 
 def _profile_rows(row_count: int, minimum: str = "2026-01-01", maximum: str = "2026-01-31") -> list[dict[str, object]]:

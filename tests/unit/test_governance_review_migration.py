@@ -51,6 +51,9 @@ EXPECTED_V1_CALLABLES = [
     'read_warehouse_table',
     'read_warehouse_query',
     'write_warehouse_table',
+    'check_schema',
+    'check_freshness',
+    'check_changes',
     'profile_and_register_table',
     'profile_dataframe',
     'profile_frequency_distribution',
@@ -520,7 +523,7 @@ def test_pipeline_and_config_use_new_governance_owners():
     pipeline_source = (root / "src" / "fabricops_kit" / "pipeline/shared.py").read_text(encoding="utf-8")
     config_source = (root / "src" / "fabricops_kit" / "config" / "shared.py").read_text(encoding="utf-8")
 
-    assert "from fabricops_kit.pipeline.guardrails_shared import _run_active_dq_guardrail" in pipeline_source
+    assert "from fabricops_kit.pipeline.guardrails_shared import run_active_dq_guardrail" in pipeline_source
     assert "from .governance_review" not in pipeline_source
     assert "governance_lookup" not in pipeline_source
     assert "CATALOGUE_TABLE = \"METADATA_DATA_CATALOGUE\"" in pipeline_source
