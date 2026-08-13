@@ -53,28 +53,115 @@ The history belongs to FabricOps and is appended to `METADATA_SOURCE_OBSERVATION
 
 The `observation_definition_id` separates histories produced with different partition columns, range columns, fingerprint columns, or partition predicates. Changing any of those settings begins a distinct comparison history instead of comparing incompatible evidence.
 
+By default, one `observe_source()` call completes both sides of the observation cycle:
+
+1. observe the current source
+2. load the latest matching history from `METADATA_SOURCE_OBSERVATION`
+3. compare current and previous compact observations
+4. return the incremental read plan
+5. append the current compact observation to `METADATA_SOURCE_OBSERVATION`
+
+The default is `persist=True`, which gives the next run evidence to compare. Use `persist=False` only when deliberately previewing or testing an observation without advancing its FabricOps-owned history.
+
 !!! note "A fingerprint is a first-tier signal"
 
     The compact aggregate is designed to identify partitions that may need attention. It is not a collision-proof row-level change record. Use [`check_changes()`](../reference/index.md) on the affected data when the pipeline needs inserted, updated, or deleted row classification.
+
+## See what FabricOps executes
+
+**The workflow has three visible layers: what the user writes, what FabricOps executes at the source, and what FabricOps keeps.**
+
+```text
+WHAT THE USER WRITES
+observe_source(...)
+        ↓
+WHAT FABRICOPS EXECUTES AT THE SOURCE
+Warehouse → generated aggregate SQL
+Lakehouse → Spark select, filter, groupBy, and aggregate
+        ↓
+WHAT FABRICOPS KEEPS
+partition | row_count | min | max | fingerprint
+        ↓
+METADATA_SOURCE_OBSERVATION
+```
+
+On the next run, FabricOps compares like-for-like observations:
+
+```text
+Current source observation
+            ↕ compare
+METADATA_SOURCE_OBSERVATION
+            ↓
+same       → skip the business-data read
+changed    → restricted read
+new        → restricted read
+removed    → reconciliation required
+```
 
 ## Warehouse pattern: aggregate before Spark
 
 **Warehouse observation pushes grouping and aggregate work into the SQL serving engine.**
 
-FabricOps uses the existing read-only [`read_warehouse_query()`](../api/reference/read_warehouse_query.md) connectivity path rather than creating another Warehouse connector. The generated observation query follows this shape:
+FabricOps uses the existing read-only [`read_warehouse_query()`](../api/reference/read_warehouse_query.md) connectivity path rather than creating another Warehouse connector.
+
+### What the user writes
+
+```python
+plan = observe_source(
+    {
+        "source_type": "warehouse",
+        "target": "warehouse",
+        "schema": "dbo",
+        "table_name": "orders",
+    },
+    partition_columns=["business_date"],
+    range_column="order_id",
+    fingerprint_columns=["order_id", "modified_at"],
+    config=CONFIG,
+    env=ENV,
+)
+```
+
+### Actual generated Warehouse query shape
+
+For that configuration, FabricOps constructs and sends this query shape to the Warehouse:
 
 ```sql
 SELECT
-    business_date,
+    [business_date],
     COUNT_BIG(*) AS row_count,
-    MIN(order_id) AS observed_min,
-    MAX(order_id) AS observed_max,
-    CHECKSUM_AGG(BINARY_CHECKSUM(order_id, modified_at)) AS aggregate_checksum
-FROM dbo.orders
-GROUP BY business_date
+    MIN([order_id]) AS observed_min,
+    MAX([order_id]) AS observed_max,
+    CHECKSUM_AGG(
+        BINARY_CHECKSUM([order_id], [modified_at])
+    ) AS aggregate_checksum
+FROM [dbo].[orders]
+GROUP BY [business_date]
 ```
 
-Only the grouped observation rows reach Spark. A subsequent business-data read can use the returned `read_predicate` in a filtered Warehouse query so unchanged partitions are not transferred.
+When the source configuration also contains:
+
+```python
+"partition_predicate": "business_date >= '2026-08-01'"
+```
+
+FabricOps includes that read-only filter before grouping:
+
+```sql
+SELECT
+    [business_date],
+    COUNT_BIG(*) AS row_count,
+    MIN([order_id]) AS observed_min,
+    MAX([order_id]) AS observed_max,
+    CHECKSUM_AGG(
+        BINARY_CHECKSUM([order_id], [modified_at])
+    ) AS aggregate_checksum
+FROM [dbo].[orders]
+WHERE business_date >= '2026-08-01'
+GROUP BY [business_date]
+```
+
+**The Warehouse performs the aggregation. Spark receives only the small grouped result.** A subsequent business-data read can use the returned `read_predicate` in a filtered Warehouse query so unchanged partitions are not transferred.
 
 This is cheap when the Warehouse can aggregate efficiently and the result has far fewer rows than the source. It can still be expensive when the query scans a very large unpartitioned table, the predicate cannot prune data, or almost every partition changes on every run.
 
@@ -88,6 +175,48 @@ The Lakehouse path uses the existing configured table resolution and Delta reade
 2. the configured partition predicate, when supplied
 3. distributed grouping and aggregation in Spark
 4. collection of only the compact per-partition result
+
+### Conceptually equivalent Spark operations
+
+The following illustrates the operations FabricOps builds internally. It is not additional code the user must execute:
+
+```python
+frame = (
+    read_lakehouse_table_core(...)
+    .select(
+        "business_date",
+        "order_id",
+        "modified_at",
+    )
+    .where("business_date >= '2026-08-01'")
+)
+
+observed = (
+    frame
+    .groupBy("business_date")
+    .agg(
+        F.count(F.lit(1)).alias("row_count"),
+        F.min(F.col("order_id")).alias("observed_min"),
+        F.max(F.col("order_id")).alias("observed_max"),
+        F.sum(
+            F.xxhash64(
+                F.coalesce(
+                    F.col("order_id").cast("string"),
+                    F.lit("<null>"),
+                ),
+                F.coalesce(
+                    F.col("modified_at").cast("string"),
+                    F.lit("<null>"),
+                ),
+            )
+        ).alias("fingerprint_input"),
+    )
+)
+
+partition_summaries = observed.collect()
+```
+
+The final `collect()` runs only after projection, filtering, grouping, and aggregation. It collects partition summaries rather than the original business rows.
 
 Choose a predicate that Spark and Delta can use for partition pruning. A string filter does not guarantee pruning by itself; its columns and values must align with the table's physical partition layout.
 
