@@ -1018,10 +1018,10 @@ def _run_table_guardrails_workflow(
                 "profile_evidence_rows": [],
             }
 
-        if not prerequisites_allow_continuation:
+        if not schema_allows_continuation:
             dq_results[table_key] = {
                 "status": "skipped", "can_continue": True, "checks": [],
-                "message": "DQ guardrail skipped because a blocking source prerequisite failed.",
+                "message": "DQ guardrail skipped because the blocking schema prerequisite failed.",
             }
         elif table_config.get("dq_preset", "active_rules") == "skip":
             dq_results[table_key] = {
