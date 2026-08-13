@@ -147,6 +147,7 @@ def test_public_callable_list_includes_guardrail_authoring_helpers_after_metadat
         'profile_dataframe',
         'profile_frequency_distribution',
         'display_guardrail_results',
+        'observe_source',
         'run_table_guardrails',
         'widget_render_data_steward',
         'widget_render_data_agreement',
