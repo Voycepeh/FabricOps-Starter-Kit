@@ -807,7 +807,7 @@ def _resolve_metadata_schema(
     return None
 
 
-def _is_table_not_found_error(exc: Exception) -> bool:
+def is_table_not_found_error(exc: Exception) -> bool:
     """Return whether an exception indicates a missing metadata table."""
     text = str(exc).lower()
     return any(token in text for token in ("table or view not found", "table not found", "not found", "does not exist", "delta table doesn't exist"))
@@ -834,7 +834,7 @@ def _setup_metadata_table_registry(
                 table_name, target="metadata", context={"config": config, "env": env}, **read_kwargs
             )
         except Exception as exc:
-            if not _is_table_not_found_error(exc):
+            if not is_table_not_found_error(exc):
                 raise RuntimeError(
                     f"Unable to read metadata table {table_name!r}; not attempting creation because the error was not a confirmed table-not-found condition."
                 ) from exc

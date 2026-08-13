@@ -94,6 +94,8 @@ A source can have the correct schema but still be stale. FabricOps checks freshn
 
 **The change check asks whether data FabricOps previously observed still looks the same now.**
 
+For large Warehouse or Lakehouse sources, first use the [source change detection and incremental reads](source-change-detection.md) pattern so FabricOps can decide whether a full business-data read is necessary. The sections below explain the deeper DataFrame-level comparison after relevant data is available.
+
 It can narrow the work in two stages: first identify changed partitions, then inspect the records inside only those partitions.
 
 ### Compare partition fingerprints

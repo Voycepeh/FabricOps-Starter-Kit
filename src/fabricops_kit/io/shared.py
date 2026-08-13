@@ -376,6 +376,16 @@ def read_warehouse_synapsesql(
     return reader.synapsesql(synapsesql_target)
 
 
+def read_warehouse_query_core(
+    query: str, *, target: str = "warehouse", spark_session=None,
+    context: dict[str, Any] | None = None, options: dict[str, Any] | None = None,
+):
+    """Execute a validated read-only Warehouse query for internal workflows."""
+    store = resolve_configured_warehouse_query_target(target, context=context)
+    sql = validate_select_query(query)
+    return read_warehouse_synapsesql(get_spark_session(spark_session), store, sql, options=options)
+
+
 def write_warehouse_synapsesql(
     df, store: FabricStore, synapsesql_target: str, *, mode: str, options: dict[str, Any] | None = None
 ) -> None:

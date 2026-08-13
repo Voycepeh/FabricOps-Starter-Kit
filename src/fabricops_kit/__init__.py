@@ -28,6 +28,7 @@ from .io import (
 )
 from .pipeline import (
     display_guardrail_results,
+    observe_source,
     profile_and_register_table,
     profile_dataframe,
     profile_frequency_distribution,
@@ -62,6 +63,7 @@ PIPELINE_EXPORTS = (
     "profile_dataframe",
     "profile_frequency_distribution",
     "display_guardrail_results",
+    "observe_source",
     "run_table_guardrails",
 )
 

@@ -137,6 +137,7 @@ METADATA_TABLE_PURPOSES = {
     "METADATA_ENRICHMENT": "Append-only generic descriptive and governance values for catalogue table and column identities.",
     "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
     "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
+    "METADATA_SOURCE_OBSERVATION": "Append-only compact source-partition observations used for incremental read planning.",
 }
 
 _UNTRACED_SCHEMA_OWNER = {
@@ -362,6 +363,10 @@ METADATA_COLUMN_OWNERS = {
         "expected_value_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
         "actual_value_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
         "result_payload_json": ["fabricops_kit.pipeline.metadata_evidence._write_guardrail_result_row"],
+    },
+    "METADATA_SOURCE_OBSERVATION": {
+        "__default__": ["fabricops_kit.pipeline.observe_source.observe_source"],
+        "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
     },
 }
 
@@ -688,8 +693,22 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'current and previous data, partition and logical key columns, range configuration, source pattern, comparison scope, mutable window, and an explicit version column for versioned sources.',
   'returns': 'Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.',
   'side_effects': 'None. It does not merge or write target data.',
-  'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',
-  'related_functions': ['check_schema', 'check_freshness', 'run_table_guardrails']},
+ 'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',
+ 'related_functions': ['check_schema', 'check_freshness', 'observe_source', 'run_table_guardrails']},
+ {'kind': 'function',
+  'module': 'pipeline',
+  'function_type': 'callable',
+  'summary_override': 'Observe source partitions cheaply and plan a restricted source read.',
+  'symbol_name': 'observe_source',
+  'template_notebook': '02_pipeline',
+  'template_segment': 'Source guardrails',
+  'use_when': 'Use before ingesting a large Warehouse or Lakehouse source to identify changed partitions.',
+  'do_not_use_when': 'Do not use for row-level inserted, updated, or deleted classification.',
+  'parameters': 'Explicit source identity and type, partition, range and fingerprint columns, and FabricOps runtime configuration.',
+  'returns': 'Compact observations plus changed and new partitions and a restricted read predicate.',
+  'side_effects': 'Appends compact history to FabricOps metadata; never writes to the external source.',
+  'preferred_example': 'plan = observe_source(source, partition_columns=["business_date"], range_column="order_id", fingerprint_columns=["order_id"], config=CONFIG, env=ENV)',
+  'related_functions': ['read_warehouse_query', 'read_lakehouse_table', 'check_changes']},
  {'kind': 'function',
   'module': 'config.get_fabric_context',
   'function_type': 'callable',

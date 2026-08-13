@@ -55,6 +55,7 @@ EXPECTED_V1_CALLABLES = [
     'profile_dataframe',
     'profile_frequency_distribution',
     'display_guardrail_results',
+    'observe_source',
     'run_table_guardrails',
     'widget_render_data_steward',
     'widget_render_data_agreement',
