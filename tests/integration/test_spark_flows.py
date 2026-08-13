@@ -277,13 +277,12 @@ def test_run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_sessi
 def test_run_active_dq_guardrail_result_write_toggle_targets_results(spark_session, monkeypatch):
     """Verify DQ enforcement writes result rows only when enabled."""
     from fabricops_kit.pipeline import guardrails_shared as governance
-    import fabricops_kit.pipeline.metadata_evidence as metadata_evidence
 
     df = spark_session.createDataFrame([{"order_id": "A", "status": "active", "amount": 10.0}])
     metadata_df = _dq_metadata_df(spark_session, [])
     writes = []
     monkeypatch.setattr(governance, "read_lakehouse_table_core", lambda *args, **kwargs: metadata_df)
-    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(governance, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     config = framework_config()
     monkeypatch.setattr(
@@ -651,17 +650,17 @@ def test_write_catalogue_evidence_does_not_fallback_to_layer_fields(spark_sessio
 def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_session, monkeypatch):
     """Verify guardrail result writer targets METADATA_GUARDRAIL_RESULTS."""
     from fabricops_kit.config.shared import build_metadata_table_key
-    from fabricops_kit.pipeline import metadata_evidence
+    from fabricops_kit.pipeline import guardrails_shared
 
     writes = []
-    monkeypatch.setattr(metadata_evidence, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, *, target, context, **kwargs: writes.append((df, context["env"], target, table, kwargs)))
 
     monkeypatch.setattr(
         "fabricops_kit.config.audit.resolve_runtime_context",
         lambda **_kwargs: resolved_runtime_context(activity_id="activity-result-001"),
     )
 
-    metadata_evidence.write_guardrail_result_row(
+    guardrails_shared.write_guardrail_result_row(
         spark_session=spark_session,
         config=framework_config(),
         env="dev",

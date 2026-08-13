@@ -126,7 +126,7 @@ def test_catalogue_writer_targets_profiled_only():
 
 def test_runtime_result_writers_target_guardrail_results_only():
     """Verify runtime outcome writers target METADATA_GUARDRAIL_RESULTS only."""
-    for path, function_name in [("pipeline/metadata_evidence.py", "write_guardrail_result_row")]:
+    for path, function_name in [("pipeline/guardrails_shared.py", "write_guardrail_result_row")]:
         source = _function_source(path, function_name)
         assert _calls_write_lakehouse_table_core(source)
         assert "METADATA_GUARDRAIL_RESULTS" in source
@@ -166,7 +166,7 @@ def test_runtime_enforcement_functions_route_outcomes_to_results():
 
 
 def test_guardrail_result_writer_has_single_shared_implementation():
-    """Verify guardrail result writing is consolidated in pipeline evidence utilities."""
+    """Verify guardrail result writing is consolidated in the shared guardrail implementation."""
     writer_definitions = []
     for path in SRC.rglob("*.py"):
         source = path.read_text(encoding="utf-8")
@@ -177,7 +177,7 @@ def test_guardrail_result_writer_has_single_shared_implementation():
             if isinstance(node, ast.FunctionDef) and node.name == "write_guardrail_result_row"
         )
 
-    assert writer_definitions == ["pipeline/metadata_evidence.py:write_guardrail_result_row"]
+    assert writer_definitions == ["pipeline/guardrails_shared.py:write_guardrail_result_row"]
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget wrappers delegate and workflows keep metadata ownership."""

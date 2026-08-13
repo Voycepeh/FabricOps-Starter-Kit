@@ -11,7 +11,6 @@ from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
-from fabricops_kit.pipeline.metadata_evidence import write_guardrail_result_row
 
 
 _DEFAULT_PROFILE_EXCLUDE_COLUMNS = {
@@ -292,6 +291,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     stop_if_failed,
     schema_check_core,
     changes_check_core,
+    write_guardrail_result_row,
 )
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
