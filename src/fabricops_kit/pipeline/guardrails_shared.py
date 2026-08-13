@@ -1570,35 +1570,29 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
     return rules
 
-def _latest_dq_rule_versions(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None):
-    """Resolve latest append-only DQ metadata rows by stable rule identity."""
+def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+    """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
     if "rule_key" in columns:
-        partition_cols = ["rule_key"]
+        partition_columns = ["rule_key"]
     elif "rule_id" in columns:
-        partition_cols = ["rule_id"]
+        partition_columns = ["rule_id"]
     else:
-        partition_cols = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
-    order_cols = [name for name in ("_committed_at", "approved_at") if name in columns]
-    if not partition_cols:
+        partition_columns = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
+    if not partition_columns:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
-    scoped = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
+    latest = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
     if env is not None and "environment_name" in columns:
-        scoped = scoped.filter(F.col("environment_name") == env)
+        latest = latest.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
-        scoped = scoped.filter(F.col("dataset_name") == dataset_name)
-    if not order_cols:
-        return scoped
-    w = Window.partitionBy(*[F.col(name) for name in partition_cols]).orderBy(*[F.col(name).desc_nulls_last() for name in order_cols])
-    return scoped.withColumn("_rn", F.row_number().over(w)).filter(F.col("_rn") == 1).drop("_rn")
-
-
-def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
-    """Load active DQ guardrail rules from append-only metadata rows."""
-    _, F, _ = _spark_sql_helpers()
-    columns = set(getattr(metadata_df, "columns", []))
-    latest = _latest_dq_rule_versions(metadata_df, table_name, env=env, dataset_name=dataset_name)
+        latest = latest.filter(F.col("dataset_name") == dataset_name)
+    order_columns = [name for name in ("_committed_at", "approved_at") if name in columns]
+    if order_columns:
+        window = Window.partitionBy(*[F.col(name) for name in partition_columns]).orderBy(
+            *[F.col(name).desc_nulls_last() for name in order_columns]
+        )
+        latest = latest.withColumn("_rn", F.row_number().over(window)).filter(F.col("_rn") == 1).drop("_rn")
     if "activation_state" in columns:
         latest = latest.filter(F.lower(F.coalesce(F.col("activation_state"), F.lit(""))) == "active")
     elif "is_active" in columns:
@@ -1729,12 +1723,6 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         raise ValueError(f"Unsupported rule_type: {rtype}")
     return F.coalesce(failed, F.lit(False))
 
-def _dq_check_status(severity: str, failed_count: int) -> str:
-    if failed_count <= 0:
-        return "passed"
-    return "failed" if str(severity).strip().lower() == "error" else "warning"
-
-
 def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Run DQ rules and return notebook guardrail check dictionaries."""
     _, F, _ = _spark_sql_helpers()
@@ -1751,7 +1739,7 @@ def _run_dq_guardrail_checks(df, table_name: str, rules: list[dict[str, Any]]) -
         )
         severity = _normalize_dq_severity(rule.get("severity"))
         columns = [str(column) for column in rule.get("columns", [])]
-        check_status = _dq_check_status(severity, failed_count)
+        check_status = "passed" if failed_count <= 0 else ("failed" if severity == "error" else "warning")
         check = {
             "check": "dq_rule",
             "table_name": table_name,
@@ -1807,37 +1795,6 @@ def _dq_tagged_dataframe(df, rules: list[dict[str, Any]]):
             .otherwise(F.lit("passed")),
         )
     )
-
-
-def _dq_failed_row_count(df, rules: list[dict[str, Any]]) -> int:
-    """Return the count of rows that failed at least one DQ rule."""
-    _, F, _ = _spark_sql_helpers()
-    if not rules:
-        return 0
-    failed_columns = [F.when(_dq_failed_expression(df, rule), F.lit(1)).otherwise(F.lit(0)) for rule in rules]
-    failed_row = failed_columns[0]
-    for column in failed_columns[1:]:
-        failed_row = failed_row + column
-    failed_rows = df.select(F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed"))
-    return int(failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0)
-
-
-def _dq_summary(checks: list[dict[str, Any]], total_count: int, failed_row_count: int, *, config: Any = None) -> dict[str, Any]:
-    """Build aggregate DQ fields for catalogue/profile evidence."""
-    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
-    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
-    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
-    status = _summarize_dq_guardrail(checks)["status"]
-    return {
-        "DQ_STATUS": status,
-        "DQ_RULE_COUNT": len(checks),
-        "DQ_FAILED_RULE_COUNT": len(failed_checks),
-        "DQ_WARNING_RULE_COUNT": len(warning_checks),
-        "DQ_ERROR_RULE_COUNT": len(error_checks),
-        "DQ_FAILED_ROW_COUNT": failed_row_count,
-        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
-        "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
-    }
 
 
 def _summarize_dq_guardrail(checks: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1941,14 +1898,41 @@ def run_active_dq_guardrail(
     rules = _load_active_dq_rules(metadata_df, table_name=table_name, env=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
-    failed_row_count = _dq_failed_row_count(dataframe, rules) if rules else 0
+    failed_row_count = 0
+    if rules:
+        _, F, _ = _spark_sql_helpers()
+        failed_columns = [
+            F.when(_dq_failed_expression(dataframe, rule), F.lit(1)).otherwise(F.lit(0))
+            for rule in rules
+        ]
+        failed_row = failed_columns[0]
+        for column in failed_columns[1:]:
+            failed_row = failed_row + column
+        failed_rows = dataframe.select(
+            F.when(failed_row > F.lit(0), F.lit(1)).otherwise(F.lit(0)).alias("failed")
+        )
+        failed_row_count = int(
+            failed_rows.agg(F.sum("failed").alias("failed_count")).collect()[0]["failed_count"] or 0
+        )
     result = _summarize_dq_guardrail(checks)
     if any(str(rule.get("review_status") or "").lower() == "active_pending_governance_review" for rule in rules):
         warning = "Rule is active through approval bypass and requires governance post-review."
         result["reason"] = warning if not result.get("reason") else f"{result.get('reason')} {warning}"
         result["bypass_warning"] = warning
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
-    result["summary"] = _dq_summary(checks, total_count, failed_row_count, config=config)
+    failed_checks = [check for check in checks if not bool(check.get("passed", False))]
+    warning_checks = [check for check in failed_checks if check.get("severity") == "warning"]
+    error_checks = [check for check in failed_checks if check.get("severity") == "error"]
+    result["summary"] = {
+        "DQ_STATUS": result["status"],
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": len(failed_checks),
+        "DQ_WARNING_RULE_COUNT": len(warning_checks),
+        "DQ_ERROR_RULE_COUNT": len(error_checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
+    }
     if write_results:
         write_guardrail_result_row(
             spark_session=spark_session,
