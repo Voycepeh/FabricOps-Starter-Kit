@@ -12,7 +12,7 @@ Engineering reads, profiles, and registers the dataset
 Governance reviews the evidence
         │
         ▼
-Governance creates and approves Guardrails
+Governance creates and activates Guardrails
 METADATA_GUARDRAIL
         │
 ────────────────────────────────────
@@ -65,7 +65,7 @@ Data Quality (DQ) checks are different because row- and column-level rules need 
 | Phase | Stage | Role | What happens |
 | --- | --- | --- | --- |
 | Initial onboarding | Produce evidence | Engineering | Read, profile, and register the dataset in the Data Catalogue. |
-| Initial onboarding | Create Guardrails | Governance | Review Engineering evidence, then define and approve schema, freshness, change, profile-behaviour, and DQ expectations. |
+| Initial onboarding | Create Guardrails | Governance | Review Engineering evidence, then define and activate schema, freshness, change, profile-behaviour, and DQ expectations. |
 | Subsequent runs | Observe source | Engineering | `observe_table()` cheaply captures the current source state. |
 | Subsequent runs | Check pre-read Guardrails | Engineering | `check_schema()`, `check_freshness()`, and `check_changes()` evaluate approved source expectations. |
 | Subsequent runs | Record results | FabricOps | Runtime outcomes go to `METADATA_GUARDRAIL_RESULTS`. |
@@ -75,7 +75,7 @@ Data Quality (DQ) checks are different because row- and column-level rules need 
 
 ## Initial onboarding: produce evidence, then create Guardrails
 
-**Governance needs observed Engineering evidence before it defines expectations for a new dataset.** The initial onboarding run reads, profiles, and registers the dataset. Governance then reviews the Data Catalogue and Data Profiled evidence and creates approved Guardrail intent in `METADATA_GUARDRAIL`.
+**Governance needs observed Engineering evidence before it defines expectations for a new dataset.** The initial onboarding run reads, profiles, and registers the dataset. Governance then reviews the `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` evidence and creates and activates approved Guardrail intent in `METADATA_GUARDRAIL`.
 
 ```text
 Engineering reads the dataset
@@ -84,7 +84,7 @@ Profile and register
         ↓
 Governance reviews observed evidence
         ↓
-Create and approve Guardrails
+Create and activate Guardrails
 ```
 
 For example, Governance might approve:
@@ -94,6 +94,18 @@ For example, Governance might approve:
 - whether a detected source change should warn or block;
 - expected profile behaviour; and
 - row- and column-level DQ rules.
+
+For source observation, Governance owns both the observation definition and the expected change behaviour. The active source-change Guardrail supplies:
+
+| Guardrail value | Purpose |
+| --- | --- |
+| `partition_column` | Identifies the source partitions to observe independently. |
+| `change_column` | Identifies the value whose observed bounds signal source movement. |
+| `change_required` | Requires an observed source change. |
+| `no_change_required` | Requires no observed source change. |
+| `monitor_only` | Records the observed change status without blocking continuation. |
+
+Exactly one controlled expectation—`change_required`, `no_change_required`, or `monitor_only`—applies to the source-change Guardrail. Engineering does not repeat this policy in pipeline code.
 
 See [Run the initial Development pipeline](../guided-demo/02-run-pipeline.md) and [review and define Guardrails](../guided-demo/03-enrich-guardrails.md) for this onboarding sequence.
 
@@ -125,13 +137,12 @@ observation_df = observe_table(
     target=SOURCE_TARGET,
     schema=SOURCE_SCHEMA,
     table_name=SOURCE_TABLE_NAME,
-    partition_column="business_date",
-    change_column="modified_at",
 )
-metadata_table_key = observation_df.select("metadata_table_key").first()[0]
 ```
 
-The observation stores compact source facts in `METADATA_SOURCE_OBSERVATION`: row counts plus the minimum and maximum change value for each partition. Warehouse aggregation is pushed into Warehouse SQL. Lakehouse observation projects only the partition and change columns before distributed aggregation.
+`observe_table()` resolves `partition_column` and `change_column` from the active approved source-change Guardrail. It does not guess them, and Engineering does not redefine Governance-owned policy at runtime. If that Guardrail is missing, inactive, ambiguous, or invalid, observation fails with a clear configuration error instead of collecting evidence under assumed settings.
+
+The observation stores compact source facts in `METADATA_SOURCE_OBSERVATION`: row counts plus the minimum and maximum change value for each partition. Warehouse aggregation is pushed into Warehouse SQL. Lakehouse observation projects only the Governance-defined partition and change columns before distributed aggregation.
 
 !!! note "Evidence is deliberately limited"
 
@@ -146,8 +157,6 @@ schema_result = check_schema(
     target=SOURCE_TARGET,
     schema=SOURCE_SCHEMA,
     table_name=SOURCE_TABLE_NAME,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 ```
 
@@ -160,8 +169,6 @@ Run schema first because freshness and change checks depend on configured partit
 ```python
 freshness_result = check_freshness(
     observation_df,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 ```
 
@@ -174,14 +181,12 @@ A source can have the expected schema and still be stale. See the [`check_freshn
 ```python
 changes_result = check_changes(
     observation_df,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 ```
 
 The first comparison establishes a baseline. Later comparisons retain affected partition values as structured evidence. Removed partitions are recorded as `is_present=false` tombstones.
 
-This signal is intentionally compact: it does not use row-level `key_hash` or `non_key_hash` comparisons and does not define a mutable refresh window. The future physical read layer—not source observation—owns the decision about how to retrieve affected business data. See the [`check_changes()` reference](../api/reference/check_changes.md) for the supported comparison paths.
+This signal remains compact partition evidence. The physical read layer—not source observation—owns predicate construction, and the target pipeline owns its merge behaviour. See the [`check_changes()` reference](../api/reference/check_changes.md) for the supported comparison paths.
 
 ## 5. Decide whether the pipeline should continue
 
@@ -226,8 +231,9 @@ The [Guided Demo guarded pipeline](../guided-demo/04-run-pipeline-with-guardrail
 
 | Metadata table | Responsibility |
 | --- | --- |
-| `METADATA_GUARDRAIL` | Approved Guardrail intent: what should be true. |
+| `METADATA_DATA_CATALOGUE` / `METADATA_DATA_PROFILED` | Observed schema and profiling evidence reviewed during onboarding. |
 | `METADATA_SOURCE_OBSERVATION` | Compact evidence captured from the current source. |
+| `METADATA_GUARDRAIL` | Governance-owned observation definition and approved expectations: what should be true. |
 | `METADATA_GUARDRAIL_RESULTS` | Runtime outcomes: what happened when FabricOps checked. |
 
 The observation and Data Catalogue use the same authoritative `metadata_table_key`, keeping source evidence linked to the physical table later profiled and registered.
