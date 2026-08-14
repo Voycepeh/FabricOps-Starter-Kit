@@ -37,7 +37,7 @@ nav:
       - Warehouse SQL in PySpark: solutions/warehouse-query.md
       - Profile and understand data: solutions/profile-data.md
       - Automatic Data Lineage: solutions/capture-data-lineage.md
-      - Validate a source before ETL: solutions/validate-a-data-source-before-etl.md
+      - ETL Guardrails: solutions/etl-guardrails.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md

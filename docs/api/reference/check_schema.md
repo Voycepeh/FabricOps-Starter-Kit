@@ -12,9 +12,9 @@ Check observed table schema against direct or approved schema intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_schema.py:14`
+`fabricops_kit/pipeline/check_schema.py:20`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L96">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L20-L111">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -40,6 +40,7 @@ def check_schema(
     table_name: str,
     target: str='source',
     schema: str | None=None,
+    dataframe=None,
 ) -> dict:
 ```
 
@@ -62,6 +63,7 @@ True
 | `table_name` | `str` | Yes | Physical table name within the configured target. |
 | `target` | `str` | No | Logical FabricOps target containing the configured physical table. |
 | `schema` | `str \| None` | No | Physical schema containing the configured table. |
+| `dataframe` | `DataFrame` | No | Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked. |
 
 ## Returns
 
@@ -72,6 +74,8 @@ Structured schema guardrail status, continuation decision, checks, and differenc
 ValueError
     If the target is unsupported or no active approved Schema guardrail
     exists for the resolved table.
+SchemaDriftError
+    If an active blocking schema guardrail rejects the checked schema.
 
 ## See also
 

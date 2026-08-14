@@ -397,15 +397,6 @@
       "suggested_action": "review_for_deletion_or_connection"
     },
     {
-      "function_name": "stop_if_failed",
-      "qualified_name": "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
-      "reason": "Defined in src but not reached from any public function flow",
-      "source_end_line": 1690,
-      "source_path": "src/fabricops_kit/pipeline/guardrails_shared.py",
-      "source_start_line": 1670,
-      "suggested_action": "review_for_deletion_or_connection"
-    },
-    {
       "function_name": "_blocking_guardrail_message",
       "qualified_name": "fabricops_kit.pipeline.shared._blocking_guardrail_message",
       "reason": "Defined in src but not reached from any public function flow",
@@ -3478,9 +3469,9 @@
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
       "release_history": [],
       "release_versions": [],
-      "source_end_line": 96,
+      "source_end_line": 111,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
-      "source_start_line": 14,
+      "source_start_line": 20,
       "supports_live_contract": false,
       "transitive_live_dependent_count": 0,
       "transitive_live_dependents": []
@@ -4947,15 +4938,15 @@
       "transitive_live_dependents": []
     },
     {
-      "contract_classification": "internal_function",
-      "contract_display": "Internal",
+      "contract_classification": "preview_only_internal",
+      "contract_display": "Preview-only internal",
       "direct_live_dependent_count": 0,
       "direct_live_dependents": [],
       "discontinued_in": null,
       "function_name": "stop_if_failed",
       "function_type": "shared_function",
       "lifecycle_status": "internal",
-      "live_impact_level": "none",
+      "live_impact_level": "preview_only",
       "live_since": null,
       "qualified_name": "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
       "release_history": [],
@@ -21322,7 +21313,7 @@
       "contract_display": "Preview",
       "contract_risk": "preview",
       "depth": 6,
-      "direct_call_count": 12,
+      "direct_call_count": 13,
       "discontinued_in": null,
       "examples": ">>> result = check_schema(\"orders\", target=\"source\", schema=\"dbo\")\n>>> result[\"can_continue\"]\nTrue",
       "files_touched": [
@@ -21357,9 +21348,9 @@
           "recursive": false,
           "release_history": [],
           "release_versions": [],
-          "source_end_line": 96,
+          "source_end_line": 111,
           "source_path": "src/fabricops_kit/pipeline/check_schema.py",
-          "source_start_line": 14,
+          "source_start_line": 20,
           "supports_live_contract": false,
           "transitive_live_dependent_count": 0,
           "transitive_live_dependents": [],
@@ -25204,6 +25195,38 @@
           "discontinued_in": null,
           "distinct_caller_count": 1,
           "edge_type": "direct",
+          "function_name": "stop_if_failed",
+          "function_type": "shared_function",
+          "inline_candidate": true,
+          "lifecycle_status": "internal",
+          "live_impact_level": "preview_only",
+          "live_since": null,
+          "parent_qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
+          "promote_to_shared_candidate": false,
+          "qualified_name": "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
+          "recursive": false,
+          "release_history": [],
+          "release_versions": [],
+          "source_end_line": 1690,
+          "source_path": "src/fabricops_kit/pipeline/guardrails_shared.py",
+          "source_start_line": 1670,
+          "supports_live_contract": false,
+          "transitive_live_dependent_count": 0,
+          "transitive_live_dependents": [],
+          "violation_details": [],
+          "violation_types": []
+        },
+        {
+          "architecture_violations": [],
+          "call_count_from_parent": 1,
+          "contract_classification": "preview_only_internal",
+          "contract_display": "Preview-only internal",
+          "depth": 1,
+          "direct_live_dependent_count": 0,
+          "direct_live_dependents": [],
+          "discontinued_in": null,
+          "distinct_caller_count": 1,
+          "edge_type": "direct",
           "function_name": "write_guardrail_result_row",
           "function_type": "shared_function",
           "inline_candidate": true,
@@ -26855,6 +26878,12 @@
           "name": "schema",
           "required": "No",
           "type": "str | None"
+        },
+        {
+          "description": "Incoming DataFrame whose schema should be checked. When omitted, the schema of the configured physical table is checked.",
+          "name": "dataframe",
+          "required": "No",
+          "type": "DataFrame, optional"
         }
       ],
       "public_import_path": "fabricops_kit.check_schema",
@@ -26862,13 +26891,13 @@
         "large_width_or_depth"
       ],
       "qualified_name": "fabricops_kit.pipeline.check_schema.check_schema",
-      "raises_documentation": "ValueError\n    If the target is unsupported or no active approved Schema guardrail\n    exists for the resolved table.",
+      "raises_documentation": "ValueError\n    If the target is unsupported or no active approved Schema guardrail\n    exists for the resolved table.\nSchemaDriftError\n    If an active blocking schema guardrail rejects the checked schema.",
       "refactor_signals": [
         {
           "evidence": [
             {
               "depth": 6,
-              "width": 12
+              "width": 13
             }
           ],
           "message": "Large width/depth rule triggered: Width > 10 or Depth > 5.",
@@ -26880,18 +26909,18 @@
       "release_history": [],
       "release_versions": [],
       "returns_documentation": "dict\n    Structured guardrail status, continuation decision, checks, and schema\n    differences. Governed configured-table checks append the outcome to\n    ``METADATA_GUARDRAIL_RESULTS``.",
-      "scope": 60,
+      "scope": 61,
       "signals": [
         "large_width_or_depth"
       ],
-      "signature": "def check_schema(table_name: str, *, target: str='source', schema: str | None=None) -> dict",
-      "source_end_line": 96,
+      "signature": "def check_schema(table_name: str, *, target: str='source', schema: str | None=None, dataframe=None) -> dict",
+      "source_end_line": 111,
       "source_path": "src/fabricops_kit/pipeline/check_schema.py",
-      "source_start_line": 14,
-      "summary": "Check a table's observed schema against configured schema intent.",
-      "transitive_function_count": 60,
+      "source_start_line": 20,
+      "summary": "Check a persisted or supplied schema against configured schema intent.",
+      "transitive_function_count": 61,
       "usage_notes": "",
-      "width": 12
+      "width": 13
     },
     {
       "architecture_violation_count": 0,
@@ -85083,10 +85112,10 @@
     ]
   },
   "summary": {
-    "defined_but_not_used_count": 98,
+    "defined_but_not_used_count": 97,
     "defined_function_count": 380,
     "public_function_count": 29,
-    "used_function_count": 282
+    "used_function_count": 283
   },
   "used_functions": [
     "fabricops_kit.config.audit._audit_timestamp_value",
@@ -85219,6 +85248,7 @@
     "fabricops_kit.pipeline.guardrails_shared.resolve_guardrail_change_behaviour",
     "fabricops_kit.pipeline.guardrails_shared.schema_check_core",
     "fabricops_kit.pipeline.guardrails_shared.select_table_guardrail_rule",
+    "fabricops_kit.pipeline.guardrails_shared.stop_if_failed",
     "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
     "fabricops_kit.pipeline.observe_table._compact_rows",
     "fabricops_kit.pipeline.observe_table._identifier",
