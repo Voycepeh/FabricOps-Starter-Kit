@@ -22,8 +22,18 @@ class Frame:
     def collect(self): return self.rows
 
 
-def evidence(partition="2026-08-10", count=10, maximum="2026-08-10T12:00:00"):
-    return {"partition_value": partition, "row_count": count, "max_change_value": maximum}
+def evidence(
+    partition="2026-08-10",
+    count=10,
+    minimum="2026-08-10T08:00:00",
+    maximum="2026-08-10T12:00:00",
+):
+    return {
+        "partition_value": partition,
+        "row_count": count,
+        "min_change_value": minimum,
+        "max_change_value": maximum,
+    }
 
 
 def run(monkeypatch, current, previous=(), *, kind="warehouse", **arguments):
@@ -54,7 +64,11 @@ def test_unchanged_evidence_requires_no_read(monkeypatch):
     assert result["changed_partitions"] == [] and not result["requires_read"]
 
 
-@pytest.mark.parametrize("current", [evidence(count=11), evidence(maximum="2026-08-11T00:00:00")])
+@pytest.mark.parametrize("current", [
+    evidence(count=11),
+    evidence(minimum="2026-08-10T07:30:00"),
+    evidence(maximum="2026-08-11T00:00:00"),
+])
 def test_changed_evidence_marks_partition(monkeypatch, current):
     result, _, _ = run(monkeypatch, [current], [{**evidence(), "is_present": True}])
     assert result["changed_partitions"] == ["2026-08-10"]
@@ -65,7 +79,13 @@ def test_new_and_removed_partitions(monkeypatch):
     result, _, persisted = run(monkeypatch, [evidence("new")], previous)
     assert result["new_partitions"] == ["new"]
     assert result["removed_partitions"] == ["old"]
-    assert persisted[-1] == {"partition_value": "old", "is_present": False, "row_count": 0, "max_change_value": None}
+    assert persisted[-1] == {
+        "partition_value": "old",
+        "is_present": False,
+        "row_count": 0,
+        "min_change_value": None,
+        "max_change_value": None,
+    }
 
 
 def test_removed_partition_reappearance_is_changed(monkeypatch):
@@ -77,7 +97,10 @@ def test_removed_partition_reappearance_is_changed(monkeypatch):
 def test_warehouse_aggregation_is_pushed_down(monkeypatch):
     _, queries, _ = run(monkeypatch, [evidence()])
     sql = queries[0][0]
-    assert "COUNT_BIG(*)" in sql and "MAX([modified_at])" in sql and "GROUP BY [business_date]" in sql
+    assert "COUNT_BIG(*)" in sql
+    assert "MIN([modified_at])" in sql
+    assert "MAX([modified_at])" in sql
+    assert "GROUP BY [business_date]" in sql
     assert "SELECT *" not in sql
 
 
@@ -91,7 +114,7 @@ def test_lakehouse_projects_only_observation_columns(monkeypatch):
     class Expr:
         def alias(self, name): return self
     class Functions:
-        col = lit = count = max = staticmethod(lambda *args: Expr())
+        col = lit = count = min = max = staticmethod(lambda *args: Expr())
     pyspark = types.ModuleType("pyspark"); sql = types.ModuleType("pyspark.sql")
     sql.functions = Functions; pyspark.sql = sql
     monkeypatch.setitem(sys.modules, "pyspark", pyspark); monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
@@ -100,7 +123,7 @@ def test_lakehouse_projects_only_observation_columns(monkeypatch):
     module._observe_lakehouse("orders", "source", None, "business_date", "modified_at", spark_session=object(), context={})
     assert calls[0] == ("select", ("business_date", "modified_at"))
     assert calls[1] == ("groupBy", ("business_date",))
-    assert calls[2] == ("agg", 2)
+    assert calls[2] == ("agg", 3)
 
 
 @pytest.mark.parametrize("kwargs", [

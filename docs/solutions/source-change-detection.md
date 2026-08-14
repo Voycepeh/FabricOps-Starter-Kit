@@ -39,18 +39,19 @@ For each partition, FabricOps stores only:
 
 - the partition value
 - its row count
+- its earliest change value
 - its latest change value
 
-A partition requires a follow-up read when it is new, its row count changes, its latest change value changes, or it reappears after removal. Missing current partitions are reported as removed, and compact tombstones preserve that absence for later comparisons.
+A partition requires a follow-up read when it is new, its row count changes, its earliest or latest change value changes, or it reappears after removal. Missing current partitions are reported as removed, and compact tombstones preserve that absence for later comparisons.
 
-Warehouse observation runs `COUNT(*)` and `MAX(change_column)` grouped by the partition column in the Warehouse SQL engine. Spark receives only the aggregate result. Lakehouse observation selects only the partition and change columns before performing the distributed aggregation.
+Warehouse observation runs `COUNT(*)`, `MIN(change_column)`, and `MAX(change_column)` grouped by the partition column in the Warehouse SQL engine. Spark receives only the aggregate result. Lakehouse observation selects only the partition and change columns before performing the distributed aggregation.
 
 !!! important "Choose a trustworthy change column"
-    `change_column` must advance when rows in the partition are inserted or updated. Typical values are `modified_at`, `updated_at`, or `last_changed_at`. Observation is a lightweight signal, not proof that every individual cell is unchanged. Use deeper change detection when the source does not maintain a reliable change column.
+    `change_column` must advance when rows in the partition are inserted or updated. Typical values are `modified_at`, `updated_at`, or `last_changed_at`. Observation is a lightweight signal, not proof that every individual cell is unchanged; a middle value can change while count, minimum, and maximum remain identical. Use deeper change detection when the source does not maintain a reliable change column.
 
 ## Place observation before the full read
 
-The source workflow is **observe cheaply → schema, freshness, and change checks → full source read → row-level data-quality checks → profile/register**. `observe_table()` produces evidence; it is not itself a guardrail. Its `MAX(change_column)` evidence can support freshness and change decisions without a second source scan.
+The source workflow is **observe cheaply → schema, freshness, and change checks → full source read → row-level data-quality checks → profile/register**. `observe_table()` produces evidence; it is not itself a guardrail. Its `MIN(change_column)` and `MAX(change_column)` evidence can support freshness and change decisions without a second source scan.
 
 The current standalone `check_schema()`, `check_freshness()`, and `check_changes()` callables still accept DataFrames or row-like observations. Connecting all three directly to stored table-observation evidence requires a separate focused consolidation; this PR does not broaden their contracts. Row-level null, value, domain, and uniqueness checks remain after the full read.
 

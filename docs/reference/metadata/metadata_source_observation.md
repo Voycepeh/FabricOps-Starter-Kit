@@ -6,8 +6,8 @@
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 19 |
-| Business columns | 11 |
+| Total columns | 20 |
+| Business columns | 12 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -23,6 +23,7 @@
 | `partition_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Metadata Source Observation field `partition_value`. |
 | `is_present` | `boolean` | [`observe_table`](../../api/reference/observe_table.md) | Boolean state recorded for `is_present`. |
 | `row_count` | `long` | [`observe_table`](../../api/reference/observe_table.md) | Observed total row count in the profiled dataset snapshot. |
+| `min_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Metadata Source Observation field `min_change_value`. |
 | `max_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Metadata Source Observation field `max_change_value`. |
 | `observed_at` | `timestamp` | [`observe_table`](../../api/reference/observe_table.md) | Timestamp stored for `observed_at`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |

@@ -35,6 +35,7 @@ def _warehouse_observation_query(schema: str, table_name: str, partition_column:
         "SELECT\n"
         f"  [{partition_column}] AS partition_value,\n"
         "  COUNT_BIG(*) AS row_count,\n"
+        f"  MIN([{change_column}]) AS min_change_value,\n"
         f"  MAX([{change_column}]) AS max_change_value\n"
         f"FROM [{schema}].[{table_name}]\n"
         f"GROUP BY [{partition_column}]"
@@ -45,11 +46,13 @@ def _compact_rows(frame: Any) -> list[dict[str, Any]]:
     compact = []
     for row in frame.collect():
         value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        minimum = value.get("min_change_value")
         maximum = value.get("max_change_value")
         compact.append({
             "partition_value": str(value.get("partition_value", "")),
             "is_present": True,
             "row_count": int(value.get("row_count") or 0),
+            "min_change_value": None if minimum is None else str(minimum),
             "max_change_value": None if maximum is None else str(maximum),
         })
     return compact
@@ -72,9 +75,11 @@ def _observe_lakehouse(
     ).select(partition_column, change_column)
     observed = frame.groupBy(partition_column).agg(
         F.count(F.lit(1)).alias("row_count"),
+        F.min(F.col(change_column)).alias("min_change_value"),
         F.max(F.col(change_column)).alias("max_change_value"),
     ).select(
-        F.col(partition_column).alias("partition_value"), "row_count", "max_change_value"
+        F.col(partition_column).alias("partition_value"),
+        "row_count", "min_change_value", "max_change_value",
     )
     return _compact_rows(observed)
 
@@ -95,7 +100,10 @@ def _load_previous(
     rows = (
         frame.where((frame.source_id == source_id) & (frame.observation_definition_id == observation_definition_id))
         .orderBy(frame.observed_at.desc())
-        .select("partition_value", "is_present", "row_count", "max_change_value", "observed_at")
+        .select(
+            "partition_value", "is_present", "row_count",
+            "min_change_value", "max_change_value", "observed_at",
+        )
         .collect()
     )
     latest: dict[str, dict[str, Any]] = {}
@@ -144,9 +152,9 @@ def observe_table(
 ) -> dict[str, Any]:
     """Cheaply identify changed source-table partitions before expensive work.
 
-    ``observe_table()`` cheaply records row count and latest change value by
-    source partition so FabricOps can decide whether more expensive source
-    processing is required.
+    ``observe_table()`` cheaply records row count plus earliest and latest
+    change values by source partition so FabricOps can decide whether more
+    expensive source processing is required.
 
     Parameters
     ----------
@@ -180,11 +188,13 @@ def observe_table(
 
     Notes
     -----
-    The stored evidence is only the partition, row count, and latest change
-    value. This is a lightweight change signal, not proof that every cell is
-    unchanged. Sources without a reliable change column require deeper change
-    detection elsewhere. Warehouse aggregation is pushed into SQL; Lakehouse
-    aggregation is distributed and projects only the two required columns.
+    The stored evidence is only the partition, row count, and earliest and
+    latest change values. This is a lightweight change signal, not proof that
+    every cell is unchanged: a middle value can change while all three signals
+    remain identical. Sources without a reliable change column require deeper
+    change detection elsewhere. Warehouse aggregation is pushed into SQL;
+    Lakehouse aggregation is distributed and projects only the two required
+    source columns.
     Compact history and removal tombstones are appended to the configured
     FabricOps metadata Lakehouse.
 
@@ -260,6 +270,7 @@ def observe_table(
         elif (
             not prior.get("is_present", True)
             or int(prior.get("row_count") or 0) != row["row_count"]
+            or prior.get("min_change_value") != row["min_change_value"]
             or prior.get("max_change_value") != row["max_change_value"]
         ):
             changed_partitions.append(row["partition_value"])
@@ -270,7 +281,7 @@ def observe_table(
     affected = [*changed_partitions, *new_partitions]
     tombstones = [{
         "partition_value": partition, "is_present": False,
-        "row_count": 0, "max_change_value": None,
+        "row_count": 0, "min_change_value": None, "max_change_value": None,
     } for partition in removed_partitions]
     _persist(
         [*current, *tombstones], source_id=source_id,

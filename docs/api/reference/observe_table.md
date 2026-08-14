@@ -7,22 +7,22 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Cheaply identify changed table partitions before expensive source work.
+Record compact count and change-value bounds before expensive source work.
 
 <div class="reference-docstring-intro" markdown="1">
 
-``observe_table()`` cheaply records row count and latest change value by
-source partition so FabricOps can decide whether more expensive source
-processing is required.
+``observe_table()`` cheaply records row count plus earliest and latest
+change values by source partition so FabricOps can decide whether more
+expensive source processing is required.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:137`
+`fabricops_kit/pipeline/observe_table.py:145`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L137-L293">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L145-L304">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -83,7 +83,7 @@ True
 
 ## Returns
 
-Compact observations plus changed and new partitions and a restricted read predicate.
+Compact count, minimum and maximum change-value observations plus changed partitions and a restricted read predicate.
 
 ## Raises / Errors
 
@@ -98,11 +98,13 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-The stored evidence is only the partition, row count, and latest change
-value. This is a lightweight change signal, not proof that every cell is
-unchanged. Sources without a reliable change column require deeper change
-detection elsewhere. Warehouse aggregation is pushed into SQL; Lakehouse
-aggregation is distributed and projects only the two required columns.
+The stored evidence is only the partition, row count, and earliest and
+latest change values. This is a lightweight change signal, not proof that
+every cell is unchanged: a middle value can change while all three signals
+remain identical. Sources without a reliable change column require deeper
+change detection elsewhere. Warehouse aggregation is pushed into SQL;
+Lakehouse aggregation is distributed and projects only the two required
+source columns.
 Compact history and removal tombstones are appended to the configured
 FabricOps metadata Lakehouse.
 
