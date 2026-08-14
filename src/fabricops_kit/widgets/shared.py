@@ -1314,13 +1314,16 @@ def _schema_freshness_profile_records_from_selection(
     max_lag_days: int | str,
     profile_mode: str,
     watermark_column: str,
+    partition_column: str = "",
+    change_column: str = "",
+    expected_change: str = "monitor_only",
     bypass_reason: str = "",
     action: str = "submit",
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
     config: Any = None,
 ) -> list[dict[str, Any]]:
-    """Build schema, freshness, and profile behavior rule rows from selections."""
+    """Build separate schema, freshness, change, and profile rule rows."""
     if str(profile_mode) == "changing_data" and not str(watermark_column or "").strip():
         raise ValueError("watermark_column is required when profile_mode is changing_data")
     if str(freshness_mode) == "enforce":
@@ -1333,8 +1336,32 @@ def _schema_freshness_profile_records_from_selection(
     else:
         lag_days = 0
     columns = [str(column) for column in selected_columns]
+    expected_change = str(expected_change).strip().lower()
+    if expected_change not in {"change_required", "no_change_required", "monitor_only"}:
+        raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
+    if not str(partition_column).strip() or not str(change_column).strip():
+        raise ValueError("partition_column and change_column are required for the source-change rule")
+    available_columns = {str(column) for column in state.get("columns", [])}
+    if partition_column not in available_columns or change_column not in available_columns:
+        raise ValueError("partition_column and change_column must come from the selected table catalogue evidence")
     data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
     return [
+        _base_guardrail_rule_record(
+            state,
+            guardrail_type="change",
+            rule_type=expected_change,
+            parameters={
+                "partition_column": partition_column,
+                "change_column": change_column,
+                "expected_change": expected_change,
+            },
+            description="Source-change observation and expectation guardrail",
+            bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
+            config=config,
+        ),
         _base_guardrail_rule_record(
             state,
             guardrail_type="schema",

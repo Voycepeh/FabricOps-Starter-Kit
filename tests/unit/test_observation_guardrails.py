@@ -48,6 +48,7 @@ def configure(monkeypatch, history):
     monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: {})
     monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: [{"metadata_table_key": "key", "table_name": "orders", "guardrail_type": "change", "rule_type": "monitor_only", "severity": "blocking", "activation_state": "active", "review_state": "governance_approved", "rule_key": "change_monitor"}])
     return written
 
 
@@ -77,7 +78,7 @@ def test_unchanged_and_reappeared_observations(monkeypatch):
     configure(monkeypatch, [row(at=previous)])
     assert check_changes(Frame([row(at=now)], Spark()))["changed"] is False
     configure(monkeypatch, [row(at=previous, present=False)])
-    assert check_changes(Frame([row(at=now)], Spark()))["changed_partitions"] == ["a"]
+    assert check_changes(Frame([row(at=now)], Spark()))["reappeared_partitions"] == ["a"]
 
 
 @pytest.mark.parametrize(("severity", "status", "can_continue"), [
@@ -90,8 +91,8 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     result_writes = []
     monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: result_writes.append(kwargs))
     approved_rules = [{
-        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "changes",
-        "rule_type": "detect_changes", "severity": severity, "activation_state": "active",
+        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "change",
+        "rule_type": "no_change_required", "severity": severity, "activation_state": "active",
         "review_state": "governance_approved", "rule_key": f"changes_{severity}",
     }]
 
@@ -100,12 +101,12 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     assert result["status"] == status
     assert result["can_continue"] is can_continue
     assert result["severity"] == severity
-    assert result_writes[0]["guardrail_type"] == "changes"
+    assert result_writes[0]["guardrail_type"] == "change"
 
 
 def test_freshness_uses_observed_maximum_without_source_scan():
     result = check_freshness(
-        Frame([row(maximum="2026-08-14")]), max_lag_days=0,
+        [{"max_change_value": "2026-08-14"}], freshness_column="max_change_value", max_lag_days=0,
         reference_date="2026-08-14",
     )
     assert result["status"] == "passed"

@@ -10,6 +10,7 @@ from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_
 from fabricops_kit.pipeline.guardrails_shared import (
     changes_check_core,
     evaluate_changes_guardrail,
+    load_table_guardrail_rules,
     write_guardrail_result_row,
 )
 
@@ -89,15 +90,17 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
         previous = []
     current_by = {str(row["partition_value"]): row for row in current}
     previous_by = {str(row["partition_value"]): row for row in previous}
-    new, changed = [], []
+    new, changed, reappeared = [], [], []
     for value, row in current_by.items():
         prior = previous_by.get(value)
         if prior is None:
             new.append(row["partition_value"])
-        elif (not prior.get("is_present", True) or any(
+        elif not prior.get("is_present", True):
+            reappeared.append(row["partition_value"])
+        elif any(
             prior.get(field) != row.get(field)
             for field in ("row_count", "min_change_value", "max_change_value")
-        )):
+        ):
             changed.append(row["partition_value"])
     removed = [row["partition_value"] for value, row in previous_by.items()
                if row.get("is_present", True) and value not in current_by]
@@ -119,16 +122,21 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             tombstone_df, _OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
             context=context, mode="append",
         )
-    has_changes = not previous or bool(new or changed or removed)
+    has_changes = not previous or bool(new or changed or removed or reappeared)
     result = {
         "status": "changed" if has_changes else "unchanged", "can_continue": True,
         "check_type": "changes", "guardrail_type": "changes", "changed": has_changes,
         "first_observation": not previous, "new_partitions": new,
         "changed_partitions": changed, "removed_partitions": removed,
-        "affected_partitions": [*new, *changed, *removed],
+        "reappeared_partitions": reappeared,
+        "affected_partitions": [*new, *changed, *removed, *reappeared],
         "reason": "First observation baseline created." if not previous else
                   ("Source observation changed." if has_changes else "Source observation is unchanged."),
     }
+    if rules_df is None:
+        rules_df = load_table_guardrail_rules(
+            config, env, spark_session=getattr(dataframe, "sparkSession", None),
+        )
     if rules_df is not None:
         result["metadata_table_key"] = identity
         result = evaluate_changes_guardrail(
@@ -140,8 +148,8 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
                 spark_session=getattr(dataframe, "sparkSession", None), config=config, env=env,
                 run_id=str(observed_at), dataset_name="", table_name=str(current[0]["source_table"]),
                 store_type="lakehouse", layer=str(current[0]["source_target"]),
-                schema_name=current[0].get("source_schema"), guardrail_type="changes",
-                rule_type=str(result.get("rule_type") or "detect_changes"), result=result,
+                schema_name=current[0].get("source_schema"), guardrail_type="change",
+                rule_type=str(result.get("rule_type") or "monitor_only"), result=result,
                 rule_key=str(result["rule_key"]),
             )
         return result
@@ -201,10 +209,11 @@ def check_changes(
     include_row_changes : bool, default=False
         Include deterministic key hashes grouped by change classification.
     rules_df : DataFrame or iterable of mappings, optional
-        Approved change rules for the canonical observation path. A detected
-        change blocks when the selected rule has blocking severity and warns
-        while allowing continuation when it has warning severity. The runtime
-        outcome is written to ``METADATA_GUARDRAIL_RESULTS``.
+        Approved source-change rules for the canonical observation path. When
+        omitted, the active rule is loaded by ``metadata_table_key``. Its
+        ``change_required``, ``no_change_required``, or ``monitor_only`` intent
+        governs continuation, and the runtime outcome is written to
+        ``METADATA_GUARDRAIL_RESULTS``.
     metadata_table_key : str, optional
         Canonical identity used to scope the previous observation snapshot.
 

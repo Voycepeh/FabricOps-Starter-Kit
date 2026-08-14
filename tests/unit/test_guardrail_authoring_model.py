@@ -193,7 +193,7 @@ def test_authoring_widgets_write_rule_intent_records_only(monkeypatch):
     sfp_widget = widget_author_schema_freshness_profile_rules(state)
     dq_widget = widget_author_dq_rules(state, selected_columns=["order_id"])
     records = sfp_widget["build_records"]() + dq_widget["build_batch_records"]()
-    assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "profile_behavior", "dq"}
+    assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "change", "profile_behavior", "dq"}
     assert all("rule_parameters_json" in record for record in records)
     assert all(json.loads(record["rule_parameters_json"]) is not None for record in records)
     assert all("result_id" not in record for record in records)

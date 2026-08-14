@@ -20,9 +20,9 @@ later guardrail checks can judge the source without a full source read.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:112`
+`fabricops_kit/pipeline/observe_table.py:114`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L112-L240">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L114-L243">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -48,8 +48,6 @@ def observe_table(
     table_name: str,
     target: str='source',
     schema: str | None=None,
-    partition_column: str,
-    change_column: str,
 ) -> Any:
 ```
 
@@ -63,8 +61,6 @@ def observe_table(
 ...     table_name="orders",
 ...     target="source",
 ...     schema="dbo",
-...     partition_column="business_date",
-...     change_column="modified_at",
 ... )
 >>> observation_df.select("partition_value", "row_count")
 
@@ -77,8 +73,6 @@ def observe_table(
 | `table_name` | `str` | Yes | Table name within the configured target. |
 | `target` | `str` | No | Logical Lakehouse or Warehouse target configured by ``00_env_config``. |
 | `schema` | `str \| None` | No | Optional Lakehouse schema. A schema is required for Warehouse targets. |
-| `partition_column` | `str` | Yes | Column whose distinct values identify independently readable partitions. |
-| `change_column` | `str` | Yes | Trustworthy column that advances when rows in a partition are inserted or updated, such as ``modified_at``, ``updated_at``, or ``last_changed_at``. |
 
 ## Returns
 
@@ -87,7 +81,7 @@ Compact count, minimum and maximum change-value observations plus changed partit
 ## Raises / Errors
 
 ValueError
-    If table identity, columns, target type, or a required Warehouse schema
+    If table identity, target type, or a required active source-change rule
     is invalid.
 RuntimeError
     If ``00_env_config`` has not initialized FabricOps or observation
