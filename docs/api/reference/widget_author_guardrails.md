@@ -14,7 +14,7 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 
 `fabricops_kit/widgets/widget_author_guardrails.py:139`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L406">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L401">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -60,7 +60,7 @@ def widget_author_guardrails(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Selected table state returned by :func:`widget_select_guardrail_target`, including its canonical table key, catalogue columns, and existing rules. |
+| `state` | `Mapping[str, Any]` | Yes | Selected table state including its canonical table key, catalogue columns, and existing rules. |
 | `spark_session` | `Any` | No | Fabric Spark session used to append saved metadata rows. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
 | `commit` | `bool` | No | Save the initial form selection immediately. The default renders a form. |

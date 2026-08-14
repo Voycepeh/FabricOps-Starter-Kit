@@ -182,7 +182,6 @@ def test_guardrail_result_writer_has_single_shared_implementation():
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget wrappers delegate and workflows keep metadata ownership."""
     workflow_by_wrapper = {
-        "widget_select_guardrail_target": "_guardrail_target_selection_widget_workflow",
         "widget_author_guardrails": "widget_author_guardrails",
         "widget_author_dq_rules": "_dq_rule_authoring_widget_workflow",
         "widget_review_guardrail_governance": "_guardrail_governance_review_widget_workflow",
@@ -192,15 +191,10 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         for wrapper_name, workflow_name in workflow_by_wrapper.items()
     }
 
-    selector_source = workflow_sources["_guardrail_target_selection_widget_workflow"]
     schema_widget_source = workflow_sources["widget_author_guardrails"]
     dq_widget_source = workflow_sources["_dq_rule_authoring_widget_workflow"]
     review_widget_source = workflow_sources["_guardrail_governance_review_widget_workflow"]
 
-    assert "PROFILED_TABLE" in selector_source
-    assert "GUARDRAIL_TABLE" in selector_source
-    assert "ENRICHMENT_TABLE" not in selector_source
-    assert "_read_metadata_table_or_empty" in selector_source
     assert "_write_rule_records" in schema_widget_source
     assert "_write_rule_records" in dq_widget_source
     assert "_write_rule_records" in review_widget_source

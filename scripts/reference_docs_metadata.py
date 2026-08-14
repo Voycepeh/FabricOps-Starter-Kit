@@ -409,11 +409,6 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_select_guardrail_target',
-  'visibility': 'public',
-  'module_summary': 'Owns the guardrail target selection widget workflow.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
  {'module_name': 'widgets.widget_author_guardrails',
   'visibility': 'public',
   'module_summary': 'Owns versioned Schema, Freshness, and Changes guardrail authoring.',
@@ -480,7 +475,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_render_data_agreement',
                             'widget_register_data_contract',
                             'widget_view_agreement_catalogue',
-                            'widget_select_guardrail_target',
                             'widget_enrich_table_metadata',
                             'widget_author_guardrails',
                             'widget_author_dq_rules'],
@@ -1491,7 +1485,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
   'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
   'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
-  'related_functions': ['widget_view_data_catalogue', 'widget_select_guardrail_target'],
+  'related_functions': ['widget_view_data_catalogue'],
   'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
   'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
   'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
@@ -1500,37 +1494,6 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The metadata catalogue has no logical tables.',
                             'A table or current column lacks its canonical metadata key.',
                             'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},
- {'kind': 'function',
-  'module': 'widgets.widget_select_guardrail_target',
-  'function_type': 'callable',
-  'summary_override': 'Render an interactive target selector for guardrail authoring and '
-                      'governance review.',
-  'symbol_name': 'widget_select_guardrail_target',
-  'template_notebook': '02_pipeline / 01_governance',
-  'template_segment': 'Guardrail authoring',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
-              'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
-             'the helper.',
-  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
-                      'existing guardrail rules, and table governance policy to create the '
-                      'handover state for guardrail authoring or review.',
-  'when_to_use': 'Use at the start of 02_pipeline authoring or 01_governance when a user '
-                 'must choose which profiled table to work on.',
-  'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
-                     'selector reads metadata and prepares widget state only.',
-  'glossary_terms': ['evidence', 'guardrails', 'metadata lakehouse', 'notebook template'],
-  'return_interpretation': 'The returned state includes environment, dataset, table, metadata '
-                           'keys, profile rows, existing rules, and governance policy values for '
-                           'downstream widgets.',
-  'common_failure_causes': ['METADATA_DATA_PROFILED has no profiles.',
-                            'The selected table lacks metadata identity fields.',
-                            'Metadata tables cannot be read.',
-                            'ipywidgets is unavailable.']},
  {'kind': 'function',
   'module': 'widgets.widget_author_guardrails',
   'function_type': 'callable',
@@ -1545,7 +1508,6 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['widget_select_guardrail_target'],
   'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',
   'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
@@ -2140,34 +2102,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                          'The result bundle is malformed.',
                                                          'The caller expects debug internals while '
                                                          'using summary mode.']},
- 'widget_select_guardrail_target': {'expanded_purpose': 'Renders an interactive selector that '
-                                                        'reads profiled evidence, '
-                                                        'existing guardrail rules, and table '
-                                                        'governance policy to create the handover '
-                                                        'state for guardrail authoring or review.',
-                                    'when_to_use': 'Use at the start of 02_pipeline authoring or '
-                                                   '01_governance when a user must choose '
-                                                   'which profiled table to work on.',
-                                    'do_not_use_when': 'Do not use for automatic pipeline '
-                                                       'enforcement or to write metadata; this '
-                                                       'selector reads metadata and prepares '
-                                                       'widget state only.',
-                                    'glossary_terms': ['evidence',
-                                                       'guardrails',
-                                                       'metadata lakehouse',
-                                                       'notebook template'],
-                                    'return_interpretation': 'The returned state includes '
-                                                             'environment, dataset, table, '
-                                                             'metadata keys, profile rows, '
-                                                             'existing rules, and governance '
-                                                             'policy values for downstream '
-                                                             'widgets.',
-                                    'common_failure_causes': ['METADATA_DATA_PROFILED has no '
-                                                              'profiles.',
-                                                              'The selected table lacks metadata '
-                                                              'identity fields.',
-                                                              'Metadata tables cannot be read.',
-                                                              'ipywidgets is unavailable.']},
  'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
                                                                       'controls for authoring '
                                                                       'versioned table-level Schema, '

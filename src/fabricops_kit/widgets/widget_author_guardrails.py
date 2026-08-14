@@ -148,8 +148,8 @@ def widget_author_guardrails(
     Parameters
     ----------
     state : Mapping[str, Any]
-        Selected table state returned by :func:`widget_select_guardrail_target`,
-        including its canonical table key, catalogue columns, and existing rules.
+        Selected table state including its canonical table key, catalogue
+        columns, and existing rules.
     spark_session : Any, optional
         Fabric Spark session used to append saved metadata rows.
     context : dict[str, Any], optional
@@ -180,11 +180,6 @@ def widget_author_guardrails(
     >>> form = widget_author_guardrails(guardrail_target_state)
     >>> form["version"]
     1
-
-    See Also
-    --------
-    widget_select_guardrail_target
-    the governed runtime checks
 
     """
     if not str(state.get("table_name") or "").strip() or not str(state.get("metadata_table_key") or "").strip():

@@ -100,7 +100,7 @@ def _dq_rule_authoring_widget_workflow(
     Parameters
     ----------
     state : mapping
-        Handover state from :func:`widget_select_guardrail_target`.
+        Selected table state with catalogue columns and existing rules.
     dq_authoring_mode : {"manual"}, default="manual"
         Manual DQ authoring mode.
     rule_type : str, default="not_null"

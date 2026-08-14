@@ -11,7 +11,6 @@ __all__ = [
     "widget_render_data_agreement",
     "widget_render_data_steward",
     "widget_review_guardrail_governance",
-    "widget_select_guardrail_target",
 ]
 
 _WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in __all__}

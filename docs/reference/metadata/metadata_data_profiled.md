@@ -50,4 +50,3 @@
 ## Related function reference
 
 - [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
-- [`widget_select_guardrail_target`](../../api/reference/widget_select_guardrail_target.md)

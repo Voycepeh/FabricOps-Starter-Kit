@@ -431,30 +431,6 @@ def test_governance_review_widget_actions(monkeypatch):
     assert superseded["review_status"] == "superseded"
 
 
-def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatch):
-    """Verify target selector reads catalogue, rules, and governance policy."""
-    _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.widgets import shared as governance_review
-    from fabricops_kit import widgets
-    from fabricops_kit.widgets import shared as widget_shared
-
-    catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
-    rules = [_rule(metadata_table_key="table-key")]
-    catalogue[0].update({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "bypass_allowed": True, "policy_reason": "governed", "policy_updated_at": "2026-01-01T00:00:00Z"})
-    enrichment = []
-
-    def fake_read(config, env, table_name, *, spark_session):
-        return {governance_review.PROFILED_TABLE: catalogue, governance_review.GUARDRAIL_TABLE: rules, governance_review.ENRICHMENT_TABLE: enrichment}[table_name]
-
-    monkeypatch.setattr(widget_shared, "_read_metadata_table_or_empty", fake_read)
-    state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
-
-    assert state["environment_name"] == "dev"
-    assert state["columns"] == ["order_id"]
-    assert state["existing_rules"] == rules
-    assert state["governance_mode"] == "governed"
-    assert state["approval_bypass_allowed"] is True
-    assert len(state["_controls"]["target"].options) == 1
 
 
 
