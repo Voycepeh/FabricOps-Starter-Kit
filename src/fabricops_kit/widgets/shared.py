@@ -1317,6 +1317,7 @@ def _schema_freshness_profile_records_from_selection(
     partition_column: str = "",
     change_column: str = "",
     expected_change: str = "monitor_only",
+    change_mode: str = "skip",
     bypass_reason: str = "",
     action: str = "submit",
     source_notebook_type: str = "02_pipeline",
@@ -1336,17 +1337,21 @@ def _schema_freshness_profile_records_from_selection(
     else:
         lag_days = 0
     columns = [str(column) for column in selected_columns]
-    expected_change = str(expected_change).strip().lower()
+    change_mode = str(change_mode).strip().lower()
+    if change_mode not in {"enforce", "monitor", "skip"}:
+        raise ValueError("change_mode must be one of: enforce, monitor, skip")
+    expected_change = "monitor_only" if change_mode == "monitor" else str(expected_change).strip().lower()
     if expected_change not in {"change_required", "no_change_required", "monitor_only"}:
         raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
-    if not str(partition_column).strip() or not str(change_column).strip():
+    if change_mode != "skip" and (not str(partition_column).strip() or not str(change_column).strip()):
         raise ValueError("partition_column and change_column are required for the source-change rule")
     available_columns = {str(column) for column in state.get("columns", [])}
-    if partition_column not in available_columns or change_column not in available_columns:
+    if change_mode != "skip" and (partition_column not in available_columns or change_column not in available_columns):
         raise ValueError("partition_column and change_column must come from the selected table catalogue evidence")
     data_types = {str(row.get("column_name") or ""): str(row.get("data_type") or "") for row in state.get("catalogue_profile_rows", [])}
-    return [
-        _base_guardrail_rule_record(
+    records = []
+    if change_mode != "skip":
+        records.append(_base_guardrail_rule_record(
             state,
             guardrail_type="change",
             rule_type=expected_change,
@@ -1361,7 +1366,8 @@ def _schema_freshness_profile_records_from_selection(
             source_notebook_type=source_notebook_type,
             created_by_role=created_by_role,
             config=config,
-        ),
+        ))
+    records.extend([
         _base_guardrail_rule_record(
             state,
             guardrail_type="schema",
@@ -1398,7 +1404,8 @@ def _schema_freshness_profile_records_from_selection(
             created_by_role=created_by_role,
             config=config,
         ),
-    ]
+    ])
+    return records
 
 def _dq_records_from_selection(
     state: Mapping[str, Any],

@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.guardrails_shared import freshness_check_core, load_table_guardrail_rules, select_table_guardrail_rule, write_guardrail_result_row
 
@@ -81,13 +81,15 @@ def check_freshness(
             reference_date=reference_date,
         )
         if observation_evidence and result.get("rule_key"):
+            source_target = str(first.get("source_target") or "source")
+            source_store_type = str(get_store(config, env, source_target).kind).lower()
             result["metadata_table_key"] = metadata_table_key
             result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}
             result["actual"] = {"latest_observed_change_value": result.get("latest_value"), "required_min_value": result.get("required_min_value")}
             write_guardrail_result_row(
                 spark_session=getattr(dataframe, "sparkSession", None) or get_spark_session(), config=config,
                 env=env, run_id=str(first.get("observed_at") or ""), dataset_name=dataset_name,
-                table_name=table_name, store_type="lakehouse", layer=str(first.get("source_target") or "source"),
+                table_name=table_name, store_type=source_store_type, layer=source_target,
                 schema_name=first.get("source_schema"), guardrail_type="freshness",
                 rule_type=str(result.get("rule_type")), result=result, rule_key=str(result["rule_key"]),
             )

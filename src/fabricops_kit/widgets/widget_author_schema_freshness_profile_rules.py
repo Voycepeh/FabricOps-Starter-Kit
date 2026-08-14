@@ -117,6 +117,7 @@ def _schema_freshness_profile_rule_authoring_widget_workflow(
     freshness_mode = widgets.Dropdown(options=["enforce", "skip"], value="skip" if str(freshness_rule.get("rule_type") or "skip") == "skip" else "enforce", description="Freshness")
     freshness_column = widgets.Dropdown(options=[""] + columns, value=str(freshness_params.get("freshness_column") or freshness_rule.get("column_name") or ""), description="Column")
     max_lag = widgets.BoundedIntText(value=int(freshness_params.get("max_lag_days") or 0), min=0, description="Max lag days")
+    change_mode = widgets.Dropdown(options=["skip", "monitor", "enforce"], value="monitor" if str(change_rule.get("rule_type")) == "monitor_only" else ("enforce" if change_rule else "skip"), description="Source change")
     partition_column = widgets.Dropdown(options=columns, value=str(change_params.get("partition_column") or (columns[0] if columns else "")), description="Partition")
     change_column = widgets.Dropdown(options=columns, value=str(change_params.get("change_column") or (columns[0] if columns else "")), description="Change")
     expected_change = widgets.Dropdown(options=["change_required", "no_change_required", "monitor_only"], value=str(change_params.get("expected_change") or change_rule.get("rule_type") or "monitor_only"), description="Expected")
@@ -147,6 +148,7 @@ def _schema_freshness_profile_rule_authoring_widget_workflow(
             partition_column=partition_column.value,
             change_column=change_column.value,
             expected_change=expected_change.value,
+            change_mode=change_mode.value,
             bypass_reason=reason,
             action=selected_action,
             source_notebook_type=source_notebook_type,
@@ -178,7 +180,7 @@ def _schema_freshness_profile_rule_authoring_widget_workflow(
         preview.value = ""
         message.value = "<b>Cancelled.</b>"
 
-    for control in (schema_columns, schema_mode, freshness_mode, freshness_column, max_lag, partition_column, change_column, expected_change, profile_mode, watermark_column, bypass_box):
+    for control in (schema_columns, schema_mode, freshness_mode, freshness_column, max_lag, change_mode, partition_column, change_column, expected_change, profile_mode, watermark_column, bypass_box):
         control.observe(lambda change: refresh_preview(), names="value")
     draft_button.on_click(lambda _: save(action="draft"))
     submit_button.on_click(lambda _: save(action="submit"))
@@ -196,7 +198,7 @@ def _schema_freshness_profile_rule_authoring_widget_workflow(
         widgets.HTML("<h4>Freshness guardrail</h4>"),
         widgets.HBox([freshness_mode, freshness_column, max_lag]),
         widgets.HTML("<h4>Source-change guardrail</h4>"),
-        widgets.HBox([partition_column, change_column, expected_change]),
+        widgets.HBox([change_mode, partition_column, change_column, expected_change]),
         widgets.HTML("<h4>Profile behavior guardrail</h4>"),
         widgets.HBox([profile_mode, watermark_column]),
         bypass_box,
@@ -207,7 +209,7 @@ def _schema_freshness_profile_rule_authoring_widget_workflow(
     ip.display(ui)
     return {
         "records": records_state["records"],
-        "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "partition_column": partition_column, "change_column": change_column, "expected_change": expected_change, "profile_mode": profile_mode, "watermark_column": watermark_column, "apply_now_reason": bypass_box, "bypass_reason": bypass_box},
+        "controls": {"schema_columns": schema_columns, "schema_mode": schema_mode, "freshness_mode": freshness_mode, "freshness_column": freshness_column, "max_lag": max_lag, "change_mode": change_mode, "partition_column": partition_column, "change_column": change_column, "expected_change": expected_change, "profile_mode": profile_mode, "watermark_column": watermark_column, "apply_now_reason": bypass_box, "bypass_reason": bypass_box},
         "build_records": build_records,
         "save": save,
         "save_draft_button": draft_button,

@@ -193,11 +193,32 @@ def test_authoring_widgets_write_rule_intent_records_only(monkeypatch):
     sfp_widget = widget_author_schema_freshness_profile_rules(state)
     dq_widget = widget_author_dq_rules(state, selected_columns=["order_id"])
     records = sfp_widget["build_records"]() + dq_widget["build_batch_records"]()
-    assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "change", "profile_behavior", "dq"}
+    assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "profile_behavior", "dq"}
     assert all("rule_parameters_json" in record for record in records)
     assert all(json.loads(record["rule_parameters_json"]) is not None for record in records)
     assert all("result_id" not in record for record in records)
     assert all("profile_payload_json" not in record for record in records)
+
+
+def test_source_change_authoring_is_optional_and_validated(monkeypatch):
+    """Verify change intent is emitted only when its independent section is enabled."""
+    _install_fake_notebook_widgets(monkeypatch)
+    state = {
+        "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+        "metadata_table_key": "table-key", "columns": ["business_date", "modified_at"],
+        "catalogue_profile_rows": [{"column_name": "business_date", "data_type": "date"}, {"column_name": "modified_at", "data_type": "timestamp"}],
+        "governance_mode": "ungoverned", "approval_policy": "no_approval_required",
+    }
+    widget = widget_author_schema_freshness_profile_rules(state)
+    assert "change" not in {row["guardrail_type"] for row in widget["build_records"]()}
+    widget["controls"]["change_mode"].value = "enforce"
+    widget["controls"]["partition_column"].value = "business_date"
+    widget["controls"]["change_column"].value = "modified_at"
+    widget["controls"]["expected_change"].value = "change_required"
+    change = next(row for row in widget["build_records"]() if row["guardrail_type"] == "change")
+    assert json.loads(change["rule_parameters_json"]) == {
+        "change_column": "modified_at", "expected_change": "change_required", "partition_column": "business_date",
+    }
 
 
 def _rule(**overrides):

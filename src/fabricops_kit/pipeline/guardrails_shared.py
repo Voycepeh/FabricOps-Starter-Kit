@@ -614,12 +614,22 @@ def evaluate_changes_guardrail(
     if rule_type not in {"change_required", "no_change_required", "monitor_only"}:
         raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
     changed = bool(result.get("changed"))
-    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed)
     result["expected"] = {"expected_change": rule_type}
     result["actual"] = {
         "changed": changed,
         **{name: result.get(name, []) for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")},
     }
+    if result.get("first_observation"):
+        result.update(
+            status="baseline_created",
+            can_continue=True,
+            changed=False,
+            reason="First observation baseline created; change intent was not evaluated.",
+        )
+        result["actual"]["changed"] = None
+        result["message"] = result["reason"]
+        return _apply_bypass_post_review_warning(result, rule)
+    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed)
     if passed:
         result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
     else:

@@ -5,7 +5,7 @@ from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
+from fabricops_kit.config.shared import get_store, is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.guardrails_shared import (
     changes_check_core,
@@ -144,10 +144,12 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             environment_name=env, metadata_table_key=identity,
         )
         if result.get("rule_key"):
+            source_target = str(current[0]["source_target"])
+            source_store_type = str(get_store(config, env, source_target).kind).lower()
             write_guardrail_result_row(
                 spark_session=getattr(dataframe, "sparkSession", None), config=config, env=env,
                 run_id=str(observed_at), dataset_name="", table_name=str(current[0]["source_table"]),
-                store_type="lakehouse", layer=str(current[0]["source_target"]),
+                store_type=source_store_type, layer=source_target,
                 schema_name=current[0].get("source_schema"), guardrail_type="change",
                 rule_type=str(result.get("rule_type") or "monitor_only"), result=result,
                 rule_key=str(result["rule_key"]),

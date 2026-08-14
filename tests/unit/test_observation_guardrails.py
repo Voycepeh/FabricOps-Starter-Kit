@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 import importlib
+import types
 
 import pytest
 
 changes = importlib.import_module("fabricops_kit.pipeline.check_changes")
+freshness = importlib.import_module("fabricops_kit.pipeline.check_freshness")
 from fabricops_kit import check_changes, check_freshness
 
 
@@ -48,6 +50,7 @@ def configure(monkeypatch, history):
     monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: {})
     monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
+    monkeypatch.setattr(changes, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse"))
     monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: [{"metadata_table_key": "key", "table_name": "orders", "guardrail_type": "change", "rule_type": "monitor_only", "severity": "blocking", "activation_state": "active", "review_state": "governance_approved", "rule_key": "change_monitor"}])
     return written
 
@@ -58,6 +61,10 @@ def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypa
     result = check_changes(Frame([row(at=now)], Spark()))
     assert result["first_observation"] is True
     assert result["new_partitions"] == ["a"]
+    assert result["status"] == "baseline_created"
+    assert result["can_continue"] is True
+    assert result["changed"] is False
+    assert result["actual"]["changed"] is None
 
 
 def test_previous_comparable_snapshot_is_selected_and_changes_are_classified(monkeypatch):
@@ -102,6 +109,7 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     assert result["can_continue"] is can_continue
     assert result["severity"] == severity
     assert result_writes[0]["guardrail_type"] == "change"
+    assert result_writes[0]["store_type"] == "warehouse"
 
 
 def test_freshness_uses_observed_maximum_without_source_scan():
@@ -111,3 +119,19 @@ def test_freshness_uses_observed_maximum_without_source_scan():
     )
     assert result["status"] == "passed"
     assert result["freshness_column"] == "max_change_value"
+
+
+def test_freshness_result_preserves_warehouse_store_type(monkeypatch):
+    observed = Frame([row(maximum="2026-08-14")], Spark())
+    rules = [{
+        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "freshness", "rule_type": "max_lag_days",
+        "rule_parameters_json": '{"max_lag_days": 0}', "severity": "blocking",
+        "activation_state": "active", "review_state": "governance_approved", "rule_key": "freshness_rule",
+    }]
+    writes = []
+    monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(freshness, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse"))
+    monkeypatch.setattr(freshness, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
+    result = freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")
+    assert result["status"] == "passed"
+    assert writes[0]["store_type"] == "warehouse"
