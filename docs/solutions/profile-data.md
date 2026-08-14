@@ -1,4 +1,4 @@
-# Profile and understand your data
+# Standardized data profiling
 
 ## Problem
 
