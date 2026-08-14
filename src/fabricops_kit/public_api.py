@@ -32,7 +32,7 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_view_data_catalogue.widget_view_data_catalogue",
     "fabricops_kit.widgets.widget_register_data_contract.widget_register_data_contract",
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
-    "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+    "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
     "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
     "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
     "fabricops_kit.widgets.widget_select_guardrail_target.widget_select_guardrail_target",

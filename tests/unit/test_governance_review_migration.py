@@ -64,7 +64,7 @@ EXPECTED_V1_CALLABLES = [
     'widget_render_data_agreement',
     'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
-    'widget_author_schema_freshness_profile_rules',
+    'widget_author_guardrails',
     'widget_view_agreement_catalogue',
     'widget_view_pipeline_catalogue',
     'widget_view_data_catalogue',
@@ -86,7 +86,7 @@ def test_widget_public_callables_live_under_widgets_package():
 
     widget_names = {
         'widget_author_dq_rules',
-        'widget_author_schema_freshness_profile_rules',
+        'widget_author_guardrails',
         'widget_view_agreement_catalogue',
         'widget_view_pipeline_catalogue',
         'widget_view_data_catalogue',
@@ -113,7 +113,7 @@ def test_widget_modules_do_not_call_public_widget_functions():
     widgets_dir = root / "src" / "fabricops_kit" / "widgets"
     public_widget_names = {
         'widget_author_dq_rules',
-        'widget_author_schema_freshness_profile_rules',
+        'widget_author_guardrails',
         'widget_view_agreement_catalogue',
         'widget_view_pipeline_catalogue',
         'widget_view_data_catalogue',
@@ -550,7 +550,7 @@ def test_root_public_governance_and_widget_imports_still_work():
     """Verify supported root governance and widget imports remain available."""
     for name in [
         "widget_author_dq_rules",
-        "widget_author_schema_freshness_profile_rules",
+        "widget_author_guardrails",
         "widget_enrich_table_metadata",
         "widget_review_guardrail_governance",
         "widget_select_guardrail_target",

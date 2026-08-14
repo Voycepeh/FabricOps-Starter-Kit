@@ -143,7 +143,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_view_agreement_catalogue",
         "widget_select_guardrail_target",
         "widget_enrich_table_metadata",
-        "widget_author_schema_freshness_profile_rules",
+        "widget_author_guardrails",
         "widget_author_dq_rules",
     }
 

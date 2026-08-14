@@ -6,7 +6,7 @@ __all__ = [
     "widget_view_data_catalogue",
     "widget_register_data_contract",
     "widget_author_dq_rules",
-    "widget_author_schema_freshness_profile_rules",
+    "widget_author_guardrails",
     "widget_enrich_table_metadata",
     "widget_render_data_agreement",
     "widget_render_data_steward",
