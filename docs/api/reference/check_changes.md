@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:183`
+`fabricops_kit/pipeline/check_changes.py:177`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L183-L281">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L177-L210">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,22 +36,7 @@ For profiling-related pipeline functions, the output captures the important deta
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def check_changes(
-    dataframe,
-    previous_dataframe=None,
-    partition_columns: list[str] | tuple[str, ...] | None=None,
-    key_columns: list[str] | tuple[str, ...] | None=None,
-    non_key_columns: list[str] | tuple[str, ...] | None=None,
-    range_column: str | None=None,
-    source_pattern: str='snapshot',
-    comparison_scope: str='complete',
-    refresh_days: int=0,
-    version_column: str | None=None,
-    reference_date: date | datetime | str | None=None,
-    include_row_changes: bool=False,
-    rules_df=None,
-    metadata_table_key: str='',
-) -> dict:
+def check_changes(observation) -> dict
 ```
 
 </div>
@@ -60,7 +45,8 @@ def check_changes(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_changes(current, previous, key_columns=["id"])
+>>> observation = observe_table("orders", target="source", schema="dbo")
+>>> result = check_changes(observation)
 >>> result["changed"]
 True
 
@@ -70,20 +56,7 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dataframe` | `DataFrame or iterable of mappings` | Yes | Current source observation. |
-| `previous_dataframe` | `DataFrame or iterable of mappings` | No | Previous comparable source observation. |
-| `partition_columns` | `list[str] \| tuple[str, ...] \| None` | No | Columns defining cheap partition fingerprints. |
-| `key_columns` | `list[str] \| tuple[str, ...] \| None` | No | Non-null columns that uniquely identify a logical row. |
-| `non_key_columns` | `list[str] \| tuple[str, ...] \| None` | No | Columns whose content identifies an update. Defaults to all non-key columns, except that a versioned source's ``version_column`` is used only for latest-record resolution unless explicitly included here. |
-| `range_column` | `str \| None` | No | Date, timestamp, or ordered range column used for recent and unseen range classification. |
-| `source_pattern` | `str` | No | Explicit source behavior; it is never inferred from table naming. |
-| `comparison_scope` | `str` | No | Completeness of the current observation. ``complete`` can prove global deletions, ``partitions`` can prove deletions only inside supplied complete partitions, and ``partial`` never infers deletions. |
-| `refresh_days` | `int` | No | Number of days in the expected mutable window. Zero means only values dated on ``reference_date`` are recent. |
-| `version_column` | `str \| None` | No | Column used to select the latest row per logical key. Required when ``source_pattern="versioned"``. |
-| `reference_date` | `date \| datetime \| str \| None` | No | End of the recent mutable window. |
-| `include_row_changes` | `bool` | No | Include deterministic key hashes grouped by change classification. |
-| `rules_df` | `DataFrame or iterable of mappings` | No | Approved source-change rules for the canonical observation path. When omitted, the active rule is loaded by ``metadata_table_key``. Its ``change_required``, ``no_change_required``, or ``monitor_only`` intent governs continuation, and the runtime outcome is written to ``METADATA_GUARDRAIL_RESULTS``. |
-| `metadata_table_key` | `str` | No | Canonical identity used to scope the previous observation snapshot. |
+| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
 
 ## Returns
 

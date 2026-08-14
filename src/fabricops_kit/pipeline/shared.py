@@ -561,7 +561,7 @@ def build_guardrail_summary_rows(result_bundle: Mapping[str, Any]) -> list[dict[
     Parameters
     ----------
     result_bundle : mapping
-        Result bundle returned by :func:`run_table_guardrails`.
+        Result bundle returned by the governed runtime checks.
 
     Returns
     -------
@@ -704,7 +704,7 @@ def _display_guardrail_results_workflow(
     Parameters
     ----------
     result_bundle : mapping
-        Result bundle returned by :func:`run_table_guardrails`.
+        Result bundle returned by the governed runtime checks.
     mode : {"summary", "detailed", "debug"}, default="summary"
         Display mode for notebook output. ``summary`` is compact, ``detailed``
         is per-guardrail diagnostics, and ``debug`` returns raw nested results.

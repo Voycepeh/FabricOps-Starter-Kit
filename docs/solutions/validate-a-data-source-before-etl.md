@@ -9,11 +9,7 @@ Before transforming or writing data, FabricOps can check whether the source stil
 | Change | Has previously observed source data changed? | Table |
 | Data Quality | Do individual values meet approved rules? | Table or column |
 
-Schema, freshness, and change checks answer different questions. The workflow is designed to let users run them individually while developing and testing a pipeline, or run the approved checks together through [`run_table_guardrails()`](../api/reference/run_table_guardrails.md) in the normal FabricOps workflow.
-
-!!! note "Current and planned interfaces"
-
-    `run_table_guardrails()` is the current public production interface for schema, freshness, profile-change, and Data Quality Guardrails. The standalone `check_schema()`, `check_freshness()`, and `check_source_changes()` examples, row-level change classifications, mutable-window behavior, and `checks=` selection shown below describe the intended development interface; they are not exported public callables yet.
+Schema, freshness, and change checks answer different questions. Governance authors their policy once, and the runtime functions resolve that active approved configuration internally.
 
 ```text
 Read source
@@ -53,17 +49,10 @@ Actual: string
 
 Freshness and change detection may depend on configured columns such as `RECEIVED_DATE` and `MESSAGE_ID`. FabricOps therefore validates the schema before attempting those checks.
 
-The planned standalone development and debugging check is expressed as:
+The runtime supplies only the configured physical table identity:
 
 ```python
-schema_result = check_schema(
-    source_df,
-    expected_schema={
-        "MESSAGE_ID": "bigint",
-        "STATUS": "string",
-        "RECEIVED_DATE": "date",
-    },
-)
+schema_result = check_schema("orders", target="source", schema="dbo")
 ```
 
 ## Check freshness
@@ -71,11 +60,7 @@ schema_result = check_schema(
 **Freshness checks whether the source has advanced as expected.**
 
 ```python
-freshness_result = check_freshness(
-    source_df,
-    freshness_column="RECEIVED_DATE",
-    max_lag_days=1,
-)
+freshness_result = check_freshness(observation)
 ```
 
 A current source passes:
@@ -88,7 +73,7 @@ Result: PASS
 
 A source whose latest `RECEIVED_DATE` is `2026-08-08` fails the same one-day rule.
 
-A source can have the correct schema but still be stale. FabricOps checks freshness before comparing source changes so old input is not incorrectly treated as the latest state. The integrated Guardrail workflow already provides freshness enforcement through `run_table_guardrails()`.
+A source can have the correct schema but still be stale. FabricOps checks freshness before comparing source changes so old input is not incorrectly treated as the latest state.
 
 ## Check previously observed data for changes
 
@@ -183,67 +168,28 @@ The detector stays neutral so it can be used between files, Bronze, Silver, Gold
 - An SCD2 target may version changed records.
 - A governed production pipeline may stop on unexpected historical drift.
 
-## Run the checks together
+## Run the governed checks explicitly
 
-**The production path runs the approved source Guardrails as one workflow.**
-
-```python
-results = run_table_guardrails(source_tables)
-```
-
-The combined result remains easy to scan while retaining details for investigation:
-
-```text
-Source Guardrails
-
-Schema      PASS
-Freshness   PASS
-Change      WARNING
-
-Historical source drift detected: 2026-05-14
-
-Inserted    2
-Updated     7
-Deleted     6
-```
-
-Change belongs beside schema and freshness in the existing Guardrail workflow; it is not a separate subsystem.
-
-## Run only what you are testing
-
-**Planned check selection supports a progressive development workflow.**
-
-Run only schema while developing that expectation:
+**The production path keeps each result visible while resolving approved policy internally.**
 
 ```python
-run_table_guardrails(
-    source_tables,
-    checks=["schema"],
+observation = observe_table(
+    "orders",
+    target="source",
+    schema="dbo",
 )
-```
 
-```text
-Schema      PASS
-Freshness   NOT RUN
-Change      NOT RUN
-```
-
-Then combine schema and freshness:
-
-```python
-run_table_guardrails(
-    source_tables,
-    checks=["schema", "freshness"],
+schema_result = check_schema(
+    "orders",
+    target="source",
+    schema="dbo",
 )
+
+freshness_result = check_freshness(observation)
+changes_result = check_changes(observation)
 ```
 
-Finally, omit the selection to run the normal production workflow:
-
-```python
-run_table_guardrails(source_tables)
-```
-
-This creates a simple learning path: **learn one check → test one check → combine checks → run the normal FabricOps workflow**.
+The canonical observation supplies table identity and compact source evidence. The active Schema, Freshness, and Changes guardrails supply the policy values authored by Governance.
 
 ## Keep intent separate from outcomes
 
@@ -251,9 +197,9 @@ All Guardrail execution follows the same metadata story:
 
 | Metadata table | Responsibility |
 | --- | --- |
-| `METADATA_GUARDRAIL` | What should be true: approved Guardrail intent. |
+| `METADATA_GUARDRAIL_RULES` | What should be true: approved Guardrail intent. |
 | `METADATA_GUARDRAIL_RESULTS` | What happened when FabricOps checked: runtime outcomes. |
 
 ## Next
 
-Use [`run_table_guardrails()`](../api/reference/run_table_guardrails.md) in [`02_pipeline`](../guided-demo/04-run-pipeline-with-guardrails.md), then review how [Governance enriches and approves Guardrail intent](../guided-demo/03-enrich-guardrails.md).
+Use the explicit governed checks in [`02_pipeline`](../guided-demo/04-run-pipeline-with-guardrails.md), then review how [Governance enriches and approves Guardrail intent](../guided-demo/03-enrich-guardrails.md).

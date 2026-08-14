@@ -35,7 +35,6 @@ from .pipeline import (
     profile_and_register_table,
     profile_dataframe,
     profile_frequency_distribution,
-    run_table_guardrails,
 )
 
 CONFIG_EXPORTS = (
@@ -70,7 +69,6 @@ PIPELINE_EXPORTS = (
     "profile_frequency_distribution",
     "display_guardrail_results",
     "observe_table",
-    "run_table_guardrails",
 )
 
 WIDGET_EXPORTS = (

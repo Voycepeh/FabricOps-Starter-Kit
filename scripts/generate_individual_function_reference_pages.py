@@ -210,7 +210,9 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_LINEAGE": ["profile_and_register_table"],
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
-    "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
+    "METADATA_GUARDRAIL_RESULTS": [
+        "check_schema", "check_freshness", "check_changes", "display_guardrail_results",
+    ],
     "METADATA_SOURCE_OBSERVATION": ["observe_table"],
     "METADATA_GUARDRAIL": [
         "widget_author_guardrails",
@@ -269,11 +271,6 @@ INTERNAL_HELPER_EXCLUSIONS: dict[str, set[str]] = {
         "fabricops_kit.io.shared._normalize_schema_name",
         "fabricops_kit.config.shared.get_store",
     },
-    "run_table_guardrails": {
-        "fabricops_kit.config.shared.get_current_audit_timestamp",
-        "fabricops_kit.config.shared.get_audit_timezone",
-        "fabricops_kit.config.shared._validate_audit_timezone",
-    },
 }
 
 
@@ -305,10 +302,6 @@ INTERNAL_HELPER_AUDIT_DECISIONS = {
 
 
 PARAMETER_DISPLAY_TYPES = {
-    "run_table_guardrails": {
-        "source_definitions": "list[PipelineTableConfig]",
-        "target_definitions": "list[PipelineTableConfig]",
-    },
     "write_pipeline_run_summary": {
         "source_definitions": "list[PipelineTableConfig]",
         "target_definitions": "list[PipelineTableConfig]",

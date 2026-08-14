@@ -2,7 +2,6 @@
 
 import pytest
 
-from fabricops_kit.pipeline import check_changes
 from fabricops_kit.pipeline import guardrails_shared
 
 pytestmark = pytest.mark.spark
@@ -18,7 +17,7 @@ def test_spark_unchanged_partitions_bypass_deep_comparison(spark_session, monkey
         "_spark_row_comparison",
         lambda *args, **kwargs: pytest.fail("deep Spark comparison must not run"),
     )
-    result = check_changes(
+    result = guardrails_shared.changes_check_core(
         current,
         previous,
         partition_columns=["day"],
@@ -39,7 +38,7 @@ def test_spark_changes_are_aggregated_without_collecting_source_rows(spark_sessi
         {"id": 1, "day": "2026-08-12", "value": "new"},
         {"id": 3, "day": "2026-08-12", "value": "inserted"},
     ])
-    result = check_changes(
+    result = guardrails_shared.changes_check_core(
         current,
         previous,
         partition_columns=["day"],

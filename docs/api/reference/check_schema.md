@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:14`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L123">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L96">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,14 +37,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def check_schema(
-    dataframe=None,
-    expected_schema: dict[str, str] | None=None,
-    preset: str='strict',
-    rules_df=None,
-    dataset_name: str='',
-    table_name: str='',
-    environment_name: str='',
-    metadata_table_key: str='',
+    table_name: str,
     target: str='source',
     schema: str | None=None,
 ) -> dict:
@@ -56,7 +49,7 @@ def check_schema(
 
 <div class="reference-example-usage" markdown="1">
 
->>> result = check_schema(df, {"order_id": "bigint"})
+>>> result = check_schema("orders", target="source", schema="dbo")
 >>> result["can_continue"]
 True
 
@@ -66,16 +59,9 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dataframe` | `Any` | No | Spark, pandas, or dataframe-like object with schema metadata. Omit it and pass ``target``, ``schema``, and ``table_name`` to inspect a configured physical table without reading its business rows. |
-| `expected_schema` | `dict[str, str] \| None` | No | Expected column-to-datatype mapping for a direct check. |
-| `preset` | `str` | No | Direct schema comparison behavior. |
-| `rules_df` | `DataFrame or iterable of mappings` | No | Approved guardrail rules. When supplied, the applicable schema rule is selected using the table context instead of ``expected_schema``. The configured-table path loads the active rule automatically when neither rule data nor ``expected_schema`` is supplied. |
-| `dataset_name` | `str` | No | Table identity used to select an approved rule. |
-| `table_name` | `str` | No | Not documented yet |
-| `environment_name` | `str` | No | Not documented yet |
-| `metadata_table_key` | `str` | No | Not documented yet |
-| `target` | `str` | No | Logical FabricOps target used when ``dataframe`` is omitted. |
-| `schema` | `str \| None` | No | Physical schema used when ``dataframe`` is omitted. |
+| `table_name` | `str` | Yes | Physical table name within the configured target. |
+| `target` | `str` | No | Logical FabricOps target containing the configured physical table. |
+| `schema` | `str \| None` | No | Physical schema containing the configured table. |
 
 ## Returns
 
@@ -84,8 +70,8 @@ Structured schema guardrail status, continuation decision, checks, and differenc
 ## Raises / Errors
 
 ValueError
-    If the preset is invalid or neither rule data nor an expected schema is
-    supplied.
+    If the target is unsupported or no active approved Schema guardrail
+    exists for the resolved table.
 
 ## See also
 

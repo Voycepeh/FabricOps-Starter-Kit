@@ -3,7 +3,7 @@
 Use :func:`enforce_freshness`, :func:`enforce_profile_behavior`, and
 :func:`stop_if_failed` in production pipeline notebooks. Schema guardrail
 authoring is widget-led and runtime schema enforcement is orchestrated through
-``run_table_guardrails``.
+the governed runtime checks.
 """
 
 from __future__ import annotations
@@ -21,6 +21,12 @@ from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
 from fabricops_kit.config.shared import build_metadata_table_key, get_current_audit_timestamp, is_table_not_found_error
 from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
+
+SOURCE_OBSERVATION_COLUMNS = frozenset({
+    "metadata_table_key", "source_target", "source_schema", "source_table",
+    "partition_column", "partition_value", "change_column", "row_count",
+    "min_change_value", "max_change_value", "is_present", "observed_at",
+})
 
 
 def write_guardrail_result_row(
@@ -894,7 +900,7 @@ def schema_check_core(
     environment_name: str = "",
     metadata_table_key: str = "",
 ) -> dict:
-    """Apply an internal runtime schema check for ``run_table_guardrails``.
+    """Apply an internal runtime schema check for the governed runtime checks.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
     enforcement for widget-led guardrail flows without exposing a public schema
@@ -935,7 +941,7 @@ def schema_check_core(
 
     Notes
     -----
-    This private helper is called by ``run_table_guardrails`` only. Notebook
+    This private helper is called by the governed runtime checks only. Notebook
     authors should use widget-authored rules and the guardrail gate instead of
     calling schema validation helpers directly.
 

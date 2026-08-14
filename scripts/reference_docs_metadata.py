@@ -351,7 +351,9 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "__default__": [
-            "fabricops_kit.pipeline.run_table_guardrails.run_table_guardrails",
+            "fabricops_kit.pipeline.check_schema.check_schema",
+            "fabricops_kit.pipeline.check_freshness.check_freshness",
+            "fabricops_kit.pipeline.check_changes.check_changes",
             "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
@@ -531,7 +533,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
  {'notebook_key': 'example_dq_rule_smoke_test',
   'notebook_label': '`example_dq_rule_smoke_test`',
   'segment_intro': 'Isolated DQ rule smoke-test checks for notebook authors.',
-  'segments': [{'symbols': ['write_lakehouse_table', 'run_table_guardrails'],
+  'segments': [{'symbols': ['write_lakehouse_table'],
                 'title': 'DQ smoke checks'}],
   'template_path': 'templates/notebooks/example_dq_rule_smoke_test.ipynb'}]
 
@@ -675,7 +677,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Structured schema guardrail status, continuation decision, checks, and differences.',
   'side_effects': 'None. The orchestrator records execution evidence when configured.',
   'preferred_example': 'schema_result = check_schema(df, {"order_id": "bigint"})',
-  'related_functions': ['check_freshness', 'check_changes', 'run_table_guardrails']},
+  'related_functions': ['check_freshness', 'check_changes']},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -689,7 +691,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Structured freshness evidence and continuation decision.',
   'side_effects': 'None. The orchestrator records execution evidence when configured.',
   'preferred_example': 'freshness_result = check_freshness(df, "business_date", 2)',
-  'related_functions': ['check_schema', 'check_changes', 'enforce_freshness', 'run_table_guardrails']},
+  'related_functions': ['check_schema', 'check_changes', 'enforce_freshness']},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -703,7 +705,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.',
   'side_effects': 'None. It does not merge or write target data.',
  'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',
- 'related_functions': ['check_schema', 'check_freshness', 'observe_table', 'run_table_guardrails']},
+ 'related_functions': ['check_schema', 'check_freshness', 'observe_table']},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -915,7 +917,7 @@ PUBLIC_SYMBOL_DOCS = [
   'fabric_context': 'Routes writes through configured FabricOps Lakehouse targets instead of an attached/default lakehouse.',
   'ai_verification': 'Verify guardrails passed, target/schema/table routing is intentional, and write mode is safe before generating calls.',
   'preferred_example': 'write_lakehouse_table(df_orders, "orders_clean", target="unified", schema=UNIFIED_SCHEMA, mode="overwrite")',
-  'related_functions': ['read_lakehouse_table', 'write_warehouse_table', 'run_table_guardrails'],
+  'related_functions': ['read_lakehouse_table', 'write_warehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Tables path, then delegates to Spark Delta writer with any supplied writer options.',
   'when_to_use': 'Use after transformations and guardrail checks when the destination is a Lakehouse table.',
   'glossary_terms': ['target table', 'guardrails', 'metadata lakehouse'],
@@ -1203,7 +1205,7 @@ PUBLIC_SYMBOL_DOCS = [
   'fabric_context': 'Requires 00_env_config so FabricOps can find the metadata lakehouse configured for the selected environment.',
   'ai_verification': 'Verify the physical asset identity, execution participation role, optional frequency columns, frequency threshold, and append-only profiled evidence write and catalogue identity upsert before running; the role is not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE.',
   'preferred_example': 'profiled_df = profile_and_register_table(df_customer, profile_role="source", target="source", schema=SOURCE_SCHEMA, table_name="customer")',
-  'related_functions': ['profile_dataframe', 'profile_frequency_distribution', 'run_table_guardrails'],
+  'related_functions': ['profile_dataframe', 'profile_frequency_distribution'],
   'expanded_purpose': 'Orchestrates DataFrame profiling, threshold-guarded default frequency evidence, canonical profiled schema mapping, catalogue identity derivation, deterministic key creation, and append-only profiled evidence registration and catalogue identity upsert while accepting profile_role as execution participation context. The role is validated but not stored in METADATA_DATA_PROFILED or METADATA_DATA_CATALOGUE; automatic lineage registration follows separately.',
   'when_to_use': 'Use in 02_pipeline once for each DataFrame that should produce profiled evidence and catalogue identity. Pass profile_role as execution participation context; automatic lineage registration follows separately and will record the role outside the catalogue.',
   'glossary_terms': ['evidence', 'source data', 'target table'],
@@ -1375,7 +1377,7 @@ PUBLIC_SYMBOL_DOCS = [
                      'before passing it to stop_if_failed.',
   'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\n'
                        'stop_if_failed(guardrail_result)',
-  'related_functions': ['enforce_freshness', 'enforce_profile_behavior', 'run_table_guardrails'],
+  'related_functions': ['enforce_freshness', 'enforce_profile_behavior'],
   'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not '
                       'continue into unsafe downstream writes.',
   'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail '
@@ -1389,62 +1391,6 @@ PUBLIC_SYMBOL_DOCS = [
                             'The caller passed a warning result that should not stop execution.'],
   'related_guides': [{'title': 'Pipeline Execution',
                       'path': '../../guided-demo/run-pipeline.md'}]},
- {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Run approved table checks and return whether the pipeline may continue.',
-  'symbol_name': 'run_table_guardrails',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Guardrail orchestration',
-  'use_when': 'Use in 02_pipeline to run source guardrails before transformation and target '
-              'guardrails before writes while keeping per-table results separated.',
-  'do_not_use_when': 'Do not use as a replacement for individual helper calls when debugging one '
-                     'specific guardrail interactively.',
-  'parameters': {'table_configs': 'Source or target table configuration dictionaries. Each item supplies the DataFrame to check plus table identity, expected schema, freshness, profile-behavior, and DQ settings.',
-                 'run_id': 'Pipeline run identifier written with saved results and used to group in-memory profiles. Omit only when an active pipeline context already provides it.',
-                 'context': 'FabricOps runtime context, usually {"config": CONFIG, "env": ENV}. Omit when 00_env_config or an active pipeline context already provides the context.',
-                 'spark_session': 'Spark session used for profiling, metadata reads, DQ checks, and result writes. Omit only when an active pipeline context already provides it.',
-                 'agreement_id': 'Optional data agreement identifier to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed.',
-                 'agreement_version': 'Optional data agreement version to attach to saved profiling and catalogue results. Omit when the active pipeline context supplies it or when no agreement context is needed.',
-                 'table_role': 'Optional role for the supplied configurations, usually "source" or "target". Use it when the active pipeline context should remember these definitions for summaries.',
-                 'mode': 'Run mode. "profile" is the default review-oriented mode; "enforce" defaults stop_on_failure to True so blocking failures stop the notebook.',
-                 'stop_on_failure': 'Whether to stop notebook execution after all table checks have been collected when any table has a blocking failure. Omit to use the default for mode.'},
-  'returns': 'Guardrail result bundle with profiles, schema results, freshness results, stability '
-             'results, DQ results, catalogue status, evidence definitions, summary, can_continue, '
-             'and failed_tables.',
-  'raises': 'Raises ValueError when required runtime context such as spark_session or run_id is missing, when mode is unsupported, or when table configs are invalid. With stop_on_failure=True, raises or exits after all checks are collected if blocking failures exist.',
-  'side_effects': 'Profiles DataFrames, reads stability/DQ metadata through configured metadata '
-                  'routing, writes evidence, and may update table config DataFrames with '
-                  'DQ annotations.',
-  'fabric_context': 'Requires CONFIG and env from 00_env_config so metadata operations use the '
-                    'configured metadata target.',
-  'ai_verification': 'Verify stop_on_failure=True is used before transformation or writes when '
-                     'blocking guardrails should stop execution.',
-  'preferred_example': 'source_guardrail_results = run_table_guardrails(SOURCE_TABLES, '
-                       'run_id=RUN_ID, context={"config": CONFIG, "env": ENV}, '
-                       'spark_session=spark, stop_on_failure=True)',
-  'related_functions': ['write_catalogue_evidence'],
-  'expanded_purpose': 'Runs the approved checks for each configured source or target table. It '
-                      'can check schema, data freshness, profile changes, and data-quality rules, '
-                      'then returns a combined result showing whether the pipeline may continue.',
-  'when_to_use': 'Use in 02_pipeline before transformations or writes when table configs should be '
-                 'validated by the standard guardrail sequence.',
-  'glossary_terms': ['guardrails',
-                     'can_continue',
-                     'source data',
-                     'target table',
-                     'evidence'],
-  'return_interpretation': 'Review per-table profiles, schema results, freshness results, '
-                           'profile-behavior results, DQ results, catalogue status, the overall '
-                           'summary, can_continue, and failed_tables. True can_continue means no '
-                           'blocking guardrail result requires the pipeline to stop. False means '
-                           'the notebook should stop before writing the affected output.',
-  'common_failure_causes': ['One of the table configs is incomplete.',
-                            'A schema, freshness, profile behavior, or DQ check fails.',
-                            'Approved metadata evidence cannot be read.',
-                            'Spark cannot profile or validate one of the DataFrames.'],
-  'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1490,7 +1436,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
   'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
@@ -1518,7 +1464,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: summary, detailed, or debug.', 'spark_session': 'Optional Spark session used to build Spark DataFrames for display rows.'},
   'returns': 'Display-friendly summary rows, detailed rows, debug data, or Spark DataFrames depending on mode and Spark availability.',
   'raises': 'Raises ValueError when mode is unsupported or the result bundle cannot be displayed.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Returns summary, detailed, or debug guardrail display output so Fabric '
                       'notebooks show readable tables by default while preserving raw result '
                       'bundles for developers.',
@@ -1569,7 +1515,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
                       'existing guardrail rules, and table governance policy to create the '
                       'handover state for guardrail authoring or review.',
@@ -1599,7 +1545,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['widget_select_guardrail_target', 'run_table_guardrails'],
+  'related_functions': ['widget_select_guardrail_target'],
   'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',
   'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
@@ -1677,7 +1623,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders manual DQ authoring controls that produce editable '
                       'guardrail rule intent rows under the selected table governance policy.',
   'when_to_use': 'Use in 02_pipeline after target selection when engineering needs to '
@@ -1708,7 +1654,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders governance review controls for reviewing '
                       'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
                       'supersede actions.',
@@ -2132,26 +2078,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                               'current runtime.',
                                               'The caller passed a warning result that should not '
                                               'stop execution.']},
- 'run_table_guardrails': {'expanded_purpose': 'Coordinates profiling, schema, freshness, profile '
-                                              'behavior, DQ, and evidence checks for a '
-                                              'group of pipeline table configs.',
-                          'when_to_use': 'Use in 02_pipeline before transformations or writes when '
-                                         'table configs should be validated by the standard '
-                                         'guardrail sequence.',
-                          'glossary_terms': ['guardrails',
-                                             'can_continue',
-                                             'source data',
-                                             'target table',
-                                             'evidence'],
-                          'return_interpretation': 'The result groups each guardrail outcome and a '
-                                                   'summary DataFrame. If any blocking result has '
-                                                   'can_continue false, stop before writing data.',
-                          'common_failure_causes': ['One of the table configs is incomplete.',
-                                                    'A schema, freshness, profile behavior, or DQ '
-                                                    'check fails.',
-                                                    'Approved metadata evidence cannot be read.',
-                                                    'Spark cannot profile or validate one of the '
-                                                    'DataFrames.']},
  'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime evidence rows '
                                                   'generated by pipeline guardrails to the '
                                                   'configured metadata target.',
@@ -2360,8 +2286,6 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                                'path': '../../guided-demo/review-guardrails.md'}],
  'stop_if_failed': [{'title': 'Pipeline Execution',
                      'path': '../../guided-demo/run-pipeline.md'}],
- 'run_table_guardrails': [{'title': 'Pipeline Execution',
-                           'path': '../../guided-demo/02-run-pipeline.md'}],
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
                                'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
