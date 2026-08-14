@@ -1,68 +1,65 @@
-# Detect changed source-table partitions
+# Check source-table changes before a full read
 
-`observe_table()` cheaply identifies which source table partitions changed before FabricOps performs a more expensive read, profiling run, or deeper change check.
+`observe_table()` collects and persists compact source facts; the guardrail checks make the judgements.
 
-## Observe a configured table
+## Run the pre-read flow
 
-Use the same logical target, schema, and table variables as the pipeline read. The configured `source` target may resolve to either a Warehouse or Lakehouse:
+Use the same logical target, schema, and table identity as the eventual pipeline read:
 
 ```python
-from fabricops_kit import observe_table
+from fabricops_kit import check_changes, check_freshness, check_schema, observe_table
 
-SOURCE_TARGET = "source"
-SOURCE_SCHEMA = "dbo"
-SOURCE_TABLE_NAME = "student_enrolment"
-
-observation = observe_table(
+observation_df = observe_table(
     target=SOURCE_TARGET,
     schema=SOURCE_SCHEMA,
     table_name=SOURCE_TABLE_NAME,
     partition_column="business_date",
     change_column="modified_at",
 )
-```
+metadata_table_key = observation_df.select("metadata_table_key").first()[0]
 
-For a Lakehouse without schemas, omit the schema while retaining the same logical target:
-
-```python
-observation = observe_table(
-    table_name=SOURCE_TABLE_NAME,
+schema_result = check_schema(
     target=SOURCE_TARGET,
-    partition_column="business_date",
-    change_column="modified_at",
+    schema=SOURCE_SCHEMA,
+    table_name=SOURCE_TABLE_NAME,
+    rules_df=guardrail_rules_df,
+    metadata_table_key=metadata_table_key,
+)
+freshness_result = check_freshness(
+    observation_df,
+    rules_df=guardrail_rules_df,
+    metadata_table_key=metadata_table_key,
+)
+changes_result = check_changes(
+    observation_df,
+    rules_df=guardrail_rules_df,
+    metadata_table_key=metadata_table_key,
 )
 ```
 
-## Understand the evidence
+## Keep evidence and judgement separate
 
-For each partition, FabricOps stores only:
+| Stage | Responsibility | Metadata ownership |
+| --- | --- | --- |
+| `observe_table()` | Aggregate `COUNT`, `MIN`, and `MAX`; persist and return the canonical observation DataFrame. | `METADATA_SOURCE_OBSERVATION` observed facts |
+| `check_schema()` | Inspect and judge the physical schema without a full business-row read. | `METADATA_GUARDRAIL` approved rule; `METADATA_GUARDRAIL_RESULTS` judgement |
+| `check_freshness(observation_df)` | Judge the observation-wide latest `max_change_value`. | Rule and judgement metadata |
+| `check_changes(observation_df)` | Load the previous comparable snapshot, compare partitions, and append removal tombstones. | Observation tombstones and guardrail judgement |
 
-- the partition value
-- its row count
-- its earliest change value
-- its latest change value
+Warehouse observation pushes grouped `COUNT_BIG`, `MIN(change_column)`, and `MAX(change_column)` into the Warehouse SQL engine. Lakehouse observation projects only the partition and change columns before its distributed aggregation.
 
-A partition requires a follow-up read when it is new, its row count changes, its earliest or latest change value changes, or it reappears after removal. Missing current partitions are reported as removed, and compact tombstones preserve that absence for later comparisons.
+!!! important "Observation does not judge"
+    A successfully collected snapshot is persisted even when a later check fails. `observe_table()` does not load history, classify partitions, decide whether a read is required, or construct a physical read predicate.
 
-Warehouse observation runs `COUNT(*)`, `MIN(change_column)`, and `MAX(change_column)` grouped by the partition column in the Warehouse SQL engine. Spark receives only the aggregate result. Lakehouse observation selects only the partition and change columns before performing the distributed aggregation.
+A first comparison establishes a baseline. Later comparisons classify a partition as new, changed, removed, or reappeared. Removed partitions are represented by `is_present=false` tombstones written by `check_changes()`; affected partition values remain structured evidence, and the future physical read layer owns predicate construction.
 
-!!! important "Choose a trustworthy change column"
-    `change_column` must advance when rows in the partition are inserted or updated. Typical values are `modified_at`, `updated_at`, or `last_changed_at`. Observation is a lightweight signal, not proof that every individual cell is unchanged; a middle value can change while count, minimum, and maximum remain identical. Use deeper change detection when the source does not maintain a reliable change column.
+!!! warning "Recreate old Preview metadata tables"
+    Existing Preview `METADATA_SOURCE_OBSERVATION` tables created with the old fingerprint-based schema are incompatible. Recreate them through the normal FabricOps metadata/bootstrap setup; no migration or compatibility shim is provided.
 
-## Place observation before the full read
+## Continue only after cheap checks pass
 
-The source workflow is **observe cheaply → schema, freshness, and change checks → full source read → row-level data-quality checks → profile/register**. `observe_table()` produces evidence; it is not itself a guardrail. Its `MIN(change_column)` and `MAX(change_column)` evidence can support freshness and change decisions without a second source scan.
-
-The current standalone `check_schema()`, `check_freshness()`, and `check_changes()` callables still accept DataFrames or row-like observations. Connecting all three directly to stored table-observation evidence requires a separate focused consolidation; this PR does not broaden their contracts. Row-level null, value, domain, and uniqueness checks remain after the full read.
-
-## Plan the restricted follow-up read
-
-The result preserves `first_observation`, `new_partitions`, `changed_partitions`, `removed_partitions`, `requires_read`, and a restricted `read_predicate`. Use that plan to avoid an expensive source read when no likely change exists, or to restrict deeper processing to affected partitions.
-
-`observe_table()` never mutates the source. It appends compact observation history to FabricOps-owned metadata routed through the metadata target configured by `00_env_config`.
-
-Each observation uses the same deterministic `metadata_table_key` later used by `profile_and_register_table()`. This links `METADATA_SOURCE_OBSERVATION` to the corresponding table in `METADATA_DATA_CATALOGUE` even when observation runs before the first profile registration. Previous evidence is scoped by that table key together with `partition_column` and `change_column`; no separate source or opaque observation-definition identifier is stored.
+After all three results allow continuation, perform the full source read, run row-level DQ, and call `profile_and_register_table()`. The observation and catalogue use the same authoritative `metadata_table_key`, so the evidence remains linked to the profiled physical table identity.
 
 ## Next step
 
-Review the [`observe_table()` API](../api/reference/observe_table.md), then use [`check_changes()`](../reference/index.md) when an affected slice needs deeper DataFrame-level comparison.
+Review the [`observe_table()` API](../api/reference/observe_table.md) and the generated references for `check_schema`, `check_freshness`, and `check_changes`.

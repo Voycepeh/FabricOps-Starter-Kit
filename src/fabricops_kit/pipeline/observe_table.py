@@ -1,4 +1,4 @@
-"""Owner file for lightweight table observation and incremental read planning."""
+"""Owner file for lightweight table observation evidence."""
 
 from __future__ import annotations
 
@@ -8,12 +8,7 @@ from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import (
-    build_metadata_table_key,
-    get_store,
-    is_table_not_found_error,
-    resolve_fabric_context,
-)
+from fabricops_kit.config.shared import build_metadata_table_key, get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     get_spark_session,
@@ -89,46 +84,13 @@ def _observe_lakehouse(
     return _compact_rows(observed)
 
 
-def _load_previous(
-    metadata_table_key: str, partition_column: str, change_column: str, *, spark_session: Any,
-    context: dict[str, Any], metadata_schema: str | None,
-) -> list[dict[str, Any]]:
-    try:
-        frame = read_lakehouse_table_core(
-            OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
-            spark_session=spark_session, context=context,
-        )
-    except Exception as exc:
-        if is_table_not_found_error(exc):
-            return []
-        raise RuntimeError(f"Unable to load table observation history for {metadata_table_key!r}: {exc}") from exc
-    rows = (
-        frame.where(
-            (frame.metadata_table_key == metadata_table_key)
-            & (frame.partition_column == partition_column)
-            & (frame.change_column == change_column)
-        )
-        .orderBy(frame.observed_at.desc())
-        .select(
-            "partition_value", "is_present", "row_count",
-            "min_change_value", "max_change_value", "observed_at",
-        )
-        .collect()
-    )
-    latest: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        value = row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
-        latest.setdefault(str(value["partition_value"]), value)
-    return list(latest.values())
-
-
 def _persist(
     rows: list[dict[str, Any]], *, metadata_table_key: str,
     target: str, schema: str | None, table_name: str,
     partition_column: str, change_column: str,
     observed_at: datetime, spark_session: Any, config: Any, env: str,
     context: dict[str, Any], metadata_schema: str | None,
-) -> None:
+) -> Any:
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     values = [{
         **row, "metadata_table_key": metadata_table_key,
@@ -144,13 +106,7 @@ def _persist(
         frame, OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
         context=context, mode="append",
     )
-
-
-def _read_predicate(partition_column: str, partition_values: list[str]) -> str | None:
-    if not partition_values:
-        return None
-    escaped = [value.replace("'", "''") for value in partition_values]
-    return f"[{partition_column}] IN ({', '.join(repr(value) for value in escaped)})"
+    return frame
 
 
 def observe_table(
@@ -160,12 +116,12 @@ def observe_table(
     schema: str | None = None,
     partition_column: str,
     change_column: str,
-) -> dict[str, Any]:
-    """Cheaply identify changed source-table partitions before expensive work.
+) -> Any:
+    """Collect, persist, and return lightweight source-table evidence.
 
     ``observe_table()`` cheaply records row count plus earliest and latest
-    change values by source partition so FabricOps can decide whether more
-    expensive source processing is required.
+    change values by source partition so
+    later guardrail checks can judge the source without a full source read.
 
     Parameters
     ----------
@@ -184,10 +140,10 @@ def observe_table(
 
     Returns
     -------
-    dict[str, Any]
-        A restricted read plan containing the canonical ``metadata_table_key``,
-        compact observations, new, changed, and removed partitions, and whether
-        a follow-up read is required.
+    pyspark.sql.DataFrame
+        The canonical observation rows written to
+        ``METADATA_SOURCE_OBSERVATION``. Normal observation rows have
+        ``is_present=True``.
 
     Raises
     ------
@@ -196,7 +152,7 @@ def observe_table(
         is invalid.
     RuntimeError
         If ``00_env_config`` has not initialized FabricOps or observation
-        history cannot be read.
+        cannot be collected or persisted.
 
     Notes
     -----
@@ -207,8 +163,9 @@ def observe_table(
     change detection elsewhere. Warehouse aggregation is pushed into SQL;
     Lakehouse aggregation is distributed and projects only the two required
     source columns.
-    Compact history and removal tombstones are appended to the configured
-    FabricOps metadata Lakehouse after collection and comparison succeed. The
+    Evidence is appended only after collection succeeds. This function neither
+    loads history nor makes guardrail decisions; ``check_changes`` owns
+    comparison and removal tombstones. The
     canonical table key is built from the resolved physical identity with the
     same :func:`build_metadata_table_key` helper used by
     :func:`profile_and_register_table`, linking observations to
@@ -216,15 +173,14 @@ def observe_table(
 
     Examples
     --------
-    >>> plan = observe_table(
+    >>> observation_df = observe_table(
     ...     table_name="orders",
     ...     target="source",
     ...     schema="dbo",
     ...     partition_column="business_date",
     ...     change_column="modified_at",
     ... )
-    >>> plan["requires_read"]
-    True
+    >>> observation_df.select("partition_value", "row_count")
 
     See Also
     --------
@@ -262,10 +218,6 @@ def observe_table(
         source_type, target_value, schema_value, table_value
     )
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
-    previous = _load_previous(
-        metadata_table_key, partition_value, change_value, spark_session=spark,
-        context=context, metadata_schema=metadata_schema,
-    )
     if source_type == "warehouse":
         query = _warehouse_observation_query(
             schema_value, table_value, partition_value, change_value  # type: ignore[arg-type]
@@ -274,51 +226,15 @@ def observe_table(
             query, target=target_value, spark_session=spark, context=context,
         ))
     else:
-        query = None
         current = _observe_lakehouse(
             table_value, target_value, schema_value, partition_value, change_value,
             spark_session=spark, context=context,
         )
 
-    previous_by_partition = {str(row["partition_value"]): row for row in previous}
-    current_partitions = {str(row["partition_value"]) for row in current}
-    new_partitions: list[str] = []
-    changed_partitions: list[str] = []
-    for row in current:
-        prior = previous_by_partition.get(row["partition_value"])
-        if prior is None:
-            new_partitions.append(row["partition_value"])
-        elif (
-            not prior.get("is_present", True)
-            or int(prior.get("row_count") or 0) != row["row_count"]
-            or prior.get("min_change_value") != row["min_change_value"]
-            or prior.get("max_change_value") != row["max_change_value"]
-        ):
-            changed_partitions.append(row["partition_value"])
-    removed_partitions = sorted(
-        partition for partition, row in previous_by_partition.items()
-        if row.get("is_present", True) and partition not in current_partitions
-    )
-    affected = [*changed_partitions, *new_partitions]
-    tombstones = [{
-        "partition_value": partition, "is_present": False,
-        "row_count": 0, "min_change_value": None, "max_change_value": None,
-    } for partition in removed_partitions]
-    _persist(
-        [*current, *tombstones], metadata_table_key=metadata_table_key,
+    return _persist(
+        current, metadata_table_key=metadata_table_key,
         target=target_value, schema=schema_value, table_name=table_value,
         partition_column=partition_value, change_column=change_value,
         observed_at=datetime.now(UTC), spark_session=spark, config=config, env=env,
         context=context, metadata_schema=metadata_schema,
     )
-    return {
-        "metadata_table_key": metadata_table_key,
-        "observations": current,
-        "first_observation": not previous,
-        "new_partitions": new_partitions,
-        "changed_partitions": changed_partitions,
-        "removed_partitions": removed_partitions,
-        "requires_read": not previous or bool(affected) or bool(removed_partitions),
-        "read_predicate": _read_predicate(partition_value, affected),
-        "warehouse_observation_query": query,
-    }

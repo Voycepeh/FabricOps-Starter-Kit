@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:8`
+`fabricops_kit/pipeline/check_changes.py:106`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L8-L91">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L106-L199">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -49,6 +49,8 @@ def check_changes(
     version_column: str | None=None,
     reference_date: date | datetime | str | None=None,
     include_row_changes: bool=False,
+    rules_df=None,
+    metadata_table_key: str='',
 ) -> dict:
 ```
 
@@ -80,6 +82,8 @@ True
 | `version_column` | `str \| None` | No | Column used to select the latest row per logical key. Required when ``source_pattern="versioned"``. |
 | `reference_date` | `date \| datetime \| str \| None` | No | End of the recent mutable window. |
 | `include_row_changes` | `bool` | No | Include deterministic key hashes grouped by change classification. |
+| `rules_df` | `DataFrame or iterable of mappings` | No | Approved change rules for the canonical observation path. |
+| `metadata_table_key` | `str` | No | Canonical identity used to scope the previous observation snapshot. |
 
 ## Returns
 

@@ -1135,6 +1135,11 @@ def freshness_check_core(
                 max_lag_days = params.get("max_lag_days")
                 severity = _catalogue_value(rule, "severity") or "blocking"
 
+    dataframe_columns = set(getattr(dataframe, "columns", ()))
+    if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
+        dataframe_columns = set(_row_to_dict(dataframe[0]))
+    if {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns:
+        freshness_column = "max_change_value"
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()
     if normalized_severity not in {"blocking", "warning"}:

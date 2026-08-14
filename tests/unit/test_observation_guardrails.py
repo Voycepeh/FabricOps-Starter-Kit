@@ -1,0 +1,86 @@
+"""Tests for guardrail paths over canonical source-observation evidence."""
+# ruff: noqa: D101, D102, D103, D105, D107
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+import importlib
+
+changes = importlib.import_module("fabricops_kit.pipeline.check_changes")
+from fabricops_kit import check_changes, check_freshness
+
+
+def row(partition="a", *, at=None, count=1, minimum="2026-08-13", maximum="2026-08-14", present=True, key="key"):
+    return {
+        "metadata_table_key": key, "source_target": "source", "source_schema": "dbo",
+        "source_table": "orders", "partition_column": "business_date",
+        "partition_value": partition, "change_column": "modified_at", "row_count": count,
+        "min_change_value": minimum, "max_change_value": maximum, "is_present": present,
+        "observed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
+    }
+
+
+class Frame:
+    def __init__(self, rows, spark=None):
+        self._rows = rows
+        self.columns = list(rows[0]) if rows else list(row())
+        self.sparkSession = spark
+
+    def collect(self):
+        return self._rows
+
+    def __iter__(self):
+        return iter(self._rows)
+
+
+class Spark:
+    def __init__(self): self.created = []
+    def createDataFrame(self, rows, schema=None):
+        frame = Frame(rows, self); self.created.append((frame, schema)); return frame
+
+
+def configure(monkeypatch, history):
+    monkeypatch.setattr(changes, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(changes, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(changes, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(history))
+    written = []
+    monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
+    monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: {})
+    return written
+
+
+def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure(monkeypatch, [row(at=now)])
+    result = check_changes(Frame([row(at=now)], Spark()))
+    assert result["first_observation"] is True
+    assert result["new_partitions"] == ["a"]
+
+
+def test_previous_comparable_snapshot_is_selected_and_changes_are_classified(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    previous = now - timedelta(hours=1)
+    history = [row("a", at=previous), row("removed", at=previous), row("unrelated", at=previous, key="other")]
+    written = configure(monkeypatch, history)
+    result = check_changes(Frame([row("a", at=now, count=2), row("new", at=now)], Spark()))
+    assert result["changed_partitions"] == ["a"]
+    assert result["new_partitions"] == ["new"]
+    assert result["removed_partitions"] == ["removed"]
+    assert written[0]["is_present"] is False and written[0]["row_count"] == 0
+
+
+def test_unchanged_and_reappeared_observations(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    previous = now - timedelta(hours=1)
+    configure(monkeypatch, [row(at=previous)])
+    assert check_changes(Frame([row(at=now)], Spark()))["changed"] is False
+    configure(monkeypatch, [row(at=previous, present=False)])
+    assert check_changes(Frame([row(at=now)], Spark()))["changed_partitions"] == ["a"]
+
+
+def test_freshness_uses_observed_maximum_without_source_scan():
+    result = check_freshness(
+        Frame([row(maximum="2026-08-14")]), max_lag_days=0,
+        reference_date="2026-08-14",
+    )
+    assert result["status"] == "passed"
+    assert result["freshness_column"] == "max_change_value"

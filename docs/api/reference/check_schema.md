@@ -12,9 +12,9 @@ Check observed table schema against direct or approved schema intent.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_schema.py:6`
+`fabricops_kit/pipeline/check_schema.py:14`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L6-L63">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L101">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,7 +37,7 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def check_schema(
-    dataframe,
+    dataframe=None,
     expected_schema: dict[str, str] | None=None,
     preset: str='strict',
     rules_df=None,
@@ -45,6 +45,8 @@ def check_schema(
     table_name: str='',
     environment_name: str='',
     metadata_table_key: str='',
+    target: str='source',
+    schema: str | None=None,
 ) -> dict:
 ```
 
@@ -64,7 +66,7 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `dataframe` | `Any` | Yes | Spark, pandas, or dataframe-like object with schema metadata. |
+| `dataframe` | `Any` | No | Spark, pandas, or dataframe-like object with schema metadata. Omit it and pass ``target``, ``schema``, and ``table_name`` to inspect a configured physical table without reading its business rows. |
 | `expected_schema` | `dict[str, str] \| None` | No | Expected column-to-datatype mapping for a direct check. |
 | `preset` | `str` | No | Direct schema comparison behavior. |
 | `rules_df` | `DataFrame or iterable of mappings` | No | Approved guardrail rules. When supplied, the applicable schema rule is selected using the table context instead of ``expected_schema``. |
@@ -72,6 +74,8 @@ True
 | `table_name` | `str` | No | Not documented yet |
 | `environment_name` | `str` | No | Not documented yet |
 | `metadata_table_key` | `str` | No | Not documented yet |
+| `target` | `str` | No | Logical FabricOps target used when ``dataframe`` is omitted. |
+| `schema` | `str \| None` | No | Physical schema used when ``dataframe`` is omitted. |
 
 ## Returns
 
