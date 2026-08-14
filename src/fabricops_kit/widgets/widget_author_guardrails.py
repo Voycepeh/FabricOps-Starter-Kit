@@ -6,18 +6,13 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.pipeline.guardrails_shared import (
+    GUARDRAIL_CHANGE_BEHAVIOURS,
+    resolve_guardrail_change_behaviour,
+)
 from fabricops_kit.widgets import shared
 
-CHANGE_BEHAVIOURS = (
-    "No changes expected",
-    "Incremental append",
-    "Snapshot overwrite",
-)
-_CHANGE_MAPPING = {
-    "No changes expected": ("no_change_required", "snapshot"),
-    "Incremental append": ("monitor_only", "incremental_append"),
-    "Snapshot overwrite": ("monitor_only", "snapshot"),
-}
+CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
 
 
@@ -36,6 +31,7 @@ def _guardrail_records_from_selection(
     change_behaviour: str,
     partition_column: str = "",
     change_column: str = "",
+    configuration_version: int | None = None,
     config: Any = None,
 ) -> list[dict[str, Any]]:
     """Translate the form vocabulary into canonical guardrail rows."""
@@ -57,14 +53,12 @@ def _guardrail_records_from_selection(
             raise ValueError("Maximum age unit must be Minutes, Hours, or Days.")
     else:
         age = 0.0
-    if change_behaviour not in _CHANGE_MAPPING:
-        raise ValueError("Change behaviour is invalid.")
     for label, value in (("Partition column", partition_column), ("Change / watermark column", change_column)):
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
-    expected_change, source_pattern = _CHANGE_MAPPING[change_behaviour]
+    expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
     existing = list(state.get("existing_rules") or [])
-    version = _configuration_version(existing) + 1
+    version = configuration_version or (_configuration_version(existing) + 1)
     data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
         for row in state.get("catalogue_profile_rows", [])
@@ -116,8 +110,8 @@ def _guardrail_records_from_selection(
             rule_id=f"{record['rule_id']}.v{version}",
             activation_state="active",
             is_active=True,
-            review_status="",
-            review_state="",
+            review_status="authored",
+            review_state="authored",
             approval_required=False,
             approval_bypassed=False,
             requires_governance_review=False,
@@ -186,7 +180,7 @@ def widget_author_guardrails(
     widgets = shared.require_ipywidgets()
     columns = [str(value) for value in state.get("columns", [])]
     existing = list(state.get("existing_rules") or [])
-    current_version = _configuration_version(existing)
+    version_state = {"persisted": _configuration_version(existing)}
     schema_params = shared._rule_params(shared._latest_rule(existing, "schema"))
     freshness_params = shared._rule_params(shared._latest_rule(existing, "freshness"))
     change_params = shared._rule_params(shared._latest_rule(existing, "change"))
@@ -225,6 +219,7 @@ def widget_author_guardrails(
     )
     message = widgets.HTML()
     save_button = widgets.Button(description="Save Guardrails", button_style="primary")
+    version_display = widgets.HTML(value=f"<b>Next save version</b><br>{version_state['persisted'] + 1}")
 
     def build_records() -> list[dict[str, Any]]:
         return _guardrail_records_from_selection(
@@ -236,6 +231,7 @@ def widget_author_guardrails(
             change_behaviour=change_behaviour.value,
             partition_column=partition_column.value,
             change_column=change_column.value,
+            configuration_version=version_state["persisted"] + 1,
             config=config,
         )
 
@@ -245,11 +241,13 @@ def widget_author_guardrails(
             message.value = "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
             return records
         shared._write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        version_state["persisted"] = records[0]["configuration_version"]
+        version_display.value = f"<b>Next save version</b><br>{version_state['persisted'] + 1}"
         message.value = f"<b style='color:green'>Saved guardrail version {records[0]['configuration_version']}.</b>"
         return records
 
     save_button.on_click(save)
-    version = current_version or 1
+    version = version_state["persisted"] + 1
     identity = shared.form_grid(
         widgets,
         [
@@ -257,7 +255,7 @@ def widget_author_guardrails(
             widgets.HTML(value=f"<b>Target</b><br>{state.get('fabric_store_target') or state.get('layer', '')}"),
             widgets.HTML(value=f"<b>Schema</b><br>{state.get('schema_name', '')}"),
             widgets.HTML(value=f"<b>Table</b><br>{state.get('table_name', '')}"),
-            widgets.HTML(value=f"<b>Guardrail version</b><br>{version}"),
+            version_display,
         ],
     )
     ui = shared.form_page(
@@ -292,7 +290,8 @@ def widget_author_guardrails(
     ip.display(ui)
     result = {
         "version": version,
-        "next_version": current_version + 1,
+        "next_version": version,
+        "version_state": version_state,
         "controls": {
             "schema_columns": schema_checkboxes,
             "freshness_column": freshness_column,

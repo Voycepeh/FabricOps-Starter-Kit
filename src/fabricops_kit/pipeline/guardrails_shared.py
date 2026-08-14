@@ -89,9 +89,15 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 }
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
-_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
+_ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approved", "active_pending_governance_review"}
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
+GUARDRAIL_CHANGE_BEHAVIOURS = ("No changes expected", "Incremental append", "Snapshot overwrite")
+_GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING = {
+    "No changes expected": ("no_change_required", "snapshot"),
+    "Incremental append": ("monitor_only", "incremental_append"),
+    "Snapshot overwrite": ("monitor_only", "snapshot"),
+}
 DQ_RULE_TYPES = [
     "not_null",
     "null_rate_below",
@@ -520,8 +526,7 @@ def _is_active_guardrail_rule(row: dict) -> bool:
             return False
     elif _catalogue_value(row, "is_active") is not True:
         return False
-    review_status = _rule_review_status(row)
-    return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES
+    return _rule_review_status(row) in _ACTIVE_RULE_REVIEW_STATUSES
 
 
 def _parse_rule_parameters(row: dict) -> dict:
@@ -617,12 +622,18 @@ def evaluate_changes_guardrail(
             "Governance must author and activate one first."
         )
     params = _parse_rule_parameters(rule)
-    rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
+    behaviour = _string_value(params.get("change_behaviour"))
+    if behaviour:
+        rule_type, source_pattern = resolve_guardrail_change_behaviour(behaviour)
+    else:
+        rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
+        source_pattern = _string_value(params.get("source_pattern") or result.get("source_pattern") or "snapshot").lower()
     severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     result.update({
         "rule_type": rule_type,
+        "source_pattern": source_pattern,
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
     })
@@ -644,7 +655,8 @@ def evaluate_changes_guardrail(
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed)
+    append_violation = source_pattern == "incremental_append" and int(result.get("append_violation_count") or 0) > 0
+    passed = not append_violation and (rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed))
     if passed:
         result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
     else:
@@ -652,6 +664,14 @@ def evaluate_changes_guardrail(
         result.update(status="failed" if blocking else "warning", can_continue=not blocking, reason=f"Source change expectation {rule_type!r} was not satisfied.")
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
+
+
+def resolve_guardrail_change_behaviour(change_behaviour: str) -> tuple[str, str]:
+    """Translate one widget change behaviour into canonical runtime concepts."""
+    try:
+        return _GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING[str(change_behaviour)]
+    except KeyError as exc:
+        raise ValueError(f"change_behaviour must be one of: {', '.join(GUARDRAIL_CHANGE_BEHAVIOURS)}") from exc
 
 
 # ---------------------------------------------------------------------------
