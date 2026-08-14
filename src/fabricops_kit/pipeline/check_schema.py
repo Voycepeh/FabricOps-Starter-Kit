@@ -24,9 +24,9 @@ def check_schema(
     table_name : str
         Physical table name within the configured target.
     target : str, default="source"
-        Logical FabricOps target used when ``dataframe`` is omitted.
+        Logical FabricOps target containing the configured physical table.
     schema : str, optional
-        Physical schema used when ``dataframe`` is omitted.
+        Physical schema containing the configured table.
 
     Returns
     -------

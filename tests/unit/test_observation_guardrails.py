@@ -119,6 +119,14 @@ def test_freshness_rejects_non_observation_input():
         check_freshness([{"max_change_value": "2026-08-14"}])
 
 
+def test_freshness_rejects_incomplete_observation_identity():
+    incomplete = row()
+    del incomplete["source_table"]
+
+    with pytest.raises(ValueError, match="canonical evidence"):
+        check_freshness([incomplete])
+
+
 def test_freshness_result_preserves_warehouse_store_type(monkeypatch):
     observed = Frame([row(maximum="2999-08-14")], Spark())
     rules = [{
@@ -171,6 +179,15 @@ def test_authored_change_behaviour_drives_observation_runtime_semantics(monkeypa
     assert result["pattern_semantics"] == ("append_only" if expected_pattern == "incremental_append" else "full_state")
     assert result["status"] == expected_status
     assert result["append_violation_count"] == (1 if expected_pattern == "incremental_append" else 0)
+
+
+def test_changes_requires_active_approved_change_rule(monkeypatch):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure(monkeypatch, [row(at=now - timedelta(hours=1))])
+    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: [])
+
+    with pytest.raises(ValueError, match="No active approved change rule exists for 'key'"):
+        check_changes(Frame([row(at=now)], Spark()))
 
 
 def test_governed_guardrail_public_signatures_are_minimal():

@@ -13,15 +13,11 @@ from fabricops_kit.pipeline.guardrails_shared import (
     load_table_guardrail_rules,
     resolve_guardrail_change_behaviour,
     select_table_guardrail_rule,
+    SOURCE_OBSERVATION_COLUMNS,
     write_guardrail_result_row,
 )
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
-_OBSERVATION_COLUMNS = {
-    "metadata_table_key", "source_target", "source_schema", "source_table",
-    "partition_column", "partition_value", "change_column", "row_count",
-    "min_change_value", "max_change_value", "is_present", "observed_at",
-}
 
 
 def _rows(dataframe) -> list[dict[str, Any]]:
@@ -33,7 +29,7 @@ def _is_observation(dataframe) -> bool:
     columns = set(getattr(dataframe, "columns", ()))
     if not columns and isinstance(dataframe, (list, tuple)) and dataframe:
         columns = set(dict(dataframe[0]))
-    return _OBSERVATION_COLUMNS <= columns
+    return SOURCE_OBSERVATION_COLUMNS <= columns
 
 
 def _previous_observation(history, *, identity: str, partition_column: str, change_column: str, observed_at) -> list[dict[str, Any]]:
@@ -130,13 +126,13 @@ def _observation_changes(observation) -> dict:
     selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="change", metadata_table_key=identity, environment_name=env,
     )
-    source_pattern = "snapshot"
-    if selected_rule:
-        parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
-        if parameters.get("change_behaviour"):
-            _, source_pattern = resolve_guardrail_change_behaviour(parameters["change_behaviour"])
-        else:
-            source_pattern = str(parameters.get("source_pattern") or "snapshot")
+    if selected_rule is None:
+        raise ValueError(f"No active approved change rule exists for {identity!r}.")
+    parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
+    if parameters.get("change_behaviour"):
+        _, source_pattern = resolve_guardrail_change_behaviour(parameters["change_behaviour"])
+    else:
+        source_pattern = str(parameters.get("source_pattern") or "snapshot")
     pattern_result = changes_check_core(
         current, previous or None, key_columns=["partition_value"],
         non_key_columns=["row_count", "min_change_value", "max_change_value", "is_present"],

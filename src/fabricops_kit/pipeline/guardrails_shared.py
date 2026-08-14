@@ -22,6 +22,12 @@ from fabricops_kit.config.shared import build_metadata_table_key, get_current_au
 from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
+SOURCE_OBSERVATION_COLUMNS = frozenset({
+    "metadata_table_key", "source_target", "source_schema", "source_table",
+    "partition_column", "partition_value", "change_column", "row_count",
+    "min_change_value", "max_change_value", "is_present", "observed_at",
+})
+
 
 def write_guardrail_result_row(
     *,

@@ -2,7 +2,7 @@
 
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.guardrails_shared import freshness_check_core, load_table_guardrail_rules, select_table_guardrail_rule, write_guardrail_result_row
+from fabricops_kit.pipeline.guardrails_shared import SOURCE_OBSERVATION_COLUMNS, freshness_check_core, load_table_guardrail_rules, select_table_guardrail_rule, write_guardrail_result_row
 
 
 def check_freshness(
@@ -31,10 +31,7 @@ def check_freshness(
     if not columns and isinstance(observation, (list, tuple)) and observation:
         first = observation[0]
         columns = set(first.asDict(recursive=True) if hasattr(first, "asDict") else first)
-    observation_evidence = {
-        "metadata_table_key", "partition_value", "change_column",
-        "max_change_value", "observed_at",
-    } <= columns
+    observation_evidence = SOURCE_OBSERVATION_COLUMNS <= columns
     if not observation_evidence:
         raise ValueError("observation must be canonical evidence returned by observe_table()")
     rows = observation.collect() if hasattr(observation, "collect") else observation

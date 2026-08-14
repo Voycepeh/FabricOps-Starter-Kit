@@ -60,8 +60,8 @@ True
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
 | `table_name` | `str` | Yes | Physical table name within the configured target. |
-| `target` | `str` | No | Logical FabricOps target used when ``dataframe`` is omitted. |
-| `schema` | `str \| None` | No | Physical schema used when ``dataframe`` is omitted. |
+| `target` | `str` | No | Logical FabricOps target containing the configured physical table. |
+| `schema` | `str \| None` | No | Physical schema containing the configured table. |
 
 ## Returns
 
