@@ -89,9 +89,15 @@ _DEFAULT_STABILITY_EXCLUDE_COLUMNS = {
 }
 _DEFAULT_STABILITY_EXCLUDE_PREFIXES = ("_fabricops_", "_dq_")
 
-_ACTIVE_RULE_REVIEW_STATUSES = {"self_approved", "governance_approved", "active_pending_governance_review"}
+_ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approved", "active_pending_governance_review"}
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
+GUARDRAIL_CHANGE_BEHAVIOURS = ("No changes expected", "Incremental append", "Snapshot overwrite")
+_GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING = {
+    "No changes expected": ("no_change_required", "snapshot"),
+    "Incremental append": ("monitor_only", "incremental_append"),
+    "Snapshot overwrite": ("monitor_only", "snapshot"),
+}
 DQ_RULE_TYPES = [
     "not_null",
     "null_rate_below",
@@ -555,7 +561,7 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         candidates.append(row)
     if not candidates:
         return None
-    candidates.sort(key=lambda row: _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at")), reverse=True)
+    candidates.sort(key=lambda row: (int(_catalogue_value(row, "configuration_version") or 0), _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at"))), reverse=True)
     return candidates[0]
 
 
@@ -616,12 +622,18 @@ def evaluate_changes_guardrail(
             "Governance must author and activate one first."
         )
     params = _parse_rule_parameters(rule)
-    rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
+    behaviour = _string_value(params.get("change_behaviour"))
+    if behaviour:
+        rule_type, source_pattern = resolve_guardrail_change_behaviour(behaviour)
+    else:
+        rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
+        source_pattern = _string_value(params.get("source_pattern") or result.get("source_pattern") or "snapshot").lower()
     severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
     result.update({
         "rule_type": rule_type,
+        "source_pattern": source_pattern,
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
     })
@@ -643,7 +655,8 @@ def evaluate_changes_guardrail(
         result["actual"]["changed"] = None
         result["message"] = result["reason"]
         return _apply_bypass_post_review_warning(result, rule)
-    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed)
+    append_violation = source_pattern == "incremental_append" and int(result.get("append_violation_count") or 0) > 0
+    passed = not append_violation and (rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed))
     if passed:
         result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
     else:
@@ -651,6 +664,14 @@ def evaluate_changes_guardrail(
         result.update(status="failed" if blocking else "warning", can_continue=not blocking, reason=f"Source change expectation {rule_type!r} was not satisfied.")
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
+
+
+def resolve_guardrail_change_behaviour(change_behaviour: str) -> tuple[str, str]:
+    """Translate one widget change behaviour into canonical runtime concepts."""
+    try:
+        return _GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING[str(change_behaviour)]
+    except KeyError as exc:
+        raise ValueError(f"change_behaviour must be one of: {', '.join(GUARDRAIL_CHANGE_BEHAVIOURS)}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -921,6 +942,7 @@ def schema_check_core(
     """
     rule = None
     rule_type = ""
+    severity = "blocking"
     if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
         rules_df, expected_schema = expected_schema, None
     if rules_df is not None:
@@ -934,12 +956,15 @@ def schema_check_core(
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
             preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+            severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
 
     normalized_preset = str(preset).lower()
     if normalized_preset not in _SCHEMA_PRESETS:
         raise ValueError("preset must be one of: strict, allow_new_columns, monitor_only")
+    if severity not in {"blocking", "warning"}:
+        raise ValueError("severity must be one of: blocking, warning")
 
     actual_columns, actual_types = _actual_schema(dataframe)
     actual_set = set(actual_columns)
@@ -980,6 +1005,9 @@ def schema_check_core(
     else:
         status = "passed"
         can_continue = True
+    if status == "failed" and severity == "warning":
+        status = "warning"
+        can_continue = True
 
     message = (
         "Schema validation passed."
@@ -995,6 +1023,7 @@ def schema_check_core(
         "unexpected_columns": actual_unexpected,
         "datatype_mismatches": datatype_mismatches,
         "preset": normalized_preset,
+        "severity": severity,
     }
     if rule is not None:
         result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
@@ -1158,6 +1187,20 @@ def _coerce_date(value) -> date | None:
         return None
 
 
+def _coerce_datetime(value) -> datetime | None:
+    """Return a timezone-naive comparison datetime for freshness values."""
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value.replace(tzinfo=None) if value.tzinfo else value
+    if isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+    try:
+        parsed = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+        return parsed.replace(tzinfo=None) if parsed.tzinfo else parsed
+    except ValueError:
+        return None
+
 def _iso_date_value(value) -> str:
     parsed = _coerce_date(value)
     return parsed.isoformat() if parsed is not None else ("" if value is None else str(value))
@@ -1217,6 +1260,7 @@ def freshness_check_core(
     """
     rule = None
     rule_type = ""
+    max_age_seconds = None
     if rules_df is None and freshness_column is not None and not isinstance(freshness_column, str):
         rules_df, freshness_column = freshness_column, None
     if rules_df is not None:
@@ -1226,7 +1270,15 @@ def freshness_check_core(
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "max_lag_days").lower()
             if rule_type != "skip":
                 freshness_column = params.get("freshness_column") or params.get("column_name") or _catalogue_value(rule, "column_name")
-                max_lag_days = params.get("max_lag_days")
+                if params.get("maximum_age") not in (None, ""):
+                    unit = str(params.get("maximum_age_unit") or "days").lower()
+                    factors = {"minutes": 60, "hours": 3600, "days": 86400}
+                    if unit not in factors:
+                        raise ValueError("maximum_age_unit must be minutes, hours, or days")
+                    max_age_seconds = float(params["maximum_age"]) * factors[unit]
+                else:
+                    max_lag_days = params.get("max_lag_days")
+                    max_age_seconds = None
                 severity = _catalogue_value(rule, "severity") or "blocking"
 
     dataframe_columns = set(getattr(dataframe, "columns", ()))
@@ -1270,21 +1322,21 @@ def freshness_check_core(
         base_result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
     if not column:
         return _apply_bypass_post_review_warning(base_result, rule)
-    if max_lag_days is None or str(max_lag_days).strip() == "":
+    if max_age_seconds is None and (max_lag_days is None or str(max_lag_days).strip() == ""):
         raise ValueError("max_lag_days is required when freshness_column is set")
-    lag_days = int(max_lag_days)
+    lag_days = int(max_lag_days or 0)
     if lag_days < 0:
         raise ValueError("max_lag_days must be greater than or equal to zero")
     base_result["freshness_max_lag_days"] = lag_days
 
-    today = _coerce_date(reference_date) if reference_date is not None else date.today()
-    if today is None:
+    reference = _coerce_datetime(reference_date) if reference_date is not None else datetime.now()
+    if reference is None:
         raise ValueError("reference_date must be a date, datetime, or ISO date string")
-    required_min = today - timedelta(days=lag_days)
+    required_min = reference - timedelta(seconds=max_age_seconds) if max_age_seconds is not None else reference - timedelta(days=lag_days)
     latest_raw = _max_column_value(dataframe, column)
-    latest_date = _coerce_date(latest_raw)
-    latest_display = _iso_date_value(latest_raw)
-    required_display = required_min.isoformat()
+    latest_date = _coerce_datetime(latest_raw)
+    latest_display = _coerce_datetime(latest_raw).isoformat() if max_age_seconds is not None and _coerce_datetime(latest_raw) else _iso_date_value(latest_raw)
+    required_display = required_min.isoformat() if max_age_seconds is not None else required_min.date().isoformat()
     base_result.update(latest_value=latest_display, required_min_value=required_display)
 
     if latest_date is not None and latest_date >= required_min:

@@ -1280,7 +1280,7 @@ def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: st
         if column_name is not None and str(item.get("column_name") or "") != column_name:
             continue
         matches.append(item)
-    matches.sort(key=lambda row: str(row.get("_committed_at") or ""), reverse=True)
+    matches.sort(key=lambda row: (int(row.get("configuration_version") or 0), str(row.get("_committed_at") or "")), reverse=True)
     return matches[0] if matches else {}
 
 def _rule_params(rule: Mapping[str, Any]) -> dict[str, Any]:

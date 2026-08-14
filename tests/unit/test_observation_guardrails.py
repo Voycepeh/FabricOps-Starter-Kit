@@ -148,3 +148,26 @@ def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
     with pytest.raises(ValueError, match="does not match change_column 'modified_at'"):
         freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")
+
+
+@pytest.mark.parametrize(("behaviour", "expected_pattern", "expected_status"), [
+    ("Incremental append", "incremental_append", "failed"),
+    ("Snapshot overwrite", "snapshot", "passed"),
+])
+def test_authored_change_behaviour_drives_observation_runtime_semantics(monkeypatch, behaviour, expected_pattern, expected_status):
+    """Use the authored source pattern during canonical observation comparison."""
+    import json
+
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure(monkeypatch, [row(at=now - timedelta(hours=1))])
+    rules = [{
+        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "change",
+        "rule_type": "monitor_only", "rule_parameters_json": json.dumps({"change_behaviour": behaviour}),
+        "severity": "blocking", "activation_state": "active", "review_state": "authored",
+        "configuration_version": 2, "rule_key": "authored_change_rule",
+    }]
+    result = check_changes(Frame([row(at=now, count=2)], Spark()), rules_df=rules, metadata_table_key="key")
+    assert result["source_pattern"] == expected_pattern
+    assert result["pattern_semantics"] == ("append_only" if expected_pattern == "incremental_append" else "full_state")
+    assert result["status"] == expected_status
+    assert result["append_violation_count"] == (1 if expected_pattern == "incremental_append" else 0)

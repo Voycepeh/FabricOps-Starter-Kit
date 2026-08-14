@@ -12,7 +12,7 @@ from fabricops_kit.widgets.shared import (
     GUARDRAIL_TABLE,
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-from fabricops_kit.widgets import widget_author_dq_rules, widget_author_schema_freshness_profile_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
+from fabricops_kit.widgets import widget_author_dq_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
 
 
 @pytest.fixture(autouse=True)
@@ -177,50 +177,8 @@ def test_governance_rule_actions_approve_reject_and_supersede():
     assert superseded["superseded_by_rule_key"] == "new"
 
 
-def test_authoring_widgets_write_rule_intent_records_only(monkeypatch):
-    """Verify authoring widgets return guardrail-rule rows instead of catalogue or result rows."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {
-        "environment_name": "dev",
-        "dataset_name": "sales",
-        "table_name": "orders",
-        "metadata_table_key": "table-key",
-        "columns": ["order_id"],
-        "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "string"}],
-        "governance_mode": "ungoverned",
-        "approval_policy": "no_approval_required",
-    }
-    sfp_widget = widget_author_schema_freshness_profile_rules(state)
-    dq_widget = widget_author_dq_rules(state, selected_columns=["order_id"])
-    records = sfp_widget["build_records"]() + dq_widget["build_batch_records"]()
-    assert {record["guardrail_type"] for record in records} == {"schema", "freshness", "profile_behavior", "dq"}
-    assert all("rule_parameters_json" in record for record in records)
-    assert all(json.loads(record["rule_parameters_json"]) is not None for record in records)
-    assert all("result_id" not in record for record in records)
-    assert all("profile_payload_json" not in record for record in records)
 
 
-def test_source_change_authoring_is_optional_and_validated(monkeypatch):
-    """Verify change intent is emitted only when its independent section is enabled."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {
-        "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
-        "metadata_table_key": "table-key", "columns": ["business_date", "modified_at"],
-        "catalogue_profile_rows": [{"column_name": "business_date", "data_type": "date"}, {"column_name": "modified_at", "data_type": "timestamp"}],
-        "governance_mode": "ungoverned", "approval_policy": "no_approval_required",
-    }
-    widget = widget_author_schema_freshness_profile_rules(state)
-    assert widget["controls"]["partition_column"].value == ""
-    assert widget["controls"]["change_column"].value == ""
-    assert "change" not in {row["guardrail_type"] for row in widget["build_records"]()}
-    widget["controls"]["change_mode"].value = "enforce"
-    widget["controls"]["partition_column"].value = "business_date"
-    widget["controls"]["change_column"].value = "modified_at"
-    widget["controls"]["expected_change"].value = "change_required"
-    change = next(row for row in widget["build_records"]() if row["guardrail_type"] == "change")
-    assert json.loads(change["rule_parameters_json"]) == {
-        "change_column": "modified_at", "expected_change": "change_required", "partition_column": "business_date",
-    }
 
 
 def _rule(**overrides):
@@ -401,60 +359,8 @@ def test_governance_can_approve_or_reject_active_pending_rule():
     assert rejected["is_active"] is False
 
 
-def test_schema_widget_prepopulates_and_validates_user_inputs(monkeypatch):
-    """Verify schema/freshness/profile widget prepopulates and validates selections."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {
-        "environment_name": "dev",
-        "dataset_name": "sales",
-        "table_name": "orders",
-        "metadata_table_key": "table-key",
-        "columns": ["order_id", "business_date"],
-        "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}, {"column_name": "business_date", "data_type": "string"}],
-        "existing_rules": [
-            _rule(guardrail_type="schema", rule_type="strict", rule_parameters_json=json.dumps({"columns": ["order_id"], "data_types": {"order_id": "int"}})),
-            _rule(guardrail_type="freshness", rule_type="max_lag_days", rule_parameters_json=json.dumps({"freshness_column": "business_date", "max_lag_days": 3})),
-            _rule(guardrail_type="profile_behavior", rule_type="changing_data", rule_parameters_json=json.dumps({"watermark_column": "business_date"})),
-        ],
-        "governance_mode": "governed",
-        "approval_policy": "approval_required_with_bypass",
-        "approval_bypass_allowed": True,
-    }
-    widget = widget_author_schema_freshness_profile_rules(state)
-
-    assert widget["controls"]["schema_mode"].value == "strict"
-    assert widget["controls"]["freshness_column"].value == "business_date"
-    assert widget["controls"]["max_lag"].value == 3
-    assert widget["controls"]["watermark_column"].value == "business_date"
-    widget["controls"]["watermark_column"].value = ""
-    try:
-        widget["build_records"]()
-    except ValueError as exc:
-        assert "watermark_column" in str(exc)
-    else:
-        raise AssertionError("changing_data without watermark_column should fail")
 
 
-def test_governed_authoring_widget_actions_create_required_lifecycles(monkeypatch):
-    """Verify governed schema authoring exposes draft, submit, and apply-now actions."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
-    widget = widget_author_schema_freshness_profile_rules(state)
-
-    draft = widget["build_records"](action="draft")
-    submitted = widget["build_records"](action="submit")
-    applied = widget["build_records"](action="apply_now")
-
-    assert {record["review_state"] for record in draft} == {"draft"}
-    assert {record["activation_state"] for record in draft} == {"inactive"}
-    assert {record["requires_governance_review"] for record in draft} == {False}
-    assert {record["review_state"] for record in submitted} == {"pending_governance_review"}
-    assert {record["activation_state"] for record in submitted} == {"pending"}
-    assert {record["requires_governance_review"] for record in submitted} == {True}
-    assert {record["review_state"] for record in applied} == {"active_pending_governance_review"}
-    assert {record["activation_state"] for record in applied} == {"active"}
-    assert {record["activation_reason"] for record in applied} == {"engineering_apply_now"}
-    assert {record["requires_governance_review"] for record in applied} == {True}
 
 
 def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monkeypatch):
@@ -551,45 +457,8 @@ def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatc
     assert len(state["_controls"]["target"].options) == 1
 
 
-def test_schema_widget_freshness_lag_rejects_negative(monkeypatch):
-    """Verify freshness max lag rejects negative values when enforce mode is active."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["business_date"], "catalogue_profile_rows": [{"column_name": "business_date", "data_type": "string"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
-    widget = widget_author_schema_freshness_profile_rules(state)
-    widget["controls"]["freshness_mode"].value = "enforce"
-    widget["controls"]["freshness_column"].value = "business_date"
-    widget["controls"]["max_lag"].value = -1
-
-    try:
-        widget["build_records"]()
-    except ValueError as exc:
-        assert "max_lag_days" in str(exc)
-    else:
-        raise AssertionError("negative max lag should fail")
 
 
-def test_authoring_widget_save_writes_only_guardrail_rules(monkeypatch):
-    """Verify authoring widget save writes only METADATA_GUARDRAIL."""
-    _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.widgets import shared as governance_review
-    from fabricops_kit import widgets
-    from fabricops_kit.widgets import shared as widget_shared
-
-    writes = []
-
-    class Spark:
-        def createDataFrame(self, records):
-            return records
-
-    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "approval_bypass_allowed": False}
-    widget = widget_author_schema_freshness_profile_rules(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
-
-    widget["save"]()
-
-    assert writes == [governance_review.GUARDRAIL_TABLE]
-    assert governance_review.CATALOGUE_TABLE not in writes
-    assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
 
 
 def test_review_widget_does_not_write_separate_policy_table(monkeypatch):

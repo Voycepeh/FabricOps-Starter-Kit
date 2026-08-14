@@ -1,6 +1,7 @@
 """Public deterministic changes check."""
 
 from datetime import date, datetime
+import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
@@ -11,6 +12,8 @@ from fabricops_kit.pipeline.guardrails_shared import (
     changes_check_core,
     evaluate_changes_guardrail,
     load_table_guardrail_rules,
+    resolve_guardrail_change_behaviour,
+    select_table_guardrail_rule,
     write_guardrail_result_row,
 )
 
@@ -122,6 +125,26 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             tombstone_df, _OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
             context=context, mode="append",
         )
+    if rules_df is None:
+        rules_df = load_table_guardrail_rules(
+            config, env, spark_session=getattr(dataframe, "sparkSession", None),
+        )
+    selected_rule = select_table_guardrail_rule(
+        rules_df, guardrail_type="change", metadata_table_key=identity, environment_name=env,
+    )
+    source_pattern = "snapshot"
+    if selected_rule:
+        parameters = json.loads(selected_rule.get("rule_parameters_json") or "{}")
+        if parameters.get("change_behaviour"):
+            _, source_pattern = resolve_guardrail_change_behaviour(parameters["change_behaviour"])
+        else:
+            source_pattern = str(parameters.get("source_pattern") or "snapshot")
+    pattern_result = changes_check_core(
+        current, previous or None, key_columns=["partition_value"],
+        non_key_columns=["row_count", "min_change_value", "max_change_value", "is_present"],
+        source_pattern=source_pattern,
+        comparison_scope="partial" if source_pattern == "incremental_append" else "complete",
+    )
     has_changes = not previous or bool(new or changed or removed or reappeared)
     result = {
         "status": "changed" if has_changes else "unchanged", "can_continue": True,
@@ -130,13 +153,12 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
         "changed_partitions": changed, "removed_partitions": removed,
         "reappeared_partitions": reappeared,
         "affected_partitions": [*new, *changed, *removed, *reappeared],
+        "source_pattern": source_pattern,
+        "pattern_semantics": pattern_result["pattern_semantics"],
+        "append_violation_count": pattern_result["append_violation_count"],
         "reason": "First observation baseline created." if not previous else
                   ("Source observation changed." if has_changes else "Source observation is unchanged."),
     }
-    if rules_df is None:
-        rules_df = load_table_guardrail_rules(
-            config, env, spark_session=getattr(dataframe, "sparkSession", None),
-        )
     if rules_df is not None:
         result["metadata_table_key"] = identity
         result = evaluate_changes_guardrail(
