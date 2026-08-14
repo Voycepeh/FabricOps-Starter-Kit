@@ -194,7 +194,7 @@ def test_governed_guardrail_public_signatures_are_minimal():
     import inspect
     from fabricops_kit import check_schema
 
-    assert str(inspect.signature(check_schema)) == "(table_name: str, *, target: str = 'source', schema: str | None = None) -> dict"
+    assert str(inspect.signature(check_schema)) == "(table_name: str, *, target: str = 'source', schema: str | None = None, dataframe=None) -> dict"
     assert str(inspect.signature(check_freshness)) == "(observation) -> dict"
     assert str(inspect.signature(check_changes)) == "(observation) -> dict"
 
@@ -230,3 +230,41 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     assert core_calls[0][1]["metadata_table_key"] == "lakehouse||source||dbo||orders"
     assert writes[0]["guardrail_type"] == "schema"
     assert writes[0]["table_name"] == "orders"
+
+
+def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monkeypatch):
+    schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
+    incoming = types.SimpleNamespace(columns=["id"])
+    config = object()
+    store = types.SimpleNamespace(kind="warehouse", schema="dbo")
+    rules = [{"rule_key": "schema_rule"}]
+    core_calls = []
+
+    monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "prod", {}))
+    monkeypatch.setattr(schema_module, "get_store", lambda *args: store)
+    monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_warehouse_table_location", lambda *args: ("sales", "orders", "path"))
+    monkeypatch.setattr(
+        schema_module,
+        "read_warehouse_query_core",
+        lambda *args, **kwargs: pytest.fail("the persisted table must not be read"),
+    )
+    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "warehouse||product||sales||orders")
+    monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
+    monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
+    monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: None)
+
+    def fake_core(dataframe, **kwargs):
+        core_calls.append((dataframe, kwargs))
+        return {"status": "passed", "can_continue": True, "rule_key": "schema_rule", "rule_type": "strict"}
+
+    monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
+
+    schema_module.check_schema("orders", target="product", schema="sales", dataframe=incoming)
+
+    assert core_calls == [(incoming, {
+        "rules_df": rules,
+        "table_name": "orders",
+        "environment_name": "prod",
+        "metadata_table_key": "warehouse||product||sales||orders",
+    })]
