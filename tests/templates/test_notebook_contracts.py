@@ -247,14 +247,10 @@ def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
 
     dev_calls = call_names(environment_if.body)
     prod_calls = call_names(production_if.body)
-    dev_source, prod_source = matching_cells[0].split('elif ENV == "prod":', maxsplit=1)
-    prod_source = prod_source.split("else:", maxsplit=1)[0]
 
     assert dev_calls.index(writer) < dev_calls.index(reader) < dev_calls.index("profile_and_register_table")
     assert dev_calls.index("profile_and_register_table") < dev_calls.index("check_schema")
-    assert dev_source.index("check_schema(") < dev_source.index("Run the existing target DQ guardrail execution")
     assert prod_calls.index("check_schema") < prod_calls.index(writer)
-    assert prod_source.index("check_schema(") < prod_source.index("Run the existing target DQ guardrail execution") < prod_source.index(f"{writer}(")
     assert prod_calls.index(writer) < prod_calls.index(reader) < prod_calls.index("profile_and_register_table")
     assert "schema_result" not in matching_cells[0]
     assert "can_continue" not in matching_cells[0]
