@@ -268,3 +268,25 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
         "environment_name": "prod",
         "metadata_table_key": "warehouse||product||sales||orders",
     })]
+
+
+def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
+    """The public check records its result before the shared gate blocks execution."""
+    schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
+    result = {"status": "failed", "can_continue": False, "rule_key": "rule", "rule_type": "strict"}
+    events = []
+
+    monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (object(), "prod", {}))
+    monkeypatch.setattr(schema_module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))
+    monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
+    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "governed-orders")
+    monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: [result])
+    monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: result)
+    monkeypatch.setattr(schema_module, "schema_check_core", lambda *args, **kwargs: result.copy())
+    monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: events.append("recorded"))
+    monkeypatch.setattr(schema_module, "stop_if_failed", lambda checked: events.append(("gate", checked["can_continue"])))
+
+    schema_module.check_schema("orders", target="product", schema="dbo", dataframe=object())
+
+    assert events == ["recorded", ("gate", False)]
