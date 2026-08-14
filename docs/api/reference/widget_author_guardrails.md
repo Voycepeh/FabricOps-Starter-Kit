@@ -12,9 +12,9 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_guardrails.py:138`
+`fabricops_kit/widgets/widget_author_guardrails.py:139`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L138-L356">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L406">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -88,7 +88,9 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 <div class="reference-docstring-notes" markdown="1">
 
 Run in Microsoft Fabric after ``00_env_config`` and table selection. The
-widget authors configuration only; it has no approval workflow.
+widget authors configuration only; it has no approval workflow. Select the
+required table columns and preserve their expected data types as the schema
+guardrail.
 
 </div>
 
