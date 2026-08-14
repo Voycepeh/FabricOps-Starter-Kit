@@ -1,4 +1,4 @@
-# Capture Data Lineage automatically in `02_pipeline`
+# Table-level Data Lineage capture in an ETL pipeline
 
 ## Problem
 
