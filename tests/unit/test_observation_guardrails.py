@@ -104,7 +104,8 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
         "review_state": "governance_approved", "rule_key": f"changes_{severity}",
     }]
 
-    result = check_changes(Frame([row(at=now, count=2)], Spark()), rules_df=approved_rules, metadata_table_key="key")
+    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: approved_rules)
+    result = check_changes(Frame([row(at=now, count=2)], Spark()))
 
     assert result["status"] == status
     assert result["can_continue"] is can_continue
@@ -113,17 +114,13 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     assert result_writes[0]["store_type"] == "warehouse"
 
 
-def test_freshness_uses_observed_maximum_without_source_scan():
-    result = check_freshness(
-        [{"max_change_value": "2026-08-14"}], freshness_column="max_change_value", max_lag_days=0,
-        reference_date="2026-08-14",
-    )
-    assert result["status"] == "passed"
-    assert result["freshness_column"] == "max_change_value"
+def test_freshness_rejects_non_observation_input():
+    with pytest.raises(ValueError, match="canonical evidence"):
+        check_freshness([{"max_change_value": "2026-08-14"}])
 
 
 def test_freshness_result_preserves_warehouse_store_type(monkeypatch):
-    observed = Frame([row(maximum="2026-08-14")], Spark())
+    observed = Frame([row(maximum="2999-08-14")], Spark())
     rules = [{
         "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "freshness", "rule_type": "max_lag_days",
         "rule_parameters_json": '{"max_lag_days": 0}', "severity": "blocking",
@@ -133,21 +130,23 @@ def test_freshness_result_preserves_warehouse_store_type(monkeypatch):
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(freshness, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse"))
     monkeypatch.setattr(freshness, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
-    result = freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")
+    monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
+    result = freshness.check_freshness(observed)
     assert result["status"] == "passed"
     assert writes[0]["store_type"] == "warehouse"
 
 
 def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch):
-    observed = Frame([row(maximum="2026-08-14")], Spark())
+    observed = Frame([row(maximum="2999-08-14")], Spark())
     rules = [{
         "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "freshness", "rule_type": "max_lag_days",
         "rule_parameters_json": '{"freshness_column": "loaded_at", "max_lag_days": 0}',
         "activation_state": "active", "review_state": "governance_approved", "rule_key": "freshness_rule",
     }]
     monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(freshness, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
     with pytest.raises(ValueError, match="does not match change_column 'modified_at'"):
-        freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")
+        freshness.check_freshness(observed)
 
 
 @pytest.mark.parametrize(("behaviour", "expected_pattern", "expected_status"), [
@@ -166,8 +165,51 @@ def test_authored_change_behaviour_drives_observation_runtime_semantics(monkeypa
         "severity": "blocking", "activation_state": "active", "review_state": "authored",
         "configuration_version": 2, "rule_key": "authored_change_rule",
     }]
-    result = check_changes(Frame([row(at=now, count=2)], Spark()), rules_df=rules, metadata_table_key="key")
+    monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
+    result = check_changes(Frame([row(at=now, count=2)], Spark()))
     assert result["source_pattern"] == expected_pattern
     assert result["pattern_semantics"] == ("append_only" if expected_pattern == "incremental_append" else "full_state")
     assert result["status"] == expected_status
     assert result["append_violation_count"] == (1 if expected_pattern == "incremental_append" else 0)
+
+
+def test_governed_guardrail_public_signatures_are_minimal():
+    import inspect
+    from fabricops_kit import check_schema
+
+    assert str(inspect.signature(check_schema)) == "(table_name: str, *, target: str = 'source', schema: str | None = None) -> dict"
+    assert str(inspect.signature(check_freshness)) == "(observation) -> dict"
+    assert str(inspect.signature(check_changes)) == "(observation) -> dict"
+
+
+def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
+    schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
+    frame = types.SimpleNamespace(limit=lambda count: types.SimpleNamespace(columns=["id"]))
+    config = object()
+    store = types.SimpleNamespace(kind="lakehouse")
+    rules = [{"rule_key": "schema_rule"}]
+    writes = []
+    core_calls = []
+
+    monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "dev", {"active": True}))
+    monkeypatch.setattr(schema_module, "get_store", lambda *args: store)
+    monkeypatch.setattr(schema_module, "get_spark_session", lambda: "spark")
+    monkeypatch.setattr(schema_module, "resolve_lakehouse_table_location", lambda *args: ("orders", "dbo", "path"))
+    monkeypatch.setattr(schema_module, "read_lakehouse_table_core", lambda *args, **kwargs: frame)
+    monkeypatch.setattr(schema_module, "build_metadata_table_key", lambda *args: "lakehouse||source||dbo||orders")
+    monkeypatch.setattr(schema_module, "load_table_guardrail_rules", lambda *args, **kwargs: rules)
+    monkeypatch.setattr(schema_module, "select_table_guardrail_rule", lambda *args, **kwargs: rules[0])
+
+    def fake_core(dataframe, **kwargs):
+        core_calls.append((dataframe, kwargs))
+        return {"status": "passed", "can_continue": True, "rule_key": "schema_rule", "rule_type": "required_columns"}
+
+    monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
+    monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
+
+    result = schema_module.check_schema("orders", target="source", schema="dbo")
+
+    assert result["status"] == "passed"
+    assert core_calls[0][1]["metadata_table_key"] == "lakehouse||source||dbo||orders"
+    assert writes[0]["guardrail_type"] == "schema"
+    assert writes[0]["table_name"] == "orders"

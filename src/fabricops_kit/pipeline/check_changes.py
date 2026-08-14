@@ -1,6 +1,5 @@
 """Public deterministic changes check."""
 
-from datetime import date, datetime
 import json
 from typing import Any
 
@@ -65,11 +64,11 @@ def _previous_observation(history, *, identity: str, partition_column: str, chan
     return [row for row in candidates if row["observed_at"] == previous_at]
 
 
-def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = "") -> dict:
-    current = _rows(dataframe)
+def _observation_changes(observation) -> dict:
+    current = _rows(observation)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
-    identity = metadata_table_key or str(current[0]["metadata_table_key"])
+    identity = str(current[0]["metadata_table_key"])
     partition_column = str(current[0]["partition_column"])
     change_column = str(current[0]["change_column"])
     observed_at = current[0]["observed_at"]
@@ -81,7 +80,7 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
     try:
         history = read_lakehouse_table_core(
             _OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
-            spark_session=getattr(dataframe, "sparkSession", None), context=context,
+            spark_session=getattr(observation, "sparkSession", None), context=context,
         )
         previous = _previous_observation(
             history, identity=identity, partition_column=partition_column,
@@ -116,7 +115,7 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             "min_change_value": None, "max_change_value": None,
             "is_present": False, **audit,
         } for value in removed]
-        spark = getattr(dataframe, "sparkSession", None)
+        spark = getattr(observation, "sparkSession", None)
         tombstone_df = spark.createDataFrame(
             [coerce_metadata_row_types(_OBSERVATION_TABLE, row) for row in tombstones],
             schema=metadata_table_schema_registry()[_OBSERVATION_TABLE],
@@ -125,10 +124,9 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             tombstone_df, _OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
             context=context, mode="append",
         )
-    if rules_df is None:
-        rules_df = load_table_guardrail_rules(
-            config, env, spark_session=getattr(dataframe, "sparkSession", None),
-        )
+    rules_df = load_table_guardrail_rules(
+        config, env, spark_session=getattr(observation, "sparkSession", None),
+    )
     selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="change", metadata_table_key=identity, environment_name=env,
     )
@@ -169,7 +167,7 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
             source_target = str(current[0]["source_target"])
             source_store_type = str(get_store(config, env, source_target).kind).lower()
             write_guardrail_result_row(
-                spark_session=getattr(dataframe, "sparkSession", None), config=config, env=env,
+                spark_session=getattr(observation, "sparkSession", None), config=config, env=env,
                 run_id=str(observed_at), dataset_name="", table_name=str(current[0]["source_table"]),
                 store_type=source_store_type, layer=source_target,
                 schema_name=current[0].get("source_schema"), guardrail_type="change",
@@ -181,65 +179,14 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
 
 
 def check_changes(
-    dataframe,
-    previous_dataframe=None,
-    *,
-    partition_columns: list[str] | tuple[str, ...] | None = None,
-    key_columns: list[str] | tuple[str, ...] | None = None,
-    non_key_columns: list[str] | tuple[str, ...] | None = None,
-    range_column: str | None = None,
-    source_pattern: str = "snapshot",
-    comparison_scope: str = "complete",
-    refresh_days: int = 0,
-    version_column: str | None = None,
-    reference_date: date | datetime | str | None = None,
-    include_row_changes: bool = False,
-    rules_df=None,
-    metadata_table_key: str = "",
+    observation,
 ) -> dict:
     """Describe deterministic row and partition changes since an observation.
 
     Parameters
     ----------
-    dataframe : DataFrame or iterable of mappings
-        Current source observation.
-    previous_dataframe : DataFrame or iterable of mappings, optional
-        Previous comparable source observation.
-    partition_columns : sequence of str, optional
-        Columns defining cheap partition fingerprints.
-    key_columns : sequence of str
-        Non-null columns that uniquely identify a logical row.
-    non_key_columns : sequence of str, optional
-        Columns whose content identifies an update. Defaults to all non-key
-        columns, except that a versioned source's ``version_column`` is used
-        only for latest-record resolution unless explicitly included here.
-    range_column : str, optional
-        Date, timestamp, or ordered range column used for recent and unseen
-        range classification.
-    source_pattern : {"snapshot", "incremental_append", "mutable_incremental", "versioned"}
-        Explicit source behavior; it is never inferred from table naming.
-    comparison_scope : {"complete", "partitions", "partial"}
-        Completeness of the current observation. ``complete`` can prove global
-        deletions, ``partitions`` can prove deletions only inside supplied
-        complete partitions, and ``partial`` never infers deletions.
-    refresh_days : int, default=0
-        Number of days in the expected mutable window. Zero means only values
-        dated on ``reference_date`` are recent.
-    version_column : str, optional
-        Column used to select the latest row per logical key. Required when
-        ``source_pattern="versioned"``.
-    reference_date : date, datetime, str, optional
-        End of the recent mutable window.
-    include_row_changes : bool, default=False
-        Include deterministic key hashes grouped by change classification.
-    rules_df : DataFrame or iterable of mappings, optional
-        Approved source-change rules for the canonical observation path. When
-        omitted, the active rule is loaded by ``metadata_table_key``. Its
-        ``change_required``, ``no_change_required``, or ``monitor_only`` intent
-        governs continuation, and the runtime outcome is written to
-        ``METADATA_GUARDRAIL_RESULTS``.
-    metadata_table_key : str, optional
-        Canonical identity used to scope the previous observation snapshot.
+    observation : pyspark.sql.DataFrame
+        Canonical evidence returned by :func:`observe_table`.
 
     Returns
     -------
@@ -256,26 +203,12 @@ def check_changes(
 
     Examples
     --------
-    >>> result = check_changes(current, previous, key_columns=["id"])
+    >>> observation = observe_table("orders", target="source", schema="dbo")
+    >>> result = check_changes(observation)
     >>> result["changed"]
     True
 
     """
-    if _is_observation(dataframe):
-        if previous_dataframe is not None:
-            raise ValueError("previous_dataframe is loaded automatically for canonical observation evidence")
-        return _observation_changes(dataframe, rules_df=rules_df, metadata_table_key=metadata_table_key)
-    return changes_check_core(
-        dataframe,
-        previous_dataframe,
-        partition_columns=partition_columns,
-        key_columns=key_columns,
-        non_key_columns=non_key_columns,
-        range_column=range_column,
-        source_pattern=source_pattern,
-        comparison_scope=comparison_scope,
-        refresh_days=refresh_days,
-        version_column=version_column,
-        reference_date=reference_date,
-        include_row_changes=include_row_changes,
-    )
+    if not _is_observation(observation):
+        raise ValueError("observation must be canonical evidence returned by observe_table()")
+    return _observation_changes(observation)

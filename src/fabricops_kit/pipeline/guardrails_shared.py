@@ -3,7 +3,7 @@
 Use :func:`enforce_freshness`, :func:`enforce_profile_behavior`, and
 :func:`stop_if_failed` in production pipeline notebooks. Schema guardrail
 authoring is widget-led and runtime schema enforcement is orchestrated through
-``run_table_guardrails``.
+the governed runtime checks.
 """
 
 from __future__ import annotations
@@ -894,7 +894,7 @@ def schema_check_core(
     environment_name: str = "",
     metadata_table_key: str = "",
 ) -> dict:
-    """Apply an internal runtime schema check for ``run_table_guardrails``.
+    """Apply an internal runtime schema check for the governed runtime checks.
 
     This helper is not a notebook-facing callable. It preserves runtime schema
     enforcement for widget-led guardrail flows without exposing a public schema
@@ -935,7 +935,7 @@ def schema_check_core(
 
     Notes
     -----
-    This private helper is called by ``run_table_guardrails`` only. Notebook
+    This private helper is called by the governed runtime checks only. Notebook
     authors should use widget-authored rules and the guardrail gate instead of
     calling schema validation helpers directly.
 

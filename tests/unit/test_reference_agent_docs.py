@@ -1972,7 +1972,6 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
     expected_paths = {
         "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
-        "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
         "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
     }
 
@@ -2001,7 +2000,6 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
     expected_paths = {
         "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
-        "run_table_guardrails": "src/fabricops_kit/pipeline/run_table_guardrails.py",
         "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
         "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",
     }

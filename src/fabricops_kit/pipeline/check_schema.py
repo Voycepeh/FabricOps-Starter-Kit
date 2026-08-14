@@ -12,15 +12,8 @@ from fabricops_kit.pipeline.guardrails_shared import load_table_guardrail_rules,
 
 
 def check_schema(
-    dataframe=None,
-    expected_schema: dict[str, str] | None = None,
+    table_name: str,
     *,
-    preset: str = "strict",
-    rules_df=None,
-    dataset_name: str = "",
-    table_name: str = "",
-    environment_name: str = "",
-    metadata_table_key: str = "",
     target: str = "source",
     schema: str | None = None,
 ) -> dict:
@@ -28,21 +21,8 @@ def check_schema(
 
     Parameters
     ----------
-    dataframe : Any
-        Spark, pandas, or dataframe-like object with schema metadata. Omit it
-        and pass ``target``, ``schema``, and ``table_name`` to inspect a
-        configured physical table without reading its business rows.
-    expected_schema : dict[str, str], optional
-        Expected column-to-datatype mapping for a direct check.
-    preset : {"strict", "allow_new_columns", "monitor_only"}, default="strict"
-        Direct schema comparison behavior.
-    rules_df : DataFrame or iterable of mappings, optional
-        Approved guardrail rules. When supplied, the applicable schema rule is
-        selected using the table context instead of ``expected_schema``. The
-        configured-table path loads the active rule automatically when neither
-        rule data nor ``expected_schema`` is supplied.
-    dataset_name, table_name, environment_name, metadata_table_key : str, optional
-        Table identity used to select an approved rule.
+    table_name : str
+        Physical table name within the configured target.
     target : str, default="source"
         Logical FabricOps target used when ``dataframe`` is omitted.
     schema : str, optional
@@ -58,66 +38,59 @@ def check_schema(
     Raises
     ------
     ValueError
-        If the preset is invalid or neither rule data nor an expected schema is
-        supplied.
+        If the target is unsupported or no active approved Schema guardrail
+        exists for the resolved table.
 
     Examples
     --------
-    >>> result = check_schema(df, {"order_id": "bigint"})
+    >>> result = check_schema("orders", target="source", schema="dbo")
     >>> result["can_continue"]
     True
 
     """
-    if dataframe is None:
-        if not table_name:
-            raise ValueError("table_name is required when dataframe is omitted")
-        config, env, context = resolve_fabric_context()
-        store = get_store(config, env, target)
-        spark = get_spark_session()
-        store_type = str(store.kind).lower()
-        if store_type == "warehouse":
-            schema_name, resolved_table, _ = resolve_warehouse_table_location(
-                store, schema or getattr(store, "schema", None), table_name,
-            )
-            dataframe = read_warehouse_query_core(
-                f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
-                target=target, spark_session=spark, context=context,
-            )
-        elif store_type == "lakehouse":
-            resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
-            dataframe = read_lakehouse_table_core(
-                resolved_table, target=target, schema=schema_name,
-                spark_session=spark, context=context,
-            ).limit(0)
-        else:
-            raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
-        metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
-        table_name = resolved_table
-        if rules_df is None and expected_schema is None:
-            rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
-            environment_name = env
-            if select_table_guardrail_rule(rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key, environment_name=env) is None:
-                raise ValueError(f"No active approved schema rule exists for {metadata_table_key!r}.")
-    if rules_df is not None:
-        result = schema_check_core(
-            dataframe,
-            rules_df=rules_df,
-            dataset_name=dataset_name,
-            table_name=table_name,
-            environment_name=environment_name,
-            metadata_table_key=metadata_table_key,
+    config, env, context = resolve_fabric_context()
+    store = get_store(config, env, target)
+    spark = get_spark_session()
+    store_type = str(store.kind).lower()
+    if store_type == "warehouse":
+        schema_name, resolved_table, _ = resolve_warehouse_table_location(
+            store, schema or getattr(store, "schema", None), table_name,
         )
-        if dataframe is not None and 'config' in locals() and result.get("rule_key"):
-            result["metadata_table_key"] = metadata_table_key
-            result["expected"] = {"schema_rule": result.get("rule_type")}
-            result["actual"] = {name: result.get(name, []) for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")}
-            write_guardrail_result_row(
-                spark_session=spark, config=config, env=env, run_id="", dataset_name=dataset_name,
-                table_name=table_name, store_type=store_type, layer=target, schema_name=schema_name,
-                guardrail_type="schema", rule_type=str(result.get("rule_type")), result=result,
-                rule_key=str(result["rule_key"]),
-            )
-        return result
-    if expected_schema is None:
-        raise ValueError("expected_schema is required when rules_df is not supplied")
-    return schema_check_core(dataframe, expected_schema, preset=preset)
+        dataframe = read_warehouse_query_core(
+            f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
+            target=target, spark_session=spark, context=context,
+        )
+    elif store_type == "lakehouse":
+        resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
+        dataframe = read_lakehouse_table_core(
+            resolved_table, target=target, schema=schema_name,
+            spark_session=spark, context=context,
+        ).limit(0)
+    else:
+        raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
+    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
+    rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
+    if select_table_guardrail_rule(
+        rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,
+        environment_name=env,
+    ) is None:
+        raise ValueError(f"No active approved schema rule exists for {metadata_table_key!r}.")
+    result = schema_check_core(
+        dataframe, rules_df=rules_df, table_name=resolved_table,
+        environment_name=env, metadata_table_key=metadata_table_key,
+    )
+    if result.get("rule_key"):
+        result["metadata_table_key"] = metadata_table_key
+        result["expected"] = {"schema_rule": result.get("rule_type")}
+        result["actual"] = {
+            name: result.get(name, [])
+            for name in ("missing_columns", "unexpected_columns", "datatype_mismatches")
+        }
+        write_guardrail_result_row(
+            spark_session=spark, config=config, env=env, run_id="", dataset_name="",
+            table_name=resolved_table, store_type=store_type, layer=target,
+            schema_name=schema_name, guardrail_type="schema",
+            rule_type=str(result.get("rule_type")), result=result,
+            rule_key=str(result["rule_key"]),
+        )
+    return result

@@ -3,7 +3,6 @@
 import pytest
 import inspect
 
-from fabricops_kit.pipeline import check_changes
 from fabricops_kit.pipeline import guardrails_shared
 
 
@@ -15,7 +14,7 @@ CURRENT = [
 
 def check(current=CURRENT, previous=None, **kwargs):
     """Run a source check with stable test defaults."""
-    return check_changes(
+    return guardrails_shared.changes_check_core(
         current,
         CURRENT if previous is None else previous,
         key_columns=["id"],

@@ -184,7 +184,7 @@ def widget_author_guardrails(
     See Also
     --------
     widget_select_guardrail_target
-    run_table_guardrails
+    the governed runtime checks
 
     """
     if not str(state.get("table_name") or "").strip() or not str(state.get("metadata_table_key") or "").strip():

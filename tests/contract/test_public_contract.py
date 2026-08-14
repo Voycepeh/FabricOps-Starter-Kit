@@ -402,7 +402,6 @@ def test_package_root_expected_public_names_are_present() -> None:
         "read_lakehouse_excel",
         "write_lakehouse_table",
         "profile_dataframe",
-        "run_table_guardrails",
         "widget_render_data_steward",
         "widget_render_data_agreement",
     }
