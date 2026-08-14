@@ -307,7 +307,7 @@ METADATA_COLUMN_OWNERS = {
     },
     "METADATA_GUARDRAIL": {
         "__default__": [
-            "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules.widget_author_schema_freshness_profile_rules",
+            "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
             "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
@@ -412,9 +412,9 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns the guardrail target selection widget workflow.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_author_schema_freshness_profile_rules',
+ {'module_name': 'widgets.widget_author_guardrails',
   'visibility': 'public',
-  'module_summary': 'Owns schema, freshness, and profile behavior rule authoring widget workflow.',
+  'module_summary': 'Owns versioned Schema, Freshness, and Changes guardrail authoring.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
  {'module_name': 'widgets.widget_author_dq_rules',
@@ -480,7 +480,7 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_view_agreement_catalogue',
                             'widget_select_guardrail_target',
                             'widget_enrich_table_metadata',
-                            'widget_author_schema_freshness_profile_rules',
+                            'widget_author_guardrails',
                             'widget_author_dq_rules'],
                 'title': 'Agreement, contract, evidence, enrichment, and guardrails'}],
   'template_path': 'templates/notebooks/01_governance.ipynb'},
@@ -1586,12 +1586,11 @@ PUBLIC_SYMBOL_DOCS = [
                             'Metadata tables cannot be read.',
                             'ipywidgets is unavailable.']},
  {'kind': 'function',
-  'module': 'widgets.widget_author_schema_freshness_profile_rules',
+  'module': 'widgets.widget_author_guardrails',
   'function_type': 'callable',
-  'summary_override': 'Render interactive schema, freshness, and profile-behavior guardrail '
-                      'authoring controls.',
-  'symbol_name': 'widget_author_schema_freshness_profile_rules',
-  'template_notebook': '02_pipeline',
+  'summary_override': 'Render versioned table-level Schema, Freshness, and Changes guardrail controls.',
+  'symbol_name': 'widget_author_guardrails',
+  'template_notebook': '01_governance',
   'template_segment': 'Guardrail authoring',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
@@ -1600,21 +1599,16 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['run_table_guardrails', 'widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders interactive controls for authoring schema, freshness, and '
-                      'profile-behavior guardrail rule intent while applying the selected table '
-                      'governance policy.',
-  'when_to_use': 'Use in 02_pipeline after selecting a guardrail target to save active '
-                 'self-approved rules, submit proposed rules, or bypass approval with a required '
-                 'reason.',
+  'related_functions': ['widget_select_guardrail_target', 'run_table_guardrails'],
+  'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',
+  'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
                      'intent only to METADATA_GUARDRAIL when saving.',
-  'glossary_terms': ['guardrails', 'profile behavior', 'metadata lakehouse', 'notebook template'],
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget state exposes controls, preview records, and save actions '
                            'that produce append-only guardrail rule rows under the table policy.',
-  'common_failure_causes': ['The handover state is missing columns.',
-                            'Changing-data profile behavior has no watermark column.',
-                            'Freshness max lag is invalid.',
+  'common_failure_causes': ['The selected table state is missing columns or its canonical key.',
+                            'Freshness maximum age is invalid.',
                             'The metadata target cannot be written.']},
  {'kind': 'function',
   'module': 'widgets.widget_view_agreement_catalogue',
@@ -2248,18 +2242,11 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                               'identity fields.',
                                                               'Metadata tables cannot be read.',
                                                               'ipywidgets is unavailable.']},
- 'widget_author_schema_freshness_profile_rules': {'expanded_purpose': 'Renders interactive '
+ 'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
                                                                       'controls for authoring '
-                                                                      'schema, freshness, and '
-                                                                      'profile-behavior guardrail '
-                                                                      'rule intent while applying '
-                                                                      'the selected table '
-                                                                      'governance policy.',
-                                                  'when_to_use': 'Use in 02_pipeline after '
-                                                                 'selecting a guardrail target to '
-                                                                 'save active self-approved rules, '
-                                                                 'submit proposed rules, or bypass '
-                                                                 'approval with a required reason.',
+                                                                      'versioned table-level Schema, '
+                                                                      'Freshness, and Changes guardrail intent.',
+                                                  'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
                                                   'do_not_use_when': 'Do not use to write '
                                                                      'evidence or '
                                                                      'runtime outcomes; it writes '
@@ -2267,7 +2254,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                      'METADATA_GUARDRAIL '
                                                                      'when saving.',
                                                   'glossary_terms': ['guardrails',
-                                                                     'profile behavior',
                                                                      'metadata lakehouse',
                                                                      'notebook template'],
                                                   'return_interpretation': 'The widget state '
@@ -2278,13 +2264,8 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                            'guardrail rule rows '
                                                                            'under the table '
                                                                            'policy.',
-                                                  'common_failure_causes': ['The handover state is '
-                                                                            'missing columns.',
-                                                                            'Changing-data profile '
-                                                                            'behavior has no '
-                                                                            'watermark column.',
-                                                                            'Freshness max lag is '
-                                                                            'invalid.',
+                                                  'common_failure_causes': ['The selected table state is missing columns or its canonical key.',
+                                                                            'Freshness maximum age is invalid.',
                                                                             'The metadata target '
                                                                             'cannot be written.']},
  'widget_author_dq_rules': {'expanded_purpose': 'Renders manual DQ authoring '

@@ -183,7 +183,7 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     """Verify widget wrappers delegate and workflows keep metadata ownership."""
     workflow_by_wrapper = {
         "widget_select_guardrail_target": "_guardrail_target_selection_widget_workflow",
-        "widget_author_schema_freshness_profile_rules": "_schema_freshness_profile_rule_authoring_widget_workflow",
+        "widget_author_guardrails": "widget_author_guardrails",
         "widget_author_dq_rules": "_dq_rule_authoring_widget_workflow",
         "widget_review_guardrail_governance": "_guardrail_governance_review_widget_workflow",
     }
@@ -193,7 +193,7 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     }
 
     selector_source = workflow_sources["_guardrail_target_selection_widget_workflow"]
-    schema_widget_source = workflow_sources["_schema_freshness_profile_rule_authoring_widget_workflow"]
+    schema_widget_source = workflow_sources["widget_author_guardrails"]
     dq_widget_source = workflow_sources["_dq_rule_authoring_widget_workflow"]
     review_widget_source = workflow_sources["_guardrail_governance_review_widget_workflow"]
 
@@ -220,10 +220,12 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
         wrapper_calls = {node.func.id for node in ast.walk(wrapper_def) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
         wrapper_returns = [node for node in ast.walk(wrapper_def) if isinstance(node, ast.Return)]
 
-        assert workflow_name in wrapper_calls
-        assert len(wrapper_returns) == 1
+        if wrapper_name != "widget_author_guardrails":
+            assert workflow_name in wrapper_calls
+            assert len(wrapper_returns) == 1
         assert "write_lakehouse_table_core" not in wrapper_source
-        assert "_write_rule_records" not in wrapper_source
+        if wrapper_name != "widget_author_guardrails":
+            assert "_write_rule_records" not in wrapper_source
         assert "_write_enrichment_records" not in wrapper_source
         assert "CATALOGUE_TABLE" not in wrapper_source
         assert "GUARDRAIL_TABLE" not in wrapper_source

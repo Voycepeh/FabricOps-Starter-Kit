@@ -1,4 +1,4 @@
-# `widget_author_schema_freshness_profile_rules`
+# `widget_author_guardrails`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Render interactive schema, freshness, and profile-behavior guardrail authoring controls.
+Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py:15`
+`fabricops_kit/widgets/widget_author_guardrails.py:132`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_schema_freshness_profile_rules.py#L15-L59">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L132-L312">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -36,13 +36,10 @@ They help users write values into the correct underlying metadata tables without
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_author_schema_freshness_profile_rules(
+def widget_author_guardrails(
     state: Mapping[str, Any],
     spark_session: Any=None,
     context: dict[str, Any] | None=None,
-    bypass_reason: str='',
-    source_notebook_type: str='02_pipeline',
-    created_by_role: str='engineering',
     commit: bool=False,
 ) -> dict[str, Any]:
 ```
@@ -51,19 +48,22 @@ def widget_author_schema_freshness_profile_rules(
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+>>> form = widget_author_guardrails(guardrail_target_state)
+>>> form["version"]
+1
+
+</div>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Guardrail target state returned by the target selector or prepared by a notebook workflow. |
-| `spark_session` | `Any` | No | Fabric Spark session used when committing metadata rows. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
-| `bypass_reason` | `str` | No | Governance-bypass reason used when applying rules immediately. |
-| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
-| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
-| `commit` | `bool` | No | When True, commit the selected rule instead of preview-only behavior. |
+| `state` | `Mapping[str, Any]` | Yes | Selected table state returned by :func:`widget_select_guardrail_target`, including its canonical table key, catalogue columns, and existing rules. |
+| `spark_session` | `Any` | No | Fabric Spark session used to append saved metadata rows. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
+| `commit` | `bool` | No | Save the initial form selection immediately. The default renders a form. |
 
 ## Returns
 
@@ -79,10 +79,18 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 ### Common failure causes
 
-- The handover state is missing columns.
-- Changing-data profile behavior has no watermark column.
-- Freshness max lag is invalid.
+- The selected table state is missing columns or its canonical key.
+- Freshness maximum age is invalid.
 - The metadata target cannot be written.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Run in Microsoft Fabric after ``00_env_config`` and table selection. The
+widget authors configuration only; it has no approval workflow.
+
+</div>
 
 ## See also
 
@@ -102,13 +110,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.1.0 |
-| Preview | 0.2.0 |
 
 
 </details>

@@ -417,7 +417,7 @@ import sys
 import fabricops_kit
 widget_modules = [
     "fabricops_kit.widgets.widget_author_dq_rules",
-    "fabricops_kit.widgets.widget_author_schema_freshness_profile_rules",
+    "fabricops_kit.widgets.widget_author_guardrails",
     "fabricops_kit.widgets.widget_enrich_table_metadata",
     "fabricops_kit.widgets.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward",
