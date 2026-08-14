@@ -194,6 +194,7 @@ def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
     additive_df = spark_session.createDataFrame([(1, "new", "extra")], "id int, status string, source_file string")
     incompatible_df = spark_session.createDataFrame([("1", "new")], "id string, status string")
+    missing_df = spark_session.createDataFrame([(1,)], "id int")
     expected_schema = {"id": "int", "status": "string"}
 
     happy = schema_check_core(happy_df, expected_schema, preset="strict")
@@ -218,6 +219,11 @@ def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     incompatible_allow_new = schema_check_core(incompatible_df, expected_schema, preset="allow_new_columns")
     assert incompatible_allow_new["status"] == "failed"
     assert incompatible_allow_new["can_continue"] is False
+
+    missing = schema_check_core(missing_df, expected_schema, preset="strict")
+    assert missing["status"] == "failed"
+    assert missing["can_continue"] is False
+    assert missing["missing_columns"] == ["status"]
 
 
 def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):

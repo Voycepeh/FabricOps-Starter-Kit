@@ -8,7 +8,13 @@ from fabricops_kit.io.shared import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
-from fabricops_kit.pipeline.guardrails_shared import load_table_guardrail_rules, schema_check_core, select_table_guardrail_rule, write_guardrail_result_row
+from fabricops_kit.pipeline.guardrails_shared import (
+    load_table_guardrail_rules,
+    schema_check_core,
+    select_table_guardrail_rule,
+    stop_if_failed,
+    write_guardrail_result_row,
+)
 
 
 def check_schema(
@@ -16,8 +22,9 @@ def check_schema(
     *,
     target: str = "source",
     schema: str | None = None,
+    dataframe=None,
 ) -> dict:
-    """Check a table's observed schema against configured schema intent.
+    """Check a persisted or supplied schema against configured schema intent.
 
     Parameters
     ----------
@@ -27,6 +34,9 @@ def check_schema(
         Logical FabricOps target containing the configured physical table.
     schema : str, optional
         Physical schema containing the configured table.
+    dataframe : DataFrame, optional
+        Incoming DataFrame whose schema should be checked. When omitted, the
+        schema of the configured physical table is checked.
 
     Returns
     -------
@@ -40,6 +50,8 @@ def check_schema(
     ValueError
         If the target is unsupported or no active approved Schema guardrail
         exists for the resolved table.
+    SchemaDriftError
+        If an active blocking schema guardrail rejects the checked schema.
 
     Examples
     --------
@@ -56,16 +68,18 @@ def check_schema(
         schema_name, resolved_table, _ = resolve_warehouse_table_location(
             store, schema or getattr(store, "schema", None), table_name,
         )
-        dataframe = read_warehouse_query_core(
-            f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
-            target=target, spark_session=spark, context=context,
-        )
+        if dataframe is None:
+            dataframe = read_warehouse_query_core(
+                f"SELECT TOP (0) * FROM [{schema_name}].[{resolved_table}]",
+                target=target, spark_session=spark, context=context,
+            )
     elif store_type == "lakehouse":
         resolved_table, schema_name, _ = resolve_lakehouse_table_location(store, table_name, schema)
-        dataframe = read_lakehouse_table_core(
-            resolved_table, target=target, schema=schema_name,
-            spark_session=spark, context=context,
-        ).limit(0)
+        if dataframe is None:
+            dataframe = read_lakehouse_table_core(
+                resolved_table, target=target, schema=schema_name,
+                spark_session=spark, context=context,
+            ).limit(0)
     else:
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
@@ -93,4 +107,5 @@ def check_schema(
             rule_type=str(result.get("rule_type")), result=result,
             rule_key=str(result["rule_key"]),
         )
+    stop_if_failed(result)
     return result
