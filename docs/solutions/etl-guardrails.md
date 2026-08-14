@@ -1,10 +1,10 @@
-# Validate a data source before ETL
+# ETL Guardrails
 
-Validate compact source evidence before paying for a full business-data read, then validate the source and target DataFrames at their governed boundaries.
+Apply governed checks across the full pipeline lifecycle, from compact source observation through target publication and profiling.
 
-## Why validation happens before expensive work
+## What ETL Guardrails do
 
-**Cheap source checks protect the pipeline before profiling, transformation, and publication begin.** Schema, Freshness, and Changes Guardrails answer different questions, but together they determine whether the governed run may continue to the full source read.
+**ETL Guardrails place explicit quality boundaries around source reads, transformation, and target publication.** Schema, Freshness, Changes, and DQ Guardrails each answer a different question while Governance-authored rules determine whether a governed run may continue.
 
 ```text
 INITIAL ONBOARDING
@@ -16,18 +16,20 @@ Engineering reads the dataset
 → author DQ Guardrails when needed
 → Guardrail intent in METADATA_GUARDRAIL
 
-SUBSEQUENT GOVERNED RUNS
+DEVELOPMENT
 observe_table()
-→ check_schema() → check_freshness() → check_changes()
-→ can full read continue?
-→ full source read when allowed
-→ run source DQ
-→ profile source
-→ transform
-→ check target schema
-→ run target DQ
-→ write when allowed
-→ profile target after a successful write
+→ source Schema / Freshness / Changes Guardrails
+→ read → source DQ → profile source → transform
+→ write target → profile/register target
+→ target Schema + DQ
+→ Governance reviews changes
+
+PRODUCTION
+observe_table()
+→ source Schema / Freshness / Changes Guardrails
+→ read → source DQ → profile source → transform
+→ target Schema + DQ
+→ write target → profile/register target
 ```
 
 ## Initial onboarding
@@ -42,9 +44,9 @@ observe_table()
 
 This onboarding read establishes the evidence needed for authoring. The cheap pre-read checks apply on subsequent governed runs, after the relevant Guardrails exist.
 
-## Author Guardrails in Governance
+## Source Guardrails
 
-**Governance uses two separate authoring surfaces.** Authoring writes configuration; it is not a separate approval workflow.
+**Governance authors the rules that Engineering evaluates at the source boundary.** Authoring writes configuration; it is not a separate approval workflow.
 
 ### Table-level Guardrails
 
@@ -58,7 +60,7 @@ This onboarding read establishes the evidence needed for authoring. The cheap pr
 
 [`widget_author_dq_rules()`](../api/reference/widget_author_dq_rules.md) authors DQ Guardrails separately. DQ authoring does not belong to the table-level Schema, Freshness, and Changes widget.
 
-## Subsequent governed runs
+### Evaluate source Guardrails
 
 **A governed run observes and checks the source before reading all business data.**
 
@@ -82,7 +84,7 @@ can_continue = all(
 
 The example uses the current public signatures. Consult the generated references for complete return contracts and failure behaviour rather than duplicating API documentation here.
 
-## Observe the source
+### Observe the source
 
 **[`observe_table()`](../api/reference/observe_table.md) gathers compact source facts.** It records row counts and earliest and latest configured change values by source partition in `METADATA_SOURCE_OBSERVATION`.
 
@@ -95,23 +97,23 @@ Observation does not:
 
 The observation is deliberately lightweight. It provides evidence for the checks, not proof that every source cell is unchanged.
 
-## Check schema
+### Check schema
 
 **[`check_schema()`](../api/reference/check_schema.md) checks the physical source structure against the configured Schema Guardrail.** It uses the table identity rather than the observation DataFrame and returns structured differences plus a continuation decision.
 
 Run this first so later checks do not rely on columns whose names or types have drifted.
 
-## Check freshness
+### Check freshness
 
 **[`check_freshness()`](../api/reference/check_freshness.md) checks whether the observed source is sufficiently recent.** It evaluates the canonical evidence returned by `observe_table()` against the configured Freshness Guardrail and returns freshness evidence plus a continuation decision.
 
-## Check changes
+### Check changes
 
 **[`check_changes()`](../api/reference/check_changes.md) compares the current observation with previous comparable observations.** It identifies partition-level changes, records removal tombstones where required, evaluates the configured Changes Guardrail, and returns structured evidence plus a continuation decision.
 
 A first comparable observation establishes a baseline. Later observations can show partitions as new, changed, removed, or reappeared. This is compact partition evidence—not inserted, updated, or deleted row tracking.
 
-## Decide whether the pipeline can continue
+### Decide whether the pipeline can continue
 
 **Combine the three explicit continuation results before the full read.** A blocking result stops the pipeline at the governed boundary; an allowed result permits the next step.
 
@@ -119,7 +121,7 @@ A first comparable observation establishes a baseline. Later observations can sh
 
     Observation and checks can identify changes and whether continuation is allowed. They do not construct incremental predicates, implement skip/full/restricted reads, merge or overwrite targets, apply SCD2 behaviour, or perform remediation. The pipeline owns those choices.
 
-## Read and validate the source DataFrame
+## Source DQ
 
 **Read the full source only when the pre-read results allow it.** Once the business rows are available, run the authored source DQ Guardrails and stop when their continuation results block the pipeline. Then profile and register the source DataFrame so `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` record what Engineering actually observed.
 
@@ -127,15 +129,25 @@ A first comparable observation establishes a baseline. Later observations can sh
 
 **Apply the pipeline's visible transformation logic only after source validation succeeds.** Transformation produces the target DataFrame; source observation and source checks do not own transformation, merge, or remediation behaviour.
 
-## Validate and publish the target DataFrame
+## Target Guardrails
 
-**Validate the transformed DataFrame before publication.** Check its schema and run the authored target DQ Guardrails. Write only when those target checks allow continuation, then profile and register the successfully written target.
+**Target Schema and DQ Guardrails apply in both environments, but their position changes.** The active environment determines whether Engineering first needs to materialise new evidence or must protect an existing approved table.
 
-This order keeps the evidence meaningful:
+- **Development:** write the transformed target, profile and register it, then evaluate target Schema and DQ Guardrails. This ordering materialises and profiles intentional schema evolution so Governance can review the changes and update approved intent when appropriate.
+- **Production:** evaluate target Schema and DQ Guardrails before writing, then write and profile/register only when continuation is allowed. This ordering validates against approved Guardrails before the existing table is changed.
 
-1. target schema and DQ checks protect the publication boundary
-2. the write occurs only after those checks pass
-3. target profiling records the successfully published result
+The target checks use the rules authored in Governance. Development results provide review evidence; Production results protect the publication boundary.
+
+## Development vs Production
+
+| Environment | Target sequence | Why |
+| --- | --- | --- |
+| Engineering Development | Transform → write → profile/register → target Schema + DQ | Materialise and profile intentional schema evolution so Governance can review it. |
+| Engineering Production | Transform → target Schema + DQ → write → profile/register | Validate against approved Guardrails before changing the existing table. |
+
+!!! important "The environment controls target ordering"
+
+    Do not apply one universal target-validation sequence. Development captures proposed target evolution for Governance review; Production prevents unapproved changes from reaching the existing target.
 
 ## Metadata ownership
 
@@ -161,8 +173,10 @@ This order keeps the evidence meaningful:
 | Source DataFrame | Source DQ evaluation | Validate actual source rows after the full read. |
 | Source DataFrame | `profile_and_register_table()` | Record what was observed in the source DataFrame. |
 | Transform | Pipeline transformation | Produce the target DataFrame after source validation succeeds. |
-| Target DataFrame | Schema and DQ evaluation | Validate the transformed data before publication. |
-| Publish | Write, then `profile_and_register_table()` | Publish only allowed data and profile the successful target. |
+| Development target | Write, then `profile_and_register_table()` | Materialise and record the proposed target before its Guardrails are evaluated. |
+| Development target | Schema and DQ evaluation | Evaluate the materialised and profiled target so Governance can review intentional evolution. |
+| Production target | Schema and DQ evaluation | Validate transformed data against approved Guardrails before the existing table changes. |
+| Production target | Write, then `profile_and_register_table()` | Publish only allowed data and record the successful target. |
 
 ## Next
 
