@@ -312,7 +312,7 @@
     "decision": "template_called_public"
   },
   {
-    "function": "widget_author_schema_freshness_profile_rules",
+    "function": "widget_author_guardrails",
     "in_root_exports": true,
     "directly_called_in_core_templates": [
       "02_pipeline",
