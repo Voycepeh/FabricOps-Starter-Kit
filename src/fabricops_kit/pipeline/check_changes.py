@@ -7,7 +7,11 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.pipeline.guardrails_shared import changes_check_core
+from fabricops_kit.pipeline.guardrails_shared import (
+    changes_check_core,
+    evaluate_changes_guardrail,
+    write_guardrail_result_row,
+)
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _OBSERVATION_COLUMNS = {
@@ -29,7 +33,35 @@ def _is_observation(dataframe) -> bool:
     return _OBSERVATION_COLUMNS <= columns
 
 
-def _observation_changes(dataframe, *, metadata_table_key: str = "") -> dict:
+def _previous_observation(history, *, identity: str, partition_column: str, change_column: str, observed_at) -> list[dict[str, Any]]:
+    if hasattr(history, "where") and hasattr(history, "agg"):
+        from pyspark.sql import functions as F
+
+        comparable = history.where(
+            (F.col("metadata_table_key") == identity)
+            & (F.col("partition_column") == partition_column)
+            & (F.col("change_column") == change_column)
+            & (F.col("observed_at") < F.lit(observed_at))
+        )
+        timestamp_rows = comparable.agg(F.max("observed_at").alias("previous_observed_at")).collect()
+        previous_at = timestamp_rows[0]["previous_observed_at"] if timestamp_rows else None
+        if previous_at is None:
+            return []
+        return _rows(comparable.where(F.col("observed_at") == F.lit(previous_at)).select(
+            "partition_value", "is_present", "row_count", "min_change_value",
+            "max_change_value", "observed_at",
+        ))
+    candidates = [row for row in _rows(history) if (
+        str(row.get("metadata_table_key")) == identity
+        and str(row.get("partition_column")) == partition_column
+        and str(row.get("change_column")) == change_column
+        and row.get("observed_at") < observed_at
+    )]
+    previous_at = max((row["observed_at"] for row in candidates), default=None)
+    return [row for row in candidates if row["observed_at"] == previous_at]
+
+
+def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = "") -> dict:
     current = _rows(dataframe)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
@@ -47,18 +79,14 @@ def _observation_changes(dataframe, *, metadata_table_key: str = "") -> dict:
             _OBSERVATION_TABLE, target="metadata", schema=metadata_schema,
             spark_session=getattr(dataframe, "sparkSession", None), context=context,
         )
-        candidates = [row for row in _rows(history) if (
-            str(row.get("metadata_table_key")) == identity
-            and str(row.get("partition_column")) == partition_column
-            and str(row.get("change_column")) == change_column
-            and row.get("observed_at") < observed_at
-        )]
+        previous = _previous_observation(
+            history, identity=identity, partition_column=partition_column,
+            change_column=change_column, observed_at=observed_at,
+        )
     except Exception as exc:
         if not is_table_not_found_error(exc):
             raise RuntimeError(f"Unable to load table observation history for {identity!r}: {exc}") from exc
-        candidates = []
-    previous_at = max((row["observed_at"] for row in candidates), default=None)
-    previous = [row for row in candidates if row["observed_at"] == previous_at]
+        previous = []
     current_by = {str(row["partition_value"]): row for row in current}
     previous_by = {str(row["partition_value"]): row for row in previous}
     new, changed = [], []
@@ -92,7 +120,7 @@ def _observation_changes(dataframe, *, metadata_table_key: str = "") -> dict:
             context=context, mode="append",
         )
     has_changes = not previous or bool(new or changed or removed)
-    return {
+    result = {
         "status": "changed" if has_changes else "unchanged", "can_continue": True,
         "check_type": "changes", "guardrail_type": "changes", "changed": has_changes,
         "first_observation": not previous, "new_partitions": new,
@@ -101,6 +129,23 @@ def _observation_changes(dataframe, *, metadata_table_key: str = "") -> dict:
         "reason": "First observation baseline created." if not previous else
                   ("Source observation changed." if has_changes else "Source observation is unchanged."),
     }
+    if rules_df is not None:
+        result["metadata_table_key"] = identity
+        result = evaluate_changes_guardrail(
+            result, rules_df=rules_df, table_name=str(current[0]["source_table"]),
+            environment_name=env, metadata_table_key=identity,
+        )
+        if result.get("rule_key"):
+            write_guardrail_result_row(
+                spark_session=getattr(dataframe, "sparkSession", None), config=config, env=env,
+                run_id=str(observed_at), dataset_name="", table_name=str(current[0]["source_table"]),
+                store_type="lakehouse", layer=str(current[0]["source_target"]),
+                schema_name=current[0].get("source_schema"), guardrail_type="changes",
+                rule_type=str(result.get("rule_type") or "detect_changes"), result=result,
+                rule_key=str(result["rule_key"]),
+            )
+        return result
+    return result
 
 
 def check_changes(
@@ -156,7 +201,10 @@ def check_changes(
     include_row_changes : bool, default=False
         Include deterministic key hashes grouped by change classification.
     rules_df : DataFrame or iterable of mappings, optional
-        Approved change rules for the canonical observation path.
+        Approved change rules for the canonical observation path. A detected
+        change blocks when the selected rule has blocking severity and warns
+        while allowing continuation when it has warning severity. The runtime
+        outcome is written to ``METADATA_GUARDRAIL_RESULTS``.
     metadata_table_key : str, optional
         Canonical identity used to scope the previous observation snapshot.
 
@@ -164,7 +212,8 @@ def check_changes(
     -------
     dict
         Structured changes summary, partition observations, counts, and
-        observed ranges. This function does not merge or write target data.
+        observed ranges. This function does not merge or write target data;
+        approved observation rules may write guardrail-result metadata.
 
     Raises
     ------
@@ -182,7 +231,7 @@ def check_changes(
     if _is_observation(dataframe):
         if previous_dataframe is not None:
             raise ValueError("previous_dataframe is loaded automatically for canonical observation evidence")
-        return _observation_changes(dataframe, metadata_table_key=metadata_table_key)
+        return _observation_changes(dataframe, rules_df=rules_df, metadata_table_key=metadata_table_key)
     return changes_check_core(
         dataframe,
         previous_dataframe,

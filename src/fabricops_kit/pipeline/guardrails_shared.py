@@ -543,9 +543,9 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         rule_environment = _string_value(_catalogue_value(row, "environment_name"))
         if rule_environment and environment_name and rule_environment != environment_name:
             continue
-        if _string_value(_catalogue_value(row, "dataset_name")) != dataset_name:
+        if dataset_name and _string_value(_catalogue_value(row, "dataset_name")) != dataset_name:
             continue
-        if _string_value(_catalogue_value(row, "table_name")) != table_name:
+        if table_name and _string_value(_catalogue_value(row, "table_name")) != table_name:
             continue
         rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))
         if metadata_table_key and rule_table_key != metadata_table_key:
@@ -557,6 +557,49 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
         return None
     candidates.sort(key=lambda row: _string_value(_catalogue_value(row, "approved_at", "created_at", "_committed_at")), reverse=True)
     return candidates[0]
+
+
+def evaluate_changes_guardrail(
+    result: dict,
+    *,
+    rules_df,
+    dataset_name: str = "",
+    table_name: str = "",
+    environment_name: str = "",
+    metadata_table_key: str = "",
+) -> dict:
+    """Apply approved change intent to an observation comparison result."""
+    rule = _select_table_guardrail_rule(
+        rules_df, guardrail_type="changes", dataset_name=dataset_name,
+        table_name=table_name, environment_name=environment_name,
+        metadata_table_key=metadata_table_key,
+    )
+    if not rule:
+        return result
+    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "detect_changes").lower()
+    severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
+    if severity not in {"blocking", "warning"}:
+        raise ValueError("severity must be one of: blocking, warning")
+    result.update({
+        "rule_type": rule_type,
+        "severity": severity,
+        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+    })
+    if rule_type == "skip":
+        result.update(status="skipped", can_continue=True, reason="Changes guardrail skipped by approved rule.")
+    elif result.get("first_observation"):
+        result.update(status="baseline_created", can_continue=True, reason="First observation baseline created.")
+    elif result.get("changed"):
+        blocking = severity == "blocking"
+        result.update(
+            status="failed" if blocking else "warning",
+            can_continue=not blocking,
+            reason="Source observation changed versus the previous comparable snapshot.",
+        )
+    else:
+        result.update(status="passed", can_continue=True, reason="Source observation is unchanged.")
+    result["message"] = result["reason"]
+    return _apply_bypass_post_review_warning(result, rule)
 
 
 # ---------------------------------------------------------------------------

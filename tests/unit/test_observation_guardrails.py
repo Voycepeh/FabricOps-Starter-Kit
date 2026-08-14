@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 import importlib
 
+import pytest
+
 changes = importlib.import_module("fabricops_kit.pipeline.check_changes")
 from fabricops_kit import check_changes, check_freshness
 
@@ -45,6 +47,7 @@ def configure(monkeypatch, history):
     written = []
     monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
     monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: {})
+    monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
     return written
 
 
@@ -75,6 +78,29 @@ def test_unchanged_and_reappeared_observations(monkeypatch):
     assert check_changes(Frame([row(at=now)], Spark()))["changed"] is False
     configure(monkeypatch, [row(at=previous, present=False)])
     assert check_changes(Frame([row(at=now)], Spark()))["changed_partitions"] == ["a"]
+
+
+@pytest.mark.parametrize(("severity", "status", "can_continue"), [
+    ("blocking", "failed", False),
+    ("warning", "warning", True),
+])
+def test_approved_changes_rule_governs_continuation(monkeypatch, severity, status, can_continue):
+    now = datetime(2026, 8, 14, tzinfo=UTC)
+    configure(monkeypatch, [row(at=now - timedelta(hours=1))])
+    result_writes = []
+    monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: result_writes.append(kwargs))
+    approved_rules = [{
+        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "changes",
+        "rule_type": "detect_changes", "severity": severity, "activation_state": "active",
+        "review_state": "governance_approved", "rule_key": f"changes_{severity}",
+    }]
+
+    result = check_changes(Frame([row(at=now, count=2)], Spark()), rules_df=approved_rules, metadata_table_key="key")
+
+    assert result["status"] == status
+    assert result["can_continue"] is can_continue
+    assert result["severity"] == severity
+    assert result_writes[0]["guardrail_type"] == "changes"
 
 
 def test_freshness_uses_observed_maximum_without_source_scan():
