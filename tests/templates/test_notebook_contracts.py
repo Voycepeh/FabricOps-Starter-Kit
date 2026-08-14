@@ -216,3 +216,47 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     assert 'SOURCE_SCHEMA = "dbo"' in source
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
     assert "`observe_table()` is evidence collection, not a guardrail" in source
+
+
+@pytest.mark.parametrize(
+    ("writer", "reader"),
+    [
+        ("write_lakehouse_table", "read_lakehouse_table"),
+        ("write_warehouse_table", "read_warehouse_table"),
+    ],
+)
+def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
+    """Dev publishes evidence before guardrails; prod validates before publication."""
+    matching_cells = [
+        source
+        for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb")
+        if 'if ENV == "dev":' in source and f"{writer}(" in source
+    ]
+    assert len(matching_cells) == 1
+    tree = ast.parse(matching_cells[0])
+    environment_if = next(node for node in tree.body if isinstance(node, ast.If))
+    production_if = environment_if.orelse[0]
+
+    def call_names(statements):
+        return [
+            node.func.id
+            for statement in statements
+            for node in ast.walk(statement)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        ]
+
+    dev_calls = call_names(environment_if.body)
+    prod_calls = call_names(production_if.body)
+    dev_source, prod_source = matching_cells[0].split('elif ENV == "prod":', maxsplit=1)
+    prod_source = prod_source.split("else:", maxsplit=1)[0]
+
+    assert dev_calls.index(writer) < dev_calls.index(reader) < dev_calls.index("profile_and_register_table")
+    assert dev_calls.index("profile_and_register_table") < dev_calls.index("check_schema")
+    assert dev_source.index("check_schema(") < dev_source.index("Run the existing target DQ guardrail execution")
+    assert prod_calls.index("check_schema") < prod_calls.index(writer)
+    assert prod_source.index("check_schema(") < prod_source.index("Run the existing target DQ guardrail execution") < prod_source.index(f"{writer}(")
+    assert prod_calls.index(writer) < prod_calls.index(reader) < prod_calls.index("profile_and_register_table")
+    assert "schema_result" not in matching_cells[0]
+    assert "can_continue" not in matching_cells[0]
+    assert "guardrails_shared" not in matching_cells[0]
+    assert "run_active_dq_guardrail" not in matching_cells[0]
