@@ -1,205 +1,156 @@
 # Validate a data source before ETL
 
-Before transforming or writing data, FabricOps can check whether the source still looks the way the pipeline expects.
+Validate compact source evidence before paying for a full business-data read, then apply DataFrame-level Guardrails before writing a target.
 
-| Check | Question it answers | Typical level |
-| --- | --- | --- |
-| Schema | Is the source structure still what we expect? | Table |
-| Freshness | Is the source recent enough? | Table |
-| Change | Has previously observed source data changed? | Table |
-| Data Quality | Do individual values meet approved rules? | Table or column |
+## Why validation happens before expensive work
 
-Schema, freshness, and change checks answer different questions. Governance authors their policy once, and the runtime functions resolve that active approved configuration internally.
+**Cheap source checks protect the pipeline before profiling, transformation, and publication begin.** Schema, Freshness, and Changes Guardrails answer different questions, but together they determine whether the governed run may continue to the full source read.
 
 ```text
-Read source
-    ↓
-Schema check
-    ↓
-Freshness check
-    ↓
-Change check
-    ↓
-Other Guardrails
-    ↓
-ETL
+INITIAL ONBOARDING
+Engineering reads the dataset
+→ profile and register
+→ Data Catalogue / Data Profiled evidence
+→ Governance selects the table
+→ author Schema / Freshness / Changes Guardrails
+→ author DQ Guardrails when needed
+→ Guardrail intent in METADATA_GUARDRAIL
+
+SUBSEQUENT GOVERNED RUNS
+observe_table()
+→ check_schema() → check_freshness() → check_changes()
+→ continuation decision
+→ full source read when allowed
+→ profile / transform
+→ run_table_guardrails()
+→ target checks
+→ write when allowed
 ```
 
-## Check the schema first
+## Initial onboarding
 
-**The schema check protects the assumptions the rest of the pipeline depends on.**
+**Engineering produces evidence; Governance authors Guardrails; Engineering later evaluates them; FabricOps records the results.**
 
-Suppose the pipeline expects:
+1. Engineering reads the dataset and calls `profile_and_register_table()`.
+2. FabricOps records observed table and column evidence in `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED`.
+3. Governance selects the catalogued table and reviews that evidence.
+4. Governance authors table-level and, where needed, DQ Guardrails.
+5. FabricOps stores the authored intent in `METADATA_GUARDRAIL`.
 
-| Column | Expected type |
-| --- | --- |
-| `MESSAGE_ID` | `bigint` |
-| `STATUS` | `string` |
-| `RECEIVED_DATE` | `date` |
+This onboarding read establishes the evidence needed for authoring. The cheap pre-read checks apply on subsequent governed runs, after the relevant Guardrails exist.
 
-The source instead arrives with `RECEIVED_DATE` as a string:
+## Author Guardrails in Governance
 
-```text
-Schema: FAIL
+**Governance uses two separate authoring surfaces.** Authoring writes configuration; it is not a separate approval workflow.
 
-RECEIVED_DATE
-Expected: date
-Actual: string
-```
+### Table-level Guardrails
 
-Freshness and change detection may depend on configured columns such as `RECEIVED_DATE` and `MESSAGE_ID`. FabricOps therefore validates the schema before attempting those checks.
+[`widget_author_guardrails()`](../api/reference/widget_author_guardrails.md) authors configuration for:
 
-The runtime supplies only the configured physical table identity:
+- **Schema** — the expected source structure
+- **Freshness** — how recent the observed source must be
+- **Changes** — how source observations should be compared and judged
+
+### DQ Guardrails
+
+[`widget_author_dq_rules()`](../api/reference/widget_author_dq_rules.md) authors DQ Guardrails separately. DQ authoring does not belong to the table-level Schema, Freshness, and Changes widget.
+
+## Subsequent governed runs
+
+**A governed run observes and checks the source before reading all business data.**
 
 ```python
+from fabricops_kit import check_changes, check_freshness, check_schema, observe_table
+
+observation = observe_table(
+    table_name="orders",
+    target="source",
+    schema="dbo",
+)
 schema_result = check_schema("orders", target="source", schema="dbo")
+freshness_result = check_freshness(observation)
+changes_result = check_changes(observation)
+
+can_continue = all(
+    result["can_continue"]
+    for result in (schema_result, freshness_result, changes_result)
+)
 ```
+
+The example uses the current public signatures. Consult the generated references for complete return contracts and failure behaviour rather than duplicating API documentation here.
+
+## Observe the source
+
+**[`observe_table()`](../api/reference/observe_table.md) gathers compact source facts.** It records row counts and earliest and latest configured change values by source partition in `METADATA_SOURCE_OBSERVATION`.
+
+Observation does not:
+
+- author Guardrails or invent source policy
+- decide severity or whether the pipeline may continue
+- own physical read predicates or target merge behaviour
+- perform row-level change tracking
+
+The observation is deliberately lightweight. It provides evidence for the checks, not proof that every source cell is unchanged.
+
+## Check schema
+
+**[`check_schema()`](../api/reference/check_schema.md) checks the physical source structure against the configured Schema Guardrail.** It uses the table identity rather than the observation DataFrame and returns structured differences plus a continuation decision.
+
+Run this first so later checks do not rely on columns whose names or types have drifted.
 
 ## Check freshness
 
-**Freshness checks whether the source has advanced as expected.**
+**[`check_freshness()`](../api/reference/check_freshness.md) checks whether the observed source is sufficiently recent.** It evaluates the canonical evidence returned by `observe_table()` against the configured Freshness Guardrail and returns freshness evidence plus a continuation decision.
 
-```python
-freshness_result = check_freshness(observation)
-```
+## Check changes
 
-A current source passes:
+**[`check_changes()`](../api/reference/check_changes.md) compares the current observation with previous comparable observations.** It identifies partition-level changes, records removal tombstones where required, evaluates the configured Changes Guardrail, and returns structured evidence plus a continuation decision.
 
-```text
-Latest RECEIVED_DATE: 2026-08-12
-Maximum allowed lag: 1 day
-Result: PASS
-```
+A first comparable observation establishes a baseline. Later observations can show partitions as new, changed, removed, or reappeared. This is compact partition evidence—not inserted, updated, or deleted row tracking.
 
-A source whose latest `RECEIVED_DATE` is `2026-08-08` fails the same one-day rule.
+## Decide whether the pipeline can continue
 
-A source can have the correct schema but still be stale. FabricOps checks freshness before comparing source changes so old input is not incorrectly treated as the latest state.
+**Combine the three explicit continuation results before the full read.** A blocking result stops the pipeline at the governed boundary; an allowed result permits the next step.
 
-## Check previously observed data for changes
+!!! important "Detection is not read policy"
 
-**The change check asks whether data FabricOps previously observed still looks the same now.**
+    Observation and checks can identify changes and whether continuation is allowed. They do not construct incremental predicates, implement skip/full/restricted reads, merge or overwrite targets, apply SCD2 behaviour, or perform remediation. The pipeline owns those choices.
 
-For large Warehouse or Lakehouse sources, first use the [source change detection and incremental reads](source-change-detection.md) pattern so FabricOps can decide whether a full business-data read is necessary. The sections below explain the deeper DataFrame-level comparison after relevant data is available.
+## Read and transform
 
-It can narrow the work in two stages: first identify changed partitions, then inspect the records inside only those partitions.
+**Read the full source only when the pre-read results allow it.** Engineering then profiles the available business data, applies visible transformation logic, and prepares the target DataFrame using the normal `02_pipeline` workflow.
 
-### Compare partition fingerprints
+## Run DataFrame-level Guardrails
 
-| Date | Rows | Fingerprint |
-| --- | ---: | --- |
-| 2026-08-09 | 51,882 | `d42f91...` |
-| 2026-08-10 | 52,411 | `71ab22...` |
-| 2026-08-11 | 53,004 | `90ce18...` |
+**`run_table_guardrails()` is the DataFrame-level Guardrail orchestrator once business data is available.** It runs the configured table checks—including schema, freshness, profile-change, and DQ checks—records outcomes where configured, and returns whether the pipeline may continue. It is not DQ-only.
 
-FabricOps compares each current fingerprint with the previous observation:
+Keep this stage distinct from the cheap pre-read source functions: `observe_table()`, `check_schema()`, `check_freshness()`, and `check_changes()`. The pre-read checks complement the normal guarded pipeline; they do not replace source and target DataFrame checks.
 
-- **Same:** no deeper comparison is needed.
-- **Different:** inspect the records inside that partition.
+See the [generated function reference](../reference/index.md) for the callable catalogue and current API details.
 
-### Compare rows inside a changed partition
+## Metadata ownership
 
-The row comparison uses three pieces of evidence:
+| Ownership | Metadata table | Responsibility |
+| --- | --- | --- |
+| Governance intent | `METADATA_GUARDRAIL` | Authored Schema, Freshness, Changes, and DQ Guardrail configuration. |
+| Source evidence | `METADATA_SOURCE_OBSERVATION` | Compact observed source facts used by the pre-read checks. |
+| Runtime judgement | `METADATA_GUARDRAIL_RESULTS` | Check outcomes and continuation decisions recorded by FabricOps. |
+| Profiling evidence | `METADATA_DATA_CATALOGUE` | Observed table and column identity produced by Engineering. |
+| Profiling evidence | `METADATA_DATA_PROFILED` | Observed profiles produced by Engineering and reviewed during authoring. |
 
-- `key_hash`: stable identity of the logical record.
-- `non_key_hash`: state of the remaining attributes.
-- Batch or run context: when FabricOps observed that state.
+## How the functions fit together
 
-For example, an earlier observation might contain:
-
-| ID | `key_hash` | `non_key_hash` |
-| ---: | --- | --- |
-| 10001 | `a81f...` | `111aaa...` |
-
-The same logical record might later contain:
-
-| ID | `key_hash` | `non_key_hash` |
-| ---: | --- | --- |
-| 10001 | `a81f...` | `92bc44...` |
-
-The unchanged `key_hash` and different `non_key_hash` classify record `10001` as **updated**.
-
-| Comparison | Classification |
-| --- | --- |
-| New key | Inserted |
-| Same key and same state | Unchanged |
-| Same key and different state | Updated |
-| Previously present key now missing | Deleted |
-
-### Set the mutable window
-
-The configurable refresh window separates expected recent corrections from older source drift:
-
-```python
-change_result = check_source_changes(
-    current_df,
-    previous_df,
-    key_columns=["MESSAGE_ID"],
-    incremental_column="RECEIVED_DATE",
-    refresh_days=7,
-)
-```
-
-| Configuration | Meaning |
-| --- | --- |
-| `refresh_days=7` | The latest 7 days are recent and mutable. |
-| `refresh_days=30` | The latest 30 days are recent and mutable. |
-| `refresh_days=90` | The latest 90 days are recent and mutable. |
-
-With a seven-day window, a three-day-old update is a **recent change**. A 100-day-old update is **historical source drift**.
-
-!!! important "Detection is not action"
-
-    The change check tells FabricOps what changed. It does not decide what to do with the change.
-
-```text
-CHANGE DETECTION                 PIPELINE POLICY
-
-Inserted                        Skip
-Updated                         Warn
-Deleted                 →       Stop
-Historical drift                Load difference
-Recent change                   Rebuild range
-                                SCD2
-```
-
-The detector stays neutral so it can be used between files, Bronze, Silver, Gold, or Warehouse sources and targets. The pipeline applies the policy appropriate to its destination:
-
-- A current-state target may replace the affected range.
-- An SCD2 target may version changed records.
-- A governed production pipeline may stop on unexpected historical drift.
-
-## Run the governed checks explicitly
-
-**The production path keeps each result visible while resolving approved policy internally.**
-
-```python
-observation = observe_table(
-    "orders",
-    target="source",
-    schema="dbo",
-)
-
-schema_result = check_schema(
-    "orders",
-    target="source",
-    schema="dbo",
-)
-
-freshness_result = check_freshness(observation)
-changes_result = check_changes(observation)
-```
-
-The canonical observation supplies table identity and compact source evidence. The active Schema, Freshness, and Changes guardrails supply the policy values authored by Governance.
-
-## Keep intent separate from outcomes
-
-All Guardrail execution follows the same metadata story:
-
-| Metadata table | Responsibility |
-| --- | --- |
-| `METADATA_GUARDRAIL_RULES` | What should be true: approved Guardrail intent. |
-| `METADATA_GUARDRAIL_RESULTS` | What happened when FabricOps checked: runtime outcomes. |
+| Stage | Function | Responsibility |
+| --- | --- | --- |
+| Onboard | `profile_and_register_table()` | Produce catalogue and profiling evidence from the initial read. |
+| Author | `widget_author_guardrails()` | Author table-level Schema, Freshness, and Changes configuration. |
+| Author | `widget_author_dq_rules()` | Author DQ Guardrails separately. |
+| Pre-read | `observe_table()` | Collect and persist compact source facts. |
+| Pre-read | `check_schema()` | Judge physical structure against Schema intent. |
+| Pre-read | `check_freshness()` | Judge recency from the current observation. |
+| Pre-read | `check_changes()` | Compare observations and judge configured Changes intent. |
+| DataFrame | `run_table_guardrails()` | Orchestrate Guardrails after business data is available. |
 
 ## Next
 
-Use the explicit governed checks in [`02_pipeline`](../guided-demo/04-run-pipeline-with-guardrails.md), then review how [Governance enriches and approves Guardrail intent](../guided-demo/03-enrich-guardrails.md).
+Follow the Guided Demo to [author Guardrails in Governance](../guided-demo/03-enrich-guardrails.md), then [run the pipeline with Guardrails](../guided-demo/04-run-pipeline-with-guardrails.md).

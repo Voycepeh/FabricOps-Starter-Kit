@@ -26,7 +26,7 @@ nav:
       - Step 0B - Set Up Environment: guided-demo/00B-run-environment-setup.md
       - Step 1 - Create Agreement: guided-demo/01-create-agreement.md
       - Step 2 - Run Development Pipeline: guided-demo/02-run-pipeline.md
-      - Step 3 - Review and Define Guardrails: guided-demo/03-enrich-guardrails.md
+      - Step 3 - Review and Author Guardrails: guided-demo/03-enrich-guardrails.md
       - Step 4 - Validate Guardrails: guided-demo/04-run-pipeline-with-guardrails.md
       - Step 5 - Create Data Contract: guided-demo/05-create-data-contract.md
       - Step 6 - Promote to Production: guided-demo/06-promote-to-production.md
@@ -38,7 +38,6 @@ nav:
       - Profile and understand data: solutions/profile-data.md
       - Automatic Data Lineage: solutions/capture-data-lineage.md
       - Validate a source before ETL: solutions/validate-a-data-source-before-etl.md
-      - Source change detection and incremental reads: solutions/source-change-detection.md
   - Notebook Templates: notebook-templates.md
   - Releases:
       - Overview: releases/index.md
