@@ -1,6 +1,6 @@
 # Validate a data source before ETL
 
-Validate compact source evidence before paying for a full business-data read, then apply DataFrame-level Guardrails before writing a target.
+Validate compact source evidence before paying for a full business-data read, then validate the source and target DataFrames at their governed boundaries.
 
 ## Why validation happens before expensive work
 
@@ -19,12 +19,15 @@ Engineering reads the dataset
 SUBSEQUENT GOVERNED RUNS
 observe_table()
 → check_schema() → check_freshness() → check_changes()
-→ continuation decision
+→ can full read continue?
 → full source read when allowed
-→ profile / transform
-→ run_table_guardrails()
-→ target checks
+→ run source DQ
+→ profile source
+→ transform
+→ check target schema
+→ run target DQ
 → write when allowed
+→ profile target after a successful write
 ```
 
 ## Initial onboarding
@@ -116,17 +119,23 @@ A first comparable observation establishes a baseline. Later observations can sh
 
     Observation and checks can identify changes and whether continuation is allowed. They do not construct incremental predicates, implement skip/full/restricted reads, merge or overwrite targets, apply SCD2 behaviour, or perform remediation. The pipeline owns those choices.
 
-## Read and transform
+## Read and validate the source DataFrame
 
-**Read the full source only when the pre-read results allow it.** Engineering then profiles the available business data, applies visible transformation logic, and prepares the target DataFrame using the normal `02_pipeline` workflow.
+**Read the full source only when the pre-read results allow it.** Once the business rows are available, run the authored source DQ Guardrails and stop when their continuation results block the pipeline. Then profile and register the source DataFrame so `METADATA_DATA_CATALOGUE` and `METADATA_DATA_PROFILED` record what Engineering actually observed.
 
-## Run DataFrame-level Guardrails
+## Transform
 
-**`run_table_guardrails()` is the DataFrame-level Guardrail orchestrator once business data is available.** It runs the configured table checks—including schema, freshness, profile-change, and DQ checks—records outcomes where configured, and returns whether the pipeline may continue. It is not DQ-only.
+**Apply the pipeline's visible transformation logic only after source validation succeeds.** Transformation produces the target DataFrame; source observation and source checks do not own transformation, merge, or remediation behaviour.
 
-Keep this stage distinct from the cheap pre-read source functions: `observe_table()`, `check_schema()`, `check_freshness()`, and `check_changes()`. The pre-read checks complement the normal guarded pipeline; they do not replace source and target DataFrame checks.
+## Validate and publish the target DataFrame
 
-See the [generated function reference](../reference/index.md) for the callable catalogue and current API details.
+**Validate the transformed DataFrame before publication.** Check its schema and run the authored target DQ Guardrails. Write only when those target checks allow continuation, then profile and register the successfully written target.
+
+This order keeps the evidence meaningful:
+
+1. target schema and DQ checks protect the publication boundary
+2. the write occurs only after those checks pass
+3. target profiling records the successfully published result
 
 ## Metadata ownership
 
@@ -140,7 +149,7 @@ See the [generated function reference](../reference/index.md) for the callable c
 
 ## How the functions fit together
 
-| Stage | Function | Responsibility |
+| Stage | Action | Responsibility |
 | --- | --- | --- |
 | Onboard | `profile_and_register_table()` | Produce catalogue and profiling evidence from the initial read. |
 | Author | `widget_author_guardrails()` | Author table-level Schema, Freshness, and Changes configuration. |
@@ -149,7 +158,11 @@ See the [generated function reference](../reference/index.md) for the callable c
 | Pre-read | `check_schema()` | Judge physical structure against Schema intent. |
 | Pre-read | `check_freshness()` | Judge recency from the current observation. |
 | Pre-read | `check_changes()` | Compare observations and judge configured Changes intent. |
-| DataFrame | `run_table_guardrails()` | Orchestrate Guardrails after business data is available. |
+| Source DataFrame | Source DQ evaluation | Validate actual source rows after the full read. |
+| Source DataFrame | `profile_and_register_table()` | Record what was observed in the source DataFrame. |
+| Transform | Pipeline transformation | Produce the target DataFrame after source validation succeeds. |
+| Target DataFrame | Schema and DQ evaluation | Validate the transformed data before publication. |
+| Publish | Write, then `profile_and_register_table()` | Publish only allowed data and profile the successful target. |
 
 ## Next
 
