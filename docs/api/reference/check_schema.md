@@ -14,7 +14,7 @@ Check observed table schema against direct or approved schema intent.
 
 `fabricops_kit/pipeline/check_schema.py:14`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L101">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_schema.py#L14-L123">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ True
 | `dataframe` | `Any` | No | Spark, pandas, or dataframe-like object with schema metadata. Omit it and pass ``target``, ``schema``, and ``table_name`` to inspect a configured physical table without reading its business rows. |
 | `expected_schema` | `dict[str, str] \| None` | No | Expected column-to-datatype mapping for a direct check. |
 | `preset` | `str` | No | Direct schema comparison behavior. |
-| `rules_df` | `DataFrame or iterable of mappings` | No | Approved guardrail rules. When supplied, the applicable schema rule is selected using the table context instead of ``expected_schema``. |
+| `rules_df` | `DataFrame or iterable of mappings` | No | Approved guardrail rules. When supplied, the applicable schema rule is selected using the table context instead of ``expected_schema``. The configured-table path loads the active rule automatically when neither rule data nor ``expected_schema`` is supplied. |
 | `dataset_name` | `str` | No | Table identity used to select an approved rule. |
 | `table_name` | `str` | No | Not documented yet |
 | `environment_name` | `str` | No | Not documented yet |

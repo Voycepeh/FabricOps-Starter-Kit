@@ -18,7 +18,7 @@ from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
-from fabricops_kit.config.shared import build_metadata_table_key, get_current_audit_timestamp
+from fabricops_kit.config.shared import build_metadata_table_key, get_current_audit_timestamp, is_table_not_found_error
 from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
@@ -559,6 +559,42 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
     return candidates[0]
 
 
+def load_table_guardrail_rules(config, env: str, *, spark_session=None):
+    """Load guardrail intent from the configured metadata target."""
+    try:
+        return read_lakehouse_table_core(
+            GUARDRAIL_TABLE, target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"),
+            spark_session=spark_session, context={"config": config, "env": env},
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            raise ValueError("No guardrail rules exist; Governance must author and activate the required rule first.") from exc
+        raise
+
+
+def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:
+    """Select the latest active approved table rule by canonical identity."""
+    return _select_table_guardrail_rule(
+        rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",
+        environment_name=environment_name, metadata_table_key=metadata_table_key,
+    )
+
+
+def resolve_change_rule_observation_columns(rule: dict) -> tuple[str, str]:
+    """Return validated observation columns from an active source-change rule."""
+    parameters = _parse_rule_parameters(rule)
+    resolved = []
+    for name in ("partition_column", "change_column"):
+        value = str(parameters.get(name) or "").strip()
+        if not value:
+            raise ValueError(f"Active source-change rule is invalid: {name} is missing.")
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+            raise ValueError(f"Active source-change rule is invalid: {name} must be a simple identifier.")
+        resolved.append(value)
+    return resolved[0], resolved[1]
+
+
 def evaluate_changes_guardrail(
     result: dict,
     *,
@@ -570,13 +606,17 @@ def evaluate_changes_guardrail(
 ) -> dict:
     """Apply approved change intent to an observation comparison result."""
     rule = _select_table_guardrail_rule(
-        rules_df, guardrail_type="changes", dataset_name=dataset_name,
+        rules_df, guardrail_type="change", dataset_name=dataset_name,
         table_name=table_name, environment_name=environment_name,
         metadata_table_key=metadata_table_key,
     )
     if not rule:
-        return result
-    rule_type = _string_value(_catalogue_value(rule, "rule_type") or "detect_changes").lower()
+        raise ValueError(
+            f"No active approved source-change rule exists for {metadata_table_key!r}; "
+            "Governance must author and activate one first."
+        )
+    params = _parse_rule_parameters(rule)
+    rule_type = _string_value(params.get("expected_change") or _catalogue_value(rule, "rule_type") or "monitor_only").lower()
     severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     if severity not in {"blocking", "warning"}:
         raise ValueError("severity must be one of: blocking, warning")
@@ -585,19 +625,30 @@ def evaluate_changes_guardrail(
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
     })
-    if rule_type == "skip":
-        result.update(status="skipped", can_continue=True, reason="Changes guardrail skipped by approved rule.")
-    elif result.get("first_observation"):
-        result.update(status="baseline_created", can_continue=True, reason="First observation baseline created.")
-    elif result.get("changed"):
-        blocking = severity == "blocking"
+    if rule_type not in {"change_required", "no_change_required", "monitor_only"}:
+        raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
+    changed = bool(result.get("changed"))
+    result["expected"] = {"expected_change": rule_type}
+    result["actual"] = {
+        "changed": changed,
+        **{name: result.get(name, []) for name in ("new_partitions", "changed_partitions", "removed_partitions", "reappeared_partitions")},
+    }
+    if result.get("first_observation"):
         result.update(
-            status="failed" if blocking else "warning",
-            can_continue=not blocking,
-            reason="Source observation changed versus the previous comparable snapshot.",
+            status="baseline_created",
+            can_continue=True,
+            changed=False,
+            reason="First observation baseline created; change intent was not evaluated.",
         )
+        result["actual"]["changed"] = None
+        result["message"] = result["reason"]
+        return _apply_bypass_post_review_warning(result, rule)
+    passed = rule_type == "monitor_only" or (rule_type == "change_required" and changed) or (rule_type == "no_change_required" and not changed)
+    if passed:
+        result.update(status="passed", can_continue=True, reason=f"Source change expectation {rule_type!r} satisfied.")
     else:
-        result.update(status="passed", can_continue=True, reason="Source observation is unchanged.")
+        blocking = severity == "blocking"
+        result.update(status="failed" if blocking else "warning", can_continue=not blocking, reason=f"Source change expectation {rule_type!r} was not satisfied.")
     result["message"] = result["reason"]
     return _apply_bypass_post_review_warning(result, rule)
 
@@ -1181,7 +1232,20 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    if {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns:
+    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns
+    if observation_evidence and rule_type != "skip":
+        rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
+        change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
+        change_columns.discard("")
+        if len(change_columns) != 1:
+            raise ValueError("Observation evidence must contain one authoritative change_column.")
+        observation_change_column = next(iter(change_columns))
+        configured_freshness_column = str(freshness_column or "").strip()
+        if configured_freshness_column and configured_freshness_column != observation_change_column:
+            raise ValueError(
+                "Active freshness rule is invalid for observation evidence: "
+                f"freshness_column {configured_freshness_column!r} does not match change_column {observation_change_column!r}."
+            )
         freshness_column = "max_change_value"
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()

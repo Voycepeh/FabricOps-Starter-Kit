@@ -2,7 +2,9 @@
 
 from datetime import date, datetime
 
-from fabricops_kit.pipeline.guardrails_shared import freshness_check_core
+from fabricops_kit.config.shared import get_store, resolve_fabric_context
+from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.pipeline.guardrails_shared import freshness_check_core, load_table_guardrail_rules, select_table_guardrail_rule, write_guardrail_result_row
 
 
 def check_freshness(
@@ -33,14 +35,18 @@ def check_freshness(
     reference_date : date, datetime, str, optional
         Comparison date, defaulting to today.
     rules_df : DataFrame or iterable of mappings, optional
-        Approved rules used instead of direct freshness arguments.
+        Approved rules used instead of direct freshness arguments. Canonical
+        observation input loads the active rule automatically when omitted. If
+        a rule retains ``freshness_column`` for direct checks, it must match the
+        observation's governed ``change_column``.
     dataset_name, table_name, environment_name, metadata_table_key : str, optional
         Table identity used to select an approved rule.
 
     Returns
     -------
     dict
-        Structured freshness evidence and continuation decision.
+        Structured freshness evidence and continuation decision. Governed
+        observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.
 
     Examples
     --------
@@ -55,8 +61,19 @@ def check_freshness(
         "metadata_table_key", "partition_value", "change_column",
         "max_change_value", "observed_at",
     } <= columns
+    rows = dataframe.collect() if observation_evidence and hasattr(dataframe, "collect") else dataframe
+    first = rows[0].asDict(recursive=True) if observation_evidence and rows and hasattr(rows[0], "asDict") else (dict(rows[0]) if observation_evidence and rows else {})
+    if observation_evidence:
+        config, env, _context = resolve_fabric_context()
+        metadata_table_key = str(first.get("metadata_table_key") or "")
+        table_name = str(first.get("source_table") or table_name)
+        environment_name = env
+    if observation_evidence and rules_df is None:
+        rules_df = load_table_guardrail_rules(config, env, spark_session=getattr(dataframe, "sparkSession", None))
+        if select_table_guardrail_rule(rules_df, guardrail_type="freshness", metadata_table_key=metadata_table_key, environment_name=env) is None:
+            raise ValueError(f"No active approved freshness rule exists for {metadata_table_key!r}.")
     if rules_df is not None:
-        return freshness_check_core(
+        result = freshness_check_core(
             dataframe,
             rules_df=rules_df,
             dataset_name=dataset_name,
@@ -65,6 +82,20 @@ def check_freshness(
             metadata_table_key=metadata_table_key,
             reference_date=reference_date,
         )
+        if observation_evidence and result.get("rule_key"):
+            source_target = str(first.get("source_target") or "source")
+            source_store_type = str(get_store(config, env, source_target).kind).lower()
+            result["metadata_table_key"] = metadata_table_key
+            result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}
+            result["actual"] = {"latest_observed_change_value": result.get("latest_value"), "required_min_value": result.get("required_min_value")}
+            write_guardrail_result_row(
+                spark_session=getattr(dataframe, "sparkSession", None) or get_spark_session(), config=config,
+                env=env, run_id=str(first.get("observed_at") or ""), dataset_name=dataset_name,
+                table_name=table_name, store_type=source_store_type, layer=source_target,
+                schema_name=first.get("source_schema"), guardrail_type="freshness",
+                rule_type=str(result.get("rule_type")), result=result, rule_key=str(result["rule_key"]),
+            )
+        return result
     return freshness_check_core(
         dataframe,
         "max_change_value" if observation_evidence else freshness_column,

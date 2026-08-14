@@ -13,29 +13,32 @@ observation_df = observe_table(
     target=SOURCE_TARGET,
     schema=SOURCE_SCHEMA,
     table_name=SOURCE_TABLE_NAME,
-    partition_column="business_date",
-    change_column="modified_at",
 )
-metadata_table_key = observation_df.select("metadata_table_key").first()[0]
-
 schema_result = check_schema(
     target=SOURCE_TARGET,
     schema=SOURCE_SCHEMA,
     table_name=SOURCE_TABLE_NAME,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 freshness_result = check_freshness(
     observation_df,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 changes_result = check_changes(
     observation_df,
-    rules_df=guardrail_rules_df,
-    metadata_table_key=metadata_table_key,
 )
 ```
+
+## Author rules before governed execution
+
+**Governance owns the expectations and observation definition.** After initial Development onboarding has read and profiled the table, Governance selects its catalogue entry and authors separate schema, freshness, source-change, and profile-behavior rules. The active source-change rule supplies `partition_column`, `change_column`, and one controlled expectation: `change_required`, `no_change_required`, or `monitor_only`.
+
+```text
+Initial Development read and profile/register
+    → Catalogue/Profiled evidence
+    → Governance authors and activates rules
+    → subsequent governed pre-read checks
+```
+
+`observe_table()` fails clearly when no active approved source-change rule exists. It never guesses columns or creates policy. Schema/profile evidence remains in Catalogue/Profiled; partition facts remain in Source Observation; intent remains in Guardrail; runtime judgement remains in Guardrail Results.
 
 ## Keep evidence and judgement separate
 

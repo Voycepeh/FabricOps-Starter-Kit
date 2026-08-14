@@ -12,9 +12,9 @@ Describe deterministic partition and logical-row source changes.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:151`
+`fabricops_kit/pipeline/check_changes.py:161`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L151-L248">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L161-L259">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -82,7 +82,7 @@ True
 | `version_column` | `str \| None` | No | Column used to select the latest row per logical key. Required when ``source_pattern="versioned"``. |
 | `reference_date` | `date \| datetime \| str \| None` | No | End of the recent mutable window. |
 | `include_row_changes` | `bool` | No | Include deterministic key hashes grouped by change classification. |
-| `rules_df` | `DataFrame or iterable of mappings` | No | Approved change rules for the canonical observation path. A detected change blocks when the selected rule has blocking severity and warns while allowing continuation when it has warning severity. The runtime outcome is written to ``METADATA_GUARDRAIL_RESULTS``. |
+| `rules_df` | `DataFrame or iterable of mappings` | No | Approved source-change rules for the canonical observation path. When omitted, the active rule is loaded by ``metadata_table_key``. Its ``change_required``, ``no_change_required``, or ``monitor_only`` intent governs continuation, and the runtime outcome is written to ``METADATA_GUARDRAIL_RESULTS``. |
 | `metadata_table_key` | `str` | No | Canonical identity used to scope the previous observation snapshot. |
 
 ## Returns

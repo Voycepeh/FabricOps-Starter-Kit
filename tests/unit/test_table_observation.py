@@ -44,13 +44,14 @@ def run(monkeypatch, current, previous=(), *, kind="warehouse", persist_spy=None
     monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda store, table, schema: (table, schema, f"/Tables/{table}"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
+    monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": '{"partition_column":"business_date","change_column":"modified_at"}'})
     monkeypatch.setattr(
         module, "_persist",
         lambda rows, **kwargs: (persisted.extend(rows), persist_spy and persist_spy(rows, kwargs), Frame(rows))[2],
     )
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
-    call = dict(table_name="orders", target="source", schema="dbo",
-                partition_column="business_date", change_column="modified_at")
+    call = dict(table_name="orders", target="source", schema="dbo")
     call.update(arguments)
     result = module.observe_table(**call)
     return result, queries, persisted
@@ -98,12 +99,10 @@ def test_lakehouse_projects_only_observation_columns(monkeypatch):
     assert calls[2] == ("agg", 3)
 
 
-@pytest.mark.parametrize("kwargs", [
-    {"table_name": ""}, {"table_name": "bad.name"}, {"partition_column": "bad-name"}, {"change_column": ""},
-])
+@pytest.mark.parametrize("kwargs", [{"table_name": ""}, {"table_name": "bad.name"}])
 def test_invalid_identity_and_columns(monkeypatch, kwargs):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (_ for _ in ()).throw(AssertionError()))
-    values = dict(table_name="orders", partition_column="day", change_column="modified_at") | kwargs
+    values = dict(table_name="orders") | kwargs
     with pytest.raises(ValueError): module.observe_table(**values)
 
 
@@ -111,18 +110,29 @@ def test_warehouse_requires_schema(monkeypatch):
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
     monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse"))
     with pytest.raises(ValueError, match="schema is required"):
-        module.observe_table(table_name="orders", partition_column="day", change_column="modified_at")
+        module.observe_table(table_name="orders")
+
+
+def test_invalid_active_change_rule_has_actionable_error(monkeypatch):
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse", schema="dbo"))
+    monkeypatch.setattr(module, "resolve_warehouse_table_location", lambda store, schema, table: (schema, table, "Store.dbo.orders"))
+    monkeypatch.setattr(module, "get_spark_session", lambda: object())
+    monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
+    monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": "not-json"})
+    with pytest.raises(ValueError, match="Active source-change rule is invalid: partition_column is missing"):
+        module.observe_table(table_name="orders")
 
 
 def test_metadata_table_key_is_deterministic_and_independent_of_observation_columns(monkeypatch):
     captured = []
     run(monkeypatch, [evidence()], persist_spy=lambda rows, kwargs: captured.append(kwargs))
-    run(monkeypatch, [evidence()], change_column="updated_at", persist_spy=lambda rows, kwargs: captured.append(kwargs))
+    run(monkeypatch, [evidence()], persist_spy=lambda rows, kwargs: captured.append(kwargs))
     assert captured[0]["metadata_table_key"] == captured[1]["metadata_table_key"]
 
 
 def test_public_signature_has_no_legacy_or_runtime_plumbing():
-    assert str(inspect.signature(module.observe_table)) == "(table_name: 'str', *, target: 'str' = 'source', schema: 'str | None' = None, partition_column: 'str', change_column: 'str') -> 'Any'"
+    assert str(inspect.signature(module.observe_table)) == "(table_name: 'str', *, target: 'str' = 'source', schema: 'str | None' = None) -> 'Any'"
 
 
 def test_observe_source_is_not_exported():
@@ -145,11 +155,13 @@ def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
     monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda store, table, schema: (table, schema, f"/Tables/{table}"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
+    monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": '{"partition_column":"business_date","change_column":"modified_at"}'})
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: None)
     monkeypatch.setattr(module, "_observe_lakehouse", lambda *args, **kwargs: captured.append(args) or [{**evidence(), "is_present": True}])
     identities = []
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: identities.append(kwargs) or Frame(rows))
-    module.observe_table(table_name="orders", target="source", schema="dbo", partition_column="business_date", change_column="modified_at")
+    module.observe_table(table_name="orders", target="source", schema="dbo")
     assert captured[0][:3] == ("orders", "source", "dbo")
     assert identities[0]["metadata_table_key"] == module.build_metadata_table_key("lakehouse", "source", "dbo", "orders")
 
@@ -191,10 +203,12 @@ def test_failed_observation_does_not_persist(monkeypatch):
     monkeypatch.setattr(module, "resolve_warehouse_table_location", lambda store, schema, table: (schema, table, "Store.dbo.orders"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
+    monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
+    monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": '{"partition_column":"business_date","change_column":"modified_at"}'})
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("source failed")))
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: persisted.extend(rows))
     with pytest.raises(RuntimeError, match="source failed"):
-        module.observe_table(table_name="orders", partition_column="day", change_column="modified_at")
+        module.observe_table(table_name="orders")
     assert persisted == []
 
 

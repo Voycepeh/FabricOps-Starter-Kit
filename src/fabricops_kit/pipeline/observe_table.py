@@ -18,6 +18,7 @@ from fabricops_kit.io.shared import (
     resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
+from fabricops_kit.pipeline.guardrails_shared import load_table_guardrail_rules, resolve_change_rule_observation_columns, select_table_guardrail_rule
 
 OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -114,8 +115,6 @@ def observe_table(
     *,
     target: str = "source",
     schema: str | None = None,
-    partition_column: str,
-    change_column: str,
 ) -> Any:
     """Collect, persist, and return lightweight source-table evidence.
 
@@ -131,12 +130,6 @@ def observe_table(
         Logical Lakehouse or Warehouse target configured by ``00_env_config``.
     schema : str or None, default=None
         Optional Lakehouse schema. A schema is required for Warehouse targets.
-    partition_column : str
-        Column whose distinct values identify independently readable partitions.
-    change_column : str
-        Trustworthy column that advances when rows in a partition are inserted
-        or updated, such as ``modified_at``, ``updated_at``, or
-        ``last_changed_at``.
 
     Returns
     -------
@@ -148,7 +141,7 @@ def observe_table(
     Raises
     ------
     ValueError
-        If table identity, columns, target type, or a required Warehouse schema
+        If table identity, target type, or a required active source-change rule
         is invalid.
     RuntimeError
         If ``00_env_config`` has not initialized FabricOps or observation
@@ -177,8 +170,6 @@ def observe_table(
     ...     table_name="orders",
     ...     target="source",
     ...     schema="dbo",
-    ...     partition_column="business_date",
-    ...     change_column="modified_at",
     ... )
     >>> observation_df.select("partition_value", "row_count")
 
@@ -192,9 +183,6 @@ def observe_table(
     if not target_value:
         raise ValueError("target must be a configured target name.")
     schema_value = _identifier(schema, "schema") if schema is not None else None
-    partition_value = _identifier(partition_column, "partition_column")
-    change_value = _identifier(change_column, "change_column")
-
     config, env, context = resolve_fabric_context()
     store = get_store(config, env, target_value)
     source_type = str(store.kind).lower()
@@ -217,6 +205,17 @@ def observe_table(
     metadata_table_key = build_metadata_table_key(
         source_type, target_value, schema_value, table_value
     )
+    rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
+    rule = select_table_guardrail_rule(
+        rules_df, guardrail_type="change", metadata_table_key=metadata_table_key,
+        environment_name=env,
+    )
+    if rule is None:
+        raise ValueError(
+            f"No active approved source-change rule exists for {metadata_table_key!r}; "
+            "Governance must author and activate one before observe_table() can run."
+        )
+    partition_value, change_value = resolve_change_rule_observation_columns(rule)
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     if source_type == "warehouse":
         query = _warehouse_observation_query(
