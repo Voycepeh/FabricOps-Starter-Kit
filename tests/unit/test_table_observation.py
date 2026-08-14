@@ -113,6 +113,17 @@ def test_warehouse_requires_schema(monkeypatch):
         module.observe_table(table_name="orders")
 
 
+def test_invalid_active_change_rule_has_actionable_error(monkeypatch):
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    monkeypatch.setattr(module, "get_store", lambda *args: types.SimpleNamespace(kind="warehouse", schema="dbo"))
+    monkeypatch.setattr(module, "resolve_warehouse_table_location", lambda store, schema, table: (schema, table, "Store.dbo.orders"))
+    monkeypatch.setattr(module, "get_spark_session", lambda: object())
+    monkeypatch.setattr(module, "load_table_guardrail_rules", lambda *args, **kwargs: [object()])
+    monkeypatch.setattr(module, "select_table_guardrail_rule", lambda *args, **kwargs: {"rule_parameters_json": "not-json"})
+    with pytest.raises(ValueError, match="Active source-change rule is invalid: partition_column is missing"):
+        module.observe_table(table_name="orders")
+
+
 def test_metadata_table_key_is_deterministic_and_independent_of_observation_columns(monkeypatch):
     captured = []
     run(monkeypatch, [evidence()], persist_spy=lambda rows, kwargs: captured.append(kwargs))

@@ -125,7 +125,7 @@ def _observation_changes(dataframe, *, rules_df=None, metadata_table_key: str = 
     has_changes = not previous or bool(new or changed or removed or reappeared)
     result = {
         "status": "changed" if has_changes else "unchanged", "can_continue": True,
-        "check_type": "changes", "guardrail_type": "changes", "changed": has_changes,
+        "check_type": "changes", "guardrail_type": "change", "changed": has_changes,
         "first_observation": not previous, "new_partitions": new,
         "changed_partitions": changed, "removed_partitions": removed,
         "reappeared_partitions": reappeared,

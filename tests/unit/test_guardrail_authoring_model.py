@@ -210,6 +210,8 @@ def test_source_change_authoring_is_optional_and_validated(monkeypatch):
         "governance_mode": "ungoverned", "approval_policy": "no_approval_required",
     }
     widget = widget_author_schema_freshness_profile_rules(state)
+    assert widget["controls"]["partition_column"].value == ""
+    assert widget["controls"]["change_column"].value == ""
     assert "change" not in {row["guardrail_type"] for row in widget["build_records"]()}
     widget["controls"]["change_mode"].value = "enforce"
     widget["controls"]["partition_column"].value = "business_date"

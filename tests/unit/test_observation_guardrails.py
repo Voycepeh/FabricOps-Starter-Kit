@@ -65,6 +65,7 @@ def test_first_observation_and_current_snapshot_is_not_its_own_baseline(monkeypa
     assert result["can_continue"] is True
     assert result["changed"] is False
     assert result["actual"]["changed"] is None
+    assert result["guardrail_type"] == "change"
 
 
 def test_previous_comparable_snapshot_is_selected_and_changes_are_classified(monkeypatch):
@@ -135,3 +136,15 @@ def test_freshness_result_preserves_warehouse_store_type(monkeypatch):
     result = freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")
     assert result["status"] == "passed"
     assert writes[0]["store_type"] == "warehouse"
+
+
+def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch):
+    observed = Frame([row(maximum="2026-08-14")], Spark())
+    rules = [{
+        "metadata_table_key": "key", "table_name": "orders", "guardrail_type": "freshness", "rule_type": "max_lag_days",
+        "rule_parameters_json": '{"freshness_column": "loaded_at", "max_lag_days": 0}',
+        "activation_state": "active", "review_state": "governance_approved", "rule_key": "freshness_rule",
+    }]
+    monkeypatch.setattr(freshness, "resolve_fabric_context", lambda: (object(), "dev", {}))
+    with pytest.raises(ValueError, match="does not match change_column 'modified_at'"):
+        freshness.check_freshness(observed, rules_df=rules, reference_date="2026-08-14")

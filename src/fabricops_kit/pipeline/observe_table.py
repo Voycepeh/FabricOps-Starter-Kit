@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-import json
 import re
 from typing import Any
 
@@ -19,7 +18,7 @@ from fabricops_kit.io.shared import (
     resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
-from fabricops_kit.pipeline.guardrails_shared import load_table_guardrail_rules, select_table_guardrail_rule
+from fabricops_kit.pipeline.guardrails_shared import load_table_guardrail_rules, resolve_change_rule_observation_columns, select_table_guardrail_rule
 
 OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 _IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -216,10 +215,7 @@ def observe_table(
             f"No active approved source-change rule exists for {metadata_table_key!r}; "
             "Governance must author and activate one before observe_table() can run."
         )
-    raw_parameters = rule.get("rule_parameters_json") or "{}"
-    parameters = json.loads(raw_parameters) if isinstance(raw_parameters, str) else dict(raw_parameters)
-    partition_value = _identifier(parameters.get("partition_column"), "change rule partition_column")
-    change_value = _identifier(parameters.get("change_column"), "change rule change_column")
+    partition_value, change_value = resolve_change_rule_observation_columns(rule)
     metadata_schema = configured_lakehouse_schema(config, env, "metadata")
     if source_type == "warehouse":
         query = _warehouse_observation_query(

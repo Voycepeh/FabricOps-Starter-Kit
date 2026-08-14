@@ -20,9 +20,9 @@ later guardrail checks can judge the source without a full source read.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:114`
+`fabricops_kit/pipeline/observe_table.py:113`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L114-L243">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L113-L239">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">

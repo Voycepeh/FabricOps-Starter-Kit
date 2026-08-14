@@ -581,6 +581,20 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table
     )
 
 
+def resolve_change_rule_observation_columns(rule: dict) -> tuple[str, str]:
+    """Return validated observation columns from an active source-change rule."""
+    parameters = _parse_rule_parameters(rule)
+    resolved = []
+    for name in ("partition_column", "change_column"):
+        value = str(parameters.get(name) or "").strip()
+        if not value:
+            raise ValueError(f"Active source-change rule is invalid: {name} is missing.")
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+            raise ValueError(f"Active source-change rule is invalid: {name} must be a simple identifier.")
+        resolved.append(value)
+    return resolved[0], resolved[1]
+
+
 def evaluate_changes_guardrail(
     result: dict,
     *,
@@ -1218,7 +1232,20 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    if {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns:
+    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns
+    if observation_evidence and rule_type != "skip":
+        rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
+        change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
+        change_columns.discard("")
+        if len(change_columns) != 1:
+            raise ValueError("Observation evidence must contain one authoritative change_column.")
+        observation_change_column = next(iter(change_columns))
+        configured_freshness_column = str(freshness_column or "").strip()
+        if configured_freshness_column and configured_freshness_column != observation_change_column:
+            raise ValueError(
+                "Active freshness rule is invalid for observation evidence: "
+                f"freshness_column {configured_freshness_column!r} does not match change_column {observation_change_column!r}."
+            )
         freshness_column = "max_change_value"
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()

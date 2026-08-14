@@ -36,7 +36,9 @@ def check_freshness(
         Comparison date, defaulting to today.
     rules_df : DataFrame or iterable of mappings, optional
         Approved rules used instead of direct freshness arguments. Canonical
-        observation input loads the active rule automatically when omitted.
+        observation input loads the active rule automatically when omitted. If
+        a rule retains ``freshness_column`` for direct checks, it must match the
+        observation's governed ``change_column``.
     dataset_name, table_name, environment_name, metadata_table_key : str, optional
         Table identity used to select an approved rule.
 

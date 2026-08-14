@@ -14,7 +14,7 @@ Check whether source timing satisfies direct or approved freshness intent.
 
 `fabricops_kit/pipeline/check_freshness.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L10-L103">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L10-L105">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -69,7 +69,7 @@ def check_freshness(
 | `max_lag_days` | `int \| str \| None` | No | Maximum permitted lag in days. |
 | `severity` | `str` | No | Failure behavior for a direct check. |
 | `reference_date` | `date \| datetime \| str \| None` | No | Comparison date, defaulting to today. |
-| `rules_df` | `DataFrame or iterable of mappings` | No | Approved rules used instead of direct freshness arguments. Canonical observation input loads the active rule automatically when omitted. |
+| `rules_df` | `DataFrame or iterable of mappings` | No | Approved rules used instead of direct freshness arguments. Canonical observation input loads the active rule automatically when omitted. If a rule retains ``freshness_column`` for direct checks, it must match the observation's governed ``change_column``. |
 | `dataset_name` | `str` | No | Table identity used to select an approved rule. |
 | `table_name` | `str` | No | Not documented yet |
 | `environment_name` | `str` | No | Not documented yet |
