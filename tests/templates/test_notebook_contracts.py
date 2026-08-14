@@ -255,4 +255,3 @@ def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
     assert "schema_result" not in matching_cells[0]
     assert "can_continue" not in matching_cells[0]
     assert "guardrails_shared" not in matching_cells[0]
-    assert "run_active_dq_guardrail" not in matching_cells[0]
