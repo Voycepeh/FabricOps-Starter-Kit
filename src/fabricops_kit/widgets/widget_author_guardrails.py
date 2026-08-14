@@ -14,6 +14,8 @@ from fabricops_kit.widgets import shared
 
 CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
 _DURATION_UNITS = ("Minutes", "Hours", "Days")
+_FAILURE_ACTIONS = (("Block pipeline", "blocking"), ("Warn only", "warning"))
+_FAILURE_SEVERITIES = {value for _, value in _FAILURE_ACTIONS}
 
 
 def _configuration_version(rules: Iterable[Mapping[str, Any]]) -> int:
@@ -29,6 +31,9 @@ def _guardrail_records_from_selection(
     maximum_age: int | float,
     maximum_age_unit: str,
     change_behaviour: str,
+    schema_severity: str = "blocking",
+    freshness_severity: str = "blocking",
+    change_severity: str = "blocking",
     partition_column: str = "",
     change_column: str = "",
     configuration_version: int | None = None,
@@ -57,6 +62,13 @@ def _guardrail_records_from_selection(
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
     expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
+    severities = {
+        "schema": str(schema_severity),
+        "freshness": str(freshness_severity),
+        "change": str(change_severity),
+    }
+    if any(value not in _FAILURE_SEVERITIES for value in severities.values()):
+        raise ValueError("Failure action must be Block pipeline or Warn only.")
     existing = list(state.get("existing_rules") or [])
     version = configuration_version or (_configuration_version(existing) + 1)
     data_types = {
@@ -97,7 +109,7 @@ def _guardrail_records_from_selection(
             rule_type=rule_type,
             column_name=column_name,
             parameters=parameters,
-            severity="blocking",
+            severity=severities[guardrail_type],
             description=f"Table {guardrail_type} guardrail",
             action="apply_now",
             source_notebook_type="01_governance",
@@ -181,11 +193,19 @@ def widget_author_guardrails(
     columns = [str(value) for value in state.get("columns", [])]
     existing = list(state.get("existing_rules") or [])
     version_state = {"persisted": _configuration_version(existing)}
-    schema_params = shared._rule_params(shared._latest_rule(existing, "schema"))
-    freshness_params = shared._rule_params(shared._latest_rule(existing, "freshness"))
-    change_params = shared._rule_params(shared._latest_rule(existing, "change"))
+    schema_rule = shared._latest_rule(existing, "schema")
+    freshness_rule = shared._latest_rule(existing, "freshness")
+    change_rule = shared._latest_rule(existing, "change")
+    schema_params = shared._rule_params(schema_rule)
+    freshness_params = shared._rule_params(freshness_rule)
+    change_params = shared._rule_params(change_rule)
     selected_required = set(schema_params.get("columns") or columns)
     schema_checkboxes = {name: widgets.Checkbox(value=name in selected_required, description=name) for name in columns}
+    schema_failure_action = widgets.Dropdown(
+        options=_FAILURE_ACTIONS,
+        value=str(schema_rule.get("severity") or "blocking"),
+        **shared.widget_common(widgets, "On failure"),
+    )
     freshness_value = str(freshness_params.get("freshness_column") or "")
     freshness_column = widgets.Dropdown(
         options=["", *columns],
@@ -200,6 +220,11 @@ def widget_author_guardrails(
         options=_DURATION_UNITS,
         value=unit_value if unit_value in _DURATION_UNITS else "Days",
         **shared.widget_common(widgets, "Unit"),
+    )
+    freshness_failure_action = widgets.Dropdown(
+        options=_FAILURE_ACTIONS,
+        value=str(freshness_rule.get("severity") or "blocking"),
+        **shared.widget_common(widgets, "On failure"),
     )
     behaviour = str(change_params.get("change_behaviour") or "Incremental append")
     change_behaviour = widgets.Dropdown(
@@ -217,6 +242,11 @@ def widget_author_guardrails(
         value=str(change_params.get("change_column") or ""),
         **shared.widget_common(widgets, "Change / watermark column"),
     )
+    change_failure_action = widgets.Dropdown(
+        options=_FAILURE_ACTIONS,
+        value=str(change_rule.get("severity") or "blocking"),
+        **shared.widget_common(widgets, "On failure"),
+    )
     message = widgets.HTML()
     save_button = widgets.Button(description="Save Guardrails", button_style="primary")
     version_display = widgets.HTML(value=f"<b>Next save version</b><br>{version_state['persisted'] + 1}")
@@ -229,6 +259,9 @@ def widget_author_guardrails(
             maximum_age=maximum_age.value,
             maximum_age_unit=maximum_age_unit.value,
             change_behaviour=change_behaviour.value,
+            schema_severity=schema_failure_action.value,
+            freshness_severity=freshness_failure_action.value,
+            change_severity=change_failure_action.value,
             partition_column=partition_column.value,
             change_column=change_column.value,
             configuration_version=version_state["persisted"] + 1,
@@ -270,18 +303,27 @@ def widget_author_guardrails(
                 children=[
                     shared.checkbox_group(
                         widgets, label="Columns that must exist", checkboxes=schema_checkboxes.values()
-                    )
+                    ),
+                    schema_failure_action,
                 ],
             ),
             shared.form_section(
                 widgets,
                 title="2. Freshness",
-                children=[shared.form_grid(widgets, [freshness_column, maximum_age, maximum_age_unit])],
+                children=[
+                    shared.form_grid(
+                        widgets, [freshness_column, maximum_age, maximum_age_unit, freshness_failure_action]
+                    )
+                ],
             ),
             shared.form_section(
                 widgets,
                 title="3. Changes",
-                children=[shared.form_grid(widgets, [change_behaviour, partition_column, change_column])],
+                children=[
+                    shared.form_grid(
+                        widgets, [change_behaviour, partition_column, change_column, change_failure_action]
+                    )
+                ],
             ),
             shared.action_row(widgets, [save_button]),
             message,
@@ -294,12 +336,15 @@ def widget_author_guardrails(
         "version_state": version_state,
         "controls": {
             "schema_columns": schema_checkboxes,
+            "schema_failure_action": schema_failure_action,
             "freshness_column": freshness_column,
             "maximum_age": maximum_age,
             "maximum_age_unit": maximum_age_unit,
+            "freshness_failure_action": freshness_failure_action,
             "change_behaviour": change_behaviour,
             "partition_column": partition_column,
             "change_column": change_column,
+            "change_failure_action": change_failure_action,
         },
         "build_records": build_records,
         "save": save,

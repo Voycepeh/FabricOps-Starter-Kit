@@ -942,6 +942,7 @@ def schema_check_core(
     """
     rule = None
     rule_type = ""
+    severity = "blocking"
     if rules_df is None and expected_schema is not None and not isinstance(expected_schema, dict):
         rules_df, expected_schema = expected_schema, None
     if rules_df is not None:
@@ -955,12 +956,15 @@ def schema_check_core(
             expected_schema = {column: expected.get(column, "") for column in selected_columns}
             rule_type = _string_value(_catalogue_value(rule, "rule_type") or "relaxed").lower()
             preset = {"strict": "strict", "relaxed": "allow_new_columns", "skip": "monitor_only"}.get(rule_type, "allow_new_columns")
+            severity = _string_value(_catalogue_value(rule, "severity") or "blocking").lower()
     elif expected_schema is None:
         raise ValueError("expected_schema is required when rules_df is not supplied")
 
     normalized_preset = str(preset).lower()
     if normalized_preset not in _SCHEMA_PRESETS:
         raise ValueError("preset must be one of: strict, allow_new_columns, monitor_only")
+    if severity not in {"blocking", "warning"}:
+        raise ValueError("severity must be one of: blocking, warning")
 
     actual_columns, actual_types = _actual_schema(dataframe)
     actual_set = set(actual_columns)
@@ -1001,6 +1005,9 @@ def schema_check_core(
     else:
         status = "passed"
         can_continue = True
+    if status == "failed" and severity == "warning":
+        status = "warning"
+        can_continue = True
 
     message = (
         "Schema validation passed."
@@ -1016,6 +1023,7 @@ def schema_check_core(
         "unexpected_columns": actual_unexpected,
         "datatype_mismatches": datatype_mismatches,
         "preset": normalized_preset,
+        "severity": severity,
     }
     if rule is not None:
         result.update({"guardrail_type": "schema", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})

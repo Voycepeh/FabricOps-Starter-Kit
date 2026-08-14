@@ -5,6 +5,7 @@ import json
 import sys
 
 import fabricops_kit
+from fabricops_kit.pipeline.guardrails_shared import schema_check_core
 from fabricops_kit.widgets import widget_author_dq_rules, widget_author_guardrails
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
@@ -146,6 +147,17 @@ def test_records_are_minimum_schema_canonical_duration_and_simple_changes():
     assert tuple(CHANGE_BEHAVIOURS) == ("No changes expected", "Incremental append", "Snapshot overwrite")
 
 
+def test_each_section_persists_its_authored_failure_action():
+    """Store each section's failure action through the canonical severity field."""
+    records = _records(schema_severity="blocking", freshness_severity="warning", change_severity="blocking")
+
+    assert {row["guardrail_type"]: row["severity"] for row in records} == {
+        "schema": "blocking",
+        "freshness": "warning",
+        "change": "blocking",
+    }
+
+
 def test_change_behaviour_mapping():
     """Translate the three UI labels in one authoritative mapping."""
     expected = {
@@ -208,3 +220,49 @@ def test_two_persisted_saves_advance_the_local_version(monkeypatch):
     assert widget["version_state"]["persisted"] == 5
     assert "6" in widget["ui"].children[1].children[-1].value
     assert existing == [{"guardrail_type": "schema", "configuration_version": 3}]
+
+
+def test_failure_actions_prepopulate_and_rebuild_from_existing_rules(monkeypatch):
+    """Load section-specific failure actions and preserve them in rebuilt rows."""
+    _install_fake_notebook_widgets(monkeypatch)
+    existing = [
+        {"guardrail_type": "schema", "configuration_version": 3, "severity": "warning"},
+        {"guardrail_type": "freshness", "configuration_version": 3, "severity": "blocking"},
+        {"guardrail_type": "change", "configuration_version": 3, "severity": "warning"},
+    ]
+    widget = widget_author_guardrails(_state(existing), context={"config": object(), "env": "dev"})
+
+    controls = widget["controls"]
+    assert controls["schema_failure_action"].value == "warning"
+    assert controls["freshness_failure_action"].value == "blocking"
+    assert controls["change_failure_action"].value == "warning"
+    assert tuple(controls["schema_failure_action"].options) == (
+        ("Block pipeline", "blocking"),
+        ("Warn only", "warning"),
+    )
+    assert {row["guardrail_type"]: row["severity"] for row in widget["build_records"]()} == {
+        "schema": "warning",
+        "freshness": "blocking",
+        "change": "warning",
+    }
+
+
+def test_schema_runtime_uses_authored_warning_severity():
+    """Let an authored schema warning continue without a caller-side override."""
+
+    class Frame:
+        columns = []
+        dtypes = []
+
+    rules = _records(schema_severity="warning")
+    result = schema_check_core(
+        Frame(),
+        rules_df=rules,
+        dataset_name="sales",
+        table_name="orders",
+        metadata_table_key="lakehouse.source.dbo.orders",
+    )
+
+    assert result["status"] == "warning"
+    assert result["severity"] == "warning"
+    assert result["can_continue"] is True
