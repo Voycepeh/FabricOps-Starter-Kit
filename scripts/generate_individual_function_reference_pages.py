@@ -196,7 +196,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
-    "METADATA_SOURCE_OBSERVATION": ["observe_source"],
+    "METADATA_SOURCE_OBSERVATION": ["observe_table"],
     "METADATA_GUARDRAIL": [
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",

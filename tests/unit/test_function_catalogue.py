@@ -158,7 +158,7 @@ def test_root_exports_match_callable_surface_audit() -> None:
     audit_names.add("widget_register_data_contract")
     audit_names.add("profile_frequency_distribution")
     audit_names.add("profile_and_register_table")
-    audit_names.add("observe_source")
+    audit_names.add("observe_table")
     audit_names.discard("widget_pipeline_bootstrap")
     audit_names.discard("write_pipeline_run_summary")
     audit_names.discard("widget_render_agreement_evidence")
