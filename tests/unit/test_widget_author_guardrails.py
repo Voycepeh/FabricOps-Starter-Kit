@@ -102,6 +102,8 @@ def _state(existing=()):
         "catalogue_profile_rows": [
             {"column_name": "id", "data_type": "bigint"},
             {"column_name": "updated_at", "data_type": "timestamp"},
+            {"column_name": "snapshot_date", "data_type": "date"},
+            {"column_name": "extra", "data_type": "string"},
         ],
         "existing_rules": list(existing),
     }
@@ -245,6 +247,99 @@ def test_failure_actions_prepopulate_and_rebuild_from_existing_rules(monkeypatch
         "freshness": "blocking",
         "change": "warning",
     }
+
+
+def test_schema_section_displays_catalogue_datatypes_and_persists_checked_columns(monkeypatch):
+    """Show every canonical catalogue type and persist it only for checked columns."""
+    _install_fake_notebook_widgets(monkeypatch)
+
+    widget = widget_author_guardrails(_state(), context={"config": object(), "env": "dev"})
+    controls = widget["controls"]
+
+    assert list(controls["schema_rows"]) == ["id", "updated_at", "snapshot_date", "extra"]
+    assert controls["schema_data_types"] == {
+        "id": "bigint",
+        "updated_at": "timestamp",
+        "snapshot_date": "date",
+        "extra": "string",
+    }
+    for name, row in controls["schema_rows"].items():
+        assert name in row.children[1].value
+        assert controls["schema_data_types"][name] in row.children[2].value
+
+    controls["schema_columns"]["updated_at"].value = False
+    schema_params = json.loads(widget["build_records"]()[0]["rule_parameters_json"])
+
+    assert schema_params["columns"] == ["id", "snapshot_date", "extra"]
+    assert schema_params["data_types"] == {
+        "id": controls["schema_data_types"]["id"],
+        "snapshot_date": controls["schema_data_types"]["snapshot_date"],
+        "extra": controls["schema_data_types"]["extra"],
+    }
+    assert "updated_at" not in schema_params["data_types"]
+
+
+def test_existing_schema_selection_and_severity_are_prepopulated(monkeypatch):
+    """Load required columns and failure action while showing current catalogue types."""
+    _install_fake_notebook_widgets(monkeypatch)
+    existing = [
+        {
+            "guardrail_type": "schema",
+            "configuration_version": 3,
+            "severity": "warning",
+            "rule_parameters_json": json.dumps(
+                {"columns": ["id", "extra"], "data_types": {"id": "long", "extra": "string"}}
+            ),
+        }
+    ]
+
+    controls = widget_author_guardrails(
+        _state(existing), context={"config": object(), "env": "dev"}
+    )["controls"]
+
+    assert {name for name, checkbox in controls["schema_columns"].items() if checkbox.value} == {"id", "extra"}
+    assert controls["schema_failure_action"].value == "warning"
+    assert controls["schema_data_types"]["id"] == "bigint"
+
+
+def test_minimum_required_schema_enforces_selected_columns_and_allows_extra_columns():
+    """Retain missing-column and datatype enforcement without rejecting extras."""
+
+    class Frame:
+        def __init__(self, dtypes):
+            self.dtypes = dtypes
+            self.columns = [name for name, _ in dtypes]
+
+    rule = _records()[0]
+
+    missing = schema_check_core(
+        Frame([("extra", "string")]),
+        rules_df=[rule],
+        dataset_name="sales",
+        table_name="orders",
+        metadata_table_key="lakehouse.source.dbo.orders",
+    )
+    mismatch = schema_check_core(
+        Frame([("id", "string"), ("extra", "string")]),
+        rules_df=[rule],
+        dataset_name="sales",
+        table_name="orders",
+        metadata_table_key="lakehouse.source.dbo.orders",
+    )
+    matching_with_extra = schema_check_core(
+        Frame([("id", "bigint"), ("extra", "string")]),
+        rules_df=[rule],
+        dataset_name="sales",
+        table_name="orders",
+        metadata_table_key="lakehouse.source.dbo.orders",
+    )
+
+    assert missing["missing_columns"] == ["id"]
+    assert missing["can_continue"] is False
+    assert mismatch["datatype_mismatches"] == [{"column": "id", "expected": "bigint", "actual": "string"}]
+    assert mismatch["can_continue"] is False
+    assert matching_with_extra["unexpected_columns"] == ["extra"]
+    assert matching_with_extra["can_continue"] is True
 
 
 def test_schema_runtime_uses_authored_warning_severity():

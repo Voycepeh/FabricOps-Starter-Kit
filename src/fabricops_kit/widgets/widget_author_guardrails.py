@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+import html
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
@@ -170,7 +171,9 @@ def widget_author_guardrails(
     Notes
     -----
     Run in Microsoft Fabric after ``00_env_config`` and table selection. The
-    widget authors configuration only; it has no approval workflow.
+    widget authors configuration only; it has no approval workflow. Select the
+    required table columns and preserve their expected data types as the schema
+    guardrail.
 
     Examples
     --------
@@ -200,7 +203,54 @@ def widget_author_guardrails(
     freshness_params = shared._rule_params(freshness_rule)
     change_params = shared._rule_params(change_rule)
     selected_required = set(schema_params.get("columns") or columns)
-    schema_checkboxes = {name: widgets.Checkbox(value=name in selected_required, description=name) for name in columns}
+    schema_data_types = {
+        str(row.get("column_name") or ""): str(row.get("data_type") or "")
+        for row in state.get("catalogue_profile_rows", [])
+    }
+    schema_checkboxes = {
+        name: widgets.Checkbox(value=name in selected_required, description="", indent=False) for name in columns
+    }
+    schema_header = widgets.GridBox(
+        [
+            widgets.HTML(value="<b>Required</b>"),
+            widgets.HTML(value="<b>Column name</b>"),
+            widgets.HTML(value="<b>Data type</b>"),
+        ],
+        layout=widgets.Layout(
+            width="100%",
+            grid_template_columns="90px minmax(160px, 1fr) minmax(130px, 1fr)",
+            grid_gap="4px 12px",
+        ),
+    )
+    schema_rows = {
+        name: widgets.GridBox(
+            [
+                schema_checkboxes[name],
+                widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
+                widgets.HTML(value=f"<code>{html.escape(schema_data_types.get(name, ''))}</code>"),
+            ],
+            layout=widgets.Layout(
+                width="100%",
+                grid_template_columns="90px minmax(160px, 1fr) minmax(130px, 1fr)",
+                grid_gap="4px 12px",
+                align_items="center",
+            ),
+        )
+        for name in columns
+    }
+    required_schema = widgets.VBox(
+        [
+            widgets.HTML(
+                value=(
+                    "<b>Required schema</b><br>"
+                    "<span style='font-size:12px'>Checked columns must exist with the shown data type.</span>"
+                )
+            ),
+            schema_header,
+            *schema_rows.values(),
+        ],
+        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="4px"),
+    )
     schema_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
         value=str(schema_rule.get("severity") or "blocking"),
@@ -301,9 +351,7 @@ def widget_author_guardrails(
                 widgets,
                 title="1. Schema",
                 children=[
-                    shared.checkbox_group(
-                        widgets, label="Columns that must exist", checkboxes=schema_checkboxes.values()
-                    ),
+                    required_schema,
                     schema_failure_action,
                 ],
             ),
@@ -336,6 +384,8 @@ def widget_author_guardrails(
         "version_state": version_state,
         "controls": {
             "schema_columns": schema_checkboxes,
+            "schema_data_types": schema_data_types,
+            "schema_rows": schema_rows,
             "schema_failure_action": schema_failure_action,
             "freshness_column": freshness_column,
             "maximum_age": maximum_age,

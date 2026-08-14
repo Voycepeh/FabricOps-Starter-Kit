@@ -36,9 +36,9 @@
       "sidebar_include": false
     },
     {
-      "module_name": "widgets.widget_author_schema_freshness_profile_rules",
+      "module_name": "widgets.widget_author_guardrails",
       "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior rule authoring widget workflow.",
+      "module_summary": "Owns Schema, Freshness, and Changes guardrail authoring widget workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false
     },
@@ -347,12 +347,12 @@
       ]
     },
     {
-      "module_name": "widgets.widget_author_schema_freshness_profile_rules",
+      "module_name": "widgets.widget_author_guardrails",
       "visibility": "public",
-      "module_summary": "Owns schema, freshness, and profile behavior rule authoring widget workflow.",
+      "module_summary": "Owns Schema, Freshness, and Changes guardrail authoring widget workflow.",
       "sidebar_group": "1. Governance steward",
       "sidebar_include": false,
-      "callable_name": "widget_author_schema_freshness_profile_rules",
+      "callable_name": "widget_author_guardrails",
       "callable_visibility": "public",
       "callable_type": "callable",
       "callable_role": "callable",
