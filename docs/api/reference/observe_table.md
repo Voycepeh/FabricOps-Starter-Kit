@@ -12,17 +12,17 @@ Record compact count and change-value bounds before expensive source work.
 <div class="reference-docstring-intro" markdown="1">
 
 ``observe_table()`` cheaply records row count plus earliest and latest
-change values by source partition so FabricOps can decide whether more
-expensive source processing is required.
+change values by source partition so
+later guardrail checks can judge the source without a full source read.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:156`
+`fabricops_kit/pipeline/observe_table.py:112`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L156-L324">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L112-L240">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,7 +50,7 @@ def observe_table(
     schema: str | None=None,
     partition_column: str,
     change_column: str,
-) -> dict[str, Any]:
+) -> Any:
 ```
 
 </div>
@@ -59,15 +59,14 @@ def observe_table(
 
 <div class="reference-example-usage" markdown="1">
 
->>> plan = observe_table(
+>>> observation_df = observe_table(
 ...     table_name="orders",
 ...     target="source",
 ...     schema="dbo",
 ...     partition_column="business_date",
 ...     change_column="modified_at",
 ... )
->>> plan["requires_read"]
-True
+>>> observation_df.select("partition_value", "row_count")
 
 </div>
 
@@ -92,7 +91,7 @@ ValueError
     is invalid.
 RuntimeError
     If ``00_env_config`` has not initialized FabricOps or observation
-    history cannot be read.
+    cannot be collected or persisted.
 
 ## Notes
 
@@ -105,8 +104,9 @@ remain identical. Sources without a reliable change column require deeper
 change detection elsewhere. Warehouse aggregation is pushed into SQL;
 Lakehouse aggregation is distributed and projects only the two required
 source columns.
-Compact history and removal tombstones are appended to the configured
-FabricOps metadata Lakehouse after collection and comparison succeed. The
+Evidence is appended only after collection succeeds. This function neither
+loads history nor makes guardrail decisions; ``check_changes`` owns
+comparison and removal tombstones. The
 canonical table key is built from the resolved physical identity with the
 same :func:`build_metadata_table_key` helper used by
 :func:`profile_and_register_table`, linking observations to

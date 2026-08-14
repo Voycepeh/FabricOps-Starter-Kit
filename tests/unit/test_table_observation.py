@@ -44,10 +44,9 @@ def run(monkeypatch, current, previous=(), *, kind="warehouse", persist_spy=None
     monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda store, table, schema: (table, schema, f"/Tables/{table}"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
-    monkeypatch.setattr(module, "_load_previous", lambda *args, **kwargs: list(previous))
     monkeypatch.setattr(
         module, "_persist",
-        lambda rows, **kwargs: (persisted.extend(rows), persist_spy and persist_spy(rows, kwargs)),
+        lambda rows, **kwargs: (persisted.extend(rows), persist_spy and persist_spy(rows, kwargs), Frame(rows))[2],
     )
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda query, **kwargs: queries.append((query, kwargs)) or Frame(current))
     call = dict(table_name="orders", target="source", schema="dbo",
@@ -57,46 +56,14 @@ def run(monkeypatch, current, previous=(), *, kind="warehouse", persist_spy=None
     return result, queries, persisted
 
 
-def test_first_observation_requires_read(monkeypatch):
-    result, _, _ = run(monkeypatch, [evidence()])
-    assert result["first_observation"] and result["requires_read"]
-    assert result["new_partitions"] == ["2026-08-10"]
-
-
-def test_unchanged_evidence_requires_no_read(monkeypatch):
-    previous = [{**evidence(), "is_present": True}]
-    result, _, _ = run(monkeypatch, [evidence()], previous)
-    assert result["changed_partitions"] == [] and not result["requires_read"]
-
-
-@pytest.mark.parametrize("current", [
-    evidence(count=11),
-    evidence(minimum="2026-08-10T07:30:00"),
-    evidence(maximum="2026-08-11T00:00:00"),
-])
-def test_changed_evidence_marks_partition(monkeypatch, current):
-    result, _, _ = run(monkeypatch, [current], [{**evidence(), "is_present": True}])
-    assert result["changed_partitions"] == ["2026-08-10"]
-
-
-def test_new_and_removed_partitions(monkeypatch):
-    previous = [{**evidence("old"), "is_present": True}]
-    result, _, persisted = run(monkeypatch, [evidence("new")], previous)
-    assert result["new_partitions"] == ["new"]
-    assert result["removed_partitions"] == ["old"]
-    assert persisted[-1] == {
-        "partition_value": "old",
-        "is_present": False,
-        "row_count": 0,
-        "min_change_value": None,
-        "max_change_value": None,
-    }
-
-
-def test_removed_partition_reappearance_is_changed(monkeypatch):
-    previous = [{**evidence(), "is_present": False}]
-    result, _, _ = run(monkeypatch, [evidence()], previous)
-    assert result["changed_partitions"] == ["2026-08-10"]
+def test_observe_table_returns_persisted_evidence_without_judgement(monkeypatch):
+    result, _, persisted = run(monkeypatch, [evidence()])
+    assert isinstance(result, Frame)
+    assert result.collect() == persisted
+    source = inspect.getsource(module.observe_table)
+    for decision in ("new_partitions", "changed_partitions", "removed_partitions", "requires_read", "read_predicate"):
+        assert decision not in source
+    assert "_load_previous" not in inspect.getsource(module)
 
 
 def test_warehouse_aggregation_is_pushed_down(monkeypatch):
@@ -148,15 +115,14 @@ def test_warehouse_requires_schema(monkeypatch):
 
 
 def test_metadata_table_key_is_deterministic_and_independent_of_observation_columns(monkeypatch):
-    first, _, _ = run(monkeypatch, [evidence()])
-    second, _, _ = run(monkeypatch, [evidence()])
-    changed, _, _ = run(monkeypatch, [evidence()], change_column="updated_at")
-    assert first["metadata_table_key"] == second["metadata_table_key"]
-    assert first["metadata_table_key"] == changed["metadata_table_key"]
+    captured = []
+    run(monkeypatch, [evidence()], persist_spy=lambda rows, kwargs: captured.append(kwargs))
+    run(monkeypatch, [evidence()], change_column="updated_at", persist_spy=lambda rows, kwargs: captured.append(kwargs))
+    assert captured[0]["metadata_table_key"] == captured[1]["metadata_table_key"]
 
 
 def test_public_signature_has_no_legacy_or_runtime_plumbing():
-    assert str(inspect.signature(module.observe_table)) == "(table_name: 'str', *, target: 'str' = 'source', schema: 'str | None' = None, partition_column: 'str', change_column: 'str') -> 'dict[str, Any]'"
+    assert str(inspect.signature(module.observe_table)) == "(table_name: 'str', *, target: 'str' = 'source', schema: 'str | None' = None, partition_column: 'str', change_column: 'str') -> 'Any'"
 
 
 def test_observe_source_is_not_exported():
@@ -166,8 +132,9 @@ def test_observe_source_is_not_exported():
 
 
 def test_logical_source_target_routes_to_configured_warehouse(monkeypatch):
-    result, queries, _ = run(monkeypatch, [evidence()], kind="warehouse")
-    assert result["metadata_table_key"] == module.build_metadata_table_key("warehouse", "source", "dbo", "orders")
+    captured = []
+    result, queries, _ = run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: captured.append(kwargs))
+    assert captured[0]["metadata_table_key"] == module.build_metadata_table_key("warehouse", "source", "dbo", "orders")
     assert queries[0][1]["target"] == "source"
 
 
@@ -178,12 +145,13 @@ def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
     monkeypatch.setattr(module, "resolve_lakehouse_table_location", lambda store, table, schema: (table, schema, f"/Tables/{table}"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
-    monkeypatch.setattr(module, "_load_previous", lambda *args, **kwargs: [])
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: None)
     monkeypatch.setattr(module, "_observe_lakehouse", lambda *args, **kwargs: captured.append(args) or [{**evidence(), "is_present": True}])
-    result = module.observe_table(table_name="orders", target="source", schema="dbo", partition_column="business_date", change_column="modified_at")
+    identities = []
+    monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: identities.append(kwargs) or Frame(rows))
+    module.observe_table(table_name="orders", target="source", schema="dbo", partition_column="business_date", change_column="modified_at")
     assert captured[0][:3] == ("orders", "source", "dbo")
-    assert result["metadata_table_key"] == module.build_metadata_table_key("lakehouse", "source", "dbo", "orders")
+    assert identities[0]["metadata_table_key"] == module.build_metadata_table_key("lakehouse", "source", "dbo", "orders")
 
 
 def test_table_observation_path_contains_no_checksum_or_fingerprint_model():
@@ -196,9 +164,10 @@ def test_table_observation_path_contains_no_checksum_or_fingerprint_model():
 def test_observation_key_matches_profile_registration_builder(monkeypatch):
     from fabricops_kit.config.shared import build_metadata_table_key
 
-    result, _, _ = run(monkeypatch, [evidence()], kind="warehouse")
+    captured = []
+    run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: captured.append(kwargs))
     expected_profile_key = build_metadata_table_key("warehouse", "source", "dbo", "orders")
-    assert result["metadata_table_key"] == expected_profile_key
+    assert captured[0]["metadata_table_key"] == expected_profile_key
 
 
 def test_successful_observation_persists_canonical_identity_and_definition(monkeypatch):
@@ -222,7 +191,6 @@ def test_failed_observation_does_not_persist(monkeypatch):
     monkeypatch.setattr(module, "resolve_warehouse_table_location", lambda store, schema, table: (schema, table, "Store.dbo.orders"))
     monkeypatch.setattr(module, "get_spark_session", lambda: object())
     monkeypatch.setattr(module, "configured_lakehouse_schema", lambda *args: None)
-    monkeypatch.setattr(module, "_load_previous", lambda *args, **kwargs: [])
     monkeypatch.setattr(module, "read_warehouse_query_core", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("source failed")))
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: persisted.extend(rows))
     with pytest.raises(RuntimeError, match="source failed"):

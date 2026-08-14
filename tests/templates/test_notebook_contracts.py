@@ -203,12 +203,15 @@ def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
     """Keep the cheap pre-read and row-level post-read source boundary explicit."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    observation = source.index("observation = observe_table(")
+    observation = source.index("observation_df = observe_table(")
+    schema_check = source.index("schema_result = check_schema(", observation)
+    freshness_check = source.index("freshness_result = check_freshness(", schema_check)
+    changes_check = source.index("changes_result = check_changes(", freshness_check)
     full_read = source.index("source_df = read_lakehouse_table(", observation)
     row_checks = source.index("Run row-level DQ guardrails", full_read)
     profile = source.index("source_profile_df = profile_and_register_table(", row_checks)
 
-    assert observation < full_read < row_checks < profile
+    assert observation < schema_check < freshness_check < changes_check < full_read < row_checks < profile
     assert 'SOURCE_TARGET = "source"' in source
     assert 'SOURCE_SCHEMA = "dbo"' in source
     assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source

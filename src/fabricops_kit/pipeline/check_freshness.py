@@ -47,6 +47,14 @@ def check_freshness(
     >>> result = check_freshness(rows, "business_date", 2)
 
     """
+    columns = set(getattr(dataframe, "columns", ()))
+    if not columns and isinstance(dataframe, (list, tuple)) and dataframe:
+        first = dataframe[0]
+        columns = set(first.asDict(recursive=True) if hasattr(first, "asDict") else first)
+    observation_evidence = {
+        "metadata_table_key", "partition_value", "change_column",
+        "max_change_value", "observed_at",
+    } <= columns
     if rules_df is not None:
         return freshness_check_core(
             dataframe,
@@ -59,7 +67,7 @@ def check_freshness(
         )
     return freshness_check_core(
         dataframe,
-        freshness_column,
+        "max_change_value" if observation_evidence else freshness_column,
         max_lag_days,
         severity=severity,
         reference_date=reference_date,
