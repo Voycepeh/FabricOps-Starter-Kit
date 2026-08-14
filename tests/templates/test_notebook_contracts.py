@@ -197,3 +197,19 @@ def test_governance_workflow_cells_are_output_free():
     assert workflow_cells
     assert all(cell.execution_count is None for cell in workflow_cells)
     assert all(not cell.outputs for cell in workflow_cells)
+
+
+def test_02_pipeline_observes_before_read_and_profiles_after_row_checks():
+    """Keep the cheap pre-read and row-level post-read source boundary explicit."""
+    source = _notebook_source("02_pipeline.ipynb")
+
+    observation = source.index("observation = observe_table(")
+    full_read = source.index("source_df = read_lakehouse_table(", observation)
+    row_checks = source.index("Run row-level DQ guardrails", full_read)
+    profile = source.index("source_profile_df = profile_and_register_table(", row_checks)
+
+    assert observation < full_read < row_checks < profile
+    assert 'SOURCE_TARGET = "source"' in source
+    assert 'SOURCE_SCHEMA = "dbo"' in source
+    assert 'SOURCE_TABLE_NAME = "student_enrolment"' in source
+    assert "`observe_table()` is evidence collection, not a guardrail" in source

@@ -1,32 +1,31 @@
 # METADATA_SOURCE_OBSERVATION
 
-**Purpose:** Append-only compact source-partition observations used for incremental read planning.
+**Purpose:** Append-only compact partition observations used for cheap pre-read source checking; each row links to METADATA_DATA_CATALOGUE through metadata_table_key.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 21 |
-| Business columns | 13 |
+| Total columns | 20 |
+| Business columns | 12 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `source_id` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Identifier stored for `source_id`. |
-| `observation_definition_id` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Identifier stored for `observation_definition_id`. |
-| `source_type` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_type`. |
-| `source_target` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_target`. |
-| `source_schema` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_schema`. |
-| `source_table` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `source_table`. |
-| `partition_value` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `partition_value`. |
-| `is_present` | `boolean` | [`observe_source`](../../api/reference/observe_source.md) | Boolean state recorded for `is_present`. |
-| `row_count` | `long` | [`observe_source`](../../api/reference/observe_source.md) | Observed total row count in the profiled dataset snapshot. |
-| `observed_min` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `observed_min`. |
-| `observed_max` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `observed_max`. |
-| `fingerprint` | `string` | [`observe_source`](../../api/reference/observe_source.md) | Metadata Source Observation field `fingerprint`. |
-| `observed_at` | `timestamp` | [`observe_source`](../../api/reference/observe_source.md) | Timestamp stored for `observed_at`. |
+| `metadata_table_key` | `string` | [`observe_table`](../../api/reference/observe_table.md), `fabricops_kit.config.shared.build_metadata_table_key` | Canonical table identity shared with METADATA_DATA_CATALOGUE. |
+| `source_target` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Logical FabricOps target resolved through 00_env_config. |
+| `source_schema` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Resolved physical source schema when the configured store uses one. |
+| `source_table` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Resolved physical source table name. |
+| `partition_column` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Column whose distinct values define observed source partitions. |
+| `partition_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | String representation of the observed partition value. |
+| `change_column` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Trustworthy source column used for automatic minimum and maximum evidence. |
+| `row_count` | `long` | [`observe_table`](../../api/reference/observe_table.md) | Number of rows observed in the partition, or zero for a removal tombstone. |
+| `min_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Earliest observed change-column value, or null for a removal tombstone. |
+| `max_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Latest observed change-column value, or null for a removal tombstone. |
+| `is_present` | `boolean` | [`observe_table`](../../api/reference/observe_table.md) | Whether the partition exists in this observation; false identifies a removal tombstone. |
+| `observed_at` | `timestamp` | [`observe_table`](../../api/reference/observe_table.md) | Timestamp when FabricOps collected this compact source observation. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
@@ -38,4 +37,4 @@
 
 ## Related function reference
 
-- [`observe_source`](../../api/reference/observe_source.md)
+- [`observe_table`](../../api/reference/observe_table.md)

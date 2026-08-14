@@ -137,7 +137,10 @@ METADATA_TABLE_PURPOSES = {
     "METADATA_ENRICHMENT": "Append-only generic descriptive and governance values for catalogue table and column identities.",
     "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
     "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
-    "METADATA_SOURCE_OBSERVATION": "Append-only compact source-partition observations used for incremental read planning.",
+    "METADATA_SOURCE_OBSERVATION": (
+        "Append-only compact partition observations used for cheap pre-read source checking; "
+        "each row links to METADATA_DATA_CATALOGUE through metadata_table_key."
+    ),
 }
 
 _UNTRACED_SCHEMA_OWNER = {
@@ -365,8 +368,12 @@ METADATA_COLUMN_OWNERS = {
         "result_payload_json": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "__default__": ["fabricops_kit.pipeline.observe_source.observe_source"],
+        "__default__": ["fabricops_kit.pipeline.observe_table.observe_table"],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+        "metadata_table_key": [
+            "fabricops_kit.pipeline.observe_table.observe_table",
+            "fabricops_kit.config.shared.build_metadata_table_key",
+        ],
     },
 }
 
@@ -481,7 +488,9 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
   'notebook_label': '`02_pipeline`',
   'segment_intro': 'Simple v0.2 Lakehouse-first pipeline with complete-table Warehouse read and '
                    'write alternatives.',
-  'segments': [{'symbols': ['read_lakehouse_csv',
+  'segments': [{'symbols': ['observe_table', 'check_schema', 'check_freshness', 'check_changes'],
+                'title': 'Observe and check source cheaply'},
+               {'symbols': ['read_lakehouse_csv',
                             'read_lakehouse_excel',
                             'read_lakehouse_parquet',
                             'read_lakehouse_table',
@@ -694,20 +703,20 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Structured change counts, partition fingerprints, recent and historical classifications, and observed ranges.',
   'side_effects': 'None. It does not merge or write target data.',
  'preferred_example': 'change_result = check_changes(current_df, previous_df, key_columns=["order_id"])',
- 'related_functions': ['check_schema', 'check_freshness', 'observe_source', 'run_table_guardrails']},
+ 'related_functions': ['check_schema', 'check_freshness', 'observe_table', 'run_table_guardrails']},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Observe source partitions cheaply and plan a restricted source read.',
-  'symbol_name': 'observe_source',
+  'summary_override': 'Record compact count and change-value bounds before expensive source work.',
+  'symbol_name': 'observe_table',
   'template_notebook': '02_pipeline',
   'template_segment': 'Source guardrails',
   'use_when': 'Use before ingesting a large Warehouse or Lakehouse source to identify changed partitions.',
   'do_not_use_when': 'Do not use for row-level inserted, updated, or deleted classification.',
-  'parameters': 'Explicit source identity and type, partition, range and fingerprint columns, and FabricOps runtime configuration.',
-  'returns': 'Compact observations plus changed and new partitions and a restricted read predicate.',
+  'parameters': 'Configured table target and schema, partition column, and trustworthy change column.',
+  'returns': 'Compact count, minimum and maximum change-value observations plus changed partitions and a restricted read predicate.',
   'side_effects': 'Appends compact history to FabricOps metadata; never writes to the external source.',
-  'preferred_example': 'plan = observe_source(source, partition_columns=["business_date"], range_column="order_id", fingerprint_columns=["order_id"], config=CONFIG, env=ENV)',
+  'preferred_example': 'observation = observe_table(target=SOURCE_TARGET, schema=SOURCE_SCHEMA, table_name=SOURCE_TABLE_NAME, partition_column="business_date", change_column="modified_at")',
   'related_functions': ['read_warehouse_query', 'read_lakehouse_table', 'check_changes']},
  {'kind': 'function',
   'module': 'config.get_fabric_context',

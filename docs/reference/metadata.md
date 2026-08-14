@@ -66,6 +66,6 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
 -   **[METADATA_SOURCE_OBSERVATION](metadata/metadata_source_observation.md)**
 
-    Append-only compact source-partition observations used for incremental read planning.
+    Append-only compact partition observations used for cheap pre-read source checking; each row links to METADATA_DATA_CATALOGUE through metadata_table_key.
 
 </div>

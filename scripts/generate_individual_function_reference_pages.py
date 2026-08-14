@@ -188,6 +188,21 @@ METADATA_FIELD_DESCRIPTIONS = {
     "usage_notes": "Usage notes recorded for the row.",
     "quality_notes": "Quality notes recorded for the row.",
 }
+
+SOURCE_OBSERVATION_FIELD_DESCRIPTIONS = {
+    "metadata_table_key": "Canonical table identity shared with METADATA_DATA_CATALOGUE.",
+    "source_target": "Logical FabricOps target resolved through 00_env_config.",
+    "source_schema": "Resolved physical source schema when the configured store uses one.",
+    "source_table": "Resolved physical source table name.",
+    "partition_column": "Column whose distinct values define observed source partitions.",
+    "partition_value": "String representation of the observed partition value.",
+    "change_column": "Trustworthy source column used for automatic minimum and maximum evidence.",
+    "row_count": "Number of rows observed in the partition, or zero for a removal tombstone.",
+    "min_change_value": "Earliest observed change-column value, or null for a removal tombstone.",
+    "max_change_value": "Latest observed change-column value, or null for a removal tombstone.",
+    "is_present": "Whether the partition exists in this observation; false identifies a removal tombstone.",
+    "observed_at": "Timestamp when FabricOps collected this compact source observation.",
+}
 METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_AGREEMENT": ["widget_render_data_agreement"],
     "METADATA_DATA_CATALOGUE": ["profile_and_register_table", "widget_enrich_table_metadata"],
@@ -196,7 +211,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
     "METADATA_GUARDRAIL_RESULTS": ["run_table_guardrails", "display_guardrail_results"],
-    "METADATA_SOURCE_OBSERVATION": ["observe_source"],
+    "METADATA_SOURCE_OBSERVATION": ["observe_table"],
     "METADATA_GUARDRAIL": [
         "widget_author_schema_freshness_profile_rules",
         "widget_author_dq_rules",
@@ -4180,6 +4195,8 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
+    if table_name == "METADATA_SOURCE_OBSERVATION" and column_name in SOURCE_OBSERVATION_FIELD_DESCRIPTIONS:
+        return SOURCE_OBSERVATION_FIELD_DESCRIPTIONS[column_name]
     if column_name in METADATA_FIELD_DESCRIPTIONS:
         return METADATA_FIELD_DESCRIPTIONS[column_name]
     if column_name.endswith("_json"):
