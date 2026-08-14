@@ -1,6 +1,6 @@
 # Step 4: Rerun the Development pipeline with Guardrails
 
-**Rerun `02_pipeline` in Engineering Development so the Guardrails defined in Step 3 are loaded, evaluated, and recorded before critical publication steps.**
+**Rerun `02_pipeline` in Engineering Development so the Guardrails authored in Step 3 are loaded, evaluated, and recorded before critical publication steps.**
 
 The guarded pipeline keeps the same read, profile, transform, profile, and write pattern from Step 2, then adds Guardrail retrieval, evaluation, severity handling, and continuation decisions.
 
@@ -24,7 +24,7 @@ read
 
 1. Read the source DataFrame.
 2. Profile and register the source.
-3. Load the active source Guardrails defined by Governance.
+3. Load the active source Guardrails authored by Governance.
 4. Evaluate source Guardrails.
 5. Stop or continue based on severity and continuation results.
 6. Apply transformation logic.

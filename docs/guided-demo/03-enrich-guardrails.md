@@ -1,6 +1,6 @@
-# Step 3: Enrich the Data Catalogue and define Guardrails
+# Step 3: Enrich the Data Catalogue and Author Guardrails
 
-**Return to `01_governance` after `02_pipeline` has produced the Data Catalogue and Data Profiled evidence. Governance reads that evidence, enriches it, and defines Guardrails.**
+**Return to `01_governance` after `02_pipeline` has produced the Data Catalogue and Data Profiled evidence. Governance reads that evidence, enriches it, and authors Guardrails.**
 
 ## Before you begin
 
@@ -12,8 +12,8 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
 2. Select the governed dataset.
 3. Inspect the Data Catalogue and Data Profiled evidence written by `02_pipeline`.
 4. Add or refine Enrichment such as business descriptions, classifications, and stewardship context.
-5. Define schema, freshness, profile-behaviour, and data-quality Guardrails for the ETL workflow.
-6. Save the approved Governance records.
+5. Author schema, freshness, profile-behaviour, and data-quality Guardrails for the ETL workflow.
+6. Save the authored Governance records.
 
 ## Governance responsibilities
 
@@ -21,7 +21,7 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
 | --- | --- |
 | `METADATA_DATA_CATALOGUE` | Read the observed table and column evidence written by `02_pipeline`. |
 | `METADATA_ENRICHMENT` | Add descriptive business context and classifications. |
-| `METADATA_GUARDRAIL` | Define executable Guardrail intent for the ETL workflow. |
+| `METADATA_GUARDRAIL` | Author executable Guardrail intent for the ETL workflow. |
 | `METADATA_GUARDRAIL_RESULTS` | Inspect runtime outcomes written by Engineering; do not edit them as observed evidence. |
 
 !!! important "Keep observed evidence and Governance intent separate"
@@ -33,8 +33,8 @@ Confirm that Step 2 completed successfully and the relevant Data Catalogue and D
 You should now have:
 
 - reviewed Engineering evidence
-- approved Enrichment records
-- Guardrails ready for `02_pipeline` to evaluate
+- authored Enrichment records
+- authored Guardrails ready for `02_pipeline` to evaluate
 
 **Previous:** [Step 2: Run the Common Pipeline Patterns](02-run-pipeline.md)  
 **Next:** [Step 4: Rerun the Development pipeline with Guardrails](04-run-pipeline-with-guardrails.md)
