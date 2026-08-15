@@ -17,24 +17,24 @@ pytestmark = pytest.mark.unit
 def _rule(rule_type: str, **kwargs):
     rule = {"rule_id": f"r_{rule_type}", "rule_type": rule_type, "columns": ["id"], "severity": "error", "description": "test"}
     rule.update(kwargs)
-    if rule_type == "null_rate_below":
-        rule.setdefault("max_null_percent", 0)
+    if rule_type == "missing_values":
+        rule.setdefault("maximum_null_percent", 0)
     return rule
 
 
 @pytest.mark.parametrize(
     ("rule", "failed"),
     [
-        (_rule("null_rate_below", columns=["email"], max_null_percent=10), 1),
-        (_rule("non_empty_string", columns=["name"]), 2),
-        (_rule("unique", columns=["id"]), 2),
+        (_rule("missing_values", columns=["email"], maximum_null_percent=10), 1),
+        (_rule("blank_text", columns=["name"]), 2),
+        (_rule("unique_values", columns=["id"]), 2),
         (_rule("unique_combination", columns=["id", "semester"]), 2),
-        (_rule("accepted_values", columns=["status"], allowed_values=["Active", "Inactive"]), 1),
-        (_rule("not_in_values", columns=["country"], blocked_values=["UNKNOWN", "N/A"]), 2),
-        (_rule("between", columns=["score"], minimum_value=0, maximum_value=100), 1),
-        (_rule("regex_match", columns=["email"], regex_pattern=r"^[^@]+@[^@]+\.[^@]+$"), 1),
+        (_rule("allowed_values", columns=["status"], allowed_values=["Active", "Inactive"]), 1),
+        (_rule("blocked_values", columns=["country"], blocked_values=["UNKNOWN", "N/A"]), 2),
+        (_rule("value_range", columns=["score"], minimum=0, maximum=100), 1),
+        (_rule("text_pattern", columns=["email"], pattern=r"^[^@]+@[^@]+\.[^@]+$"), 1),
         (_rule("required_when", columns=["approved_date"], condition_column="country", condition_operator="=", condition_value="UNKNOWN"), 1),
-        (_rule("value_when", columns=["is_active"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=False), 1),
+        (_rule("conditional_value", columns=["is_active"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=False), 1),
         (_rule("compare_columns", columns=["end_date", "start_date"], operator=">="), 1),
     ],
 )
@@ -53,19 +53,19 @@ def test_dq_rule_engine_supports_catalogue_rules(spark_session, rule, failed):
     assert checks[0]["failed_count"] == failed
 
 
-@pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "value_range", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "custom_expression", "not_null", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "expression_true"])
+@pytest.mark.parametrize("old_rule_type", ["unique_key", "regex_format", "regex", "unique_compound", "compound_unique", "datatype", "referential_integrity", "custom_expression", "null_rate_below", "non_empty_string", "unique", "accepted_values", "not_in_values", "between", "regex_match", "value_when", "not_null", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "expression_true"])
 def test_legacy_or_external_rule_names_fail_validation(old_rule_type):
     """Verify legacy or external rule names fail validation."""
     with pytest.raises(ValueError, match="unsupported rule_type"):
         governance._validate_dq_rules([_rule(old_rule_type, columns=["id"])])
 
 
-def test_strict_null_rate_and_non_empty_string_have_distinct_semantics(spark_session):
+def test_strict_null_rate_and_blank_text_have_distinct_semantics(spark_session):
     """Verify strict null-rate and non-empty-string rules have distinct semantics."""
     df = spark_session.createDataFrame([(None,), ("",), ("   ",), ("ok",)], "name string")
 
-    strict_null_rate = _rule("null_rate_below", columns=["name"], max_null_percent=0)
-    non_empty = _rule("non_empty_string", columns=["name"])
+    strict_null_rate = _rule("missing_values", columns=["name"], maximum_null_percent=0)
+    non_empty = _rule("blank_text", columns=["name"])
 
     null_rate_check = governance._run_dq_guardrail_checks(df, "students", [strict_null_rate])[0]
     non_empty_check = governance._run_dq_guardrail_checks(df, "students", [non_empty])[0]
@@ -101,9 +101,9 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(
         [
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "null_rate_below", "rule_parameters_json": json.dumps({"columns": ["id"], "max_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "null_rate_below", "rule_parameters_json": json.dumps({"columns": ["id"], "max_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
-            {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "accepted_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
+            {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "allowed_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
         ]
     )
     rules = governance._load_active_dq_rules(metadata, "orders", env="dev", dataset_name="sales")
@@ -172,9 +172,9 @@ def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_sessi
         "id string, status string, amount int",
     )
     rules = [
-        _rule("null_rate_below", rule_id="id_required", columns=["id"], severity="error"),
-        _rule("accepted_values", rule_id="status_allowed", columns=["status"], allowed_values=["good"], severity="warning"),
-        _rule("between", rule_id="amount_positive", columns=["amount"], minimum_value=0, minimum_inclusive=False, severity="warning"),
+        _rule("missing_values", rule_id="id_required", columns=["id"], severity="error"),
+        _rule("allowed_values", rule_id="status_allowed", columns=["status"], allowed_values=["good"], severity="warning"),
+        _rule("value_range", rule_id="amount_positive", columns=["amount"], minimum=0, minimum_inclusive=False, severity="warning"),
     ]
 
     rows = governance._dq_tagged_dataframe(df, rules).select("id", "status", "amount", "_dq_failed_rules", "_dq_check_status").collect()
@@ -186,7 +186,7 @@ def test_dq_tagged_dataframe_uses_row_level_warning_and_error_status(spark_sessi
     assert by_values[(None, "good", -1)]["_dq_check_status"] == "failed"
 
 
-def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
+def test_conditional_value_uses_null_safe_expected_value_comparison(spark_session):
     """Verify value when uses null safe expected value comparison."""
     df = spark_session.createDataFrame(
         [
@@ -199,9 +199,9 @@ def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
         "student_status string, is_active boolean, expected_null string, actual_non_null string, actual_null string",
     )
     rules = [
-        _rule("value_when", rule_id="graduated_inactive", columns=["is_active"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=False),
-        _rule("value_when", rule_id="null_expected", columns=["expected_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=None),
-        _rule("value_when", rule_id="nonnull_expected", columns=["actual_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value="x"),
+        _rule("conditional_value", rule_id="graduated_inactive", columns=["is_active"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=False),
+        _rule("conditional_value", rule_id="null_expected", columns=["expected_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=None),
+        _rule("conditional_value", rule_id="nonnull_expected", columns=["actual_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value="x"),
     ]
 
     checks = {check["rule_id"]: check for check in governance._run_dq_guardrail_checks(df, "students", rules)}
@@ -210,7 +210,7 @@ def test_value_when_uses_null_safe_expected_value_comparison(spark_session):
     assert checks["null_expected"]["failed_count"] == 0
     assert checks["nonnull_expected"]["failed_count"] == 3
 
-    null_mismatch = _rule("value_when", rule_id="null_mismatch", columns=["actual_non_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=None)
+    null_mismatch = _rule("conditional_value", rule_id="null_mismatch", columns=["actual_non_null"], condition_column="student_status", condition_operator="=", condition_value="Graduated", expected_value=None)
     assert governance._run_dq_guardrail_checks(df, "students", [null_mismatch])[0]["failed_count"] == 1
 
 
@@ -242,8 +242,8 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "dataset_name": "sales",
                 "table_name": "orders",
                 "column_name": "id",
-                "rule_type": "null_rate_below",
-                "rule_parameters_json": json.dumps({"columns": ["id"], "max_null_percent": 0}),
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "id required",
                 "is_active": True,
@@ -259,7 +259,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "dataset_name": "sales",
                 "table_name": "orders",
                 "column_name": "status",
-                "rule_type": "accepted_values",
+                "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["ok"]}),
                 "severity": "error",
                 "description": "draft should not run",
@@ -276,7 +276,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "dataset_name": "sales",
                 "table_name": "orders",
                 "column_name": "status",
-                "rule_type": "accepted_values",
+                "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["bad"]}),
                 "severity": "error",
                 "description": "inactive should not run",
@@ -320,8 +320,8 @@ def test_run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(mo
                 "dataset_name": "sales",
                 "table_name": "orders",
                 "column_name": "id",
-                "rule_type": "null_rate_below",
-                "rule_parameters_json": json.dumps({"columns": ["id"], "max_null_percent": 0}),
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "draft",
                 "is_active": True,
@@ -353,8 +353,8 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
             "dataset_name": "sales",
             "table_name": "orders",
             "column_name": "order_id",
-            "rule_type": "null_rate_below",
-            "rule_parameters_json": json.dumps({"columns": ["order_id"], "max_null_percent": 0}),
+            "rule_type": "missing_values",
+            "rule_parameters_json": json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}),
             "severity": "error",
             "description": "required",
             "action_type": "created",
@@ -393,10 +393,10 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
     assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders", env="dev", dataset_name="sales")] == ["active_pending"]
 
 def test_null_rate_zero_is_strict_and_positive_threshold_allows_expected_rate(spark_session):
-    """Use null_rate_below(0) for strict non-null without a duplicate rule type."""
+    """Use missing_values(0) for strict non-null without a duplicate rule type."""
     df = spark_session.createDataFrame([(1,), (2,), (None,), (3,)], "value int")
-    strict = _rule("null_rate_below", columns=["value"], max_null_percent=0)
-    permissive = _rule("null_rate_below", columns=["value"], max_null_percent=25)
+    strict = _rule("missing_values", columns=["value"], maximum_null_percent=0)
+    permissive = _rule("missing_values", columns=["value"], maximum_null_percent=25)
 
     assert governance._run_dq_guardrail_checks(df, "values", [strict])[0]["failed_count"] == 1
     assert governance._run_dq_guardrail_checks(df, "values", [permissive])[0]["failed_count"] == 0
@@ -405,29 +405,29 @@ def test_null_rate_zero_is_strict_and_positive_threshold_allows_expected_rate(sp
 @pytest.mark.parametrize(
     ("parameters", "failed"),
     [
-        ({"minimum_value": 0, "minimum_inclusive": True}, 0),
-        ({"minimum_value": 0, "minimum_inclusive": False}, 1),
-        ({"maximum_value": 100, "maximum_inclusive": True}, 0),
-        ({"maximum_value": 100, "maximum_inclusive": False}, 1),
-        ({"minimum_value": 0, "maximum_value": 100}, 0),
+        ({"minimum": 0, "minimum_inclusive": True}, 0),
+        ({"minimum": 0, "minimum_inclusive": False}, 1),
+        ({"maximum": 100, "maximum_inclusive": True}, 0),
+        ({"maximum": 100, "maximum_inclusive": False}, 1),
+        ({"minimum": 0, "maximum": 100}, 0),
     ],
 )
 def test_between_supports_one_or_two_inclusive_or_exclusive_bounds(spark_session, parameters, failed):
-    """Consolidate directional comparisons into configurable between bounds."""
+    """Consolidate directional comparisons into configurable value_range bounds."""
     df = spark_session.createDataFrame([(0,), (50,), (100,)], "score int")
-    rule = _rule("between", columns=["score"], **parameters)
+    rule = _rule("value_range", columns=["score"], **parameters)
     assert governance._run_dq_guardrail_checks(df, "scores", [rule])[0]["failed_count"] == failed
 
 
 def test_between_preserves_comparable_date_values(spark_session):
-    """Keep date-like comparable values in the general between rule."""
+    """Keep date-like comparable values in the general value_range rule."""
     df = spark_session.createDataFrame([("2025-12-31",), ("2026-01-01",), ("2026-12-31",)], "event_date string")
     rule = _rule(
-        "between",
+        "value_range",
         columns=["event_date"],
-        minimum_value="2026-01-01",
+        minimum="2026-01-01",
         minimum_inclusive=True,
-        maximum_value="2026-12-31",
+        maximum="2026-12-31",
         maximum_inclusive=False,
     )
     assert governance._run_dq_guardrail_checks(df, "events", [rule])[0]["failed_count"] == 2

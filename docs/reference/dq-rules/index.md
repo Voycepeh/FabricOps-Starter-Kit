@@ -8,39 +8,39 @@ The vocabulary is deliberately structured and governable. DQ rules use named par
 
 | Rule | Purpose | Canonical configuration |
 |---|---|---|
-| `null_rate_below` | Limit the percentage of null values. A threshold of `0` is strict non-null enforcement. | one column; `max_null_percent` |
-| `non_empty_string` | Reject null, blank, and whitespace-only strings. | one column |
-| `unique` | Require each selected column to be unique independently. | one column per rule |
+| `missing_values` | Limit the percentage of null values. A threshold of `0` is strict non-null enforcement. | one column; `maximum_null_percent` |
+| `blank_text` | Reject null, blank, and whitespace-only strings. | one column |
+| `unique_values` | Require each selected column to be unique independently. | one column per rule |
 | `unique_combination` | Require a combined business key to be unique. | two or more ordered `columns` |
-| `accepted_values` | Allow only an approved value set. | one column; `allowed_values` |
-| `not_in_values` | Reject a governed list of forbidden values. | one column; `blocked_values` |
-| `between` | Enforce one-sided or two-sided bounds for numeric, date, or other comparable values. | one column; optional `minimum_value` / `maximum_value` and inclusivity flags |
-| `regex_match` | Require populated strings to match a governed pattern. | one column; `regex_pattern` |
+| `allowed_values` | Allow only an approved value set. | one column; `allowed_values` |
+| `blocked_values` | Reject a governed list of forbidden values. | one column; `blocked_values` |
+| `value_range` | Enforce one-sided or two-sided bounds for numeric, date, or other comparable values. | one column; optional `minimum` / `maximum` and inclusivity flags |
+| `text_pattern` | Require populated strings to match a governed pattern. | one column; `pattern` |
 | `required_when` | Require one or more target columns when a structured condition matches. | target `columns`; condition column, operator, and value |
-| `value_when` | Require one target column to equal an expected value when a structured condition matches. | one target column; structured condition; `expected_value` |
+| `conditional_value` | Require one target column to equal an expected value when a structured condition matches. | one target column; structured condition; `expected_value` |
 | `compare_columns` | Compare two distinct ordered columns with a controlled operator. | two ordered `columns`; `operator` |
 
 ## Practical examples
 
 ### Strict non-null
 
-Use `null_rate_below` with a zero threshold rather than a separate `not_null` rule:
+Use `missing_values` with a zero threshold rather than a separate `not_null` rule:
 
 ```json
-{"rule_type":"null_rate_below","columns":["student_id"],"max_null_percent":0}
+{"rule_type":"missing_values","columns":["student_id"],"maximum_null_percent":0}
 ```
 
 ### One-sided and two-sided ranges
 
-`between` supports `>`, `>=`, `<`, `<=`, and bounded ranges through values and inclusivity flags:
+`value_range` supports `>`, `>=`, `<`, `<=`, and bounded ranges through values and inclusivity flags:
 
 ```json
 {
-  "rule_type": "between",
+  "rule_type": "value_range",
   "columns": ["amount"],
-  "minimum_value": 0,
+  "minimum": 0,
   "minimum_inclusive": false,
-  "maximum_value": null,
+  "maximum": null,
   "maximum_inclusive": true
 }
 ```

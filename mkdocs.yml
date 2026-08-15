@@ -59,16 +59,16 @@ nav:
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
-      - null_rate_below: reference/dq-rules/null-rate-below.md
-      - non_empty_string: reference/dq-rules/non-empty-string.md
-      - unique: reference/dq-rules/unique.md
+      - missing_values: reference/dq-rules/missing-values.md
+      - blank_text: reference/dq-rules/blank-text.md
+      - unique_values: reference/dq-rules/unique-values.md
       - unique_combination: reference/dq-rules/unique-combination.md
-      - accepted_values: reference/dq-rules/accepted-values.md
-      - not_in_values: reference/dq-rules/not-in-values.md
-      - between: reference/dq-rules/between.md
-      - regex_match: reference/dq-rules/regex-match.md
+      - allowed_values: reference/dq-rules/allowed-values.md
+      - blocked_values: reference/dq-rules/blocked-values.md
+      - value_range: reference/dq-rules/value-range.md
+      - text_pattern: reference/dq-rules/text-pattern.md
       - required_when: reference/dq-rules/required-when.md
-      - value_when: reference/dq-rules/value-when.md
+      - conditional_value: reference/dq-rules/conditional-value.md
       - compare_columns: reference/dq-rules/compare-columns.md
   - FabricOps Maintainer:
       - Product Definition: maintainer/product-definition.md

@@ -105,16 +105,16 @@ _GUARDRAIL_CHANGE_BEHAVIOUR_MAPPING = {
     "Snapshot overwrite": ("monitor_only", "snapshot"),
 }
 DQ_RULE_TYPES = [
-    "null_rate_below",
-    "non_empty_string",
-    "unique",
+    "missing_values",
+    "blank_text",
+    "unique_values",
     "unique_combination",
-    "accepted_values",
-    "not_in_values",
-    "between",
-    "regex_match",
+    "allowed_values",
+    "blocked_values",
+    "value_range",
+    "text_pattern",
     "required_when",
-    "value_when",
+    "conditional_value",
     "compare_columns",
 ]
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
@@ -1747,10 +1747,10 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if rtype not in DQ_RULE_TYPES:
             raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported rule_type '{rtype}'.")
 
-        if rtype in {"non_empty_string", "required_when"}:
+        if rtype in {"blank_text", "required_when"}:
             require_columns(rule, minimum=1)
         elif rtype in {
-            "null_rate_below", "unique", "accepted_values", "not_in_values", "between", "regex_match", "value_when",
+            "missing_values", "unique_values", "allowed_values", "blocked_values", "value_range", "text_pattern", "conditional_value",
         }:
             require_columns(rule, count=1)
         elif rtype == "unique_combination":
@@ -1758,32 +1758,32 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
         elif rtype == "compare_columns":
             require_columns(rule, count=2)
 
-        if rtype == "null_rate_below":
-            if rule.get("max_null_percent") is None:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires max_null_percent.")
-            threshold = float(rule["max_null_percent"])
+        if rtype == "missing_values":
+            if rule.get("maximum_null_percent") is None:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires maximum_null_percent.")
+            threshold = float(rule["maximum_null_percent"])
             if not 0 <= threshold <= 100:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' max_null_percent must be between 0 and 100.")
-            rule["max_null_percent"] = threshold
-        if rtype == "accepted_values" and "allowed_values" not in rule:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' maximum_null_percent must be between 0 and 100.")
+            rule["maximum_null_percent"] = threshold
+        if rtype == "allowed_values" and "allowed_values" not in rule:
             raise ValueError(f"DQ rule '{rule['rule_id']}' requires allowed_values.")
-        if rtype == "not_in_values" and "blocked_values" not in rule:
+        if rtype == "blocked_values" and "blocked_values" not in rule:
             raise ValueError(f"DQ rule '{rule['rule_id']}' requires blocked_values.")
-        if rtype == "between":
-            if rule.get("minimum_value") is None and rule.get("maximum_value") is None:
-                raise ValueError(f"DQ rule '{rule['rule_id']}' requires minimum_value or maximum_value.")
+        if rtype == "value_range":
+            if rule.get("minimum") is None and rule.get("maximum") is None:
+                raise ValueError(f"DQ rule '{rule['rule_id']}' requires minimum or maximum.")
             rule["minimum_inclusive"] = bool(rule.get("minimum_inclusive", True))
             rule["maximum_inclusive"] = bool(rule.get("maximum_inclusive", True))
-        if rtype == "regex_match" and not str(rule.get("regex_pattern") or ""):
-            raise ValueError(f"DQ rule '{rule['rule_id']}' requires regex_pattern.")
-        if rtype in {"required_when", "value_when"}:
+        if rtype == "text_pattern" and not str(rule.get("pattern") or ""):
+            raise ValueError(f"DQ rule '{rule['rule_id']}' requires pattern.")
+        if rtype in {"required_when", "conditional_value"}:
             if not str(rule.get("condition_column") or "").strip():
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_column.")
             if str(rule.get("condition_operator") or "") not in DQ_COMPARISON_OPERATORS:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported condition_operator.")
             if "condition_value" not in rule:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires condition_value.")
-        if rtype == "value_when":
+        if rtype == "conditional_value":
             if "expected_value" not in rule:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' requires expected_value.")
         if rtype == "compare_columns":
@@ -1893,32 +1893,32 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
             return left < right
         return left <= right
 
-    if rtype == "null_rate_below":
+    if rtype == "missing_values":
         total = int(df.count())
         null_count = int(df.filter(F.col(col_name).isNull()).count()) if total else 0
-        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["max_null_percent"]) else F.lit(False)
-    elif rtype == "non_empty_string":
+        failed = F.col(col_name).isNull() if total and ((null_count / total) * 100) > float(rule["maximum_null_percent"]) else F.lit(False)
+    elif rtype == "blank_text":
         failed = empty_string(cols[0])
         for c in cols[1:]:
             failed = failed | empty_string(c)
-    elif rtype in {"unique", "unique_combination"}:
+    elif rtype in {"unique_values", "unique_combination"}:
         failed = F.count(F.lit(1)).over(Window.partitionBy(*[F.col(c) for c in cols])) > F.lit(1)
-    elif rtype == "accepted_values":
+    elif rtype == "allowed_values":
         failed = F.col(col_name).isNotNull() & ~F.col(col_name).isin(list(rule["allowed_values"]))
-    elif rtype == "not_in_values":
+    elif rtype == "blocked_values":
         failed = F.col(col_name).isNotNull() & F.col(col_name).isin(list(rule["blocked_values"]))
-    elif rtype == "between":
+    elif rtype == "value_range":
         value_col = F.col(col_name)
         cond = F.lit(False)
-        if rule.get("minimum_value") is not None:
-            minimum = F.lit(rule["minimum_value"])
+        if rule.get("minimum") is not None:
+            minimum = F.lit(rule["minimum"])
             cond = cond | (value_col < minimum if rule["minimum_inclusive"] else value_col <= minimum)
-        if rule.get("maximum_value") is not None:
-            maximum = F.lit(rule["maximum_value"])
+        if rule.get("maximum") is not None:
+            maximum = F.lit(rule["maximum"])
             cond = cond | (value_col > maximum if rule["maximum_inclusive"] else value_col >= maximum)
         failed = F.col(col_name).isNotNull() & cond
-    elif rtype == "regex_match":
-        failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["regex_pattern"])
+    elif rtype == "text_pattern":
+        failed = F.col(col_name).isNotNull() & ~F.col(col_name).cast("string").rlike(rule["pattern"])
     elif rtype == "compare_columns":
         left = F.col(cols[0])
         right = F.col(cols[1])
@@ -1932,7 +1932,7 @@ def _dq_failed_expression(df, rule: dict[str, Any]):
         for c in cols[1:]:
             missing = missing | empty_string(c)
         failed = condition & missing
-    elif rtype == "value_when":
+    elif rtype == "conditional_value":
         condition = compare(F.col(condition_column), rule["condition_operator"], F.lit(rule["condition_value"]))
         failed = condition & ~F.col(col_name).eqNullSafe(F.lit(rule["expected_value"]))
     else:

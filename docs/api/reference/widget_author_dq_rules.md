@@ -39,7 +39,7 @@ They help users write values into the correct underlying metadata tables without
 def widget_author_dq_rules(
     spark_session: Any,
     context: dict[str, Any] | None=None,
-    rule_type: str='null_rate_below',
+    rule_type: str='missing_values',
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
     severity: str='warning',
@@ -58,7 +58,7 @@ def widget_author_dq_rules(
 
 >>> form = widget_author_dq_rules(spark_session=spark)
 >>> form["controls"]["rule_type"].value
-'null_rate_below'
+'missing_values'
 
 </div>
 

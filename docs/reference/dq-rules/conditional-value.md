@@ -1,4 +1,4 @@
-# `value_when`
+# `conditional_value`
 
 Require one target column to equal an expected value when a structured row condition matches.
 
@@ -14,7 +14,7 @@ Require one target column to equal an expected value when a structured row condi
 
 ```json
 {
-  "rule_type": "value_when",
+  "rule_type": "conditional_value",
   "columns": ["is_active"],
   "condition_column": "status",
   "condition_operator": "=",

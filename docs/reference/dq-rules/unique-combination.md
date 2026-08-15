@@ -63,5 +63,5 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Related rules
 
-- [`unique`](unique.md)
+- [`unique_values`](unique-values.md)
 - [`compare_columns`](compare-columns.md)

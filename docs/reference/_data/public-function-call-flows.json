@@ -49033,7 +49033,7 @@
       "depth": 8,
       "direct_call_count": 11,
       "discontinued_in": null,
-      "examples": ">>> form = widget_author_dq_rules(spark_session=spark)\n>>> form[\"controls\"][\"rule_type\"].value\n'null_rate_below'",
+      "examples": ">>> form = widget_author_dq_rules(spark_session=spark)\n>>> form[\"controls\"][\"rule_type\"].value\n'missing_values'",
       "files_touched": [
         "src/fabricops_kit/config/audit.py",
         "src/fabricops_kit/config/metadata_keys.py",
@@ -53005,7 +53005,7 @@
         "large_width_or_depth",
         "architecture_violation"
       ],
-      "signature": "def widget_author_dq_rules(*, spark_session: Any, context: dict[str, Any] | None=None, rule_type: str='null_rate_below', selected_columns: Iterable[str] | None=None, parameters: Mapping[str, Any] | None=None, severity: str='warning', bypass_reason: str='', source_notebook_type: str='01_governance', created_by_role: str='governance', commit: bool=False) -> dict[str, Any]",
+      "signature": "def widget_author_dq_rules(*, spark_session: Any, context: dict[str, Any] | None=None, rule_type: str='missing_values', selected_columns: Iterable[str] | None=None, parameters: Mapping[str, Any] | None=None, severity: str='warning', bypass_reason: str='', source_notebook_type: str='01_governance', created_by_role: str='governance', commit: bool=False) -> dict[str, Any]",
       "source_end_line": 432,
       "source_path": "src/fabricops_kit/widgets/widget_author_dq_rules.py",
       "source_start_line": 144,

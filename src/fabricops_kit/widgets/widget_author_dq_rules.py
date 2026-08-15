@@ -13,11 +13,11 @@ from fabricops_kit.widgets import shared
 
 
 DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
-    "null_rate_below": {
-        "label": "Null rate below",
+    "missing_values": {
+        "label": "Missing values",
         "column_selection": "independent",
         "parameters": {
-            "max_null_percent": {
+            "maximum_null_percent": {
                 "label": "Maximum null percent",
                 "type": "number",
                 "required": True,
@@ -25,39 +25,39 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
             }
         },
     },
-    "non_empty_string": {"label": "Non-empty string", "column_selection": "independent", "parameters": {}},
-    "unique": {"label": "Unique", "column_selection": "independent", "parameters": {}},
+    "blank_text": {"label": "Blank text", "column_selection": "independent", "parameters": {}},
+    "unique_values": {"label": "Unique values", "column_selection": "independent", "parameters": {}},
     "unique_combination": {
         "label": "Unique combination",
         "column_selection": "group",
         "minimum_columns": 2,
         "parameters": {},
     },
-    "accepted_values": {
-        "label": "Accepted values",
+    "allowed_values": {
+        "label": "Allowed values",
         "column_selection": "independent",
-        "parameters": {"allowed_values": {"label": "Accepted values", "type": "list", "required": True}},
+        "parameters": {"allowed_values": {"label": "Allowed values", "type": "list", "required": True}},
     },
-    "not_in_values": {
-        "label": "Excluded values",
+    "blocked_values": {
+        "label": "Blocked values",
         "column_selection": "independent",
-        "parameters": {"blocked_values": {"label": "Excluded values", "type": "list", "required": True}},
+        "parameters": {"blocked_values": {"label": "Blocked values", "type": "list", "required": True}},
     },
-    "between": {
-        "label": "Between",
+    "value_range": {
+        "label": "Value range",
         "column_selection": "independent",
-        "at_least_one_of": ("minimum_value", "maximum_value"),
+        "at_least_one_of": ("minimum", "maximum"),
         "parameters": {
-            "minimum_value": {"label": "Minimum", "type": "optional_scalar"},
+            "minimum": {"label": "Minimum", "type": "optional_scalar"},
             "minimum_inclusive": {"label": "Include minimum", "type": "boolean", "default": True},
-            "maximum_value": {"label": "Maximum", "type": "optional_scalar"},
+            "maximum": {"label": "Maximum", "type": "optional_scalar"},
             "maximum_inclusive": {"label": "Include maximum", "type": "boolean", "default": True},
         },
     },
-    "regex_match": {
-        "label": "Matches pattern",
+    "text_pattern": {
+        "label": "Text pattern",
         "column_selection": "independent",
-        "parameters": {"regex_pattern": {"label": "Pattern", "type": "text", "required": True}},
+        "parameters": {"pattern": {"label": "Pattern", "type": "text", "required": True}},
     },
     "required_when": {
         "label": "Required when",
@@ -69,8 +69,8 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
             "condition_value": {"label": "Condition value", "type": "scalar", "required": True},
         },
     },
-    "value_when": {
-        "label": "Value when",
+    "conditional_value": {
+        "label": "Conditional value",
         "column_selection": "conditional",
         "minimum_columns": 1,
         "maximum_columns": 1,
@@ -145,7 +145,7 @@ def widget_author_dq_rules(
     *,
     spark_session: Any,
     context: dict[str, Any] | None = None,
-    rule_type: str = "null_rate_below",
+    rule_type: str = "missing_values",
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
     severity: str = "warning",
@@ -162,7 +162,7 @@ def widget_author_dq_rules(
         Fabric Spark session used to read profiled targets and save DQ rules.
     context : dict[str, Any], optional
         Advanced override for the active ``FABRIC_CONTEXT``.
-    rule_type : str, default="null_rate_below"
+    rule_type : str, default="missing_values"
         Initially selected canonical DQ rule type.
     selected_columns : Iterable[str], optional
         Columns initially selected on each resolved target.
@@ -201,7 +201,7 @@ def widget_author_dq_rules(
     --------
     >>> form = widget_author_dq_rules(spark_session=spark)
     >>> form["controls"]["rule_type"].value
-    'null_rate_below'
+    'missing_values'
 
     """
     from IPython import display as ip
@@ -212,7 +212,7 @@ def widget_author_dq_rules(
     initial_parameters = dict(parameters or {})
     rule = widgets.Dropdown(
         options=[(definition["label"], name) for name, definition in DQ_RULE_DEFINITIONS.items()],
-        value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "null_rate_below",
+        value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "missing_values",
         **shared.widget_common(widgets, "DQ rule"),
     )
     parameter_box = widgets.VBox()

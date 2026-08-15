@@ -1,4 +1,4 @@
-# non_empty_string
+# blank_text
 
 ## What this rule does
 
@@ -17,7 +17,7 @@ Use for names, descriptions, labels, codes, or other text fields that must conta
 ## Parameters
 
 ```yaml
-rule_type: non_empty_string
+rule_type: blank_text
 columns: ["programme_name"]
 severity: error
 ```
@@ -25,11 +25,11 @@ severity: error
 ## Example rule definition
 
 ```yaml
-rule_id: non_empty_string_example
-rule_type: non_empty_string
+rule_id: blank_text_example
+rule_type: blank_text
 columns: ["programme_name"]
 severity: error
-description: "Example approved metadata rule for non_empty_string."
+description: "Example approved metadata rule for blank_text."
 ```
 
 Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
@@ -60,9 +60,9 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 ## Notes
 
 - The value is cast to string and trimmed before checking for blank text.
-- Use `null_rate_below` with `max_null_percent=0` when blank strings are acceptable but actual nulls are not.
+- Use `missing_values` with `maximum_null_percent=0` when blank strings are acceptable but actual nulls are not.
 
 ## Related rules
 
-- [`null_rate_below`](null-rate-below.md)
+- [`missing_values`](missing-values.md)
 - [`required_when`](required-when.md)
