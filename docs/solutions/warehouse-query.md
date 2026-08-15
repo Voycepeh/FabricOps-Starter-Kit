@@ -1,4 +1,4 @@
-# Query a Warehouse directly from the PySpark pipeline
+# Query a Warehouse from PySpark
 
 ## Problem
 

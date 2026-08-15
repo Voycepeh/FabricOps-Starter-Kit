@@ -1,4 +1,4 @@
-# Read and write across multiple Lakehouses and Warehouses in one notebook
+# Read and write to multiple Lakehouses and Warehouses within a single notebook
 
 ## Problem
 
