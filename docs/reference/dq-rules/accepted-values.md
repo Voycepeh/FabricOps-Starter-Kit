@@ -34,7 +34,7 @@ severity: warning
 description: "Example approved metadata rule for accepted_values."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -61,11 +61,11 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Notes
 
-- Null values do not fail this rule by themselves. Add `not_null` if the value is mandatory.
+- Null values do not fail this rule by themselves. Use `null_rate_below` with `max_null_percent=0` if the value is mandatory.
 - Keep allowed lists small and governed.
 
 ## Related rules
 
 - [`not_in_values`](not-in-values.md)
 - [`value_when`](value-when.md)
-- [`not_null`](not-null.md)
+- [`null_rate_below`](null-rate-below.md)

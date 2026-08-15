@@ -1,73 +1,28 @@
-# between
+# `between`
 
-## What this rule does
+Keep one comparable column inside an approved one-sided or two-sided range.
 
-Checks that populated numeric or comparable values stay within a configured lower and/or upper bound.
+## Configuration
 
-## When to use it
+| Field | Requirement |
+|---|---|
+| `columns` | Exactly one column. |
+| `minimum_value` | Optional lower bound. Numeric, date-like, and other comparable values are supported. |
+| `minimum_inclusive` | `true` for `>=`; `false` for `>`. Defaults to `true`. |
+| `maximum_value` | Optional upper bound. |
+| `maximum_inclusive` | `true` for `<=`; `false` for `<`. Defaults to `true`. |
 
-Use for percentages, scores, quantities, and other values with a known valid range.
+At least one bound is required.
 
-## Rule applies to
-
-**Data applicability:** Numeric, date, or otherwise comparable profiled columns where catalogue min/max evidence should stay inside an approved lower and/or upper bound.
-
-**Example column(s) on this page:** `score`
-
-## Parameters
-
-```yaml
-rule_type: between
-columns: ["score"]
-min_value: 0
-max_value: 100
-severity: error
+```json
+{
+  "rule_type": "between",
+  "columns": ["percentage"],
+  "minimum_value": 0,
+  "minimum_inclusive": true,
+  "maximum_value": 100,
+  "maximum_inclusive": true
+}
 ```
 
-## Example rule definition
-
-```yaml
-rule_id: between_example
-rule_type: between
-columns: ["score"]
-min_value: 0
-max_value: 100
-severity: error
-description: "Example approved metadata rule for between."
-```
-
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
-
-## Sample input data
-
-| assessment_id | score |
-| --- | --- |
-| A001 | 88 |
-| A002 | 0 |
-| A003 | 104 |
-| A004 | -2 |
-
-## Rows that pass
-
-| assessment_id | score | Why |
-| --- | --- | --- |
-| A001 | 88 | Inside range. |
-| A002 | 0 | On inclusive lower bound. |
-
-## Rows that fail
-
-| assessment_id | score | Why |
-| --- | --- | --- |
-| A003 | 104 | Above maximum. |
-| A004 | -2 | Below minimum. |
-
-## Notes
-
-- You may provide only `min_value` or only `max_value` when the rule has one-sided bounds.
-- Null values do not fail this rule by themselves.
-
-## Related rules
-
-- [`greater_than_or_equal`](greater-than-or-equal.md)
-- [`less_than_or_equal`](less-than-or-equal.md)
-- [`date_between`](date-between.md)
+Use the same rule for date-like comparable values; there is no separate date-range rule.

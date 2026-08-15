@@ -34,7 +34,7 @@ severity: warning
 description: "Example approved metadata rule for null_rate_below."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -66,5 +66,5 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Related rules
 
-- [`not_null`](not-null.md)
+- [`null_rate_below`](null-rate-below.md)
 - [`non_empty_string`](non-empty-string.md)

@@ -271,11 +271,11 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     rules_df = spark_session.createDataFrame([
         _rule(
             rule_key="dq-rule",
-            rule_id="orders.order_id.not_null",
+            rule_id="orders.order_id.null_rate_below",
             guardrail_type="dq",
-            rule_type="not_null",
+            rule_type="null_rate_below",
             column_name="order_id",
-            rule_parameters_json=json.dumps({"columns": ["order_id"]}),
+            rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0}),
             severity="error",
         )
     ])
@@ -285,7 +285,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
-    assert result["checks"][0]["rule_id"] == "orders.order_id.not_null"
+    assert result["checks"][0]["rule_id"] == "orders.order_id.null_rate_below"
 
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
@@ -323,7 +323,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     )
 
     dq_rules_df = spark_session.createDataFrame([
-        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
+        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.null_rate_below", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0}))
     ])
     monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
     dq = dq_runtime.run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
@@ -369,7 +369,7 @@ def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monke
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
     def build(action):
         return governance_review._dq_records_from_selection(
-            state, rule_type="not_null", selected_columns=["order_id"], action=action
+            state, rule_type="null_rate_below", selected_columns=["order_id"], parameters={"max_null_percent": 0}, action=action
         )
 
     batch_draft = individual_draft = build("draft")
@@ -471,13 +471,13 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules
 
     rows = [
-        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="active_pending_governance_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", review_status="active_pending_governance_review", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
+        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="null_rate_below", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "max_null_percent": 0})),
     ]
     rows[-2].pop("review_status")
     rows[-1].pop("is_active")
@@ -542,10 +542,10 @@ def test_authoring_widgets_stamp_engineering_and_governance_sources(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required"}
 
     engineering = governance_review._dq_records_from_selection(
-        state, rule_type="not_null", selected_columns=["order_id"], action="submit"
+        state, rule_type="null_rate_below", selected_columns=["order_id"], parameters={"max_null_percent": 0}, action="submit"
     )[0]
     governance = governance_review._dq_records_from_selection(
-        state, rule_type="not_null", selected_columns=["order_id"], action="submit",
+        state, rule_type="null_rate_below", selected_columns=["order_id"], parameters={"max_null_percent": 0}, action="submit",
         source_notebook_type="01_governance", created_by_role="governance"
     )[0]
 

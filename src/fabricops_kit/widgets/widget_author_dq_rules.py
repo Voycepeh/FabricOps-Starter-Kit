@@ -8,14 +8,22 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.pipeline.guardrails_shared import DQ_COMPARISON_OPERATORS
 from fabricops_kit.widgets import shared
 
 
 DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
-    "not_null": {"label": "Not null", "column_selection": "independent", "parameters": {}},
     "null_rate_below": {
         "label": "Null rate below",
-        "parameters": {"max_null_percent": {"label": "Maximum null percent", "type": "number", "required": True}},
+        "column_selection": "independent",
+        "parameters": {
+            "max_null_percent": {
+                "label": "Maximum null percent",
+                "type": "number",
+                "required": True,
+                "default": 0,
+            }
+        },
     },
     "non_empty_string": {"label": "Non-empty string", "column_selection": "independent", "parameters": {}},
     "unique": {"label": "Unique", "column_selection": "independent", "parameters": {}},
@@ -27,109 +35,80 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
     },
     "accepted_values": {
         "label": "Accepted values",
+        "column_selection": "independent",
         "parameters": {"allowed_values": {"label": "Accepted values", "type": "list", "required": True}},
     },
     "not_in_values": {
         "label": "Excluded values",
+        "column_selection": "independent",
         "parameters": {"blocked_values": {"label": "Excluded values", "type": "list", "required": True}},
     },
     "between": {
         "label": "Between",
-        "at_least_one_of": ("min_value", "max_value"),
+        "column_selection": "independent",
+        "at_least_one_of": ("minimum_value", "maximum_value"),
         "parameters": {
-            "min_value": {"label": "Minimum", "type": "optional_number"},
-            "max_value": {"label": "Maximum", "type": "optional_number"},
+            "minimum_value": {"label": "Minimum", "type": "optional_scalar"},
+            "minimum_inclusive": {"label": "Include minimum", "type": "boolean", "default": True},
+            "maximum_value": {"label": "Maximum", "type": "optional_scalar"},
+            "maximum_inclusive": {"label": "Include maximum", "type": "boolean", "default": True},
         },
-    },
-    "greater_than": {
-        "label": "Greater than",
-        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
-    },
-    "greater_than_or_equal": {
-        "label": "Greater than or equal",
-        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
-    },
-    "less_than": {
-        "label": "Less than",
-        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
-    },
-    "less_than_or_equal": {
-        "label": "Less than or equal",
-        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
     },
     "regex_match": {
         "label": "Matches pattern",
+        "column_selection": "independent",
         "parameters": {"regex_pattern": {"label": "Pattern", "type": "text", "required": True}},
-    },
-    "date_not_future": {"label": "Date is not in the future", "parameters": {}},
-    "date_between": {
-        "label": "Date between",
-        "at_least_one_of": ("min_value", "max_value"),
-        "parameters": {
-            "min_value": {"label": "Earliest date", "type": "optional_text"},
-            "max_value": {"label": "Latest date", "type": "optional_text"},
-        },
-    },
-    "freshness": {
-        "label": "Freshness",
-        "parameters": {
-            "max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}
-        },
-    },
-    "max_age_days": {
-        "label": "Maximum age in days",
-        "parameters": {
-            "max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}
-        },
-    },
-    "column_pair_equal": {"label": "Columns are equal", "column_selection": "ordered_pair", "parameters": {}},
-    "column_a_gte_column_b": {
-        "label": "Column A is greater than or equal to column B",
-        "column_selection": "ordered_pair",
-        "parameters": {},
-    },
-    "column_a_gt_column_b": {
-        "label": "Column A is greater than column B",
-        "column_selection": "ordered_pair",
-        "parameters": {},
     },
     "required_when": {
         "label": "Required when",
-        "column_selection": "group",
+        "column_selection": "conditional",
         "minimum_columns": 1,
-        "parameters": {"condition": {"label": "Condition", "type": "text", "required": True}},
+        "parameters": {
+            "condition_column": {"label": "Condition column", "type": "column", "required": True},
+            "condition_operator": {"label": "Condition operator", "type": "operator", "required": True},
+            "condition_value": {"label": "Condition value", "type": "scalar", "required": True},
+        },
     },
     "value_when": {
         "label": "Value when",
+        "column_selection": "conditional",
+        "minimum_columns": 1,
+        "maximum_columns": 1,
         "parameters": {
-            "condition": {"label": "Condition", "type": "text", "required": True},
-            "expected_value": {"label": "Expected value", "type": "text"},
+            "condition_column": {"label": "Condition column", "type": "column", "required": True},
+            "condition_operator": {"label": "Condition operator", "type": "operator", "required": True},
+            "condition_value": {"label": "Condition value", "type": "scalar", "required": True},
+            "expected_value": {"label": "Expected value", "type": "scalar", "required": True},
         },
     },
-    "expression_true": {
-        "label": "Expression is true",
-        "column_selection": "none",
-        "parameters": {"expression": {"label": "Expression", "type": "text", "required": True}},
+    "compare_columns": {
+        "label": "Compare columns",
+        "column_selection": "ordered_pair",
+        "parameters": {"operator": {"label": "Operator", "type": "operator", "required": True}},
     },
 }
 
-for _definition in DQ_RULE_DEFINITIONS.values():
-    _definition.setdefault("column_selection", "independent")
 
-
-def _parameter_control(widgets: Any, definition: Mapping[str, Any], value: Any) -> Any:
+def _parameter_control(widgets: Any, definition: Mapping[str, Any], value: Any, *, columns: Iterable[str] = ()) -> Any:
     kind = definition.get("type")
     common = shared.widget_common(widgets, str(definition.get("label") or "Parameter"))
     if kind == "number":
         return widgets.Text(value="" if value is None else str(value), **common)
-    if kind in {"optional_number", "optional_text"}:
+    if kind in {"optional_scalar", "scalar"}:
         return widgets.Text(value="" if value is None else str(value), **common)
-    if kind == "integer":
-        return widgets.IntText(value=int(value if value is not None else definition.get("default", 0)), **common)
+    if kind == "boolean":
+        return widgets.Checkbox(value=bool(value), **common)
+    if kind == "column":
+        options = list(columns)
+        selected = value if value in options else (options[0] if options else None)
+        return widgets.Dropdown(options=options, value=selected, **common)
+    if kind == "operator":
+        selected = value if value in DQ_COMPARISON_OPERATORS else "="
+        return widgets.Dropdown(options=DQ_COMPARISON_OPERATORS, value=selected, **common)
     if kind == "list":
         text = ", ".join(str(item) for item in value) if isinstance(value, (list, tuple)) else str(value or "")
         return widgets.Text(value=text, **common)
-    return widgets.Text(value=str(value or definition.get("default", "")), **common)
+    return widgets.Text(value=str(definition.get("default", "") if value is None else value), **common)
 
 
 def _collect_parameters(definition: Mapping[str, Any], controls: Mapping[str, Any]) -> dict[str, Any]:
@@ -138,13 +117,20 @@ def _collect_parameters(definition: Mapping[str, Any], controls: Mapping[str, An
         value = controls[name].value
         if parameter.get("type") == "list":
             value = [item.strip() for item in str(value).split(",") if item.strip()]
-        elif parameter.get("type") in {"number", "optional_number"}:
+        elif parameter.get("type") == "number":
             try:
                 value = None if str(value).strip() == "" else float(value)
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"{parameter['label']} must be a number.") from exc
-        elif parameter.get("type") == "optional_text":
-            value = None if str(value).strip() == "" else str(value).strip()
+        elif parameter.get("type") in {"optional_scalar", "scalar"}:
+            text = str(value).strip()
+            if text == "" and parameter.get("type") == "optional_scalar":
+                value = None
+            else:
+                try:
+                    value = json.loads(text)
+                except json.JSONDecodeError:
+                    value = text
         if parameter.get("required") and (value is None or value == "" or value == []):
             raise ValueError(f"{parameter['label']} is required.")
         values[name] = value
@@ -159,7 +145,7 @@ def widget_author_dq_rules(
     *,
     spark_session: Any,
     context: dict[str, Any] | None = None,
-    rule_type: str = "not_null",
+    rule_type: str = "null_rate_below",
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
     severity: str = "warning",
@@ -176,7 +162,7 @@ def widget_author_dq_rules(
         Fabric Spark session used to read profiled targets and save DQ rules.
     context : dict[str, Any], optional
         Advanced override for the active ``FABRIC_CONTEXT``.
-    rule_type : str, default="not_null"
+    rule_type : str, default="null_rate_below"
         Initially selected canonical DQ rule type.
     selected_columns : Iterable[str], optional
         Columns initially selected on each resolved target.
@@ -206,15 +192,16 @@ def widget_author_dq_rules(
 
     Notes
     -----
-    Run after ``00_env_config`` in Microsoft Fabric. One canonical
-    ``METADATA_GUARDRAIL`` DQ row is produced per selected column, with
-    structured values serialized in ``rule_parameters_json``.
+    Run after ``00_env_config`` in Microsoft Fabric. Independent rules produce one ``METADATA_GUARDRAIL`` row per selected
+    column. Grouped, conditional, and ordered-pair rules remain one logical
+    row, with all participating columns and structured values serialized in
+    ``rule_parameters_json``.
 
     Examples
     --------
     >>> form = widget_author_dq_rules(spark_session=spark)
     >>> form["controls"]["rule_type"].value
-    'not_null'
+    'null_rate_below'
 
     """
     from IPython import display as ip
@@ -225,7 +212,7 @@ def widget_author_dq_rules(
     initial_parameters = dict(parameters or {})
     rule = widgets.Dropdown(
         options=[(definition["label"], name) for name, definition in DQ_RULE_DEFINITIONS.items()],
-        value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "not_null",
+        value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "null_rate_below",
         **shared.widget_common(widgets, "DQ rule"),
     )
     parameter_box = widgets.VBox()
@@ -248,7 +235,12 @@ def widget_author_dq_rules(
         parameter_controls.clear()
         definition = DQ_RULE_DEFINITIONS[rule.value]
         for name, spec in definition["parameters"].items():
-            control = _parameter_control(widgets, spec, initial_parameters.get(name, spec.get("default")))
+            control = _parameter_control(
+                widgets,
+                spec,
+                initial_parameters.get(name, spec.get("default")),
+                columns=state.get("columns", []),
+            )
             control.observe(refresh_preview, names="value")
             parameter_controls[name] = control
         parameter_box.children = tuple(parameter_controls.values()) or (
@@ -271,20 +263,36 @@ def widget_author_dq_rules(
                 refresh_preview()
                 return
             initial = [column for column in (selected_columns or ()) if column in columns]
+            column_a_value = initial[0] if initial else columns[0]
+            column_b_value = initial[1] if len(initial) > 1 else next(
+                column for column in columns if column != column_a_value
+            )
             column_a = widgets.Dropdown(
                 options=columns,
-                value=initial[0] if initial else columns[0],
+                value=column_a_value,
                 **shared.widget_common(widgets, "Column A"),
             )
             column_b = widgets.Dropdown(
                 options=columns,
-                value=initial[1] if len(initial) > 1 else columns[1],
+                value=column_b_value,
                 **shared.widget_common(widgets, "Column B"),
             )
             column_a.observe(refresh_preview, names="value")
             column_b.observe(refresh_preview, names="value")
             column_controls.update(column_a=column_a, column_b=column_b)
             column_box.children = (column_a, column_b)
+            refresh_preview()
+            return
+        if selection_mode == "conditional" and definition.get("maximum_columns") == 1:
+            initial = [column for column in (selected_columns or ()) if column in columns]
+            target_column = widgets.Dropdown(
+                options=columns,
+                value=initial[0] if initial else (columns[0] if columns else None),
+                **shared.widget_common(widgets, "Target column"),
+            )
+            target_column.observe(refresh_preview, names="value")
+            column_controls["target_column"] = target_column
+            column_box.children = (target_column,)
             refresh_preview()
             return
         selected = set(selected_columns or selected_state.get("columns", []))
@@ -326,6 +334,10 @@ def widget_author_dq_rules(
             columns = [column_controls["column_a"].value, column_controls["column_b"].value]
             if columns[0] == columns[1]:
                 raise ValueError("Column A and Column B must be different columns.")
+        elif selection_mode == "conditional" and definition.get("maximum_columns") == 1:
+            if "target_column" not in column_controls or not column_controls["target_column"].value:
+                raise ValueError("Select a target column.")
+            columns = [column_controls["target_column"].value]
         else:
             columns = [name for name, control in column_controls.items() if control.value]
             minimum = int(definition.get("minimum_columns", 1))
@@ -364,8 +376,12 @@ def widget_author_dq_rules(
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
         return records
 
+    def render_target(selected_state: Mapping[str, Any]) -> None:
+        render_parameters()
+        render_columns(selected_state)
+
     state, target, target_controls = shared._load_guardrail_authoring_targets(
-        config, env, spark_session=spark_session, widgets=widgets, on_change=render_columns
+        config, env, spark_session=spark_session, widgets=widgets, on_change=render_target
     )
 
     def render_rule(*_: Any) -> None:
@@ -375,7 +391,6 @@ def widget_author_dq_rules(
     rule.observe(render_rule, names="value")
     severity_control.observe(refresh_preview, names="value")
     bypass.observe(refresh_preview, names="value")
-    render_parameters()
     save_button = widgets.Button(description="Save DQ rules", button_style="primary")
     save_button.on_click(lambda _: save())
     ui = shared.form_page(

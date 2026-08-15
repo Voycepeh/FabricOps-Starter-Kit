@@ -24,6 +24,7 @@ from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
     metadata_table_schema_registry,
 )
+from fabricops_kit.pipeline.guardrails_shared import DQ_RULE_TYPES
 
 
 _WIDGET_STYLE = {"description_width": "initial"}
@@ -348,7 +349,6 @@ SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "01_governance"]
 CREATED_BY_ROLES = ["engineering", "governance", "system"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 
@@ -1520,11 +1520,12 @@ def _dq_records_from_selection(
     """Build DQ rule records from selected columns."""
     columns = [str(column) for column in selected_columns]
     if column_selection != "independent":
+        identity_payload = {"columns": columns, **dict(parameters or {})}
         record = _base_guardrail_rule_record(
             state,
             guardrail_type="dq",
             rule_type=rule_type,
-            parameters={"columns": columns, **dict(parameters or {})},
+            parameters=identity_payload,
             severity=severity,
             description=f"{rule_type} DQ guardrail",
             bypass_reason=bypass_reason,
@@ -1532,6 +1533,17 @@ def _dq_records_from_selection(
             source_notebook_type=source_notebook_type,
             created_by_role=created_by_role,
             config=config,
+        )
+        identity_hash = hashlib.sha256(
+            json.dumps(identity_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()[:12]
+        rule_id = f"{record['table_name']}._table.dq.{rule_type}.{identity_hash}"
+        record.update(
+            guardrail_rule_id=rule_id,
+            rule_id=rule_id,
+            rule_key=_build_dq_rule_key(
+                record["environment_name"], record["dataset_name"], record["table_name"], rule_id
+            ),
         )
         record["action_type"] = action_type
         if action_type in {"deactivated", "superseded"}:
@@ -1957,11 +1969,10 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             continue
         draft = dict(rule)
         draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
-        if draft["rule_type"] != "expression_true":
-            columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
-            if isinstance(columns, str):
-                columns = [c.strip() for c in columns.split(",") if c.strip()]
-            draft["columns"] = list(columns or [])
+        columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
+        if isinstance(columns, str):
+            columns = [c.strip() for c in columns.split(",") if c.strip()]
+        draft["columns"] = list(columns or [])
         from fabricops_kit.pipeline.guardrails_shared import _validate_dq_rules
         _validate_dq_rules([draft])
         columns = [str(c) for c in draft.get("columns", [])]
@@ -1969,8 +1980,12 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
         primary_column = columns[0] if columns else display_column
         identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
         identity["column_name"] = display_column
-        rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}")
         params = _dq_rule_parameter_payload(draft, columns)
+        identity_hash = hashlib.sha256(_json(params).encode("utf-8")).hexdigest()[:12]
+        rule_id = str(
+            rule.get("rule_id")
+            or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}.{identity_hash}"
+        )
         rows.append({
             "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
             "rule_id": rule_id,

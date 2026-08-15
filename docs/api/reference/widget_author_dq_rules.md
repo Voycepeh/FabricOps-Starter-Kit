@@ -12,9 +12,9 @@ Render interactive manual DQ guardrail authoring controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_dq_rules.py:158`
+`fabricops_kit/widgets/widget_author_dq_rules.py:144`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L158-L417">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L144-L432">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -39,7 +39,7 @@ They help users write values into the correct underlying metadata tables without
 def widget_author_dq_rules(
     spark_session: Any,
     context: dict[str, Any] | None=None,
-    rule_type: str='not_null',
+    rule_type: str='null_rate_below',
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
     severity: str='warning',
@@ -58,7 +58,7 @@ def widget_author_dq_rules(
 
 >>> form = widget_author_dq_rules(spark_session=spark)
 >>> form["controls"]["rule_type"].value
-'not_null'
+'null_rate_below'
 
 </div>
 
@@ -100,9 +100,10 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 <div class="reference-docstring-notes" markdown="1">
 
-Run after ``00_env_config`` in Microsoft Fabric. One canonical
-``METADATA_GUARDRAIL`` DQ row is produced per selected column, with
-structured values serialized in ``rule_parameters_json``.
+Run after ``00_env_config`` in Microsoft Fabric. Independent rules produce one ``METADATA_GUARDRAIL`` row per selected
+column. Grouped, conditional, and ordered-pair rules remain one logical
+row, with all participating columns and structured values serialized in
+``rule_parameters_json``.
 
 </div>
 

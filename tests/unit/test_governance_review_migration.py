@@ -183,7 +183,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
 
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     """Verify dq rule validation rejects unsupported runtime rule types."""
-    rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
+    rules = [{"rule_id": "id_required", "rule_type": "null_rate_below", "columns": ["id"], "max_null_percent": 0, "severity": "error", "description": "Required"}]
     assert dq_runtime._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
         dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "custom"}])

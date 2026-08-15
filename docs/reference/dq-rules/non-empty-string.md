@@ -32,7 +32,7 @@ severity: error
 description: "Example approved metadata rule for non_empty_string."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -60,9 +60,9 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 ## Notes
 
 - The value is cast to string and trimmed before checking for blank text.
-- Use `not_null` when blank strings are acceptable but actual nulls are not.
+- Use `null_rate_below` with `max_null_percent=0` when blank strings are acceptable but actual nulls are not.
 
 ## Related rules
 
-- [`not_null`](not-null.md)
+- [`null_rate_below`](null-rate-below.md)
 - [`required_when`](required-when.md)

@@ -32,7 +32,7 @@ severity: error
 description: "Example approved metadata rule for unique_combination."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -64,4 +64,4 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 ## Related rules
 
 - [`unique`](unique.md)
-- [`column_pair_equal`](column-pair-equal.md)
+- [`compare_columns`](compare-columns.md)
