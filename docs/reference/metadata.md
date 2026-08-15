@@ -64,6 +64,10 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
     Runtime guardrail outcomes written by pipeline enforcement.
 
+-   **[METADATA_GUARDRAIL_ROW_RESULTS](metadata/metadata_guardrail_row_results.md)**
+
+    Failed source-row and failed-DQ-rule evidence linked to runtime guardrail outcomes.
+
 -   **[METADATA_SOURCE_OBSERVATION](metadata/metadata_source_observation.md)**
 
     Append-only compact partition observations used for cheap pre-read source checking; each row links to METADATA_DATA_CATALOGUE through metadata_table_key.

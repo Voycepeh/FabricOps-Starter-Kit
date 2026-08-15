@@ -759,3 +759,92 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
             "profile_hash": "hash-2026-06-15",
         },
     ]
+
+
+def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(spark_session, monkeypatch):
+    """Persist one summary per rule and one compact evidence row per failed row/rule."""
+    from fabricops_kit.pipeline import guardrails_shared
+
+    dataframe = spark_session.createDataFrame(
+        [("one", None, "open", 5, 3), ("two", "x", "closed", 1, 2)],
+        "business_id string, required_value string, status string, upper int, lower int",
+    )
+    metadata = spark_session.createDataFrame([
+        {
+            "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
+            "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+            "guardrail_type": "dq", "rule_type": "required_when", "column_name": "required_value",
+            "rule_parameters_json": json.dumps({"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"}),
+            "severity": "warning", "description": "required when open", "activation_state": "active",
+            "review_state": "governance_approved", "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+        },
+        {
+            "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
+            "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+            "guardrail_type": "dq", "rule_type": "compare_columns", "column_name": "upper,lower",
+            "rule_parameters_json": json.dumps({"columns": ["upper", "lower"], "operator": "<="}),
+            "severity": "error", "description": "upper <= lower", "activation_state": "active",
+            "review_state": "governance_approved", "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+        },
+    ])
+    writes = []
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, **kwargs: writes.append((table, df.collect())))
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(activity_id="activity-dq-001"),
+    )
+
+    result = guardrails_shared.check_dq_runtime(
+        dataframe, framework_config(), "dev", "orders", target="source", store_type="lakehouse",
+        schema_name=None, dataset_name="sales", run_id="run-9", row_identity_columns=["business_id"],
+    )
+
+    assert result["status"] == "failed"
+    assert result["can_continue"] is False
+    assert result["summary"] == {
+        "DQ_STATUS": "failed", "DQ_RULE_COUNT": 2, "DQ_FAILED_RULE_COUNT": 2,
+        "DQ_WARNING_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1, "DQ_FAILED_ROW_COUNT": 1,
+        "DQ_FAILED_ROW_PERCENT": 50.0, "DQ_CHECKED_AT": result["summary"]["DQ_CHECKED_AT"],
+    }
+    summaries = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_RESULTS")
+    evidence = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_ROW_RESULTS")
+    assert len(summaries) == 2
+    assert len(evidence) == 2  # the same source row failed both rules
+    assert {row.guardrail_rule_id for row in evidence} == {"gr-required", "gr-compare"}
+    assert {row.guardrail_result_id for row in evidence} == {row.guardrail_result_id for row in summaries}
+    assert all(json.loads(row.row_identity) == {"business_id": "one"} for row in evidence)
+    compare = next(row for row in evidence if row.guardrail_rule_id == "gr-compare")
+    assert json.loads(compare.involved_columns_json) == ["upper", "lower"]
+    assert json.loads(compare.failed_values_json) == {"upper": 5, "lower": 3}
+    conditional = next(row for row in evidence if row.guardrail_rule_id == "gr-required")
+    assert json.loads(conditional.involved_columns_json) == ["required_value", "status"]
+    assert json.loads(conditional.failed_values_json) == {"status": "open"}
+    assert conditional.run_id == "run-9"
+
+
+def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_session, monkeypatch):
+    """Avoid empty row-evidence writes while retaining a passing rule summary."""
+    from fabricops_kit.pipeline import guardrails_shared
+
+    dataframe = spark_session.createDataFrame([("one", "ok")], "row_uuid string, value string")
+    metadata = spark_session.createDataFrame([{
+        "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
+        "environment_name": "dev", "table_name": "orders", "guardrail_type": "dq",
+        "rule_type": "allowed_values", "column_name": "value",
+        "rule_parameters_json": json.dumps({"columns": ["value"], "allowed_values": ["ok"]}),
+        "severity": "error", "activation_state": "active", "review_state": "governance_approved",
+        "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+    }])
+    writes = []
+    monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
+    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, **kwargs: writes.append(table))
+    monkeypatch.setattr("fabricops_kit.config.audit.resolve_runtime_context", lambda **_kwargs: resolved_runtime_context())
+
+    result = guardrails_shared.check_dq_runtime(
+        dataframe, framework_config(), "dev", "orders", target="source", store_type="lakehouse", schema_name=None,
+    )
+
+    assert result["status"] == "passed"
+    assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 0
+    assert writes == ["METADATA_GUARDRAIL_RESULTS"]

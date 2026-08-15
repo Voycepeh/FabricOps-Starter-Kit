@@ -1850,6 +1850,8 @@ def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, 
         rules.append(
             {
                 "rule_id": str(row.get("rule_id") or ""),
+                "guardrail_rule_id": str(row.get("guardrail_rule_id") or row.get("rule_id") or ""),
+                "rule_key": str(row.get("rule_key") or row.get("rule_id") or ""),
                 "rule_type": _canonical_dq_rule_type(row.get("rule_type")),
                 "columns": rule_columns,
                 "severity": _normalize_dq_severity(row.get("severity")),
@@ -1859,6 +1861,127 @@ def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, 
             }
         )
     return _validate_dq_rules(rules)
+
+
+def check_dq_runtime(
+    dataframe,
+    config,
+    env: str,
+    table_name: str,
+    *,
+    target: str,
+    store_type: str,
+    schema_name: str | None,
+    dataset_name: str = "",
+    run_id: str = "",
+    row_identity_columns: list[str] | None = None,
+) -> dict[str, Any]:
+    """Evaluate governed DQ rules and persist rule summaries and failed-row evidence."""
+    spark_session = getattr(dataframe, "sparkSession", None)
+    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
+        raise RuntimeError("check_dq requires a Spark DataFrame in the active Microsoft Fabric runtime.")
+    source_columns = list(getattr(dataframe, "columns", []))
+    identities = list(row_identity_columns or [])
+    if not identities:
+        identities = [name for name in ("row_uuid", "_row_uuid", "row_id") if name in source_columns][:1]
+    missing_identities = [name for name in identities if name not in source_columns]
+    if missing_identities:
+        raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
+    metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
+    rules = _load_active_dq_rules(metadata_df, table_name, env=env, dataset_name=dataset_name or None)
+    checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
+    result = _summarize_dq_guardrail(checks)
+    result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
+    total_count = int(dataframe.count())
+    failed_rule_count = sum(not check["passed"] for check in checks)
+    failed_row_count = 0
+    if rules:
+        _, F, _ = _spark_sql_helpers()
+        any_failure = F.lit(False)
+        for rule in rules:
+            any_failure = any_failure | _dq_failed_expression(dataframe, rule)
+        failed_row_count = int(dataframe.filter(any_failure).count())
+    result["summary"] = {
+        "DQ_STATUS": result["status"],
+        "DQ_RULE_COUNT": len(checks),
+        "DQ_FAILED_RULE_COUNT": failed_rule_count,
+        "DQ_WARNING_RULE_COUNT": sum(check["status"] == "warning" for check in checks),
+        "DQ_ERROR_RULE_COUNT": sum(check["status"] == "failed" for check in checks),
+        "DQ_FAILED_ROW_COUNT": failed_row_count,
+        "DQ_FAILED_ROW_PERCENT": float(round((failed_row_count / total_count) * 100, 4)) if total_count else 0.0,
+        "DQ_CHECKED_AT": get_current_audit_timestamp(config=config, drop_microseconds=False),
+    }
+    if not rules:
+        return result
+
+    audit = build_runtime_audit_fields(config=config, env=env)
+    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
+    check_by_id = {check["rule_id"]: check for check in checks}
+    result_ids = {rule["rule_id"]: str(uuid4()) for rule in rules}
+    summary_rows = []
+    for rule in rules:
+        check = check_by_id[rule["rule_id"]]
+        summary_rows.append({
+            "guardrail_result_id": result_ids[rule["rule_id"]],
+            "guardrail_rule_id": rule["guardrail_rule_id"],
+            "result_id": str(uuid4()),
+            "rule_key": rule["rule_key"],
+            "metadata_table_key": metadata_table_key,
+            "environment_name": env,
+            "dataset_name": dataset_name,
+            "table_name": table_name,
+            "column_name": ",".join(rule["columns"]),
+            "guardrail_type": "dq",
+            "rule_type": rule["rule_type"],
+            "status": check["status"],
+            "can_continue": check["status"] != "failed",
+            "severity": rule["severity"],
+            "reason": "Rule passed." if check["passed"] else f"{check['failed_count']} row(s) failed {rule['rule_type']}.",
+            "expected_value_json": json.dumps({key: value for key, value in rule.items() if key not in {"description", "guardrail_rule_id", "rule_id", "rule_key", "severity"}}, default=str, sort_keys=True),
+            "actual_value_json": json.dumps({"failed_count": check["failed_count"], "failed_percent": check["failed_percent"], "total_count": check["total_count"]}, sort_keys=True),
+            "result_payload_json": json.dumps(check, default=str, sort_keys=True),
+            **audit,
+        })
+    context = {"config": config, "env": env}
+    write_lakehouse_table_core(
+        spark_session.createDataFrame([coerce_metadata_row_types("METADATA_GUARDRAIL_RESULTS", row) for row in summary_rows]),
+        "METADATA_GUARDRAIL_RESULTS", target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"), context=context, mode="append",
+    )
+
+    _, F, _ = _spark_sql_helpers()
+    if identities:
+        row_identity = F.to_json(F.struct(*[F.col(name).alias(name) for name in identities]))
+    else:
+        row_identity = F.sha2(F.to_json(F.struct(*[F.col(name).alias(name) for name in sorted(source_columns)])), 256)
+    evidence_frames = []
+    for rule in rules:
+        involved = list(dict.fromkeys([*rule["columns"], str(rule.get("condition_column") or "")]))
+        involved = [name for name in involved if name and name in source_columns]
+        details = {key: value for key, value in rule.items() if key not in {"description", "guardrail_rule_id", "rule_id", "rule_key", "severity"}}
+        evidence_frames.append(dataframe.filter(_dq_failed_expression(dataframe, rule)).select(
+            F.expr("uuid()").alias("guardrail_row_result_id"),
+            F.lit(result_ids[rule["rule_id"]]).alias("guardrail_result_id"),
+            F.lit(rule["guardrail_rule_id"]).alias("guardrail_rule_id"),
+            F.lit(metadata_table_key).alias("metadata_table_key"), F.lit(env).alias("environment_name"),
+            F.lit(dataset_name).alias("dataset_name"), F.lit(table_name).alias("table_name"),
+            row_identity.alias("row_identity"), F.lit(rule["rule_type"]).alias("rule_type"),
+            F.lit(json.dumps(involved)).alias("involved_columns_json"),
+            F.to_json(F.struct(*[F.col(name).alias(name) for name in involved])).alias("failed_values_json"),
+            F.lit(json.dumps(details, default=str, sort_keys=True)).alias("rule_details_json"),
+            F.lit(f"Row failed {rule['rule_type']} rule {rule['rule_id']}.").alias("failure_reason"),
+            F.lit(run_id).alias("run_id"),
+            *[F.lit(value).cast("timestamp" if key == "_committed_at" else "string").alias(key) for key, value in audit.items()],
+        ))
+    evidence = evidence_frames[0]
+    for frame in evidence_frames[1:]:
+        evidence = evidence.unionByName(frame)
+    if evidence.limit(1).count():
+        write_lakehouse_table_core(
+            evidence, "METADATA_GUARDRAIL_ROW_RESULTS", target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"), context=context, mode="append",
+        )
+    return result
 
 
 
