@@ -54,6 +54,7 @@ def write_guardrail_result_row(
     row = {
         "guardrail_result_id": str(uuid4()),
         "result_id": str(uuid4()),
+        "run_id": run_id,
         "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "metadata_table_key": str(
@@ -1793,7 +1794,7 @@ def _validate_dq_rules(rules: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise ValueError(f"DQ rule '{rule['rule_id']}' has unsupported operator.")
     return rules
 
-def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
+def _load_active_dq_rules(metadata_df, metadata_table_key: str, env: str | None = None, dataset_name: str | None = None) -> list[dict[str, Any]]:
     """Load active DQ guardrail rules from append-only metadata rows."""
     _, F, Window = _spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
@@ -1805,7 +1806,9 @@ def _load_active_dq_rules(metadata_df, table_name: str, env: str | None = None, 
         partition_columns = [name for name in ("metadata_table_key", "column_name", "rule_type") if name in columns]
     if not partition_columns:
         raise ValueError("DQ metadata must include rule_key or rule identity columns.")
-    latest = metadata_df.filter(F.col("table_name") == table_name) if "table_name" in columns else metadata_df
+    if "metadata_table_key" not in columns:
+        raise ValueError("DQ metadata must include metadata_table_key for canonical table scoping.")
+    latest = metadata_df.filter(F.col("metadata_table_key") == metadata_table_key)
     if env is not None and "environment_name" in columns:
         latest = latest.filter(F.col("environment_name") == env)
     if dataset_name is not None and "dataset_name" in columns:
@@ -1887,8 +1890,9 @@ def check_dq_runtime(
     missing_identities = [name for name in identities if name not in source_columns]
     if missing_identities:
         raise ValueError(f"row_identity_columns not found in dataframe: {', '.join(missing_identities)}")
+    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
     metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
-    rules = _load_active_dq_rules(metadata_df, table_name, env=env, dataset_name=dataset_name or None)
+    rules = _load_active_dq_rules(metadata_df, metadata_table_key, env=env, dataset_name=dataset_name or None)
     checks = _run_dq_guardrail_checks(dataframe, table_name, rules) if rules else []
     result = _summarize_dq_guardrail(checks)
     result["dataframe"] = _dq_tagged_dataframe(dataframe, rules)
@@ -1915,7 +1919,6 @@ def check_dq_runtime(
         return result
 
     audit = build_runtime_audit_fields(config=config, env=env)
-    metadata_table_key = build_metadata_table_key(store_type, target, schema_name, table_name)
     check_by_id = {check["rule_id"]: check for check in checks}
     result_ids = {rule["rule_id"]: str(uuid4()) for rule in rules}
     summary_rows = []
@@ -1925,6 +1928,7 @@ def check_dq_runtime(
             "guardrail_result_id": result_ids[rule["rule_id"]],
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "result_id": str(uuid4()),
+            "run_id": run_id,
             "rule_key": rule["rule_key"],
             "metadata_table_key": metadata_table_key,
             "environment_name": env,
@@ -1951,9 +1955,16 @@ def check_dq_runtime(
 
     _, F, _ = _spark_sql_helpers()
     if identities:
-        row_identity = F.to_json(F.struct(*[F.col(name).alias(name) for name in identities]))
+        row_identity = F.to_json(
+            F.struct(*[F.col(name).alias(name) for name in identities]),
+            {"ignoreNullFields": "false"},
+        )
     else:
-        row_identity = F.sha2(F.to_json(F.struct(*[F.col(name).alias(name) for name in sorted(source_columns)])), 256)
+        canonical_row = F.to_json(
+            F.struct(*[F.col(name).alias(name) for name in sorted(source_columns)]),
+            {"ignoreNullFields": "false"},
+        )
+        row_identity = F.sha2(canonical_row, 256)
     evidence_frames = []
     for rule in rules:
         involved = list(dict.fromkeys([*rule["columns"], str(rule.get("condition_column") or "")]))
@@ -1967,7 +1978,10 @@ def check_dq_runtime(
             F.lit(dataset_name).alias("dataset_name"), F.lit(table_name).alias("table_name"),
             row_identity.alias("row_identity"), F.lit(rule["rule_type"]).alias("rule_type"),
             F.lit(json.dumps(involved)).alias("involved_columns_json"),
-            F.to_json(F.struct(*[F.col(name).alias(name) for name in involved])).alias("failed_values_json"),
+            F.to_json(
+                F.struct(*[F.col(name).alias(name) for name in involved]),
+                {"ignoreNullFields": "false"},
+            ).alias("failed_values_json"),
             F.lit(json.dumps(details, default=str, sort_keys=True)).alias("rule_details_json"),
             F.lit(f"Row failed {rule['rule_type']} rule {rule['rule_id']}.").alias("failure_reason"),
             F.lit(run_id).alias("run_id"),
@@ -2234,7 +2248,8 @@ def run_active_dq_guardrail(
 
     """
     metadata_df = _read_guardrail_rule_metadata(config, env, spark_session=spark_session)
-    rules = _load_active_dq_rules(metadata_df, table_name=table_name, env=env, dataset_name=dataset_name)
+    metadata_table_key = build_metadata_table_key(store_type, layer, schema_name, table_name)
+    rules = _load_active_dq_rules(metadata_df, metadata_table_key, env=env, dataset_name=dataset_name)
     checks = _run_dq_guardrail_checks(dataframe, table_name=table_name, rules=rules) if rules else []
     total_count = int(dataframe.count())
     failed_row_count = 0

@@ -6,8 +6,8 @@
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 26 |
-| Business columns | 18 |
+| Total columns | 27 |
+| Business columns | 19 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -17,6 +17,7 @@
 | `guardrail_result_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Stable identifier for the runtime guardrail result row. |
 | `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Stable identifier for the guardrail rule row. |
 | `result_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Stable identifier for the runtime result payload. |
+| `run_id` | `string` | [`check_dq`](../../api/reference/check_dq.md), `fabricops_kit.pipeline.guardrails_shared.check_dq_runtime`, `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Identifier stored for `run_id`. |
 | `rule_key` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Stable key used to group lifecycle versions of the same guardrail or enrichment rule. |
 | `metadata_table_key` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.config.shared.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
 | `environment_name` | `string` | [`check_schema`](../../api/reference/check_schema.md), [`check_freshness`](../../api/reference/check_freshness.md), [`check_changes`](../../api/reference/check_changes.md), [`check_dq`](../../api/reference/check_dq.md), `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row` | Environment name recorded for the metadata row. |

@@ -102,6 +102,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
         [
             {
                 "table_name": "orders",
+                "metadata_table_key": "orders-key",
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
@@ -119,6 +120,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
             },
             {
                 "table_name": "orders",
+                "metadata_table_key": "orders-key",
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
@@ -138,7 +140,7 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
     )
 
     assert schema_result["status"] == "warning"
-    assert _load_active_dq_rules(metadata_df, table_name="orders") == []
+    assert _load_active_dq_rules(metadata_df, "orders-key") == []
 
 
 def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_session):
@@ -147,6 +149,7 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
         [
             {
                 "table_name": "orders",
+                "metadata_table_key": "orders-key",
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
@@ -165,9 +168,11 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
         ]
     )
 
-    assert _load_active_dq_rules(metadata_df, table_name="orders") == [
+    assert _load_active_dq_rules(metadata_df, "orders-key") == [
         {
             "rule_id": "amount_positive",
+            "guardrail_rule_id": "amount_positive",
+            "rule_key": "orders|amount_positive",
             "rule_type": "value_range",
             "columns": ["amount"],
             "severity": "error",
@@ -231,12 +236,15 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
     )
 
     assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_TABLE]
-    assert writes[0][1].collect()[0]["guardrail_type"] == "dq"
-    loaded = dq_runtime._load_active_dq_rules(writes[0][1], table_name="orders")
+    persisted = writes[0][1].collect()[0]
+    assert persisted["guardrail_type"] == "dq"
+    loaded = dq_runtime._load_active_dq_rules(writes[0][1], persisted["metadata_table_key"])
 
     assert loaded == [
         {
             "rule_id": "amount_positive",
+            "guardrail_rule_id": persisted["guardrail_rule_id"],
+            "rule_key": persisted["rule_key"],
             "rule_type": "value_range",
             "columns": ["amount"],
             "severity": "error",
@@ -251,13 +259,19 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
 
 
 def _dq_metadata_df(spark_session, rows):
+    from fabricops_kit.config.shared import build_metadata_table_key
+
     schema = (
-        "environment_name string, dataset_name string, table_name string, rule_key string, rule_id string, "
+        "environment_name string, dataset_name string, table_name string, metadata_table_key string, rule_key string, rule_id string, "
         "column_name string, rule_type string, rule_parameters_json string, severity string, description string, "
         "is_active boolean, review_status string, approved_by string, approved_at string, action_type string, "
         "_committed_at string, _committed_by string"
     )
-    return spark_session.createDataFrame(rows, schema=schema)
+    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
+    return spark_session.createDataFrame(
+        [{**row, "metadata_table_key": row.get("metadata_table_key", table_key)} for row in rows],
+        schema=schema,
+    )
 
 
 def test_run_active_dq_guardrail_returns_passed_when_no_active_rules(spark_session, monkeypatch):
@@ -763,8 +777,10 @@ def test_write_catalogue_evidence_persists_each_profile_behavior_watermark(spark
 
 def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(spark_session, monkeypatch):
     """Persist one summary per rule and one compact evidence row per failed row/rule."""
+    from fabricops_kit.config.shared import build_metadata_table_key
     from fabricops_kit.pipeline import guardrails_shared
 
+    table_key = build_metadata_table_key("lakehouse", "source", None, "orders")
     dataframe = spark_session.createDataFrame(
         [("one", None, "open", 5, 3), ("two", "x", "closed", 1, 2)],
         "business_id string, required_value string, status string, upper int, lower int",
@@ -772,6 +788,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
     metadata = spark_session.createDataFrame([
         {
             "guardrail_rule_id": "gr-required", "rule_key": "required", "rule_id": "required",
+            "metadata_table_key": table_key,
             "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
             "guardrail_type": "dq", "rule_type": "required_when", "column_name": "required_value",
             "rule_parameters_json": json.dumps({"columns": ["required_value"], "condition_column": "status", "condition_operator": "=", "condition_value": "open"}),
@@ -780,6 +797,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
         },
         {
             "guardrail_rule_id": "gr-compare", "rule_key": "compare", "rule_id": "compare",
+            "metadata_table_key": table_key,
             "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
             "guardrail_type": "dq", "rule_type": "compare_columns", "column_name": "upper,lower",
             "rule_parameters_json": json.dumps({"columns": ["upper", "lower"], "operator": "<="}),
@@ -810,6 +828,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
     summaries = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_RESULTS")
     evidence = next(rows for table, rows in writes if table == "METADATA_GUARDRAIL_ROW_RESULTS")
     assert len(summaries) == 2
+    assert {row.run_id for row in summaries} == {"run-9"}
     assert len(evidence) == 2  # the same source row failed both rules
     assert {row.guardrail_rule_id for row in evidence} == {"gr-required", "gr-compare"}
     assert {row.guardrail_result_id for row in evidence} == {row.guardrail_result_id for row in summaries}
@@ -819,17 +838,20 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
     assert json.loads(compare.failed_values_json) == {"upper": 5, "lower": 3}
     conditional = next(row for row in evidence if row.guardrail_rule_id == "gr-required")
     assert json.loads(conditional.involved_columns_json) == ["required_value", "status"]
-    assert json.loads(conditional.failed_values_json) == {"status": "open"}
+    assert json.loads(conditional.failed_values_json) == {"required_value": None, "status": "open"}
     assert conditional.run_id == "run-9"
 
 
 def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_session, monkeypatch):
     """Avoid empty row-evidence writes while retaining a passing rule summary."""
+    from fabricops_kit.config.shared import build_metadata_table_key
     from fabricops_kit.pipeline import guardrails_shared
 
+    table_key = build_metadata_table_key("lakehouse", "source", None, "orders")
     dataframe = spark_session.createDataFrame([("one", "ok")], "row_uuid string, value string")
     metadata = spark_session.createDataFrame([{
         "guardrail_rule_id": "gr-allowed", "rule_key": "allowed", "rule_id": "allowed",
+        "metadata_table_key": table_key,
         "environment_name": "dev", "table_name": "orders", "guardrail_type": "dq",
         "rule_type": "allowed_values", "column_name": "value",
         "rule_parameters_json": json.dumps({"columns": ["value"], "allowed_values": ["ok"]}),

@@ -188,6 +188,7 @@ def _rule(**overrides):
         "environment_name": "dev",
         "dataset_name": "sales",
         "table_name": "orders",
+        "metadata_table_key": "orders-key",
         "column_name": "",
         "guardrail_type": "schema",
         "rule_type": "relaxed",
@@ -483,7 +484,7 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     rows[-1].pop("is_active")
     frame = spark_session.createDataFrame(rows)
 
-    loaded = _load_active_dq_rules(frame, table_name="orders", env="dev", dataset_name="sales")
+    loaded = _load_active_dq_rules(frame, "orders-key", env="dev", dataset_name="sales")
 
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
 

@@ -101,13 +101,34 @@ def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(
         [
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
-            {"rule_key": "k1", "rule_id": "r1", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
-            {"rule_key": "k2", "rule_id": "r2", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "allowed_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "old", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
+            {"rule_key": "k1", "rule_id": "r1", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "id", "rule_type": "missing_values", "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}), "severity": "error", "description": "off", "is_active": False, "review_status": "governance_approved", "action_type": "deactivated", "approved_at": "2026-01-02T00:00:00Z", "_committed_at": "2026-01-02T00:00:00Z"},
+            {"rule_key": "k2", "rule_id": "r2", "metadata_table_key": "orders-key", "environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "status", "rule_type": "allowed_values", "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["A"]}), "severity": "warning", "description": "status", "is_active": True, "review_status": "governance_approved", "action_type": "created", "approved_at": "2026-01-01T00:00:00Z", "_committed_at": "2026-01-01T00:00:00Z"},
         ]
     )
-    rules = governance._load_active_dq_rules(metadata, "orders", env="dev", dataset_name="sales")
+    rules = governance._load_active_dq_rules(metadata, "orders-key", env="dev", dataset_name="sales")
     assert [r["rule_id"] for r in rules] == ["r2"]
+
+
+def test_active_dq_rules_are_scoped_by_canonical_table_identity(spark_session):
+    """Do not mix rules for same-named tables in different configured stores."""
+    base = {
+        "environment_name": "dev", "dataset_name": "sales", "table_name": "orders",
+        "column_name": "id", "rule_type": "missing_values",
+        "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
+        "severity": "error", "is_active": True, "review_status": "governance_approved",
+        "action_type": "created", "_committed_at": "2026-01-01T00:00:00Z",
+    }
+    metadata = spark_session.createDataFrame([
+        {**base, "metadata_table_key": "source-orders", "rule_key": "source", "rule_id": "source"},
+        {**base, "metadata_table_key": "product-orders", "rule_key": "product", "rule_id": "product"},
+    ])
+
+    rules = governance._load_active_dq_rules(
+        metadata, "product-orders", env="dev", dataset_name="sales",
+    )
+
+    assert [rule["rule_id"] for rule in rules] == ["product"]
 
 
 
@@ -352,6 +373,7 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
             "environment_name": "dev",
             "dataset_name": "sales",
             "table_name": "orders",
+            "metadata_table_key": "orders-key",
             "column_name": "order_id",
             "rule_type": "missing_values",
             "rule_parameters_json": json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}),
@@ -386,11 +408,11 @@ def test_load_active_dq_rules_handles_lifecycle_column_shapes(spark_session):
     ]
     lifecycle = spark_session.createDataFrame(lifecycle_rows)
 
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(both, "orders", env="dev", dataset_name="sales")] == ["both"]
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(transitional, "orders", env="dev", dataset_name="sales")] == ["transitional"]
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(legacy, "orders", env="dev", dataset_name="sales")] == ["legacy"]
-    assert governance._load_active_dq_rules(missing_review, "orders", env="dev", dataset_name="sales") == []
-    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders", env="dev", dataset_name="sales")] == ["active_pending"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(both, "orders-key", env="dev", dataset_name="sales")] == ["both"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(transitional, "orders-key", env="dev", dataset_name="sales")] == ["transitional"]
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(legacy, "orders-key", env="dev", dataset_name="sales")] == ["legacy"]
+    assert governance._load_active_dq_rules(missing_review, "orders-key", env="dev", dataset_name="sales") == []
+    assert [rule["rule_id"] for rule in governance._load_active_dq_rules(lifecycle, "orders-key", env="dev", dataset_name="sales")] == ["active_pending"]
 
 def test_null_rate_zero_is_strict_and_positive_threshold_allows_expected_rate(spark_session):
     """Use missing_values(0) for strict non-null without a duplicate rule type."""

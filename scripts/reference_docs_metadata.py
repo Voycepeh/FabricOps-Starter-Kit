@@ -362,6 +362,11 @@ METADATA_COLUMN_OWNERS = {
         "guardrail_result_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
         "result_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
+        "run_id": [
+            "fabricops_kit.pipeline.check_dq.check_dq",
+            "fabricops_kit.pipeline.guardrails_shared.check_dq_runtime",
+            "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
+        ],
         "rule_key": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
         "metadata_table_key": [
             "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
