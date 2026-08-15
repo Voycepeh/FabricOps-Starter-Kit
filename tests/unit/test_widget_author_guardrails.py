@@ -6,7 +6,8 @@ import sys
 
 import fabricops_kit
 from fabricops_kit.pipeline.guardrails_shared import schema_check_core
-from fabricops_kit.widgets import widget_author_dq_rules, widget_author_guardrails
+from fabricops_kit.widgets import widget_author_guardrails
+from fabricops_kit.widgets.widget_author_dq_rules import widget_author_dq_rules
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
     _guardrail_records_from_selection,
@@ -127,7 +128,8 @@ def _records(**overrides):
 def test_public_surface_is_breaking_replacement():
     """Expose only the new authoring callable while retaining DQ authoring."""
     assert fabricops_kit.widget_author_guardrails is widget_author_guardrails
-    assert widget_author_dq_rules is fabricops_kit.widget_author_dq_rules
+    assert callable(fabricops_kit.widget_author_dq_rules)
+    assert widget_author_dq_rules.__name__ == "widget_author_dq_rules"
     assert "widget_author_guardrails" in fabricops_kit.__all__
     assert "widget_select_guardrail_target" not in fabricops_kit.__all__
     assert not hasattr(fabricops_kit, "widget_select_guardrail_target")
@@ -296,9 +298,7 @@ def test_existing_schema_selection_and_severity_are_prepopulated(monkeypatch):
         }
     ]
 
-    controls = _render_guardrail_authoring(
-        _state(existing), context={"config": object(), "env": "dev"}
-    )["controls"]
+    controls = _render_guardrail_authoring(_state(existing), context={"config": object(), "env": "dev"})["controls"]
 
     assert {name for name, checkbox in controls["schema_columns"].items() if checkbox.value} == {"id", "extra"}
     assert controls["schema_failure_action"].value == "warning"
@@ -364,3 +364,42 @@ def test_schema_runtime_uses_authored_warning_severity():
     assert result["status"] == "warning"
     assert result["severity"] == "warning"
     assert result["can_continue"] is True
+
+
+def test_target_change_rerenders_without_committing(monkeypatch):
+    """Commit once on initial construction but never as a target-change side effect."""
+    _install_fake_notebook_widgets(monkeypatch)
+    module = sys.modules["fabricops_kit.widgets.widget_author_guardrails"]
+    callbacks = {}
+    saves = []
+    render_commit_values = []
+
+    def fake_targets(config, env, *, spark_session, widgets, on_change):
+        state = _state()
+        callbacks["on_change"] = on_change
+        on_change(state)
+        return (
+            state,
+            widgets.Dropdown(options=["orders"]),
+            {"target_summary": widgets.HTML(), "refresh_target": lambda: None},
+        )
+
+    def fake_render(state, *, spark_session, context, commit):
+        render_commit_values.append(commit)
+
+        def save():
+            saves.append(state["table_name"])
+            return [{"table_name": state["table_name"]}]
+
+        return {"ui": module.shared.require_ipywidgets().VBox(), "save": save}
+
+    monkeypatch.setattr(module.shared, "_load_guardrail_authoring_targets", fake_targets)
+    monkeypatch.setattr(module, "_render_guardrail_authoring", fake_render)
+
+    module.widget_author_guardrails(spark_session=object(), context={"config": object(), "env": "dev"}, commit=True)
+    changed = _state()
+    changed["table_name"] = "customers"
+    callbacks["on_change"](changed)
+
+    assert saves == ["orders"]
+    assert render_commit_values == [False, False]

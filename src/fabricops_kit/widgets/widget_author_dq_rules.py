@@ -12,30 +12,118 @@ from fabricops_kit.widgets import shared
 
 
 DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
-    "not_null": {"label": "Not null", "parameters": {}},
-    "null_rate_below": {"label": "Null rate below", "parameters": {"max_null_percent": {"label": "Maximum null percent", "type": "number", "required": True}}},
-    "non_empty_string": {"label": "Non-empty string", "parameters": {}},
-    "unique": {"label": "Unique", "parameters": {}},
-    "accepted_values": {"label": "Accepted values", "parameters": {"allowed_values": {"label": "Accepted values", "type": "list", "required": True}}},
-    "not_in_values": {"label": "Excluded values", "parameters": {"blocked_values": {"label": "Excluded values", "type": "list", "required": True}}},
-    "between": {"label": "Between", "parameters": {"min_value": {"label": "Minimum", "type": "number", "required": True}, "max_value": {"label": "Maximum", "type": "number", "required": True}}},
-    "greater_than": {"label": "Greater than", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
-    "greater_than_or_equal": {"label": "Greater than or equal", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
-    "less_than": {"label": "Less than", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
-    "less_than_or_equal": {"label": "Less than or equal", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
-    "regex_match": {"label": "Matches pattern", "parameters": {"regex_pattern": {"label": "Pattern", "type": "text", "required": True}}},
+    "not_null": {"label": "Not null", "column_selection": "independent", "parameters": {}},
+    "null_rate_below": {
+        "label": "Null rate below",
+        "parameters": {"max_null_percent": {"label": "Maximum null percent", "type": "number", "required": True}},
+    },
+    "non_empty_string": {"label": "Non-empty string", "column_selection": "independent", "parameters": {}},
+    "unique": {"label": "Unique", "column_selection": "independent", "parameters": {}},
+    "unique_combination": {
+        "label": "Unique combination",
+        "column_selection": "group",
+        "minimum_columns": 2,
+        "parameters": {},
+    },
+    "accepted_values": {
+        "label": "Accepted values",
+        "parameters": {"allowed_values": {"label": "Accepted values", "type": "list", "required": True}},
+    },
+    "not_in_values": {
+        "label": "Excluded values",
+        "parameters": {"blocked_values": {"label": "Excluded values", "type": "list", "required": True}},
+    },
+    "between": {
+        "label": "Between",
+        "at_least_one_of": ("min_value", "max_value"),
+        "parameters": {
+            "min_value": {"label": "Minimum", "type": "optional_number"},
+            "max_value": {"label": "Maximum", "type": "optional_number"},
+        },
+    },
+    "greater_than": {
+        "label": "Greater than",
+        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
+    },
+    "greater_than_or_equal": {
+        "label": "Greater than or equal",
+        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
+    },
+    "less_than": {
+        "label": "Less than",
+        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
+    },
+    "less_than_or_equal": {
+        "label": "Less than or equal",
+        "parameters": {"value": {"label": "Value", "type": "number", "required": True}},
+    },
+    "regex_match": {
+        "label": "Matches pattern",
+        "parameters": {"regex_pattern": {"label": "Pattern", "type": "text", "required": True}},
+    },
     "date_not_future": {"label": "Date is not in the future", "parameters": {}},
-    "date_between": {"label": "Date between", "parameters": {"min_value": {"label": "Earliest date", "type": "text", "required": True}, "max_value": {"label": "Latest date", "type": "text", "required": True}}},
-    "freshness": {"label": "Freshness", "parameters": {"max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}}},
-    "max_age_days": {"label": "Maximum age in days", "parameters": {"max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}}},
+    "date_between": {
+        "label": "Date between",
+        "at_least_one_of": ("min_value", "max_value"),
+        "parameters": {
+            "min_value": {"label": "Earliest date", "type": "optional_text"},
+            "max_value": {"label": "Latest date", "type": "optional_text"},
+        },
+    },
+    "freshness": {
+        "label": "Freshness",
+        "parameters": {
+            "max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}
+        },
+    },
+    "max_age_days": {
+        "label": "Maximum age in days",
+        "parameters": {
+            "max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}
+        },
+    },
+    "column_pair_equal": {"label": "Columns are equal", "column_selection": "ordered_pair", "parameters": {}},
+    "column_a_gte_column_b": {
+        "label": "Column A is greater than or equal to column B",
+        "column_selection": "ordered_pair",
+        "parameters": {},
+    },
+    "column_a_gt_column_b": {
+        "label": "Column A is greater than column B",
+        "column_selection": "ordered_pair",
+        "parameters": {},
+    },
+    "required_when": {
+        "label": "Required when",
+        "column_selection": "group",
+        "minimum_columns": 1,
+        "parameters": {"condition": {"label": "Condition", "type": "text", "required": True}},
+    },
+    "value_when": {
+        "label": "Value when",
+        "parameters": {
+            "condition": {"label": "Condition", "type": "text", "required": True},
+            "expected_value": {"label": "Expected value", "type": "text"},
+        },
+    },
+    "expression_true": {
+        "label": "Expression is true",
+        "column_selection": "none",
+        "parameters": {"expression": {"label": "Expression", "type": "text", "required": True}},
+    },
 }
+
+for _definition in DQ_RULE_DEFINITIONS.values():
+    _definition.setdefault("column_selection", "independent")
 
 
 def _parameter_control(widgets: Any, definition: Mapping[str, Any], value: Any) -> Any:
     kind = definition.get("type")
     common = shared.widget_common(widgets, str(definition.get("label") or "Parameter"))
     if kind == "number":
-        return widgets.FloatText(value=float(value or 0), **common)
+        return widgets.Text(value="" if value is None else str(value), **common)
+    if kind in {"optional_number", "optional_text"}:
+        return widgets.Text(value="" if value is None else str(value), **common)
     if kind == "integer":
         return widgets.IntText(value=int(value if value is not None else definition.get("default", 0)), **common)
     if kind == "list":
@@ -50,9 +138,20 @@ def _collect_parameters(definition: Mapping[str, Any], controls: Mapping[str, An
         value = controls[name].value
         if parameter.get("type") == "list":
             value = [item.strip() for item in str(value).split(",") if item.strip()]
+        elif parameter.get("type") in {"number", "optional_number"}:
+            try:
+                value = None if str(value).strip() == "" else float(value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{parameter['label']} must be a number.") from exc
+        elif parameter.get("type") == "optional_text":
+            value = None if str(value).strip() == "" else str(value).strip()
         if parameter.get("required") and (value is None or value == "" or value == []):
             raise ValueError(f"{parameter['label']} is required.")
         values[name] = value
+    alternatives = definition.get("at_least_one_of", ())
+    if alternatives and all(values.get(name) in {None, ""} for name in alternatives):
+        labels = " or ".join(str(definition["parameters"][name]["label"]) for name in alternatives)
+        raise ValueError(f"Provide at least one of {labels}.")
     return values
 
 
@@ -133,9 +232,15 @@ def widget_author_dq_rules(
     parameter_controls: dict[str, Any] = {}
     column_box = widgets.VBox()
     column_controls: dict[str, Any] = {}
-    severity_control = widgets.ToggleButtons(options=["warning", "error"], value=severity if severity in {"warning", "error"} else "warning", description="Severity")
+    severity_control = widgets.ToggleButtons(
+        options=["warning", "error"],
+        value=severity if severity in {"warning", "error"} else "warning",
+        description="Severity",
+    )
     bypass = widgets.Textarea(value=bypass_reason, **shared.widget_common(widgets, "Apply-now reason", textarea=True))
-    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="100%", height="220px"))
+    preview = widgets.Textarea(
+        description="Preview", disabled=True, layout=widgets.Layout(width="100%", height="220px")
+    )
     message = widgets.HTML()
     records_state: dict[str, list[dict[str, Any]]] = {"records": []}
 
@@ -146,30 +251,102 @@ def widget_author_dq_rules(
             control = _parameter_control(widgets, spec, initial_parameters.get(name, spec.get("default")))
             control.observe(refresh_preview, names="value")
             parameter_controls[name] = control
-        parameter_box.children = tuple(parameter_controls.values()) or (widgets.HTML("<i>This rule has no parameters.</i>"),)
+        parameter_box.children = tuple(parameter_controls.values()) or (
+            widgets.HTML("<i>This rule has no parameters.</i>"),
+        )
         refresh_preview()
 
     def render_columns(selected_state: Mapping[str, Any]) -> None:
         column_controls.clear()
+        definition = DQ_RULE_DEFINITIONS[rule.value]
+        selection_mode = definition["column_selection"]
+        columns = list(selected_state.get("columns", []))
+        if selection_mode == "none":
+            column_box.children = (widgets.HTML("<i>This table-level rule does not select columns.</i>"),)
+            refresh_preview()
+            return
+        if selection_mode == "ordered_pair":
+            if len(columns) < 2:
+                column_box.children = (widgets.HTML("<b>At least two profiled columns are required.</b>"),)
+                refresh_preview()
+                return
+            initial = [column for column in (selected_columns or ()) if column in columns]
+            column_a = widgets.Dropdown(
+                options=columns,
+                value=initial[0] if initial else columns[0],
+                **shared.widget_common(widgets, "Column A"),
+            )
+            column_b = widgets.Dropdown(
+                options=columns,
+                value=initial[1] if len(initial) > 1 else columns[1],
+                **shared.widget_common(widgets, "Column B"),
+            )
+            column_a.observe(refresh_preview, names="value")
+            column_b.observe(refresh_preview, names="value")
+            column_controls.update(column_a=column_a, column_b=column_b)
+            column_box.children = (column_a, column_b)
+            refresh_preview()
+            return
         selected = set(selected_columns or selected_state.get("columns", []))
-        rows = [widgets.GridBox([widgets.HTML("<b>Apply</b>"), widgets.HTML("<b>Column name</b>"), widgets.HTML("<b>Data type</b>")], layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"))]
-        types = {str(row.get("column_name")): str(row.get("data_type") or "") for row in selected_state.get("catalogue_profile_rows", [])}
+        rows = [
+            widgets.GridBox(
+                [widgets.HTML("<b>Apply</b>"), widgets.HTML("<b>Column name</b>"), widgets.HTML("<b>Data type</b>")],
+                layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"),
+            )
+        ]
+        types = {
+            str(row.get("column_name")): str(row.get("data_type") or "")
+            for row in selected_state.get("catalogue_profile_rows", [])
+        }
         for name in selected_state.get("columns", []):
             control = widgets.Checkbox(value=name in selected, description="", indent=False)
             control.observe(refresh_preview, names="value")
             column_controls[name] = control
-            rows.append(widgets.GridBox([control, widgets.HTML(f"<code>{html.escape(name)}</code>"), widgets.HTML(f"<code>{html.escape(types.get(name, ''))}</code>")], layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%")))
+            rows.append(
+                widgets.GridBox(
+                    [
+                        control,
+                        widgets.HTML(f"<code>{html.escape(name)}</code>"),
+                        widgets.HTML(f"<code>{html.escape(types.get(name, ''))}</code>"),
+                    ],
+                    layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"),
+                )
+            )
         column_box.children = tuple(rows)
         refresh_preview()
 
     def build_records(*, action: str = "submit") -> list[dict[str, Any]]:
-        columns = [name for name, control in column_controls.items() if control.value]
-        if not columns:
-            raise ValueError("Select at least one column.")
-        return shared._dq_records_from_selection(state, rule_type=rule.value, selected_columns=columns, parameters=_collect_parameters(DQ_RULE_DEFINITIONS[rule.value], parameter_controls), severity=severity_control.value, bypass_reason=bypass.value.strip() if action == "apply_now" else "", action=action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
+        definition = DQ_RULE_DEFINITIONS[rule.value]
+        selection_mode = definition["column_selection"]
+        if selection_mode == "none":
+            columns = []
+        elif selection_mode == "ordered_pair":
+            if set(column_controls) != {"column_a", "column_b"}:
+                raise ValueError("This rule requires two profiled columns.")
+            columns = [column_controls["column_a"].value, column_controls["column_b"].value]
+            if columns[0] == columns[1]:
+                raise ValueError("Column A and Column B must be different columns.")
+        else:
+            columns = [name for name, control in column_controls.items() if control.value]
+            minimum = int(definition.get("minimum_columns", 1))
+            if len(columns) < minimum:
+                raise ValueError(f"Select at least {minimum} column(s).")
+        return shared._dq_records_from_selection(
+            state,
+            rule_type=rule.value,
+            selected_columns=columns,
+            parameters=_collect_parameters(definition, parameter_controls),
+            severity=severity_control.value,
+            bypass_reason=bypass.value.strip() if action == "apply_now" else "",
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
+            config=config,
+            column_selection=selection_mode,
+        )
 
     def refresh_preview(*_: Any) -> None:
-        if not state or not column_controls:
+        if not state:
             return
         try:
             records_state["records"] = build_records()
@@ -187,16 +364,54 @@ def widget_author_dq_rules(
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
         return records
 
-    state, target, target_controls = shared._load_guardrail_authoring_targets(config, env, spark_session=spark_session, widgets=widgets, on_change=render_columns)
-    rule.observe(render_parameters, names="value")
+    state, target, target_controls = shared._load_guardrail_authoring_targets(
+        config, env, spark_session=spark_session, widgets=widgets, on_change=render_columns
+    )
+
+    def render_rule(*_: Any) -> None:
+        render_parameters()
+        render_columns(state)
+
+    rule.observe(render_rule, names="value")
     severity_control.observe(refresh_preview, names="value")
     bypass.observe(refresh_preview, names="value")
     render_parameters()
     save_button = widgets.Button(description="Save DQ rules", button_style="primary")
     save_button.on_click(lambda _: save())
-    ui = shared.form_page(widgets, title="Author DQ Rules", description="Select a profiled target and configure canonical DQ rules.", children=[shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]), shared.form_section(widgets, title="Choose DQ rule", children=[rule, parameter_box]), shared.form_section(widgets, title="Applicable columns", children=[column_box]), shared.form_section(widgets, title="Failure behaviour", children=[severity_control, bypass]), shared.form_section(widgets, title="Preview", children=[preview]), shared.action_row(widgets, [save_button]), message])
+    ui = shared.form_page(
+        widgets,
+        title="Author DQ Rules",
+        description="Select a profiled target and configure canonical DQ rules.",
+        children=[
+            shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]),
+            shared.form_section(widgets, title="Choose DQ rule", children=[rule, parameter_box]),
+            shared.form_section(widgets, title="Applicable columns", children=[column_box]),
+            shared.form_section(widgets, title="Failure behaviour", children=[severity_control, bypass]),
+            shared.form_section(widgets, title="Preview", children=[preview]),
+            shared.action_row(widgets, [save_button]),
+            message,
+        ],
+    )
     ip.display(ui)
-    result = {"state": state, "records": records_state["records"], "controls": {"target": target, "rule_type": rule, "parameters": parameter_box, "parameter_controls": parameter_controls, "columns": column_controls, "severity": severity_control, "bypass_reason": bypass, **target_controls}, "build_records": build_records, "build_batch_records": build_records, "save": save, "save_button": save_button, "ui": ui}
+    result = {
+        "state": state,
+        "records": records_state["records"],
+        "controls": {
+            "target": target,
+            "rule_type": rule,
+            "parameters": parameter_box,
+            "parameter_controls": parameter_controls,
+            "columns": column_controls,
+            "severity": severity_control,
+            "bypass_reason": bypass,
+            **target_controls,
+        },
+        "build_records": build_records,
+        "build_batch_records": build_records,
+        "save": save,
+        "save_button": save_button,
+        "ui": ui,
+    }
     if commit:
         result["records"] = save(action="apply_now" if bypass_reason else "submit")
     return result

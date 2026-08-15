@@ -1515,10 +1515,31 @@ def _dq_records_from_selection(
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
     config: Any = None,
+    column_selection: str = "independent",
 ) -> list[dict[str, Any]]:
     """Build DQ rule records from selected columns."""
+    columns = [str(column) for column in selected_columns]
+    if column_selection != "independent":
+        record = _base_guardrail_rule_record(
+            state,
+            guardrail_type="dq",
+            rule_type=rule_type,
+            parameters={"columns": columns, **dict(parameters or {})},
+            severity=severity,
+            description=f"{rule_type} DQ guardrail",
+            bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
+            config=config,
+        )
+        record["action_type"] = action_type
+        if action_type in {"deactivated", "superseded"}:
+            record["is_active"] = False
+            record["review_status"] = "superseded" if action_type == "superseded" else "rejected"
+        return [record]
     records = []
-    for column in selected_columns:
+    for column in columns:
         record = _base_guardrail_rule_record(
             state,
             guardrail_type="dq",

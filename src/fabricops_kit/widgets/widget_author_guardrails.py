@@ -185,24 +185,20 @@ def widget_author_guardrails(
 
     def render(state: Mapping[str, Any]) -> None:
         current.clear()
-        current.update(
-            _render_guardrail_authoring(
-                state, spark_session=spark_session, context=context, commit=commit
-            )
-        )
+        current.update(_render_guardrail_authoring(state, spark_session=spark_session, context=context, commit=False))
         authoring.children = (current["ui"],)
 
     state, target, target_controls = shared._load_guardrail_authoring_targets(
         config, env, spark_session=spark_session, widgets=widgets, on_change=render
     )
+    if commit:
+        current["records"] = current["save"]()
     ui = shared.form_page(
         widgets,
         title="Author Guardrails",
         description="Select a profiled target, then author table-level guardrails.",
         children=[
-            shared.form_section(
-                widgets, title="Target", children=[target, target_controls["target_summary"]]
-            ),
+            shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]),
             authoring,
         ],
     )
