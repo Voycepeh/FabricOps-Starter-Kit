@@ -14,7 +14,7 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 
 `fabricops_kit/widgets/widget_author_guardrails.py:139`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L211">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L209">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -50,8 +50,6 @@ def widget_author_guardrails(
 <div class="reference-example-usage" markdown="1">
 
 >>> form = widget_author_guardrails(spark_session=spark)
->>> form["state"]["table_name"]
-'orders'
 
 </div>
 

@@ -197,8 +197,6 @@ def widget_author_dq_rules(
     Examples
     --------
     >>> form = widget_author_dq_rules(spark_session=spark)
-    >>> form["controls"]["rule_type"].value
-    'missing_values'
 
     """
     from IPython import display as ip

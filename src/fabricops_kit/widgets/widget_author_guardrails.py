@@ -172,8 +172,6 @@ def widget_author_guardrails(
     Examples
     --------
     >>> form = widget_author_guardrails(spark_session=spark)
-    >>> form["state"]["table_name"]
-    'orders'
 
     """
     from IPython import display as ip
