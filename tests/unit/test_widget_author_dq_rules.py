@@ -1,6 +1,7 @@
 """Focused contracts for standalone lightweight DQ authoring."""
 
 import json
+from importlib import import_module
 from types import SimpleNamespace
 
 import pytest
@@ -164,7 +165,7 @@ def test_structured_condition_and_value_parameters_are_canonical_scalars():
 def test_widget_changes_preview_only_until_explicit_save(monkeypatch):
     """Prevent target, rule, column, and parameter changes from writing metadata."""
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
-    import fabricops_kit.widgets.widget_author_dq_rules as module
+    module = import_module("fabricops_kit.widgets.widget_author_dq_rules")
 
     _install_fake_notebook_widgets(monkeypatch, auto_observe=True)
     callbacks = {}
@@ -210,7 +211,7 @@ def test_widget_changes_preview_only_until_explicit_save(monkeypatch):
 def test_checkbox_rules_default_to_no_selected_columns(monkeypatch, rule_type, selected_columns):
     """Require an explicit user choice instead of proposing rules for every column."""
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
-    import fabricops_kit.widgets.widget_author_dq_rules as module
+    module = import_module("fabricops_kit.widgets.widget_author_dq_rules")
 
     _install_fake_notebook_widgets(monkeypatch)
 
@@ -237,7 +238,7 @@ def test_checkbox_rules_default_to_no_selected_columns(monkeypatch, rule_type, s
 def test_initial_conditional_rule_uses_resolved_target_columns(monkeypatch, rule_type):
     """Populate condition-column options during the resolver's initial callback."""
     from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
-    import fabricops_kit.widgets.widget_author_dq_rules as module
+    module = import_module("fabricops_kit.widgets.widget_author_dq_rules")
 
     _install_fake_notebook_widgets(monkeypatch)
 
