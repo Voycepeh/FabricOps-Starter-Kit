@@ -1,4 +1,4 @@
-# regex_match
+# text_pattern
 
 ## What this rule does
 
@@ -17,24 +17,24 @@ Use for emails, fixed-format codes, identifiers, postcodes, and other structured
 ## Parameters
 
 ```yaml
-rule_type: regex_match
+rule_type: text_pattern
 columns: ["email"]
-regex_pattern: "^[^@]+@[^@]+\\.[^@]+$"
+pattern: "^[^@]+@[^@]+\\.[^@]+$"
 severity: warning
 ```
 
 ## Example rule definition
 
 ```yaml
-rule_id: regex_match_example
-rule_type: regex_match
+rule_id: text_pattern_example
+rule_type: text_pattern
 columns: ["email"]
-regex_pattern: "^[^@]+@[^@]+\.[^@]+$"
+pattern: "^[^@]+@[^@]+\.[^@]+$"
 severity: warning
-description: "Example approved metadata rule for regex_match."
+description: "Example approved metadata rule for text_pattern."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -61,11 +61,11 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Notes
 
-- Null values do not fail this rule by themselves. Add `not_null` if the value is mandatory.
+- Null values do not fail this rule by themselves. Use `missing_values` with `maximum_null_percent=0` if the value is mandatory.
 - Keep patterns understandable for reviewers.
 
 ## Related rules
 
-- [`accepted_values`](accepted-values.md)
-- [`non_empty_string`](non-empty-string.md)
-- [`expression_true`](expression-true.md)
+- [`allowed_values`](allowed-values.md)
+- [`blank_text`](blank-text.md)
+- [`required_when`](required-when.md)

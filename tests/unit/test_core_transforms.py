@@ -127,9 +127,9 @@ def test_record_table_governance_returns_rule_intent_keys_only(monkeypatch):
             {
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "greater_than",
+                "rule_type": "value_range",
                 "columns": ["amount"],
-                "value": 0,
+                "minimum": 0, "minimum_inclusive": False,
                 "severity": "error",
                 "commit": True,
             }

@@ -409,11 +409,7 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns widget implementation details for agreement workflows.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- {'module_name': 'widgets.widget_select_guardrail_target',
-  'visibility': 'public',
-  'module_summary': 'Owns the guardrail target selection widget workflow.',
-  'sidebar_group': '1. Governance steward',
-  'sidebar_include': False},
+
  {'module_name': 'widgets.widget_author_guardrails',
   'visibility': 'public',
   'module_summary': 'Owns versioned Schema, Freshness, and Changes guardrail authoring.',
@@ -480,7 +476,6 @@ TEMPLATE_FLOW_DOCS = [{'notebook_key': '00_env_config',
                             'widget_render_data_agreement',
                             'widget_register_data_contract',
                             'widget_view_agreement_catalogue',
-                            'widget_select_guardrail_target',
                             'widget_enrich_table_metadata',
                             'widget_author_guardrails',
                             'widget_author_dq_rules'],
@@ -1491,7 +1486,7 @@ PUBLIC_SYMBOL_DOCS = [
   'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
   'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
   'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
-  'related_functions': ['widget_view_data_catalogue', 'widget_select_guardrail_target'],
+  'related_functions': ['widget_view_data_catalogue'],
   'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
   'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
   'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
@@ -1500,37 +1495,7 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['The metadata catalogue has no logical tables.',
                             'A table or current column lacks its canonical metadata key.',
                             'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},
- {'kind': 'function',
-  'module': 'widgets.widget_select_guardrail_target',
-  'function_type': 'callable',
-  'summary_override': 'Render an interactive target selector for guardrail authoring and '
-                      'governance review.',
-  'symbol_name': 'widget_select_guardrail_target',
-  'template_notebook': '02_pipeline / 01_governance',
-  'template_segment': 'Guardrail authoring',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
-              'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
-             'the helper.',
-  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders an interactive selector that reads profiled evidence, '
-                      'existing guardrail rules, and table governance policy to create the '
-                      'handover state for guardrail authoring or review.',
-  'when_to_use': 'Use at the start of 02_pipeline authoring or 01_governance when a user '
-                 'must choose which profiled table to work on.',
-  'do_not_use_when': 'Do not use for automatic pipeline enforcement or to write metadata; this '
-                     'selector reads metadata and prepares widget state only.',
-  'glossary_terms': ['evidence', 'guardrails', 'metadata lakehouse', 'notebook template'],
-  'return_interpretation': 'The returned state includes environment, dataset, table, metadata '
-                           'keys, profile rows, existing rules, and governance policy values for '
-                           'downstream widgets.',
-  'common_failure_causes': ['METADATA_DATA_PROFILED has no profiles.',
-                            'The selected table lacks metadata identity fields.',
-                            'Metadata tables cannot be read.',
-                            'ipywidgets is unavailable.']},
+
  {'kind': 'function',
   'module': 'widgets.widget_author_guardrails',
   'function_type': 'callable',
@@ -1545,7 +1510,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': ['widget_select_guardrail_target'],
+  'related_functions': ['widget_author_dq_rules'],
   'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',
   'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
   'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
@@ -1614,29 +1579,24 @@ PUBLIC_SYMBOL_DOCS = [
   'function_type': 'callable',
   'summary_override': 'Render interactive manual DQ guardrail authoring controls.',
   'symbol_name': 'widget_author_dq_rules',
-  'template_notebook': '02_pipeline',
+  'template_notebook': '01_governance',
   'template_segment': 'Guardrail authoring',
   'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
               'guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
-                'record parameters accepted by this helper.',
+  'parameters': 'See the source docstring for the Spark session and optional initial rule controls.',
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['widget_review_guardrail_governance'],
-  'expanded_purpose': 'Renders manual DQ authoring controls that produce editable '
-                      'guardrail rule intent rows under the selected table governance policy.',
-  'when_to_use': 'Use in 02_pipeline after target selection when engineering needs to '
-                 'batch-create, edit, clear, or draft DQ guardrail rules.',
-  'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling; use '
-                     'run_table_guardrails for execution and profile helpers for observed evidence.',
+  'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
+  'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
+  'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
   'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
   'return_interpretation': 'The widget returns mutable preview records; '
                            'approved saves write guardrail rule intent to '
                            'METADATA_GUARDRAIL.',
   'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
-                            'Rule suggestions cannot be parsed.',
-                            'Bypass reason is missing when bypass is requested.',
+                            'No applicable column is selected.',
                             'The metadata target cannot be written.']},
 
 
@@ -2140,34 +2100,7 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                          'The result bundle is malformed.',
                                                          'The caller expects debug internals while '
                                                          'using summary mode.']},
- 'widget_select_guardrail_target': {'expanded_purpose': 'Renders an interactive selector that '
-                                                        'reads profiled evidence, '
-                                                        'existing guardrail rules, and table '
-                                                        'governance policy to create the handover '
-                                                        'state for guardrail authoring or review.',
-                                    'when_to_use': 'Use at the start of 02_pipeline authoring or '
-                                                   '01_governance when a user must choose '
-                                                   'which profiled table to work on.',
-                                    'do_not_use_when': 'Do not use for automatic pipeline '
-                                                       'enforcement or to write metadata; this '
-                                                       'selector reads metadata and prepares '
-                                                       'widget state only.',
-                                    'glossary_terms': ['evidence',
-                                                       'guardrails',
-                                                       'metadata lakehouse',
-                                                       'notebook template'],
-                                    'return_interpretation': 'The returned state includes '
-                                                             'environment, dataset, table, '
-                                                             'metadata keys, profile rows, '
-                                                             'existing rules, and governance '
-                                                             'policy values for downstream '
-                                                             'widgets.',
-                                    'common_failure_causes': ['METADATA_DATA_PROFILED has no '
-                                                              'profiles.',
-                                                              'The selected table lacks metadata '
-                                                              'identity fields.',
-                                                              'Metadata tables cannot be read.',
-                                                              'ipywidgets is unavailable.']},
+
  'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
                                                                       'controls for authoring '
                                                                       'versioned table-level Schema, '
@@ -2194,29 +2127,16 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                                             'Freshness maximum age is invalid.',
                                                                             'The metadata target '
                                                                             'cannot be written.']},
- 'widget_author_dq_rules': {'expanded_purpose': 'Renders manual DQ authoring '
-                                                'controls that produce editable guardrail rule '
-                                                'intent rows under the selected table governance '
-                                                'policy.',
-                            'when_to_use': 'Use in 02_pipeline after target selection when '
-                                           'engineering needs to batch-create, edit, clear, or '
-                                           'draft DQ guardrail rules.',
-                            'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue '
-                                               'profiling; use run_table_guardrails for execution and '
-                                               'profile helpers for observed evidence.',
+ 'widget_author_dq_rules': {'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
+                            'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
+                            'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
                             'glossary_terms': ['guardrails',
                                                'evidence',
                                                'metadata lakehouse',
                                                'notebook template'],
-                            'return_interpretation': 'The widget returns mutable preview records '
-                                                     'and draft suggestions; approved saves '
-                                                     'write guardrail rule intent to '
-                                                     'METADATA_GUARDRAIL.',
-                            'common_failure_causes': ['Rule parameters are invalid for the '
-                                                      'selected DQ type.',
-                                                      'Rule suggestions cannot be parsed.',
-                                                      'Bypass reason is missing when bypass is '
-                                                      'requested.',
+                            'return_interpretation': 'The widget returns mutable preview records; explicit saves write guardrail rule intent to METADATA_GUARDRAIL.',
+                            'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
+                                                      'No applicable column is selected.',
                                                       'The metadata target cannot be written.']},
  'widget_review_guardrail_governance': {'expanded_purpose': 'Renders governance review controls '
                                                             'for reviewing '

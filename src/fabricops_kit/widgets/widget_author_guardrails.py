@@ -137,60 +137,88 @@ def _guardrail_records_from_selection(
 
 
 def widget_author_guardrails(
+    *,
+    spark_session: Any,
+    context: dict[str, Any] | None = None,
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Render standalone Schema, Freshness, and Changes guardrail authoring.
+
+    Parameters
+    ----------
+    spark_session : Any
+        Fabric Spark session used to read profiled targets and save rules.
+    context : dict[str, Any], optional
+        Advanced override for the active ``FABRIC_CONTEXT``.
+    commit : bool, default=False
+        Save the initial selection immediately. The default renders the widget.
+
+    Returns
+    -------
+    dict[str, Any]
+        Target and authoring controls plus testable build and save actions.
+
+    Raises
+    ------
+    ValueError
+        If no profiled target exists or configured values are invalid.
+
+    Notes
+    -----
+    Run after ``00_env_config`` in Microsoft Fabric. The widget reads
+    ``METADATA_DATA_PROFILED`` and existing ``METADATA_GUARDRAIL`` rows, then
+    writes new versions through the canonical guardrail metadata writer.
+
+    Examples
+    --------
+    >>> form = widget_author_guardrails(spark_session=spark)
+
+    """
+    from IPython import display as ip
+
+    config, env, _ = resolve_fabric_context(context=context)
+    widgets = shared.require_ipywidgets()
+    authoring = widgets.VBox()
+    current: dict[str, Any] = {}
+
+    def render(state: Mapping[str, Any]) -> None:
+        current.clear()
+        current.update(_render_guardrail_authoring(state, spark_session=spark_session, context=context, commit=False))
+        authoring.children = (current["ui"],)
+
+    state, target, target_controls = shared._load_guardrail_authoring_targets(
+        config, env, spark_session=spark_session, widgets=widgets, on_change=render
+    )
+    if commit:
+        current["records"] = current["save"]()
+    ui = shared.form_page(
+        widgets,
+        title="Author Guardrails",
+        description="Select a profiled target, then author table-level guardrails.",
+        children=[
+            shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]),
+            authoring,
+        ],
+    )
+    ip.display(ui)
+    return {
+        "state": state,
+        "controls": {"target": target, **target_controls},
+        "authoring": current,
+        "ui": ui,
+    }
+
+
+def _render_guardrail_authoring(
     state: Mapping[str, Any],
     *,
     spark_session: Any = None,
     context: dict[str, Any] | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Create versioned Schema, Freshness, and Changes guardrails for a table.
-
-    Parameters
-    ----------
-    state : Mapping[str, Any]
-        Selected table state returned by :func:`widget_select_guardrail_target`,
-        including its canonical table key, catalogue columns, and existing rules.
-    spark_session : Any, optional
-        Fabric Spark session used to append saved metadata rows.
-    context : dict[str, Any], optional
-        Advanced override for the active ``FABRIC_CONTEXT``.
-    commit : bool, default=False
-        Save the initial form selection immediately. The default renders a form.
-
-    Returns
-    -------
-    dict[str, Any]
-        Controls plus testable ``build_records`` and ``save`` actions. Saving
-        appends a new configuration version to ``METADATA_GUARDRAIL``.
-
-    Raises
-    ------
-    ValueError
-        If the selected table or any configured guardrail value is invalid.
-
-    Notes
-    -----
-    Run in Microsoft Fabric after ``00_env_config`` and table selection. The
-    widget authors configuration only; it has no approval workflow. Select the
-    required table columns and preserve their expected data types as the schema
-    guardrail.
-
-    Examples
-    --------
-    >>> form = widget_author_guardrails(guardrail_target_state)
-    >>> form["version"]
-    1
-
-    See Also
-    --------
-    widget_select_guardrail_target
-    the governed runtime checks
-
-    """
+    """Render guardrail controls for one resolved target state."""
     if not str(state.get("table_name") or "").strip() or not str(state.get("metadata_table_key") or "").strip():
         raise ValueError("A selected table with a canonical metadata_table_key is required.")
-    from IPython import display as ip
-
     config, env, _ = resolve_fabric_context(context=context)
     widgets = shared.require_ipywidgets()
     columns = [str(value) for value in state.get("columns", [])]
@@ -377,7 +405,6 @@ def widget_author_guardrails(
             message,
         ],
     )
-    ip.display(ui)
     result = {
         "version": version,
         "next_version": version,

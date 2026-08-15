@@ -105,8 +105,8 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
-                "rule_type": "not_null",
-                "rule_parameters_json": "{}",
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "Required",
                 "is_active": True,
@@ -122,8 +122,8 @@ def test_spark_schema_validation_and_latest_dq_metadata_are_stable(spark_session
                 "rule_key": "orders|required",
                 "rule_id": "required",
                 "column_name": "id",
-                "rule_type": "not_null",
-                "rule_parameters_json": "{}",
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "Required",
                 "is_active": False,
@@ -150,8 +150,8 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "greater_than",
-                "rule_parameters_json": json.dumps({"value": 0}),
+                "rule_type": "value_range",
+                "rule_parameters_json": json.dumps({"minimum": 0, "minimum_inclusive": False}),
                 "severity": "error",
                 "description": "Amount must be non-negative",
                 "is_active": True,
@@ -168,12 +168,14 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
     assert _load_active_dq_rules(metadata_df, table_name="orders") == [
         {
             "rule_id": "amount_positive",
-            "rule_type": "greater_than",
+            "rule_type": "value_range",
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
             "review_status": "governance_approved",
-            "value": 0,
+            "minimum": 0,
+            "minimum_inclusive": False,
+            "maximum_inclusive": True,
         }
     ]
 
@@ -216,9 +218,10 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
             {
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "greater_than",
+                "rule_type": "value_range",
                 "columns": ["amount"],
-                "value": 0,
+                "minimum": 0,
+                "minimum_inclusive": False,
                 "severity": "error",
                 "description": "Amount must be non-negative",
                 "commit": True,
@@ -234,12 +237,14 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
     assert loaded == [
         {
             "rule_id": "amount_positive",
-            "rule_type": "greater_than",
+            "rule_type": "value_range",
             "columns": ["amount"],
             "severity": "error",
             "description": "Amount must be non-negative",
             "review_status": "governance_approved",
-            "value": 0,
+            "minimum": 0,
+            "minimum_inclusive": False,
+            "maximum_inclusive": True,
         }
     ]
 
@@ -320,7 +325,7 @@ def test_run_active_dq_guardrail_warning_failure_can_continue(spark_session, mon
                 "rule_key": "orders|status_known",
                 "rule_id": "status_known",
                 "column_name": "status",
-                "rule_type": "accepted_values",
+                "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
                 "severity": "warning",
                 "description": "Known status",
@@ -367,7 +372,7 @@ def test_run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pres
                 "rule_key": "orders|status_known",
                 "rule_id": "status_known",
                 "column_name": "status",
-                "rule_type": "accepted_values",
+                "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
                 "severity": "warning",
                 "description": "Known status",
@@ -386,8 +391,8 @@ def test_run_active_dq_guardrail_warning_failure_adds_technical_columns_and_pres
                 "rule_key": "orders|amount_positive",
                 "rule_id": "amount_positive",
                 "column_name": "amount",
-                "rule_type": "greater_than",
-                "rule_parameters_json": json.dumps({"value": 0}),
+                "rule_type": "value_range",
+                "rule_parameters_json": json.dumps({"minimum": 0, "minimum_inclusive": False}),
                 "severity": "warning",
                 "description": "Positive amount",
                 "is_active": True,
@@ -434,8 +439,8 @@ def test_run_active_dq_guardrail_error_failure_blocks(spark_session, monkeypatch
                 "rule_key": "orders|order_id_required",
                 "rule_id": "order_id_required",
                 "column_name": "order_id",
-                "rule_type": "not_null",
-                "rule_parameters_json": "{}",
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "Required",
                 "is_active": True,
@@ -474,8 +479,8 @@ def test_run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(
                 "rule_key": "orders|order_id_required",
                 "rule_id": "order_id_required",
                 "column_name": "order_id",
-                "rule_type": "not_null",
-                "rule_parameters_json": "{}",
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "Required",
                 "is_active": True,
@@ -493,7 +498,7 @@ def test_run_active_dq_guardrail_mixed_warning_and_error_failures_return_failed(
                 "rule_key": "orders|status_known",
                 "rule_id": "status_known",
                 "column_name": "status",
-                "rule_type": "accepted_values",
+                "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"allowed_values": ["active", "inactive"]}),
                 "severity": "warning",
                 "description": "Known status",
@@ -531,8 +536,8 @@ def test_run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessio
                 "rule_key": "orders|email_format",
                 "rule_id": "email_format",
                 "column_name": "email",
-                "rule_type": "not_null",
-                "rule_parameters_json": "{}",
+                "rule_type": "missing_values",
+                "rule_parameters_json": json.dumps({"maximum_null_percent": 0}),
                 "severity": "error",
                 "description": "Email format",
                 "is_active": True,
@@ -551,7 +556,7 @@ def test_run_active_dq_guardrail_supports_current_v1_metadata_shape(spark_sessio
 
     assert result["status"] == "passed"
     assert result["can_continue"] is True
-    assert result["checks"][0]["rule_type"] == "not_null"
+    assert result["checks"][0]["rule_type"] == "missing_values"
 
 
 def test_write_catalogue_evidence_writes_profile_evidence_without_result_fields(spark_session, monkeypatch):

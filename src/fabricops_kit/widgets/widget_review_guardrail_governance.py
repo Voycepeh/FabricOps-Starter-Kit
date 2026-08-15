@@ -44,8 +44,7 @@ def _guardrail_governance_review_widget_workflow(state: Mapping[str, Any], *, sp
     Parameters
     ----------
     state : mapping
-        Handover state from :func:`widget_select_guardrail_target`. The state may
-        include ``existing_rules`` from ``METADATA_GUARDRAIL``.
+        Resolved table state. The state may include ``existing_rules`` from ``METADATA_GUARDRAIL``.
     spark_session : Any, optional
         Spark session used for save actions.
     context : dict[str, Any], optional

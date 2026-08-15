@@ -1,4 +1,4 @@
-# unique
+# unique_values
 
 ## What this rule does
 
@@ -17,7 +17,7 @@ Use for natural keys, source identifiers, or generated business IDs that must id
 ## Parameters
 
 ```yaml
-rule_type: unique
+rule_type: unique_values
 columns: ["student_id"]
 severity: error
 ```
@@ -26,13 +26,13 @@ severity: error
 
 ```yaml
 rule_id: unique_example
-rule_type: unique
+rule_type: unique_values
 columns: ["student_id"]
 severity: error
-description: "Example approved metadata rule for unique."
+description: "Example approved metadata rule for unique_values."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -65,4 +65,4 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 ## Related rules
 
 - [`unique_combination`](unique-combination.md)
-- [`not_null`](not-null.md)
+- [`missing_values`](missing-values.md)

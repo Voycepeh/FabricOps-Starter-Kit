@@ -1,4 +1,4 @@
-# null_rate_below
+# missing_values
 
 ## What this rule does
 
@@ -17,24 +17,24 @@ Use when a small amount of missing data is acceptable but a spike should be visi
 ## Parameters
 
 ```yaml
-rule_type: null_rate_below
+rule_type: missing_values
 columns: ["email"]
-max_null_percent: 25
+maximum_null_percent: 25
 severity: warning
 ```
 
 ## Example rule definition
 
 ```yaml
-rule_id: null_rate_below_example
-rule_type: null_rate_below
+rule_id: missing_values_example
+rule_type: missing_values
 columns: ["email"]
-max_null_percent: 25
+maximum_null_percent: 25
 severity: warning
-description: "Example approved metadata rule for null_rate_below."
+description: "Example approved metadata rule for missing_values."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -61,10 +61,10 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Notes
 
-- Blank strings are not counted as nulls. Pair with `non_empty_string` if blanks must fail.
+- Blank strings are not counted as nulls. Pair with `blank_text` if blanks must fail.
 - If the overall null rate is within threshold, no row fails this rule.
 
 ## Related rules
 
-- [`not_null`](not-null.md)
-- [`non_empty_string`](non-empty-string.md)
+- [`missing_values`](missing-values.md)
+- [`blank_text`](blank-text.md)

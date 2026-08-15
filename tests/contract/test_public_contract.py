@@ -421,7 +421,6 @@ widget_modules = [
     "fabricops_kit.widgets.widget_render_data_agreement",
     "fabricops_kit.widgets.widget_render_data_steward",
     "fabricops_kit.widgets.widget_review_guardrail_governance",
-    "fabricops_kit.widgets.widget_select_guardrail_target",
 ]
 assert not any(name in sys.modules for name in widget_modules), sorted(name for name in widget_modules if name in sys.modules)
 value = fabricops_kit.widget_render_data_agreement

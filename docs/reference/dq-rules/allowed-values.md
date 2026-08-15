@@ -1,4 +1,4 @@
-# accepted_values
+# allowed_values
 
 ## What this rule does
 
@@ -17,7 +17,7 @@ Use for controlled domains such as status, category, currency, country group, or
 ## Parameters
 
 ```yaml
-rule_type: accepted_values
+rule_type: allowed_values
 columns: ["status"]
 allowed_values: ["new", "active", "inactive", "closed"]
 severity: warning
@@ -26,15 +26,15 @@ severity: warning
 ## Example rule definition
 
 ```yaml
-rule_id: accepted_values_example
-rule_type: accepted_values
+rule_id: allowed_values_example
+rule_type: allowed_values
 columns: ["status"]
 allowed_values: ["new", "active", "inactive", "closed"]
 severity: warning
-description: "Example approved metadata rule for accepted_values."
+description: "Example approved metadata rule for allowed_values."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -61,11 +61,11 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 
 ## Notes
 
-- Null values do not fail this rule by themselves. Add `not_null` if the value is mandatory.
+- Null values do not fail this rule by themselves. Use `missing_values` with `maximum_null_percent=0` if the value is mandatory.
 - Keep allowed lists small and governed.
 
 ## Related rules
 
-- [`not_in_values`](not-in-values.md)
-- [`value_when`](value-when.md)
-- [`not_null`](not-null.md)
+- [`blocked_values`](blocked-values.md)
+- [`conditional_value`](conditional-value.md)
+- [`missing_values`](missing-values.md)

@@ -24,6 +24,7 @@ from fabricops_kit.config.metadata_schemas import (
     coerce_metadata_row_types,
     metadata_table_schema_registry,
 )
+from fabricops_kit.pipeline.guardrails_shared import DQ_RULE_TYPES
 
 
 _WIDGET_STYLE = {"description_width": "initial"}
@@ -348,7 +349,6 @@ SOURCE_NOTEBOOK_TYPES = ["02_pipeline", "01_governance"]
 CREATED_BY_ROLES = ["engineering", "governance", "system"]
 LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-DQ_RULE_TYPES = ["not_null", "null_rate_below", "non_empty_string", "unique", "unique_combination", "accepted_values", "not_in_values", "between", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal", "regex_match", "date_not_future", "date_between", "freshness", "max_age_days", "column_pair_equal", "column_a_gte_column_b", "column_a_gt_column_b", "required_when", "value_when", "expression_true"]
 SENSITIVITY_LABELS = ["classified", "restricted", "public"]
 PERSONAL_DATA_CLASSIFICATIONS = ["direct PII", "indirect PII", "none"]
 
@@ -1268,6 +1268,123 @@ def _filter_table_rows(rows: Iterable[Mapping[str, Any]], *, environment_name: s
         filtered.append(item)
     return filtered
 
+def _load_guardrail_authoring_targets(
+    config: Any,
+    env: str,
+    *,
+    spark_session: Any,
+    widgets: Any,
+    on_change: Any | None = None,
+) -> tuple[dict[str, Any], Any, dict[str, Any]]:
+    """Load profiled targets and keep a canonical selected-table state current."""
+    catalogue = _read_metadata_table_or_empty(config, env, PROFILED_TABLE, spark_session=spark_session)
+    rules = _read_metadata_table_or_empty(config, env, GUARDRAIL_TABLE, spark_session=spark_session)
+    if not catalogue:
+        raise ValueError("METADATA_DATA_PROFILED has no guardrail targets.")
+
+    targets: dict[str, tuple[str, str, str, str]] = {}
+    for row in catalogue:
+        environment_name = str(row.get("environment_name") or env)
+        dataset_name = str(row.get("dataset_name") or "")
+        table_name = str(row.get("table_name") or "")
+        if not table_name:
+            continue
+        metadata_table_key = str(
+            row.get("metadata_table_key")
+            or config_shared.build_metadata_table_key(
+                row.get("store_type", "lakehouse"),
+                row.get("layer", row.get("fabric_store_target", "")),
+                row.get("schema_name"),
+                table_name,
+            )
+        )
+        label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
+        targets[label] = (environment_name, dataset_name, table_name, metadata_table_key)
+    if not targets:
+        raise ValueError("METADATA_DATA_PROFILED has no table-level guardrail targets.")
+
+    target = widgets.Dropdown(
+        options=[(label, value) for label, value in sorted(targets.items())],
+        description="Target",
+        layout=widgets.Layout(width="760px"),
+    )
+    summary = widgets.HTML()
+    state: dict[str, Any] = {}
+
+    def refresh(*_: Any) -> None:
+        environment_name, dataset_name, table_name, metadata_table_key = target.value
+        table_rows = _filter_table_rows(
+            catalogue,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        table_rules = _filter_table_rows(
+            rules,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        latest = max(
+            table_rows,
+            key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""),
+        )
+        snapshot_rows = table_rows
+        for identity_field in ("profile_run_id", "schema_fingerprint", "profiled_at", "run_timestamp"):
+            identity_value = str(latest.get(identity_field) or "")
+            if identity_value:
+                snapshot_rows = [
+                    row for row in table_rows if str(row.get(identity_field) or "") == identity_value
+                ]
+                break
+        columns = sorted({str(row.get("column_name")) for row in snapshot_rows if row.get("column_name")})
+        policy = resolve_table_governance_policy(
+            snapshot_rows,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        policy_values = {
+            key: policy[key]
+            for key in (
+                "governance_mode",
+                "approval_policy",
+                "governance_status",
+                "approval_bypass_allowed",
+                "bypass_allowed",
+                "requires_post_review",
+            )
+            if key in policy
+        }
+        state.clear()
+        state.update(
+            {
+                "environment_name": environment_name,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "metadata_table_key": metadata_table_key,
+                "profile_run_id": str(latest.get("profile_run_id") or ""),
+                "profile_stage": str(latest.get("profile_stage") or ""),
+                "columns": columns,
+                "catalogue_profile_rows": snapshot_rows,
+                "existing_rules": table_rules,
+                **policy_values,
+            }
+        )
+        summary.value = (
+            f"<b>Columns:</b> {len(columns)} · <b>Existing rules:</b> {len(table_rules)} · "
+            f"<b>Governance:</b> {state['governance_mode']}"
+        )
+        if on_change is not None:
+            on_change(state)
+
+    target.observe(refresh, names="value")
+    refresh()
+    return state, target, {"target_summary": summary, "refresh_target": refresh}
+
 def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: str, rule_type: str | None = None, column_name: str | None = None) -> dict[str, Any]:
     """Return the newest matching rule row for widget prepopulation."""
     matches = []
@@ -1420,10 +1537,43 @@ def _dq_records_from_selection(
     source_notebook_type: str = "02_pipeline",
     created_by_role: str = "engineering",
     config: Any = None,
+    column_selection: str = "independent",
 ) -> list[dict[str, Any]]:
     """Build DQ rule records from selected columns."""
+    columns = [str(column) for column in selected_columns]
+    if column_selection != "independent":
+        identity_payload = {"columns": columns, **dict(parameters or {})}
+        record = _base_guardrail_rule_record(
+            state,
+            guardrail_type="dq",
+            rule_type=rule_type,
+            parameters=identity_payload,
+            severity=severity,
+            description=f"{rule_type} DQ guardrail",
+            bypass_reason=bypass_reason,
+            action=action,
+            source_notebook_type=source_notebook_type,
+            created_by_role=created_by_role,
+            config=config,
+        )
+        identity_hash = hashlib.sha256(
+            json.dumps(identity_payload, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()[:12]
+        rule_id = f"{record['table_name']}._table.dq.{rule_type}.{identity_hash}"
+        record.update(
+            guardrail_rule_id=rule_id,
+            rule_id=rule_id,
+            rule_key=_build_dq_rule_key(
+                record["environment_name"], record["dataset_name"], record["table_name"], rule_id
+            ),
+        )
+        record["action_type"] = action_type
+        if action_type in {"deactivated", "superseded"}:
+            record["is_active"] = False
+            record["review_status"] = "superseded" if action_type == "superseded" else "rejected"
+        return [record]
     records = []
-    for column in selected_columns:
+    for column in columns:
         record = _base_guardrail_rule_record(
             state,
             guardrail_type="dq",
@@ -1841,11 +1991,10 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
             continue
         draft = dict(rule)
         draft["rule_type"] = _canonical_dq_rule_type(draft.get("rule_type"))
-        if draft["rule_type"] != "expression_true":
-            columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
-            if isinstance(columns, str):
-                columns = [c.strip() for c in columns.split(",") if c.strip()]
-            draft["columns"] = list(columns or [])
+        columns = draft.get("columns") or ([draft.get("column_name")] if draft.get("column_name") else [])
+        if isinstance(columns, str):
+            columns = [c.strip() for c in columns.split(",") if c.strip()]
+        draft["columns"] = list(columns or [])
         from fabricops_kit.pipeline.guardrails_shared import _validate_dq_rules
         _validate_dq_rules([draft])
         columns = [str(c) for c in draft.get("columns", [])]
@@ -1853,8 +2002,12 @@ def _build_dq_rule_records(profile_rows: list[dict[str, Any]], reviewed_rules: l
         primary_column = columns[0] if columns else display_column
         identity = _approved_column_identity(profile.get(primary_column, {}), {**rule, "column_name": display_column, "columns": columns}, env=env)
         identity["column_name"] = display_column
-        rule_id = str(rule.get("rule_id") or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}")
         params = _dq_rule_parameter_payload(draft, columns)
+        identity_hash = hashlib.sha256(_json(params).encode("utf-8")).hexdigest()[:12]
+        rule_id = str(
+            rule.get("rule_id")
+            or f"{identity['table_name']}.{display_column or 'table'}.{draft['rule_type']}.{identity_hash}"
+        )
         rows.append({
             "rule_key": str(rule.get("rule_key") or _build_dq_rule_key(identity["environment_name"], identity["dataset_name"], identity["table_name"], rule_id)),
             "rule_id": rule_id,

@@ -61,7 +61,6 @@ EXPECTED_V1_CALLABLES = [
     'observe_table',
     'widget_render_data_steward',
     'widget_render_data_agreement',
-    'widget_select_guardrail_target',
     'widget_enrich_table_metadata',
     'widget_author_guardrails',
     'widget_view_agreement_catalogue',
@@ -93,7 +92,6 @@ def test_widget_public_callables_live_under_widgets_package():
         'widget_render_data_agreement',
         'widget_render_data_steward',
         'widget_review_guardrail_governance',
-        'widget_select_guardrail_target',
     }
     for name in widget_names:
         value = getattr(widgets, name)
@@ -120,7 +118,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
         'widget_render_data_agreement',
         'widget_render_data_steward',
         'widget_review_guardrail_governance',
-        'widget_select_guardrail_target',
     }
     offenders = []
     for path in widgets_dir.glob("widget_*.py"):
@@ -186,7 +183,7 @@ def test_no_source_tests_docs_or_templates_reference_removed_modules_or_callable
 
 def test_dq_rule_validation_rejects_unsupported_runtime_rule_types():
     """Verify dq rule validation rejects unsupported runtime rule types."""
-    rules = [{"rule_id": "id_required", "rule_type": "not_null", "columns": ["id"], "severity": "error", "description": "Required"}]
+    rules = [{"rule_id": "id_required", "rule_type": "missing_values", "columns": ["id"], "maximum_null_percent": 0, "severity": "error", "description": "Required"}]
     assert dq_runtime._validate_dq_rules(rules) == rules
     with pytest.raises(ValueError):
         dq_runtime._validate_dq_rules([{**rules[0], "rule_type": "custom"}])
@@ -552,6 +549,5 @@ def test_root_public_governance_and_widget_imports_still_work():
         "widget_author_guardrails",
         "widget_enrich_table_metadata",
         "widget_review_guardrail_governance",
-        "widget_select_guardrail_target",
     ]:
         assert callable(getattr(fabricops_kit, name))

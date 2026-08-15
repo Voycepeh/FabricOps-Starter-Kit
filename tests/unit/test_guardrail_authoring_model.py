@@ -271,11 +271,11 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
     rules_df = spark_session.createDataFrame([
         _rule(
             rule_key="dq-rule",
-            rule_id="orders.order_id.not_null",
+            rule_id="orders.order_id.missing_values",
             guardrail_type="dq",
-            rule_type="not_null",
+            rule_type="missing_values",
             column_name="order_id",
-            rule_parameters_json=json.dumps({"columns": ["order_id"]}),
+            rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}),
             severity="error",
         )
     ])
@@ -285,7 +285,7 @@ def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session,
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
-    assert result["checks"][0]["rule_id"] == "orders.order_id.not_null"
+    assert result["checks"][0]["rule_id"] == "orders.order_id.missing_values"
 
 
 def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_session, monkeypatch):
@@ -323,7 +323,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     )
 
     dq_rules_df = spark_session.createDataFrame([
-        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.not_null", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]}))
+        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.missing_values", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}))
     ])
     monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
     dq = dq_runtime.run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
@@ -367,14 +367,14 @@ def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monke
     """Verify DQ authoring creates draft, submit, and apply-now lifecycle rows."""
     _install_fake_notebook_widgets(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
-    widget = widget_author_dq_rules(state, selected_columns=["order_id"])
+    def build(action):
+        return governance_review._dq_records_from_selection(
+            state, rule_type="missing_values", selected_columns=["order_id"], parameters={"maximum_null_percent": 0}, action=action
+        )
 
-    batch_draft = widget["build_batch_records"](action="draft")
-    batch_submitted = widget["build_batch_records"](action="submit")
-    batch_applied = widget["build_batch_records"](action="apply_now")
-    individual_draft = widget["build_individual_record"](action="draft")
-    individual_submitted = widget["build_individual_record"](action="submit")
-    individual_applied = widget["build_individual_record"](action="apply_now")
+    batch_draft = individual_draft = build("draft")
+    batch_submitted = individual_submitted = build("submit")
+    batch_applied = individual_applied = build("apply_now")
 
     for records in (batch_draft, individual_draft):
         assert {record["activation_state"] for record in records} == {"inactive"}
@@ -397,24 +397,6 @@ def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monke
         assert {record["activation_reason"] for record in records} == {"engineering_apply_now"}
 
 
-def test_dq_widget_exposes_only_manual_authoring_actions(monkeypatch):
-    """Verify DQ authoring hides assisted and formal review controls in v1."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id", "amount"], "catalogue_profile_rows": [{"column_name": "order_id"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "approval_bypass_allowed": True}
-    widget = widget_author_dq_rules(state, selected_columns=["order_id"], dq_authoring_mode="ai_suggest")
-
-    descriptions = set(_widget_descriptions(widget["ui"]))
-    assert "Generate suggestions" not in descriptions
-    assert "Approve suggestions" not in descriptions
-    assert "Reject suggestions" not in descriptions
-    assert "Clear / supersede selected rule" not in descriptions
-    assert "Save/update selected rule" not in descriptions
-    assert {"Save selected rule as draft", "Submit selected rule for governance review", "Apply selected rule now"}.issubset(descriptions)
-    assert not {"suggest_ai", "approve_ai", "reject_ai"} & set(widget)
-    formal_words = {"Approve", "Reject", "Replace", "Deactivate", "Supersede"}
-    assert not formal_words & descriptions
-
-
 def test_governance_review_widget_actions(monkeypatch):
     """Verify governance review widget exposes policy and rule actions."""
     _install_fake_notebook_widgets(monkeypatch)
@@ -429,36 +411,6 @@ def test_governance_review_widget_actions(monkeypatch):
     assert approved["review_status"] == "governance_approved"
     assert rejected["review_status"] == "rejected_by_governance"
     assert superseded["review_status"] == "superseded"
-
-
-def test_target_selector_returns_handover_state_with_policy_and_rules(monkeypatch):
-    """Verify target selector reads catalogue, rules, and governance policy."""
-    _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.widgets import shared as governance_review
-    from fabricops_kit import widgets
-    from fabricops_kit.widgets import shared as widget_shared
-
-    catalogue = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "profile_run_id": "profile-1", "profile_stage": "target", "column_name": "order_id", "data_type": "int"}]
-    rules = [_rule(metadata_table_key="table-key")]
-    catalogue[0].update({"governance_mode": "governed", "approval_policy": "approval_required_with_bypass", "bypass_allowed": True, "policy_reason": "governed", "policy_updated_at": "2026-01-01T00:00:00Z"})
-    enrichment = []
-
-    def fake_read(config, env, table_name, *, spark_session):
-        return {governance_review.PROFILED_TABLE: catalogue, governance_review.GUARDRAIL_TABLE: rules, governance_review.ENRICHMENT_TABLE: enrichment}[table_name]
-
-    monkeypatch.setattr(widget_shared, "_read_metadata_table_or_empty", fake_read)
-    state = widgets.widget_select_guardrail_target(spark_session=object(), context={"config": object(), "env": "dev"})
-
-    assert state["environment_name"] == "dev"
-    assert state["columns"] == ["order_id"]
-    assert state["existing_rules"] == rules
-    assert state["governance_mode"] == "governed"
-    assert state["approval_bypass_allowed"] is True
-    assert len(state["_controls"]["target"].options) == 1
-
-
-
-
 
 
 def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
@@ -519,13 +471,13 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules
 
     rows = [
-        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="active_pending_governance_review", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
-        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="not_null", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"]})),
+        _rule(rule_key="self", rule_id="self", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="gov", rule_id="gov", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", review_status="governance_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="bypass", rule_id="bypass", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", review_status="active_pending_governance_review", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="old", rule_id="old", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", review_status="approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="blank_dataset", rule_id="blank_dataset", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", dataset_name="", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="missing_status", rule_id="missing_status", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
+        _rule(rule_key="missing_active", rule_id="missing_active", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", review_status="self_approved", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0})),
     ]
     rows[-2].pop("review_status")
     rows[-1].pop("is_active")
@@ -589,8 +541,13 @@ def test_authoring_widgets_stamp_engineering_and_governance_sources(monkeypatch)
     _install_fake_notebook_widgets(monkeypatch)
     state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "columns": ["order_id"], "catalogue_profile_rows": [{"column_name": "order_id", "data_type": "int"}], "existing_rules": [], "governance_mode": "governed", "approval_policy": "approval_required"}
 
-    engineering = widget_author_dq_rules(state, selected_columns=["order_id"])["build_batch_records"](action="submit")[0]
-    governance = widget_author_dq_rules(state, selected_columns=["order_id"], source_notebook_type="01_governance", created_by_role="governance")["build_batch_records"](action="submit")[0]
+    engineering = governance_review._dq_records_from_selection(
+        state, rule_type="missing_values", selected_columns=["order_id"], parameters={"maximum_null_percent": 0}, action="submit"
+    )[0]
+    governance = governance_review._dq_records_from_selection(
+        state, rule_type="missing_values", selected_columns=["order_id"], parameters={"maximum_null_percent": 0}, action="submit",
+        source_notebook_type="01_governance", created_by_role="governance"
+    )[0]
 
     assert engineering["source_notebook_type"] == "02_pipeline"
     assert engineering["created_by_role"] == "engineering"

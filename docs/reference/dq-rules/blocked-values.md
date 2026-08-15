@@ -1,4 +1,4 @@
-# not_in_values
+# blocked_values
 
 ## What this rule does
 
@@ -17,7 +17,7 @@ Use to catch placeholders, retired codes, test values, or values known to be uns
 ## Parameters
 
 ```yaml
-rule_type: not_in_values
+rule_type: blocked_values
 columns: ["country_code"]
 blocked_values: ["UNKNOWN", "N/A", "TEST"]
 severity: warning
@@ -26,15 +26,15 @@ severity: warning
 ## Example rule definition
 
 ```yaml
-rule_id: not_in_values_example
-rule_type: not_in_values
+rule_id: blocked_values_example
+rule_type: blocked_values
 columns: ["country_code"]
 blocked_values: ["UNKNOWN", "N/A", "TEST"]
 severity: warning
-description: "Example approved metadata rule for not_in_values."
+description: "Example approved metadata rule for blocked_values."
 ```
 
-Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL_RULES`, including `rule_parameters_json`.
+Governance Review stores the same rule type and parameters in `METADATA_GUARDRAIL`, including `rule_parameters_json`.
 
 ## Sample input data
 
@@ -62,9 +62,9 @@ Governance Review stores the same rule type and parameters in `METADATA_GUARDRAI
 ## Notes
 
 - Null values do not fail this rule by themselves.
-- Use `accepted_values` when every valid value can be enumerated.
+- Use `allowed_values` when every valid value can be enumerated.
 
 ## Related rules
 
-- [`accepted_values`](accepted-values.md)
-- [`non_empty_string`](non-empty-string.md)
+- [`allowed_values`](allowed-values.md)
+- [`blank_text`](blank-text.md)

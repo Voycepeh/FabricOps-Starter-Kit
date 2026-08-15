@@ -400,19 +400,6 @@
     "decision": "template_called_public"
   },
   {
-    "function": "widget_select_guardrail_target",
-    "in_root_exports": true,
-    "directly_called_in_core_templates": [
-      "02_pipeline",
-      "03_governance"
-    ],
-    "directly_called_in_example_templates": [],
-    "imported_only_in_templates": false,
-    "called_only_internally_by_public_helper": [],
-    "has_standalone_reference_page": true,
-    "decision": "template_called_public"
-  },
-  {
     "function": "write_catalogue_evidence",
     "in_root_exports": false,
     "directly_called_in_core_templates": [],
