@@ -197,9 +197,110 @@ def test_widget_changes_preview_only_until_explicit_save(monkeypatch):
     widget = module.widget_author_dq_rules(spark_session=object(), context={"config": object(), "env": "dev"})
     widget["controls"]["parameter_controls"]["maximum_null_percent"].value = "5"
     widget["controls"]["rule_type"].value = "unique_values"
-    next(iter(widget["controls"]["columns"].values())).value = False
     callbacks["target"](widget["state"])
 
     assert writes == []
+    next(iter(widget["controls"]["columns"].values())).value = True
     widget["save"]()
     assert len(writes) == 1
+
+
+@pytest.mark.parametrize("rule_type", ["missing_values", "unique_values", "unique_combination", "required_when"])
+@pytest.mark.parametrize("selected_columns", [None, []])
+def test_checkbox_rules_default_to_no_selected_columns(monkeypatch, rule_type, selected_columns):
+    """Require an explicit user choice instead of proposing rules for every column."""
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+    import fabricops_kit.widgets.widget_author_dq_rules as module
+
+    _install_fake_notebook_widgets(monkeypatch)
+
+    def fake_targets(config, env, *, spark_session, widgets, on_change):
+        state = {**_state(), "catalogue_profile_rows": [], "existing_rules": []}
+        on_change(state)
+        return state, widgets.Dropdown(options=["orders"]), {
+            "target_summary": widgets.HTML(),
+            "refresh_target": lambda: None,
+        }
+
+    monkeypatch.setattr(module.shared, "_load_guardrail_authoring_targets", fake_targets)
+    widget = module.widget_author_dq_rules(
+        spark_session=object(),
+        context={"config": object(), "env": "dev"},
+        rule_type=rule_type,
+        selected_columns=selected_columns,
+    )
+
+    assert not any(control.value for control in widget["controls"]["columns"].values())
+
+
+@pytest.mark.parametrize("rule_type", ["required_when", "conditional_value"])
+def test_initial_conditional_rule_uses_resolved_target_columns(monkeypatch, rule_type):
+    """Populate condition-column options during the resolver's initial callback."""
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+    import fabricops_kit.widgets.widget_author_dq_rules as module
+
+    _install_fake_notebook_widgets(monkeypatch)
+
+    def fake_targets(config, env, *, spark_session, widgets, on_change):
+        state = {**_state(), "catalogue_profile_rows": [], "existing_rules": []}
+        on_change(state)
+        return state, widgets.Dropdown(options=["orders"]), {
+            "target_summary": widgets.HTML(),
+            "refresh_target": lambda: None,
+        }
+
+    monkeypatch.setattr(module.shared, "_load_guardrail_authoring_targets", fake_targets)
+    widget = module.widget_author_dq_rules(
+        spark_session=object(), context={"config": object(), "env": "dev"}, rule_type=rule_type
+    )
+
+    condition_column = widget["controls"]["parameter_controls"]["condition_column"]
+    assert list(condition_column.options) == _state()["columns"]
+    assert "bypass_reason" not in widget["controls"]
+
+
+def test_target_resolver_uses_only_latest_profile_snapshot(monkeypatch):
+    """Exclude columns that exist only in historical profile runs."""
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+
+    _install_fake_notebook_widgets(monkeypatch)
+    widgets = shared.require_ipywidgets()
+    catalogue = [
+        {
+            "environment_name": "dev",
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "metadata_table_key": "lakehouse.silver.orders",
+            "profile_run_id": "run-1",
+            "profiled_at": "2026-01-01T00:00:00Z",
+            "column_name": column,
+            "data_type": "string",
+        }
+        for column in ("a", "b", "obsolete_c")
+    ] + [
+        {
+            "environment_name": "dev",
+            "dataset_name": "sales",
+            "table_name": "orders",
+            "metadata_table_key": "lakehouse.silver.orders",
+            "profile_run_id": "run-2",
+            "profiled_at": "2026-02-01T00:00:00Z",
+            "column_name": column,
+            "data_type": "string",
+        }
+        for column in ("a", "b", "current_d")
+    ]
+    existing_rules = [{"table_name": "orders", "metadata_table_key": "lakehouse.silver.orders"}]
+
+    def fake_read(config, env, table_name, *, spark_session):
+        return catalogue if table_name == shared.PROFILED_TABLE else existing_rules
+
+    monkeypatch.setattr(shared, "_read_metadata_table_or_empty", fake_read)
+    state, _, _ = shared._load_guardrail_authoring_targets(
+        object(), "dev", spark_session=object(), widgets=widgets
+    )
+
+    assert state["profile_run_id"] == "run-2"
+    assert state["columns"] == ["a", "b", "current_d"]
+    assert {row["profile_run_id"] for row in state["catalogue_profile_rows"]} == {"run-2"}
+    assert state["existing_rules"] == existing_rules

@@ -1331,26 +1331,48 @@ def _load_guardrail_authoring_targets(
             table_rows,
             key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""),
         )
-        columns = sorted({str(row.get("column_name")) for row in table_rows if row.get("column_name")})
+        snapshot_rows = table_rows
+        for identity_field in ("profile_run_id", "schema_fingerprint", "profiled_at", "run_timestamp"):
+            identity_value = str(latest.get(identity_field) or "")
+            if identity_value:
+                snapshot_rows = [
+                    row for row in table_rows if str(row.get(identity_field) or "") == identity_value
+                ]
+                break
+        columns = sorted({str(row.get("column_name")) for row in snapshot_rows if row.get("column_name")})
         policy = resolve_table_governance_policy(
-            table_rows,
+            snapshot_rows,
             environment_name=environment_name,
             dataset_name=dataset_name,
             table_name=table_name,
             metadata_table_key=metadata_table_key,
         )
+        policy_values = {
+            key: policy[key]
+            for key in (
+                "governance_mode",
+                "approval_policy",
+                "governance_status",
+                "approval_bypass_allowed",
+                "bypass_allowed",
+                "requires_post_review",
+            )
+            if key in policy
+        }
         state.clear()
         state.update(
-            environment_name=environment_name,
-            dataset_name=dataset_name,
-            table_name=table_name,
-            metadata_table_key=metadata_table_key,
-            profile_run_id=str(latest.get("profile_run_id") or ""),
-            profile_stage=str(latest.get("profile_stage") or ""),
-            columns=columns,
-            catalogue_profile_rows=table_rows,
-            existing_rules=table_rules,
-            **policy,
+            {
+                "environment_name": environment_name,
+                "dataset_name": dataset_name,
+                "table_name": table_name,
+                "metadata_table_key": metadata_table_key,
+                "profile_run_id": str(latest.get("profile_run_id") or ""),
+                "profile_stage": str(latest.get("profile_stage") or ""),
+                "columns": columns,
+                "catalogue_profile_rows": snapshot_rows,
+                "existing_rules": table_rules,
+                **policy_values,
+            }
         )
         summary.value = (
             f"<b>Columns:</b> {len(columns)} · <b>Existing rules:</b> {len(table_rules)} · "

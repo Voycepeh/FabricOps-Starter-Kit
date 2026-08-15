@@ -14,7 +14,7 @@ Render interactive manual DQ guardrail authoring controls.
 
 `fabricops_kit/widgets/widget_author_dq_rules.py:144`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L144-L432">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L144-L428">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -43,7 +43,6 @@ def widget_author_dq_rules(
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
     severity: str='warning',
-    bypass_reason: str='',
     source_notebook_type: str='01_governance',
     created_by_role: str='governance',
     commit: bool=False,
@@ -72,7 +71,6 @@ def widget_author_dq_rules(
 | `selected_columns` | `Iterable[str] \| None` | No | Columns initially selected on each resolved target. |
 | `parameters` | `Mapping[str, Any] \| None` | No | Initial structured values for the selected rule's controls. |
 | `severity` | `str` | No | Initial failure severity. |
-| `bypass_reason` | `str` | No | Reason used only when applying a rule immediately. |
 | `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
 | `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
 | `commit` | `bool` | No | Save the initial selection immediately. |
@@ -92,8 +90,7 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 ### Common failure causes
 
 - Rule parameters are invalid for the selected DQ type.
-- Rule suggestions cannot be parsed.
-- Bypass reason is missing when bypass is requested.
+- No applicable column is selected.
 - The metadata target cannot be written.
 
 ## Notes

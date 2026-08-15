@@ -149,7 +149,6 @@ def widget_author_dq_rules(
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
     severity: str = "warning",
-    bypass_reason: str = "",
     source_notebook_type: str = "01_governance",
     created_by_role: str = "governance",
     commit: bool = False,
@@ -170,8 +169,6 @@ def widget_author_dq_rules(
         Initial structured values for the selected rule's controls.
     severity : str, default="warning"
         Initial failure severity.
-    bypass_reason : str, default=""
-        Reason used only when applying a rule immediately.
     source_notebook_type : str, default="01_governance"
         Notebook role recorded on authored metadata rows.
     created_by_role : str, default="governance"
@@ -224,14 +221,13 @@ def widget_author_dq_rules(
         value=severity if severity in {"warning", "error"} else "warning",
         description="Severity",
     )
-    bypass = widgets.Textarea(value=bypass_reason, **shared.widget_common(widgets, "Apply-now reason", textarea=True))
     preview = widgets.Textarea(
         description="Preview", disabled=True, layout=widgets.Layout(width="100%", height="220px")
     )
     message = widgets.HTML()
     records_state: dict[str, list[dict[str, Any]]] = {"records": []}
 
-    def render_parameters(*_: Any) -> None:
+    def render_parameters(selected_state: Mapping[str, Any], *_: Any) -> None:
         parameter_controls.clear()
         definition = DQ_RULE_DEFINITIONS[rule.value]
         for name, spec in definition["parameters"].items():
@@ -239,7 +235,7 @@ def widget_author_dq_rules(
                 widgets,
                 spec,
                 initial_parameters.get(name, spec.get("default")),
-                columns=state.get("columns", []),
+                columns=selected_state.get("columns", []),
             )
             control.observe(refresh_preview, names="value")
             parameter_controls[name] = control
@@ -295,7 +291,7 @@ def widget_author_dq_rules(
             column_box.children = (target_column,)
             refresh_preview()
             return
-        selected = set(selected_columns or selected_state.get("columns", []))
+        selected = set(selected_columns) if selected_columns is not None else set()
         rows = [
             widgets.GridBox(
                 [widgets.HTML("<b>Apply</b>"), widgets.HTML("<b>Column name</b>"), widgets.HTML("<b>Data type</b>")],
@@ -323,7 +319,7 @@ def widget_author_dq_rules(
         column_box.children = tuple(rows)
         refresh_preview()
 
-    def build_records(*, action: str = "submit") -> list[dict[str, Any]]:
+    def build_records() -> list[dict[str, Any]]:
         definition = DQ_RULE_DEFINITIONS[rule.value]
         selection_mode = definition["column_selection"]
         if selection_mode == "none":
@@ -349,8 +345,7 @@ def widget_author_dq_rules(
             selected_columns=columns,
             parameters=_collect_parameters(definition, parameter_controls),
             severity=severity_control.value,
-            bypass_reason=bypass.value.strip() if action == "apply_now" else "",
-            action=action,
+            action="submit",
             source_notebook_type=source_notebook_type,
             created_by_role=created_by_role,
             config=config,
@@ -369,15 +364,18 @@ def widget_author_dq_rules(
             preview.value = ""
             message.value = f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
 
-    def save(*, action: str = "submit") -> list[dict[str, Any]]:
-        records = build_records(action=action)
+    def save() -> list[dict[str, Any]]:
+        records = build_records()
         records_state["records"] = records
         shared._write_rule_records(records, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
         return records
 
     def render_target(selected_state: Mapping[str, Any]) -> None:
-        render_parameters()
+        if selected_state is not state:
+            state.clear()
+            state.update(selected_state)
+        render_parameters(selected_state)
         render_columns(selected_state)
 
     state, target, target_controls = shared._load_guardrail_authoring_targets(
@@ -385,12 +383,11 @@ def widget_author_dq_rules(
     )
 
     def render_rule(*_: Any) -> None:
-        render_parameters()
+        render_parameters(state)
         render_columns(state)
 
     rule.observe(render_rule, names="value")
     severity_control.observe(refresh_preview, names="value")
-    bypass.observe(refresh_preview, names="value")
     save_button = widgets.Button(description="Save DQ rules", button_style="primary")
     save_button.on_click(lambda _: save())
     ui = shared.form_page(
@@ -401,7 +398,7 @@ def widget_author_dq_rules(
             shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]),
             shared.form_section(widgets, title="Choose DQ rule", children=[rule, parameter_box]),
             shared.form_section(widgets, title="Applicable columns", children=[column_box]),
-            shared.form_section(widgets, title="Failure behaviour", children=[severity_control, bypass]),
+            shared.form_section(widgets, title="Failure behaviour", children=[severity_control]),
             shared.form_section(widgets, title="Preview", children=[preview]),
             shared.action_row(widgets, [save_button]),
             message,
@@ -418,7 +415,6 @@ def widget_author_dq_rules(
             "parameter_controls": parameter_controls,
             "columns": column_controls,
             "severity": severity_control,
-            "bypass_reason": bypass,
             **target_controls,
         },
         "build_records": build_records,
@@ -428,5 +424,5 @@ def widget_author_dq_rules(
         "ui": ui,
     }
     if commit:
-        result["records"] = save(action="apply_now" if bypass_reason else "submit")
+        result["records"] = save()
     return result
