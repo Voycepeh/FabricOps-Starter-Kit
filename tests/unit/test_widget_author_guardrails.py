@@ -10,6 +10,7 @@ from fabricops_kit.widgets import widget_author_dq_rules, widget_author_guardrai
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,
     _guardrail_records_from_selection,
+    _render_guardrail_authoring,
 )
 
 
@@ -128,6 +129,8 @@ def test_public_surface_is_breaking_replacement():
     assert fabricops_kit.widget_author_guardrails is widget_author_guardrails
     assert widget_author_dq_rules is fabricops_kit.widget_author_dq_rules
     assert "widget_author_guardrails" in fabricops_kit.__all__
+    assert "widget_select_guardrail_target" not in fabricops_kit.__all__
+    assert not hasattr(fabricops_kit, "widget_select_guardrail_target")
     assert "widget_author_schema_freshness_profile_rules" not in fabricops_kit.__all__
     assert not hasattr(fabricops_kit, "widget_author_schema_freshness_profile_rules")
 
@@ -212,7 +215,7 @@ def test_two_persisted_saves_advance_the_local_version(monkeypatch):
     module = sys.modules["fabricops_kit.widgets.widget_author_guardrails"]
     monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **_: written.append(records))
 
-    widget = widget_author_guardrails(
+    widget = _render_guardrail_authoring(
         _state(existing), context={"config": object(), "env": "dev"}, spark_session=object()
     )
     first = widget["save"]()
@@ -232,7 +235,7 @@ def test_failure_actions_prepopulate_and_rebuild_from_existing_rules(monkeypatch
         {"guardrail_type": "freshness", "configuration_version": 3, "severity": "blocking"},
         {"guardrail_type": "change", "configuration_version": 3, "severity": "warning"},
     ]
-    widget = widget_author_guardrails(_state(existing), context={"config": object(), "env": "dev"})
+    widget = _render_guardrail_authoring(_state(existing), context={"config": object(), "env": "dev"})
 
     controls = widget["controls"]
     assert controls["schema_failure_action"].value == "warning"
@@ -253,7 +256,7 @@ def test_schema_section_displays_catalogue_datatypes_and_persists_checked_column
     """Show every canonical catalogue type and persist it only for checked columns."""
     _install_fake_notebook_widgets(monkeypatch)
 
-    widget = widget_author_guardrails(_state(), context={"config": object(), "env": "dev"})
+    widget = _render_guardrail_authoring(_state(), context={"config": object(), "env": "dev"})
     controls = widget["controls"]
 
     assert list(controls["schema_rows"]) == ["id", "updated_at", "snapshot_date", "extra"]
@@ -293,7 +296,7 @@ def test_existing_schema_selection_and_severity_are_prepopulated(monkeypatch):
         }
     ]
 
-    controls = widget_author_guardrails(
+    controls = _render_guardrail_authoring(
         _state(existing), context={"config": object(), "env": "dev"}
     )["controls"]
 

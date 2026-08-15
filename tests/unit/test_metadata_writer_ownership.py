@@ -180,57 +180,25 @@ def test_guardrail_result_writer_has_single_shared_implementation():
     assert writer_definitions == ["pipeline/guardrails_shared.py:write_guardrail_result_row"]
 
 def test_widget_functions_do_not_write_mixed_guardrail_metadata():
-    """Verify widget wrappers delegate and workflows keep metadata ownership."""
-    workflow_by_wrapper = {
-        "widget_select_guardrail_target": "_guardrail_target_selection_widget_workflow",
-        "widget_author_guardrails": "widget_author_guardrails",
-        "widget_author_dq_rules": "_dq_rule_authoring_widget_workflow",
-        "widget_review_guardrail_governance": "_guardrail_governance_review_widget_workflow",
-    }
-    workflow_sources = {
-        workflow_name: _function_source(f"widgets/{wrapper_name}.py", workflow_name)
-        for wrapper_name, workflow_name in workflow_by_wrapper.items()
-    }
+    """Verify standalone widgets reuse the canonical metadata reader and writer."""
+    target_source = _function_source("widgets/shared.py", "_load_guardrail_authoring_targets")
+    schema_source = _function_source("widgets/widget_author_guardrails.py", "_render_guardrail_authoring")
+    dq_source = _function_source("widgets/widget_author_dq_rules.py", "widget_author_dq_rules")
+    review_source = _function_source(
+        "widgets/widget_review_guardrail_governance.py",
+        "_guardrail_governance_review_widget_workflow",
+    )
 
-    selector_source = workflow_sources["_guardrail_target_selection_widget_workflow"]
-    schema_widget_source = workflow_sources["widget_author_guardrails"]
-    dq_widget_source = workflow_sources["_dq_rule_authoring_widget_workflow"]
-    review_widget_source = workflow_sources["_guardrail_governance_review_widget_workflow"]
-
-    assert "PROFILED_TABLE" in selector_source
-    assert "GUARDRAIL_TABLE" in selector_source
-    assert "ENRICHMENT_TABLE" not in selector_source
-    assert "_read_metadata_table_or_empty" in selector_source
-    assert "_write_rule_records" in schema_widget_source
-    assert "_write_rule_records" in dq_widget_source
-    assert "_write_rule_records" in review_widget_source
-    assert "_write_enrichment_records" not in review_widget_source
-    assert "_write_governance_policy_record" not in review_widget_source
-    assert "METADATA_GOVERNANCE_REVIEWS" not in review_widget_source
-
-    for source in (schema_widget_source, dq_widget_source, review_widget_source):
-        assert "CATALOGUE_TABLE" not in source
-        assert "GUARDRAIL_RESULTS_TABLE" not in source
+    assert "PROFILED_TABLE" in target_source
+    assert "GUARDRAIL_TABLE" in target_source
+    assert "_read_metadata_table_or_empty" in target_source
+    assert "_write_rule_records" in schema_source
+    assert "_write_rule_records" in dq_source
+    assert "_write_rule_records" in review_source
+    for source in (schema_source, dq_source, review_source):
         assert "write_lakehouse_table_core" not in source
+        assert "GUARDRAIL_RESULTS_TABLE" not in source
 
-    for wrapper_name, workflow_name in workflow_by_wrapper.items():
-        wrapper_source = _function_source(f"widgets/{wrapper_name}.py", wrapper_name)
-        wrapper_tree = ast.parse(wrapper_source)
-        wrapper_def = next(node for node in wrapper_tree.body if isinstance(node, ast.FunctionDef))
-        wrapper_calls = {node.func.id for node in ast.walk(wrapper_def) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
-        wrapper_returns = [node for node in ast.walk(wrapper_def) if isinstance(node, ast.Return)]
-
-        if wrapper_name != "widget_author_guardrails":
-            assert workflow_name in wrapper_calls
-            assert len(wrapper_returns) == 1
-        assert "write_lakehouse_table_core" not in wrapper_source
-        if wrapper_name != "widget_author_guardrails":
-            assert "_write_rule_records" not in wrapper_source
-        assert "_write_enrichment_records" not in wrapper_source
-        assert "CATALOGUE_TABLE" not in wrapper_source
-        assert "GUARDRAIL_TABLE" not in wrapper_source
-        assert "GUARDRAIL_RESULTS_TABLE" not in wrapper_source
-        assert "ENRICHMENT_TABLE" not in wrapper_source
 
     for path in SRC.rglob("*.py"):
         source = path.read_text(encoding="utf-8")

@@ -1,251 +1,202 @@
-"""Public widget entrypoint for ``widget_author_dq_rules``."""
+"""Standalone DQ guardrail authoring widget."""
 
 from __future__ import annotations
 
-import importlib
+from collections.abc import Iterable, Mapping
+import html
 import json
+from typing import Any
 
-from fabricops_kit.widgets import shared as _governance_review
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.widgets import shared
 
-from typing import Any, Iterable, Mapping
 
+DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
+    "not_null": {"label": "Not null", "parameters": {}},
+    "null_rate_below": {"label": "Null rate below", "parameters": {"max_null_percent": {"label": "Maximum null percent", "type": "number", "required": True}}},
+    "non_empty_string": {"label": "Non-empty string", "parameters": {}},
+    "unique": {"label": "Unique", "parameters": {}},
+    "accepted_values": {"label": "Accepted values", "parameters": {"allowed_values": {"label": "Accepted values", "type": "list", "required": True}}},
+    "not_in_values": {"label": "Excluded values", "parameters": {"blocked_values": {"label": "Excluded values", "type": "list", "required": True}}},
+    "between": {"label": "Between", "parameters": {"min_value": {"label": "Minimum", "type": "number", "required": True}, "max_value": {"label": "Maximum", "type": "number", "required": True}}},
+    "greater_than": {"label": "Greater than", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
+    "greater_than_or_equal": {"label": "Greater than or equal", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
+    "less_than": {"label": "Less than", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
+    "less_than_or_equal": {"label": "Less than or equal", "parameters": {"value": {"label": "Value", "type": "number", "required": True}}},
+    "regex_match": {"label": "Matches pattern", "parameters": {"regex_pattern": {"label": "Pattern", "type": "text", "required": True}}},
+    "date_not_future": {"label": "Date is not in the future", "parameters": {}},
+    "date_between": {"label": "Date between", "parameters": {"min_value": {"label": "Earliest date", "type": "text", "required": True}, "max_value": {"label": "Latest date", "type": "text", "required": True}}},
+    "freshness": {"label": "Freshness", "parameters": {"max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}}},
+    "max_age_days": {"label": "Maximum age in days", "parameters": {"max_age_days": {"label": "Maximum age (days)", "type": "integer", "required": True, "default": 1}}},
+}
+
+
+def _parameter_control(widgets: Any, definition: Mapping[str, Any], value: Any) -> Any:
+    kind = definition.get("type")
+    common = shared.widget_common(widgets, str(definition.get("label") or "Parameter"))
+    if kind == "number":
+        return widgets.FloatText(value=float(value or 0), **common)
+    if kind == "integer":
+        return widgets.IntText(value=int(value if value is not None else definition.get("default", 0)), **common)
+    if kind == "list":
+        text = ", ".join(str(item) for item in value) if isinstance(value, (list, tuple)) else str(value or "")
+        return widgets.Text(value=text, **common)
+    return widgets.Text(value=str(value or definition.get("default", "")), **common)
+
+
+def _collect_parameters(definition: Mapping[str, Any], controls: Mapping[str, Any]) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for name, parameter in definition.get("parameters", {}).items():
+        value = controls[name].value
+        if parameter.get("type") == "list":
+            value = [item.strip() for item in str(value).split(",") if item.strip()]
+        if parameter.get("required") and (value is None or value == "" or value == []):
+            raise ValueError(f"{parameter['label']} is required.")
+        values[name] = value
+    return values
 
 
 def widget_author_dq_rules(
-    state: Mapping[str, Any],
     *,
-    dq_authoring_mode: str = "manual",
+    spark_session: Any,
+    context: dict[str, Any] | None = None,
     rule_type: str = "not_null",
     selected_columns: Iterable[str] | None = None,
     parameters: Mapping[str, Any] | None = None,
     severity: str = "warning",
-    spark_session: Any = None,
-    context: dict[str, Any] | None = None,
     bypass_reason: str = "",
-    source_notebook_type: str = "02_pipeline",
-    created_by_role: str = "engineering",
+    source_notebook_type: str = "01_governance",
+    created_by_role: str = "governance",
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Render interactive manual DQ rule authoring UI.
+    """Render standalone, rule-driven DQ guardrail authoring controls.
 
     Parameters
     ----------
-    state : Mapping[str, Any]
-        Guardrail target state returned by the target selector or prepared by a
-        notebook workflow.
-    dq_authoring_mode : str, default="manual"
-        Authoring mode for the widget. The public widget supports manual rule
-        authoring.
-    rule_type : str, default="not_null"
-        Initial DQ rule type selected in the widget.
-    selected_columns : Iterable[str], optional
-        Initial columns selected for the rule.
-    parameters : Mapping[str, Any], optional
-        Initial rule parameters.
-    severity : str, default="warning"
-        Initial rule severity.
-    spark_session : Any, optional
-        Fabric Spark session used when committing metadata rows.
+    spark_session : Any
+        Fabric Spark session used to read profiled targets and save DQ rules.
     context : dict[str, Any], optional
-        Advanced override for the active Fabric context.
+        Advanced override for the active ``FABRIC_CONTEXT``.
+    rule_type : str, default="not_null"
+        Initially selected canonical DQ rule type.
+    selected_columns : Iterable[str], optional
+        Columns initially selected on each resolved target.
+    parameters : Mapping[str, Any], optional
+        Initial structured values for the selected rule's controls.
+    severity : str, default="warning"
+        Initial failure severity.
     bypass_reason : str, default=""
-        Governance-bypass reason used when applying rules immediately.
-    source_notebook_type : str, default="02_pipeline"
+        Reason used only when applying a rule immediately.
+    source_notebook_type : str, default="01_governance"
         Notebook role recorded on authored metadata rows.
-    created_by_role : str, default="engineering"
+    created_by_role : str, default="governance"
         Actor role recorded on authored metadata rows.
     commit : bool, default=False
-        When True, commit the selected rule instead of preview-only behavior.
+        Save the initial selection immediately.
 
     Returns
     -------
     dict[str, Any]
-        Rendered controls and save actions for notebook automation.
+        Mutable selected-target state, controls, preview, and save actions.
+
+    Raises
+    ------
+    ValueError
+        If no profiled target exists, no column is selected, or a required rule
+        parameter is missing.
+
+    Notes
+    -----
+    Run after ``00_env_config`` in Microsoft Fabric. One canonical
+    ``METADATA_GUARDRAIL`` DQ row is produced per selected column, with
+    structured values serialized in ``rule_parameters_json``.
+
+    Examples
+    --------
+    >>> form = widget_author_dq_rules(spark_session=spark)
+    >>> form["controls"]["rule_type"].value
+    'not_null'
 
     """
-    return _dq_rule_authoring_widget_workflow(
-        state,
-        dq_authoring_mode=dq_authoring_mode,
-        rule_type=rule_type,
-        selected_columns=selected_columns,
-        parameters=parameters,
-        severity=severity,
-        spark_session=spark_session,
-        context=context,
-        bypass_reason=bypass_reason,
-        source_notebook_type=source_notebook_type,
-        created_by_role=created_by_role,
-        commit=commit,
-    )
-
-
-def _dq_rule_authoring_widget_workflow(
-    state: Mapping[str, Any],
-    *,
-    dq_authoring_mode: str = "manual",
-    rule_type: str = "not_null",
-    selected_columns: Iterable[str] | None = None,
-    parameters: Mapping[str, Any] | None = None,
-    severity: str = "warning",
-    spark_session: Any = None,
-    context: dict[str, Any] | None = None,
-    bypass_reason: str = "",
-    source_notebook_type: str = "02_pipeline",
-    created_by_role: str = "engineering",
-    commit: bool = False,
-) -> dict[str, Any]:
-    """Render interactive manual DQ rule authoring UI.
-
-    Parameters
-    ----------
-    state : mapping
-        Handover state from :func:`widget_select_guardrail_target`.
-    dq_authoring_mode : {"manual"}, default="manual"
-        Manual DQ authoring mode.
-    rule_type : str, default="not_null"
-        Initial DQ rule type for manual mode.
-    selected_columns : iterable of str, optional
-        Initial batch-selected columns. Defaults to all selected table columns.
-    parameters : mapping, optional
-        Initial JSON rule parameters.
-    severity : str, default="warning"
-        Initial rule severity.
-    spark_session : Any, optional
-        Spark session used for saves.
-    context : dict[str, Any], optional
-        Advanced override for the active Fabric context. When omitted, the
-        helper uses ``FABRIC_CONTEXT`` initialized by ``00_env_config``.
-    bypass_reason : str, optional
-        Initial approval-bypass reason.
-    source_notebook_type : {"02_pipeline", "01_governance"}, default="02_pipeline"
-        Notebook type stamped on authored records.
-    created_by_role : {"engineering", "governance", "system"}, default="engineering"
-        Role stamped on authored records.
-    commit : bool, default=False
-        Whether to save the initial generated records immediately.
-
-    Returns
-    -------
-    dict[str, Any]
-        Widget state containing controls, generated records, and callable
-        helpers for tests and notebook automation.
-
-    """
-    config, env, _context = resolve_fabric_context(context=context)
-    widgets = importlib.import_module("ipywidgets")
     from IPython import display as ip
 
-    columns = list(state.get("columns") or [])
-    initial_columns = tuple(column for column in (selected_columns or columns) if column in columns)
-    existing_rules = list(state.get("existing_rules") or [])
-    existing_dq = [row for row in existing_rules if str(row.get("guardrail_type") or "") == "dq"]
-    mode = "manual"
-
-    batch_rule_type = widgets.Dropdown(options=_governance_review.DQ_RULE_TYPES, value=rule_type if rule_type in _governance_review.DQ_RULE_TYPES else "not_null", description="Rule type")
-    batch_columns = widgets.SelectMultiple(options=columns, value=initial_columns or tuple(columns), description="Columns", rows=min(max(len(columns), 4), 12), layout=widgets.Layout(width="420px"))
-    batch_params = widgets.Textarea(value=json.dumps(parameters or {}, indent=2), description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
-    batch_severity = widgets.ToggleButtons(options=["warning", "error"], value=severity if severity in {"warning", "error"} else "warning", description="Severity")
-
-    search_column = widgets.Combobox(options=columns, value=columns[0] if columns else "", description="Column")
-    individual_rule_type = widgets.Dropdown(options=_governance_review.DQ_RULE_TYPES, value=rule_type if rule_type in _governance_review.DQ_RULE_TYPES else "not_null", description="Rule")
-    individual_params = widgets.Textarea(value="{}", description="Parameters", layout=widgets.Layout(width="760px", height="90px"))
-    bypass_box = widgets.Textarea(value=bypass_reason, description="Bypass reason", layout=widgets.Layout(width="760px", height="70px"))
-    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="900px", height="220px"))
-    history = widgets.HTML("<pre>" + json.dumps(existing_dq, indent=2, default=str) + "</pre>")
+    config, env, _ = resolve_fabric_context(context=context)
+    widgets = shared.require_ipywidgets()
+    state: dict[str, Any] = {}
+    initial_parameters = dict(parameters or {})
+    rule = widgets.Dropdown(
+        options=[(definition["label"], name) for name, definition in DQ_RULE_DEFINITIONS.items()],
+        value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "not_null",
+        **shared.widget_common(widgets, "DQ rule"),
+    )
+    parameter_box = widgets.VBox()
+    parameter_controls: dict[str, Any] = {}
+    column_box = widgets.VBox()
+    column_controls: dict[str, Any] = {}
+    severity_control = widgets.ToggleButtons(options=["warning", "error"], value=severity if severity in {"warning", "error"} else "warning", description="Severity")
+    bypass = widgets.Textarea(value=bypass_reason, **shared.widget_common(widgets, "Apply-now reason", textarea=True))
+    preview = widgets.Textarea(description="Preview", disabled=True, layout=widgets.Layout(width="100%", height="220px"))
     message = widgets.HTML()
-    records_state: dict[str, Any] = {"records": []}
+    records_state: dict[str, list[dict[str, Any]]] = {"records": []}
 
-    save_draft_button = widgets.Button(description="Save draft", button_style="")
-    submit_button = widgets.Button(description="Submit for governance review", button_style="success")
-    apply_now_button = widgets.Button(description="Apply now", button_style="warning")
-    save_one_draft_button = widgets.Button(description="Save selected rule as draft", button_style="")
-    submit_one_button = widgets.Button(description="Submit selected rule for governance review", button_style="success")
-    apply_one_button = widgets.Button(description="Apply selected rule now", button_style="warning")
+    def render_parameters(*_: Any) -> None:
+        parameter_controls.clear()
+        definition = DQ_RULE_DEFINITIONS[rule.value]
+        for name, spec in definition["parameters"].items():
+            control = _parameter_control(widgets, spec, initial_parameters.get(name, spec.get("default")))
+            control.observe(refresh_preview, names="value")
+            parameter_controls[name] = control
+        parameter_box.children = tuple(parameter_controls.values()) or (widgets.HTML("<i>This rule has no parameters.</i>"),)
+        refresh_preview()
 
-    def _batch_parameters() -> dict[str, Any]:
-        try:
-            return json.loads(batch_params.value or "{}")
-        except json.JSONDecodeError as exc:
-            raise ValueError("Parameters must be valid JSON") from exc
+    def render_columns(selected_state: Mapping[str, Any]) -> None:
+        column_controls.clear()
+        selected = set(selected_columns or selected_state.get("columns", []))
+        rows = [widgets.GridBox([widgets.HTML("<b>Apply</b>"), widgets.HTML("<b>Column name</b>"), widgets.HTML("<b>Data type</b>")], layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"))]
+        types = {str(row.get("column_name")): str(row.get("data_type") or "") for row in selected_state.get("catalogue_profile_rows", [])}
+        for name in selected_state.get("columns", []):
+            control = widgets.Checkbox(value=name in selected, description="", indent=False)
+            control.observe(refresh_preview, names="value")
+            column_controls[name] = control
+            rows.append(widgets.GridBox([control, widgets.HTML(f"<code>{html.escape(name)}</code>"), widgets.HTML(f"<code>{html.escape(types.get(name, ''))}</code>")], layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%")))
+        column_box.children = tuple(rows)
+        refresh_preview()
 
-    def _individual_parameters() -> dict[str, Any]:
-        try:
-            return json.loads(individual_params.value or "{}")
-        except json.JSONDecodeError as exc:
-            raise ValueError("Individual parameters must be valid JSON") from exc
-
-    def load_existing_individual(*_: Any) -> None:
-        rule = _governance_review._latest_rule(existing_dq, "dq", individual_rule_type.value, search_column.value)
-        params = _governance_review._rule_params(rule)
-        params.pop("columns", None)
-        individual_params.value = json.dumps(params, indent=2, default=str)
-
-    def build_batch_records(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
-        selected_action = "apply_now" if use_bypass else action
-        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
-        return _governance_review._dq_records_from_selection(state, rule_type=batch_rule_type.value, selected_columns=list(batch_columns.value), parameters=_batch_parameters(), severity=batch_severity.value, bypass_reason=reason, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
-
-    def build_individual_record(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
-        selected_action = "apply_now" if use_bypass else action
-        reason = bypass_box.value.strip() if selected_action == "apply_now" else ""
-        return _governance_review._dq_records_from_selection(state, rule_type=individual_rule_type.value, selected_columns=[search_column.value], parameters=_individual_parameters(), severity=batch_severity.value, bypass_reason=reason, action_type=action_type, action=selected_action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
+    def build_records(*, action: str = "submit") -> list[dict[str, Any]]:
+        columns = [name for name, control in column_controls.items() if control.value]
+        if not columns:
+            raise ValueError("Select at least one column.")
+        return shared._dq_records_from_selection(state, rule_type=rule.value, selected_columns=columns, parameters=_collect_parameters(DQ_RULE_DEFINITIONS[rule.value], parameter_controls), severity=severity_control.value, bypass_reason=bypass.value.strip() if action == "apply_now" else "", action=action, source_notebook_type=source_notebook_type, created_by_role=created_by_role, config=config)
 
     def refresh_preview(*_: Any) -> None:
+        if not state or not column_controls:
+            return
         try:
-            records_state["records"] = build_batch_records(action="submit")
+            records_state["records"] = build_records()
             preview.value = json.dumps(records_state["records"], indent=2, default=str)
             message.value = ""
-        except Exception as exc:
+        except ValueError as exc:
+            records_state["records"] = []
             preview.value = ""
-            message.value = f"<b style='color:#b00020'>Validation error:</b> {exc}"
+            message.value = f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
 
-    def save_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def save(*, action: str = "submit") -> list[dict[str, Any]]:
+        records = build_records(action=action)
         records_state["records"] = records
-        if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> FABRIC_CONTEXT/context and spark_session are required to save."
-            return records
-        _governance_review._write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        shared._write_rule_records(records, config=config, env=env, spark_session=spark_session)
         message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
         return records
 
-    def save_batch(*, action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
-        return save_records(build_batch_records(action="apply_now" if use_bypass else action))
-
-    def save_individual(*, action_type: str = "created", action: str = "submit", use_bypass: bool = False) -> list[dict[str, Any]]:
-        return save_records(build_individual_record(action_type=action_type, action="apply_now" if use_bypass else action))
-
-    for control in (batch_rule_type, batch_columns, batch_params, batch_severity, bypass_box):
-        control.observe(lambda change: refresh_preview(), names="value")
-    for control in (search_column, individual_rule_type):
-        control.observe(lambda change: load_existing_individual(), names="value")
-    save_draft_button.on_click(lambda _: save_batch(action="draft"))
-    submit_button.on_click(lambda _: save_batch(action="submit"))
-    apply_now_button.on_click(lambda _: save_batch(action="apply_now"))
-    save_one_draft_button.on_click(lambda _: save_individual(action_type="created", action="draft"))
-    submit_one_button.on_click(lambda _: save_individual(action_type="created", action="submit"))
-    apply_one_button.on_click(lambda _: save_individual(action_type="created", action="apply_now"))
-    load_existing_individual()
-    refresh_preview()
-    if commit:
-        save_batch(action="apply_now" if bypass_reason else "submit")
-
-    ui = widgets.VBox([
-        widgets.HTML("<h3>Author DQ rules</h3>"),
-        widgets.HTML(f"<b>Mode:</b> {mode} · <b>Table:</b> {state.get('dataset_name', '')}.{state.get('table_name', '')} · <b>Governance:</b> {state.get('governance_mode', 'ungoverned')}"),
-        widgets.HTML("<h4>Batch by rule type</h4>"),
-        widgets.HBox([batch_rule_type, batch_columns, batch_severity]),
-        batch_params,
-        widgets.HTML("<h4>Individual rule editing</h4>"),
-        widgets.HBox([search_column, individual_rule_type]),
-        individual_params,
-        widgets.HTML("<h4>Existing rule history</h4>"),
-        history,
-        bypass_box,
-        preview,
-        widgets.HBox([save_draft_button, submit_button, apply_now_button]),
-        widgets.HBox([save_one_draft_button, submit_one_button, apply_one_button]),
-        message,
-    ])
+    state, target, target_controls = shared._load_guardrail_authoring_targets(config, env, spark_session=spark_session, widgets=widgets, on_change=render_columns)
+    rule.observe(render_parameters, names="value")
+    severity_control.observe(refresh_preview, names="value")
+    bypass.observe(refresh_preview, names="value")
+    render_parameters()
+    save_button = widgets.Button(description="Save DQ rules", button_style="primary")
+    save_button.on_click(lambda _: save())
+    ui = shared.form_page(widgets, title="Author DQ Rules", description="Select a profiled target and configure canonical DQ rules.", children=[shared.form_section(widgets, title="Target", children=[target, target_controls["target_summary"]]), shared.form_section(widgets, title="Choose DQ rule", children=[rule, parameter_box]), shared.form_section(widgets, title="Applicable columns", children=[column_box]), shared.form_section(widgets, title="Failure behaviour", children=[severity_control, bypass]), shared.form_section(widgets, title="Preview", children=[preview]), shared.action_row(widgets, [save_button]), message])
     ip.display(ui)
-    return {"records": records_state["records"], "controls": {"batch_rule_type": batch_rule_type, "batch_columns": batch_columns, "batch_params": batch_params, "search_column": search_column, "individual_rule_type": individual_rule_type, "individual_params": individual_params, "apply_now_reason": bypass_box, "bypass_reason": bypass_box}, "build_batch_records": build_batch_records, "build_individual_record": build_individual_record, "save_batch": save_batch, "save_individual": save_individual, "save_draft_button": save_draft_button, "submit_button": submit_button, "apply_now_button": apply_now_button, "save_one_draft_button": save_one_draft_button, "submit_one_button": submit_one_button, "apply_one_button": apply_one_button, "ui": ui}
+    result = {"state": state, "records": records_state["records"], "controls": {"target": target, "rule_type": rule, "parameters": parameter_box, "parameter_controls": parameter_controls, "columns": column_controls, "severity": severity_control, "bypass_reason": bypass, **target_controls}, "build_records": build_records, "build_batch_records": build_records, "save": save, "save_button": save_button, "ui": ui}
+    if commit:
+        result["records"] = save(action="apply_now" if bypass_reason else "submit")
+    return result

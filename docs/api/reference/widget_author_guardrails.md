@@ -14,7 +14,7 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 
 `fabricops_kit/widgets/widget_author_guardrails.py:139`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L406">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L139-L215">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,8 +37,7 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_author_guardrails(
-    state: Mapping[str, Any],
-    spark_session: Any=None,
+    spark_session: Any,
     context: dict[str, Any] | None=None,
     commit: bool=False,
 ) -> dict[str, Any]:
@@ -50,9 +49,9 @@ def widget_author_guardrails(
 
 <div class="reference-example-usage" markdown="1">
 
->>> form = widget_author_guardrails(guardrail_target_state)
->>> form["version"]
-1
+>>> form = widget_author_guardrails(spark_session=spark)
+>>> form["state"]["table_name"]
+'orders'
 
 </div>
 
@@ -60,10 +59,9 @@ def widget_author_guardrails(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Selected table state returned by :func:`widget_select_guardrail_target`, including its canonical table key, catalogue columns, and existing rules. |
-| `spark_session` | `Any` | No | Fabric Spark session used to append saved metadata rows. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to read profiled targets and save rules. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
-| `commit` | `bool` | No | Save the initial form selection immediately. The default renders a form. |
+| `commit` | `bool` | No | Save the initial selection immediately. The default renders the widget. |
 
 ## Returns
 
@@ -87,10 +85,9 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 <div class="reference-docstring-notes" markdown="1">
 
-Run in Microsoft Fabric after ``00_env_config`` and table selection. The
-widget authors configuration only; it has no approval workflow. Select the
-required table columns and preserve their expected data types as the schema
-guardrail.
+Run after ``00_env_config`` in Microsoft Fabric. The widget reads
+``METADATA_DATA_PROFILED`` and existing ``METADATA_GUARDRAIL`` rows, then
+writes new versions through the canonical guardrail metadata writer.
 
 </div>
 

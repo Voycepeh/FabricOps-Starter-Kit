@@ -12,9 +12,9 @@ Render interactive manual DQ guardrail authoring controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_dq_rules.py:15`
+`fabricops_kit/widgets/widget_author_dq_rules.py:59`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L15-L80">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L59-L202">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,17 +37,15 @@ They help users write values into the correct underlying metadata tables without
 
 ```python
 def widget_author_dq_rules(
-    state: Mapping[str, Any],
-    dq_authoring_mode: str='manual',
+    spark_session: Any,
+    context: dict[str, Any] | None=None,
     rule_type: str='not_null',
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
     severity: str='warning',
-    spark_session: Any=None,
-    context: dict[str, Any] | None=None,
     bypass_reason: str='',
-    source_notebook_type: str='02_pipeline',
-    created_by_role: str='engineering',
+    source_notebook_type: str='01_governance',
+    created_by_role: str='governance',
     commit: bool=False,
 ) -> dict[str, Any]:
 ```
@@ -56,24 +54,28 @@ def widget_author_dq_rules(
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+>>> form = widget_author_dq_rules(spark_session=spark)
+>>> form["controls"]["rule_type"].value
+'not_null'
+
+</div>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `state` | `Mapping[str, Any]` | Yes | Guardrail target state returned by the target selector or prepared by a notebook workflow. |
-| `dq_authoring_mode` | `str` | No | Authoring mode for the widget. The public widget supports manual rule authoring. |
-| `rule_type` | `str` | No | Initial DQ rule type selected in the widget. |
-| `selected_columns` | `Iterable[str] \| None` | No | Initial columns selected for the rule. |
-| `parameters` | `Mapping[str, Any] \| None` | No | Initial rule parameters. |
-| `severity` | `str` | No | Initial rule severity. |
-| `spark_session` | `Any` | No | Fabric Spark session used when committing metadata rows. |
-| `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context. |
-| `bypass_reason` | `str` | No | Governance-bypass reason used when applying rules immediately. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to read profiled targets and save DQ rules. |
+| `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
+| `rule_type` | `str` | No | Initially selected canonical DQ rule type. |
+| `selected_columns` | `Iterable[str] \| None` | No | Columns initially selected on each resolved target. |
+| `parameters` | `Mapping[str, Any] \| None` | No | Initial structured values for the selected rule's controls. |
+| `severity` | `str` | No | Initial failure severity. |
+| `bypass_reason` | `str` | No | Reason used only when applying a rule immediately. |
 | `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
 | `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
-| `commit` | `bool` | No | When True, commit the selected rule instead of preview-only behavior. |
+| `commit` | `bool` | No | Save the initial selection immediately. |
 
 ## Returns
 
@@ -93,6 +95,16 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 - Rule suggestions cannot be parsed.
 - Bypass reason is missing when bypass is requested.
 - The metadata target cannot be written.
+
+## Notes
+
+<div class="reference-docstring-notes" markdown="1">
+
+Run after ``00_env_config`` in Microsoft Fabric. One canonical
+``METADATA_GUARDRAIL`` DQ row is produced per selected column, with
+structured values serialized in ``rule_parameters_json``.
+
+</div>
 
 ## See also
 

@@ -1268,6 +1268,101 @@ def _filter_table_rows(rows: Iterable[Mapping[str, Any]], *, environment_name: s
         filtered.append(item)
     return filtered
 
+def _load_guardrail_authoring_targets(
+    config: Any,
+    env: str,
+    *,
+    spark_session: Any,
+    widgets: Any,
+    on_change: Any | None = None,
+) -> tuple[dict[str, Any], Any, dict[str, Any]]:
+    """Load profiled targets and keep a canonical selected-table state current."""
+    catalogue = _read_metadata_table_or_empty(config, env, PROFILED_TABLE, spark_session=spark_session)
+    rules = _read_metadata_table_or_empty(config, env, GUARDRAIL_TABLE, spark_session=spark_session)
+    if not catalogue:
+        raise ValueError("METADATA_DATA_PROFILED has no guardrail targets.")
+
+    targets: dict[str, tuple[str, str, str, str]] = {}
+    for row in catalogue:
+        environment_name = str(row.get("environment_name") or env)
+        dataset_name = str(row.get("dataset_name") or "")
+        table_name = str(row.get("table_name") or "")
+        if not table_name:
+            continue
+        metadata_table_key = str(
+            row.get("metadata_table_key")
+            or config_shared.build_metadata_table_key(
+                row.get("store_type", "lakehouse"),
+                row.get("layer", row.get("fabric_store_target", "")),
+                row.get("schema_name"),
+                table_name,
+            )
+        )
+        label = f"{environment_name} / {dataset_name or '(no dataset)'} / {table_name}"
+        targets[label] = (environment_name, dataset_name, table_name, metadata_table_key)
+    if not targets:
+        raise ValueError("METADATA_DATA_PROFILED has no table-level guardrail targets.")
+
+    target = widgets.Dropdown(
+        options=[(label, value) for label, value in sorted(targets.items())],
+        description="Target",
+        layout=widgets.Layout(width="760px"),
+    )
+    summary = widgets.HTML()
+    state: dict[str, Any] = {}
+
+    def refresh(*_: Any) -> None:
+        environment_name, dataset_name, table_name, metadata_table_key = target.value
+        table_rows = _filter_table_rows(
+            catalogue,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        table_rules = _filter_table_rows(
+            rules,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        latest = max(
+            table_rows,
+            key=lambda row: str(row.get("profiled_at") or row.get("run_timestamp") or row.get("profile_run_id") or ""),
+        )
+        columns = sorted({str(row.get("column_name")) for row in table_rows if row.get("column_name")})
+        policy = resolve_table_governance_policy(
+            table_rows,
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+        )
+        state.clear()
+        state.update(
+            environment_name=environment_name,
+            dataset_name=dataset_name,
+            table_name=table_name,
+            metadata_table_key=metadata_table_key,
+            profile_run_id=str(latest.get("profile_run_id") or ""),
+            profile_stage=str(latest.get("profile_stage") or ""),
+            columns=columns,
+            catalogue_profile_rows=table_rows,
+            existing_rules=table_rules,
+            **policy,
+        )
+        summary.value = (
+            f"<b>Columns:</b> {len(columns)} · <b>Existing rules:</b> {len(table_rules)} · "
+            f"<b>Governance:</b> {state['governance_mode']}"
+        )
+        if on_change is not None:
+            on_change(state)
+
+    target.observe(refresh, names="value")
+    refresh()
+    return state, target, {"target_summary": summary, "refresh_target": refresh}
+
 def _latest_rule(existing_rules: Iterable[Mapping[str, Any]], guardrail_type: str, rule_type: str | None = None, column_name: str | None = None) -> dict[str, Any]:
     """Return the newest matching rule row for widget prepopulation."""
     matches = []
