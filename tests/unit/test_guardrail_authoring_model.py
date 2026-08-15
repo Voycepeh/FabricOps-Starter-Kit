@@ -12,6 +12,7 @@ from fabricops_kit.widgets.shared import (
     GUARDRAIL_TABLE,
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from fabricops_kit.config.shared import build_metadata_table_key
 from fabricops_kit.widgets import widget_author_dq_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
 
 
@@ -188,6 +189,7 @@ def _rule(**overrides):
         "environment_name": "dev",
         "dataset_name": "sales",
         "table_name": "orders",
+        "metadata_table_key": "orders-key",
         "column_name": "",
         "guardrail_type": "schema",
         "rule_type": "relaxed",
@@ -268,10 +270,12 @@ def test_profile_behavior_rules_from_guardrail_metadata_are_enforced(spark_sessi
 def test_dq_rules_from_guardrail_metadata_are_loaded_and_enforced(spark_session, monkeypatch):
     """Verify DQ rule rows are loaded and enforced."""
     df = spark_session.createDataFrame([(1,), (None,)], "order_id int")
+    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
     rules_df = spark_session.createDataFrame([
         _rule(
             rule_key="dq-rule",
             rule_id="orders.order_id.missing_values",
+            metadata_table_key=table_key,
             guardrail_type="dq",
             rule_type="missing_values",
             column_name="order_id",
@@ -293,6 +297,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     from fabricops_kit.pipeline.guardrails_shared import freshness_check_core, enforce_profile_behavior, schema_check_core
 
     warning = "Rule is active through approval bypass and requires governance post-review."
+    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
     schema_df = spark_session.createDataFrame([(1,)], "order_id int")
     bypass_base = {"review_status": "active_pending_governance_review"}
 
@@ -323,7 +328,7 @@ def test_bypass_warning_is_added_for_schema_freshness_profile_and_dq(spark_sessi
     )
 
     dq_rules_df = spark_session.createDataFrame([
-        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.missing_values", guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}))
+        _rule(**bypass_base, rule_key="dq-bypass", rule_id="orders.order_id.missing_values", metadata_table_key=table_key, guardrail_type="dq", rule_type="missing_values", column_name="order_id", severity="error", rule_parameters_json=json.dumps({"columns": ["order_id"], "maximum_null_percent": 0}))
     ])
     monkeypatch.setattr(dq_runtime, "_read_guardrail_rule_metadata", lambda *args, **kwargs: dq_rules_df)
     dq = dq_runtime.run_active_dq_guardrail(schema_df, object(), "dev", "sales", "orders", spark_session=spark_session, write_results=False)
@@ -483,7 +488,7 @@ def test_dq_loader_excludes_ambiguous_and_missing_lifecycle_fields(spark_session
     rows[-1].pop("is_active")
     frame = spark_session.createDataFrame(rows)
 
-    loaded = _load_active_dq_rules(frame, table_name="orders", env="dev", dataset_name="sales")
+    loaded = _load_active_dq_rules(frame, "orders-key", env="dev", dataset_name="sales")
 
     assert {rule["rule_id"] for rule in loaded} == {"self", "gov", "bypass"}
 

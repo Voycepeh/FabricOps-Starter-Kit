@@ -252,5 +252,5 @@ def test_02_pipeline_orders_target_validation_by_environment(writer, reader):
     assert prod_calls.index("check_schema") < prod_calls.index(writer)
     assert prod_calls.index(writer) < prod_calls.index(reader) < prod_calls.index("profile_and_register_table")
     assert "schema_result" not in matching_cells[0]
-    assert "can_continue" not in matching_cells[0]
+    assert 'dq_result["can_continue"]' in matching_cells[0]
     assert "guardrails_shared" not in matching_cells[0]

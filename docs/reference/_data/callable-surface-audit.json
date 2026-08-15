@@ -20,6 +20,18 @@
     "decision": "advanced_public_helper"
   },
   {
+    "function": "check_dq",
+    "in_root_exports": true,
+    "directly_called_in_core_templates": [
+      "02_pipeline.ipynb"
+    ],
+    "directly_called_in_example_templates": [],
+    "imported_only_in_templates": false,
+    "called_only_internally_by_public_helper": [],
+    "has_standalone_reference_page": true,
+    "decision": "core_template_entrypoint"
+  },
+  {
     "function": "check_schema",
     "in_root_exports": true,
     "directly_called_in_core_templates": [],

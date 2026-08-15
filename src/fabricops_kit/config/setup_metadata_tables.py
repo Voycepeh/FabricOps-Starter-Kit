@@ -225,7 +225,7 @@ def setup_metadata_tables(
     ``METADATA_DATA_CATALOGUE``, ``METADATA_DATA_PROFILED``,
     ``METADATA_DATA_PROFILED_FREQUENCY``, ``METADATA_DATA_LINEAGE``, ``METADATA_DATA_ACCESS``,
     ``METADATA_ENRICHMENT``, ``METADATA_GUARDRAIL``, and
-    ``METADATA_GUARDRAIL_RESULTS``.
+    ``METADATA_GUARDRAIL_RESULTS`` and ``METADATA_GUARDRAIL_ROW_RESULTS``.
 
     Of that v0.2.0 inventory, ``METADATA_DATA_CATALOGUE``,
     ``METADATA_DATA_PROFILED``, ``METADATA_DATA_PROFILED_FREQUENCY``, and
@@ -281,6 +281,9 @@ def setup_metadata_tables(
     - ``METADATA_GUARDRAIL_RESULTS`` stores guardrail execution results,
       status, continuation decision, expected and actual values, result
       payload, and audit information.
+    - ``METADATA_GUARDRAIL_ROW_RESULTS`` stores compact failed-row and failed
+      DQ-rule evidence linked to its rule/run summary without copying complete
+      source rows.
 
     Standard audit fields are ``_committed_by``, ``_committed_at``,
     ``_workspace_id``, ``_workspace_name``, ``_notebook_id``,

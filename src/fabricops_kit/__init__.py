@@ -28,6 +28,7 @@ from .io import (
 )
 from .pipeline import (
     check_changes,
+    check_dq,
     check_freshness,
     check_schema,
     display_guardrail_results,
@@ -64,6 +65,7 @@ PIPELINE_EXPORTS = (
     "check_schema",
     "check_freshness",
     "check_changes",
+    "check_dq",
     "profile_and_register_table",
     "profile_dataframe",
     "profile_frequency_distribution",
