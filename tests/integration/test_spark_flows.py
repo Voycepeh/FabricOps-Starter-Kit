@@ -243,7 +243,7 @@ def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_ses
     assert loaded == [
         {
             "rule_id": "amount_positive",
-            "guardrail_rule_id": persisted["guardrail_rule_id"],
+            "guardrail_rule_id": persisted["rule_id"],
             "rule_key": persisted["rule_key"],
             "rule_type": "value_range",
             "columns": ["amount"],

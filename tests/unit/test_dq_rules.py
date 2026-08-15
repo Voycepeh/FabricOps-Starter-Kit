@@ -8,6 +8,7 @@ import pytest
 
 from fabricops_kit.pipeline import guardrails_shared as governance
 from fabricops_kit.config import metadata_schemas
+from fabricops_kit.config.shared import build_metadata_table_key
 from fabricops_kit.widgets import shared as governance_authoring
 from tests.helpers import FakeSpark, framework_config
 
@@ -254,6 +255,7 @@ def test_cross_column_rules_use_consistent_null_behavior(spark_session):
 def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monkeypatch, spark_session):
     """Verify the internal active DQ guardrail loads only active metadata rules."""
     df = spark_session.createDataFrame([(1, "ok"), (None, "ok")], "id int, status string")
+    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
     metadata = spark_session.createDataFrame(
         [
             {
@@ -262,6 +264,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "environment_name": "dev",
                 "dataset_name": "sales",
                 "table_name": "orders",
+                "metadata_table_key": table_key,
                 "column_name": "id",
                 "rule_type": "missing_values",
                 "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
@@ -279,6 +282,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "environment_name": "dev",
                 "dataset_name": "sales",
                 "table_name": "orders",
+                "metadata_table_key": table_key,
                 "column_name": "status",
                 "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["ok"]}),
@@ -296,6 +300,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
                 "environment_name": "dev",
                 "dataset_name": "sales",
                 "table_name": "orders",
+                "metadata_table_key": table_key,
                 "column_name": "status",
                 "rule_type": "allowed_values",
                 "rule_parameters_json": json.dumps({"columns": ["status"], "allowed_values": ["bad"]}),
@@ -332,6 +337,7 @@ def test_run_active_dq_guardrail_loads_only_approved_active_metadata_rules(monke
 def test_run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(monkeypatch, spark_session):
     """Verify the internal active DQ guardrail returns passed when no active guardrail rules."""
     df = spark_session.createDataFrame([(1, "ok")], "id int, status string")
+    table_key = build_metadata_table_key("lakehouse", "", None, "orders")
     metadata = spark_session.createDataFrame(
         [
             {
@@ -340,6 +346,7 @@ def test_run_active_dq_guardrail_returns_passed_when_no_approved_active_rules(mo
                 "environment_name": "dev",
                 "dataset_name": "sales",
                 "table_name": "orders",
+                "metadata_table_key": table_key,
                 "column_name": "id",
                 "rule_type": "missing_values",
                 "rule_parameters_json": json.dumps({"columns": ["id"], "maximum_null_percent": 0}),
