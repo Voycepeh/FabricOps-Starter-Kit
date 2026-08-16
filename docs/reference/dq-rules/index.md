@@ -8,17 +8,17 @@ The vocabulary is deliberately structured and governable. DQ rules use named par
 
 | Rule | Purpose | Canonical configuration |
 |---|---|---|
-| `missing_values` | Limit the percentage of null values. A threshold of `0` is strict non-null enforcement. | one column; `maximum_null_percent` |
-| `blank_text` | Reject null, blank, and whitespace-only strings. | one column |
-| `unique_values` | Require each selected column to be unique independently. | one column per rule |
-| `unique_combination` | Require a combined business key to be unique. | two or more ordered `columns` |
-| `allowed_values` | Allow only an approved value set. | one column; `allowed_values` |
-| `blocked_values` | Reject a governed list of forbidden values. | one column; `blocked_values` |
-| `value_range` | Enforce one-sided or two-sided bounds for numeric, date, or other comparable values. | one column; optional `minimum` / `maximum` and inclusivity flags |
-| `text_pattern` | Require populated strings to match a governed pattern. | one column; `pattern` |
-| `required_when` | Require one or more target columns when a structured condition matches. | target `columns`; condition column, operator, and value |
-| `conditional_value` | Require one target column to equal an expected value when a structured condition matches. | one target column; structured condition; `expected_value` |
-| `compare_columns` | Compare two distinct ordered columns with a controlled operator. | two ordered `columns`; `operator` |
+| [`missing_values`](missing_values.md) | Limit the percentage of null values. A threshold of `0` is strict non-null enforcement. | one column; `maximum_null_percent` |
+| [`blank_text`](blank_text.md) | Reject null, blank, and whitespace-only strings. | one column |
+| [`unique_values`](unique_values.md) | Require each selected column to be unique independently. | one column per rule |
+| [`unique_combination`](unique_combination.md) | Require a combined business key to be unique. | two or more ordered `columns` |
+| [`allowed_values`](allowed_values.md) | Allow only an approved value set. | one column; `allowed_values` |
+| [`blocked_values`](blocked_values.md) | Reject a governed list of forbidden values. | one column; `blocked_values` |
+| [`value_range`](value_range.md) | Enforce one-sided or two-sided bounds for numeric, date, or other comparable values. | one column; optional `minimum` / `maximum` and inclusivity flags |
+| [`text_pattern`](text_pattern.md) | Require populated strings to match a governed pattern. | one column; `pattern` |
+| [`required_when`](required_when.md) | Require one or more target columns when a structured condition matches. | target `columns`; condition column, operator, and value |
+| [`conditional_value`](conditional_value.md) | Require one target column to equal an expected value when a structured condition matches. | one target column; structured condition; `expected_value` |
+| [`compare_columns`](compare_columns.md) | Compare two distinct ordered columns with a controlled operator. | two ordered `columns`; `operator` |
 
 ## Practical examples
 
