@@ -1,3 +1,5 @@
+"""Tests for the generated metadata reference model."""
+
 from __future__ import annotations
 
 from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
@@ -16,6 +18,7 @@ def _schema_fields() -> dict[str, set[str]]:
 
 
 def test_metadata_model_contract_matches_implemented_schema() -> None:
+    """Ensure configured model keys and relationships match implemented schemas."""
     canonical = list(CANONICAL_METADATA_TABLES)
     fields = _schema_fields()
     assert set(METADATA_TABLE_MODELS) == set(canonical)
@@ -40,6 +43,7 @@ def test_metadata_model_contract_matches_implemented_schema() -> None:
 
 
 def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path, monkeypatch) -> None:
+    """Ensure generated metadata docs use the model and remain deterministic."""
     metadata_dir = tmp_path / "metadata"
     landing = tmp_path / "metadata.md"
     monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", metadata_dir)
