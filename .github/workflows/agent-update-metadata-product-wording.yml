@@ -47,11 +47,12 @@ jobs:
         shell: bash
         run: |
           rm -rf site
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
           git checkout -- docs/releases/0.2.0/functions/setup_metadata_tables.md docs/releases/0.2.0/functions/setup_notebook.md 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/agent_update_metadata_product_wording.py .github/workflows/agent-update-metadata-product-wording.yml
           git add scripts/reference_docs_metadata.py docs/reference/metadata.md docs/reference/metadata
           git commit -m 'Use canonical product wording for metadata tables'
-          git pull --rebase origin agent/metadata-reference-model-foundation
           git push origin HEAD:agent/metadata-reference-model-foundation
