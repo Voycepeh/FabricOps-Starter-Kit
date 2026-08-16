@@ -1,0 +1,535 @@
+name: Agent metadata reference Stage 1
+
+on:
+  push:
+    branches:
+      - agent/metadata-reference-model-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: ${{ !contains(github.event.head_commit.message, '[stage1 complete]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply focused Stage 1 changes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          metadata_path = Path('scripts/reference_docs_metadata.py')
+          metadata = metadata_path.read_text(encoding='utf-8')
+          model_block = '''METADATA_TABLE_MODELS = {
+              "METADATA_DATA_STEWARD": {
+                  "purpose": "Keep the active Data Stewards used by the Data Agreement workflow.",
+                  "grain": "One registered Data Steward.",
+                  "primary_key": ["steward_id"],
+                  "foreign_keys": [],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One Data Steward can appear as the provider steward on many Data Agreement versions."},
+                      {"cardinality": "1:N", "statement": "One Data Steward can appear as the recipient steward on many Data Agreement versions."},
+                  ],
+              },
+              "METADATA_DATA_AGREEMENT": {
+                  "purpose": "Define why data can be shared, who is accountable, the approved purpose and usage, and the review period.",
+                  "grain": "One version of one Data Agreement.",
+                  "primary_key": ["agreement_id", "agreement_version"],
+                  "foreign_keys": [
+                      {"local_field": "provider_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one provider steward; one steward can provide many agreement versions."},
+                      {"local_field": "recipient_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one recipient steward; one steward can receive many agreement versions."},
+                  ],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One Data Agreement lifecycle can govern many Data Contract rows through agreement_id."},
+                  ],
+              },
+              "METADATA_DATA_CONTRACT": {
+                  "purpose": "Define what the data is, how it looks, its approved usage and schema fingerprint, and link it to the Data Agreement.",
+                  "grain": "One authorised catalogue table and schema fingerprint governed by one Data Agreement.",
+                  "primary_key": ["agreement_id", "metadata_table_key", "schema_fingerprint"],
+                  "foreign_keys": [
+                      {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row."},
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "1:N", "statement": "One contracted table identity can match the catalogue rows for that table's columns."},
+                  ],
+                  "relationships": [],
+              },
+              "METADATA_DATA_CATALOGUE": {
+                  "purpose": "See the tables and columns FabricOps has registered, including where they live and how they are structured.",
+                  "grain": "One registered column for one table and schema fingerprint in one environment.",
+                  "primary_key": ["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"],
+                  "foreign_keys": [],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One catalogue table identity can be referenced by many Source Observation, Data Profiled, Data Lineage, Enrichment and Guardrail rows."},
+                  ],
+              },
+              "METADATA_SOURCE_OBSERVATION": {
+                  "purpose": "Record a lightweight view of source partitions so FabricOps can spot additions, removals and changes before ETL.",
+                  "grain": "One observed partition state for one source table at one observation time.",
+                  "primary_key": ["metadata_table_key", "partition_column", "partition_value", "observed_at"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many source partition observations can belong to one logical catalogue table identity."},
+                  ],
+                  "relationships": [],
+              },
+              "METADATA_DATA_PROFILED": {
+                  "purpose": "See the shape and quality of each column from a profiled dataset snapshot.",
+                  "grain": "One profiled column for one dataset snapshot.",
+                  "primary_key": ["environment_name", "metadata_column_key", "schema_fingerprint", "profiled_at"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many profiled column snapshots can belong to one logical catalogue table identity."},
+                      {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical catalogue column over time."},
+                  ],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One profiled column snapshot can have many Data Profiled Frequency rows through metadata_column_key and profiled_at."},
+                  ],
+              },
+              "METADATA_DATA_PROFILED_FREQUENCY": {
+                  "purpose": "See the most common values and their frequencies for profiled columns.",
+                  "grain": "One ranked observed value frequency for one profiled column snapshot.",
+                  "primary_key": ["metadata_column_key", "profiled_at", "frequency_rank"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot."},
+                      {"local_field": "profiled_at", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profiled_at", "cardinality": "N:1", "statement": "The profile timestamp is the second part of the logical link back to the profiled column snapshot."},
+                  ],
+                  "relationships": [],
+              },
+              "METADATA_DATA_LINEAGE": {
+                  "purpose": "See where the data came from and where it ends up.",
+                  "grain": "One source or target participation event for one profiled table snapshot in one Fabric activity.",
+                  "primary_key": ["lineage_event_id"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many lineage events can refer to the same logical catalogue table identity."},
+                  ],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at."},
+                  ],
+              },
+              "METADATA_ENRICHMENT": {
+                  "purpose": "Add business and governance context to the data.",
+                  "grain": "One appended enrichment value for one table or column identity.",
+                  "primary_key": ["enrichment_id"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "When enrichment_level is table, many enrichment rows can describe one catalogue table identity."},
+                      {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "When enrichment_level is column, many enrichment rows can describe one catalogue column identity."},
+                  ],
+                  "relationships": [],
+              },
+              "METADATA_DATA_ACCESS": {
+                  "purpose": "Record access-review information for a user and governed data scope.",
+                  "grain": "One access-review record for one user and governed scope.",
+                  "primary_key": [],
+                  "foreign_keys": [],
+                  "relationships": [],
+              },
+              "METADATA_GUARDRAIL": {
+                  "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
+                  "grain": "One authored guardrail configuration row for one rule lifecycle or version.",
+                  "primary_key": ["guardrail_rule_id"],
+                  "foreign_keys": [
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many guardrail configurations can apply to one logical catalogue table identity."},
+                      {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Column-level guardrails can point to one logical catalogue column identity."},
+                  ],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
+                  ],
+              },
+              "METADATA_GUARDRAIL_RESULTS": {
+                  "purpose": "See whether the expectations of the data in the ETL pipeline run are met.",
+                  "grain": "One runtime outcome for one guardrail rule in one pipeline run.",
+                  "primary_key": ["guardrail_result_id"],
+                  "foreign_keys": [
+                      {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one authored guardrail rule."},
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many runtime guardrail outcomes can refer to one logical catalogue table identity."},
+                  ],
+                  "relationships": [
+                      {"cardinality": "1:N", "statement": "One Guardrail Result can have many Guardrail Row Results when row-level failure evidence is captured."},
+                  ],
+              },
+              "METADATA_GUARDRAIL_ROW_RESULTS": {
+                  "purpose": "See the specific source rows and DQ rule details behind failed runtime guardrail results.",
+                  "grain": "One failed source-row or DQ-rule evidence row linked to one runtime guardrail result.",
+                  "primary_key": ["guardrail_row_result_id"],
+                  "foreign_keys": [
+                      {"local_field": "guardrail_result_id", "referenced_table": "METADATA_GUARDRAIL_RESULTS", "referenced_field": "guardrail_result_id", "cardinality": "N:1", "statement": "Many row-level failure evidence rows can belong to one Guardrail Result."},
+                      {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many row-level failure evidence rows can trace back to one authored guardrail rule."},
+                      {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many row-level failure evidence rows can refer to one logical catalogue table identity."},
+                  ],
+                  "relationships": [],
+              },
+          }
+
+          METADATA_REFERENCE_ORDER = [
+              "METADATA_DATA_STEWARD",
+              "METADATA_DATA_AGREEMENT",
+              "METADATA_DATA_CONTRACT",
+              "METADATA_DATA_CATALOGUE",
+              "METADATA_SOURCE_OBSERVATION",
+              "METADATA_DATA_PROFILED",
+              "METADATA_DATA_PROFILED_FREQUENCY",
+              "METADATA_DATA_LINEAGE",
+              "METADATA_ENRICHMENT",
+              "METADATA_DATA_ACCESS",
+              "METADATA_GUARDRAIL",
+              "METADATA_GUARDRAIL_RESULTS",
+              "METADATA_GUARDRAIL_ROW_RESULTS",
+          ]
+
+          METADATA_TABLE_PURPOSES = {
+              table_name: str(model["purpose"])
+              for table_name, model in METADATA_TABLE_MODELS.items()
+          }
+
+          _UNTRACED_SCHEMA_OWNER = {'''
+          pattern = r'METADATA_TABLE_PURPOSES = \{.*?\n\}\n\n_UNTRACED_SCHEMA_OWNER = \{'
+          updated, count = re.subn(pattern, model_block, metadata, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Could not replace METADATA_TABLE_PURPOSES contract block exactly once.')
+          metadata_path.write_text(updated, encoding='utf-8')
+
+          generator_path = Path('scripts/generate_individual_function_reference_pages.py')
+          generator = generator_path.read_text(encoding='utf-8')
+          new_function = r'''def generate_metadata_reference_pages() -> None:
+              """Generate metadata table reference pages from the canonical schema registry."""
+              from fabricops_kit.config.metadata_schemas import (
+                  AUDIT_SCHEMA_FIELDS,
+                  CANONICAL_METADATA_TABLES,
+                  metadata_table_schema_registry,
+                  metadata_table_schema_rows,
+              )
+
+              def _model_key_text(fields: list[str]) -> str:
+                  if not fields:
+                      return "Not defined in the current implementation."
+                  return " + ".join(f"`{field}`" for field in fields)
+
+              def _relationship_lines(model: dict[str, Any]) -> list[str]:
+                  rendered: list[str] = []
+                  for foreign_key in model.get("foreign_keys", []):
+                      rendered.append(
+                          f"* `{foreign_key['local_field']}` → "
+                          f"`{foreign_key['referenced_table']}.{foreign_key['referenced_field']}` "
+                          f"(**{foreign_key['cardinality']}**). {foreign_key['statement']}"
+                      )
+                  for relationship in model.get("relationships", []):
+                      rendered.append(f"* **{relationship['cardinality']}**: {relationship['statement']}")
+                  return rendered or ["* No immediate logical relationship is defined in the current implementation."]
+
+              METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
+              registry = metadata_table_schema_registry()
+              canonical_tables = list(CANONICAL_METADATA_TABLES)
+              missing_tables = [table_name for table_name in canonical_tables if table_name not in registry]
+              if missing_tables:
+                  raise RuntimeError(
+                      "metadata_table_schema_registry() is missing canonical metadata tables: "
+                      + ", ".join(missing_tables)
+                  )
+
+              namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+              table_models = namespace.get("METADATA_TABLE_MODELS", {})
+              reference_order = namespace.get("METADATA_REFERENCE_ORDER", canonical_tables)
+              if not isinstance(table_models, dict):
+                  raise RuntimeError("Metadata reference contract must define METADATA_TABLE_MODELS as a dictionary")
+              if not isinstance(reference_order, list):
+                  raise RuntimeError("Metadata reference contract must define METADATA_REFERENCE_ORDER as a list")
+              if set(table_models) != set(canonical_tables):
+                  missing = sorted(set(canonical_tables) - set(table_models))
+                  extra = sorted(set(table_models) - set(canonical_tables))
+                  raise RuntimeError(f"Metadata model coverage mismatch; missing={missing}, extra={extra}")
+              if len(reference_order) != len(canonical_tables) or set(reference_order) != set(canonical_tables):
+                  raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
+
+              valid_cardinalities = {"1:1", "1:N", "N:1"}
+              field_names_by_table = {
+                  table_name: {row["name"] for row in metadata_table_schema_rows(schema)}
+                  for table_name, schema in registry.items()
+              }
+              for table_name in canonical_tables:
+                  model = table_models[table_name]
+                  if not isinstance(model, dict):
+                      raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] must be a dictionary")
+                  for required in ("purpose", "grain", "primary_key", "foreign_keys", "relationships"):
+                      if required not in model:
+                          raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] is missing {required!r}")
+                  if not str(model["purpose"]).strip() or not str(model["grain"]).strip():
+                      raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] must define non-empty purpose and grain")
+                  if not isinstance(model["primary_key"], list):
+                      raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}].primary_key must be a list")
+                  for field_name in model["primary_key"]:
+                      if field_name not in field_names_by_table[table_name]:
+                          raise RuntimeError(f"Primary-key field {table_name}.{field_name} is not in the implemented schema")
+                  for foreign_key in model["foreign_keys"]:
+                      local_field = foreign_key["local_field"]
+                      referenced_table = foreign_key["referenced_table"]
+                      referenced_field = foreign_key["referenced_field"]
+                      cardinality = foreign_key["cardinality"]
+                      if local_field not in field_names_by_table[table_name]:
+                          raise RuntimeError(f"Foreign-key field {table_name}.{local_field} is not in the implemented schema")
+                      if referenced_table not in registry:
+                          raise RuntimeError(f"Foreign-key target table {referenced_table} does not exist")
+                      if referenced_field not in field_names_by_table[referenced_table]:
+                          raise RuntimeError(
+                              f"Foreign-key target field {referenced_table}.{referenced_field} is not in the implemented schema"
+                          )
+                      if cardinality not in valid_cardinalities:
+                          raise RuntimeError(f"Unsupported metadata relationship cardinality: {cardinality}")
+                      if not str(foreign_key.get("statement", "")).strip():
+                          raise RuntimeError(f"Foreign-key relationship {table_name}.{local_field} needs a statement")
+                  for relationship in model["relationships"]:
+                      if relationship.get("cardinality") not in valid_cardinalities:
+                          raise RuntimeError(
+                              f"Unsupported metadata relationship cardinality: {relationship.get('cardinality')}"
+                          )
+                      if not str(relationship.get("statement", "")).strip():
+                          raise RuntimeError(f"Metadata relationship for {table_name} needs a statement")
+
+              table_purposes, column_owners = parse_metadata_reference_contract()
+              public_callable_set = public_callable_names()
+              audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
+              for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
+                  generated_page.unlink(missing_ok=True)
+
+              index_lines = [
+                  "# List of Metadata Tables",
+                  "",
+                  *parse_metadata_reference_overview(),
+                  "",
+              ]
+              for table_name in reference_order:
+                  slug = table_name.lower()
+                  model = table_models[table_name]
+                  purpose = _metadata_table_purpose(table_name, table_purposes)
+                  index_lines.extend([
+                      f"## [{table_name}](metadata/{slug}.md)",
+                      "",
+                      purpose,
+                      "",
+                      f"**Grain:** {model['grain']}",
+                      "",
+                      f"**Primary key:** {_model_key_text(model['primary_key'])}",
+                      "",
+                      "**Relationships:**",
+                      "",
+                      *_relationship_lines(model),
+                      "",
+                      f"[View full schema](metadata/{slug}.md)",
+                      "",
+                      "---",
+                      "",
+                  ])
+
+                  rows = metadata_table_schema_rows(registry[table_name])
+                  column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
+                  lines = [
+                      f"# {table_name}",
+                      "",
+                      purpose,
+                      "",
+                      "## Model",
+                      "",
+                      f"**Grain:** {model['grain']}",
+                      "",
+                      f"**Primary key:** {_model_key_text(model['primary_key'])}",
+                      "",
+                      "**Relationships:**",
+                      "",
+                      *_relationship_lines(model),
+                      "",
+                      "## Column summary",
+                      "",
+                      "| Column category | Count |",
+                      "| --- | ---: |",
+                      f"| Total columns | {column_counts['total']} |",
+                      f"| Business columns | {column_counts['business']} |",
+                      f"| Audit columns | {column_counts['audit']} |",
+                      "",
+                      "## Implemented schema",
+                      "",
+                      "| Column | Data type | Managed by | Description |",
+                      "| --- | --- | --- | --- |",
+                  ]
+                  for row in rows:
+                      column = str(row["name"])
+                      lines.append(
+                          f"| `{column}` | `{row['type']}` | "
+                          f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
+                          f"{_metadata_field_description(table_name, column)} |"
+                      )
+                  if table_name == "METADATA_ENRICHMENT":
+                      lines.extend([
+                          "", "## Breaking pre-release replacement", "",
+                          "This intentionally breaking schema replaces the previous enrichment lifecycle and payload model. Existing development `METADATA_ENRICHMENT` tables must be recreated; no automated migration or compatibility support is provided. Values to retain may be exported and manually reshaped before recreation.",
+                          "", "## Current value", "", "The latest appended row for `enrichment_level` + `metadata_key` + `enrichment_type` is current, ordered by `_committed_at`, `_activity_id`, and `enrichment_id`. Empty values are rejected, so clearing is deferred to a future change.",
+                          "", "## Examples", "",
+                          "| enrichment_level | metadata_key | enrichment_type | value |",
+                          "| --- | --- | --- | --- |",
+                          "| table | tbl_abc | Description | Student enrolment records |",
+                          "| table | tbl_abc | Classification | Highly sensitive |",
+                          "| column | col_xyz | Description | Unique student identifier |",
+                          "| column | col_xyz | Personal_identifier | Direct PII |",
+                          "", "The catalogue remains the source of table and column identity. New enrichment types do not require a schema change.",
+                      ])
+                  related_functions = METADATA_RELATED_FUNCTIONS.get(table_name, [])
+                  if related_functions:
+                      lines.extend(["", "## Related function reference", ""])
+                      lines.extend(
+                          f"* [`{function_name}`](../../api/reference/{function_name}.md)"
+                          for function_name in related_functions
+                      )
+                  (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
+                      "\n".join(lines).rstrip() + "\n", encoding="utf-8"
+                  )
+              METADATA_REFERENCE_INDEX_PATH.write_text("\n".join(index_lines).rstrip() + "\n", encoding="utf-8")
+          '''
+          pattern = r'def generate_metadata_reference_pages\(\) -> None:\n.*?\n\ndef _trim_callable_flow_dashboard_contract\('
+          replacement = new_function + '\n\ndef _trim_callable_flow_dashboard_contract('
+          updated, count = re.subn(pattern, replacement, generator, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit('Could not replace generate_metadata_reference_pages() exactly once.')
+          generator_path.write_text(updated, encoding='utf-8')
+
+          test_path = Path('tests/unit/test_metadata_reference_generator.py')
+          test_path.write_text(r'''from __future__ import annotations
+
+from pathlib import Path
+
+from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
+from scripts import generate_individual_function_reference_pages as generator
+from scripts.reference_docs_metadata import METADATA_REFERENCE_ORDER, METADATA_TABLE_MODELS
+
+
+VALID_CARDINALITIES = {"1:1", "1:N", "N:1"}
+
+
+def _schema_fields() -> dict[str, set[str]]:
+    return {
+        table_name: set(schema.fieldNames())
+        for table_name, schema in metadata_table_schema_registry().items()
+    }
+
+
+def test_metadata_model_contract_matches_implemented_schema() -> None:
+    canonical = list(CANONICAL_METADATA_TABLES)
+    fields = _schema_fields()
+    assert set(METADATA_TABLE_MODELS) == set(canonical)
+    assert len(METADATA_REFERENCE_ORDER) == len(canonical)
+    assert set(METADATA_REFERENCE_ORDER) == set(canonical)
+
+    for table_name in canonical:
+        model = METADATA_TABLE_MODELS[table_name]
+        assert model["purpose"].strip()
+        assert model["grain"].strip()
+        for field_name in model["primary_key"]:
+            assert field_name in fields[table_name]
+        for foreign_key in model["foreign_keys"]:
+            assert foreign_key["local_field"] in fields[table_name]
+            assert foreign_key["referenced_table"] in fields
+            assert foreign_key["referenced_field"] in fields[foreign_key["referenced_table"]]
+            assert foreign_key["cardinality"] in VALID_CARDINALITIES
+            assert foreign_key["statement"].strip()
+        for relationship in model["relationships"]:
+            assert relationship["cardinality"] in VALID_CARDINALITIES
+            assert relationship["statement"].strip()
+
+
+def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path, monkeypatch) -> None:
+    metadata_dir = tmp_path / "metadata"
+    landing = tmp_path / "metadata.md"
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_DIR", metadata_dir)
+    monkeypatch.setattr(generator, "METADATA_REFERENCE_INDEX_PATH", landing)
+
+    generator.generate_metadata_reference_pages()
+    first_landing = landing.read_text(encoding="utf-8")
+    first_pages = {
+        path.name: path.read_text(encoding="utf-8")
+        for path in sorted(metadata_dir.glob("*.md"))
+    }
+
+    assert "<div class=\"grid cards\"" not in first_landing
+    for table_name in CANONICAL_METADATA_TABLES:
+        slug = table_name.lower()
+        assert first_landing.count(f"## [{table_name}](metadata/{slug}.md)") == 1
+        page = first_pages[f"{slug}.md"]
+        assert "## Model" in page
+        assert "**Grain:**" in page
+        assert "**Primary key:**" in page
+        assert "**Relationships:**" in page
+        assert "## Implemented schema" in page
+        assert "| Column | Data type | Managed by | Description |" in page
+
+    generator.generate_metadata_reference_pages()
+    assert landing.read_text(encoding="utf-8") == first_landing
+    assert {
+        path.name: path.read_text(encoding="utf-8")
+        for path in sorted(metadata_dir.glob("*.md"))
+    } == first_pages
+    assert len(first_pages) == len(CANONICAL_METADATA_TABLES)
+''', encoding='utf-8')
+          PY
+
+      - name: Install test and docs dependencies
+        run: python -m pip install -e '.[dev,docs]'
+
+      - name: Run focused metadata generator tests
+        run: python -m pytest -q tests/unit/test_metadata_reference_generator.py
+
+      - name: Regenerate owned metadata reference outputs
+        shell: bash
+        run: |
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git status --short
+          allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/workflows/agent-metadata-reference-stage1.yml)$'
+          while IFS= read -r path; do
+            if [[ ! "$path" =~ $allowed ]]; then
+              git checkout -- "$path" 2>/dev/null || true
+              git clean -f -- "$path" 2>/dev/null || true
+            fi
+          done < <(git status --porcelain | sed -E 's/^...//')
+
+      - name: Confirm metadata generation is deterministic
+        shell: bash
+        run: |
+          rm -rf /tmp/metadata-reference-first
+          mkdir -p /tmp/metadata-reference-first
+          cp docs/reference/metadata.md /tmp/metadata-reference-first/metadata.md
+          cp -R docs/reference/metadata /tmp/metadata-reference-first/metadata
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          diff -u /tmp/metadata-reference-first/metadata.md docs/reference/metadata.md
+          diff -ru /tmp/metadata-reference-first/metadata docs/reference/metadata
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
+
+      - name: Run full tests and strict docs build
+        shell: bash
+        run: |
+          python -m pytest -q
+          python -m mkdocs build --strict
+
+      - name: Enforce focused diff and publish implementation commit
+        shell: bash
+        run: |
+          allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/workflows/agent-metadata-reference-stage1.yml)$'
+          bad=0
+          while IFS= read -r path; do
+            if [[ ! "$path" =~ $allowed ]]; then
+              echo "Unexpected changed path: $path"
+              bad=1
+            fi
+          done < <(git status --porcelain | sed -E 's/^...//')
+          test "$bad" -eq 0
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/agent-metadata-reference-stage1.yml
+          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py tests/unit/test_metadata_reference_generator.py docs/reference/metadata.md docs/reference/metadata
+          git commit -m '[stage1 complete] Prepare metadata relationship contract'
+          git push origin HEAD:agent/metadata-reference-model-foundation
