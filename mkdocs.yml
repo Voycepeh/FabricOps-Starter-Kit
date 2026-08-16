@@ -47,17 +47,17 @@ nav:
       - Overview: reference/metadata.md
       - Data Steward: reference/metadata/metadata_data_steward.md
       - Data Agreement: reference/metadata/metadata_data_agreement.md
-      - Data Contract: reference/metadata/metadata_data_contract.md
+      - Source Observation: reference/metadata/metadata_source_observation.md
       - Data Catalogue: reference/metadata/metadata_data_catalogue.md
       - Data Profiled: reference/metadata/metadata_data_profiled.md
       - Data Profiled Frequency: reference/metadata/metadata_data_profiled_frequency.md
       - Data Lineage: reference/metadata/metadata_data_lineage.md
-      - Data Access: reference/metadata/metadata_data_access.md
       - Enrichment: reference/metadata/metadata_enrichment.md
       - Guardrail: reference/metadata/metadata_guardrail.md
       - Guardrail Results: reference/metadata/metadata_guardrail_results.md
       - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
-      - Source Observation: reference/metadata/metadata_source_observation.md
+      - Data Contract: reference/metadata/metadata_data_contract.md
+      - Data Access: reference/metadata/metadata_data_access.md
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
