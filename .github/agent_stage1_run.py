@@ -23,3 +23,11 @@ def replace_once(text: str, pattern: str, replacement: str, label: str) -> str:
 
 module.replace_once = replace_once
 module.main()
+
+reference_test_path = Path('tests/unit/test_reference_agent_docs.py')
+reference_test = reference_test_path.read_text(encoding='utf-8')
+old_assertion = '    assert text.index(image_reference) < text.index("<div class=\\"grid cards\\" markdown>")'
+new_assertion = '    assert text.index(image_reference) < text.index("## [METADATA_DATA_STEWARD]")'
+if reference_test.count(old_assertion) != 1:
+    raise RuntimeError('Expected exactly one metadata grid ordering assertion to update')
+reference_test_path.write_text(reference_test.replace(old_assertion, new_assertion), encoding='utf-8')
