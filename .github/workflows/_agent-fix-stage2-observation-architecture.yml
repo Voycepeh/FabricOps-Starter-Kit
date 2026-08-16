@@ -1,0 +1,103 @@
+name: Fix Stage 2 observation helper architecture
+
+on:
+  push:
+    branches:
+      - agent/stage2-metadata-operational-family
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: agent/stage2-metadata-operational-family
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Align observation helpers with repository architecture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/fabricops_kit/pipeline/observation_shared.py')
+          text = path.read_text()
+          replacements = {
+              'def _observation_rows(': 'def observation_rows(',
+              'def _is_source_observation(': 'def is_source_observation(',
+              'def _catalogue_table_identity(': 'def catalogue_table_identity(',
+              'def _guardrail_compatibility_observation(': 'def guardrail_compatibility_observation(',
+              '_observation_rows(catalogue)': 'observation_rows(catalogue)',
+              '_observation_rows(observation)': 'observation_rows(observation)',
+              '"_catalogue_table_identity"': '"catalogue_table_identity"',
+              '"_guardrail_compatibility_observation"': '"guardrail_compatibility_observation"',
+              '"_is_source_observation"': '"is_source_observation"',
+              '"_observation_rows"': '"observation_rows"',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          path.write_text(text)
+
+          path = Path('src/fabricops_kit/pipeline/check_changes.py')
+          text = path.read_text()
+          text = text.replace(
+              'from fabricops_kit.pipeline.observation_shared import _is_source_observation, _observation_rows',
+              'from fabricops_kit.pipeline.observation_shared import is_source_observation, observation_rows',
+          )
+          text = text.replace('_observation_rows(', 'observation_rows(')
+          text = text.replace('_is_source_observation(', 'is_source_observation(')
+          path.write_text(text)
+
+          path = Path('src/fabricops_kit/pipeline/check_freshness.py')
+          text = path.read_text()
+          text = text.replace('_guardrail_compatibility_observation,', 'guardrail_compatibility_observation,')
+          text = text.replace('_is_source_observation,', 'is_source_observation,')
+          text = text.replace('_observation_rows,', 'observation_rows,')
+          text = text.replace('_guardrail_compatibility_observation(', 'guardrail_compatibility_observation(')
+          text = text.replace('_is_source_observation(', 'is_source_observation(')
+          text = text.replace('_observation_rows(', 'observation_rows(')
+          path.write_text(text)
+          PY
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+      - name: Validate source
+        run: |
+          uv run ruff check .
+          uv run pytest
+          uv run python scripts/release_navigation.py --check
+      - name: Regenerate owned artifacts
+        env:
+          PYTHONPATH: src
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
+        run: |
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+      - name: Verify generated stability
+        env:
+          PYTHONPATH: src
+          FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
+        run: |
+          git add src tests scripts docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
+          python scripts/generate_public_function_call_flows_json.py
+          python scripts/generate_individual_function_reference_pages.py
+          git diff --exit-code -- docs/reference/_data/public-function-call-flows.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
+      - name: Validate ownership and docs
+        run: |
+          uv run python scripts/validate_generated_artifact_ownership.py --base-ref main
+          uv run mkdocs build --strict
+      - name: Commit final fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src tests scripts docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
+          git commit -m "Align Stage 2 observation helpers with shared architecture"
+      - name: Remove temporary workflow and push
+        run: |
+          git rm .github/workflows/_agent-fix-stage2-observation-architecture.yml
+          git commit -m "Remove temporary Stage 2 architecture workflow"
+          git push origin HEAD:agent/stage2-metadata-operational-family
