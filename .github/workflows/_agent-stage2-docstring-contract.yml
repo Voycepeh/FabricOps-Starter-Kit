@@ -140,12 +140,20 @@ jobs:
               doc,
           )
           replace_doc(path, 'profile_and_register_table', doc)
+
+          test_path = Path('tests/unit/test_profile_and_register_table.py')
+          test_source = test_path.read_text(encoding='utf-8')
+          old = '            "dev", kind, target, schema\n'
+          new = '            "dev", kind, target, schema or ""\n'
+          if old not in test_source:
+              raise SystemExit('Expected Stage 2 catalogue schema assertion not found')
+          test_path.write_text(test_source.replace(old, new, 1), encoding='utf-8')
           PY
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
       - name: Validate source documentation
         run: |
-          uv run ruff check src/fabricops_kit/pipeline/check_changes.py src/fabricops_kit/pipeline/check_freshness.py src/fabricops_kit/pipeline/observe_table.py src/fabricops_kit/pipeline/profile_and_register_table.py
+          uv run ruff check src/fabricops_kit/pipeline/check_changes.py src/fabricops_kit/pipeline/check_freshness.py src/fabricops_kit/pipeline/observe_table.py src/fabricops_kit/pipeline/profile_and_register_table.py tests/unit/test_profile_and_register_table.py
           uv run pytest -q tests/unit/test_observation_guardrails.py tests/unit/test_table_observation.py tests/unit/test_profile_and_register_table.py
       - name: Regenerate affected references
         run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
@@ -153,7 +161,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/fabricops_kit/pipeline/check_changes.py src/fabricops_kit/pipeline/check_freshness.py src/fabricops_kit/pipeline/observe_table.py src/fabricops_kit/pipeline/profile_and_register_table.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
+          git add src/fabricops_kit/pipeline/check_changes.py src/fabricops_kit/pipeline/check_freshness.py src/fabricops_kit/pipeline/observe_table.py src/fabricops_kit/pipeline/profile_and_register_table.py tests/unit/test_profile_and_register_table.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
           if ! git diff --cached --quiet; then git commit -m "Restore public API docstring contracts"; fi
       - name: Verify reference generation is stable
         run: |
