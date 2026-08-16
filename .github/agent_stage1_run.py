@@ -31,3 +31,5 @@ new_assertion = '    assert text.index(image_reference) < text.index("## [METADA
 if reference_test.count(old_assertion) != 1:
     raise RuntimeError('Expected exactly one metadata grid ordering assertion to update')
 reference_test_path.write_text(reference_test.replace(old_assertion, new_assertion), encoding='utf-8')
+
+# Temporary runner only: this commit triggers the final validated publish pass.
