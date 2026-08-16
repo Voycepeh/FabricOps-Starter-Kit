@@ -93,11 +93,11 @@ profiled_df = profile_and_register_table(source_df, profile_role="source", targe
 
 ## Returns
 
-Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including stable identities, complete-DataFrame statistics, schema fingerprint, profiling timestamp, and runtime audit fields.
+Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including profile_id, profile_snapshot_id, stable table_id and column_id identities, environment_name, complete-DataFrame statistics, profiling timestamp, and runtime audit fields.
 
 ### Return interpretation
 
-The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY and join to the returned rows through metadata_column_key; frequency, catalogue, and lineage rows are side effects and are not returned.
+The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency, catalogue, and lineage rows are side effects and are not returned.
 
 ## Raises / Errors
 
