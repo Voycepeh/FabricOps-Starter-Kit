@@ -56,6 +56,8 @@ nav:
       - Enrichment: reference/metadata/metadata_enrichment.md
       - Guardrail: reference/metadata/metadata_guardrail.md
       - Guardrail Results: reference/metadata/metadata_guardrail_results.md
+      - Guardrail Row Results: reference/metadata/metadata_guardrail_row_results.md
+      - Source Observation: reference/metadata/metadata_source_observation.md
   - List of Functions: reference/index.md
   - List of DQ Rules:
       - Overview: reference/dq-rules/index.md
