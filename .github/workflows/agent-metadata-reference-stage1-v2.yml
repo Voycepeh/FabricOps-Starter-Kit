@@ -1,0 +1,66 @@
+name: Agent metadata reference Stage 1 v2
+
+on:
+  push:
+    branches:
+      - agent/metadata-reference-model-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply Stage 1 source changes
+        run: python .github/agent_stage1.py
+      - name: Install dependencies
+        run: python -m pip install -e '.[dev,docs]'
+      - name: Run focused tests
+        run: python -m pytest -q tests/unit/test_metadata_reference_generator.py
+      - name: Generate metadata references
+        shell: bash
+        run: |
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
+      - name: Confirm deterministic metadata output
+        shell: bash
+        run: |
+          rm -rf /tmp/metadata-first
+          mkdir -p /tmp/metadata-first
+          cp docs/reference/metadata.md /tmp/metadata-first/metadata.md
+          cp -R docs/reference/metadata /tmp/metadata-first/metadata
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          diff -u /tmp/metadata-first/metadata.md docs/reference/metadata.md
+          diff -ru /tmp/metadata-first/metadata docs/reference/metadata
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
+      - name: Run full validation
+        run: |
+          python -m pytest -q
+          python -m mkdocs build --strict
+      - name: Enforce focused diff and publish
+        shell: bash
+        run: |
+          allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/agent_stage1.py|\.github/workflows/agent-metadata-reference-stage1.yml|\.github/workflows/agent-metadata-reference-stage1-v2.yml)$'
+          bad=0
+          while IFS= read -r path; do
+            if [[ ! "$path" =~ $allowed ]]; then
+              echo "Unexpected changed path: $path"
+              bad=1
+            fi
+          done < <(git status --porcelain | sed -E 's/^...//')
+          test "$bad" -eq 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/agent_stage1.py .github/workflows/agent-metadata-reference-stage1.yml .github/workflows/agent-metadata-reference-stage1-v2.yml
+          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py tests/unit/test_metadata_reference_generator.py docs/reference/metadata.md docs/reference/metadata
+          git commit -m 'Prepare metadata relationship contract [stage1 complete]'
+          git push origin HEAD:agent/metadata-reference-model-foundation
