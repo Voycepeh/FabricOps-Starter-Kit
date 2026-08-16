@@ -25,7 +25,7 @@ jobs:
           python -m pip install -e '.[dev,docs]'
           python -m pip install pyspark
       - name: Run focused tests
-        run: python -m pytest -q tests/unit/test_metadata_reference_generator.py
+        run: python -m pytest -q tests/unit/test_metadata_reference_generator.py tests/unit/test_reference_agent_docs.py
       - name: Generate owned metadata references
         shell: bash
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Enforce focused diff and publish
         shell: bash
         run: |
-          allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/agent_stage1.py|\.github/agent_stage1_run.py|\.github/workflows/agent-metadata-reference-stage1.yml|\.github/workflows/agent-metadata-reference-stage1-v2.yml|\.github/workflows/agent-metadata-reference-stage1-v3.yml)$'
+          allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|tests/unit/test_reference_agent_docs.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/agent_stage1.py|\.github/agent_stage1_run.py|\.github/workflows/agent-metadata-reference-stage1.yml|\.github/workflows/agent-metadata-reference-stage1-v2.yml|\.github/workflows/agent-metadata-reference-stage1-v3.yml)$'
           bad=0
           while IFS= read -r path; do
             if [[ ! "$path" =~ $allowed ]]; then
@@ -63,6 +63,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/agent_stage1.py .github/agent_stage1_run.py .github/workflows/agent-metadata-reference-stage1.yml .github/workflows/agent-metadata-reference-stage1-v2.yml .github/workflows/agent-metadata-reference-stage1-v3.yml
-          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py tests/unit/test_metadata_reference_generator.py docs/reference/metadata.md docs/reference/metadata
+          git add scripts/reference_docs_metadata.py scripts/generate_individual_function_reference_pages.py tests/unit/test_metadata_reference_generator.py tests/unit/test_reference_agent_docs.py docs/reference/metadata.md docs/reference/metadata
           git commit -m 'Prepare metadata relationship contract [stage1 complete]'
           git push origin HEAD:agent/metadata-reference-model-foundation
