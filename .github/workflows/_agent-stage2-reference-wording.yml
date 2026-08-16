@@ -1,0 +1,62 @@
+name: Align Stage 2 generated reference wording
+
+on:
+  push:
+    branches:
+      - agent/stage2-metadata-operational-family
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: agent/stage2-metadata-operational-family
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Update generator metadata
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/reference_docs_metadata.py')
+          text = path.read_text(encoding='utf-8')
+          changes = {
+              'Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including stable identities, complete-DataFrame statistics, schema fingerprint, profiling timestamp, and runtime audit fields.':
+              'Spark DataFrame containing one compact profiling summary row for each eligible column appended to METADATA_DATA_PROFILED, including profile_id, profile_snapshot_id, stable table_id and column_id identities, environment_name, complete-DataFrame statistics, profiling timestamp, and runtime audit fields.',
+              'The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY and join to the returned rows through metadata_column_key; frequency, catalogue, and lineage rows are side effects and are not returned.':
+              'The returned rows are the compact parent summaries. Flattened frequency rows are written separately to METADATA_DATA_PROFILED_FREQUENCY, link to their parent through profile_id, and share the same profile_snapshot_id; frequency, catalogue, and lineage rows are side effects and are not returned.',
+          }
+          for old, new in changes.items():
+              if old not in text:
+                  raise SystemExit(f'Expected generator wording not found: {old[:80]}')
+              text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+      - name: Validate generator source
+        run: uv run ruff check scripts/reference_docs_metadata.py
+      - name: Regenerate references
+        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+      - name: Commit generator and generated references
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/reference_docs_metadata.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
+          git commit -m "Align Stage 2 generated reference wording"
+      - name: Verify stable regeneration
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff --exit-code -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+      - name: Remove temporary workflow and push
+        run: |
+          git rm .github/workflows/_agent-stage2-reference-wording.yml
+          git commit -m "Remove temporary Stage 2 reference workflow"
+          git push origin HEAD:agent/stage2-metadata-operational-family
