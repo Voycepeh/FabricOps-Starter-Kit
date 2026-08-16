@@ -27,8 +27,10 @@ jobs:
 
           config_shared = Path('src/fabricops_kit/config/shared.py')
           text = config_shared.read_text()
-          if 'import hashlib\n' not in text:
-              text = text.replace('from pathlib import Path\n', 'from pathlib import Path\nimport hashlib\nimport json\n')
+          future_header = 'from __future__ import annotations\n'
+          required_header = 'from __future__ import annotations\n\nimport hashlib\nimport json\n'
+          if required_header not in text:
+              text = text.replace(future_header, required_header, 1)
           identity_block = '''\n\ndef stable_metadata_id(*parts: Any) -> str:\n    \"\"\"Return a deterministic SHA-256 identity from normalized logical parts.\"\"\"\n    payload = [\n        {\"is_null\": part is None, \"value\": None if part is None else str(part).strip().lower()}\n        for part in parts\n    ]\n    return hashlib.sha256(\n        json.dumps(payload, separators=(\",\", \":\"), sort_keys=True).encode(\"utf-8\")\n    ).hexdigest()\n\n\ndef build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:\n    \"\"\"Return the environment-independent logical identity for a table asset.\"\"\"\n    return stable_metadata_id(store_type, layer, schema_name, table_name)\n\n\ndef build_column_id(table_id: Any, column_name: Any) -> str:\n    \"\"\"Return the environment-independent logical identity for a column asset.\"\"\"\n    return stable_metadata_id(table_id, column_name)\n'''
           if 'def build_table_id(' not in text:
               text += identity_block
