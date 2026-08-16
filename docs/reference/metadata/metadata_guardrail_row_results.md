@@ -1,18 +1,17 @@
 # METADATA_GUARDRAIL_ROW_RESULTS
 
-See which records did not meet the expectations.
+See the failed or quarantined rows produced by a Data Quality guardrail.
 
 ## Model
 
-**Grain:** One failed source row or DQ rule evidence row linked to one runtime guardrail result.
+**Grain:** One failed-row evidence record produced by one Guardrail rule evaluation.
 
 **Primary key:** `guardrail_row_result_id`
 
 **Relationships:**
 
-* `guardrail_result_id` → `METADATA_GUARDRAIL_RESULTS.guardrail_result_id` (**N:1**). Many row level failure evidence rows can belong to one Guardrail Result.
-* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many row level failure evidence rows can trace back to one authored guardrail rule.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many row level failure evidence rows can refer to one logical catalogue table identity.
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Row-level DQ quarantine evidence belongs directly to the Guardrail rule that produced it.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 normalization, the row result keeps metadata_table_key while carrying the same stable Catalogue table_id value.
 
 ## Column summary
 

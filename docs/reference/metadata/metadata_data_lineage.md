@@ -4,14 +4,14 @@ See where the data came from and where it ends up.
 
 ## Model
 
-**Grain:** One source or target participation event for one profiled table snapshot in one Fabric activity.
+**Grain:** One table participating as a source or target in one pipeline/profiling execution.
 
-**Primary key:** `lineage_event_id`
+**Primary key:** `lineage_id`
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many lineage events can refer to the same logical catalogue table identity.
-* **1:N**: One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many lineage participation records can refer to the same logical Catalogue table identity.
+* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). The lineage participation is recorded for the same profiling execution identified by profile_snapshot_id.
 
 ## Column summary
 
@@ -25,12 +25,12 @@ See where the data came from and where it ends up.
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `lineage_event_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.pipeline.profile_and_register_table._lineage_event_id` | Deterministic runtime lineage event identifier. |
-| `metadata_table_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.config.shared.build_metadata_table_key` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `schema_fingerprint` | `string` | `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation`, `fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint` | Deterministic fingerprint for the observed or governed schema snapshot. |
-| `profile_role` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Whether the profiled dataset participated as a source or target. |
-| `profiled_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Timestamp when the dataset profile snapshot was captured. |
+| `lineage_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Identifier stored for `lineage_id`. |
+| `table_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Identifier for the accessed table or object. |
+| `profile_snapshot_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Identifier stored for `profile_snapshot_id`. |
 | `environment_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Environment name recorded for the metadata row. |
+| `pipeline_role` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Metadata Data Lineage field `pipeline_role`. |
+| `recorded_at` | `timestamp` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Timestamp stored for `recorded_at`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

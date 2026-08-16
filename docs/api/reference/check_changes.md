@@ -9,12 +9,22 @@
 
 Describe deterministic partition and logical-row source changes.
 
+<div class="reference-docstring-intro" markdown="1">
+
+``observation`` must be the normalized evidence returned by
+:func:`observe_table`. History is selected by ``table_id`` and
+``environment_name`` so Development and Production baselines cannot be
+mixed. Removed partitions are appended as tombstones inside the same
+current observation snapshot.
+
+</div>
+
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/check_changes.py:177`
+`fabricops_kit/pipeline/check_changes.py:233`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L177-L210">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_changes.py#L233-L244">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -45,10 +55,9 @@ def check_changes(observation) -> dict
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation = observe_table("orders", target="source", schema="dbo")
->>> result = check_changes(observation)
->>> result["changed"]
-True
+```python
+change_result = check_changes(current_df, previous_df, key_columns=["order_id"])
+```
 
 </div>
 
@@ -56,7 +65,7 @@ True
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
+| `observation` | `—` | Yes | Not documented yet |
 
 ## Returns
 
@@ -64,9 +73,7 @@ Structured change counts, partition fingerprints, recent and historical classifi
 
 ## Raises / Errors
 
-ValueError
-    If configuration is invalid or logical keys are null, missing, or
-    duplicated.
+Not documented yet
 
 ## See also
 

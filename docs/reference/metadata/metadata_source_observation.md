@@ -1,36 +1,33 @@
 # METADATA_SOURCE_OBSERVATION
 
-See whether the source arrived and changed as expected.
+See what FabricOps previously observed about the source data.
 
 ## Model
 
-**Grain:** One observed partition state for one source table at one observation time.
+**Grain:** One partition observation within one source-table observation.
 
-**Primary key:** `metadata_table_key` + `partition_column` + `partition_value` + `observed_at`
+**Primary key:** `observation_id` + `partition_value`
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many source partition observations can belong to one logical catalogue table identity.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many source observations can belong to one logical Catalogue table identity in an environment.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 20 |
-| Business columns | 12 |
+| Total columns | 17 |
+| Business columns | 9 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `metadata_table_key` | `string` | [`observe_table`](../../api/reference/observe_table.md), `fabricops_kit.config.shared.build_metadata_table_key` | Canonical table identity shared with METADATA_DATA_CATALOGUE. |
-| `source_target` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Logical FabricOps target resolved through 00_env_config. |
-| `source_schema` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Resolved physical source schema when the configured store uses one. |
-| `source_table` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Resolved physical source table name. |
-| `partition_column` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Column whose distinct values define observed source partitions. |
+| `observation_id` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Identifier stored for `observation_id`. |
+| `table_id` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Identifier for the accessed table or object. |
+| `environment_name` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Environment name recorded for the metadata row. |
 | `partition_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | String representation of the observed partition value. |
-| `change_column` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Trustworthy source column used for automatic minimum and maximum evidence. |
 | `row_count` | `long` | [`observe_table`](../../api/reference/observe_table.md) | Number of rows observed in the partition, or zero for a removal tombstone. |
 | `min_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Earliest observed change-column value, or null for a removal tombstone. |
 | `max_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Latest observed change-column value, or null for a removal tombstone. |

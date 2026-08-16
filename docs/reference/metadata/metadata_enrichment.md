@@ -10,8 +10,8 @@ Add business and governance context to the data.
 
 **Relationships:**
 
-* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). When enrichment_level is table, many enrichment rows can describe one catalogue table identity.
-* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). When enrichment_level is column, many enrichment rows can describe one catalogue column identity.
+* `metadata_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id.
+* `metadata_key` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id.
 
 ## Column summary
 

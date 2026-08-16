@@ -154,68 +154,69 @@ METADATA_TABLE_MODELS = {
         "primary_key": ["agreement_id", "metadata_table_key", "schema_fingerprint"],
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "1:N", "statement": "One contracted table identity can match the catalogue rows for that table's columns."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "The current Data Contract column retains its pre-Stage-2 name, but its stable hash value identifies the same logical table now exposed by Catalogue as table_id. Data Contract redesign is deferred to Stage 5."},
         ],
         "relationships": [],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "See what data is available and how it is structured.",
-        "grain": "One registered column for one table and schema fingerprint in one environment.",
-        "primary_key": ["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"],
+        "purpose": "See the tables and columns FabricOps has observed.",
+        "grain": "One table or column asset in one environment.",
+        "primary_key": ["environment_name", "table_id", "column_id"],
         "foreign_keys": [],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One catalogue table identity can be referenced by many Source Observation, Data Profiled, Data Lineage, Enrichment and Guardrail rows."},
+            {"cardinality": "1:N", "statement": "A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time."},
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "See whether the source arrived and changed as expected.",
-        "grain": "One observed partition state for one source table at one observation time.",
-        "primary_key": ["metadata_table_key", "partition_column", "partition_value", "observed_at"],
+        "purpose": "See what FabricOps previously observed about the source data.",
+        "grain": "One partition observation within one source-table observation.",
+        "primary_key": ["observation_id", "partition_value"],
         "foreign_keys": [
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many source partition observations can belong to one logical catalogue table identity."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many source observations can belong to one logical Catalogue table identity in an environment."},
         ],
         "relationships": [],
     },
     "METADATA_DATA_PROFILED": {
-        "purpose": "Understand the shape, completeness, and characteristics of the data.",
-        "grain": "One profiled column for one dataset snapshot.",
-        "primary_key": ["environment_name", "metadata_column_key", "schema_fingerprint", "profiled_at"],
+        "purpose": "See the column-level profile metrics captured for a dataset snapshot.",
+        "grain": "One observed column in one profiling snapshot.",
+        "primary_key": ["profile_id"],
         "foreign_keys": [
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many profiled column snapshots can belong to one logical catalogue table identity."},
-            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical catalogue column over time."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many column profile snapshots can describe the same logical Catalogue table over time."},
+            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical Catalogue column over time."},
         ],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One profiled column snapshot can have many Data Profiled Frequency rows through metadata_column_key and profiled_at."},
+            {"cardinality": "1:1", "statement": "One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row."},
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
-        "purpose": "See how values are distributed across the data.",
-        "grain": "One ranked observed value frequency for one profiled column snapshot.",
-        "primary_key": ["metadata_column_key", "profiled_at", "frequency_rank"],
+        "purpose": "See the frequency distribution captured for a profiled column.",
+        "grain": "One flattened ranked value within one logical frequency distribution for a column Profile.",
+        "primary_key": ["frequency_id"],
         "foreign_keys": [
-            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot."},
-            {"local_field": "profiled_at", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profiled_at", "cardinality": "N:1", "statement": "The profile timestamp is the second part of the logical link back to the profiled column snapshot."},
+            {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Physical Frequency rows link back to the Profile that owns the logical distribution through profile_id."},
+            {"local_field": "profile_snapshot_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_snapshot_id", "cardinality": "N:1", "statement": "Profile and Frequency are produced together in the same profiling snapshot."},
         ],
-        "relationships": [],
+        "relationships": [
+            {"cardinality": "1:1", "statement": "Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage."},
+        ],
     },
     "METADATA_DATA_LINEAGE": {
         "purpose": "See where the data came from and where it ends up.",
-        "grain": "One source or target participation event for one profiled table snapshot in one Fabric activity.",
-        "primary_key": ["lineage_event_id"],
+        "grain": "One table participating as a source or target in one pipeline/profiling execution.",
+        "primary_key": ["lineage_id"],
         "foreign_keys": [
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many lineage events can refer to the same logical catalogue table identity."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many lineage participation records can refer to the same logical Catalogue table identity."},
+            {"local_field": "profile_snapshot_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_snapshot_id", "cardinality": "N:1", "statement": "The lineage participation is recorded for the same profiling execution identified by profile_snapshot_id."},
         ],
-        "relationships": [
-            {"cardinality": "1:N", "statement": "One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at."},
-        ],
+        "relationships": [],
     },
     "METADATA_ENRICHMENT": {
         "purpose": "Add business and governance context to the data.",
         "grain": "One appended enrichment value for one table or column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
-            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "When enrichment_level is table, many enrichment rows can describe one catalogue table identity."},
-            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "When enrichment_level is column, many enrichment rows can describe one catalogue column identity."},
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id."},
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id."},
         ],
         "relationships": [],
     },
@@ -231,11 +232,12 @@ METADATA_TABLE_MODELS = {
         "grain": "One authored guardrail configuration row for one rule lifecycle or version.",
         "primary_key": ["guardrail_rule_id"],
         "foreign_keys": [
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many guardrail configurations can apply to one logical catalogue table identity."},
-            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Column level guardrails can point to one logical catalogue column identity."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 renames the Guardrail identity fields, metadata_table_key carries the same stable value now exposed by Catalogue as table_id."},
+            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until Stage 4 renames the Guardrail identity fields, metadata_column_key carries the same stable value now exposed by Catalogue as column_id."},
         ],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
+            {"cardinality": "1:N", "statement": "One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
+            {"cardinality": "1:N", "statement": "One Guardrail rule can produce many Guardrail Row Results when DQ quarantine evidence is captured."},
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
@@ -243,24 +245,22 @@ METADATA_TABLE_MODELS = {
         "grain": "One runtime outcome for one guardrail rule in one pipeline run.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
-            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one authored guardrail rule."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many runtime guardrail outcomes can refer to one logical catalogue table identity."},
-        ],
-        "relationships": [
-            {"cardinality": "1:N", "statement": "One Guardrail Result can have many Guardrail Row Results when row level failure evidence is captured."},
-        ],
-    },
-    "METADATA_GUARDRAIL_ROW_RESULTS": {
-        "purpose": "See which records did not meet the expectations.",
-        "grain": "One failed source row or DQ rule evidence row linked to one runtime guardrail result.",
-        "primary_key": ["guardrail_row_result_id"],
-        "foreign_keys": [
-            {"local_field": "guardrail_result_id", "referenced_table": "METADATA_GUARDRAIL_RESULTS", "referenced_field": "guardrail_result_id", "cardinality": "N:1", "statement": "Many row level failure evidence rows can belong to one Guardrail Result."},
-            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many row level failure evidence rows can trace back to one authored guardrail rule."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many row level failure evidence rows can refer to one logical catalogue table identity."},
+            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one authored Guardrail rule."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 normalization, the result keeps metadata_table_key while carrying the same stable Catalogue table_id value."},
         ],
         "relationships": [],
     },
+    "METADATA_GUARDRAIL_ROW_RESULTS": {
+        "purpose": "See the failed or quarantined rows produced by a Data Quality guardrail.",
+        "grain": "One failed-row evidence record produced by one Guardrail rule evaluation.",
+        "primary_key": ["guardrail_row_result_id"],
+        "foreign_keys": [
+            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Row-level DQ quarantine evidence belongs directly to the Guardrail rule that produced it."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 normalization, the row result keeps metadata_table_key while carrying the same stable Catalogue table_id value."},
+        ],
+        "relationships": [],
+    },
+
 }
 
 METADATA_REFERENCE_ORDER = [

@@ -1,31 +1,34 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-See how values are distributed across the data.
+See the frequency distribution captured for a profiled column.
 
 ## Model
 
-**Grain:** One ranked observed value frequency for one profiled column snapshot.
+**Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.
 
-**Primary key:** `metadata_column_key` + `profiled_at` + `frequency_rank`
+**Primary key:** `frequency_id`
 
 **Relationships:**
 
-* `metadata_column_key` → `METADATA_DATA_PROFILED.metadata_column_key` (**N:1**). Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot.
-* `profiled_at` → `METADATA_DATA_PROFILED.profiled_at` (**N:1**). The profile timestamp is the second part of the logical link back to the profiled column snapshot.
+* `profile_id` → `METADATA_DATA_PROFILED.profile_id` (**N:1**). Physical Frequency rows link back to the Profile that owns the logical distribution through profile_id.
+* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). Profile and Frequency are produced together in the same profiling snapshot.
+* **1:1**: Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 16 |
-| Business columns | 8 |
+| Total columns | 18 |
+| Business columns | 10 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `metadata_column_key` | `string` | `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `frequency_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `frequency_id`. |
+| `profile_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `profile_id`. |
+| `profile_snapshot_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Identifier stored for `profile_snapshot_id`. |
 | `value` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `value`. |
 | `frequency_count` | `long` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `frequency_count`. |
 | `frequency_percent` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._frequency_metadata_dataframe`, [`profile_frequency_distribution`](../../api/reference/profile_frequency_distribution.md) | Metadata Data Profiled Frequency field `frequency_percent`. |

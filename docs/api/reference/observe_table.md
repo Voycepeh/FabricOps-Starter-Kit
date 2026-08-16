@@ -11,18 +11,25 @@ Record compact count and change-value bounds before expensive source work.
 
 <div class="reference-docstring-intro" markdown="1">
 
-``observe_table()`` cheaply records row count plus earliest and latest
-change values by source partition so
-later guardrail checks can judge the source without a full source read.
+FabricOps records one ``observation_id`` for the current table observation
+and one physical row per observed partition. The persisted evidence keeps
+only the stable ``table_id``, active ``environment_name``, partition value,
+compact row/range signals, observation time, and the standard audit fields.
+
+The active source-change Guardrail still supplies the partition and change
+columns used to collect the evidence during the staged metadata migration,
+but Guardrail identity and rule configuration are not persisted in
+``METADATA_SOURCE_OBSERVATION``. The same observation can therefore be
+reused by ``check_changes`` and ``check_freshness``.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:113`
+`fabricops_kit/pipeline/observe_table.py:142`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L113-L239">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L142-L239">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -57,12 +64,9 @@ def observe_table(
 
 <div class="reference-example-usage" markdown="1">
 
->>> observation_df = observe_table(
-...     table_name="orders",
-...     target="source",
-...     schema="dbo",
-... )
->>> observation_df.select("partition_value", "row_count")
+```python
+observation = observe_table(target=SOURCE_TARGET, schema=SOURCE_SCHEMA, table_name=SOURCE_TABLE_NAME, partition_column="business_date", change_column="modified_at")
+```
 
 </div>
 
@@ -70,9 +74,9 @@ def observe_table(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `table_name` | `str` | Yes | Table name within the configured target. |
-| `target` | `str` | No | Logical Lakehouse or Warehouse target configured by ``00_env_config``. |
-| `schema` | `str \| None` | No | Optional Lakehouse schema. A schema is required for Warehouse targets. |
+| `table_name` | `str` | Yes | Not documented yet |
+| `target` | `str` | No | Not documented yet |
+| `schema` | `str \| None` | No | Not documented yet |
 
 ## Returns
 
@@ -80,33 +84,7 @@ Compact count, minimum and maximum change-value observations plus changed partit
 
 ## Raises / Errors
 
-ValueError
-    If table identity, target type, or a required active source-change rule
-    is invalid.
-RuntimeError
-    If ``00_env_config`` has not initialized FabricOps or observation
-    cannot be collected or persisted.
-
-## Notes
-
-<div class="reference-docstring-notes" markdown="1">
-
-The stored evidence is only the partition, row count, and earliest and
-latest change values. This is a lightweight change signal, not proof that
-every cell is unchanged: a middle value can change while all three signals
-remain identical. Sources without a reliable change column require deeper
-change detection elsewhere. Warehouse aggregation is pushed into SQL;
-Lakehouse aggregation is distributed and projects only the two required
-source columns.
-Evidence is appended only after collection succeeds. This function neither
-loads history nor makes guardrail decisions; ``check_changes`` owns
-comparison and removal tombstones. The
-canonical table key is built from the resolved physical identity with the
-same :func:`build_metadata_table_key` helper used by
-:func:`profile_and_register_table`, linking observations to
-``METADATA_DATA_CATALOGUE`` without requiring a pre-existing catalogue row.
-
-</div>
+Not documented yet
 
 ## See also
 
