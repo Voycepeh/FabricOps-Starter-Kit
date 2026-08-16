@@ -140,15 +140,15 @@ def test_generated_reference_includes_every_exported_public_callable_page() -> N
     assert missing == []
 
     reference_index = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
-    assert 'data-callable-name="display_guardrail_results"' in reference_index
+    assert 'data-callable-name="display_guardrail_results"' not in reference_index
     assert 'data-function-type="public-starter-kit"' in reference_index
-    assert (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
+    assert not (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
 
 
 def test_generated_relationship_links_respect_function_first_routes() -> None:
     """Verify generated docs no longer depend on public module pages."""
     reference_index = (DOCS / "reference" / "index.md").read_text(encoding="utf-8")
 
-    assert (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
+    assert not (DOCS / "api" / "reference" / "display_guardrail_results.md").exists()
     assert not (DOCS / "api" / "modules" / "pipeline.md").exists()
     assert "api/modules" not in reference_index

@@ -539,21 +539,6 @@ def test_callable_pages_omit_call_flow_summaries() -> None:
         assert "Open Preview call flow" not in text, page
 
 
-def test_display_guardrail_results_uses_public_source_card() -> None:
-    """Verify display guardrail results renders its public source card."""
-    text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    implementation_section = text.split("## See also", 1)[0]
-
-    assert '??? example "View helper source by area"' not in implementation_section
-    assert '??? example "Source code"' not in implementation_section
-    assert "Implementation helper count: 11" not in text
-    assert 'class="reference-helper-groups"' not in implementation_section
-    assert re.search(
-        r'href="https://github\.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/(?:display_guardrail_results|shared)\.py#L\d+(?:-L\d+)?"',
-        implementation_section,
-    )
-
-    assert "View on GitHub" in implementation_section
 
 
 def test_dashboard_focus_links_escape_api_reference_route() -> None:
@@ -569,19 +554,6 @@ def test_dashboard_focus_links_escape_api_reference_route() -> None:
             assert "../../../assets/public-function-call-flows-dashboard.html?function=" in text, page
 
 
-def test_display_guardrail_results_omits_internal_helper_details() -> None:
-    """Verify private implementation details stay out of the callable page."""
-    text = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-    implementation_section = text.split("## See also", 1)[0]
-
-    assert '??? info "Implementation helpers used:' not in implementation_section
-    assert 'class="reference-helper-groups"' not in implementation_section
-    assert '<div class="reference-call-tree" role="tree" data-callable-architecture-flow="true">' not in implementation_section
-    assert "### Refactor signals" not in implementation_section
-    assert 'class="reference-call-tree-more"' not in implementation_section
-    assert "```text" not in implementation_section
-
-    assert "View on GitHub" in implementation_section
 
 
 def _reference_call_tree_rows(text: str) -> list[str]:
@@ -627,26 +599,6 @@ def _dashboard_flow_tree_rows(flow: dict[str, object]) -> list[str]:
     return rows
 
 
-def test_display_guardrail_results_dependency_count_matches_callable_architecture_inventory() -> None:
-    """Verify display_guardrail_results uses one canonical dependency inventory everywhere."""
-    pytest.skip("callable graph JSON is no longer owned by the individual function page generator")
-    callable_flow = json.loads((REFERENCE_DIR / "_data" / "function-call-graph.json").read_text(encoding="utf-8"))
-    flow = next(
-        item
-        for item in callable_flow["public_entrypoint_flow"]
-        if item["function_name"] == "display_guardrail_results"
-    )
-    reference_index = REFERENCE_INDEX.read_text(encoding="utf-8")
-    detail_page = (API_REFERENCE_DIR / "display_guardrail_results.md").read_text(encoding="utf-8")
-
-    assert flow["width"] == 1
-    assert flow["scope"] == 15
-    assert flow["downstream_count"] == 14
-    assert any(callee["function_type"] == "Private helper" for callee in flow["transitive_callees"])
-    assert 'data-callable-name="display_guardrail_results"' in reference_index
-    assert "Downstream callables: 14" in reference_index
-    assert '??? info "Downstream callables: 14"' in detail_page
-    assert _reference_call_tree_rows(detail_page) == _dashboard_flow_tree_rows(flow)
 
 
 def test_removed_aggregate_governance_wrapper_pages_are_absent() -> None:
@@ -1970,7 +1922,6 @@ def test_split_pipeline_public_callables_keep_ast_definition_owner_files() -> No
         for path in generator.source_module_paths()
     }
     expected_paths = {
-        "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
     }
@@ -1998,7 +1949,6 @@ def test_generated_inventory_split_pipeline_public_callables_have_owner_files() 
         if row.get("module", "").startswith("pipeline") and row.get("layer") == "public"
     }
     expected_paths = {
-        "display_guardrail_results": "src/fabricops_kit/pipeline/display_guardrail_results.py",
         "profile_dataframe": "src/fabricops_kit/pipeline/profile_dataframe.py",
         "profile_and_register_table": "src/fabricops_kit/pipeline/profile_and_register_table.py",
         "write_pipeline_run_summary": "src/fabricops_kit/pipeline/write_pipeline_run_summary.py",

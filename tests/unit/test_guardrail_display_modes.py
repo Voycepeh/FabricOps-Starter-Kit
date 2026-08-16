@@ -1,7 +1,22 @@
 """Tests for 02_pipeline guardrail display modes."""
 
-from fabricops_kit.pipeline import display_guardrail_results
+import pytest
+
 from fabricops_kit.pipeline.shared import build_guardrail_detail_rows, build_guardrail_summary_rows
+
+
+pytestmark = pytest.mark.unit
+
+
+def test_display_guardrail_results_is_removed_from_public_api():
+    """The discontinued formatter has no root, pipeline, or lifecycle export."""
+    import fabricops_kit
+    import fabricops_kit.pipeline as pipeline
+    from fabricops_kit.public_api import RELEASE_PUBLIC_API
+
+    assert not hasattr(fabricops_kit, "display_guardrail_results")
+    assert not hasattr(pipeline, "display_guardrail_results")
+    assert not any("display_guardrail_results" in path for path in RELEASE_PUBLIC_API)
 
 
 def _bundle(**overrides):
@@ -130,35 +145,3 @@ def test_detailed_mode_returns_per_guardrail_rows_with_expected_actual_reason():
     assert schema["reason"] == "Schema failed: missing column order_amount; unexpected column promo_code."
     assert "order_amount" in schema["expected"]
     assert "promo_code" in schema["actual"]
-
-
-def test_display_modes_return_summary_detail_and_debug_without_mutation():
-    """Verify display helper chooses modes and keeps raw bundle intact."""
-    bundle = _bundle(schema_results={"orders": {"status": "passed", "can_continue": True}})
-    original_summary = bundle["summary"]
-
-    assert display_guardrail_results(bundle, mode="summary") == build_guardrail_summary_rows(bundle)
-    assert display_guardrail_results(bundle, mode="detailed") == build_guardrail_detail_rows(bundle)
-    assert display_guardrail_results(bundle, mode="debug") is original_summary
-    assert bundle["summary"] is original_summary
-
-
-def test_display_modes_return_spark_dataframe_when_session_supplied():
-    """Verify summary and detailed modes return display-friendly Spark tables."""
-    bundle = _bundle(schema_results={"orders": {"status": "passed", "can_continue": True}})
-
-    class Spark:
-        def __init__(self):
-            self.rows = None
-
-        def createDataFrame(self, rows):
-            self.rows = rows
-            return {"spark_rows": rows}
-
-    spark = Spark()
-
-    rendered = display_guardrail_results(bundle, mode="summary", spark_session=spark)
-
-    assert rendered == {"spark_rows": build_guardrail_summary_rows(bundle)}
-    assert spark.rows == build_guardrail_summary_rows(bundle)
-    assert display_guardrail_results(_bundle(), mode="summary", spark_session=spark) == []

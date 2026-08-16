@@ -48,4 +48,3 @@
 - [`check_freshness`](../../api/reference/check_freshness.md)
 - [`check_changes`](../../api/reference/check_changes.md)
 - [`check_dq`](../../api/reference/check_dq.md)
-- [`display_guardrail_results`](../../api/reference/display_guardrail_results.md)

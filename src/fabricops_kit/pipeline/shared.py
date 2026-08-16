@@ -696,41 +696,6 @@ def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, An
     return _blocking_guardrail_message(summary_rows, failed_tables)
 
 
-def _display_guardrail_results_workflow(
-    result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None
-) -> Any:
-    """Return guardrail results prepared for summary, detailed, or debug display.
-
-    Parameters
-    ----------
-    result_bundle : mapping
-        Result bundle returned by the governed runtime checks.
-    mode : {"summary", "detailed", "debug"}, default="summary"
-        Display mode for notebook output. ``summary`` is compact, ``detailed``
-        is per-guardrail diagnostics, and ``debug`` returns raw nested results.
-    spark_session : pyspark.sql.SparkSession, optional
-        Spark session used to convert summary or detailed rows to a
-        display-friendly DataFrame. When omitted, a list of dictionaries is
-        returned.
-
-    Returns
-    -------
-    Any
-        Summary rows, detail rows, or raw nested debug object.
-
-    """
-    normalized = str(mode or "summary").lower().strip()
-    if normalized == "summary":
-        rows = build_guardrail_summary_rows(result_bundle)
-        return rows if spark_session is None or not rows else spark_session.createDataFrame(rows)
-    if normalized == "detailed":
-        rows = build_guardrail_detail_rows(result_bundle)
-        return rows if spark_session is None or not rows else spark_session.createDataFrame(rows)
-    if normalized == "debug":
-        return result_bundle.get("summary", result_bundle)
-    raise ValueError("mode must be one of: summary, detailed, debug")
-
-
 def _table_key(table_config: Mapping[str, Any]) -> str:
     return str(table_config["key"])
 

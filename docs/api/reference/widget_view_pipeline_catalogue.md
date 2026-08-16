@@ -14,7 +14,7 @@ Select a Source or Target dataset linked to the current notebook through data li
 
 `fabricops_kit/widgets/widget_view_pipeline_catalogue.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py#L10-L86">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py#L10-L89">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -52,7 +52,8 @@ def widget_view_pipeline_catalogue(
 
 >>> view = widget_view_pipeline_catalogue(spark_session=spark)
 >>> views = view["get_views"]()
->>> views["catalogue"], views["profile"], views["frequency"]
+>>> sorted(views)
+['catalogue', 'frequency', 'guardrail_results', 'guardrail_row_results', 'profile']
 
 </div>
 
@@ -69,8 +70,9 @@ def widget_view_pipeline_catalogue(
 
 dict
     Common catalogue state mapping. ``get_views`` returns a named mapping
-    containing the selected ``catalogue``, compact ``profile``, and
-    normalized ``frequency`` Spark DataFrames without rendering.
+    containing the selected ``catalogue``, compact ``profile``, normalized
+    ``frequency``, ``guardrail_results``, and ``guardrail_row_results``
+    Spark DataFrames without rendering.
 
 ### Return interpretation
 
