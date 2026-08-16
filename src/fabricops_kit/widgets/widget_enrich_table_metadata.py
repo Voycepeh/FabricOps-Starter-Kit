@@ -73,7 +73,7 @@ def widget_enrich_table_metadata(
 
     See Also
     --------
-    widget_view_data_catalogue
+    widget_view_catalogue
         Browse catalogue profile evidence without editing enrichment.
 
     """

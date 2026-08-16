@@ -2159,7 +2159,6 @@ def build_catalogue_widget(
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
-    include_guardrail_views: bool = False,
 ) -> dict[str, Any]:
     """Build common controls and snapshot-scoped catalogue/profile readers."""
     widgets = require_ipywidgets()
@@ -2239,17 +2238,16 @@ def build_catalogue_widget(
                     spark_session=spark_session, context=runtime_context,
                 ),
             })
-            if include_guardrail_views:
-                source_frames.update({
-                    "guardrail_results": read_lakehouse_table_core(
-                        "METADATA_GUARDRAIL_RESULTS", target=target, schema=schema,
-                        spark_session=spark_session, context=runtime_context,
-                    ),
-                    "guardrail_row_results": read_lakehouse_table_core(
-                        "METADATA_GUARDRAIL_ROW_RESULTS", target=target, schema=schema,
-                        spark_session=spark_session, context=runtime_context,
-                    ),
-                })
+            source_frames.update({
+                "guardrail_results": read_lakehouse_table_core(
+                    "METADATA_GUARDRAIL_RESULTS", target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                ),
+                "guardrail_row_results": read_lakehouse_table_core(
+                    "METADATA_GUARDRAIL_ROW_RESULTS", target=target, schema=schema,
+                    spark_session=spark_session, context=runtime_context,
+                ),
+            })
             refresh_loaded_views()
         catalogue = current_frames["catalogue"]
         profile = current_frames["profile"]
@@ -2262,12 +2260,11 @@ def build_catalogue_widget(
             "profile": profile.orderBy(*profile_order),
             "frequency": frequency.orderBy(*frequency_order),
         }
-        if include_guardrail_views:
-            views.update(_prepare_selected_guardrail_views(
-                source_frames["guardrail_results"],
-                source_frames["guardrail_row_results"],
-                metadata_table_key=key,
-            ))
+        views.update(_prepare_selected_guardrail_views(
+            source_frames["guardrail_results"],
+            source_frames["guardrail_row_results"],
+            metadata_table_key=key,
+        ))
         return views
 
     def refresh_loaded_views() -> None:

@@ -1,9 +1,7 @@
 """Public widget entrypoints for FabricOps notebook workflows."""
 
 __all__ = [
-    "widget_view_agreement_catalogue",
-    "widget_view_pipeline_catalogue",
-    "widget_view_data_catalogue",
+    "widget_view_catalogue",
     "widget_register_data_contract",
     "widget_author_dq_rules",
     "widget_author_guardrails",

@@ -140,7 +140,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         "widget_render_data_steward",
         "widget_render_data_agreement",
         "widget_register_data_contract",
-        "widget_view_agreement_catalogue",
+        "widget_view_catalogue",
         "widget_enrich_table_metadata",
         "widget_author_guardrails",
         "widget_author_dq_rules",
@@ -151,6 +151,7 @@ def test_01_governance_supports_the_complete_governance_lifecycle():
         for index, source in _code_cells(NOTEBOOK_DIR / "01_governance.ipynb")
     ) if tree is not None for node in ast.walk(tree) if isinstance(node, ast.Name)}
     assert 'target="metadata"' in source
+    assert 'mode="agreement"' in source
     assert "METADATA_SCHEMA" not in source
 
 
@@ -158,7 +159,8 @@ def test_02_pipeline_uses_only_the_catalogue_widget():
     """Verify the simplified pipeline uses only the scoped catalogue widget."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    assert "widget_view_pipeline_catalogue" in source
+    assert "widget_view_catalogue" in source
+    assert 'mode="pipeline"' in source
     assert "widget_view_data_contract" not in source
     assert "widget_author_" not in source
     assert "widget_enrich_" not in source
@@ -168,7 +170,7 @@ def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
     """Section 8 has one selector and five selected-dataset review surfaces."""
     source = _notebook_source("02_pipeline.ipynb")
 
-    assert source.count("widget_view_pipeline_catalogue(") == 1
+    assert source.count("widget_view_catalogue(") == 1
     assert "display_guardrail_results" not in source
     assert 'views["guardrail_results"]' in source
     assert 'views["guardrail_row_results"]' in source

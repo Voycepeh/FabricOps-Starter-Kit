@@ -21,14 +21,42 @@ from fabricops_kit.widgets.shared import (
 pytestmark = pytest.mark.unit
 
 
-def test_public_catalogue_widgets_replace_catch_all():
-    """The three scoped widgets replace the removed catch-all export."""
-    assert callable(fabricops_kit.widget_view_agreement_catalogue)
-    assert callable(fabricops_kit.widget_view_pipeline_catalogue)
-    assert callable(fabricops_kit.widget_view_data_catalogue)
-    assert "widget_view_data_contract" not in fabricops_kit.__all__
-    with pytest.raises(AttributeError):
-        getattr(fabricops_kit, "widget_view_data_contract")
+def test_public_catalogue_widget_is_the_only_catalogue_viewer():
+    """The consolidated catalogue widget is exported from the package root."""
+    assert callable(fabricops_kit.widget_view_catalogue)
+    assert [name for name in fabricops_kit.__all__ if name.startswith("widget_view_")] == [
+        "widget_view_catalogue",
+    ]
+
+
+def test_catalogue_widget_rejects_invalid_mode():
+    """Mode selection is explicit and closed to the three supported values."""
+    with pytest.raises(ValueError, match="mode must be one of"):
+        fabricops_kit.widget_view_catalogue(mode="data")
+
+
+@pytest.mark.parametrize("mode", ["pipeline", "agreement", "explore"])
+def test_catalogue_widget_dispatches_only_scope_resolution(monkeypatch, mode):
+    """Every supported mode hands allowed keys to one shared widget builder."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
+    selected = {"pipeline": "pipeline-key", "agreement": "agreement-key", "explore": "explore-key"}[mode]
+    inventory = [
+        {"metadata_table_key": selected},
+        {"metadata_table_key": "out-of-scope-key"},
+    ]
+    monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
+    monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(module, "collect_catalogue_inventory", lambda *_args: inventory)
+    scope = ({selected}, None, {"environment_name": "dev"}, {"Environment": "dev"})
+    monkeypatch.setattr(module, "_resolve_pipeline_catalogue_scope", lambda **_kwargs: scope)
+    monkeypatch.setattr(module, "_resolve_agreement_catalogue_scope", lambda **_kwargs: scope)
+    monkeypatch.setattr(module, "_resolve_explore_catalogue_scope", lambda **_kwargs: scope)
+    monkeypatch.setattr(module, "build_catalogue_widget", lambda **kwargs: kwargs)
+
+    result = module.widget_view_catalogue(mode=mode, agreement={"agreement_id": "agreement"})
+
+    assert result["inventory_rows"] == [{"metadata_table_key": selected}]
+    assert result["role_options"] is None
 
 
 def test_dataset_labels_are_consistent_and_pipeline_roles_are_explicit():
@@ -64,40 +92,43 @@ def test_guardrail_views_keep_stable_empty_schemas(spark_session):
         "involved_columns_json string, failed_values_json string, failure_reason string",
     )
 
-    views = _prepare_selected_guardrail_views(
-        results, row_results, metadata_table_key="missing-key"
-    )
+    views = _prepare_selected_guardrail_views(results, row_results, metadata_table_key="missing-key")
 
     assert views["guardrail_results"].count() == 0
     assert views["guardrail_results"].columns == [
-        "rule_type", "columns", "status", "severity", "failed_rows",
-        "failed_percent", "total_count", "reason", "can_continue", "run_id",
+        "rule_type",
+        "columns",
+        "status",
+        "severity",
+        "failed_rows",
+        "failed_percent",
+        "total_count",
+        "reason",
+        "can_continue",
+        "run_id",
     ]
     assert views["guardrail_row_results"].count() == 0
     assert views["guardrail_row_results"].columns == [
-        "rule_type", "row_identity", "involved_columns", "failed_values",
-        "failure_reason", "run_id",
+        "rule_type",
+        "row_identity",
+        "involved_columns",
+        "failed_values",
+        "failure_reason",
+        "run_id",
     ]
 
 
-def test_widgets_document_named_normalized_frequency_views():
-    """Public owners document normalized frequency views without rendering."""
-    for widget in (
-        fabricops_kit.widget_view_agreement_catalogue,
-        fabricops_kit.widget_view_pipeline_catalogue,
-        fabricops_kit.widget_view_data_catalogue,
-    ):
-        source = inspect.getsource(widget)
-        assert "display(catalogue" not in source
-        assert "display(profile" not in source
-        assert 'views["frequency"]' in source or "'frequency'" in source
-        assert "metadata_column_key`` and ``profiled_at" in source
-        assert "get_data_contract_views" not in source
+def test_widget_documents_common_five_view_contract():
+    """The public owner documents the normalized common view contract."""
+    source = inspect.getsource(fabricops_kit.widget_view_catalogue)
+    assert "display(catalogue" not in source
+    assert "guardrail_row_results" in source
+    assert "All modes then use one shared selector" in source
 
 
 def _run_pipeline_widget(monkeypatch, *, context=None):
     """Run the pipeline widget with lightweight lineage and rendering fakes."""
-    module = importlib.import_module("fabricops_kit.widgets.widget_view_pipeline_catalogue")
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
 
     comparisons = []
 
@@ -142,7 +173,7 @@ def _run_pipeline_widget(monkeypatch, *, context=None):
     )
     monkeypatch.setattr(module, "build_catalogue_widget", lambda **kwargs: kwargs)
     explicit = {"config": object(), "env": "dev", **(context or {})}
-    result = module.widget_view_pipeline_catalogue(context=explicit)
+    result = module.widget_view_catalogue(mode="pipeline", context=explicit)
     return result, comparisons
 
 
@@ -207,16 +238,16 @@ def test_pipeline_widget_explicit_identity_wins_live_runtime(monkeypatch, fake_n
 
 def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake_notebookutils):
     """The widget adds no identity arguments and reports exhausted resolution."""
-    signature = inspect.signature(fabricops_kit.widget_view_pipeline_catalogue)
-    assert list(signature.parameters) == ["spark_session", "target", "schema", "context"]
+    signature = inspect.signature(fabricops_kit.widget_view_catalogue)
+    assert list(signature.parameters) == ["mode", "agreement", "spark_session", "target", "schema", "context"]
 
-    module = importlib.import_module("fabricops_kit.widgets.widget_view_pipeline_catalogue")
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     fake_notebookutils.runtime.context.clear()
     with pytest.raises(
         ValueError,
         match="active FabricOps context or Fabric runtime context",
     ):
-        module.widget_view_pipeline_catalogue(context={"config": object(), "env": "dev"})
+        module.widget_view_catalogue(mode="pipeline", context={"config": object(), "env": "dev"})
 
 
 def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatch, spark_session):
@@ -278,18 +309,86 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
         ),
         "METADATA_GUARDRAIL_RESULTS": spark_session.createDataFrame(
             [
-                ("dataset-key", "orders", "old-run", "not_null", "id", "failed", "error", False, "old failure", '{"failed_count":1,"failed_percent":25.0,"total_count":4}', old_snapshot),
-                ("dataset-key", "orders", "latest-run", "required_when", "required_value,status", "failed", "error", False, "required value missing", '{"failed_count":1,"failed_percent":25.0,"total_count":4}', latest_snapshot),
-                ("dataset-key", "orders", "latest-run", "not_null", "id", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":4}', latest_snapshot),
-                ("other-key", "orders", "other-run", "not_null", "id", "failed", "error", False, "wrong canonical table", '{"failed_count":9,"failed_percent":90.0,"total_count":10}', later_snapshot),
-                ("unprofiled-key", "customers", "customer-run", "not_null", "customer_id", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":2}', later_snapshot),
+                (
+                    "dataset-key",
+                    "orders",
+                    "old-run",
+                    "not_null",
+                    "id",
+                    "failed",
+                    "error",
+                    False,
+                    "old failure",
+                    '{"failed_count":1,"failed_percent":25.0,"total_count":4}',
+                    old_snapshot,
+                ),
+                (
+                    "dataset-key",
+                    "orders",
+                    "latest-run",
+                    "required_when",
+                    "required_value,status",
+                    "failed",
+                    "error",
+                    False,
+                    "required value missing",
+                    '{"failed_count":1,"failed_percent":25.0,"total_count":4}',
+                    latest_snapshot,
+                ),
+                (
+                    "dataset-key",
+                    "orders",
+                    "latest-run",
+                    "not_null",
+                    "id",
+                    "passed",
+                    "error",
+                    True,
+                    "Rule passed.",
+                    '{"failed_count":0,"failed_percent":0.0,"total_count":4}',
+                    latest_snapshot,
+                ),
+                (
+                    "other-key",
+                    "orders",
+                    "other-run",
+                    "not_null",
+                    "id",
+                    "failed",
+                    "error",
+                    False,
+                    "wrong canonical table",
+                    '{"failed_count":9,"failed_percent":90.0,"total_count":10}',
+                    later_snapshot,
+                ),
+                (
+                    "unprofiled-key",
+                    "customers",
+                    "customer-run",
+                    "not_null",
+                    "customer_id",
+                    "passed",
+                    "error",
+                    True,
+                    "Rule passed.",
+                    '{"failed_count":0,"failed_percent":0.0,"total_count":2}',
+                    later_snapshot,
+                ),
             ],
             "metadata_table_key string, table_name string, run_id string, rule_type string, column_name string, "
             "status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp",
         ),
         "METADATA_GUARDRAIL_ROW_RESULTS": spark_session.createDataFrame(
             [
-                ("dataset-key", "latest-run", "required_when", '{"id":1}', '["required_value","status"]', '{"required_value":null,"status":"open"}', "required value was null"),
+                (
+                    "dataset-key",
+                    "latest-run",
+                    "required_when",
+                    '{"id":1}',
+                    '["required_value","status"]',
+                    '{"required_value":null,"status":"open"}',
+                    "required value was null",
+                ),
                 ("dataset-key", "latest-run", "not_null", '{"id":1}', '["id"]', '{"id":null}', "id was null"),
                 ("dataset-key", "old-run", "not_null", '{"id":2}', '["id"]', '{"id":null}', "old failure"),
                 ("other-key", "other-run", "not_null", '{"id":3}', '["id"]', '{"id":null}', "wrong canonical table"),
@@ -313,24 +412,36 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
         display_context={"Notebook": "Customer <pipeline>", "Environment": "dev", "Linked datasets": 1},
         inventory_rows=[
             {
-                "metadata_table_key": "dataset-key", "schema_fingerprint": "fingerprint",
-                "layer": "raw", "schema_name": "sales", "table_name": "orders",
+                "metadata_table_key": "dataset-key",
+                "schema_fingerprint": "fingerprint",
+                "layer": "raw",
+                "schema_name": "sales",
+                "table_name": "orders",
                 "_committed_at": latest_snapshot,
             },
             {
-                "metadata_table_key": "dataset-key", "schema_fingerprint": "previous-fingerprint",
-                "layer": "raw", "schema_name": "sales", "table_name": "orders",
+                "metadata_table_key": "dataset-key",
+                "schema_fingerprint": "previous-fingerprint",
+                "layer": "raw",
+                "schema_name": "sales",
+                "table_name": "orders",
                 "_committed_at": old_snapshot,
             },
             {
-                "metadata_table_key": "unprofiled-key", "schema_fingerprint": "fingerprint-2",
-                "layer": "z_curated", "schema_name": "sales", "table_name": "customers",
+                "metadata_table_key": "unprofiled-key",
+                "schema_fingerprint": "fingerprint-2",
+                "layer": "z_curated",
+                "schema_name": "sales",
+                "table_name": "customers",
                 "_committed_at": latest_snapshot,
             },
         ],
-        role_options=None, target="metadata", schema=None,
-        spark_session=object(), runtime_context={}, empty_message="No inventory.",
-        include_guardrail_views=True,
+        role_options=None,
+        target="metadata",
+        schema=None,
+        spark_session=object(),
+        runtime_context={},
+        empty_message="No inventory.",
     )
 
     page = displayed[0]
