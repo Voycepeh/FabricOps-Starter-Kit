@@ -1,4 +1,4 @@
-name: Fix Stage 2 stale CI contracts
+name: Stage 2 CI contract fix
 
 on:
   push:
@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   fix:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -21,227 +20,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: .python-version
-      - name: Align internal identity helpers and Stage 2 tests
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          # The Stage 2 identity builders are implementation helpers, not public API.
-          for root in (Path('src'), Path('tests'), Path('scripts')):
-              for path in root.rglob('*.py'):
-                  text = path.read_text(encoding='utf-8')
-                  updated = text.replace('build_table_id', '_build_table_id').replace('build_column_id', '_build_column_id')
-                  if updated != text:
-                      path.write_text(updated, encoding='utf-8')
-
-          identity = Path('src/fabricops_kit/config/metadata_identity.py')
-          text = identity.read_text(encoding='utf-8')
-          text = text.replace('\n\n__all__ = ["_build_column_id", "_build_table_id"]\n', '\n')
-          identity.write_text(text, encoding='utf-8')
-
-          def replace(path_str, old, new):
-              path = Path(path_str)
-              text = path.read_text(encoding='utf-8')
-              if old not in text:
-                  raise SystemExit(f'Expected text not found in {path}: {old[:100]!r}')
-              path.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-          old_catalogue = '''    assert catalogue_names == [
-        "metadata_table_key",
-        "metadata_column_key",
-        "schema_fingerprint",
-        "environment_name",
-        "store_type",
-        "layer",
-        "schema_name",
-        "table_name",
-        "column_name",
-        "data_type",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ]
-    assert profiling_fields.isdisjoint(catalogue_names)
-    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(catalogue_names)
-    assert profiling_fields.issubset(profiled_names)
-    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(profiled_names)
-'''
-          new_catalogue = '''    assert catalogue_names == [
-        "metadata_level",
-        "table_id",
-        "column_id",
-        "environment_name",
-        "store_type",
-        "layer",
-        "schema_name",
-        "table_name",
-        "column_name",
-        "first_profiled_at",
-        "last_profiled_at",
-        "is_active",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ]
-    assert profiling_fields.isdisjoint(catalogue_names)
-    assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
-    assert profiling_fields.issubset(profiled_names)
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "environment_name", "data_type"}.issubset(profiled_names)
-'''
-          replace('tests/unit/test_config.py', old_catalogue, new_catalogue)
-
-          replace(
-              'tests/unit/test_config.py',
-              '    assert catalogue["schema_fingerprint"] == "string"\n',
-              '    assert catalogue["first_profiled_at"] == "timestamp"\n    assert catalogue["last_profiled_at"] == "timestamp"\n    assert catalogue["is_active"] == "boolean"\n',
-          )
-          replace(
-              'tests/unit/test_config.py',
-              '            assert timestamp_fields == ["_committed_at"]\n',
-              '            assert timestamp_fields == ["first_profiled_at", "last_profiled_at", "_committed_at"]\n',
-          )
-          replace(
-              'tests/unit/test_config.py',
-              '''    assert schema.fieldNames() == [
-        "lineage_event_id",
-        "metadata_table_key",
-        "schema_fingerprint",
-        "profile_role",
-        "profiled_at",
-        "environment_name",
-        *audit_names,
-    ]
-''',
-              '''    assert schema.fieldNames() == [
-        "lineage_id",
-        "table_id",
-        "profile_snapshot_id",
-        "environment_name",
-        "pipeline_role",
-        "recorded_at",
-        *audit_names,
-    ]
-''',
-          )
-
-          replace(
-              'tests/unit/test_dq_rules.py',
-              '    assert {"store_type", "metadata_table_key", "metadata_column_key", "schema_fingerprint"}.issubset(catalogue_fields)\n',
-              '    assert {"metadata_level", "store_type", "table_id", "column_id", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_fields)\n',
-          )
-          replace(
-              'tests/unit/test_dq_rules.py',
-              '''    assert {
-        "metadata_column_key",
-        "value",
-        "frequency_count",
-        "frequency_percent",
-        "frequency_rank",
-        "profiled_row_count",
-        "profiled_non_null_count",
-        "profiled_at",
-    }.issubset(frequency_fields)
-''',
-              '''    assert {
-        "frequency_id",
-        "profile_id",
-        "profile_snapshot_id",
-        "value",
-        "frequency_count",
-        "frequency_percent",
-        "frequency_rank",
-        "profiled_row_count",
-        "profiled_non_null_count",
-        "profiled_at",
-    }.issubset(frequency_fields)
-''',
-          )
-
-          replace(
-              'tests/unit/test_governance_review_migration.py',
-              '''    expected_catalogue_fields = [
-        "metadata_table_key",
-        "metadata_column_key",
-        "schema_fingerprint",
-        "environment_name",
-        "store_type",
-        "layer",
-        "schema_name",
-        "table_name",
-        "column_name",
-        "data_type",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ]
-''',
-              '''    expected_catalogue_fields = [
-        "metadata_level",
-        "table_id",
-        "column_id",
-        "environment_name",
-        "store_type",
-        "layer",
-        "schema_name",
-        "table_name",
-        "column_name",
-        "first_profiled_at",
-        "last_profiled_at",
-        "is_active",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ]
-''',
-          )
-          replace(
-              'tests/unit/test_governance_review_migration.py',
-              '    assert "metadata_table_key" in schemas["METADATA_DATA_PROFILED"].fieldNames()\n',
-              '    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id"}.issubset(schemas["METADATA_DATA_PROFILED"].fieldNames())\n',
-          )
-          PY
+      - name: Apply Stage 2 CI contract fix
+        run: python .github/_agent_stage2_fix.py
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
-      - name: Run full validation
+      - name: Validate
         run: |
           uv run ruff check .
           uv run pytest
       - name: Regenerate references
-        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
-      - name: Verify reference regeneration is stable
         run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           git add src tests scripts docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
           PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
           git diff --exit-code -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
-      - name: Commit fix
+      - name: Commit and clean up
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src tests scripts docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
           git commit -m "Fix Stage 2 stale CI contracts"
-      - name: Remove temporary workflow and push
-        run: |
-          git rm .github/workflows/_agent-stage2-ci-contract-fix.yml
-          git commit -m "Remove temporary Stage 2 CI fix workflow"
+          git rm .github/_agent_stage2_fix.py .github/workflows/_agent-stage2-ci-contract-fix.yml
+          git commit -m "Remove temporary Stage 2 CI fix files"
           git push origin HEAD:agent/stage2-metadata-operational-family
