@@ -1,6 +1,6 @@
 # METADATA_DATA_PROFILED
 
-See the shape and quality of each column from a profiled dataset snapshot.
+Understand the shape, completeness, and characteristics of the data.
 
 ## Model
 

@@ -1,6 +1,6 @@
 # METADATA_GUARDRAIL_ROW_RESULTS
 
-See the specific source rows and DQ rule details behind failed runtime guardrail results.
+See which records did not meet the expectations.
 
 ## Model
 

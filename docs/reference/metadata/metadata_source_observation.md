@@ -1,6 +1,6 @@
 # METADATA_SOURCE_OBSERVATION
 
-Record a lightweight view of source partitions so FabricOps can spot additions, removals and changes before ETL.
+See whether the source arrived and changed as expected.
 
 ## Model
 

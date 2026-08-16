@@ -1,6 +1,6 @@
 # METADATA_DATA_STEWARD
 
-Keep the active Data Stewards used by the Data Agreement workflow.
+Know who is responsible for the data.
 
 ## Model
 

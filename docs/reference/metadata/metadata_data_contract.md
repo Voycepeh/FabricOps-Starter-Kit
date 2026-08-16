@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Define what the data is, how it looks, its approved usage and schema fingerprint, and link it to the Data Agreement.
+Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.
 
 ## Model
 

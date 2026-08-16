@@ -1,6 +1,6 @@
 # METADATA_DATA_AGREEMENT
 
-Define why data can be shared, who is accountable, the approved purpose and usage, and the review period.
+Define why the data is shared, with whom, and under what conditions.
 
 ## Model
 

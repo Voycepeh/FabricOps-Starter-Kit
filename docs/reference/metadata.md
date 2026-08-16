@@ -20,7 +20,7 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
 ## [METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)
 
-Keep the active Data Stewards used by the Data Agreement workflow.
+Know who is responsible for the data.
 
 **Grain:** One registered Data Steward.
 
@@ -37,7 +37,7 @@ Keep the active Data Stewards used by the Data Agreement workflow.
 
 ## [METADATA_DATA_AGREEMENT](metadata/metadata_data_agreement.md)
 
-Define why data can be shared, who is accountable, the approved purpose and usage, and the review period.
+Define why the data is shared, with whom, and under what conditions.
 
 **Grain:** One version of one Data Agreement.
 
@@ -55,7 +55,7 @@ Define why data can be shared, who is accountable, the approved purpose and usag
 
 ## [METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)
 
-Define what the data is, how it looks, its approved usage and schema fingerprint, and link it to the Data Agreement.
+Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.
 
 **Grain:** One authorised catalogue table and schema fingerprint governed by one Data Agreement.
 
@@ -72,7 +72,7 @@ Define what the data is, how it looks, its approved usage and schema fingerprint
 
 ## [METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)
 
-See the tables and columns FabricOps has registered, including where they live and how they are structured.
+See what data is available and how it is structured.
 
 **Grain:** One registered column for one table and schema fingerprint in one environment.
 
@@ -88,7 +88,7 @@ See the tables and columns FabricOps has registered, including where they live a
 
 ## [METADATA_SOURCE_OBSERVATION](metadata/metadata_source_observation.md)
 
-Record a lightweight view of source partitions so FabricOps can spot additions, removals and changes before ETL.
+See whether the source arrived and changed as expected.
 
 **Grain:** One observed partition state for one source table at one observation time.
 
@@ -104,7 +104,7 @@ Record a lightweight view of source partitions so FabricOps can spot additions, 
 
 ## [METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)
 
-See the shape and quality of each column from a profiled dataset snapshot.
+Understand the shape, completeness, and characteristics of the data.
 
 **Grain:** One profiled column for one dataset snapshot.
 
@@ -122,7 +122,7 @@ See the shape and quality of each column from a profiled dataset snapshot.
 
 ## [METADATA_DATA_PROFILED_FREQUENCY](metadata/metadata_data_profiled_frequency.md)
 
-See the most common values and their frequencies for profiled columns.
+See how values are distributed across the data.
 
 **Grain:** One ranked observed value frequency for one profiled column snapshot.
 
@@ -173,7 +173,7 @@ Add business and governance context to the data.
 
 ## [METADATA_DATA_ACCESS](metadata/metadata_data_access.md)
 
-Record access review information for a user and governed data scope.
+See who can use the data and how it can be used.
 
 **Grain:** One access review record for one user and governed scope.
 
@@ -225,7 +225,7 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 ## [METADATA_GUARDRAIL_ROW_RESULTS](metadata/metadata_guardrail_row_results.md)
 
-See the specific source rows and DQ rule details behind failed runtime guardrail results.
+See which records did not meet the expectations.
 
 **Grain:** One failed source row or DQ rule evidence row linked to one runtime guardrail result.
 

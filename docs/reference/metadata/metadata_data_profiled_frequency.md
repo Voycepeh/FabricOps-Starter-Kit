@@ -1,6 +1,6 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-See the most common values and their frequencies for profiled columns.
+See how values are distributed across the data.
 
 ## Model
 

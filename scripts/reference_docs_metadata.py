@@ -127,7 +127,7 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
 
 METADATA_TABLE_MODELS = {
     "METADATA_DATA_STEWARD": {
-        "purpose": "Keep the active Data Stewards used by the Data Agreement workflow.",
+        "purpose": "Know who is responsible for the data.",
         "grain": "One registered Data Steward.",
         "primary_key": ["steward_id"],
         "foreign_keys": [],
@@ -137,7 +137,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_AGREEMENT": {
-        "purpose": "Define why data can be shared, who is accountable, the approved purpose and usage, and the review period.",
+        "purpose": "Define why the data is shared, with whom, and under what conditions.",
         "grain": "One version of one Data Agreement.",
         "primary_key": ["agreement_id", "agreement_version"],
         "foreign_keys": [
@@ -149,7 +149,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Define what the data is, how it looks, its approved usage and schema fingerprint, and link it to the Data Agreement.",
+        "purpose": "Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.",
         "grain": "One authorised catalogue table and schema fingerprint governed by one Data Agreement.",
         "primary_key": ["agreement_id", "metadata_table_key", "schema_fingerprint"],
         "foreign_keys": [
@@ -159,7 +159,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_CATALOGUE": {
-        "purpose": "See the tables and columns FabricOps has registered, including where they live and how they are structured.",
+        "purpose": "See what data is available and how it is structured.",
         "grain": "One registered column for one table and schema fingerprint in one environment.",
         "primary_key": ["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"],
         "foreign_keys": [],
@@ -168,7 +168,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_SOURCE_OBSERVATION": {
-        "purpose": "Record a lightweight view of source partitions so FabricOps can spot additions, removals and changes before ETL.",
+        "purpose": "See whether the source arrived and changed as expected.",
         "grain": "One observed partition state for one source table at one observation time.",
         "primary_key": ["metadata_table_key", "partition_column", "partition_value", "observed_at"],
         "foreign_keys": [
@@ -177,7 +177,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_PROFILED": {
-        "purpose": "See the shape and quality of each column from a profiled dataset snapshot.",
+        "purpose": "Understand the shape, completeness, and characteristics of the data.",
         "grain": "One profiled column for one dataset snapshot.",
         "primary_key": ["environment_name", "metadata_column_key", "schema_fingerprint", "profiled_at"],
         "foreign_keys": [
@@ -189,7 +189,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_PROFILED_FREQUENCY": {
-        "purpose": "See the most common values and their frequencies for profiled columns.",
+        "purpose": "See how values are distributed across the data.",
         "grain": "One ranked observed value frequency for one profiled column snapshot.",
         "primary_key": ["metadata_column_key", "profiled_at", "frequency_rank"],
         "foreign_keys": [
@@ -220,7 +220,7 @@ METADATA_TABLE_MODELS = {
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "Record access review information for a user and governed data scope.",
+        "purpose": "See who can use the data and how it can be used.",
         "grain": "One access review record for one user and governed scope.",
         "primary_key": [],
         "foreign_keys": [],
@@ -251,7 +251,7 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_GUARDRAIL_ROW_RESULTS": {
-        "purpose": "See the specific source rows and DQ rule details behind failed runtime guardrail results.",
+        "purpose": "See which records did not meet the expectations.",
         "grain": "One failed source row or DQ rule evidence row linked to one runtime guardrail result.",
         "primary_key": ["guardrail_row_result_id"],
         "foreign_keys": [

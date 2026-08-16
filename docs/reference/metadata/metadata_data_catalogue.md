@@ -1,6 +1,6 @@
 # METADATA_DATA_CATALOGUE
 
-See the tables and columns FabricOps has registered, including where they live and how they are structured.
+See what data is available and how it is structured.
 
 ## Model
 

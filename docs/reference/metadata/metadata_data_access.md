@@ -1,6 +1,6 @@
 # METADATA_DATA_ACCESS
 
-Record access review information for a user and governed data scope.
+See who can use the data and how it can be used.
 
 ## Model
 
