@@ -9,10 +9,20 @@ def replace(path_str: str, old: str, new: str) -> None:
     path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
+RENAME_INTERNAL = {
+    "build_table_id": "_build_table_id",
+    "build_column_id": "_build_column_id",
+    "catalogue_table_identity": "_catalogue_table_identity",
+    "guardrail_compatibility_observation": "_guardrail_compatibility_observation",
+    "is_source_observation": "_is_source_observation",
+    "observation_rows": "_observation_rows",
+}
 for root in (Path("src"), Path("tests"), Path("scripts")):
     for path in root.rglob("*.py"):
         text = path.read_text(encoding="utf-8")
-        updated = text.replace("build_table_id", "_build_table_id").replace("build_column_id", "_build_column_id")
+        updated = text
+        for old, new in RENAME_INTERNAL.items():
+            updated = updated.replace(old, new)
         if updated != text:
             path.write_text(updated, encoding="utf-8")
 
