@@ -57,15 +57,14 @@ jobs:
               start = starts[expr.lineno - 1] + expr.col_offset
               end = starts[expr.end_lineno - 1] + expr.end_col_offset
               indent = ' ' * expr.col_offset
-              rendered = '"""' + doc.replace('\n', '\n' + indent) + '"""'
+              body = doc.rstrip().replace('\n', '\n' + indent)
+              rendered = '"""' + body + '\n\n' + indent + '"""'
               Path(path).write_text(source[:start] + rendered + source[end:], encoding='utf-8')
 
-          # These public signatures and user-facing semantics remain unchanged.
           for name in ('check_changes', 'check_freshness'):
               path = FILES[name]
               replace_doc(path, name, function_doc(main_source(path), name))
 
-          # Preserve the full observe_table contract and update only Stage 2 persisted identity wording.
           path = FILES['observe_table']
           doc = function_doc(main_source(path), 'observe_table')
           doc = re.sub(
@@ -80,8 +79,6 @@ jobs:
           )
           replace_doc(path, 'observe_table', doc)
 
-          # Preserve the established long-form NumPy docstring for profile_and_register_table.
-          # Only statements made incorrect by the Stage 2 physical metadata redesign are changed.
           path = FILES['profile_and_register_table']
           doc = function_doc(main_source(path), 'profile_and_register_table')
           doc = doc.replace('The value is stored in', 'The value is recorded as ``pipeline_role`` in')
