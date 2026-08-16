@@ -23,8 +23,8 @@ jobs:
       - name: Apply shared-helper architecture fix
         run: |
           python .github/_agent_stage2_shared_fix.py
-          git rm src/fabricops_kit/config/metadata_identity.py
-          git rm src/fabricops_kit/pipeline/observation_shared.py
+          git rm -f src/fabricops_kit/config/metadata_identity.py
+          git rm -f src/fabricops_kit/pipeline/observation_shared.py
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
       - name: Normalize generated-doc metadata inputs
