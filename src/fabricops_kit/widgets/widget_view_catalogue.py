@@ -212,6 +212,8 @@ def widget_view_catalogue(
         )
     allowed_keys, role_options, selection_context, display_context = scope
     rows = [row for row in inventory_rows if row["metadata_table_key"] in allowed_keys]
+    if mode == "agreement":
+        display_context["Linked datasets"] = len({row["metadata_table_key"] for row in rows})
     presentation = {
         "pipeline": (
             "Pipeline Catalogue Viewer",

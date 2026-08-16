@@ -57,6 +57,8 @@ def test_catalogue_widget_dispatches_only_scope_resolution(monkeypatch, mode):
 
     assert result["inventory_rows"] == [{"metadata_table_key": selected}]
     assert result["role_options"] is None
+    if mode == "agreement":
+        assert result["display_context"]["Linked datasets"] == 1
 
 
 def test_dataset_labels_are_consistent_and_pipeline_roles_are_explicit():
