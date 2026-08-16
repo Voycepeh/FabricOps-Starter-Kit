@@ -1,0 +1,158 @@
+name: Restore Stage 2 public docstring contracts
+
+on:
+  push:
+    branches:
+      - agent/stage2-metadata-operational-family
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: agent/stage2-metadata-operational-family
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Restore and adapt NumPy docstrings
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast
+          import subprocess
+          from pathlib import Path
+
+          FILES = {
+              'check_changes': 'src/fabricops_kit/pipeline/check_changes.py',
+              'check_freshness': 'src/fabricops_kit/pipeline/check_freshness.py',
+              'observe_table': 'src/fabricops_kit/pipeline/observe_table.py',
+              'profile_and_register_table': 'src/fabricops_kit/pipeline/profile_and_register_table.py',
+          }
+
+          def main_source(path):
+              return subprocess.check_output(['git', 'show', f'origin/main:{path}'], text=True)
+
+          def function_doc(source, name):
+              tree = ast.parse(source)
+              node = next(n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == name)
+              return ast.get_docstring(node, clean=True)
+
+          def replace_doc(path, name, doc):
+              source = Path(path).read_text(encoding='utf-8')
+              tree = ast.parse(source)
+              node = next(n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == name)
+              expr = node.body[0]
+              assert isinstance(expr, ast.Expr) and isinstance(expr.value, ast.Constant) and isinstance(expr.value.value, str)
+              lines = source.splitlines(keepends=True)
+              starts = [0]
+              for line in lines:
+                  starts.append(starts[-1] + len(line))
+              start = starts[expr.lineno - 1] + expr.col_offset
+              end = starts[expr.end_lineno - 1] + expr.end_col_offset
+              indent = ' ' * expr.col_offset
+              rendered = '"""' + doc.replace('\n', '\n' + indent) + '"""'
+              Path(path).write_text(source[:start] + rendered + source[end:], encoding='utf-8')
+
+          # Unchanged public API semantics: restore the existing Live documentation contract exactly.
+          for name in ('check_changes', 'check_freshness'):
+              path = FILES[name]
+              replace_doc(path, name, function_doc(main_source(path), name))
+
+          # observe_table keeps the complete existing contract; only the persisted Stage 2 identity explanation changed.
+          path = FILES['observe_table']
+          doc = function_doc(main_source(path), 'observe_table')
+          doc = doc.replace(
+              'The stored evidence is only the partition, row count, and earliest and\nlatest change values.',
+              'The stored evidence is the stable ``observation_id`` and ``table_id``, active\n``environment_name``, partition value, row count, and earliest and latest change values.'
+          )
+          doc = doc.replace(
+              'The\ncanonical table key is built from the resolved physical identity with the\nsame :func:`build_metadata_table_key` helper used by\n:func:`profile_and_register_table`, linking observations to\n``METADATA_DATA_CATALOGUE`` without requiring a pre-existing catalogue row.',
+              'The stable ``table_id`` is built from the resolved physical identity with the\nsame logical identity rules used by :func:`profile_and_register_table`. It is\nindependent of Development or Production; ``environment_name`` keeps those\noperational observations separate without requiring a pre-existing catalogue row.'
+          )
+          replace_doc(path, 'observe_table', doc)
+
+          # profile_and_register_table retains the established full user-facing documentation shape.
+          # Update only the physical metadata vocabulary and relationships changed by Stage 2.
+          path = FILES['profile_and_register_table']
+          doc = function_doc(main_source(path), 'profile_and_register_table')
+          replacements = {
+              'The value is stored in\n``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or\n``METADATA_DATA_CATALOGUE``.':
+                  'The value is recorded as ``pipeline_role`` in\n``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or\n``METADATA_DATA_CATALOGUE``.',
+              'includes physical asset\nidentity, compact statistical metrics, schema identity, and runtime\naudit fields.':
+                  'includes stable table and column identity, profiling snapshot identity,\ncompact statistical metrics, environment identity, and runtime audit fields.',
+              'Resolve each frequency row to its parent ``metadata_column_key`` and\nprepare it with the same ``profiled_at`` snapshot timestamp.':
+                  'Resolve each frequency row to its parent ``profile_id`` and shared\n``profile_snapshot_id``.',
+              'Replace rows for the exact ``metadata_column_key + profiled_at`` child\nsnapshot and write the normalized rows to':
+                  'Replace rows for the exact ``profile_snapshot_id`` child snapshot and\nwrite the normalized rows to',
+              'Historical parent and child snapshots join on both\n``metadata_column_key`` and ``profiled_at``. Rows are replaced only for\nthat exact snapshot identity, so earlier snapshots remain intact.':
+                  'Historical parent and child rows join through ``profile_id``. Replacement\nis scoped to the current ``profile_snapshot_id``, so earlier snapshots remain intact.',
+              '- Identity fields: ``metadata_table_key``, ``metadata_column_key``,\n  ``environment_name``, ``store_type``, ``layer``, ``schema_name``,\n  ``table_name``, ``column_name``, ``data_type``.':
+                  '- Identity fields: ``profile_id``, ``profile_snapshot_id``, ``table_id``,\n  ``column_id``, ``environment_name``, ``data_type``.',
+              '- Runtime fields: ``schema_fingerprint``, ``profiled_at``.':
+                  '- Runtime field: ``profiled_at``.',
+              'Earlier parent and\nchild snapshots are retained and join on ``metadata_column_key + profiled_at``.':
+                  'Earlier parent and child snapshots are retained. Frequency rows link to\ntheir parent through ``profile_id`` and share the same ``profile_snapshot_id``.',
+              'then checks whether the same table, column, and schema already exist. If a\nmatching record exists, it is updated. Otherwise, a new record is added.\nMatching uses ``environment_name + metadata_table_key +\nmetadata_column_key + schema_fingerprint``:\n\n- ``metadata_table_key``: stable logical table identity shared across\n  environments.\n- ``metadata_column_key``: stable logical column identity shared across\n  environments.\n- ``schema_fingerprint``: deterministic fingerprint of ordered schema\n  content, independent of deployment environment. The current schema\n  contract includes ordered column names and data types; nullability is\n  not currently part of the fingerprint.\n- ``environment_name``: environment-specific catalogue observation.\n\nOne logical Data Contract link can therefore govern the same dataset in\nDevelopment and Production, while catalogue and execution observations\nremain separate and promotion checks can compare matching logical keys.\nExisting metadata created with environment-coupled identities must be\nrecreated or explicitly migrated; FabricOps does not provide a legacy-key\ncompatibility path.\n\nA changed ``schema_fingerprint`` represents a newly observed table\nstructure and can create a new catalogue snapshot.':
+                  'then checks whether the same logical asset already exists in the active\nenvironment. If a matching record exists, it is updated. Otherwise, a new\nrecord is added. Matching uses ``environment_name + metadata_level + table_id\n+ column_id``. ``table_id`` and ``column_id`` are stable logical identities\nshared across environments, while ``environment_name`` keeps Development and\nProduction observations separate. Column catalogue rows that disappear from a\nnew profile are retained but marked inactive rather than silently deleted.',
+              'Lineage-specific fields are ``lineage_event_id``,\n``metadata_table_key``, ``schema_fingerprint``, ``profile_role``,\n``profiled_at``, and ``environment_name``.':
+                  'Lineage-specific fields are ``lineage_id``, ``table_id``,\n``profile_snapshot_id``, ``environment_name``, ``pipeline_role``, and\n``recorded_at``.',
+              '``profiled_at`` is\nthe dataset profile snapshot time, while ``_committed_at`` is the metadata\nwrite time. ``lineage_event_id`` is deterministically derived from\n``_activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and\n``profile_role``.':
+                  '``recorded_at`` is the lineage participation time, while ``_committed_at``\nis the metadata write time. ``lineage_id`` is deterministically derived from\n``_activity_id``, ``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.',
+              '- ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by\n  ``metadata_column_key`` and ``profiled_at``.':
+                  '- ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by\n  ``profile_id`` and grouped by ``profile_snapshot_id``.',
+              'Removing ``frequency_json`` from ``METADATA_DATA_PROFILED`` and adding the\nnormalized child table is a breaking physical-schema change. Existing\nmetadata tables may need recreation through the established setup flow;\nno compatibility or automatic migration layer is provided.':
+                  'This Stage 2 redesign changes the physical schemas for Catalogue, Profile,\nProfile Frequency, Lineage, and Source Observation. Existing development\nmetadata tables may need recreation through the established setup flow; no\ncompatibility or automatic migration layer is provided.'
+          }
+          for old, new in replacements.items():
+              if old not in doc:
+                  raise SystemExit(f'Expected profile docstring text not found: {old[:80]!r}')
+              doc = doc.replace(old, new)
+          replace_doc(path, 'profile_and_register_table', doc)
+          PY
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+      - name: Validate source documentation
+        run: |
+          uv run ruff check \
+            src/fabricops_kit/pipeline/check_changes.py \
+            src/fabricops_kit/pipeline/check_freshness.py \
+            src/fabricops_kit/pipeline/observe_table.py \
+            src/fabricops_kit/pipeline/profile_and_register_table.py
+          uv run pytest -q \
+            tests/unit/test_observation_guardrails.py \
+            tests/unit/test_table_observation.py \
+            tests/unit/test_profile_and_register_table.py
+      - name: Regenerate affected references
+        run: PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+      - name: Commit restored contracts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/fabricops_kit/pipeline/check_changes.py \
+            src/fabricops_kit/pipeline/check_freshness.py \
+            src/fabricops_kit/pipeline/observe_table.py \
+            src/fabricops_kit/pipeline/profile_and_register_table.py \
+            docs/api/reference \
+            docs/reference/index.md \
+            docs/reference/function-call-graph.md \
+            docs/reference/_data/generated-artifacts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Restore public API docstring contracts"
+          fi
+      - name: Verify reference generation is stable
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          git diff --exit-code -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+      - name: Remove temporary workflow and push
+        run: |
+          git rm .github/workflows/_agent-stage2-docstring-contract.yml
+          git commit -m "Remove temporary Stage 2 docstring workflow"
+          git push origin HEAD:agent/stage2-metadata-operational-family
