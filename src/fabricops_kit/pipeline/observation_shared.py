@@ -21,13 +21,13 @@ SOURCE_OBSERVATION_COLUMNS = frozenset(
 )
 
 
-def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
+def _observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     """Return canonical observation rows as dictionaries."""
     values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
     return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in values or []]
 
 
-def is_source_observation(dataframe: Any) -> bool:
+def _is_source_observation(dataframe: Any) -> bool:
     """Return whether a value exposes the normalized observation contract."""
     columns = set(getattr(dataframe, "columns", ()))
     if not columns and isinstance(dataframe, (list, tuple)) and dataframe:
@@ -35,7 +35,7 @@ def is_source_observation(dataframe: Any) -> bool:
     return SOURCE_OBSERVATION_COLUMNS <= columns
 
 
-def catalogue_table_identity(
+def _catalogue_table_identity(
     *, config: Any, env: str, table_id: str, spark_session: Any
 ) -> dict[str, Any] | None:
     """Resolve physical table attributes from the environment-specific Catalogue row."""
@@ -59,7 +59,7 @@ def catalogue_table_identity(
         rows = matches.orderBy(F.col("last_profiled_at").desc_nulls_last()).limit(1).collect()
         return rows[0].asDict(recursive=True) if rows else None
 
-    rows = observation_rows(catalogue)
+    rows = _observation_rows(catalogue)
     candidates = [
         row
         for row in rows
@@ -74,7 +74,7 @@ def catalogue_table_identity(
     return candidates[0]
 
 
-def guardrail_compatibility_observation(
+def _guardrail_compatibility_observation(
     observation: Any, *, table_id: str, change_column: str
 ) -> Any:
     """Add legacy in-memory aliases required by the not-yet-migrated Guardrail core.
@@ -90,14 +90,14 @@ def guardrail_compatibility_observation(
         )
     return [
         {**row, "metadata_table_key": table_id, "change_column": change_column}
-        for row in observation_rows(observation)
+        for row in _observation_rows(observation)
     ]
 
 
 __all__ = [
     "SOURCE_OBSERVATION_COLUMNS",
-    "catalogue_table_identity",
-    "guardrail_compatibility_observation",
-    "is_source_observation",
-    "observation_rows",
+    "_catalogue_table_identity",
+    "_guardrail_compatibility_observation",
+    "_is_source_observation",
+    "_observation_rows",
 ]

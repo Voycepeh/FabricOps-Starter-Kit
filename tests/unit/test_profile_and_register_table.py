@@ -14,7 +14,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from fabricops_kit.config import FabricStore
-from fabricops_kit.config.metadata_identity import build_column_id, build_table_id
+from fabricops_kit.config.metadata_identity import _build_column_id, _build_table_id
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.pipeline import profile_and_register_table as public_profile_and_register_table
 from fabricops_kit.pipeline import profile_frequency_distribution
@@ -45,16 +45,16 @@ AUDIT_COLUMNS = [
 
 def test_logical_table_and_column_ids_are_environment_independent():
     """Stable asset IDs depend on logical coordinates, not runtime environment."""
-    dev_id = build_table_id("lakehouse", "silver", "dbo", "orders")
-    prod_id = build_table_id("lakehouse", "silver", "dbo", "orders")
+    dev_id = _build_table_id("lakehouse", "silver", "dbo", "orders")
+    prod_id = _build_table_id("lakehouse", "silver", "dbo", "orders")
 
     assert dev_id == prod_id
-    assert dev_id != build_table_id("warehouse", "silver", "dbo", "orders")
-    assert dev_id != build_table_id("lakehouse", "gold", "dbo", "orders")
-    assert dev_id != build_table_id("lakehouse", "silver", "sales", "orders")
-    assert dev_id != build_table_id("lakehouse", "silver", "dbo", "customers")
-    assert build_column_id(dev_id, "Order_ID") == build_column_id(prod_id, " order_id ")
-    assert build_column_id(dev_id, "order_id") != build_column_id(dev_id, "amount")
+    assert dev_id != _build_table_id("warehouse", "silver", "dbo", "orders")
+    assert dev_id != _build_table_id("lakehouse", "gold", "dbo", "orders")
+    assert dev_id != _build_table_id("lakehouse", "silver", "sales", "orders")
+    assert dev_id != _build_table_id("lakehouse", "silver", "dbo", "customers")
+    assert _build_column_id(dev_id, "Order_ID") == _build_column_id(prod_id, " order_id ")
+    assert _build_column_id(dev_id, "order_id") != _build_column_id(dev_id, "amount")
 
 
 def test_schema_fingerprint_remains_internal_for_deferred_contract_support(spark_session):
@@ -381,7 +381,7 @@ def test_profile_and_register_table_automatic_skips_high_cardinality_frequency(
     result = profile_and_register_table(source, profile_role="source", target="raw", table_name="automatic")
     assert selected == ["category"]
     child = next(write["df"] for write in registered if write["table_name"] == PROFILED_FREQUENCY_TABLE)
-    category_id = build_column_id(result.collect()[0].table_id, "category")
+    category_id = _build_column_id(result.collect()[0].table_id, "category")
     category_profile_ids = {row.profile_id for row in result.collect() if row.column_id == category_id}
     assert {row.profile_id for row in child.collect()} == category_profile_ids
 
@@ -486,7 +486,7 @@ def test_catalogue_dataframe_contains_table_and_column_assets(spark_session, mon
 def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
     source = _source_df(spark_session)
     schema = metadata_table_schema_registry()[PROFILED_TABLE]
-    table_id = build_table_id("lakehouse", "raw", None, "customers")
+    table_id = _build_table_id("lakehouse", "raw", None, "customers")
     rows = []
     for field in source.schema.fields:
         row = {name: None for name in schema.fieldNames()}
@@ -495,7 +495,7 @@ def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
                 "profile_id": f"profile-{field.name}",
                 "profile_snapshot_id": "snapshot-1",
                 "table_id": table_id,
-                "column_id": build_column_id(table_id, field.name),
+                "column_id": _build_column_id(table_id, field.name),
                 "environment_name": "dev",
                 "data_type": field.dataType.simpleString(),
                 "profiled_at": datetime(2026, 1, 1),
@@ -575,7 +575,7 @@ def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeyp
         "_upsert_lineage_event",
         lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("merge failed")),
     )
-    expected_id = build_table_id("lakehouse", "raw", None, "customers")
+    expected_id = _build_table_id("lakehouse", "raw", None, "customers")
     with pytest.raises(RuntimeError, match=expected_id):
         profile_and_register_table(
             _source_df(spark_session), profile_role="source", target="raw", table_name="customers"

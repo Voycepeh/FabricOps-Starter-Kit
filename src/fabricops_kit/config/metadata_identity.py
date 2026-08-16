@@ -18,14 +18,12 @@ def _stable_metadata_id(*parts: Any) -> str:
     ).hexdigest()
 
 
-def build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
+def _build_table_id(store_type: Any, layer: Any, schema_name: Any, table_name: Any) -> str:
     """Return the environment-independent logical identity for a table asset."""
     return _stable_metadata_id(store_type, layer, schema_name, table_name)
 
 
-def build_column_id(table_id: Any, column_name: Any) -> str:
+def _build_column_id(table_id: Any, column_name: Any) -> str:
     """Return the environment-independent logical identity for a column asset."""
     return _stable_metadata_id(table_id, column_name)
 
-
-__all__ = ["build_column_id", "build_table_id"]

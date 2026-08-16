@@ -302,9 +302,9 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_identity._build_column_id</code></li>
+<li><code>fabricops_kit.config.metadata_identity._build_table_id</code></li>
 <li><code>fabricops_kit.config.metadata_identity._stable_metadata_id</code></li>
-<li><code>fabricops_kit.config.metadata_identity.build_column_id</code></li>
-<li><code>fabricops_kit.config.metadata_identity.build_table_id</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>

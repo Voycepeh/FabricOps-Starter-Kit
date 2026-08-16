@@ -150,7 +150,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
     profiled_fields = set(schemas["METADATA_DATA_PROFILED"].fieldNames())
     frequency_fields = set(schemas["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames())
-    assert {"store_type", "metadata_table_key", "metadata_column_key", "schema_fingerprint"}.issubset(catalogue_fields)
+    assert {"metadata_level", "store_type", "table_id", "column_id", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_fields)
     assert {
         "row_count",
         "non_null_count",
@@ -159,7 +159,9 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     }.issubset(profiled_fields)
     assert "frequency_json" not in profiled_fields
     assert {
-        "metadata_column_key",
+        "frequency_id",
+        "profile_id",
+        "profile_snapshot_id",
         "value",
         "frequency_count",
         "frequency_percent",

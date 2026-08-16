@@ -15,7 +15,7 @@ from fabricops_kit.pipeline.guardrails_shared import (
     select_table_guardrail_rule,
     write_guardrail_result_row,
 )
-from fabricops_kit.pipeline.observation_shared import is_source_observation, observation_rows
+from fabricops_kit.pipeline.observation_shared import _is_source_observation, _observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
 
@@ -34,7 +34,7 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
         previous_at = timestamp_rows[0]["previous_observed_at"] if timestamp_rows else None
         if previous_at is None:
             return []
-        return observation_rows(
+        return _observation_rows(
             comparable.where(F.col("observed_at") == F.lit(previous_at)).select(
                 "observation_id",
                 "table_id",
@@ -50,7 +50,7 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
 
     candidates = [
         row
-        for row in observation_rows(history)
+        for row in _observation_rows(history)
         if str(row.get("table_id") or "") == table_id
         and str(row.get("environment_name") or "") == environment_name
         and row.get("observed_at") < observed_at
@@ -60,7 +60,7 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
 
 
 def _observation_changes(observation) -> dict:
-    current = observation_rows(observation)
+    current = _observation_rows(observation)
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
 
@@ -259,6 +259,6 @@ def check_changes(observation) -> dict:
     True
 
     """
-    if not is_source_observation(observation):
+    if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
     return _observation_changes(observation)
