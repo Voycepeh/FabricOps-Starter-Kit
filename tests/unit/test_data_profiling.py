@@ -48,6 +48,7 @@ def test_profile_dataframe_delegates_to_shared_profiler(monkeypatch):
     assert module.profile_dataframe(source, exclude_columns={"audit"}) is expected
     assert calls == [(source, {"audit"})]
 
+
 FREQUENCY_COLUMNS = [
     "COLUMN_NAME",
     "DATA_TYPE",
@@ -268,3 +269,33 @@ def test_obsolete_distribution_helpers_are_absent():
 
     for name in ["_numeric_bin_edges", "_build_numeric_distribution", "_build_categorical_distribution", "build_distribution_summaries"]:
         assert not hasattr(shared, name)
+
+
+def test_public_profilers_remain_generic_stage2_inputs(spark_session):
+    """Keep Stage 2 metadata identity and runtime context out of public profiler outputs."""
+    df = spark_session.createDataFrame([(1, "open"), (2, "closed")], ["id", "status"])
+
+    profile_columns = set(profile_dataframe(df).columns)
+    frequency_columns = set(profile_frequency_distribution(df, columns=["status"]).columns)
+    metadata_owned_columns = {
+        "profile_id",
+        "profile_snapshot_id",
+        "frequency_id",
+        "table_id",
+        "column_id",
+        "environment_name",
+        "profiled_at",
+        "_committed_by",
+        "_committed_at",
+        "_workspace_id",
+        "_workspace_name",
+        "_notebook_id",
+        "_notebook_name",
+        "_metadata_lakehouse_name",
+        "_activity_id",
+    }
+
+    assert profile_columns == set(PROFILE_COLUMNS)
+    assert frequency_columns == set(FREQUENCY_COLUMNS)
+    assert profile_columns.isdisjoint(metadata_owned_columns)
+    assert frequency_columns.isdisjoint(metadata_owned_columns)
