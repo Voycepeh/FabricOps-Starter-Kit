@@ -58,7 +58,6 @@ EXPECTED_V1_CALLABLES = [
     'profile_and_register_table',
     'profile_dataframe',
     'profile_frequency_distribution',
-    'display_guardrail_results',
     'observe_table',
     'widget_render_data_steward',
     'widget_render_data_agreement',

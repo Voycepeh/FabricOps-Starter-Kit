@@ -2091,11 +2091,75 @@ def schema_version_options(rows: list[dict[str, Any]], metadata_table_key: str) 
     return result
 
 
+def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_key: str) -> dict[str, Any]:
+    """Prepare one selected dataset's latest persisted guardrail execution."""
+    from pyspark.sql import functions as F
+
+    scoped = results.filter(
+        (F.col("metadata_table_key") == metadata_table_key)
+        & F.col("run_id").isNotNull()
+        & (F.trim(F.col("run_id")) != "")
+    )
+    latest = (
+        scoped.select("run_id", "_committed_at")
+        .distinct()
+        .orderBy(F.col("_committed_at").desc_nulls_last(), F.col("run_id").desc())
+        .limit(1)
+        .collect()
+    )
+    selected_run_id = str(latest[0]["run_id"]) if latest else None
+    selected_results = (
+        scoped.filter(F.col("run_id") == selected_run_id)
+        if selected_run_id is not None
+        else scoped.limit(0)
+    )
+    actual = F.col("actual_value_json")
+    guardrail_results = selected_results.select(
+        "rule_type",
+        F.col("column_name").alias("columns"),
+        "status",
+        "severity",
+        F.get_json_object(actual, "$.failed_count").cast("long").alias("failed_rows"),
+        F.get_json_object(actual, "$.failed_percent").cast("double").alias("failed_percent"),
+        F.get_json_object(actual, "$.total_count").cast("long").alias("total_count"),
+        "reason",
+        "can_continue",
+        "run_id",
+    ).orderBy(
+        F.when(F.lower(F.col("status")) == "failed", 0)
+        .when(F.lower(F.col("status")) == "warning", 1)
+        .otherwise(2),
+        F.col("rule_type"),
+        F.col("columns"),
+    )
+    selected_row_results = (
+        row_results.filter(
+            (F.col("metadata_table_key") == metadata_table_key)
+            & (F.col("run_id") == selected_run_id)
+        )
+        if selected_run_id is not None
+        else row_results.limit(0)
+    )
+    guardrail_row_results = selected_row_results.select(
+        "rule_type",
+        "row_identity",
+        F.col("involved_columns_json").alias("involved_columns"),
+        F.col("failed_values_json").alias("failed_values"),
+        "failure_reason",
+        "run_id",
+    ).orderBy("row_identity", "rule_type", "failure_reason")
+    return {
+        "guardrail_results": guardrail_results,
+        "guardrail_row_results": guardrail_row_results,
+    }
+
+
 def build_catalogue_widget(
     *, title: str, description: str, selection_context: dict[str, Any], display_context: dict[str, Any],
     inventory_rows: list[dict[str, Any]],
     role_options: list[tuple[str | None, str]] | None, target: str, schema: str | None,
     spark_session: Any, runtime_context: dict[str, Any], empty_message: str,
+    include_guardrail_views: bool = False,
 ) -> dict[str, Any]:
     """Build common controls and snapshot-scoped catalogue/profile readers."""
     widgets = require_ipywidgets()
@@ -2129,7 +2193,6 @@ def build_catalogue_widget(
     }
     state: dict[str, Any] = {
         "get_selection": None,
-        "get_selected_target": None,
         "get_views": None,
         "refresh": None,
         "_controls": controls,
@@ -2154,23 +2217,6 @@ def build_catalogue_widget(
             "schema_name": latest.get("schema_name"), "table_name": latest.get("table_name"),
         }
 
-    def get_selected_target() -> dict[str, Any]:
-        """Return the current selected dataset identity without widget objects."""
-        selection = get_selection()
-        return {
-            name: selection.get(name)
-            for name in (
-                "metadata_table_key",
-                "environment_name",
-                "dataset_label",
-                "table_name",
-                "profile_role",
-                "store_type",
-                "layer",
-                "schema_name",
-            )
-        }
-
     def get_views():
         """Return the selected catalogue, compact profile, and frequency frames."""
         selection = get_selection()
@@ -2193,6 +2239,17 @@ def build_catalogue_widget(
                     spark_session=spark_session, context=runtime_context,
                 ),
             })
+            if include_guardrail_views:
+                source_frames.update({
+                    "guardrail_results": read_lakehouse_table_core(
+                        "METADATA_GUARDRAIL_RESULTS", target=target, schema=schema,
+                        spark_session=spark_session, context=runtime_context,
+                    ),
+                    "guardrail_row_results": read_lakehouse_table_core(
+                        "METADATA_GUARDRAIL_ROW_RESULTS", target=target, schema=schema,
+                        spark_session=spark_session, context=runtime_context,
+                    ),
+                })
             refresh_loaded_views()
         catalogue = current_frames["catalogue"]
         profile = current_frames["profile"]
@@ -2200,11 +2257,18 @@ def build_catalogue_widget(
         catalogue_order = [name for name in ("column_name", "metadata_column_key", "_committed_at") if name in catalogue.columns]
         profile_order = [name for name in ("column_name", "metadata_column_key", "profiled_at", "_committed_at") if name in profile.columns]
         frequency_order = [name for name in ("frequency_rank", "value", "_committed_at") if name in frequency.columns]
-        return {
+        views = {
             "catalogue": catalogue.orderBy(*catalogue_order),
             "profile": profile.orderBy(*profile_order),
             "frequency": frequency.orderBy(*frequency_order),
         }
+        if include_guardrail_views:
+            views.update(_prepare_selected_guardrail_views(
+                source_frames["guardrail_results"],
+                source_frames["guardrail_row_results"],
+                metadata_table_key=key,
+            ))
+        return views
 
     def refresh_loaded_views() -> None:
         """Filter cached source frames for the active dataset and snapshot."""
@@ -2356,7 +2420,6 @@ def build_catalogue_widget(
 
     state.update({
         "get_selection": get_selection,
-        "get_selected_target": get_selected_target,
         "get_views": get_views,
         "refresh": refresh,
     })

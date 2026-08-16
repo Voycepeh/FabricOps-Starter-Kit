@@ -1919,6 +1919,8 @@ def check_dq_runtime(
         return result
 
     audit = build_runtime_audit_fields(config=config, env=env)
+    resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"]).strip()
+    result["run_id"] = resolved_run_id
     check_by_id = {check["rule_id"]: check for check in checks}
     result_ids = {rule["rule_id"]: str(uuid4()) for rule in rules}
     summary_rows = []
@@ -1928,7 +1930,7 @@ def check_dq_runtime(
             "guardrail_result_id": result_ids[rule["rule_id"]],
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "result_id": str(uuid4()),
-            "run_id": run_id,
+            "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
             "metadata_table_key": metadata_table_key,
             "environment_name": env,
@@ -1984,7 +1986,7 @@ def check_dq_runtime(
             ).alias("failed_values_json"),
             F.lit(json.dumps(details, default=str, sort_keys=True)).alias("rule_details_json"),
             F.lit(f"Row failed {rule['rule_type']} rule {rule['rule_id']}.").alias("failure_reason"),
-            F.lit(run_id).alias("run_id"),
+            F.lit(resolved_run_id).alias("run_id"),
             *[F.lit(value).cast("timestamp" if key == "_committed_at" else "string").alias(key) for key, value in audit.items()],
         ))
     evidence = evidence_frames[0]

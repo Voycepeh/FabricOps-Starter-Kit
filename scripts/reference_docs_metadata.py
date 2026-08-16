@@ -1482,41 +1482,6 @@ PUBLIC_SYMBOL_DOCS = [
                             'No active freshness rule matches the table.',
                             'Metadata evidence cannot be read.']},
  {'kind': 'function',
-  'module': 'pipeline',
-  'function_type': 'callable',
-  'summary_override': 'Prepare in-memory or persisted guardrail evidence for Fabric notebook review.',
-  'symbol_name': 'display_guardrail_results',
-  'template_notebook': '02_pipeline',
-  'template_segment': 'Guardrail display',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
-              'guardrail authoring, governance, or display step is required.',
-  'parameters': {
-      'result_bundle': 'Optional in-memory guardrail result bundle.',
-      'mode': 'In-memory display mode: summary, detailed, or debug.',
-      'spark_session': 'Spark session used for persisted evidence or optional in-memory DataFrames.',
-      'metadata_table_key': 'Canonical table identity used to scope persisted Guardrail Results.',
-      'run_id': 'Optional exact execution; otherwise the latest canonical-table run is selected.',
-      'target': 'Configured metadata FabricStore target.',
-      'schema': 'Optional metadata lakehouse schema override.',
-  },
-  'returns': 'In-memory display rows, or persisted summary and row-evidence Spark DataFrames for one selected run.',
-  'raises': 'Raises ValueError for conflicting inputs, missing persisted-mode inputs, or unsupported in-memory mode.',
-  'related_functions': ['widget_review_guardrail_governance'],
-  'preferred_example': 'guardrail_views = display_guardrail_results(metadata_table_key=selected_metadata_table_key, target="metadata", spark_session=spark)',
-  'expanded_purpose': 'Prepares existing in-memory bundles or persisted Guardrail Results and DQ '
-                      'Failure Evidence without rendering or re-evaluating rules.',
-  'when_to_use': 'Use in 02_pipeline after obtaining the current metadata_table_key from the '
-                 'Pipeline Catalogue Viewer selection.',
-  'do_not_use_when': 'Do not use to mutate guardrail results or decide active rules; it is '
-                     'presentation-only.',
-  'glossary_terms': ['guardrails', 'notebook template'],
-  'return_interpretation': 'Persisted mode returns summary and row_evidence Spark DataFrames for '
-                           'one run; in-memory modes retain their existing display formats.',
-  'common_failure_causes': ['Mode is not summary, detailed, or debug.',
-                            'The Spark session cannot create a DataFrame from display rows.',
-                            'The result bundle is malformed.',
-                            'The caller expects debug internals while using summary mode.']},
- {'kind': 'function',
   'module': 'widgets.widget_enrich_table_metadata',
   'function_type': 'callable',
   'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
@@ -2118,29 +2083,6 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                                       'The max lag parameter is invalid.',
                                                       'No active freshness rule matches the table.',
                                                       'Metadata evidence cannot be read.']},
- 'display_guardrail_results': {'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: summary, detailed, or debug.', 'spark_session': 'Optional Spark session used to build Spark DataFrames for display rows.'},
-                               'raises': 'Raises ValueError when mode is unsupported or the result bundle cannot be displayed.',
-                               'expanded_purpose': 'Returns summary, detailed, or debug guardrail '
-                                                   'display output so Fabric notebooks show '
-                                                   'readable tables by default while preserving '
-                                                   'raw result bundles for developers.',
-                               'when_to_use': 'Use in 02_pipeline immediately after '
-                                              'run_table_guardrails and before stop_if_failed so '
-                                              'users see guardrail outcomes before the notebook '
-                                              'stops.',
-                               'do_not_use_when': 'Do not use to mutate guardrail results or '
-                                                  'decide active rules; it is presentation-only.',
-                               'glossary_terms': ['guardrails', 'notebook template'],
-                               'return_interpretation': 'Summary and detailed modes return '
-                                                        'display-friendly rows or Spark '
-                                                        'DataFrames; debug mode returns the raw '
-                                                        'nested guardrail summary or bundle.',
-                               'common_failure_causes': ['Mode is not summary, detailed, or debug.',
-                                                         'The Spark session cannot create a '
-                                                         'DataFrame from display rows.',
-                                                         'The result bundle is malformed.',
-                                                         'The caller expects debug internals while '
-                                                         'using summary mode.']},
 
  'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
                                                                       'controls for authoring '

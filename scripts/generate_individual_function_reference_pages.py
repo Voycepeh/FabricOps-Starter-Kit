@@ -211,7 +211,7 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_DATA_STEWARD": ["widget_render_data_steward"],
     "METADATA_ENRICHMENT": ["widget_enrich_table_metadata"],
     "METADATA_GUARDRAIL_RESULTS": [
-        "check_schema", "check_freshness", "check_changes", "check_dq", "display_guardrail_results",
+        "check_schema", "check_freshness", "check_changes", "check_dq",
     ],
     "METADATA_GUARDRAIL_ROW_RESULTS": ["check_dq"],
     "METADATA_SOURCE_OBSERVATION": ["observe_table"],

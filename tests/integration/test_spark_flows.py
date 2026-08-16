@@ -820,6 +820,7 @@ def test_check_dq_runtime_persists_rule_summaries_and_failed_row_rule_evidence(s
 
     assert result["status"] == "failed"
     assert result["can_continue"] is False
+    assert result["run_id"] == "run-9"
     assert result["summary"] == {
         "DQ_STATUS": "failed", "DQ_RULE_COUNT": 2, "DQ_FAILED_RULE_COUNT": 2,
         "DQ_WARNING_RULE_COUNT": 1, "DQ_ERROR_RULE_COUNT": 1, "DQ_FAILED_ROW_COUNT": 1,
@@ -860,13 +861,32 @@ def test_check_dq_runtime_writes_no_row_evidence_when_all_rules_pass(spark_sessi
     }])
     writes = []
     monkeypatch.setattr(guardrails_shared, "read_lakehouse_table_core", lambda *args, **kwargs: metadata)
-    monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda df, table, **kwargs: writes.append(table))
-    monkeypatch.setattr("fabricops_kit.config.audit.resolve_runtime_context", lambda **_kwargs: resolved_runtime_context())
+    monkeypatch.setattr(
+        guardrails_shared,
+        "write_lakehouse_table_core",
+        lambda df, table, **kwargs: writes.append((table, df.collect())),
+    )
+    activities = iter(("activity-auto-run-1", "activity-auto-run-2"))
+    monkeypatch.setattr(
+        "fabricops_kit.config.audit.resolve_runtime_context",
+        lambda **_kwargs: resolved_runtime_context(activity_id=next(activities)),
+    )
 
     result = guardrails_shared.check_dq_runtime(
         dataframe, framework_config(), "dev", "orders", target="source", store_type="lakehouse", schema_name=None,
     )
 
     assert result["status"] == "passed"
+    assert result["run_id"] == "activity-auto-run-1"
     assert result["summary"]["DQ_FAILED_ROW_COUNT"] == 0
-    assert writes == ["METADATA_GUARDRAIL_RESULTS"]
+    assert [table for table, _rows in writes] == ["METADATA_GUARDRAIL_RESULTS"]
+    assert {row.run_id for row in writes[0][1]} == {"activity-auto-run-1"}
+
+    second = guardrails_shared.check_dq_runtime(
+        dataframe, framework_config(), "dev", "orders", target="source",
+        store_type="lakehouse", schema_name=None,
+    )
+    assert second["run_id"] == "activity-auto-run-2"
+    assert {rows[0].run_id for _table, rows in writes} == {
+        "activity-auto-run-1", "activity-auto-run-2",
+    }

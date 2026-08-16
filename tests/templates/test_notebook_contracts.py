@@ -169,13 +169,13 @@ def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
     source = _notebook_source("02_pipeline.ipynb")
 
     assert source.count("widget_view_pipeline_catalogue(") == 1
-    assert 'pipeline_catalogue_view["get_selected_target"]()' in source
-    assert 'metadata_table_key=selected_target["metadata_table_key"]' in source
-    assert "display_guardrail_results(" in source
-    assert 'guardrail_views["summary"]' in source
-    assert 'guardrail_views["row_evidence"]' in source
+    assert "display_guardrail_results" not in source
+    assert 'views["guardrail_results"]' in source
+    assert 'views["guardrail_row_results"]' in source
     assert "display(guardrail_results_df)" in source
     assert "display(guardrail_row_results_df)" in source
+    assert "dq_result = check_dq(" in source
+    assert 'display(dq_result["summary"])' in source
     assert "run_table_guardrails" not in source
     assert "run_active_dq_guardrail" not in source
     assert source.count("Dataset selector") == 0
@@ -192,7 +192,7 @@ def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
 def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_name):
     """Each catalogue workflow renders its snapshot-scoped views in Fabric cells."""
     source = _notebook_source(notebook_name)
-    views_name = "pipeline_views" if notebook_name == "02_pipeline.ipynb" else "views"
+    views_name = "views"
 
     assert f'{state_name}["get_views"]()' in source
     assert f'catalogue_df = {views_name}["catalogue"]' in source
