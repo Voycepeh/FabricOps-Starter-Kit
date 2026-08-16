@@ -2127,7 +2127,14 @@ def build_catalogue_widget(
         "schema_fingerprint": version,
         "metadata_column_key": profile_column,
     }
-    state: dict[str, Any] = {"get_selection": None, "get_views": None, "refresh": None, "_controls": controls, "error": None}
+    state: dict[str, Any] = {
+        "get_selection": None,
+        "get_selected_target": None,
+        "get_views": None,
+        "refresh": None,
+        "_controls": controls,
+        "error": None,
+    }
     source_frames: dict[str, Any] = {}
     current_frames: dict[str, Any] = {}
     selected_profiled_at: Any = None
@@ -2145,6 +2152,23 @@ def build_catalogue_widget(
             "profiled_at": selected_profiled_at, "metadata_column_key": profile_column.value,
             "profile_role": role, "store_type": latest.get("store_type"), "layer": latest.get("layer"),
             "schema_name": latest.get("schema_name"), "table_name": latest.get("table_name"),
+        }
+
+    def get_selected_target() -> dict[str, Any]:
+        """Return the current selected dataset identity without widget objects."""
+        selection = get_selection()
+        return {
+            name: selection.get(name)
+            for name in (
+                "metadata_table_key",
+                "environment_name",
+                "dataset_label",
+                "table_name",
+                "profile_role",
+                "store_type",
+                "layer",
+                "schema_name",
+            )
         }
 
     def get_views():
@@ -2330,7 +2354,12 @@ def build_catalogue_widget(
             last_dataset_value = str(dataset.value)
         refresh()
 
-    state.update({"get_selection": get_selection, "get_views": get_views, "refresh": refresh})
+    state.update({
+        "get_selection": get_selection,
+        "get_selected_target": get_selected_target,
+        "get_views": get_views,
+        "refresh": refresh,
+    })
     refresh()
     dataset.observe(lambda change: select_dataset(change) if change.get("name") == "value" else None, names="value")
     version.observe(lambda change: refresh() if change.get("name") == "value" else None, names="value")

@@ -164,6 +164,23 @@ def test_02_pipeline_uses_only_the_catalogue_widget():
     assert "widget_enrich_" not in source
 
 
+def test_02_pipeline_reuses_catalogue_selection_for_guardrail_evidence():
+    """Section 8 has one selector and five selected-dataset review surfaces."""
+    source = _notebook_source("02_pipeline.ipynb")
+
+    assert source.count("widget_view_pipeline_catalogue(") == 1
+    assert 'pipeline_catalogue_view["get_selected_target"]()' in source
+    assert 'metadata_table_key=selected_target["metadata_table_key"]' in source
+    assert "display_guardrail_results(" in source
+    assert 'guardrail_views["summary"]' in source
+    assert 'guardrail_views["row_evidence"]' in source
+    assert "display(guardrail_results_df)" in source
+    assert "display(guardrail_row_results_df)" in source
+    assert "run_table_guardrails" not in source
+    assert "run_active_dq_guardrail" not in source
+    assert source.count("Dataset selector") == 0
+
+
 @pytest.mark.parametrize(
     ("notebook_name", "state_name"),
     [
@@ -175,11 +192,12 @@ def test_02_pipeline_uses_only_the_catalogue_widget():
 def test_catalogue_views_are_displayed_outside_the_widget(notebook_name, state_name):
     """Each catalogue workflow renders its snapshot-scoped views in Fabric cells."""
     source = _notebook_source(notebook_name)
+    views_name = "pipeline_views" if notebook_name == "02_pipeline.ipynb" else "views"
 
     assert f'{state_name}["get_views"]()' in source
-    assert 'catalogue_df = views["catalogue"]' in source
-    assert 'profile_df = views["profile"]' in source
-    assert 'frequency_df = views["frequency"]' in source
+    assert f'catalogue_df = {views_name}["catalogue"]' in source
+    assert f'profile_df = {views_name}["profile"]' in source
+    assert f'frequency_df = {views_name}["frequency"]' in source
     assert "display(catalogue_df)" in source
     assert "display(profile_df)" in source
     assert "display(frequency_df)" in source

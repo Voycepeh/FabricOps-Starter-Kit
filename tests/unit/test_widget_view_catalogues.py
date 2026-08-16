@@ -292,6 +292,18 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     assert selection["profiled_at"] is None
     assert selection["metadata_column_key"] is None
     assert read_calls == []
+    selected_target = state["get_selected_target"]()
+    assert selected_target == {
+        "metadata_table_key": "dataset-key",
+        "environment_name": "dev",
+        "dataset_label": "raw / sales / orders",
+        "table_name": "orders",
+        "profile_role": None,
+        "store_type": None,
+        "layer": "raw",
+        "schema_name": "sales",
+    }
+    assert not any(hasattr(value, "observe") for value in selected_target.values())
 
     views = state["get_views"]()
     assert read_calls == [
@@ -326,6 +338,8 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     assert len(read_calls) == 3
 
     state["_controls"]["dataset"].value = "\x1funprofiled-key"
+    assert state["get_selected_target"]()["metadata_table_key"] == "unprofiled-key"
+    assert state["get_selected_target"]()["table_name"] == "customers"
     unprofiled = state["get_views"]()
     assert len(read_calls) == 3
     assert state["get_selection"]()["profiled_at"] is None

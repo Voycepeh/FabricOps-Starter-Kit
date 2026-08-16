@@ -7,14 +7,14 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Return summary, detailed, or debug guardrail display output for Fabric notebooks.
+Prepare in-memory or persisted guardrail evidence for Fabric notebook review.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/pipeline/display_guardrail_results.py:10`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/display_guardrail_results.py#L10-L14">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/display_guardrail_results.py#L10-L29">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -37,9 +37,13 @@ For profiling-related pipeline functions, the output captures the important deta
 
 ```python
 def display_guardrail_results(
-    result_bundle: Mapping[str, Any],
+    result_bundle: Mapping[str, Any] | None=None,
     mode: str='summary',
     spark_session: Any | None=None,
+    metadata_table_key: str | None=None,
+    run_id: str | None=None,
+    target: str='metadata',
+    schema: str | None=None,
 ) -> Any:
 ```
 
@@ -47,27 +51,37 @@ def display_guardrail_results(
 
 ## Example usage
 
-Example usage not documented yet.
+<div class="reference-example-usage" markdown="1">
+
+```python
+guardrail_views = display_guardrail_results(metadata_table_key=selected_metadata_table_key, target="metadata", spark_session=spark)
+```
+
+</div>
 
 ## Parameters
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `result_bundle` | `Mapping[str, Any]` | Yes | Guardrail result bundle returned by run_table_guardrails. |
-| `mode` | `str` | No | Display mode: summary, detailed, or debug. |
-| `spark_session` | `Any \| None` | No | Optional Spark session used to build Spark DataFrames for display rows. |
+| `result_bundle` | `Mapping[str, Any] \| None` | No | Optional in-memory guardrail result bundle. |
+| `mode` | `str` | No | In-memory display mode: summary, detailed, or debug. |
+| `spark_session` | `Any \| None` | No | Spark session used for persisted evidence or optional in-memory DataFrames. |
+| `metadata_table_key` | `str \| None` | No | Canonical table identity used to scope persisted Guardrail Results. |
+| `run_id` | `str \| None` | No | Optional exact execution; otherwise the latest canonical-table run is selected. |
+| `target` | `str` | No | Configured metadata FabricStore target. |
+| `schema` | `str \| None` | No | Optional metadata lakehouse schema override. |
 
 ## Returns
 
-Display-friendly summary rows, detailed rows, debug data, or Spark DataFrames depending on mode and Spark availability.
+In-memory display rows, or persisted summary and row-evidence Spark DataFrames for one selected run.
 
 ### Return interpretation
 
-Summary and detailed modes return display-friendly rows or Spark DataFrames; debug mode returns the raw nested guardrail summary or bundle.
+Persisted mode returns summary and row_evidence Spark DataFrames for one run; in-memory modes retain their existing display formats.
 
 ## Raises / Errors
 
-Raises ValueError when mode is unsupported or the result bundle cannot be displayed.
+Raises ValueError for conflicting inputs, missing persisted-mode inputs, or unsupported in-memory mode.
 
 ### Common failure causes
 

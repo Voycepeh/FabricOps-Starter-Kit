@@ -7,7 +7,7 @@ from functools import reduce
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
+from ..io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
@@ -697,28 +697,79 @@ def _build_guardrail_blocking_message_from_bundle(result_bundle: Mapping[str, An
 
 
 def _display_guardrail_results_workflow(
-    result_bundle: Mapping[str, Any], mode: str = "summary", spark_session: Any | None = None
+    result_bundle: Mapping[str, Any] | None = None,
+    mode: str = "summary",
+    spark_session: Any | None = None,
+    *,
+    metadata_table_key: str | None = None,
+    run_id: str | None = None,
+    target: str = "metadata",
+    schema: str | None = None,
 ) -> Any:
-    """Return guardrail results prepared for summary, detailed, or debug display.
+    """Prepare in-memory or persisted guardrail results for notebook display.
 
     Parameters
     ----------
-    result_bundle : mapping
-        Result bundle returned by the governed runtime checks.
+    result_bundle : mapping, optional
+        Result bundle returned by governed runtime checks. Supply either this
+        argument or ``metadata_table_key``.
     mode : {"summary", "detailed", "debug"}, default="summary"
         Display mode for notebook output. ``summary`` is compact, ``detailed``
         is per-guardrail diagnostics, and ``debug`` returns raw nested results.
     spark_session : pyspark.sql.SparkSession, optional
         Spark session used to convert summary or detailed rows to a
-        display-friendly DataFrame. When omitted, a list of dictionaries is
-        returned.
+        display-friendly DataFrame. Required for persisted evidence mode.
+    metadata_table_key : str, optional
+        Canonical selected table identity used to load persisted evidence.
+    run_id : str, optional
+        Exact execution to review. When omitted, the latest result run for the
+        canonical table is selected deterministically.
+    target : str, default="metadata"
+        Configured metadata FabricStore target.
+    schema : str, optional
+        Metadata lakehouse schema override.
 
     Returns
     -------
     Any
-        Summary rows, detail rows, or raw nested debug object.
+        In-memory summary/detail rows or debug object. Persisted evidence mode
+        returns ``summary`` and ``row_evidence`` Spark DataFrames, the selected
+        ``run_id``, and a notebook-facing ``message``.
+
+    Notes
+    -----
+    Persisted mode reads only ``METADATA_GUARDRAIL_RESULTS`` and
+    ``METADATA_GUARDRAIL_ROW_RESULTS``. It does not evaluate rules, read source
+    rows, write metadata, or render DataFrames.
+
+    Examples
+    --------
+    >>> guardrail_views = display_guardrail_results(
+    ...     metadata_table_key=selected_metadata_table_key,
+    ...     target="metadata",
+    ...     spark_session=spark,
+    ... )
+    >>> guardrail_views["run_id"] is not None
+    True
 
     """
+    if metadata_table_key is not None:
+        if result_bundle is not None:
+            raise ValueError("Supply either result_bundle or metadata_table_key, not both.")
+        if spark_session is None:
+            raise ValueError("spark_session is required for persisted guardrail evidence.")
+        key = str(metadata_table_key).strip()
+        if not key:
+            raise ValueError("metadata_table_key must be a non-empty canonical table identity.")
+        return _load_persisted_guardrail_views(
+            key,
+            run_id=run_id,
+            target=target,
+            schema=schema,
+            spark_session=spark_session,
+        )
+    if result_bundle is None:
+        raise ValueError("Supply result_bundle or metadata_table_key.")
     normalized = str(mode or "summary").lower().strip()
     if normalized == "summary":
         rows = build_guardrail_summary_rows(result_bundle)
@@ -729,6 +780,101 @@ def _display_guardrail_results_workflow(
     if normalized == "debug":
         return result_bundle.get("summary", result_bundle)
     raise ValueError("mode must be one of: summary, detailed, debug")
+
+
+def _load_persisted_guardrail_views(
+    metadata_table_key: str,
+    *,
+    run_id: str | None,
+    target: str,
+    schema: str | None,
+    spark_session: Any,
+) -> dict[str, Any]:
+    """Load one canonical table's summary run and linked failed-row evidence."""
+    from pyspark.sql import functions as F
+
+    results = read_lakehouse_table_core(
+        "METADATA_GUARDRAIL_RESULTS",
+        target=target,
+        schema=schema,
+        spark_session=spark_session,
+    ).filter(F.col("metadata_table_key") == metadata_table_key)
+    selected_run_id = str(run_id).strip() if run_id is not None else None
+    if selected_run_id is None:
+        latest = (
+            results.select("run_id", "_committed_at")
+            .distinct()
+            .orderBy(F.col("_committed_at").desc_nulls_last(), F.col("run_id").desc_nulls_last())
+            .limit(1)
+            .collect()
+        )
+        selected_run_id = str(latest[0]["run_id"] or "") if latest else None
+    selected_results = (
+        results.filter(F.col("run_id") == selected_run_id)
+        if selected_run_id is not None
+        else results.limit(0)
+    )
+    has_results = bool(selected_results.select("run_id").limit(1).collect())
+    actual = F.col("actual_value_json")
+    summary = selected_results.select(
+        "rule_type",
+        F.col("column_name").alias("columns"),
+        "status",
+        "severity",
+        F.get_json_object(actual, "$.failed_count").cast("long").alias("failed_rows"),
+        F.get_json_object(actual, "$.failed_percent").cast("double").alias("failed_percent"),
+        F.get_json_object(actual, "$.total_count").cast("long").alias("total_count"),
+        "reason",
+        "can_continue",
+        "run_id",
+        "guardrail_result_id",
+        "guardrail_rule_id",
+    ).orderBy(
+        F.when(F.lower(F.col("status")) == "failed", 0)
+        .when(F.lower(F.col("status")) == "warning", 1)
+        .otherwise(2),
+        F.when(F.lower(F.col("severity")) == "error", 0)
+        .when(F.lower(F.col("severity")) == "warning", 1)
+        .otherwise(2),
+        F.col("rule_type"),
+        F.col("columns"),
+        F.col("guardrail_result_id"),
+    )
+
+    evidence = read_lakehouse_table_core(
+        "METADATA_GUARDRAIL_ROW_RESULTS",
+        target=target,
+        schema=schema,
+        spark_session=spark_session,
+    )
+    selected_evidence = (
+        evidence.filter(
+            (F.col("metadata_table_key") == metadata_table_key)
+            & (F.col("run_id") == selected_run_id)
+        )
+        if selected_run_id is not None
+        else evidence.limit(0)
+    )
+    row_evidence = selected_evidence.select(
+        "rule_type",
+        "row_identity",
+        F.col("involved_columns_json").alias("involved_columns"),
+        F.col("failed_values_json").alias("failed_values"),
+        "failure_reason",
+        "run_id",
+        "guardrail_result_id",
+        "guardrail_rule_id",
+    ).orderBy("row_identity", "rule_type", "guardrail_result_id", "guardrail_rule_id")
+    return {
+        "summary": summary,
+        "row_evidence": row_evidence,
+        "run_id": selected_run_id,
+        "message": (
+            "No Guardrail Results exist for the selected dataset."
+            if not has_results
+            else "Guardrail Results loaded; DQ Failure Evidence is empty when all DQ rows passed."
+        ),
+    }
 
 
 def _table_key(table_config: Mapping[str, Any]) -> str:

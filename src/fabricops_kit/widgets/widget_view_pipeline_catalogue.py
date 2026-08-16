@@ -27,6 +27,8 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
         Common catalogue state mapping. ``get_views`` returns a named mapping
         containing the selected ``catalogue``, compact ``profile``, and
         normalized ``frequency`` Spark DataFrames without rendering.
+        ``get_selected_target`` returns the current notebook-linked dataset
+        identity as plain values for downstream evidence readers.
 
     Raises
     ------
@@ -50,6 +52,9 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     >>> view = widget_view_pipeline_catalogue(spark_session=spark)
     >>> views = view["get_views"]()
     >>> views["catalogue"], views["profile"], views["frequency"]
+    >>> selected_target = view["get_selected_target"]()
+    >>> selected_target["metadata_table_key"] is not None
+    True
 
     """
     config, environment_name, resolved = resolve_fabric_context(context=context)
