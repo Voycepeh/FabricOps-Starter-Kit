@@ -1,217 +1,75 @@
 # List of Metadata Tables
 
-FabricOps metadata tables capture the governance, engineering, quality, and contract information created as data moves through the workflow.
+FabricOps metadata tables describe the governed workflow evidence written by the notebook templates. These pages are generated from the implemented metadata setup schema registry used by `00_env_config`.
 
-The diagram below shows how the FabricOps metadata tables relate to one another across agreement, source observation, profiling, lineage, guardrails, and contracts.
+The diagram below shows how the FabricOps metadata tables relate to one another across agreement, profiling, guardrail, lineage, and pipeline-run evidence.
 
 ![FabricOps metadata model](../assets/fabricops-metadata-model.png)
 
 ## Data Agreement versus Data Contract
 
-A Data Agreement defines why data may be shared, who is accountable, the approved purpose and usage, and the period the agreement applies to.
+A Data Agreement is the overarching governance agreement between the accountable data producer and consumer parties, represented by their data stewards. It defines why the data may be shared, who is accountable, the permitted purpose and scope, usage conditions, and the agreement’s review period.
 
-A Data Contract defines the specific data covered by that agreement: what it is, how it is structured, its sensitivity, quality requirements, schema, freshness, and approved uses.
+A Data Contract is the machine-readable dataset-level promise governed by a Data Agreement. In the current FabricOps metadata model, the contract records the parent agreement, authorised catalogue tables, and their schema fingerprints. Related catalogue, enrichment, guardrail, profiling, and lineage metadata provide the broader technical and quality context for those tables.
 
 One Data Agreement can govern multiple Data Contracts.
 
-!!! note "About the identities below"
-    Identity describes how FabricOps recognizes the logical record or snapshot. Links to shows the shared keys used to connect metadata across the model. The underlying Delta tables do not enforce relational primary or foreign key constraints.
+The agreement answers: Why and under what governance arrangement may this data be shared?
 
-<div class="metadata-workflow-list">
+The contract answers: Exactly what data will be delivered, in what structure, at what quality, and how reliably?
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_steward.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">01</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_STEWARD</strong>
-      <span>Know who is responsible for the data.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One steward record</span>
-    <span><b>Identity</b> <code>steward_id</code></span>
-    <span><b>Links to</b> None</span>
-  </span>
-</a>
+<div class="grid cards" markdown>
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_agreement.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">02</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_AGREEMENT</strong>
-      <span>Capture why data is shared, with whom, and under what conditions.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One agreement version</span>
-    <span><b>Identity</b> <code>agreement_id</code> + <code>agreement_version</code></span>
-    <span><b>Links to</b> Provider and recipient steward → Data Steward</span>
-  </span>
-</a>
+-   **[METADATA_DATA_STEWARD](metadata/metadata_data_steward.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_source_observation.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">03</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_SOURCE_OBSERVATION</strong>
-      <span>See whether source data has arrived and changed as expected.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One source partition observation</span>
-    <span><b>Identity</b> Table + partition + observation time</span>
-    <span><b>Links to</b> <code>metadata_table_key</code> → Data Catalogue</span>
-  </span>
-</a>
+    Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_catalogue.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">04</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_CATALOGUE</strong>
-      <span>Understand what data is available and how it is structured.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One column in one observed table schema</span>
-    <span><b>Identity</b> Environment + table + column + schema fingerprint</span>
-    <span><b>Links to</b> <code>metadata_table_key</code>, <code>metadata_column_key</code></span>
-  </span>
-</a>
+-   **[METADATA_DATA_AGREEMENT](metadata/metadata_data_agreement.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_profiled.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">05</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_PROFILED</strong>
-      <span>Understand the shape, completeness, and characteristics of the data.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One column in one profile snapshot</span>
-    <span><b>Identity</b> <code>metadata_column_key</code> + <code>profiled_at</code></span>
-    <span><b>Links to</b> <code>metadata_table_key</code>, <code>metadata_column_key</code> → Data Catalogue</span>
-  </span>
-</a>
+    Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_profiled_frequency.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">06</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_PROFILED_FREQUENCY</strong>
-      <span>See how values are distributed across the data.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One distinct value in one profiled column snapshot</span>
-    <span><b>Identity</b> Column + profile time + frequency rank</span>
-    <span><b>Links to</b> <code>metadata_column_key</code> + <code>profiled_at</code> → Data Profiled</span>
-  </span>
-</a>
+-   **[METADATA_DATA_CONTRACT](metadata/metadata_data_contract.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_lineage.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">07</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_LINEAGE</strong>
-      <span>See where the data came from and where it ends up.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One source or target table in one Fabric activity</span>
-    <span><b>Identity</b> <code>lineage_event_id</code></span>
-    <span><b>Links to</b> <code>metadata_table_key</code> → Data Catalogue</span>
-  </span>
-</a>
+    Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
 
-<a class="metadata-workflow-row" href="metadata/metadata_enrichment.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">08</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_ENRICHMENT</strong>
-      <span>Add business and governance context to the data.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One enrichment entry</span>
-    <span><b>Identity</b> <code>enrichment_id</code></span>
-    <span><b>Links to</b> <code>metadata_key</code> → Data Catalogue table or column</span>
-  </span>
-</a>
+-   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_guardrail.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">09</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_GUARDRAIL</strong>
-      <span>Define the expectations that data used in the ETL pipeline should meet.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One append-only guardrail lifecycle record</span>
-    <span><b>Identity</b> Logical rule IDs plus lifecycle/version context</span>
-    <span><b>Links to</b> <code>metadata_table_key</code>, <code>metadata_column_key</code> → Data Catalogue</span>
-  </span>
-</a>
+    Observed table and column identities used for governed catalogue review and runtime comparisons.
 
-<a class="metadata-workflow-row" href="metadata/metadata_guardrail_results.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">10</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_GUARDRAIL_RESULTS</strong>
-      <span>See whether the data in an ETL pipeline run met those expectations.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One guardrail result in one pipeline run</span>
-    <span><b>Identity</b> <code>guardrail_result_id</code></span>
-    <span><b>Links to</b> <code>guardrail_rule_id</code> → Guardrail; <code>metadata_table_key</code> → Data Catalogue</span>
-  </span>
-</a>
+-   **[METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_guardrail_row_results.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">11</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_GUARDRAIL_ROW_RESULTS</strong>
-      <span>See which records caused a data quality check to fail.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One failed source row × failed DQ rule</span>
-    <span><b>Identity</b> <code>guardrail_row_result_id</code></span>
-    <span><b>Links to</b> <code>guardrail_result_id</code> → Guardrail Results; <code>guardrail_rule_id</code> → Guardrail</span>
-  </span>
-</a>
+    Compact per-column summary statistics captured from a profiled dataset snapshot.
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_contract.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">12</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_CONTRACT</strong>
-      <span>Define what the data is, how it is structured, its sensitivity, quality requirements, schema, freshness, and approved uses, and link it to the Data Agreement.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One table membership in one saved contract inventory</span>
-    <span><b>Identity</b> Agreement + table within one save activity</span>
-    <span><b>Links to</b> <code>agreement_id</code> → Data Agreement; <code>metadata_table_key</code> → Data Catalogue</span>
-  </span>
-</a>
+-   **[METADATA_DATA_PROFILED_FREQUENCY](metadata/metadata_data_profiled_frequency.md)**
 
-<a class="metadata-workflow-row" href="metadata/metadata_data_access.md">
-  <span class="metadata-workflow-row__main">
-    <span class="metadata-workflow-row__step">13</span>
-    <span class="metadata-workflow-row__content">
-      <strong>METADATA_DATA_ACCESS</strong>
-      <span>Record who can use the data and how they are allowed to use it.</span>
-    </span>
-  </span>
-  <span class="metadata-workflow-row__facts">
-    <span><b>Grain</b> One access record</span>
-    <span><b>Identity</b> Not formally defined yet</span>
-    <span><b>Links to</b> <code>metadata_table_key</code>, <code>metadata_column_key</code> → Data Catalogue</span>
-  </span>
-</a>
+    Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.
+
+-   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
+
+    Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.
+
+-   **[METADATA_DATA_ACCESS](metadata/metadata_data_access.md)**
+
+    Access-review rows reserved for implemented metadata access evidence.
+
+-   **[METADATA_ENRICHMENT](metadata/metadata_enrichment.md)**
+
+    Append-only generic descriptive and governance values for catalogue table and column identities.
+
+-   **[METADATA_GUARDRAIL](metadata/metadata_guardrail.md)**
+
+    Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.
+
+-   **[METADATA_GUARDRAIL_RESULTS](metadata/metadata_guardrail_results.md)**
+
+    Runtime guardrail outcomes written by pipeline enforcement.
+
+-   **[METADATA_GUARDRAIL_ROW_RESULTS](metadata/metadata_guardrail_row_results.md)**
+
+    Failed source-row and failed-DQ-rule evidence linked to runtime guardrail outcomes.
+
+-   **[METADATA_SOURCE_OBSERVATION](metadata/metadata_source_observation.md)**
+
+    Append-only compact partition observations used for cheap pre-read source checking; each row links to METADATA_DATA_CATALOGUE through metadata_table_key.
 
 </div>

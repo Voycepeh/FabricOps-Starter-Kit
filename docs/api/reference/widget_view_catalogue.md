@@ -1,4 +1,4 @@
-# `widget_view_pipeline_catalogue`
+# `widget_view_catalogue`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
 <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
@@ -7,22 +7,24 @@
 
 > This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
 
-Select a Source or Target dataset linked to the current notebook through data lineage, then load its catalogue and profile DataFrames for native Fabric rendering.
+Select catalogue evidence through an explicit pipeline, agreement, or explore dataset scope.
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_pipeline_catalogue.py:10`
+`fabricops_kit/widgets/widget_view_catalogue.py:117`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_pipeline_catalogue.py#L10-L89">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L117-L247">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
 <span class="reference-chip">Public Starter Kit function</span>
+<span class="reference-chip">01_governance</span>
 <span class="reference-chip">02_pipeline</span>
+<span class="reference-chip">99_explore</span>
 </p>
 
-**Used in notebooks:** `02_pipeline`
+**Used in notebooks:** `01_governance`, `02_pipeline`, `99_explore`
 
 ## Usage notes
 
@@ -36,7 +38,9 @@ They are read-only selectors and do not modify metadata.
 <div class="reference-api-definition" markdown="1">
 
 ```python
-def widget_view_pipeline_catalogue(
+def widget_view_catalogue(
+    mode: str,
+    agreement: dict[str, Any] | None=None,
     spark_session=None,
     target: str='metadata',
     schema: str | None=None,
@@ -50,9 +54,8 @@ def widget_view_pipeline_catalogue(
 
 <div class="reference-example-usage" markdown="1">
 
->>> view = widget_view_pipeline_catalogue(spark_session=spark)
->>> views = view["get_views"]()
->>> sorted(views)
+>>> view = widget_view_catalogue(mode="explore", spark_session=spark)
+>>> sorted(view["get_views"]())
 ['catalogue', 'frequency', 'guardrail_results', 'guardrail_row_results', 'profile']
 
 </div>
@@ -61,41 +64,39 @@ def widget_view_pipeline_catalogue(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
+| `mode` | `str` | Yes | Explicit dataset-scope strategy. No mode is inferred from other inputs. |
+| `agreement` | `dict[str, Any] \| None` | No | Agreement widget state containing the current saved agreement. Required only for ``mode="agreement"``. |
 | `spark_session` | `object` | No | Spark session override. |
 | `target` | `str` | No | Configured metadata FabricStore target. |
 | `schema` | `str \| None` | No | Metadata lakehouse schema override. |
-| `context` | `object` | No | Explicit FabricOps context used to resolve stable notebook identity. |
+| `context` | `object` | No | Explicit FabricOps context used for environment and runtime identity. |
 
 ## Returns
 
 dict
-    Common catalogue state mapping. ``get_views`` returns a named mapping
-    containing the selected ``catalogue``, compact ``profile``, normalized
-    ``frequency``, ``guardrail_results``, and ``guardrail_row_results``
-    Spark DataFrames without rendering.
+    Common state with ``get_selection``, ``get_views``, and ``refresh``.
+    ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,
+    ``guardrail_results``, and ``guardrail_row_results`` Spark DataFrames,
+    all scoped to the selected ``metadata_table_key``.
 
 ### Return interpretation
 
-Call state["get_views"]() to receive exactly catalogue_df and profile_df for native Fabric display.
+Call state["get_views"]() to receive exactly catalogue, profile, frequency, guardrail_results, and guardrail_row_results for the selected metadata_table_key.
 
 ## Raises / Errors
 
 ValueError
-    If stable notebook identity is unavailable after checking the active
-    FabricOps context and current Microsoft Fabric runtime.
+    If ``mode`` is unsupported, pipeline notebook identity cannot be
+    resolved, or agreement mode has no saved agreement selection.
 
 ## Notes
 
 <div class="reference-docstring-notes" markdown="1">
 
-Notebook and workspace identity are resolved, in order, from an explicitly
-injected FabricOps context, the active FabricOps context and its runtime
-metadata, and the current Microsoft Fabric notebook runtime.
-
-The compact profile defaults to the latest ``profiled_at`` snapshot.
-Frequencies are limited to the selected profile column and matched through
-both ``metadata_column_key`` and ``profiled_at`` so historical snapshots
-cannot be mixed.
+Microsoft Fabric is the execution runtime. Pipeline mode derives its scope
+from current-notebook lineage, agreement mode derives it from registered
+contracts, and explore mode includes the current environment inventory.
+All modes then use one shared selector and evidence-loading path.
 
 </div>
 
@@ -117,12 +118,6 @@ No related guides documented.
 | Contract classification | Preview public function |
 | Contract risk | Preview |
 | Live-critical dependencies | 0 |
-
-### Release history
-
-| Status | Version |
-| --- | --- |
-| Preview | 0.2.0 |
 
 
 </details>

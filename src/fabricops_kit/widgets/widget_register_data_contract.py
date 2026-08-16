@@ -404,7 +404,7 @@ def widget_register_data_contract(
     See Also
     --------
     widget_render_data_agreement
-    widget_view_agreement_catalogue
+    widget_view_catalogue
     widget_enrich_table_metadata
 
     """
