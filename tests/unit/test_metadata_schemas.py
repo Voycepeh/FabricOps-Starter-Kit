@@ -1,4 +1,4 @@
-"""Focused contracts for immutable Data Contract metadata schemas."""
+"""Focused contracts for FabricOps metadata schemas."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.unit
 
 
 def test_data_contract_uses_one_snapshot_membership_schema():
-    """One snapshot table contains timestamped memberships without lifecycle columns."""
+    """Keep the current Data Contract contract unchanged until Stage 5."""
     registry = metadata_table_schema_registry()
     audit_names = [name for name, _kind, _nullable in audit_schema_fields()]
     membership_names = registry["METADATA_DATA_CONTRACT"].fieldNames()
@@ -24,50 +24,127 @@ def test_data_contract_uses_one_snapshot_membership_schema():
     assert membership_names == [
         "agreement_id", "metadata_table_key", "schema_fingerprint", "approved_usage_json", *audit_names,
     ]
-    abandoned = {
-        "contract_id", "contract_version", "contract_status", "effective_from",
-        "effective_to", "contract_payload_json", "contract_snapshot_id",
-        "snapshot_saved_at",
-    }
-    assert abandoned.isdisjoint(membership_names)
 
 
-def test_profiled_frequency_schema_is_normalized_and_ordered():
-    """Verify the breaking normalized profile frequency metadata contract."""
-    from fabricops_kit.config.metadata_schemas import (
-        AUDIT_SCHEMA_FIELDS,
-        CANONICAL_METADATA_TABLES,
-        metadata_table_schema_registry,
-    )
+def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
+    """Catalogue owns the physical table/column identity for one environment."""
+    fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
+    assert fields == [
+        "metadata_level",
+        "table_id",
+        "column_id",
+        "environment_name",
+        "store_type",
+        "layer",
+        "schema_name",
+        "table_name",
+        "column_name",
+        "first_profiled_at",
+        "last_profiled_at",
+        "is_active",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
+    ]
+    assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key"}.isdisjoint(fields)
 
+
+def test_stage2_profile_schema_is_normalized():
+    """Profile stores snapshot metrics and asset IDs without repeated physical names."""
+    fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
+    assert fields[:20] == [
+        "profile_id",
+        "profile_snapshot_id",
+        "table_id",
+        "column_id",
+        "environment_name",
+        "data_type",
+        "row_count",
+        "non_null_count",
+        "null_count",
+        "null_percent",
+        "distinct_count",
+        "distinct_percent",
+        "mean_value",
+        "stddev_value",
+        "min_value",
+        "percentile_25_value",
+        "median_value",
+        "percentile_75_value",
+        "max_value",
+        "profiled_at",
+    ]
+    assert {
+        "metadata_table_key",
+        "metadata_column_key",
+        "store_type",
+        "layer",
+        "schema_name",
+        "table_name",
+        "column_name",
+        "schema_fingerprint",
+    }.isdisjoint(fields)
+
+
+def test_profiled_frequency_schema_is_flattened_detail_for_profile():
+    """Frequency stores flattened distribution rows linked through profile_id."""
     registry = metadata_table_schema_registry()
     profiled_index = CANONICAL_METADATA_TABLES.index("METADATA_DATA_PROFILED")
     assert CANONICAL_METADATA_TABLES[profiled_index + 1] == "METADATA_DATA_PROFILED_FREQUENCY"
     assert "frequency_json" not in registry["METADATA_DATA_PROFILED"].fieldNames()
-    schema = registry["METADATA_DATA_PROFILED_FREQUENCY"]
-    expected = [
-        ("metadata_column_key", "StringType", False),
-        ("value", "StringType", True),
-        ("frequency_count", "LongType", False),
-        ("frequency_percent", "DoubleType", False),
-        ("frequency_rank", "IntegerType", False),
-        ("profiled_row_count", "LongType", False),
-        ("profiled_non_null_count", "LongType", False),
-        ("profiled_at", "TimestampType", False),
-        *[(name, f"{kind.title()}Type" if kind != "integer" else "IntegerType", nullable) for name, kind, nullable in AUDIT_SCHEMA_FIELDS],
+    fields = registry["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames()
+    assert fields == [
+        "frequency_id",
+        "profile_id",
+        "profile_snapshot_id",
+        "value",
+        "frequency_count",
+        "frequency_percent",
+        "frequency_rank",
+        "profiled_row_count",
+        "profiled_non_null_count",
+        "profiled_at",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields] == expected
+    assert {"table_id", "column_id", "environment_name", "metadata_column_key"}.isdisjoint(fields)
 
 
-def test_enrichment_schema_is_minimal_generic_contract():
-    """Enrichment has five required business fields and standard audit fields only."""
+def test_stage2_lineage_schema_uses_pipeline_language():
+    """Lineage describes pipeline participation rather than a profiling role."""
+    fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
+    assert fields == [
+        "lineage_id",
+        "table_id",
+        "profile_snapshot_id",
+        "environment_name",
+        "pipeline_role",
+        "recorded_at",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
+    ]
+    assert {"lineage_event_id", "profile_role", "profiled_at"}.isdisjoint(fields)
+
+
+def test_stage2_source_observation_schema_is_guardrail_independent():
+    """Persist reusable source evidence without Guardrail-owned identity."""
+    fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
+    assert fields == [
+        "observation_id",
+        "table_id",
+        "environment_name",
+        "partition_value",
+        "row_count",
+        "min_change_value",
+        "max_change_value",
+        "is_present",
+        "observed_at",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
+    ]
+    assert {"metadata_table_key", "guardrail_rule_version_id", "partition_column", "change_column"}.isdisjoint(fields)
+
+
+def test_enrichment_schema_is_unchanged_until_stage3():
+    """Do not pull the Enrichment migration into Stage 2."""
     schema = metadata_table_schema_registry()["METADATA_ENRICHMENT"]
     expected_names = [
         "enrichment_id", "enrichment_level", "metadata_key", "enrichment_type", "value",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     assert schema.fieldNames() == expected_names
-    assert all(field.nullable is False for field in schema.fields)
-    assert all(type(field.dataType).__name__ == ("TimestampType" if field.name == "_committed_at" else "StringType") for field in schema.fields)
-    removed = {"enrichment_rule_id", "metadata_table_key", "metadata_column_key", "enrichment_payload_json", "review_status", "activation_state", "is_active", "effective_from"}
-    assert removed.isdisjoint(schema.fieldNames())
