@@ -1,4 +1,5 @@
 """Tests for Stage 2 profile_and_register_table orchestration."""
+# ruff: noqa: D103
 
 from __future__ import annotations
 
