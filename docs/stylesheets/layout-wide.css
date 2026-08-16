@@ -233,6 +233,109 @@
   font-weight: 700;
 }
 
+/* Product-style metadata workflow list. */
+.md-content__inner .md-typeset > .metadata-workflow-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.25rem 0 2rem;
+  max-width: 100%;
+  width: min(100%, 108rem);
+}
+
+.md-typeset .metadata-workflow-row {
+  align-items: stretch;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 0.3rem solid var(--md-accent-fg-color);
+  border-radius: 0.55rem;
+  box-shadow: 0 0.08rem 0.24rem rgba(0, 0, 0, 0.05);
+  color: inherit;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.md-typeset .metadata-workflow-row:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: 0 0.15rem 0.45rem rgba(0, 0, 0, 0.09);
+}
+
+.md-typeset .metadata-workflow-row__main {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.9rem;
+  min-width: 0;
+  padding: 1rem 1.1rem;
+}
+
+.md-typeset .metadata-workflow-row__step {
+  color: var(--md-default-fg-color--light);
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+}
+
+.md-typeset .metadata-workflow-row__content {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.md-typeset .metadata-workflow-row__content strong {
+  color: var(--md-accent-fg-color);
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .metadata-workflow-row__content > span {
+  color: var(--md-default-fg-color);
+  line-height: 1.5;
+}
+
+.md-typeset .metadata-workflow-row__facts {
+  background: color-mix(in srgb, var(--md-default-fg-color--lightest) 55%, transparent);
+  border-left: 1px solid var(--md-default-fg-color--lightest);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+}
+
+.md-typeset .metadata-workflow-row__facts > span {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.md-typeset .metadata-workflow-row__facts b {
+  color: var(--md-default-fg-color);
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.08rem;
+  text-transform: uppercase;
+}
+
+.md-typeset .metadata-workflow-row__facts code {
+  font-size: 0.7rem;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media screen and (max-width: 44.984375em) {
+  .md-typeset .metadata-workflow-row {
+    grid-template-columns: 1fr;
+  }
+
+  .md-typeset .metadata-workflow-row__facts {
+    border-left: 0;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Generated public callable flow tables. */
 .md-typeset .callable-flow-table-wrap {
   margin: 1rem 0 1.5rem;
