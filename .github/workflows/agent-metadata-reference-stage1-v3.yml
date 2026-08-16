@@ -51,6 +51,9 @@ jobs:
       - name: Enforce focused diff and publish
         shell: bash
         run: |
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/releases/0.2.0/functions/setup_metadata_tables.md docs/releases/0.2.0/functions/setup_notebook.md 2>/dev/null || true
+          rm -rf site
           allowed='^(scripts/reference_docs_metadata.py|scripts/generate_individual_function_reference_pages.py|tests/unit/test_metadata_reference_generator.py|tests/unit/test_reference_agent_docs.py|docs/reference/metadata.md|docs/reference/metadata/.*\.md|\.github/agent_stage1.py|\.github/agent_stage1_run.py|\.github/workflows/agent-metadata-reference-stage1.yml|\.github/workflows/agent-metadata-reference-stage1-v2.yml|\.github/workflows/agent-metadata-reference-stage1-v3.yml)$'
           bad=0
           while IFS= read -r path; do
