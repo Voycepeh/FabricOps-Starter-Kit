@@ -9,22 +9,12 @@
 
 Check whether source timing satisfies direct or approved freshness intent.
 
-<div class="reference-docstring-intro" markdown="1">
-
-The persisted observation remains independent of Guardrail configuration.
-During the staged migration this function loads the current change and
-freshness rules, temporarily adds the legacy aliases required by the
-not-yet-migrated Guardrail core in memory, and never writes those aliases
-back to ``METADATA_SOURCE_OBSERVATION``.
-
-</div>
-
 <div class="reference-source-card" markdown="1">
 **Source**
 
 `fabricops_kit/pipeline/check_freshness.py:19`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L19-L105">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_freshness.py#L19-L116">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -55,9 +45,8 @@ def check_freshness(observation) -> dict
 
 <div class="reference-example-usage" markdown="1">
 
-```python
-freshness_result = check_freshness(df, "business_date", 2)
-```
+>>> observation = observe_table("orders", target="source", schema="dbo")
+>>> result = check_freshness(observation)
 
 </div>
 
@@ -65,7 +54,7 @@ freshness_result = check_freshness(df, "business_date", 2)
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `observation` | `—` | Yes | Not documented yet |
+| `observation` | `pyspark.sql.DataFrame` | Yes | Canonical evidence returned by :func:`observe_table`. |
 
 ## Returns
 

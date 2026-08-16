@@ -231,13 +231,33 @@ def _observation_changes(observation) -> dict:
 
 
 def check_changes(observation) -> dict:
-    """Describe deterministic partition changes since a source observation.
+    """Describe deterministic row and partition changes since an observation.
+    
+    Parameters
+    ----------
+    observation : pyspark.sql.DataFrame
+        Canonical evidence returned by :func:`observe_table`.
+    
+    Returns
+    -------
+    dict
+        Structured changes summary, partition observations, counts, and
+        observed ranges. This function does not merge or write target data;
+        approved observation rules may write guardrail-result metadata.
+    
+    Raises
+    ------
+    ValueError
+        If configuration is invalid or logical keys are null, missing, or
+        duplicated.
+    
+    Examples
+    --------
+    >>> observation = observe_table("orders", target="source", schema="dbo")
+    >>> result = check_changes(observation)
+    >>> result["changed"]
+    True
 
-    ``observation`` must be the normalized evidence returned by
-    :func:`observe_table`. History is selected by ``table_id`` and
-    ``environment_name`` so Development and Production baselines cannot be
-    mixed. Removed partitions are appended as tombstones inside the same
-    current observation snapshot.
     """
     if not is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")

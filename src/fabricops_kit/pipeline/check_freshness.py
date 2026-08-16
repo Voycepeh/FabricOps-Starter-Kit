@@ -17,13 +17,24 @@ from fabricops_kit.pipeline.observation_shared import (
 
 
 def check_freshness(observation) -> dict:
-    """Check whether a normalized source observation satisfies freshness intent.
+    """Check whether a source satisfies configured freshness intent.
+    
+    Parameters
+    ----------
+    observation : pyspark.sql.DataFrame
+        Canonical evidence returned by :func:`observe_table`.
+    
+    Returns
+    -------
+    dict
+        Structured freshness evidence and continuation decision. Governed
+        observation checks append the outcome to ``METADATA_GUARDRAIL_RESULTS``.
+    
+    Examples
+    --------
+    >>> observation = observe_table("orders", target="source", schema="dbo")
+    >>> result = check_freshness(observation)
 
-    The persisted observation remains independent of Guardrail configuration.
-    During the staged migration this function loads the current change and
-    freshness rules, temporarily adds the legacy aliases required by the
-    not-yet-migrated Guardrail core in memory, and never writes those aliases
-    back to ``METADATA_SOURCE_OBSERVATION``.
     """
     if not is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")

@@ -283,7 +283,7 @@ def test_profile_and_register_table_derives_physical_identity_into_catalogue(
     catalogue = next(write["df"] for write in registered if write["table_name"] == CATALOGUE_TABLE)
     table_row = next(row for row in catalogue.collect() if row.metadata_level == "table")
     assert (table_row.environment_name, table_row.store_type, table_row.layer, table_row.schema_name) == (
-        "dev", kind, target, schema
+        "dev", kind, target, schema or ""
     )
 
 
