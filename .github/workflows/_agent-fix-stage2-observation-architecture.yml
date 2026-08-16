@@ -80,16 +80,16 @@ jobs:
           PYTHONPATH: src
           FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
         run: |
-          python scripts/generate_public_function_call_flows_json.py
-          python scripts/generate_individual_function_reference_pages.py
+          uv run python scripts/generate_public_function_call_flows_json.py
+          uv run python scripts/generate_individual_function_reference_pages.py
       - name: Verify generated stability
         env:
           PYTHONPATH: src
           FABRICOPS_PRESERVE_GENERATED_ARTIFACT_TIMESTAMPS: "1"
         run: |
           git add src tests scripts docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
-          python scripts/generate_public_function_call_flows_json.py
-          python scripts/generate_individual_function_reference_pages.py
+          uv run python scripts/generate_public_function_call_flows_json.py
+          uv run python scripts/generate_individual_function_reference_pages.py
           git diff --exit-code -- docs/reference/_data/public-function-call-flows.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
       - name: Validate ownership and docs
         run: |
