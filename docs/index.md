@@ -87,7 +87,7 @@ FabricOps consists of:
   </a>
 
   <a class="fabricops-landing-card" href="reference/dq-rules/">
-    <span class="fabricops-landing-card__title">23 data quality rule types</span>
+    <span class="fabricops-landing-card__title">11 data quality rule types</span>
     <span class="fabricops-landing-card__body">Explore supported data quality rules that can be used as guardrails.</span>
   </a>
 </div>
