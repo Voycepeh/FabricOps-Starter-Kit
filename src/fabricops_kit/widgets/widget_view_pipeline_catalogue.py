@@ -25,8 +25,9 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     -------
     dict
         Common catalogue state mapping. ``get_views`` returns a named mapping
-        containing the selected ``catalogue``, compact ``profile``, and
-        normalized ``frequency`` Spark DataFrames without rendering.
+        containing the selected ``catalogue``, compact ``profile``, normalized
+        ``frequency``, ``guardrail_results``, and ``guardrail_row_results``
+        Spark DataFrames without rendering.
 
     Raises
     ------
@@ -49,7 +50,8 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
     --------
     >>> view = widget_view_pipeline_catalogue(spark_session=spark)
     >>> views = view["get_views"]()
-    >>> views["catalogue"], views["profile"], views["frequency"]
+    >>> sorted(views)
+    ['catalogue', 'frequency', 'guardrail_results', 'guardrail_row_results', 'profile']
 
     """
     config, environment_name, resolved = resolve_fabric_context(context=context)
@@ -83,4 +85,5 @@ def widget_view_pipeline_catalogue(*, spark_session=None, target: str = "metadat
         display_context={"Notebook": notebook_name, "Environment": environment_name, "Linked datasets": len(pairs)},
         inventory_rows=rows, role_options=pairs, target=target, schema=schema, spark_session=spark_session,
         runtime_context=runtime_context, empty_message="No lineage catalogue inventory was found for this notebook.",
+        include_guardrail_views=True,
     )

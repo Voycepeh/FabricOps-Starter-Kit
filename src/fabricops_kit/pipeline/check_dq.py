@@ -31,7 +31,8 @@ def check_dq(
     dataset_name : str, optional
         Governed dataset identity used to further scope rules when supplied.
     run_id : str, optional
-        Pipeline run identity persisted with failed-row evidence.
+        Pipeline run identity persisted with failed-row evidence. When omitted,
+        the current Fabric activity identity is used.
     row_identity_columns : list[str], optional
         Business-key columns used for row identity. When omitted, an existing
         row UUID/ID is preferred and a deterministic content hash is the
@@ -40,8 +41,9 @@ def check_dq(
     Returns
     -------
     dict
-        Overall status and continuation decision, one check per evaluated rule,
-        aggregate counts, and the original DataFrame with DQ status columns.
+        Overall ``status`` and ``can_continue`` decision, concise ``summary``,
+        one check per evaluated rule, and the original DataFrame with DQ status
+        columns. Evaluated rules also include the resolved ``run_id``.
 
     Raises
     ------

@@ -14,7 +14,7 @@ Evaluate current active governed DQ rules and persist linked rule and failed-row
 
 `fabricops_kit/pipeline/check_dq.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L8-L89">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/check_dq.py#L8-L91">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -68,7 +68,7 @@ True
 | `target` | `str` | No | Configured FabricOps store target that owns the table. |
 | `schema` | `str \| None` | No | Physical schema containing the table. |
 | `dataset_name` | `str` | No | Governed dataset identity used to further scope rules when supplied. |
-| `run_id` | `str` | No | Pipeline run identity persisted with failed-row evidence. |
+| `run_id` | `str` | No | Pipeline run identity persisted with failed-row evidence. When omitted, the current Fabric activity identity is used. |
 | `row_identity_columns` | `list[str] \| None` | No | Business-key columns used for row identity. When omitted, an existing row UUID/ID is preferred and a deterministic content hash is the fallback. |
 
 ## Returns

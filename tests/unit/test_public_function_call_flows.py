@@ -295,9 +295,7 @@ def test_repository_manifest_lifecycle_authority() -> None:
         {"version": "0.2.0", "status": "live"},
     ]
 
-    preview = next(item for item in payload["public_functions"] if item["function_name"] == "display_guardrail_results")
-    assert preview["lifecycle_status"] == "preview"
-    assert preview["live_since"] is None
+    assert "display_guardrail_results" not in {item["function_name"] for item in payload["public_functions"]}
 
     manifest = flows.load_release_manifests()[-1]
     expected_live = sum(1 for item in manifest["functions"] if item["status"] == "live")
