@@ -1,0 +1,57 @@
+name: Agent update metadata product wording
+
+on:
+  push:
+    branches:
+      - agent/metadata-reference-model-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply canonical product wording
+        run: python .github/agent_update_metadata_product_wording.py
+      - name: Install dependencies
+        run: |
+          python -m pip install -e '.[dev,docs]'
+          python -m pip install pyspark
+      - name: Regenerate directly affected reference outputs
+        run: |
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
+      - name: Confirm deterministic output
+        run: |
+          cp docs/reference/metadata.md /tmp/metadata.md
+          rm -rf /tmp/metadata-pages
+          cp -R docs/reference/metadata /tmp/metadata-pages
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          diff -u /tmp/metadata.md docs/reference/metadata.md
+          diff -ru /tmp/metadata-pages docs/reference/metadata
+          git checkout -- docs/reference/_data/generated-artifacts.json 2>/dev/null || true
+          git checkout -- docs/api/reference docs/reference/index.md docs/reference/call-graph.md docs/reference/function-call-graph.md 2>/dev/null || true
+      - name: Validate
+        run: |
+          python -m pytest -q tests/unit/test_metadata_reference_generator.py tests/unit/test_reference_agent_docs.py
+          python -m mkdocs build --strict
+      - name: Publish focused update
+        shell: bash
+        run: |
+          rm -rf site
+          git checkout -- docs/releases/0.2.0/functions/setup_metadata_tables.md docs/releases/0.2.0/functions/setup_notebook.md 2>/dev/null || true
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/agent_update_metadata_product_wording.py .github/workflows/agent-update-metadata-product-wording.yml
+          git add scripts/reference_docs_metadata.py docs/reference/metadata.md docs/reference/metadata
+          git commit -m 'Use canonical product wording for metadata tables'
+          git pull --rebase origin agent/metadata-reference-model-foundation
+          git push origin HEAD:agent/metadata-reference-model-foundation
