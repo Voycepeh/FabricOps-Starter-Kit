@@ -1,6 +1,17 @@
 # METADATA_DATA_CONTRACT
 
-**Purpose:** Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.
+Define what the data is, how it looks, its approved usage and schema fingerprint, and link it to the Data Agreement.
+
+## Model
+
+**Grain:** One authorised catalogue table and schema fingerprint governed by one Data Agreement.
+
+**Primary key:** `agreement_id` + `metadata_table_key` + `schema_fingerprint`
+
+**Relationships:**
+
+* `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**1:N**). One contracted table identity can match the catalogue rows for that table's columns.
 
 ## Column summary
 

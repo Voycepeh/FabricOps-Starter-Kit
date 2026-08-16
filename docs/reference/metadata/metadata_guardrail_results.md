@@ -1,6 +1,18 @@
 # METADATA_GUARDRAIL_RESULTS
 
-**Purpose:** Runtime guardrail outcomes written by pipeline enforcement.
+See whether the expectations of the data in the ETL pipeline run are met.
+
+## Model
+
+**Grain:** One runtime outcome for one guardrail rule in one pipeline run.
+
+**Primary key:** `guardrail_result_id`
+
+**Relationships:**
+
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one authored guardrail rule.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many runtime guardrail outcomes can refer to one logical catalogue table identity.
+* **1:N**: One Guardrail Result can have many Guardrail Row Results when row level failure evidence is captured.
 
 ## Column summary
 
@@ -44,7 +56,7 @@
 
 ## Related function reference
 
-- [`check_schema`](../../api/reference/check_schema.md)
-- [`check_freshness`](../../api/reference/check_freshness.md)
-- [`check_changes`](../../api/reference/check_changes.md)
-- [`check_dq`](../../api/reference/check_dq.md)
+* [`check_schema`](../../api/reference/check_schema.md)
+* [`check_freshness`](../../api/reference/check_freshness.md)
+* [`check_changes`](../../api/reference/check_changes.md)
+* [`check_dq`](../../api/reference/check_dq.md)

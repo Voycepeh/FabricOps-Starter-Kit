@@ -1,6 +1,17 @@
 # METADATA_ENRICHMENT
 
-**Purpose:** Append-only generic descriptive and governance values for catalogue table and column identities.
+Add business and governance context to the data.
+
+## Model
+
+**Grain:** One appended enrichment value for one table or column identity.
+
+**Primary key:** `enrichment_id`
+
+**Relationships:**
+
+* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). When enrichment_level is table, many enrichment rows can describe one catalogue table identity.
+* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). When enrichment_level is column, many enrichment rows can describe one catalogue column identity.
 
 ## Column summary
 
@@ -28,13 +39,9 @@
 | `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
 | `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
 
-## Breaking pre-release replacement
+## Breaking pre release replacement
 
 This intentionally breaking schema replaces the previous enrichment lifecycle and payload model. Existing development `METADATA_ENRICHMENT` tables must be recreated; no automated migration or compatibility support is provided. Values to retain may be exported and manually reshaped before recreation.
-
-## Grain
-
-One row per enrichment level + metadata key + enrichment type + append event.
 
 ## Current value
 
@@ -53,4 +60,4 @@ The catalogue remains the source of table and column identity. New enrichment ty
 
 ## Related function reference
 
-- [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
+* [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)

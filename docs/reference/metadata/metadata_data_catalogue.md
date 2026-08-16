@@ -1,6 +1,16 @@
 # METADATA_DATA_CATALOGUE
 
-**Purpose:** Observed table and column identities used for governed catalogue review and runtime comparisons.
+See the tables and columns FabricOps has registered, including where they live and how they are structured.
+
+## Model
+
+**Grain:** One registered column for one table and schema fingerprint in one environment.
+
+**Primary key:** `environment_name` + `metadata_table_key` + `metadata_column_key` + `schema_fingerprint`
+
+**Relationships:**
+
+* **1:N**: One catalogue table identity can be referenced by many Source Observation, Data Profiled, Data Lineage, Enrichment and Guardrail rows.
 
 ## Column summary
 
@@ -35,5 +45,5 @@
 
 ## Related function reference
 
-- [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
-- [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+* [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md)

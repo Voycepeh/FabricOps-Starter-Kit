@@ -1,6 +1,17 @@
 # METADATA_DATA_PROFILED_FREQUENCY
 
-**Purpose:** Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.
+See the most common values and their frequencies for profiled columns.
+
+## Model
+
+**Grain:** One ranked observed value frequency for one profiled column snapshot.
+
+**Primary key:** `metadata_column_key` + `profiled_at` + `frequency_rank`
+
+**Relationships:**
+
+* `metadata_column_key` → `METADATA_DATA_PROFILED.metadata_column_key` (**N:1**). Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot.
+* `profiled_at` → `METADATA_DATA_PROFILED.profiled_at` (**N:1**). The profile timestamp is the second part of the logical link back to the profiled column snapshot.
 
 ## Column summary
 

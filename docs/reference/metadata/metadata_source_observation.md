@@ -1,6 +1,16 @@
 # METADATA_SOURCE_OBSERVATION
 
-**Purpose:** Append-only compact partition observations used for cheap pre-read source checking; each row links to METADATA_DATA_CATALOGUE through metadata_table_key.
+Record a lightweight view of source partitions so FabricOps can spot additions, removals and changes before ETL.
+
+## Model
+
+**Grain:** One observed partition state for one source table at one observation time.
+
+**Primary key:** `metadata_table_key` + `partition_column` + `partition_value` + `observed_at`
+
+**Relationships:**
+
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many source partition observations can belong to one logical catalogue table identity.
 
 ## Column summary
 
@@ -37,4 +47,4 @@
 
 ## Related function reference
 
-- [`observe_table`](../../api/reference/observe_table.md)
+* [`observe_table`](../../api/reference/observe_table.md)

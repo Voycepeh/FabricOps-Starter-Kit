@@ -1,6 +1,17 @@
 # METADATA_DATA_STEWARD
 
-**Purpose:** Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.
+Keep the active Data Stewards used by the Data Agreement workflow.
+
+## Model
+
+**Grain:** One registered Data Steward.
+
+**Primary key:** `steward_id`
+
+**Relationships:**
+
+* **1:N**: One Data Steward can appear as the provider steward on many Data Agreement versions.
+* **1:N**: One Data Steward can appear as the recipient steward on many Data Agreement versions.
 
 ## Column summary
 
@@ -31,4 +42,4 @@
 
 ## Related function reference
 
-- [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)
+* [`widget_render_data_steward`](../../api/reference/widget_render_data_steward.md)

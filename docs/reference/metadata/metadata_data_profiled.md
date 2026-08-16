@@ -1,6 +1,18 @@
 # METADATA_DATA_PROFILED
 
-**Purpose:** Compact per-column summary statistics captured from a profiled dataset snapshot.
+See the shape and quality of each column from a profiled dataset snapshot.
+
+## Model
+
+**Grain:** One profiled column for one dataset snapshot.
+
+**Primary key:** `environment_name` + `metadata_column_key` + `schema_fingerprint` + `profiled_at`
+
+**Relationships:**
+
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many profiled column snapshots can belong to one logical catalogue table identity.
+* `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). Many profile snapshots can describe the same logical catalogue column over time.
+* **1:N**: One profiled column snapshot can have many Data Profiled Frequency rows through metadata_column_key and profiled_at.
 
 ## Column summary
 
@@ -49,6 +61,6 @@
 
 ## Related function reference
 
-- [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
-- [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
-- [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+* [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
+* [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
