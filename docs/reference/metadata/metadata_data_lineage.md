@@ -1,6 +1,17 @@
 # METADATA_DATA_LINEAGE
 
-**Purpose:** Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.
+See where the data came from and where it ends up.
+
+## Model
+
+**Grain:** One source or target participation event for one profiled table snapshot in one Fabric activity.
+
+**Primary key:** `lineage_event_id`
+
+**Relationships:**
+
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many lineage events can refer to the same logical catalogue table identity.
+* **1:N**: One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at.
 
 ## Column summary
 
@@ -31,4 +42,4 @@
 
 ## Related function reference
 
-- [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)
+* [`profile_and_register_table`](../../api/reference/profile_and_register_table.md)

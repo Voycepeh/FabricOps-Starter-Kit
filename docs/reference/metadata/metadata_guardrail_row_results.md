@@ -1,6 +1,18 @@
 # METADATA_GUARDRAIL_ROW_RESULTS
 
-**Purpose:** Failed source-row and failed-DQ-rule evidence linked to runtime guardrail outcomes.
+See which records did not meet the expectations.
+
+## Model
+
+**Grain:** One failed source row or DQ rule evidence row linked to one runtime guardrail result.
+
+**Primary key:** `guardrail_row_result_id`
+
+**Relationships:**
+
+* `guardrail_result_id` → `METADATA_GUARDRAIL_RESULTS.guardrail_result_id` (**N:1**). Many row level failure evidence rows can belong to one Guardrail Result.
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many row level failure evidence rows can trace back to one authored guardrail rule.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many row level failure evidence rows can refer to one logical catalogue table identity.
 
 ## Column summary
 
@@ -39,4 +51,4 @@
 
 ## Related function reference
 
-- [`check_dq`](../../api/reference/check_dq.md)
+* [`check_dq`](../../api/reference/check_dq.md)

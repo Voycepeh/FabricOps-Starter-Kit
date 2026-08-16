@@ -4234,6 +4234,23 @@ def generate_metadata_reference_pages() -> None:
         metadata_table_schema_rows,
     )
 
+    def _model_key_text(fields: list[str]) -> str:
+        if not fields:
+            return "Not defined in the current implementation."
+        return " + ".join(f"`{field}`" for field in fields)
+
+    def _relationship_lines(model: dict[str, Any]) -> list[str]:
+        rendered: list[str] = []
+        for foreign_key in model.get("foreign_keys", []):
+            rendered.append(
+                f"* `{foreign_key['local_field']}` → "
+                f"`{foreign_key['referenced_table']}.{foreign_key['referenced_field']}` "
+                f"(**{foreign_key['cardinality']}**). {foreign_key['statement']}"
+            )
+        for relationship in model.get("relationships", []):
+            rendered.append(f"* **{relationship['cardinality']}**: {relationship['statement']}")
+        return rendered or ["* No immediate logical relationship is defined in the current implementation."]
+
     METADATA_REFERENCE_DIR.mkdir(parents=True, exist_ok=True)
     registry = metadata_table_schema_registry()
     canonical_tables = list(CANONICAL_METADATA_TABLES)
@@ -4243,34 +4260,116 @@ def generate_metadata_reference_pages() -> None:
             "metadata_table_schema_registry() is missing canonical metadata tables: "
             + ", ".join(missing_tables)
         )
+
+    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
+    table_models = namespace.get("METADATA_TABLE_MODELS", {})
+    reference_order = namespace.get("METADATA_REFERENCE_ORDER", canonical_tables)
+    if not isinstance(table_models, dict):
+        raise RuntimeError("Metadata reference contract must define METADATA_TABLE_MODELS as a dictionary")
+    if not isinstance(reference_order, list):
+        raise RuntimeError("Metadata reference contract must define METADATA_REFERENCE_ORDER as a list")
+    if set(table_models) != set(canonical_tables):
+        missing = sorted(set(canonical_tables) - set(table_models))
+        extra = sorted(set(table_models) - set(canonical_tables))
+        raise RuntimeError(f"Metadata model coverage mismatch; missing={missing}, extra={extra}")
+    if len(reference_order) != len(canonical_tables) or set(reference_order) != set(canonical_tables):
+        raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
+
+    valid_cardinalities = {"1:1", "1:N", "N:1"}
+    field_names_by_table = {
+        table_name: {row["name"] for row in metadata_table_schema_rows(schema)}
+        for table_name, schema in registry.items()
+    }
+    for table_name in canonical_tables:
+        model = table_models[table_name]
+        if not isinstance(model, dict):
+            raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] must be a dictionary")
+        for required in ("purpose", "grain", "primary_key", "foreign_keys", "relationships"):
+            if required not in model:
+                raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] is missing {required!r}")
+        if not str(model["purpose"]).strip() or not str(model["grain"]).strip():
+            raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}] must define non empty purpose and grain")
+        if not isinstance(model["primary_key"], list):
+            raise RuntimeError(f"METADATA_TABLE_MODELS[{table_name!r}].primary_key must be a list")
+        for field_name in model["primary_key"]:
+            if field_name not in field_names_by_table[table_name]:
+                raise RuntimeError(f"Primary key field {table_name}.{field_name} is not in the implemented schema")
+        for foreign_key in model["foreign_keys"]:
+            local_field = foreign_key["local_field"]
+            referenced_table = foreign_key["referenced_table"]
+            referenced_field = foreign_key["referenced_field"]
+            cardinality = foreign_key["cardinality"]
+            if local_field not in field_names_by_table[table_name]:
+                raise RuntimeError(f"Foreign key field {table_name}.{local_field} is not in the implemented schema")
+            if referenced_table not in registry:
+                raise RuntimeError(f"Foreign key target table {referenced_table} does not exist")
+            if referenced_field not in field_names_by_table[referenced_table]:
+                raise RuntimeError(
+                    f"Foreign key target field {referenced_table}.{referenced_field} is not in the implemented schema"
+                )
+            if cardinality not in valid_cardinalities:
+                raise RuntimeError(f"Unsupported metadata relationship cardinality: {cardinality}")
+            if not str(foreign_key.get("statement", "")).strip():
+                raise RuntimeError(f"Foreign key relationship {table_name}.{local_field} needs a statement")
+        for relationship in model["relationships"]:
+            if relationship.get("cardinality") not in valid_cardinalities:
+                raise RuntimeError(
+                    f"Unsupported metadata relationship cardinality: {relationship.get('cardinality')}"
+                )
+            if not str(relationship.get("statement", "")).strip():
+                raise RuntimeError(f"Metadata relationship for {table_name} needs a statement")
+
     table_purposes, column_owners = parse_metadata_reference_contract()
     public_callable_set = public_callable_names()
     audit_column_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for generated_page in METADATA_REFERENCE_DIR.glob("*.md"):
         generated_page.unlink(missing_ok=True)
+
     index_lines = [
         "# List of Metadata Tables",
         "",
         *parse_metadata_reference_overview(),
         "",
-        "<div class=\"grid cards\" markdown>",
-        "",
     ]
-    for table_name in canonical_tables:
+    for table_name in reference_order:
         slug = table_name.lower()
+        model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
         index_lines.extend([
-            f"-   **[{table_name}](metadata/{slug}.md)**",
+            f"## [{table_name}](metadata/{slug}.md)",
             "",
-            f"    {purpose}",
+            purpose,
+            "",
+            f"**Grain:** {model['grain']}",
+            "",
+            f"**Primary key:** {_model_key_text(model['primary_key'])}",
+            "",
+            "**Relationships:**",
+            "",
+            *_relationship_lines(model),
+            "",
+            f"[View full schema](metadata/{slug}.md)",
+            "",
+            "---",
             "",
         ])
+
         rows = metadata_table_schema_rows(registry[table_name])
         column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
         lines = [
             f"# {table_name}",
             "",
-            f"**Purpose:** {purpose}",
+            purpose,
+            "",
+            "## Model",
+            "",
+            f"**Grain:** {model['grain']}",
+            "",
+            f"**Primary key:** {_model_key_text(model['primary_key'])}",
+            "",
+            "**Relationships:**",
+            "",
+            *_relationship_lines(model),
             "",
             "## Column summary",
             "",
@@ -4294,9 +4393,8 @@ def generate_metadata_reference_pages() -> None:
             )
         if table_name == "METADATA_ENRICHMENT":
             lines.extend([
-                "", "## Breaking pre-release replacement", "",
+                "", "## Breaking pre release replacement", "",
                 "This intentionally breaking schema replaces the previous enrichment lifecycle and payload model. Existing development `METADATA_ENRICHMENT` tables must be recreated; no automated migration or compatibility support is provided. Values to retain may be exported and manually reshaped before recreation.",
-                "", "## Grain", "", "One row per enrichment level + metadata key + enrichment type + append event.",
                 "", "## Current value", "", "The latest appended row for `enrichment_level` + `metadata_key` + `enrichment_type` is current, ordered by `_committed_at`, `_activity_id`, and `enrichment_id`. Empty values are rejected, so clearing is deferred to a future change.",
                 "", "## Examples", "",
                 "| enrichment_level | metadata_key | enrichment_type | value |",
@@ -4311,12 +4409,13 @@ def generate_metadata_reference_pages() -> None:
         if related_functions:
             lines.extend(["", "## Related function reference", ""])
             lines.extend(
-                f"- [`{function_name}`](../../api/reference/{function_name}.md)"
+                f"* [`{function_name}`](../../api/reference/{function_name}.md)"
                 for function_name in related_functions
             )
-        (METADATA_REFERENCE_DIR / f"{slug}.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    index_lines.extend(["</div>", ""])
-    METADATA_REFERENCE_INDEX_PATH.write_text("\n".join(index_lines), encoding="utf-8")
+        (METADATA_REFERENCE_DIR / f"{slug}.md").write_text(
+            "\n".join(lines).rstrip() + "\n", encoding="utf-8"
+        )
+    METADATA_REFERENCE_INDEX_PATH.write_text("\n".join(index_lines).rstrip() + "\n", encoding="utf-8")
 
 
 def _trim_callable_flow_dashboard_contract(

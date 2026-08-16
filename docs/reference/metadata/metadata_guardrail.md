@@ -1,6 +1,18 @@
 # METADATA_GUARDRAIL
 
-**Purpose:** Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.
+Define the expectations the data used in the ETL pipeline should meet.
+
+## Model
+
+**Grain:** One authored guardrail configuration row for one rule lifecycle or version.
+
+**Primary key:** `guardrail_rule_id`
+
+**Relationships:**
+
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many guardrail configurations can apply to one logical catalogue table identity.
+* `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). Column level guardrails can point to one logical catalogue column identity.
+* **1:N**: One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
 
 ## Column summary
 
@@ -72,6 +84,6 @@
 
 ## Related function reference
 
-- [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
-- [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
-- [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)
+* [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
+* [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
+* [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)

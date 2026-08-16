@@ -1,6 +1,18 @@
 # METADATA_DATA_AGREEMENT
 
-**Purpose:** Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.
+Define why the data is shared, with whom, and under what conditions.
+
+## Model
+
+**Grain:** One version of one Data Agreement.
+
+**Primary key:** `agreement_id` + `agreement_version`
+
+**Relationships:**
+
+* `provider_steward_id` → `METADATA_DATA_STEWARD.steward_id` (**N:1**). Each Data Agreement version has one provider steward; one steward can provide many agreement versions.
+* `recipient_steward_id` → `METADATA_DATA_STEWARD.steward_id` (**N:1**). Each Data Agreement version has one recipient steward; one steward can receive many agreement versions.
+* **1:N**: One Data Agreement lifecycle can govern many Data Contract rows through agreement_id.
 
 ## Column summary
 
@@ -37,4 +49,4 @@
 
 ## Related function reference
 
-- [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)
+* [`widget_render_data_agreement`](../../api/reference/widget_render_data_agreement.md)

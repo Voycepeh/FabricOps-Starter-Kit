@@ -1,6 +1,16 @@
 # METADATA_DATA_ACCESS
 
-**Purpose:** Access-review rows reserved for implemented metadata access evidence.
+See who can use the data and how it can be used.
+
+## Model
+
+**Grain:** One access review record for one user and governed scope.
+
+**Primary key:** Not defined in the current implementation.
+
+**Relationships:**
+
+* No immediate logical relationship is defined in the current implementation.
 
 ## Column summary
 

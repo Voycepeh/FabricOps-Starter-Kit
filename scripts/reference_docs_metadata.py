@@ -125,23 +125,163 @@ METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION = (
     "profiling, guardrail, lineage, and pipeline-run evidence."
 )
 
+METADATA_TABLE_MODELS = {
+    "METADATA_DATA_STEWARD": {
+        "purpose": "Know who is responsible for the data.",
+        "grain": "One registered Data Steward.",
+        "primary_key": ["steward_id"],
+        "foreign_keys": [],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One Data Steward can appear as the provider steward on many Data Agreement versions."},
+            {"cardinality": "1:N", "statement": "One Data Steward can appear as the recipient steward on many Data Agreement versions."},
+        ],
+    },
+    "METADATA_DATA_AGREEMENT": {
+        "purpose": "Define why the data is shared, with whom, and under what conditions.",
+        "grain": "One version of one Data Agreement.",
+        "primary_key": ["agreement_id", "agreement_version"],
+        "foreign_keys": [
+            {"local_field": "provider_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one provider steward; one steward can provide many agreement versions."},
+            {"local_field": "recipient_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one recipient steward; one steward can receive many agreement versions."},
+        ],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One Data Agreement lifecycle can govern many Data Contract rows through agreement_id."},
+        ],
+    },
+    "METADATA_DATA_CONTRACT": {
+        "purpose": "Define what the data is, how it looks, its sensitivity, quality requirements, schema, freshness, approved usages, and link it to the Data Agreement.",
+        "grain": "One authorised catalogue table and schema fingerprint governed by one Data Agreement.",
+        "primary_key": ["agreement_id", "metadata_table_key", "schema_fingerprint"],
+        "foreign_keys": [
+            {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "1:N", "statement": "One contracted table identity can match the catalogue rows for that table's columns."},
+        ],
+        "relationships": [],
+    },
+    "METADATA_DATA_CATALOGUE": {
+        "purpose": "See what data is available and how it is structured.",
+        "grain": "One registered column for one table and schema fingerprint in one environment.",
+        "primary_key": ["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"],
+        "foreign_keys": [],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One catalogue table identity can be referenced by many Source Observation, Data Profiled, Data Lineage, Enrichment and Guardrail rows."},
+        ],
+    },
+    "METADATA_SOURCE_OBSERVATION": {
+        "purpose": "See whether the source arrived and changed as expected.",
+        "grain": "One observed partition state for one source table at one observation time.",
+        "primary_key": ["metadata_table_key", "partition_column", "partition_value", "observed_at"],
+        "foreign_keys": [
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many source partition observations can belong to one logical catalogue table identity."},
+        ],
+        "relationships": [],
+    },
+    "METADATA_DATA_PROFILED": {
+        "purpose": "Understand the shape, completeness, and characteristics of the data.",
+        "grain": "One profiled column for one dataset snapshot.",
+        "primary_key": ["environment_name", "metadata_column_key", "schema_fingerprint", "profiled_at"],
+        "foreign_keys": [
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many profiled column snapshots can belong to one logical catalogue table identity."},
+            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Many profile snapshots can describe the same logical catalogue column over time."},
+        ],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One profiled column snapshot can have many Data Profiled Frequency rows through metadata_column_key and profiled_at."},
+        ],
+    },
+    "METADATA_DATA_PROFILED_FREQUENCY": {
+        "purpose": "See how values are distributed across the data.",
+        "grain": "One ranked observed value frequency for one profiled column snapshot.",
+        "primary_key": ["metadata_column_key", "profiled_at", "frequency_rank"],
+        "foreign_keys": [
+            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot."},
+            {"local_field": "profiled_at", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profiled_at", "cardinality": "N:1", "statement": "The profile timestamp is the second part of the logical link back to the profiled column snapshot."},
+        ],
+        "relationships": [],
+    },
+    "METADATA_DATA_LINEAGE": {
+        "purpose": "See where the data came from and where it ends up.",
+        "grain": "One source or target participation event for one profiled table snapshot in one Fabric activity.",
+        "primary_key": ["lineage_event_id"],
+        "foreign_keys": [
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many lineage events can refer to the same logical catalogue table identity."},
+        ],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at."},
+        ],
+    },
+    "METADATA_ENRICHMENT": {
+        "purpose": "Add business and governance context to the data.",
+        "grain": "One appended enrichment value for one table or column identity.",
+        "primary_key": ["enrichment_id"],
+        "foreign_keys": [
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "When enrichment_level is table, many enrichment rows can describe one catalogue table identity."},
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "When enrichment_level is column, many enrichment rows can describe one catalogue column identity."},
+        ],
+        "relationships": [],
+    },
+    "METADATA_DATA_ACCESS": {
+        "purpose": "See who can use the data and how it can be used.",
+        "grain": "One access review record for one user and governed scope.",
+        "primary_key": [],
+        "foreign_keys": [],
+        "relationships": [],
+    },
+    "METADATA_GUARDRAIL": {
+        "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
+        "grain": "One authored guardrail configuration row for one rule lifecycle or version.",
+        "primary_key": ["guardrail_rule_id"],
+        "foreign_keys": [
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many guardrail configurations can apply to one logical catalogue table identity."},
+            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_column_key", "cardinality": "N:1", "statement": "Column level guardrails can point to one logical catalogue column identity."},
+        ],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
+        ],
+    },
+    "METADATA_GUARDRAIL_RESULTS": {
+        "purpose": "See whether the expectations of the data in the ETL pipeline run are met.",
+        "grain": "One runtime outcome for one guardrail rule in one pipeline run.",
+        "primary_key": ["guardrail_result_id"],
+        "foreign_keys": [
+            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one authored guardrail rule."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many runtime guardrail outcomes can refer to one logical catalogue table identity."},
+        ],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One Guardrail Result can have many Guardrail Row Results when row level failure evidence is captured."},
+        ],
+    },
+    "METADATA_GUARDRAIL_ROW_RESULTS": {
+        "purpose": "See which records did not meet the expectations.",
+        "grain": "One failed source row or DQ rule evidence row linked to one runtime guardrail result.",
+        "primary_key": ["guardrail_row_result_id"],
+        "foreign_keys": [
+            {"local_field": "guardrail_result_id", "referenced_table": "METADATA_GUARDRAIL_RESULTS", "referenced_field": "guardrail_result_id", "cardinality": "N:1", "statement": "Many row level failure evidence rows can belong to one Guardrail Result."},
+            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many row level failure evidence rows can trace back to one authored guardrail rule."},
+            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "metadata_table_key", "cardinality": "N:1", "statement": "Many row level failure evidence rows can refer to one logical catalogue table identity."},
+        ],
+        "relationships": [],
+    },
+}
+
+METADATA_REFERENCE_ORDER = [
+    "METADATA_DATA_STEWARD",
+    "METADATA_DATA_AGREEMENT",
+    "METADATA_DATA_CONTRACT",
+    "METADATA_DATA_CATALOGUE",
+    "METADATA_SOURCE_OBSERVATION",
+    "METADATA_DATA_PROFILED",
+    "METADATA_DATA_PROFILED_FREQUENCY",
+    "METADATA_DATA_LINEAGE",
+    "METADATA_ENRICHMENT",
+    "METADATA_DATA_ACCESS",
+    "METADATA_GUARDRAIL",
+    "METADATA_GUARDRAIL_RESULTS",
+    "METADATA_GUARDRAIL_ROW_RESULTS",
+]
+
 METADATA_TABLE_PURPOSES = {
-    "METADATA_DATA_STEWARD": "Data steward person registry used by agreement intake; responsibility effective periods belong to METADATA_DATA_AGREEMENT.",
-    "METADATA_DATA_AGREEMENT": "Data Agreement records that describe the overarching governance arrangement between producer and consumer stewards, including approved purpose, usage, accountability, and lifecycle context.",
-    "METADATA_DATA_CONTRACT": "Dataset-level contract rows linking parent Data Agreements to authorised catalogue tables and their schema fingerprints.",
-    "METADATA_DATA_CATALOGUE": "Observed table and column identities used for governed catalogue review and runtime comparisons.",
-    "METADATA_DATA_PROFILED": "Compact per-column summary statistics captured from a profiled dataset snapshot.",
-    "METADATA_DATA_PROFILED_FREQUENCY": "Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.",
-    "METADATA_DATA_LINEAGE": "Each row records a profiled dataset snapshot participating as a source or target in one Fabric activity.",
-    "METADATA_DATA_ACCESS": "Access-review rows reserved for implemented metadata access evidence.",
-    "METADATA_ENRICHMENT": "Append-only generic descriptive and governance values for catalogue table and column identities.",
-    "METADATA_GUARDRAIL": "Append-only schema, freshness, profile-behavior, and DQ guardrail intent rows.",
-    "METADATA_GUARDRAIL_RESULTS": "Runtime guardrail outcomes written by pipeline enforcement.",
-    "METADATA_GUARDRAIL_ROW_RESULTS": "Failed source-row and failed-DQ-rule evidence linked to runtime guardrail outcomes.",
-    "METADATA_SOURCE_OBSERVATION": (
-        "Append-only compact partition observations used for cheap pre-read source checking; "
-        "each row links to METADATA_DATA_CATALOGUE through metadata_table_key."
-    ),
+    table_name: str(model["purpose"])
+    for table_name, model in METADATA_TABLE_MODELS.items()
 }
 
 _UNTRACED_SCHEMA_OWNER = {
