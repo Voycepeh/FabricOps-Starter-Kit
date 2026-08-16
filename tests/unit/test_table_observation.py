@@ -9,7 +9,7 @@ import types
 
 import pytest
 
-from fabricops_kit.config.metadata_identity import _build_table_id
+from fabricops_kit.config.shared import build_table_id
 
 module = importlib.import_module("fabricops_kit.pipeline.observe_table")
 
@@ -152,7 +152,7 @@ def test_observe_source_is_not_exported():
 def test_logical_source_target_routes_to_configured_warehouse(monkeypatch):
     captured = []
     _, queries, _ = run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: captured.append(kwargs))
-    assert captured[0]["table_id"] == _build_table_id("warehouse", "source", "dbo", "orders")
+    assert captured[0]["table_id"] == build_table_id("warehouse", "source", "dbo", "orders")
     assert queries[0][1]["target"] == "source"
 
 
@@ -170,7 +170,7 @@ def test_logical_source_target_routes_to_configured_lakehouse(monkeypatch):
     monkeypatch.setattr(module, "_persist", lambda rows, **kwargs: identities.append(kwargs) or Frame(rows))
     module.observe_table(table_name="orders", target="source", schema="dbo")
     assert captured[0][:3] == ("orders", "source", "dbo")
-    assert identities[0]["table_id"] == _build_table_id("lakehouse", "source", "dbo", "orders")
+    assert identities[0]["table_id"] == build_table_id("lakehouse", "source", "dbo", "orders")
 
 
 def test_table_observation_path_contains_no_checksum_or_fingerprint_model():
@@ -183,7 +183,7 @@ def test_table_observation_path_contains_no_checksum_or_fingerprint_model():
 def test_observation_id_matches_profile_registration_builder(monkeypatch):
     captured = []
     run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: captured.append(kwargs))
-    expected_table_id = _build_table_id("warehouse", "source", "dbo", "orders")
+    expected_table_id = build_table_id("warehouse", "source", "dbo", "orders")
     assert captured[0]["table_id"] == expected_table_id
 
 
@@ -192,7 +192,7 @@ def test_successful_observation_persists_canonical_identity_without_rule_definit
     run(monkeypatch, [evidence()], kind="warehouse", persist_spy=lambda rows, kwargs: persisted.append((rows, kwargs)))
     rows, identity = persisted[0]
     assert rows == [{**evidence(), "is_present": True}]
-    assert identity["table_id"] == _build_table_id("warehouse", "source", "dbo", "orders")
+    assert identity["table_id"] == build_table_id("warehouse", "source", "dbo", "orders")
     assert identity["observation_id"]
     assert "metadata_table_key" not in identity
     assert "partition_column" not in identity

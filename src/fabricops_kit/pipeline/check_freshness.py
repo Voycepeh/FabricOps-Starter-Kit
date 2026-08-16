@@ -9,10 +9,10 @@ from fabricops_kit.pipeline.guardrails_shared import (
     select_table_guardrail_rule,
     write_guardrail_result_row,
 )
-from fabricops_kit.pipeline.observation_shared import (
-    _guardrail_compatibility_observation,
-    _is_source_observation,
-    _observation_rows,
+from fabricops_kit.pipeline.shared import (
+    guardrail_compatibility_observation,
+    is_source_observation,
+    observation_rows,
 )
 
 
@@ -36,9 +36,9 @@ def check_freshness(observation) -> dict:
     >>> result = check_freshness(observation)
 
     """
-    if not _is_source_observation(observation):
+    if not is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
-    rows = _observation_rows(observation)
+    rows = observation_rows(observation)
     if not rows:
         raise ValueError("observation must contain at least one canonical evidence row")
     first = rows[0]
@@ -78,7 +78,7 @@ def check_freshness(observation) -> dict:
             "the observation change column cannot be resolved."
         )
     _partition_column, change_column = resolve_change_rule_observation_columns(change_rule)
-    compatibility_observation = _guardrail_compatibility_observation(
+    compatibility_observation = guardrail_compatibility_observation(
         observation,
         table_id=table_id,
         change_column=change_column,

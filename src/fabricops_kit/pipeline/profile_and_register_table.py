@@ -9,7 +9,7 @@ from typing import Any, Sequence
 from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_identity import _build_column_id, _build_table_id
+from fabricops_kit.config.shared import build_column_id, build_table_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
@@ -206,7 +206,7 @@ def _canonical_profiled_dataframe(
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
-    column_id_udf = F.udf(lambda column_name: _build_column_id(table_id, column_name), T.StringType())
+    column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
     base = profile_df.select(
         F.col("COLUMN_NAME").alias("_column_name"),
@@ -263,7 +263,7 @@ def _frequency_metadata_dataframe(
     from pyspark.sql import functions as F
     from pyspark.sql import types as T
 
-    column_id_udf = F.udf(lambda column_name: _build_column_id(table_id, column_name), T.StringType())
+    column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select("column_id", "data_type", "profile_id", "profile_snapshot_id", "profiled_at")
     joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
         identities,
@@ -369,7 +369,7 @@ def _catalogue_dataframe_from_profiled(
     ]
     profiled_ids = {row.column_id for row in profiled_df.select("column_id").collect()}
     for field in source_df.schema.fields:
-        column_id = _build_column_id(first["table_id"], field.name)
+        column_id = build_column_id(first["table_id"], field.name)
         if column_id not in profiled_ids:
             continue
         rows.append(
@@ -766,7 +766,7 @@ def profile_and_register_table(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     profile_df = build_profile_dataframe(df)
-    table_id = _build_table_id(normalized_store_type, normalized_target, normalized_schema, normalized_table)
+    table_id = build_table_id(normalized_store_type, normalized_target, normalized_schema, normalized_table)
     profile_snapshot_id = str(uuid4())
     profiled_df = _canonical_profiled_dataframe(
         profile_df,

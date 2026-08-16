@@ -302,9 +302,6 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
-<li><code>fabricops_kit.config.metadata_identity._build_column_id</code></li>
-<li><code>fabricops_kit.config.metadata_identity._build_table_id</code></li>
-<li><code>fabricops_kit.config.metadata_identity._stable_metadata_id</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
@@ -312,12 +309,15 @@ compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
+<li><code>fabricops_kit.config.shared.build_column_id</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_audit_timezone</code></li>
 <li><code>fabricops_kit.config.shared.get_current_audit_timestamp</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
 <li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
 <li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
 <li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>

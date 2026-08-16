@@ -8,7 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_identity import _build_table_id
+from fabricops_kit.config.shared import build_table_id
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import (
@@ -231,7 +231,7 @@ def observe_table(
             )
 
     spark = get_spark_session()
-    table_id = _build_table_id(source_type, target_value, schema_value, table_value)
+    table_id = build_table_id(source_type, target_value, schema_value, table_value)
 
     # Stage 4 will migrate the Guardrail schema from metadata_table_key to
     # table_id. The hash value is intentionally identical, so the current
