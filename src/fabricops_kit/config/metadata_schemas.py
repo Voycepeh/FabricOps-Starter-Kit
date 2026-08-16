@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any
+from uuid import uuid4
 
 CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
@@ -20,6 +21,36 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_GUARDRAIL_ROW_RESULTS",
     "METADATA_SOURCE_OBSERVATION",
 ]
+
+# Logical PK/FK labels document the model; FabricOps does not use Spark
+# nullability or database constraints as relational enforcement mechanisms.
+METADATA_RELATIONSHIPS = {
+    name: {"grain": "One recorded metadata event.", "primary_key": "—", "foreign_keys": {}}
+    for name in CANONICAL_METADATA_TABLES
+}
+METADATA_RELATIONSHIPS.update({
+    "METADATA_DATA_CATALOGUE": {
+        "grain": "One logical table or column asset.",
+        "primary_key": "metadata_key",
+        "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key (column rows)"},
+    },
+    "METADATA_DATA_PROFILED": {
+        "grain": "One observed column in one profiling snapshot.",
+        "primary_key": "profile_record_id",
+        "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "metadata_column_key": "METADATA_DATA_CATALOGUE.metadata_key"},
+    },
+    "METADATA_DATA_PROFILED_FREQUENCY": {
+        "grain": "One ranked value frequency for one profiled column record.",
+        "primary_key": "frequency_id",
+        "foreign_keys": {"profile_record_id": "METADATA_DATA_PROFILED.profile_record_id", "metadata_column_key": "METADATA_DATA_CATALOGUE.metadata_key"},
+    },
+    "METADATA_DATA_LINEAGE": {"grain": "One table participation event in one profiling execution.", "primary_key": "lineage_event_id", "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "profile_snapshot_id": "METADATA_DATA_PROFILED.profile_snapshot_id"}},
+    "METADATA_SOURCE_OBSERVATION": {"grain": "One partition row in one table observation.", "primary_key": "observation_id + partition_value", "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "guardrail_rule_version_id": "METADATA_GUARDRAIL.guardrail_rule_version_id"}},
+    "METADATA_ENRICHMENT": {"grain": "One appended enrichment value for one table or column asset.", "primary_key": "enrichment_id", "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "metadata_column_key": "METADATA_DATA_CATALOGUE.metadata_key"}},
+    "METADATA_GUARDRAIL": {"grain": "One immutable lifecycle version of one logical rule.", "primary_key": "guardrail_rule_version_id", "foreign_keys": {"metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "metadata_column_key": "METADATA_DATA_CATALOGUE.metadata_key"}},
+    "METADATA_GUARDRAIL_RESULTS": {"grain": "One runtime outcome for one guardrail evaluation.", "primary_key": "guardrail_result_id", "foreign_keys": {"guardrail_rule_version_id": "METADATA_GUARDRAIL.guardrail_rule_version_id", "metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key", "metadata_column_key": "METADATA_DATA_CATALOGUE.metadata_key"}},
+    "METADATA_GUARDRAIL_ROW_RESULTS": {"grain": "One failed-row evidence record for one guardrail result.", "primary_key": "guardrail_row_result_id", "foreign_keys": {"guardrail_result_id": "METADATA_GUARDRAIL_RESULTS.guardrail_result_id", "metadata_table_key": "METADATA_DATA_CATALOGUE.metadata_key"}},
+})
 
 AUDIT_SCHEMA_FIELDS = [
     ("_committed_by", "string", False),
@@ -113,16 +144,16 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         "METADATA_DATA_STEWARD": build_metadata_schema("METADATA_DATA_STEWARD", [("steward_id", "string", False), ("steward_name", "string"), ("steward_role", "string"), ("contact", "string"), ("is_active", "boolean"), ("custom_fields_json", "string"), *audit]),
         "METADATA_DATA_AGREEMENT": build_metadata_schema("METADATA_DATA_AGREEMENT", [("agreement_id", "string", False), ("agreement_version", "string", False), ("agreement_name", "string", False), ("domain", "string", False), ("provider_steward_id", "string", False), ("recipient_steward_id", "string", False), ("start_date", "date", False), ("expiry_date", "date", False), ("business_purpose", "string", False), ("supporting_documents_json", "string", True), ("approved_usage_json", "string", False), ("custom_fields_json", "string", True), *audit]),
         "METADATA_DATA_CONTRACT": build_metadata_schema("METADATA_DATA_CONTRACT", [("agreement_id", "string", False), ("metadata_table_key", "string", False), ("schema_fingerprint", "string", False), ("approved_usage_json", "string", False), *audit]),
-        "METADATA_DATA_CATALOGUE": build_metadata_schema("METADATA_DATA_CATALOGUE", [("metadata_table_key", "string", False), ("metadata_column_key", "string", False), ("schema_fingerprint", "string", False), ("environment_name", "string", False), ("store_type", "string", False), ("layer", "string", False), ("schema_name", "string", True), ("table_name", "string", False), ("column_name", "string", False), ("data_type", "string", False), *audit]),
-        "METADATA_DATA_PROFILED": build_metadata_schema("METADATA_DATA_PROFILED", [("metadata_table_key", "string", False), ("metadata_column_key", "string", False), ("environment_name", "string", False), ("store_type", "string", False), ("layer", "string", False), ("schema_name", "string", True), ("table_name", "string", False), ("column_name", "string", False), ("data_type", "string", False), ("row_count", "long", False), ("non_null_count", "long", False), ("null_count", "long", False), ("null_percent", "double", False), ("distinct_count", "long", False), ("distinct_percent", "double", False), ("mean_value", "double", True), ("stddev_value", "double", True), ("min_value", "string", True), ("percentile_25_value", "double", True), ("median_value", "double", True), ("percentile_75_value", "double", True), ("max_value", "string", True), ("schema_fingerprint", "string", False), ("profiled_at", "timestamp", False), *audit]),
-        "METADATA_DATA_PROFILED_FREQUENCY": build_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", [("metadata_column_key", "string", False), ("value", "string", True), ("frequency_count", "long", False), ("frequency_percent", "double", False), ("frequency_rank", "integer", False), ("profiled_row_count", "long", False), ("profiled_non_null_count", "long", False), ("profiled_at", "timestamp", False), *audit]),
-        "METADATA_DATA_LINEAGE": build_metadata_schema("METADATA_DATA_LINEAGE", [("lineage_event_id", "string", False), ("metadata_table_key", "string", False), ("schema_fingerprint", "string", False), ("profile_role", "string", False), ("profiled_at", "timestamp", False), ("environment_name", "string", True), *audit]),
+        "METADATA_DATA_CATALOGUE": build_metadata_schema("METADATA_DATA_CATALOGUE", [("metadata_key", "string"), ("metadata_level", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("store_type", "string"), ("layer", "string"), ("schema_name", "string"), ("table_name", "string"), ("column_name", "string"), ("first_profiled_at", "timestamp"), ("last_profiled_at", "timestamp"), ("is_active", "boolean"), *audit]),
+        "METADATA_DATA_PROFILED": build_metadata_schema("METADATA_DATA_PROFILED", [("profile_record_id", "string"), ("profile_snapshot_id", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("environment_name", "string"), ("data_type", "string"), ("row_count", "long"), ("non_null_count", "long"), ("null_count", "long"), ("null_percent", "double"), ("distinct_count", "long"), ("distinct_percent", "double"), ("mean_value", "double"), ("stddev_value", "double"), ("min_value", "string"), ("percentile_25_value", "double"), ("median_value", "double"), ("percentile_75_value", "double"), ("max_value", "string"), ("profiled_at", "timestamp"), *audit]),
+        "METADATA_DATA_PROFILED_FREQUENCY": build_metadata_schema("METADATA_DATA_PROFILED_FREQUENCY", [("frequency_id", "string"), ("profile_record_id", "string"), ("profile_snapshot_id", "string"), ("metadata_column_key", "string"), ("value", "string"), ("frequency_count", "long"), ("frequency_percent", "double"), ("frequency_rank", "integer"), ("profiled_row_count", "long"), ("profiled_non_null_count", "long"), ("profiled_at", "timestamp"), *audit]),
+        "METADATA_DATA_LINEAGE": build_metadata_schema("METADATA_DATA_LINEAGE", [("lineage_event_id", "string"), ("metadata_table_key", "string"), ("profile_snapshot_id", "string"), ("profile_role", "string"), ("profiled_at", "timestamp"), ("environment_name", "string"), *audit]),
         "METADATA_DATA_ACCESS": build_metadata_schema("METADATA_DATA_ACCESS", [("user_principal", "string"), ("role_name", "string"), ("permission", "string"), ("access_purpose", "string"), ("approval_status", "string"), ("access_scope", "string"), ("table_id", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("granted_date", "date"), ("expires_at", "timestamp"), ("approved_by", "string"), ("approved_at", "timestamp"), ("notes", "string"), *audit]),
-        "METADATA_ENRICHMENT": build_metadata_schema("METADATA_ENRICHMENT", [("enrichment_id", "string", False), ("enrichment_level", "string", False), ("metadata_key", "string", False), ("enrichment_type", "string", False), ("value", "string", False), *audit]),
-        "METADATA_GUARDRAIL": build_metadata_schema("METADATA_GUARDRAIL", [("guardrail_rule_id", "string"), ("configuration_version", "integer"), ("rule_key", "string"), ("rule_id", "string"), ("metadata_column_key", "string"), ("metadata_table_key", "string"), ("environment_name", "string"), ("dataset_name", "string"), ("table_name", "string"), ("column_name", "string"), ("guardrail_type", "string"), ("rule_type", "string"), ("rule_parameters_json", "string"), ("severity", "string"), ("description", "string"), ("activation_state", "string"), ("is_active", "boolean"), ("review_status", "string"), ("review_state", "string"), ("created_by_role", "string"), ("author_role", "string"), ("suggestion_json", "string"), ("action_type", "string"), ("source_notebook_type", "string"), ("activation_reason", "string"), ("activated_by", "string"), ("activated_at", "timestamp"), ("superseded_by_rule_key", "string"), ("notes", "string"), ("approval_required", "boolean"), ("approval_bypassed", "boolean"), ("requires_governance_review", "boolean"), ("requires_post_review", "boolean"), ("bypass_reason", "string"), ("bypassed_by", "string"), ("bypassed_at", "timestamp"), ("governance_mode", "string"), ("approval_policy", "string"), ("submitted_by", "string"), ("submitted_at", "timestamp"), ("reviewed_by", "string"), ("reviewed_at", "timestamp"), ("review_decision", "string"), ("review_comment", "string"), ("supersedes_rule_id", "string"), ("effective_from", "date"), ("effective_to", "date"), *audit]),
-        "METADATA_GUARDRAIL_RESULTS": build_metadata_schema("METADATA_GUARDRAIL_RESULTS", [("guardrail_result_id", "string", False), ("guardrail_rule_id", "string", False), ("result_id", "string", False), ("run_id", "string"), ("rule_key", "string", False), ("metadata_table_key", "string"), ("environment_name", "string"), ("dataset_name", "string"), ("table_name", "string"), ("column_name", "string"), ("guardrail_type", "string"), ("rule_type", "string"), ("status", "string"), ("can_continue", "boolean"), ("severity", "string"), ("reason", "string"), ("expected_value_json", "string"), ("actual_value_json", "string"), ("result_payload_json", "string"), *audit]),
-        "METADATA_GUARDRAIL_ROW_RESULTS": build_metadata_schema("METADATA_GUARDRAIL_ROW_RESULTS", [("guardrail_row_result_id", "string", False), ("guardrail_result_id", "string", False), ("guardrail_rule_id", "string", False), ("metadata_table_key", "string", False), ("environment_name", "string", False), ("dataset_name", "string"), ("table_name", "string", False), ("row_identity", "string", False), ("rule_type", "string", False), ("involved_columns_json", "string", False), ("failed_values_json", "string", False), ("rule_details_json", "string", False), ("failure_reason", "string", False), ("run_id", "string"), *audit]),
-        "METADATA_SOURCE_OBSERVATION": build_metadata_schema("METADATA_SOURCE_OBSERVATION", [("metadata_table_key", "string", False), ("source_target", "string", False), ("source_schema", "string", True), ("source_table", "string", False), ("partition_column", "string", False), ("partition_value", "string", False), ("change_column", "string", False), ("row_count", "long", False), ("min_change_value", "string", True), ("max_change_value", "string", True), ("is_present", "boolean", False), ("observed_at", "timestamp", False), *audit]),
+        "METADATA_ENRICHMENT": build_metadata_schema("METADATA_ENRICHMENT", [("enrichment_id", "string"), ("enrichment_level", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("enrichment_type", "string"), ("value", "string"), *audit]),
+        "METADATA_GUARDRAIL": build_metadata_schema("METADATA_GUARDRAIL", [("guardrail_rule_version_id", "string"), ("guardrail_rule_id", "string"), ("configuration_version", "integer"), ("rule_key", "string"), ("rule_id", "string"), ("metadata_column_key", "string"), ("metadata_table_key", "string"), ("environment_name", "string"), ("guardrail_type", "string"), ("rule_type", "string"), ("rule_parameters_json", "string"), ("severity", "string"), ("description", "string"), ("activation_state", "string"), ("is_active", "boolean"), ("review_status", "string"), ("review_state", "string"), ("created_by_role", "string"), ("author_role", "string"), ("suggestion_json", "string"), ("action_type", "string"), ("source_notebook_type", "string"), ("activation_reason", "string"), ("activated_by", "string"), ("activated_at", "timestamp"), ("superseded_by_rule_key", "string"), ("notes", "string"), ("approval_required", "boolean"), ("approval_bypassed", "boolean"), ("requires_governance_review", "boolean"), ("requires_post_review", "boolean"), ("bypass_reason", "string"), ("bypassed_by", "string"), ("bypassed_at", "timestamp"), ("governance_mode", "string"), ("approval_policy", "string"), ("submitted_by", "string"), ("submitted_at", "timestamp"), ("reviewed_by", "string"), ("reviewed_at", "timestamp"), ("review_decision", "string"), ("review_comment", "string"), ("supersedes_rule_id", "string"), ("effective_from", "date"), ("effective_to", "date"), *audit]),
+        "METADATA_GUARDRAIL_RESULTS": build_metadata_schema("METADATA_GUARDRAIL_RESULTS", [("guardrail_result_id", "string", False), ("guardrail_rule_id", "string", False), ("guardrail_rule_version_id", "string"), ("result_id", "string", False), ("run_id", "string"), ("rule_key", "string", False), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("environment_name", "string"), ("guardrail_type", "string"), ("rule_type", "string"), ("status", "string"), ("can_continue", "boolean"), ("severity", "string"), ("reason", "string"), ("expected_value_json", "string"), ("actual_value_json", "string"), ("result_payload_json", "string"), *audit]),
+        "METADATA_GUARDRAIL_ROW_RESULTS": build_metadata_schema("METADATA_GUARDRAIL_ROW_RESULTS", [("guardrail_row_result_id", "string", False), ("guardrail_result_id", "string", False), ("guardrail_rule_id", "string", False), ("metadata_table_key", "string", False), ("environment_name", "string", False), ("row_identity", "string", False), ("rule_type", "string", False), ("involved_columns_json", "string", False), ("failed_values_json", "string", False), ("rule_details_json", "string", False), ("failure_reason", "string", False), ("run_id", "string"), *audit]),
+        "METADATA_SOURCE_OBSERVATION": build_metadata_schema("METADATA_SOURCE_OBSERVATION", [("observation_id", "string"), ("metadata_table_key", "string"), ("guardrail_rule_version_id", "string"), ("environment_name", "string"), ("partition_value", "string"), ("row_count", "long"), ("min_change_value", "string"), ("max_change_value", "string"), ("is_present", "boolean"), ("observed_at", "timestamp"), *audit]),
     }
 
 def _coerce_metadata_value(value: Any, type_name: str) -> Any:
@@ -162,6 +193,8 @@ def coerce_metadata_row_types(table_name: str, row: dict[str, Any]) -> dict[str,
     if schema is None:
         return dict(row)
     coerced = dict(row)
+    if table_name == "METADATA_GUARDRAIL" and not coerced.get("guardrail_rule_version_id"):
+        coerced["guardrail_rule_version_id"] = str(uuid4())
     for field in getattr(schema, "fields", []):
         if field.name in coerced:
             coerced[field.name] = _coerce_metadata_value(coerced[field.name], type(field.dataType).__name__)
@@ -212,6 +245,7 @@ def metadata_table_field_names(schema: Any) -> list[str]:
 __all__ = [
     "AUDIT_SCHEMA_FIELDS",
     "CANONICAL_METADATA_TABLES",
+    "METADATA_RELATIONSHIPS",
     "audit_schema_fields",
     "canonical_metadata_tables",
     "coerce_metadata_row_types",

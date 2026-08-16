@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import re
 from typing import Any
+from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
@@ -87,17 +88,16 @@ def _observe_lakehouse(
 
 def _persist(
     rows: list[dict[str, Any]], *, metadata_table_key: str,
-    target: str, schema: str | None, table_name: str,
-    partition_column: str, change_column: str,
+    guardrail_rule_version_id: str,
     observed_at: datetime, spark_session: Any, config: Any, env: str,
     context: dict[str, Any], metadata_schema: str | None,
 ) -> Any:
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
+    observation_id = str(uuid4())
     values = [{
-        **row, "metadata_table_key": metadata_table_key,
-        "source_target": target, "source_schema": schema, "source_table": table_name,
-        "partition_column": partition_column, "change_column": change_column,
-        "observed_at": observed_at, **audit,
+        **row, "observation_id": observation_id, "metadata_table_key": metadata_table_key,
+        "guardrail_rule_version_id": guardrail_rule_version_id,
+        "environment_name": env, "observed_at": observed_at, **audit,
     } for row in rows]
     frame = spark_session.createDataFrame(
         [coerce_metadata_row_types(OBSERVATION_TABLE, row) for row in values],
@@ -232,8 +232,7 @@ def observe_table(
 
     return _persist(
         current, metadata_table_key=metadata_table_key,
-        target=target_value, schema=schema_value, table_name=table_value,
-        partition_column=partition_value, change_column=change_value,
+        guardrail_rule_version_id=str(rule.get("guardrail_rule_version_id") or ""),
         observed_at=datetime.now(UTC), spark_session=spark, config=config, env=env,
         context=context, metadata_schema=metadata_schema,
     )

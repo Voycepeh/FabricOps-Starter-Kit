@@ -23,8 +23,8 @@ from fabricops_kit.pipeline.shared import build_profile_dataframe
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 
 SOURCE_OBSERVATION_COLUMNS = frozenset({
-    "metadata_table_key", "source_target", "source_schema", "source_table",
-    "partition_column", "partition_value", "change_column", "row_count",
+    "observation_id", "metadata_table_key", "guardrail_rule_version_id",
+    "environment_name", "partition_value", "row_count",
     "min_change_value", "max_change_value", "is_present", "observed_at",
 })
 
@@ -56,15 +56,14 @@ def write_guardrail_result_row(
         "result_id": str(uuid4()),
         "run_id": run_id,
         "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
+        "guardrail_rule_version_id": str(result.get("guardrail_rule_version_id") or ""),
         "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
         "metadata_table_key": str(
             result.get("metadata_table_key")
             or build_metadata_table_key(store_type, layer, schema_name, table_name)
         ),
+        "metadata_column_key": str(result.get("metadata_column_key") or ""),
         "environment_name": env,
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "column_name": column_name,
         "guardrail_type": guardrail_type,
         "rule_type": rule_type,
         "status": str(result.get("status") or "not_run"),
@@ -1280,20 +1279,8 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns
+    observation_evidence = {"metadata_table_key", "partition_value", "max_change_value", "observed_at"} <= dataframe_columns
     if observation_evidence and rule_type != "skip":
-        rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
-        change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
-        change_columns.discard("")
-        if len(change_columns) != 1:
-            raise ValueError("Observation evidence must contain one authoritative change_column.")
-        observation_change_column = next(iter(change_columns))
-        configured_freshness_column = str(freshness_column or "").strip()
-        if configured_freshness_column and configured_freshness_column != observation_change_column:
-            raise ValueError(
-                "Active freshness rule is invalid for observation evidence: "
-                f"freshness_column {configured_freshness_column!r} does not match change_column {observation_change_column!r}."
-            )
         freshness_column = "max_change_value"
     column = str(freshness_column or "").strip()
     normalized_severity = str(severity or "blocking").lower().strip()

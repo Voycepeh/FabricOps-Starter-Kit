@@ -5,7 +5,7 @@ from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
-from fabricops_kit.config.shared import get_store, is_table_not_found_error, resolve_fabric_context
+from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from fabricops_kit.pipeline.guardrails_shared import (
     changes_check_core,
@@ -32,14 +32,13 @@ def _is_observation(dataframe) -> bool:
     return SOURCE_OBSERVATION_COLUMNS <= columns
 
 
-def _previous_observation(history, *, identity: str, partition_column: str, change_column: str, observed_at) -> list[dict[str, Any]]:
+def _previous_observation(history, *, identity: str, guardrail_rule_version_id: str, observed_at) -> list[dict[str, Any]]:
     if hasattr(history, "where") and hasattr(history, "agg"):
         from pyspark.sql import functions as F
 
         comparable = history.where(
             (F.col("metadata_table_key") == identity)
-            & (F.col("partition_column") == partition_column)
-            & (F.col("change_column") == change_column)
+            & (F.col("guardrail_rule_version_id") == guardrail_rule_version_id)
             & (F.col("observed_at") < F.lit(observed_at))
         )
         timestamp_rows = comparable.agg(F.max("observed_at").alias("previous_observed_at")).collect()
@@ -52,8 +51,7 @@ def _previous_observation(history, *, identity: str, partition_column: str, chan
         ))
     candidates = [row for row in _rows(history) if (
         str(row.get("metadata_table_key")) == identity
-        and str(row.get("partition_column")) == partition_column
-        and str(row.get("change_column")) == change_column
+        and str(row.get("guardrail_rule_version_id")) == guardrail_rule_version_id
         and row.get("observed_at") < observed_at
     )]
     previous_at = max((row["observed_at"] for row in candidates), default=None)
@@ -65,8 +63,7 @@ def _observation_changes(observation) -> dict:
     if not current:
         raise ValueError("observation dataframe must contain at least one row")
     identity = str(current[0]["metadata_table_key"])
-    partition_column = str(current[0]["partition_column"])
-    change_column = str(current[0]["change_column"])
+    guardrail_rule_version_id = str(current[0]["guardrail_rule_version_id"])
     observed_at = current[0]["observed_at"]
     if any(row["observed_at"] != observed_at for row in current):
         raise ValueError("observation dataframe must contain one shared observed_at snapshot")
@@ -79,8 +76,8 @@ def _observation_changes(observation) -> dict:
             spark_session=getattr(observation, "sparkSession", None), context=context,
         )
         previous = _previous_observation(
-            history, identity=identity, partition_column=partition_column,
-            change_column=change_column, observed_at=observed_at,
+            history, identity=identity, guardrail_rule_version_id=guardrail_rule_version_id,
+            observed_at=observed_at,
         )
     except Exception as exc:
         if not is_table_not_found_error(exc):
@@ -155,18 +152,16 @@ def _observation_changes(observation) -> dict:
     }
     if rules_df is not None:
         result["metadata_table_key"] = identity
+        result["guardrail_rule_version_id"] = guardrail_rule_version_id
         result = evaluate_changes_guardrail(
-            result, rules_df=rules_df, table_name=str(current[0]["source_table"]),
+            result, rules_df=rules_df, table_name="",
             environment_name=env, metadata_table_key=identity,
         )
         if result.get("rule_key"):
-            source_target = str(current[0]["source_target"])
-            source_store_type = str(get_store(config, env, source_target).kind).lower()
             write_guardrail_result_row(
                 spark_session=getattr(observation, "sparkSession", None), config=config, env=env,
-                run_id=str(observed_at), dataset_name="", table_name=str(current[0]["source_table"]),
-                store_type=source_store_type, layer=source_target,
-                schema_name=current[0].get("source_schema"), guardrail_type="change",
+                run_id=str(observed_at), dataset_name="", table_name="",
+                store_type="", layer="", schema_name=None, guardrail_type="change",
                 rule_type=str(result.get("rule_type") or "monitor_only"), result=result,
                 rule_key=str(result["rule_key"]),
             )

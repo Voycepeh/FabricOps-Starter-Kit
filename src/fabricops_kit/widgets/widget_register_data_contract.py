@@ -408,6 +408,11 @@ def widget_register_data_contract(
     widget_enrich_table_metadata
 
     """
+    raise RuntimeError(
+        "Data Contract registration is temporarily unavailable after the metadata catalogue identity cleanup. "
+        "The next focused Data Contract change will rebuild contractual schema snapshots without catalogue "
+        "schema_fingerprint history."
+    )
     resolved_agreement_id, agreement_label = _agreement_details(agreement, agreement_id)
     parent_approved_usages = _agreement_approved_usages(agreement, agreement_id)
     initial_ids = _normalize_initial_ids(metadata_ids)

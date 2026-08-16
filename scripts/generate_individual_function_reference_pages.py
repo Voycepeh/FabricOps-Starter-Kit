@@ -4230,6 +4230,7 @@ def generate_metadata_reference_pages() -> None:
     from fabricops_kit.config.metadata_schemas import (
         AUDIT_SCHEMA_FIELDS,
         CANONICAL_METADATA_TABLES,
+        METADATA_RELATIONSHIPS,
         metadata_table_schema_registry,
         metadata_table_schema_rows,
     )
@@ -4266,11 +4267,17 @@ def generate_metadata_reference_pages() -> None:
             "",
         ])
         rows = metadata_table_schema_rows(registry[table_name])
+        relationship = METADATA_RELATIONSHIPS[table_name]
         column_counts = _metadata_column_counts(rows, audit_column_names=audit_column_names)
         lines = [
             f"# {table_name}",
             "",
             f"**Purpose:** {purpose}",
+            "",
+            "## Grain", "", relationship["grain"], "",
+            "## Primary key", "", f"`{relationship['primary_key']}`", "",
+            "## Foreign keys", "",
+            *([f"- `{column}` → `{target}`" for column, target in relationship["foreign_keys"].items()] or ["None documented."]),
             "",
             "## Column summary",
             "",
@@ -4282,13 +4289,16 @@ def generate_metadata_reference_pages() -> None:
             "",
             "## Implemented schema",
             "",
-            "| Column | Data type | Managed by | Description |",
-            "| --- | --- | --- | --- |",
+            "| Column | Data type | Key | Managed by | Description |",
+            "| --- | --- | --- | --- | --- |",
         ]
         for row in rows:
             column = str(row["name"])
+            is_pk = column in {part.strip() for part in relationship["primary_key"].split("+")}
+            is_fk = column in relationship["foreign_keys"]
+            key_label = "PK/FK" if is_pk and is_fk else "PK" if is_pk else "FK" if is_fk else "—"
             lines.append(
-                f"| `{column}` | `{row['type']}` | "
+                f"| `{column}` | `{row['type']}` | **{key_label}** | "
                 f"{_metadata_managed_by(table_name, column, column_owners=column_owners, public_callable_set=public_callable_set)} | "
                 f"{_metadata_field_description(table_name, column)} |"
             )

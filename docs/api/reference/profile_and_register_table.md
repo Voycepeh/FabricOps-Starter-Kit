@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:469`
+`fabricops_kit/pipeline/profile_and_register_table.py:515`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L469-L820">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L515-L878">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -308,7 +308,7 @@ no compatibility or automatic migration layer is provided.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 60 |
+| Live-critical dependencies | 59 |
 
 ### Release history
 
@@ -368,7 +368,6 @@ no compatibility or automatic migration layer is provided.
 <li><code>fabricops_kit.pipeline.profile_and_register_table._require_non_empty_string</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._resolve_physical_identity</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._scalar_frequency_columns</code></li>
-<li><code>fabricops_kit.pipeline.profile_and_register_table._schema_fingerprint</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._selected_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_catalogue_identities</code></li>
 <li><code>fabricops_kit.pipeline.profile_and_register_table._upsert_lineage_event</code></li>

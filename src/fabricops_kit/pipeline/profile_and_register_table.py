@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 from typing import Any, Sequence
+from uuid import uuid4
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
@@ -99,12 +100,12 @@ def _resolve_physical_identity(*, profile_role: Any, target: Any, schema: Any, t
     return normalized_role, normalized_target, normalized_table, normalized_schema, store_kind, config, env, context
 
 
-def _lineage_event_id(*, activity_id: str, metadata_table_key: str, schema_fingerprint: str, profile_role: str) -> str:
+def _lineage_event_id(*, activity_id: str, metadata_table_key: str, profile_snapshot_id: str, profile_role: str) -> str:
     """Return the deterministic runtime lineage event identity."""
     payload = {
         "activity_id": _require_non_empty_string(activity_id, "activity_id"),
         "metadata_table_key": _require_non_empty_string(metadata_table_key, "metadata_table_key"),
-        "schema_fingerprint": _require_non_empty_string(schema_fingerprint, "schema_fingerprint"),
+        "profile_snapshot_id": _require_non_empty_string(profile_snapshot_id, "profile_snapshot_id"),
         "profile_role": _normalize_choice(profile_role, "profile_role", {"source", "target"}),
     }
     return hashlib.sha256(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
@@ -181,20 +182,26 @@ def _frequency_metadata_dataframe(
     from pyspark.sql import functions as F
 
     identities = profiled_df.select(
-        F.col("column_name").alias("_column_name"),
         F.col("data_type").alias("_data_type"),
         "metadata_column_key",
+        "profile_record_id",
+        "profile_snapshot_id",
         "profiled_at",
     )
+    metadata_table_key = str(profiled_df.select("metadata_table_key").first()["metadata_table_key"])
+    column_key_udf = F.udf(lambda name: build_metadata_column_key(metadata_table_key, name), "string")
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
     joined = frequency_df.join(
         identities,
-        (frequency_df.COLUMN_NAME == identities._column_name)
-        & (frequency_df.DATA_TYPE == identities._data_type),
+        (frequency_df.DATA_TYPE == identities._data_type)
+        & (column_key_udf(frequency_df.COLUMN_NAME) == identities.metadata_column_key),
         "inner",
     )
     return joined.select(
-        F.col("metadata_column_key").cast("string"),
+        F.expr("uuid()").cast("string").alias("frequency_id"),
+        F.col("profile_record_id").cast("string"),
+        F.col("profile_snapshot_id").cast("string"),
+        identities.metadata_column_key.cast("string").alias("metadata_column_key"),
         F.col("VALUE").cast("string").alias("value"),
         F.col("FREQUENCY_COUNT").cast("long").alias("frequency_count"),
         F.col("FREQUENCY_PERCENT").cast("double").alias("frequency_percent"),
@@ -223,14 +230,13 @@ def _replace_frequency_rows(
         configured_lakehouse_schema(config, env, "metadata"),
         context={"config": config, "env": env},
     )
-    snapshots = profiled_df.select("metadata_column_key", "profiled_at").dropDuplicates()
+    snapshots = profiled_df.select("profile_snapshot_id").dropDuplicates()
     (
         DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(
             snapshots.alias("source"),
-            "target.metadata_column_key = source.metadata_column_key "
-            "AND target.profiled_at = source.profiled_at",
+            "target.profile_snapshot_id = source.profile_snapshot_id",
         )
         .whenMatchedDelete()
         .execute()
@@ -276,6 +282,7 @@ def _canonical_profiled_dataframe(
     layer: str,
     schema_name: str | None,
     table_name: str,
+    profile_snapshot_id: str,
 ):
     """Return profile rows mapped to the detailed profiled schema."""
     from pyspark.sql import functions as F
@@ -285,7 +292,6 @@ def _canonical_profiled_dataframe(
     column_key_udf = F.udf(
         lambda column_name: build_metadata_column_key(metadata_table_key, column_name), T.StringType()
     )
-    schema_fingerprint = _schema_fingerprint(source_df)
     audit_columns = _audit_literal_columns(config=config, env=env, runtime_context=runtime_context)
 
     profiled_df = profile_df.select(
@@ -307,14 +313,11 @@ def _canonical_profiled_dataframe(
     )
 
     return profiled_df.select(
+        F.expr("uuid()").cast("string").alias("profile_record_id"),
+        F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(metadata_table_key).cast("string").alias("metadata_table_key"),
         column_key_udf(F.col("column_name")).alias("metadata_column_key"),
         F.lit(environment_name).cast("string").alias("environment_name"),
-        F.lit(store_type).cast("string").alias("store_type"),
-        F.lit(layer).cast("string").alias("layer"),
-        F.lit(schema_name).cast("string").alias("schema_name"),
-        F.lit(table_name).cast("string").alias("table_name"),
-        F.col("column_name").cast("string"),
         F.col("data_type").cast("string"),
         F.col("row_count"),
         F.col("non_null_count"),
@@ -329,7 +332,6 @@ def _canonical_profiled_dataframe(
         F.col("median_value"),
         F.col("percentile_75_value"),
         F.col("max_value"),
-        F.lit(schema_fingerprint).cast("string").alias("schema_fingerprint"),
         audit_columns["_committed_at"].alias("profiled_at"),
         audit_columns["_committed_by"].alias("_committed_by"),
         audit_columns["_committed_at"].alias("_committed_at"),
@@ -342,22 +344,49 @@ def _canonical_profiled_dataframe(
     ).select(*PROFILED_COLUMNS)
 
 
-def _catalogue_dataframe_from_profiled(profiled_df):
-    """Return distinct catalogue identity rows derived from detailed profiled rows."""
+def _catalogue_dataframe_from_profiled(
+    profiled_df, *, source_df: Any, store_type: str, layer: str, schema_name: str | None, table_name: str
+):
+    """Return the table and column asset identities observed in one profile."""
     from pyspark.sql import functions as F
 
-    return (
-        profiled_df.select(
-            F.col("metadata_table_key").cast("string"),
-            F.col("metadata_column_key").cast("string"),
-            F.col("schema_fingerprint").cast("string"),
-            F.col("environment_name").cast("string"),
-            F.col("store_type").cast("string"),
-            F.col("layer").cast("string"),
-            F.col("schema_name").cast("string"),
-            F.col("table_name").cast("string"),
-            F.col("column_name").cast("string"),
-            F.col("data_type").cast("string"),
+    audit = [F.col(name) for name in CATALOGUE_COLUMNS if name.startswith("_")]
+    columns = profiled_df.select(
+            F.col("metadata_column_key").alias("metadata_key"),
+            F.lit("column").alias("metadata_level"),
+            F.col("metadata_table_key"),
+            F.col("metadata_column_key"),
+            F.lit(store_type).alias("store_type"),
+            F.lit(layer).alias("layer"),
+            F.lit(schema_name).cast("string").alias("schema_name"),
+            F.lit(table_name).alias("table_name"),
+            # Resolve the current physical name from its stable key without storing it in Profiled.
+            F.lit(None).cast("string").alias("column_name"),
+            F.col("profiled_at").alias("first_profiled_at"),
+            F.col("profiled_at").alias("last_profiled_at"),
+            F.lit(True).alias("is_active"),
+            *audit,
+        )
+    # Attach names from the source profile order; keys remain the relationship contract.
+    source_names = [field.name for field in source_df.schema.fields]
+    if source_names:
+        name_rows = profiled_df.sparkSession.createDataFrame(
+            [(build_metadata_column_key(profiled_df.first()["metadata_table_key"], name), name) for name in source_names],
+            "metadata_key string, resolved_column_name string",
+        )
+        columns = columns.join(name_rows, "metadata_key", "left").drop("column_name").withColumnRenamed(
+            "resolved_column_name", "column_name"
+        ).select(*CATALOGUE_COLUMNS)
+    table = profiled_df.limit(1).select(
+            F.col("metadata_table_key").alias("metadata_key"),
+            F.lit("table").alias("metadata_level"),
+            F.col("metadata_table_key"),
+            F.lit(None).cast("string").alias("metadata_column_key"),
+            F.lit(store_type).alias("store_type"), F.lit(layer).alias("layer"),
+            F.lit(schema_name).cast("string").alias("schema_name"), F.lit(table_name).alias("table_name"),
+            F.lit(None).cast("string").alias("column_name"),
+            F.col("profiled_at").alias("first_profiled_at"), F.col("profiled_at").alias("last_profiled_at"),
+            F.lit(True).alias("is_active"),
             F.col("_committed_by").cast("string"),
             F.col("_committed_at").cast("timestamp"),
             F.col("_workspace_id").cast("string"),
@@ -366,16 +395,14 @@ def _catalogue_dataframe_from_profiled(profiled_df):
             F.col("_notebook_name").cast("string"),
             F.col("_metadata_lakehouse_name").cast("string"),
             F.col("_activity_id").cast("string"),
-        )
-        .dropDuplicates(["environment_name", "metadata_table_key", "metadata_column_key", "schema_fingerprint"])
-        .select(*CATALOGUE_COLUMNS)
-    )
+        ).select(*CATALOGUE_COLUMNS)
+    return table.unionByName(columns.select(*CATALOGUE_COLUMNS)).dropDuplicates(["metadata_key"])
 
 
 def _write_lineage_participation(
     *,
     metadata_table_key: str,
-    schema_fingerprint: str,
+    profile_snapshot_id: str,
     profile_role: str,
     profiled_at: Any,
     config: Any,
@@ -385,14 +412,14 @@ def _write_lineage_participation(
 ) -> None:
     """Write one idempotent runtime lineage event to metadata lineage."""
     normalized_key = _require_non_empty_string(metadata_table_key, "metadata_table_key")
-    normalized_fingerprint = _require_non_empty_string(schema_fingerprint, "schema_fingerprint")
+    normalized_snapshot = _require_non_empty_string(profile_snapshot_id, "profile_snapshot_id")
     normalized_role = _normalize_choice(profile_role, "profile_role", {"source", "target"})
     audit = build_runtime_audit_fields(config=config, env=env, runtime_context=context)
     activity_id = audit["_activity_id"]
     event_id = _lineage_event_id(
         activity_id=activity_id,
         metadata_table_key=normalized_key,
-        schema_fingerprint=normalized_fingerprint,
+        profile_snapshot_id=normalized_snapshot,
         profile_role=normalized_role,
     )
     row = coerce_metadata_row_types(
@@ -400,7 +427,7 @@ def _write_lineage_participation(
         {
             "lineage_event_id": event_id,
             "metadata_table_key": normalized_key,
-            "schema_fingerprint": normalized_fingerprint,
+            "profile_snapshot_id": normalized_snapshot,
             "profile_role": normalized_role,
             "profiled_at": profiled_at,
             "environment_name": env,
@@ -413,7 +440,7 @@ def _write_lineage_participation(
 
 
 def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, spark_session: Any) -> None:
-    """Upsert environment observations by logical table, column, and schema identity."""
+    """Upsert stable identities and deactivate columns absent from this observation."""
     try:
         from delta.tables import DeltaTable
     except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
@@ -432,10 +459,29 @@ def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, env: str, sp
         target.alias("target")
         .merge(
             catalogue_df.alias("source"),
-            "target.environment_name = source.environment_name AND target.metadata_table_key = source.metadata_table_key AND target.metadata_column_key = source.metadata_column_key AND target.schema_fingerprint = source.schema_fingerprint",
+            "target.metadata_key = source.metadata_key",
         )
-        .whenMatchedUpdateAll()
+        .whenMatchedUpdate(set={
+            "last_profiled_at": "source.last_profiled_at",
+            "is_active": "true",
+            "column_name": "source.column_name",
+            "_committed_by": "source._committed_by",
+            "_committed_at": "source._committed_at",
+            "_workspace_id": "source._workspace_id",
+            "_workspace_name": "source._workspace_name",
+            "_notebook_id": "source._notebook_id",
+            "_notebook_name": "source._notebook_name",
+            "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
+            "_activity_id": "source._activity_id",
+        })
         .whenNotMatchedInsertAll()
+        .whenNotMatchedBySourceUpdate(
+            condition=(
+                "target.metadata_level = 'column' AND target.metadata_table_key = "
+                f"'{catalogue_df.first()['metadata_table_key']}' AND target.is_active = true"
+            ),
+            set={"is_active": "false"},
+        )
         .execute()
     )
 
@@ -750,7 +796,7 @@ def profile_and_register_table(
         raise ValueError("frequency_max_distinct_percent must be finite and between 0.0 and 100.0 when supplied.")
 
     profile_df = build_profile_dataframe(df)
-    schema_fingerprint = _schema_fingerprint(df)
+    profile_snapshot_id = str(uuid4())
     profiled_df = _canonical_profiled_dataframe(
         profile_df,
         source_df=df,
@@ -762,7 +808,12 @@ def profile_and_register_table(
         layer=normalized_target,
         schema_name=normalized_schema,
         table_name=normalized_table,
+        profile_snapshot_id=profile_snapshot_id,
     )
+    # Materialize UUID-backed row identities once so every child write observes
+    # the same profile_record_id values from this profiling invocation.
+    profiled_df = profiled_df.cache()
+    profiled_df.count()
     selected_columns = _selected_frequency_columns(
         df, profile_df, selected_frequency_columns, frequency_max_distinct_percent
     )
@@ -796,7 +847,14 @@ def profile_and_register_table(
         env=env,
         spark_session=df.sparkSession,
     )
-    catalogue_df = _catalogue_dataframe_from_profiled(profiled_df)
+    catalogue_df = _catalogue_dataframe_from_profiled(
+        profiled_df,
+        source_df=df,
+        store_type=normalized_store_type,
+        layer=normalized_target,
+        schema_name=normalized_schema,
+        table_name=normalized_table,
+    )
     _upsert_catalogue_identities(catalogue_df=catalogue_df, config=config, env=env, spark_session=df.sparkSession)
     metadata_table_key = build_metadata_table_key(
         normalized_store_type, normalized_target, normalized_schema, normalized_table
@@ -804,7 +862,7 @@ def profile_and_register_table(
     try:
         _write_lineage_participation(
             metadata_table_key=metadata_table_key,
-            schema_fingerprint=schema_fingerprint,
+            profile_snapshot_id=profile_snapshot_id,
             profile_role=normalized_profile_role,
             profiled_at=build_runtime_audit_fields(config=config, env=env, runtime_context=context)["_committed_at"],
             config=config,

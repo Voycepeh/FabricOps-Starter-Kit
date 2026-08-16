@@ -34,7 +34,7 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
 -   **[METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)**
 
-    Observed table and column identities used for governed catalogue review and runtime comparisons.
+    Maintain the stable table and column identities that connect FabricOps metadata.
 
 -   **[METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)**
 
@@ -42,7 +42,7 @@ The contract answers: Exactly what data will be delivered, in what structure, at
 
 -   **[METADATA_DATA_PROFILED_FREQUENCY](metadata/metadata_data_profiled_frequency.md)**
 
-    Flattened distinct-value frequency rows joined to compact profile summaries through metadata_column_key.
+    Flattened distinct-value frequency rows linked to their exact profile_record_id.
 
 -   **[METADATA_DATA_LINEAGE](metadata/metadata_data_lineage.md)**
 

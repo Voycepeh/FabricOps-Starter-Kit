@@ -1,6 +1,6 @@
 """Public source freshness guardrail check."""
 
-from fabricops_kit.config.shared import get_store, resolve_fabric_context
+from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.guardrails_shared import SOURCE_OBSERVATION_COLUMNS, freshness_check_core, load_table_guardrail_rules, select_table_guardrail_rule, write_guardrail_result_row
 
@@ -40,7 +40,7 @@ def check_freshness(
     first = rows[0].asDict(recursive=True) if hasattr(rows[0], "asDict") else dict(rows[0])
     config, env, _context = resolve_fabric_context()
     metadata_table_key = str(first.get("metadata_table_key") or "")
-    table_name = str(first.get("source_table") or "")
+    table_name = ""
     rules_df = load_table_guardrail_rules(
         config, env, spark_session=getattr(observation, "sparkSession", None),
     )
@@ -54,9 +54,8 @@ def check_freshness(
         environment_name=env, metadata_table_key=metadata_table_key,
     )
     if result.get("rule_key"):
-        source_target = str(first.get("source_target") or "source")
-        source_store_type = str(get_store(config, env, source_target).kind).lower()
         result["metadata_table_key"] = metadata_table_key
+        result["guardrail_rule_version_id"] = str(first.get("guardrail_rule_version_id") or "")
         result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}
         result["actual"] = {
             "latest_observed_change_value": result.get("latest_value"),
@@ -65,8 +64,8 @@ def check_freshness(
         write_guardrail_result_row(
             spark_session=getattr(observation, "sparkSession", None) or get_spark_session(),
             config=config, env=env, run_id=str(first.get("observed_at") or ""),
-            dataset_name="", table_name=table_name, store_type=source_store_type,
-            layer=source_target, schema_name=first.get("source_schema"),
+            dataset_name="", table_name=table_name, store_type="",
+            layer="", schema_name=None,
             guardrail_type="freshness", rule_type=str(result.get("rule_type")),
             result=result, rule_key=str(result["rule_key"]),
         )

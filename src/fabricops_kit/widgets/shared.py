@@ -903,7 +903,7 @@ def build_enrichment_records(
 ) -> list[dict[str, Any]]:
     """Build canonical append-only ``METADATA_ENRICHMENT`` rows.
 
-    Each input must provide ``enrichment_level``, ``metadata_key``,
+    Each input must provide ``enrichment_level``, ``metadata_table_key``,
     ``enrichment_type``, and a non-empty string ``value``. Appending a newer row
     replaces the current value; clearing is intentionally deferred because empty
     values are rejected.
@@ -918,9 +918,12 @@ def build_enrichment_records(
         level = str(raw.get("enrichment_level") or "").strip().lower()
         if level not in {"table", "column"}:
             raise ValueError("enrichment_level must be 'table' or 'column'.")
-        metadata_key = str(raw.get("metadata_key") or "").strip()
-        if not metadata_key:
-            raise ValueError("metadata_key must be non-empty.")
+        metadata_table_key = str(raw.get("metadata_table_key") or "").strip()
+        metadata_column_key = str(raw.get("metadata_column_key") or "").strip()
+        if not metadata_table_key:
+            raise ValueError("metadata_table_key must be non-empty.")
+        if level == "column" and not metadata_column_key:
+            raise ValueError("metadata_column_key must be non-empty for column enrichment.")
         enrichment_type = str(raw.get("enrichment_type") or "").strip()
         if not enrichment_type:
             raise ValueError("enrichment_type must be non-empty.")
@@ -931,7 +934,8 @@ def build_enrichment_records(
         built.append({
             "enrichment_id": str(raw.get("enrichment_id") or uuid.uuid4()),
             "enrichment_level": level,
-            "metadata_key": metadata_key,
+            "metadata_table_key": metadata_table_key,
+            "metadata_column_key": metadata_column_key if level == "column" else "",
             "enrichment_type": enrichment_type,
             "value": value,
             **row_audit,
@@ -949,7 +953,8 @@ def latest_enrichment_values(rows: Any) -> dict[tuple[str, str, str], dict[str, 
     latest: dict[tuple[str, str, str], dict[str, Any]] = {}
     for raw in source or []:
         row = raw.asDict(recursive=True) if hasattr(raw, "asDict") else dict(raw)
-        key = (str(row.get("enrichment_level") or ""), str(row.get("metadata_key") or ""), str(row.get("enrichment_type") or ""))
+        asset_key = row.get("metadata_column_key") or row.get("metadata_table_key")
+        key = (str(row.get("enrichment_level") or ""), str(asset_key or ""), str(row.get("enrichment_type") or ""))
         committed_at = row.get("_committed_at")
         committed_text = str(committed_at or "").strip().replace("Z", "+00:00")
         try:
@@ -1234,7 +1239,7 @@ def _base_guardrail_rule_record(state: Mapping[str, Any], *, guardrail_type: str
     committed_at = _audit_timestamp_value(config)
     actor_value = _resolve_action_by(actor)
     pending = lifecycle.get("review_state") == "pending_governance_review"
-    return {"guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": config_shared.build_metadata_column_key(table_key, column_name) if column_name else "", "metadata_table_key": table_key, "environment_name": env, "dataset_name": dataset, "table_name": table, "column_name": column_name, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
+    return {"guardrail_rule_version_id": str(uuid.uuid4()), "guardrail_rule_id": rule_id, "rule_key": _build_dq_rule_key(env, dataset, table, rule_id), "rule_id": rule_id, "metadata_column_key": config_shared.build_metadata_column_key(table_key, column_name) if column_name else "", "metadata_table_key": table_key, "environment_name": env, "guardrail_type": guardrail_type, "rule_type": rule_type, "rule_parameters_json": json.dumps(parameters or {}, sort_keys=True, default=str), "severity": severity, "description": description, "submitted_by": actor_value if pending else "", "submitted_at": committed_at if pending else "", "reviewed_by": actor_value if lifecycle.get("review_status") == "self_approved" else "", "reviewed_at": committed_at if lifecycle.get("review_status") == "self_approved" else "", "review_decision": lifecycle.get("review_status", ""), "review_comment": "", "supersedes_rule_id": "", "effective_from": committed_at if lifecycle.get("is_active") else "", "effective_to": "", "action_type": "created", "source_notebook_type": source_notebook_type, **lifecycle}
 
 def _read_metadata_table_or_empty(config: Any, env: str, table_name: str, *, spark_session: Any) -> list[dict[str, Any]]:
     """Read a metadata table and return row dictionaries."""

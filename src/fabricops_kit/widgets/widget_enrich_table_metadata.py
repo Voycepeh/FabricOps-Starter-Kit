@@ -254,7 +254,13 @@ def widget_enrich_table_metadata(
         values = drafts.get((level, key), values_from_controls(level))
         before = originals.get((level, key), {})
         inputs = [
-            {"enrichment_level": level, "metadata_key": key, "enrichment_type": name, "value": value}
+            {
+                "enrichment_level": level,
+                "metadata_table_key": key if level == "table" else str(selected.get("table_key") or ""),
+                "metadata_column_key": key if level == "column" else "",
+                "enrichment_type": name,
+                "value": value,
+            }
             for name, value in values.items() if value.strip() and value != before.get(name, "")
         ]
         return _enrichment.build_enrichment_records(inputs, config=config, env=env)

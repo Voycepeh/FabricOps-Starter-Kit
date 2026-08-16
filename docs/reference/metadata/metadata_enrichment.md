@@ -2,31 +2,45 @@
 
 **Purpose:** Append-only generic descriptive and governance values for catalogue table and column identities.
 
+## Grain
+
+One appended enrichment value for one table or column asset.
+
+## Primary key
+
+`enrichment_id`
+
+## Foreign keys
+
+- `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_key`
+- `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_key`
+
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 13 |
-| Business columns | 5 |
+| Total columns | 14 |
+| Business columns | 6 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
-| Column | Data type | Managed by | Description |
-| --- | --- | --- | --- |
-| `enrichment_id` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Identifier stored for `enrichment_id`. |
-| `enrichment_level` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `enrichment_level`. |
-| `metadata_key` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `metadata_key`. |
-| `enrichment_type` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Enrichment type recorded for the row. |
-| `value` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `value`. |
-| `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
-| `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
-| `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
-| `_workspace_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace name captured from runtime audit context. |
-| `_notebook_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook identifier captured from runtime audit context. |
-| `_notebook_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
-| `_metadata_lakehouse_name` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
-| `_activity_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
+| Column | Data type | Key | Managed by | Description |
+| --- | --- | --- | --- | --- |
+| `enrichment_id` | `string` | **PK** | `fabricops_kit.widgets.shared.build_enrichment_records` | Identifier stored for `enrichment_id`. |
+| `enrichment_level` | `string` | **—** | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `enrichment_level`. |
+| `metadata_table_key` | `string` | **FK** | [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md), `fabricops_kit.widgets.shared.build_enrichment_records` | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
+| `metadata_column_key` | `string` | **FK** | [`widget_enrich_table_metadata`](../../api/reference/widget_enrich_table_metadata.md), `fabricops_kit.widgets.shared.build_enrichment_records` | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
+| `enrichment_type` | `string` | **—** | `fabricops_kit.widgets.shared.build_enrichment_records` | Enrichment type recorded for the row. |
+| `value` | `string` | **—** | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `value`. |
+| `_committed_by` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
+| `_committed_at` | `timestamp` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
+| `_workspace_id` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |
+| `_workspace_name` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace name captured from runtime audit context. |
+| `_notebook_id` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook identifier captured from runtime audit context. |
+| `_notebook_name` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric notebook name captured from runtime audit context. |
+| `_metadata_lakehouse_name` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Configured metadata lakehouse name used for the write. |
+| `_activity_id` | `string` | **—** | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric execution activity identifier for the current notebook or pipeline run. |
 
 ## Breaking pre-release replacement
 
