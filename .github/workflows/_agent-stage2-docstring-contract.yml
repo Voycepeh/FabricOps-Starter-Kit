@@ -143,8 +143,8 @@ jobs:
 
           test_path = Path('tests/unit/test_profile_and_register_table.py')
           test_source = test_path.read_text(encoding='utf-8')
-          old = '            "dev", kind, target, schema\n'
-          new = '            "dev", kind, target, schema or ""\n'
+          old = '        "dev", kind, target, schema\n'
+          new = '        "dev", kind, target, schema or ""\n'
           if old not in test_source:
               raise SystemExit('Expected Stage 2 catalogue schema assertion not found')
           test_path.write_text(test_source.replace(old, new, 1), encoding='utf-8')
