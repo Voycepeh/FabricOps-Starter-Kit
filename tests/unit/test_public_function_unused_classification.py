@@ -27,12 +27,17 @@ def _write_project(tmp_path: Path) -> tuple[Path, Path, Path]:
         "def reached_helper():\n"
         "    return None\n\n"
         "def detached_root():\n"
-        "    return detached_helper()\n\n"
+        "    detached_helper()\n"
+        "    return callback_consumer()\n\n"
         "def detached_helper():\n"
         "    return None\n\n"
         "def callback_only():\n"
         "    return None\n\n"
         "CALLBACKS = {'callback': callback_only}\n\n"
+        "def body_callback_only():\n"
+        "    return None\n\n"
+        "def callback_consumer():\n"
+        "    return {'label_fn': body_callback_only}\n\n"
         "def orphan():\n"
         "    return None\n\n"
         "def __getattr__(name):\n"
@@ -57,13 +62,13 @@ def test_unused_cleanup_only_keeps_unreferenced_roots(tmp_path: Path) -> None:
         payload_name.split(".")[-1]
         for payload_name in payload["detached_functions"]
     }
-    assert {"detached_helper", "callback_only", "__getattr__"} <= detached_names
+    assert {"detached_helper", "callback_only", "callback_consumer", "body_callback_only", "__getattr__"} <= detached_names
 
     source_referenced_names = {
         payload_name.split(".")[-1]
         for payload_name in payload["source_referenced_functions"]
     }
-    assert {"detached_helper", "callback_only"} <= source_referenced_names
+    assert {"detached_helper", "callback_only", "callback_consumer", "body_callback_only"} <= source_referenced_names
     assert "__getattr__" not in source_referenced_names
 
     runtime_hook_names = {
@@ -73,7 +78,7 @@ def test_unused_cleanup_only_keeps_unreferenced_roots(tmp_path: Path) -> None:
     assert runtime_hook_names == {"__getattr__"}
 
     assert payload["summary"]["defined_but_not_used_count"] == 2
-    assert payload["summary"]["detached_function_count"] == 3
+    assert payload["summary"]["detached_function_count"] == 5
     assert all(row["inbound_source_references"] == [] for row in payload["defined_but_not_used"])
 
 
@@ -87,5 +92,9 @@ def test_global_source_references_capture_internal_calls_and_module_registries(t
 
     detached_helper = "fabricops_kit.internal.detached_helper"
     callback_only = "fabricops_kit.internal.callback_only"
+    callback_consumer = "fabricops_kit.internal.callback_consumer"
+    body_callback_only = "fabricops_kit.internal.body_callback_only"
     assert inbound[detached_helper] == {"fabricops_kit.internal.detached_root"}
     assert inbound[callback_only] == {"fabricops_kit.internal::<module>"}
+    assert inbound[callback_consumer] == {"fabricops_kit.internal.detached_root"}
+    assert inbound[body_callback_only] == {"fabricops_kit.internal.callback_consumer"}

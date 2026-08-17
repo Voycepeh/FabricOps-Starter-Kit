@@ -10,7 +10,6 @@ SEARCH_ROOTS = [SRC, ROOT / "templates" / "notebooks", ROOT / "scripts", ROOT / 
 PRIVATE_HELPER_ALLOWLIST = {
     "__getattr__": "Package lazy-loading hook is invoked by Python attribute access rather than by a source-level call.",
     "_load_package_version": "Package metadata fallback is invoked during module import rather than by a source-level call.",
-    "_now_audit_timestamp": "Legacy audit timestamp helper retained for metadata compatibility but not currently called.",
 }
 
 
