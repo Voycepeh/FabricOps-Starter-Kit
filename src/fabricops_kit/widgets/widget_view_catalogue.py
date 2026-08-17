@@ -33,6 +33,10 @@ def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[
     return [row.asDict(recursive=True) for row in rows if str(row["table_id"] or "").strip()]
 
 
+collect_catalogue_inventory = _collect_catalogue_inventory
+require_ipywidgets = widget_shared.require_ipywidgets
+
+
 def _resolve_pipeline_catalogue_scope(
     *,
     environment_name: str,
@@ -156,7 +160,7 @@ def _build_catalogue_widget(
     empty_message: str,
 ) -> dict[str, Any]:
     """Build the normalized catalogue reader and human-facing Spark views."""
-    widgets = widget_shared.require_ipywidgets()
+    widgets = require_ipywidgets()
     rows_by_table_id = {str(row["table_id"]): row for row in inventory_rows}
     roles = role_options or [(None, table_id) for table_id in sorted(rows_by_table_id)]
     options: list[tuple[str, str]] = []
@@ -169,9 +173,11 @@ def _build_catalogue_widget(
         options.append((_reader_dataset_label(row, role), value))
         option_context[value] = (role, table_id)
     options.sort(key=lambda item: (item[0].casefold(), item[1]))
+    initial_table_id = next(iter(rows_by_table_id), "")
+    initial_value = next((value for _label, value in options if value.endswith(f"\x1f{initial_table_id}")), None)
 
     search = widgets.Text(value="", placeholder="Search catalogues", **widget_shared.widget_common(widgets, "Search"))
-    dataset = widgets.Dropdown(options=options, **widget_shared.widget_common(widgets, "Dataset"))
+    dataset = widgets.Dropdown(options=options, value=initial_value, **widget_shared.widget_common(widgets, "Dataset"))
     profile_column = widgets.Dropdown(options=[], **widget_shared.widget_common(widgets, "Profile column"))
     for control in (search, dataset, profile_column):
         control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
@@ -508,6 +514,9 @@ def _build_catalogue_widget(
     return state
 
 
+build_catalogue_widget = _build_catalogue_widget
+
+
 def widget_view_catalogue(
     *,
     mode: str,
@@ -602,7 +611,7 @@ def widget_view_catalogue(
         spark_session=spark_session,
         context=runtime_context,
     )
-    inventory_rows = _collect_catalogue_inventory(catalogue, environment_name)
+    inventory_rows = collect_catalogue_inventory(catalogue, environment_name)
     if mode == "explore":
         scope = _resolve_explore_catalogue_scope(
             inventory_rows=inventory_rows,
@@ -631,7 +640,7 @@ def widget_view_catalogue(
         ),
     }
     title, description, empty_message = presentation[mode]
-    return _build_catalogue_widget(
+    return build_catalogue_widget(
         title=title,
         description=description,
         selection_context=selection_context,
