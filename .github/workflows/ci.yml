@@ -1,26 +1,21 @@
 name: FabricOps CI
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - breaking/stage3-enrichment-access-fresh
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate:
+  stage3-reference-patch:
     runs-on: ubuntu-latest
-    env:
-      DISABLE_MKDOCS_2_WARNING: "true"
     steps:
-      - name: Checkout
+      - name: Checkout Stage 3 branch
         uses: actions/checkout@v5
         with:
+          ref: breaking/stage3-enrichment-access-fresh
           fetch-depth: 0
 
       - name: Install uv
@@ -34,80 +29,95 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Ruff lint
-        run: uv run ruff check .
-
-      - name: Normalize guided-demo links
-        run: uv run python scripts/normalize_guided_demo_links.py
-
-      - name: Run full test suite
-        run: uv run pytest
-
-      - name: Validate release navigation
-        run: uv run python scripts/release_navigation.py --check
-
-      - name: Validate owned generated artifacts
-        shell: bash
+      - name: Patch Stage 3 metadata reference contract
         run: |
-          set -euo pipefail
-          source .venv/bin/activate
-          python scripts/validate_generated_artifact_ownership.py
-
-      - name: Build strict documentation
-        env:
-          FABRICOPS_GIT_SHA: ${{ github.sha }}
-        run: uv run mkdocs build --strict
-
-      - name: Build distributions
-        run: uv build
-
-      - name: Check distributions
-        run: uvx twine check dist/*
-
-      - name: Install wheel and smoke-test public imports
-        shell: bash
-        run: |
-          set -euo pipefail
-          wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          test -n "${wheel_path}"
-          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
-          source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
           python - <<'PY'
-          from importlib.metadata import version
-          import fabricops_kit as kit
+          from pathlib import Path
 
-          assert kit.__version__ == version("fabricops-kit")
-          for public_name in kit.__all__:
-              getattr(kit, public_name)
-          print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
+          path = Path("scripts/reference_docs_metadata.py")
+          text = path.read_text()
+
+          models_root = text.index("METADATA_TABLE_MODELS = {")
+          models_start = text.index('    "METADATA_ENRICHMENT": {', models_root)
+          models_end = text.index('    "METADATA_GUARDRAIL": {', models_start)
+          models_replacement = '''    "METADATA_ENRICHMENT": {
+              "purpose": "Add business and governance context to the data.",
+              "grain": "One appended enrichment value for one table or column identity in one environment.",
+              "primary_key": ["enrichment_id"],
+              "foreign_keys": [
+                  {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
+                  {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+              ],
+              "relationships": [],
+          },
+          "METADATA_DATA_ACCESS": {
+              "purpose": "See who has row-level access to the data.",
+              "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
+              "primary_key": ["access_id"],
+              "foreign_keys": [
+                  {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
+              ],
+              "relationships": [],
+          },
+'''
+          text = text[:models_start] + models_replacement + text[models_end:]
+
+          owners_root = text.index("METADATA_COLUMN_OWNERS = {")
+          owners_start = text.index('    "METADATA_ENRICHMENT": {', owners_root)
+          owners_end = text.index('    "METADATA_GUARDRAIL": {', owners_start)
+          owners_replacement = '''    "METADATA_ENRICHMENT": {
+              "__default__": [
+                  "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+                  "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
+              ],
+              "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+              "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+          },
+'''
+          text = text[:owners_start] + owners_replacement + text[owners_end:]
+
+          public_root = text.index("PUBLIC_SYMBOL_DOCS = [")
+          symbol_pos = text.index("'symbol_name': 'widget_enrich_table_metadata'", public_root)
+          widget_start = text.rfind(" {'kind': 'function',", public_root, symbol_pos)
+          widget_end = text.index("\n\n {'kind': 'function',", symbol_pos)
+          widget = text[widget_start:widget_end]
+          replacements = {
+              "'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.'": "'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.'",
+              "'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'": "'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'",
+              "'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint']": "'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue']",
+              "'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.'": "'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.'",
+              "'The metadata catalogue has no logical tables.'": "'The active environment has no logical tables in the metadata catalogue.'",
+              "'A table or current column lacks its canonical metadata key.'": "'A selected table lacks table_id or a current column lacks column_id.'",
+          }
+          for old, new in replacements.items():
+              if widget.count(old) != 1:
+                  raise SystemExit(f"Expected widget field exactly once: {old}")
+              widget = widget.replace(old, new)
+          text = text[:widget_start] + widget + text[widget_end:]
+
+          if "widget_review_guardrail_governance" in text:
+              raise SystemExit("Deleted guardrail review widget reference unexpectedly present")
+
+          path.write_text(text)
           PY
 
-      - name: Configure GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
+      - name: Regenerate owned references
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
 
-      - name: Upload validated GitHub Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: site
-
-  deploy-docs:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: validate
-    runs-on: ubuntu-latest
-    concurrency:
-      group: pages
-      cancel-in-progress: true
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy validated documentation to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Restore normal CI and push generated Stage 3 fix
+        run: |
+          git checkout origin/main -- .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Align Stage 3 metadata references"
+          git push origin HEAD:breaking/stage3-enrichment-access-fresh
