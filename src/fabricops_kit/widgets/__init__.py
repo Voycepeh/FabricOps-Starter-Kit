@@ -22,4 +22,3 @@ def __getattr__(name: str):
     value = getattr(import_module(_WIDGET_MODULES[name]), name)
     globals()[name] = value
     return value
-
