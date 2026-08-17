@@ -770,7 +770,8 @@ def test_metadata_reference_overview_renders_model_diagram() -> None:
     assert f"![FabricOps metadata model]({image_reference})" in text
     assert (metadata_tables_path.parent / image_reference).resolve() == asset_path.resolve()
     assert text.index("FabricOps metadata tables describe") < text.index(image_reference)
-    assert text.index(image_reference) < text.index("## [METADATA_DATA_STEWARD]")
+    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
+    assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
 
 def test_template_function_map_page_stays_removed() -> None:
     """Verify the intentionally deleted template function map page stays removed."""
