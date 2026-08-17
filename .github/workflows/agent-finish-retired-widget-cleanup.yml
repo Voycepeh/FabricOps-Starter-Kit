@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Remove stale audit and test expectations
+      - name: Remove stale retired-widget contracts
         run: |
           python - <<'PY'
           import ast
@@ -66,6 +66,19 @@ jobs:
               raise SystemExit('stale writer ownership reference remains')
           ast.parse(text)
           writer_test.write_text(text, encoding='utf-8')
+
+          generator = Path('scripts/generate_individual_function_reference_pages.py')
+          text = generator.read_text(encoding='utf-8')
+          text = text.replace('        "widget_review_guardrail_governance",\n', '')
+          text = text.replace('    "widgets.widget_review_guardrail_governance": "widgets.widget_review_guardrail_governance",\n', '')
+          text = text.replace('    "widget_review_guardrail_governance": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],\n', '')
+          if target in text:
+              for lineno, line in enumerate(text.splitlines(), 1):
+                  if target in line:
+                      print(f'remaining generator reference {lineno}: {line}')
+              raise SystemExit('stale retired-widget generator reference remains')
+          ast.parse(text)
+          generator.write_text(text, encoding='utf-8')
           PY
 
       - name: Normalize authoritative docs metadata
@@ -103,6 +116,7 @@ jobs:
             .github/workflows/agent-finish-retired-widget-cleanup.yml \
             docs/reference/_data/callable-surface-audit.json \
             docs/reference/metadata.md docs/reference/metadata \
+            scripts/generate_individual_function_reference_pages.py \
             scripts/reference_docs_metadata.py \
             tests/unit/test_function_catalogue.py \
             tests/unit/test_metadata.py \
