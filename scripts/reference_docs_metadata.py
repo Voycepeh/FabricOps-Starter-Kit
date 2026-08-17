@@ -212,21 +212,19 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_ENRICHMENT": {
         "purpose": "Add business and governance context to the data.",
-        "grain": "One appended enrichment value for one table or column identity in one environment.",
+        "grain": "One appended enrichment value for one table or column identity.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
-            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id."},
+            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id."},
         ],
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See who has row-level access to the data.",
-        "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
-        "primary_key": ["access_id"],
-        "foreign_keys": [
-            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
-        ],
+        "purpose": "See who can use the data and how it can be used.",
+        "grain": "One access review record for one user and governed scope.",
+        "primary_key": [],
+        "foreign_keys": [],
         "relationships": [],
     },
     "METADATA_GUARDRAIL": {
@@ -439,16 +437,14 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_ENRICHMENT": {
         "__default__": [
             "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-            "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
+            "fabricops_kit.widgets.shared.build_enrichment_records",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-        "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "enrichment_id": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "enrichment_level": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "metadata_key": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "enrichment_type": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "value": ["fabricops_kit.widgets.shared.build_enrichment_records"],
     },
     "METADATA_GUARDRAIL": {
         "__default__": [
@@ -988,7 +984,8 @@ PUBLIC_SYMBOL_DOCS = [
                            'or validated and whether the environment is ready for workflows that '
                            'write evidence.',
   'common_failure_causes': ['The configured metadata lakehouse ABFSS path is missing or invalid.',
-                            'Spark cannot create or inspect metadata tables through the configured ABFSS paths.',
+                            'Spark cannot create or inspect metadata tables through the configured '
+                            'ABFSS paths.',
                             'The selected environment does not include metadata routing.',
                             'The caller lacks permission to create or update metadata tables.'],
   'related_guides': [{'title': 'Templates',
@@ -1002,16 +999,21 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_render_data_steward',
   'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
-  'expanded_purpose': 'Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.',
-  'when_to_use': 'Use in 01_governance when collecting or updating data steward details before creating a data agreement.',
+  'expanded_purpose': 'Renders the data steward intake widget so a notebook user can capture '
+                      'steward contact and ownership details for an agreement workflow.',
+  'when_to_use': 'Use in 01_governance when collecting or updating data steward details before '
+                 'creating a data agreement.',
   'glossary_terms': ['notebook template'],
   'returns': 'Notebook widget state or rendered widget result used to save steward details to METADATA_DATA_STEWARD.',
   'raises': 'Raises widget, validation, or metadata routing errors when required steward fields are missing or the metadata table cannot be written.',
-  'return_interpretation': 'The widget itself is the user interface; saved steward values are available to downstream agreement workflows only after the user completes the widget action.',
+  'return_interpretation': 'The widget itself is the user interface; saved steward values are '
+                           'available to downstream agreement workflows only after the user '
+                           'completes the widget action.',
   'common_failure_causes': ['ipywidgets is not available in the runtime.',
                             'Required steward fields are left blank.',
                             'Widget state is cleared by rerunning cells out of order.',
-                            'Metadata routing is unavailable when the widget tries to persist records.'],
+                            'Metadata routing is unavailable when the widget tries to persist '
+                            'records.'],
   'related_guides': [{'title': 'Templates',
                       'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
@@ -1021,12 +1023,14 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_render_data_agreement',
   'template_notebook': '01_governance',
   'template_segment': 'Agreement intake',
-  'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching governance arrangement between accountable producer and consumer stewards, including purpose, scope, permitted use, and review context.',
+  'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching '
+                      'governance arrangement between accountable producer and consumer stewards, including purpose, scope, permitted use, and review context.',
   'when_to_use': 'Use in 01_governance after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.',
   'glossary_terms': ['notebook template'],
   'returns': 'Notebook widget state or rendered widget result used to save agreement details to METADATA_DATA_AGREEMENT.',
   'raises': 'Raises widget, validation, or metadata routing errors when required agreement fields are missing or the metadata table cannot be written.',
-  'return_interpretation': 'The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.',
+  'return_interpretation': 'The rendered widget collects agreement input; downstream helpers can '
+                           'only use the agreement after the user saves valid values.',
   'common_failure_causes': ['ipywidgets is not available in the runtime.',
                             'Required agreement fields are missing.',
                             'Agreement identifiers conflict with existing metadata.',
@@ -1089,24 +1093,32 @@ PUBLIC_SYMBOL_DOCS = [
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a CSV file from a configured Fabric-resolved path.',
-  'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL tables.',
+  'do_not_use_when': 'Do not use for Delta tables, Parquet files, Excel files, or warehouse SQL '
+                     'tables.',
   'parameters': 'relative_path, target, optional spark_session, optional context, header flag, and Spark CSV reader options.',
   'returns': 'Spark DataFrame loaded from the Fabric-resolved CSV path.',
-  'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the file cannot be read.',
+  'raises': 'Raises ValueError for invalid file paths and configuration/Spark errors when the file '
+            'cannot be read.',
   'side_effects': 'Reads from the configured Fabric-resolved path; it does not write metadata, tables, or files.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify relative_path is a configured Fabric-resolved file path, then check row count and schema after reading.',
-  'preferred_example': 'df = read_lakehouse_csv(relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
+  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
+                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+  'ai_verification': 'Verify relative_path is a configured Fabric-resolved file path, then check row count and schema '
+                     'after reading.',
+  'preferred_example': 'df = read_lakehouse_csv('
+                       'relative_path="raw/orders/orders.csv", header=True, spark_session=spark)',
   'related_functions': ['read_lakehouse_table', 'read_lakehouse_parquet', 'read_lakehouse_excel'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark CSV reader with supplied CSV options.',
-  'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be resolved through configured Fabric targets.',
+  'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be '
+                 'resolved through configured Fabric targets.',
   'glossary_terms': ['source data', 'notebook template'],
-  'return_interpretation': 'The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.',
+  'return_interpretation': 'The returned DataFrame reflects Spark CSV parsing options; inspect '
+                           'schema and sample rows before profiling or writing.',
   'common_failure_causes': ['The file path is wrong or outside the configured Fabric target.',
                             'CSV options do not match the file shape.',
                             'Spark cannot access the file.',
                             'The selected environment is missing the source lakehouse target.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1114,25 +1126,36 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'read_lakehouse_parquet',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading a Parquet file or path from a configured Fabric lakehouse Files path.',
-  'do_not_use_when': 'Do not use for Delta tables, CSV files, Excel files, or warehouse SQL tables.',
+  'use_when': 'Use when reading a Parquet file or path from a configured Fabric lakehouse Files '
+              'path.',
+  'do_not_use_when': 'Do not use for Delta tables, CSV files, Excel files, or warehouse SQL '
+                     'tables.',
   'parameters': 'relative_path, target, verbose flag, optional spark_session, optional context, and Spark Parquet reader options.',
-  'returns': 'Spark DataFrame loaded from the original Parquet path or timestamp-converted fallback path.',
-  'raises': 'Raises ValueError for invalid relative paths and Spark/read errors when the Parquet path cannot be loaded.',
-  'side_effects': 'Reads from the configured Fabric-resolved path and may create a local timestamp-converted fallback for single-file Parquet precision issues; it does not write metadata tables.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify the file path is resolved by the Fabric resolver and check row count/schema after reading.',
-  'preferred_example': 'df = read_lakehouse_parquet(relative_path="raw/orders/orders.parquet", spark_session=spark)',
+  'returns': 'Spark DataFrame loaded from the original Parquet path or timestamp-converted '
+             'fallback path.',
+  'raises': 'Raises ValueError for invalid relative paths and Spark/read errors when the Parquet '
+            'path cannot be loaded.',
+  'side_effects': 'Reads from the configured Fabric-resolved path and may create a local timestamp-converted fallback '
+                  'for single-file Parquet precision issues; it does not write metadata tables.',
+  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
+                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+  'ai_verification': 'Verify the file path is resolved by the Fabric resolver and check row '
+                     'count/schema after reading.',
+  'preferred_example': 'df = read_lakehouse_parquet('
+                       'relative_path="raw/orders/orders.parquet", spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_excel', 'read_lakehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, then delegates to Spark Parquet reader with supplied options and timestamp fallback reads.',
-  'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a managed table.',
+  'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a '
+                 'managed table.',
   'glossary_terms': ['source data', 'notebook template'],
-  'return_interpretation': 'The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.',
+  'return_interpretation': 'The returned DataFrame uses the Parquet schema read by Spark; validate '
+                           'it before downstream profile or guardrail checks.',
   'common_failure_causes': ['The Parquet path is missing or misspelled.',
                             'The file is not valid Parquet.',
                             'The configured lakehouse target is unavailable.',
                             'The caller lacks read permission.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1140,25 +1163,38 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'read_lakehouse_excel',
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
-  'use_when': 'Use when reading .xlsx files from a configured Fabric-resolved path, especially small reference files, mapping tables, or manually maintained business inputs.',
-  'do_not_use_when': 'Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL tables.',
-  'parameters': 'config, env, target, relative_path, optional sheet_name, optional spark_session, and pandas read_excel keyword arguments.',
+  'use_when': 'Use when reading .xlsx files from a configured Fabric-resolved path, '
+              'especially small reference files, mapping tables, or manually maintained business '
+              'inputs.',
+  'do_not_use_when': 'Do not use for Delta tables, CSV files, Parquet files, or warehouse SQL '
+                     'tables.',
+  'parameters': 'config, env, target, relative_path, optional sheet_name, optional spark_session, '
+                'and pandas read_excel keyword arguments.',
   'returns': 'Spark DataFrame converted from the selected Excel worksheet.',
-  'raises': 'Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when the file cannot be read.',
-  'side_effects': 'Reads from lakehouse Files through a temporary local Excel file; it does not write metadata, tables, or files.',
-  'fabric_context': 'Requires 00_env_config config/env/target context for resolving the configured lakehouse Files path.',
-  'ai_verification': 'Verify the DataFrame row count and schema after reading, and confirm the Excel file is appropriate for a small reference-style input.',
-  'preferred_example': 'mapping_df = read_lakehouse_excel(relative_path="reference/faculty_mapping.xlsx", sheet_name=0, spark_session=spark)',
+  'raises': 'Raises ValueError for invalid or non-Excel paths and Fabric/Spark/pandas errors when '
+            'the file cannot be read.',
+  'side_effects': 'Reads from lakehouse Files through a temporary local Excel file; it does not '
+                  'write metadata, tables, or files.',
+  'fabric_context': 'Requires 00_env_config config/env/target context for resolving the configured '
+                    'lakehouse Files path.',
+  'ai_verification': 'Verify the DataFrame row count and schema after reading, and confirm the '
+                     'Excel file is appropriate for a small reference-style input.',
+  'preferred_example': 'mapping_df = read_lakehouse_excel('
+                       'relative_path="reference/faculty_mapping.xlsx", sheet_name=0, '
+                       'spark_session=spark)',
   'related_functions': ['read_lakehouse_csv', 'read_lakehouse_parquet', 'read_lakehouse_table'],
   'expanded_purpose': 'Resolves the configured Lakehouse Files path, reads workbook binary, parses it with pandas.read_excel options, and converts the pandas DataFrame to Spark.',
-  'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.',
+  'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow '
+                 'configured Fabric lakehouse routing.',
   'glossary_terms': ['source data', 'notebook template'],
-  'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.',
+  'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; '
+                           'confirm headers and types before using it as pipeline input.',
   'common_failure_causes': ['The workbook path or sheet name is incorrect.',
                             'Excel parsing dependencies are unavailable.',
                             'The workbook layout does not match expected headers.',
                             'The configured lakehouse target cannot be read.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1167,24 +1203,32 @@ PUBLIC_SYMBOL_DOCS = [
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when reading a table from a configured Fabric warehouse target.',
-  'do_not_use_when': 'Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or Excel paths.',
+  'do_not_use_when': 'Do not use for lakehouse Delta tables or lakehouse Files CSV, Parquet, or '
+                     'Excel paths.',
   'parameters': 'schema, table_name, target, optional spark_session, optional context, and Fabric Warehouse connector reader options.',
   'returns': 'Spark DataFrame loaded from the configured warehouse table.',
-  'raises': 'Raises configuration, Spark SQL, or warehouse-read errors when the target/table cannot be resolved/read.',
+  'raises': 'Raises configuration, Spark SQL, or warehouse-read errors when the target/table '
+            'cannot be resolved/read.',
   'side_effects': 'Reads from a warehouse table; it does not write metadata, tables, or files.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify the warehouse target/schema/table are configured and inspect the resulting DataFrame schema before downstream use.',
-  'preferred_example': 'df = read_warehouse_table(schema="dbo", table="orders", spark_session=spark)',
+  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
+                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+  'ai_verification': 'Verify the warehouse target/schema/table are configured and inspect the '
+                     'resulting DataFrame schema before downstream use.',
+  'preferred_example': 'df = read_warehouse_table('
+                       'schema="dbo", table="orders", spark_session=spark)',
   'related_functions': ['write_warehouse_table', 'read_warehouse_query'],
   'expanded_purpose': 'Resolves the configured Warehouse table target, then delegates full-table reads to the Fabric Warehouse Spark connector with supplied connector options.',
-  'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.',
+  'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or '
+                 'Delta table.',
   'glossary_terms': ['source data', 'notebook template'],
-  'return_interpretation': 'The returned DataFrame represents the warehouse read result; confirm filters and row counts before profiling or transformation.',
+  'return_interpretation': 'The returned DataFrame represents the warehouse read result; confirm '
+                           'filters and row counts before profiling or transformation.',
   'common_failure_causes': ['The warehouse target is not configured.',
                             'The table or SQL text is invalid.',
                             'Warehouse connector context is unavailable.',
                             'The caller lacks warehouse read permission.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1207,7 +1251,8 @@ PUBLIC_SYMBOL_DOCS = [
   'glossary_terms': ['source data', 'notebook template'],
   'return_interpretation': 'The returned DataFrame contains the query result from the warehouse SQL serving engine.',
   'common_failure_causes': ['The SQL is blank or not a SELECT/CTE.', 'The warehouse target is not configured.', 'The Fabric connector is unavailable.', 'The caller lacks warehouse read permission.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'io',
   'function_type': 'callable',
@@ -1216,24 +1261,33 @@ PUBLIC_SYMBOL_DOCS = [
   'template_notebook': '02_pipeline',
   'template_segment': 'Fabric IO',
   'use_when': 'Use when publishing a Spark DataFrame to a configured Fabric warehouse table.',
-  'do_not_use_when': 'Do not use for lakehouse table writes, lakehouse Files writes, or metadata evidence writes.',
+  'do_not_use_when': 'Do not use for lakehouse table writes, lakehouse Files writes, or metadata '
+                     'evidence writes.',
   'parameters': 'df, schema, table_name, target, write mode, optional Spark repartition_by value, optional connector writer options, and optional context.',
   'returns': 'None; the DataFrame is written to the configured warehouse table.',
-  'raises': 'Raises configuration, Spark connector, or warehouse write errors when the target/table cannot be written.',
+  'raises': 'Raises configuration, Spark connector, or warehouse write errors when the '
+            'target/table cannot be written.',
   'side_effects': 'Writes data to a Fabric warehouse table using the selected mode.',
-  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the intended env name; never hardcode Fabric workspace or item identifiers.',
-  'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and check the intended write mode before calling.',
-  'preferred_example': 'write_warehouse_table(serving_df, target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
+  'fabric_context': 'Requires the FrameworkConfig or compatible CONFIG from 00_env_config plus the '
+                    'intended env name; never hardcode Fabric workspace or item identifiers.',
+  'ai_verification': 'Verify guardrails passed, confirm schema/table routing from CONFIG, and '
+                     'check the intended write mode before calling.',
+  'preferred_example': 'write_warehouse_table(serving_df, '
+                       'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
-  'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied connector options.',
-  'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a warehouse table.',
+  'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
+  'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
+                 'warehouse table.',
   'glossary_terms': ['target table', 'guardrails'],
-  'return_interpretation': 'A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.',
+  'return_interpretation': 'A successful write means the helper submitted the DataFrame write to '
+                           'the configured warehouse target; verify downstream table state for '
+                           'business checks.',
   'common_failure_causes': ['The warehouse target is missing from configuration.',
                             'The target table name or write mode is invalid.',
                             'Warehouse connector support is unavailable.',
                             'The caller lacks write permission.'],
-  'related_guides': [{'title': 'Templates', 'path': '../../notebook-templates.md'}]},
+  'related_guides': [{'title': 'Templates',
+                      'path': '../../notebook-templates.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1242,25 +1296,33 @@ PUBLIC_SYMBOL_DOCS = [
   'template_notebook': '02_pipeline / optional 99_explore',
   'template_segment': 'Profiling',
   'use_when': 'Use to create schema, row-count, null, distinct, min/max, and numeric statistic profiles from a Spark DataFrame.',
-  'do_not_use_when': 'Do not use as a data-quality enforcement step or as a persistence helper; it builds profile rows but does not approve governance evidence.',
+  'do_not_use_when': 'Do not use as a data-quality enforcement step or as a persistence helper; it '
+                     'builds profile rows but does not approve governance evidence.',
   'parameters': 'df and optional exclude_columns.',
   'returns': 'Spark DataFrame containing one profile row per eligible business column.',
   'raises': 'Raises Spark/DataFrame errors when profiling expressions cannot be evaluated.',
-  'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write metadata, tables, or files.',
-  'fabric_context': 'Use after reading source/target data and before metadata persistence or governance review workflows that need profiles.',
-  'ai_verification': 'Verify the profile row count matches expected business columns and inspect key schema/profile fields before writing evidence.',
+  'side_effects': 'Computes profiling aggregations on the provided DataFrame; it does not write '
+                  'metadata, tables, or files.',
+  'fabric_context': 'Use after reading source/target data and before metadata persistence or '
+                    'governance review workflows that need profiles.',
+  'ai_verification': 'Verify the profile row count matches expected business columns and inspect '
+                     'key schema/profile fields before writing evidence.',
   'preferred_example': 'profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])',
   'related_functions': ['enforce_profile_behavior'],
-  'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
-  'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table needs reproducible profiles.',
+  'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, '
+                      'row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
+  'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table '
+                 'needs reproducible profiles.',
   'glossary_terms': ['evidence', 'source data', 'target table'],
   'return_interpretation': 'Each returned profile row describes one eligible source column. Downstream governance and guardrail helpers may use those rows as evidence.',
   'common_failure_causes': ['The DataFrame is empty or missing expected columns.',
                             'Requested statistics are unsupported for a column type.',
                             'Spark actions fail while computing counts or summaries.',
                             'Excluded columns remove fields needed for review.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                     {'title': 'Governance Review', 'path': '../../guided-demo/03-enrich-guardrails.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'},
+                     {'title': 'Governance Review',
+                      'path': '../../guided-demo/03-enrich-guardrails.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1285,7 +1347,8 @@ PUBLIC_SYMBOL_DOCS = [
   'common_failure_causes': ['Requested columns are missing.',
                             'top_n is not greater than zero when supplied.',
                             'Spark actions fail while computing frequency counts.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1311,100 +1374,183 @@ PUBLIC_SYMBOL_DOCS = [
                             'profile_role or the configured target store kind is unsupported.',
                             'The target, table name, or required schema is blank.',
                             'Requested frequency columns are missing from the DataFrame.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Enforce whether the latest data arrived within the configured freshness lag.',
+  'summary_override': 'Enforce whether the latest data arrived within the configured freshness '
+                      'lag.',
   'symbol_name': 'enforce_freshness',
   'template_notebook': '02_pipeline',
   'template_segment': 'Freshness enforcement',
-  'use_when': 'Use in 02_pipeline to validate max(freshness_column) is at least today minus freshness_max_lag_days.',
-  'do_not_use_when': 'Do not use for schema validation, load-behavior enforcement, or DQ-rule enforcement; use enforce_profile_behavior or run_table_guardrails for those checks.',
-  'parameters': 'dataframe, freshness_column, max_lag_days, severity, and optional reference_date for deterministic validation.',
-  'returns': 'Guardrail result dictionary with status, can_continue, latest_value, required_min_value, and freshness evidence fields.',
-  'raises': 'ValueError when severity is unsupported, lag is missing for a configured column, lag is negative, or reference_date is invalid.',
-  'side_effects': 'Computes max(freshness_column) on the provided DataFrame; it does not write metadata, tables, or files.',
-  'fabric_context': 'Use in 02_pipeline after schema validation and before downstream writes so stale data can block or warn independently from profile behavior.',
-  'ai_verification': 'Verify freshness_column and freshness_max_lag_days come from the table config and that blocking severity stops writes when can_continue is false.',
-  'preferred_example': 'freshness_result = enforce_freshness(df, "business_date", 1, severity="blocking")\nstop_if_failed(freshness_result)',
+  'use_when': 'Use in 02_pipeline to validate max(freshness_column) is at least today minus '
+              'freshness_max_lag_days.',
+  'do_not_use_when': 'Do not use for schema validation, load-behavior enforcement, or DQ-rule '
+                     'enforcement; use enforce_profile_behavior or '
+                     'run_table_guardrails for those checks.',
+  'parameters': 'dataframe, freshness_column, max_lag_days, severity, and optional reference_date '
+                'for deterministic validation.',
+  'returns': 'Guardrail result dictionary with status, can_continue, latest_value, '
+             'required_min_value, and freshness evidence fields.',
+  'raises': 'ValueError when severity is unsupported, lag is missing for a configured column, lag '
+            'is negative, or reference_date is invalid.',
+  'side_effects': 'Computes max(freshness_column) on the provided DataFrame; it does not write '
+                  'metadata, tables, or files.',
+  'fabric_context': 'Use in 02_pipeline after schema validation and before downstream writes so '
+                    'stale data can block or warn independently from profile behavior.',
+  'ai_verification': 'Verify freshness_column and freshness_max_lag_days come from the table '
+                     'config and that blocking severity stops writes when can_continue is false.',
+  'preferred_example': 'freshness_result = enforce_freshness(df, "business_date", 1, '
+                       'severity="blocking")\n'
+                       'stop_if_failed(freshness_result)',
   'related_functions': ['enforce_profile_behavior', 'stop_if_failed'],
-  'expanded_purpose': 'Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.',
-  'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.',
+  'expanded_purpose': 'Checks whether the latest value in a freshness column is recent enough for '
+                      'the configured maximum lag before pipeline writes continue.',
+  'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or '
+                 'warn before downstream work proceeds.',
   'glossary_terms': ['guardrails', 'can_continue', 'source data', 'target table'],
-  'return_interpretation': 'If can_continue is true, the latest freshness value is within the allowed lag or the check was skipped. If false, investigate stale data before writing outputs.',
+  'return_interpretation': 'If can_continue is true, the latest freshness value is within the '
+                           'allowed lag or the check was skipped. If false, investigate stale data '
+                           'before writing outputs.',
   'common_failure_causes': ['The freshness column is missing.',
                             'The max lag value is missing or invalid.',
                             'The latest date is older than the allowed lag.',
                             'Severity is invalid or configured as blocking for stale data.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted profiled evidence.',
+  'summary_override': 'Enforce static, changing, or skipped profile behavior against accepted '
+                      'profiled evidence.',
   'symbol_name': 'enforce_profile_behavior',
   'template_notebook': '02_pipeline',
   'template_segment': 'Profile behavior enforcement',
-  'expanded_purpose': 'This function protects against silent data behavior changes. It compares current static_data or changing_data profiles with previous approved evidence. If the current profile no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.',
-  'use_when': 'Use in 02_pipeline to enforce profile_mode expectations against previous accepted profiled evidence.',
-  'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously approved profile behavior pattern. It is especially useful when full-table static data changes unexpectedly or when a previous watermark group changes or disappears.',
-  'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use run_table_guardrails for DQ-rule enforcement.',
-  'glossary_terms': ['profile behavior', 'evidence', 'profile', 'stage', 'profile behavior', 'guardrails', 'can_continue', 'static_data', 'changing_data', 'skip', 'metadata lakehouse'],
-  'parameters': {'spark': 'Spark session used to read accepted profiles from the configured metadata target.',
+  'expanded_purpose': 'This function protects against silent data behavior changes. It compares '
+                      'current static_data or changing_data profiles with previous '
+                      'approved evidence. If the current profile no longer matches the '
+                      'approved baseline, the function returns a failed guardrail result so the '
+                      'pipeline can stop before writing data.',
+  'use_when': 'Use in 02_pipeline to enforce profile_mode expectations against previous accepted '
+              'profiled evidence.',
+  'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously '
+                 'approved profile behavior pattern. It is especially useful when full-table '
+                 'static data changes unexpectedly or when a previous watermark group changes or '
+                 'disappears.',
+  'do_not_use_when': 'Do not use for simple schema validation or DQ-rule enforcement; use '
+                     'run_table_guardrails for DQ-rule enforcement.',
+  'glossary_terms': ['profile behavior',
+                     'evidence',
+                     'profile',
+                     'stage',
+                     'profile behavior',
+                     'guardrails',
+                     'can_continue',
+                     'static_data',
+                     'changing_data',
+                     'skip',
+                     'metadata lakehouse'],
+  'parameters': {'spark': 'Spark session used to read accepted profiles from the '
+                          'configured metadata target.',
                  'dataframe': 'Current source or target DataFrame being checked.',
-                 'metadata_table': 'Metadata table that stores accepted catalogue profile evidence.',
+                 'metadata_table': 'Metadata table that stores accepted catalogue profile '
+                                   'evidence.',
                  'dataset_name': 'Dataset name used to find matching evidence.',
                  'table_name': 'Table name used to find matching evidence.',
                  'stage': 'The part of the pipeline being checked, such as source or target.',
-                 'run_id': 'Current pipeline run identifier recorded in the generated profile evidence.',
-                 'profile_mode': 'Profile behavior mode to evaluate: static_data, changing_data, or skip.',
-                 'watermark_column': 'Column used to group changing_data profiles when configured.',
+                 'run_id': 'Current pipeline run identifier recorded in the generated profile '
+                           'evidence.',
+                 'profile_mode': 'Profile behavior mode to evaluate: static_data, changing_data, '
+                                 'or skip.',
+                 'watermark_column': 'Column used to group changing_data profiles when '
+                                     'configured.',
                  'exclude_columns': 'Optional columns to ignore while comparing profile fields.',
-                 'exclude_run_id': 'Optional run id to exclude when selecting the accepted baseline evidence.'},
-  'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, baseline details, and profile behavior checks.',
-  'return_interpretation': 'If can_continue is true, the current profile behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, review or supersede the relevant guardrail rule in governance. If not intentional, fix the source data or pipeline configuration.',
-  'raises': 'Raises Spark or metadata-read errors when baseline profiles cannot be loaded or compared.',
+                 'exclude_run_id': 'Optional run id to exclude when selecting the accepted '
+                                   'baseline evidence.'},
+  'returns': 'Guardrail result dictionary with status, can_continue, message, current profile, '
+             'baseline details, and profile behavior checks.',
+  'return_interpretation': 'If can_continue is true, the current profile behavior matches the '
+                           'accepted baseline and the pipeline can continue. If can_continue is '
+                           'false, review whether the behavior change is intentional before '
+                           'writing the table. If intentional, review or supersede the relevant '
+                           'guardrail rule in governance. If not intentional, fix the source data '
+                           'or pipeline configuration.',
+  'raises': 'Raises Spark or metadata-read errors when baseline profiles cannot be loaded '
+            'or compared.',
   'common_failure_causes': ['No accepted profile exists yet.',
                             'The current profile behavior does not match the accepted baseline.',
-                            'The configured dataset or table name does not match catalogue evidence.',
+                            'The configured dataset or table name does not match catalogue '
+                            'evidence.',
                             'The configured stage does not match the accepted evidence.',
                             'The metadata lakehouse or profiled evidence table cannot be read.',
                             'The accepted evidence is missing required profile behavior fields.',
                             'The current profile_mode value is invalid or unsupported.',
                             'The accepted evidence is stale or incomplete.'],
-  'side_effects': 'Reads baseline profile metadata and computes current profiles; it does not write target data.',
-  'fabric_context': 'Requires profile metadata routed through the configured 00_env_config metadata target and a valid source/target stage.',
-  'ai_verification': 'Verify baseline selection, status, and can_continue before allowing downstream writes or calling stop_if_failed.',
-  'preferred_example': 'stability_result = enforce_profile_behavior(\n    spark=spark,\n    dataframe=df,\n    metadata_table="METADATA_DATA_PROFILED",\n    dataset_name="sales_orders",\n    table_name="orders_raw",\n    stage="target",\n    run_id=run_id,\n    profile_mode="changing_data",\n    watermark_column="business_date",\n)\nstop_if_failed(stability_result)',
-  'related_functions': ['profile_dataframe', 'enforce_freshness', 'stop_if_failed'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                     {'title': 'Governance Review', 'path': '../../guided-demo/03-enrich-guardrails.md'}]},
+  'side_effects': 'Reads baseline profile metadata and computes current profiles; it does '
+                  'not write target data.',
+  'fabric_context': 'Requires profile metadata routed through the configured 00_env_config '
+                    'metadata target and a valid source/target stage.',
+  'ai_verification': 'Verify baseline selection, status, and can_continue before allowing '
+                     'downstream writes or calling stop_if_failed.',
+  'preferred_example': 'stability_result = enforce_profile_behavior(\n'
+                       '    spark=spark,\n'
+                       '    dataframe=df,\n'
+                       '    metadata_table="METADATA_DATA_PROFILED",\n'
+                       '    dataset_name="sales_orders",\n'
+                       '    table_name="orders_raw",\n'
+                       '    stage="target",\n'
+                       '    run_id=run_id,\n'
+                       '    profile_mode="changing_data",\n'
+                       '    watermark_column="business_date",\n'
+                       ')\n'
+                       'stop_if_failed(stability_result)',
+  'related_functions': ['profile_dataframe',
+                        'enforce_freshness',
+                        'stop_if_failed'],
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'},
+                     {'title': 'Governance Review',
+                      'path': '../../guided-demo/03-enrich-guardrails.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Stop a notebook only when a schema, freshness, profile behavior, or DQ guardrail result blocks continuation.',
+  'summary_override': 'Stop a notebook only when a schema, freshness, profile behavior, or DQ '
+                      'guardrail result blocks continuation.',
   'symbol_name': 'stop_if_failed',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the notebook when can_continue is false.',
-  'do_not_use_when': 'Do not use for informational warnings that should not block execution, or before a guardrail result exists.',
+  'use_when': 'Use after schema, freshness, profile behavior, or DQ guardrail helpers to stop the '
+              'notebook when can_continue is false.',
+  'do_not_use_when': 'Do not use for informational warnings that should not block execution, or '
+                     'before a guardrail result exists.',
   'parameters': 'guardrail result dictionary and optional message/runtime controls.',
-  'returns': 'None when execution may continue; otherwise raises or exits according to runtime behavior.',
-  'raises': 'Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail must stop execution.',
-  'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an exception.',
-  'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, or enforce_profile_behavior and before write helpers.',
-  'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message before passing it to stop_if_failed.',
-  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\nstop_if_failed(guardrail_result)',
+  'returns': 'None when execution may continue; otherwise raises or exits according to runtime '
+             'behavior.',
+  'raises': 'Raises RuntimeError outside Fabric notebook exit handling when a failed guardrail '
+            'must stop execution.',
+  'side_effects': 'May terminate notebook execution through Fabric notebook utilities or raise an '
+                  'exception.',
+  'fabric_context': 'Use in 02_pipeline after run_table_guardrails, enforce_freshness, '
+                    'or enforce_profile_behavior and before write helpers.',
+  'ai_verification': 'Verify the guardrail result shape includes status/can_continue/message '
+                     'before passing it to stop_if_failed.',
+  'preferred_example': 'guardrail_result = run_table_guardrails(table_configs, context={"config": CONFIG, "env": ENV}, run_id=RUN_ID, spark_session=spark)\n'
+                       'stop_if_failed(guardrail_result)',
   'related_functions': ['enforce_freshness', 'enforce_profile_behavior'],
-  'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.',
-  'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.',
+  'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not '
+                      'continue into unsafe downstream writes.',
+  'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail '
+                 'helpers when can_continue controls whether the pipeline should proceed.',
   'glossary_terms': ['guardrails', 'can_continue'],
-  'return_interpretation': 'No return value means execution may continue. A blocking result raises or exits according to runtime settings.',
+  'return_interpretation': 'No return value means execution may continue. A blocking result raises '
+                           'or exits according to runtime settings.',
   'common_failure_causes': ['The guardrail result is missing can_continue or status fields.',
                             'A blocking guardrail returned can_continue as false.',
                             'Notebook exit behavior is not supported in the current runtime.',
                             'The caller passed a warning result that should not stop execution.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1412,38 +1558,55 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'write_catalogue_evidence',
   'template_notebook': '02_pipeline',
   'template_segment': 'Catalogue evidence',
-  'use_when': 'Use after source or target profiles and guardrail results are available to persist evidence through the configured metadata route.',
-  'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook context, and optional guardrail results.',
+  'use_when': 'Use after source or target profiles and guardrail results are available to persist '
+              'evidence through the configured metadata route.',
+  'parameters': 'profiles, dataset definitions, config, env, run_id, agreement context, notebook '
+                'context, and optional guardrail results.',
   'returns': 'Dictionary of write statuses keyed by dataset alias.',
-  'side_effects': 'Writes METADATA_DATA_PROFILED through the configured metadata lakehouse target.',
+  'side_effects': 'Writes METADATA_DATA_PROFILED through the configured metadata lakehouse '
+                  'target.',
   'related_functions': ['profile_dataframe', 'write_lakehouse_table'],
-  'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to the configured metadata target.',
-  'when_to_use': 'Use after guardrail evidence is built and before governance or handover workflows need the latest runtime evidence.',
+  'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to '
+                      'the configured metadata target.',
+  'when_to_use': 'Use after guardrail evidence is built and before governance or handover '
+                 'workflows need the latest runtime evidence.',
   'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
-  'return_interpretation': 'The returned status summarizes which evidence rows were prepared or written. Confirm expected table keys appear before relying on governance review outputs.',
+  'return_interpretation': 'The returned status summarizes which evidence rows were prepared or '
+                           'written. Confirm expected table keys appear before relying on '
+                           'governance review outputs.',
   'common_failure_causes': ['Evidence definitions are missing required fields.',
                             'The metadata lakehouse cannot be written.',
                             'Spark cannot convert evidence rows to the target schema.',
                             'The caller lacks metadata write permission.'],
-  'related_guides': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                     {'title': 'Metadata Tables', 'path': '../../reference/metadata.md'}]},
+  'related_guides': [{'title': 'Pipeline Execution',
+                      'path': '../../guided-demo/02-run-pipeline.md'},
+                     {'title': 'Metadata Tables',
+                      'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
-  'summary_override': 'Evaluate freshness using an active metadata-backed freshness guardrail rule.',
+  'summary_override': 'Evaluate freshness using an active metadata-backed freshness guardrail '
+                      'rule.',
   'symbol_name': 'enforce_freshness_rule',
   'template_notebook': '02_pipeline',
   'template_segment': 'Guardrail enforcement',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that guardrail authoring, governance, or display step is required.',
+  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
+              'guardrail authoring, governance, or display step is required.',
   'parameters': {'result_bundle': 'Guardrail result bundle returned by run_table_guardrails.', 'mode': 'Display mode: "summary" for the main outcome table, "detailed" for detailed rows, or "debug" for raw nested values.', 'spark_session': 'Optional Spark session used to convert display rows to Spark DataFrames when available.'},
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.',
+  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
+             'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': [],
-  'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active freshness intent from governance is enforced during pipeline execution.',
-  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL should determine the freshness column and maximum lag.',
-  'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring and governance review widgets for lifecycle changes.',
+  'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
+                      'freshness intent from governance is enforced during pipeline execution.',
+  'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
+                 'should determine the freshness column and maximum lag.',
+  'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring '
+                     'and governance review widgets for lifecycle changes.',
   'glossary_terms': ['guardrails', 'metadata lakehouse', 'can_continue'],
-  'return_interpretation': 'A can_continue value of true means the latest freshness value satisfied the active rule or no blocking rule applied; false means the run should stop after display.',
+  'return_interpretation': 'A can_continue value of true means the latest freshness value '
+                           'satisfied the active rule or no blocking rule applied; false means the '
+                           'run should stop after display.',
   'common_failure_causes': ['The freshness column is missing.',
                             'The max lag parameter is invalid.',
                             'No active freshness rule matches the table.',
@@ -1455,18 +1618,18 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_enrich_table_metadata',
   'template_notebook': '01_governance',
   'template_segment': 'Guardrail governance review',
-  'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.',
+  'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.',
   'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
   'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
   'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
   'related_functions': ['widget_view_catalogue'],
-  'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
+  'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
   'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
   'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
-  'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue'],
-  'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.',
-  'common_failure_causes': ['The active environment has no logical tables in the metadata catalogue.',
-                            'A selected table lacks table_id or a current column lacks column_id.',
+  'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint'],
+  'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.',
+  'common_failure_causes': ['The metadata catalogue has no logical tables.',
+                            'A table or current column lacks its canonical metadata key.',
                             'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},
 
  {'kind': 'function',
@@ -1476,16 +1639,21 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_author_guardrails',
   'template_notebook': '01_governance',
   'template_segment': 'Guardrail authoring',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that guardrail authoring, governance, or display step is required.',
-  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and record parameters accepted by this helper.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.',
+  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
+              'guardrail authoring, governance, or display step is required.',
+  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
+                'record parameters accepted by this helper.',
+  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
+             'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': ['widget_author_dq_rules'],
   'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',
   'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
-  'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule intent only to METADATA_GUARDRAIL when saving.',
+  'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule '
+                     'intent only to METADATA_GUARDRAIL when saving.',
   'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
-  'return_interpretation': 'The widget state exposes controls, preview records, and save actions that produce append-only guardrail rule rows under the table policy.',
+  'return_interpretation': 'The widget state exposes controls, preview records, and save actions '
+                           'that produce append-only guardrail rule rows under the table policy.',
   'common_failure_causes': ['The selected table state is missing columns or its canonical key.',
                             'Freshness maximum age is invalid.',
                             'The metadata target cannot be written.']},
@@ -1521,6 +1689,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'The active environment has no registered catalogue datasets.',
                             'The metadata target cannot be written.']},
 
+
  {'kind': 'function',
   'module': 'widgets.widget_author_dq_rules',
   'function_type': 'callable',
@@ -1528,19 +1697,25 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_author_dq_rules',
   'template_notebook': '01_governance',
   'template_segment': 'Guardrail authoring',
-  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that guardrail authoring, governance, or display step is required.',
+  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
+              'guardrail authoring, governance, or display step is required.',
   'parameters': 'See the source docstring for the Spark session and optional initial rule controls.',
-  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by the helper.',
+  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
+             'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
   'related_functions': [],
   'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
   'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
   'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
   'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
-  'return_interpretation': 'The widget returns mutable preview records; approved saves write guardrail rule intent to METADATA_GUARDRAIL.',
+  'return_interpretation': 'The widget returns mutable preview records; '
+                           'approved saves write guardrail rule intent to '
+                           'METADATA_GUARDRAIL.',
   'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
                             'No applicable column is selected.',
                             'The metadata target cannot be written.']},
+
+
  ]
 
 FOCUSED_FUNCTION_DOC_UPDATES = {
@@ -1657,101 +1832,210 @@ for _row in PUBLIC_SYMBOL_DOCS:
         _row.update(_update)
 
 
-PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Validates the selected FabricOps environment, resolves configured runtime targets, and returns the notebook context that downstream helpers depend on.',
+PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Validates the selected FabricOps environment, resolves '
+                                        'configured runtime targets, and returns the notebook '
+                                        'context that downstream helpers depend on.',
                     'glossary_terms': ['notebook template', 'metadata lakehouse'],
-                    'return_interpretation': 'A ready context means required targets resolved and runtime checks passed. Review validation messages before running downstream cells when readiness is not successful.',
+                    'return_interpretation': 'A ready context means required targets resolved and '
+                                             'runtime checks passed. Review validation messages '
+                                             'before running downstream cells when readiness is '
+                                             'not successful.',
                     'common_failure_causes': ['The environment name is not present in CONFIG.',
-                                              'Required targets are missing from path configuration.',
-                                              'Fabric runtime metadata is unavailable and no local fallback was provided.',
-                                              'Configured lakehouse or warehouse targets cannot be resolved.']},
- 'setup_metadata_tables': {'expanded_purpose': 'Prepares FabricOps metadata tables through configured metadata target ABFSS paths, not Spark partial namespaces or an attached default lakehouse.',
-                           'when_to_use': 'Use after setup_notebook in 00_env_config when bootstrapping or validating the metadata store for an environment.',
+                                              'Required targets are missing from path '
+                                              'configuration.',
+                                              'Fabric runtime metadata is unavailable and no local '
+                                              'fallback was provided.',
+                                              'Configured lakehouse or warehouse targets cannot be '
+                                              'resolved.']},
+ 'setup_metadata_tables': {'expanded_purpose': 'Prepares FabricOps metadata tables through '
+                                               'configured metadata target ABFSS paths, not Spark '
+                                               'partial namespaces or an attached default '
+                                               'lakehouse.',
+                           'when_to_use': 'Use after setup_notebook in 00_env_config when '
+                                          'bootstrapping or validating the metadata store for an '
+                                          'environment.',
                            'glossary_terms': ['metadata lakehouse', 'evidence'],
-                           'return_interpretation': 'The returned setup status tells you which metadata tables were created or validated and whether the environment is ready for workflows that write evidence.',
-                           'common_failure_causes': ['The configured metadata lakehouse ABFSS path is missing or invalid.',
-                                                     'Spark cannot create or inspect metadata tables through the configured ABFSS paths.',
-                                                     'The selected environment does not include metadata routing.',
-                                                     'The caller lacks permission to create or update metadata tables.']},
- 'widget_render_data_steward': {'expanded_purpose': 'Renders the data steward intake widget so a notebook user can capture steward contact and ownership details for an agreement workflow.',
-                                'when_to_use': 'Use in 01_governance when collecting or updating data steward details before creating a data agreement.',
+                           'return_interpretation': 'The returned setup status tells you which '
+                                                    'metadata tables were created or validated and '
+                                                    'whether the environment is ready for '
+                                                    'workflows that write evidence.',
+                           'common_failure_causes': ['The configured metadata lakehouse ABFSS path '
+                                                     'is missing or invalid.',
+                                                     'Spark cannot create or inspect metadata '
+                                                     'tables through the configured ABFSS paths.',
+                                                     'The selected environment does not include '
+                                                     'metadata routing.',
+                                                     'The caller lacks permission to create or '
+                                                     'update metadata tables.']},
+ 'widget_render_data_steward': {'expanded_purpose': 'Renders the data steward intake widget so a '
+                                                    'notebook user can capture steward contact and '
+                                                    'ownership details for an agreement workflow.',
+                                'when_to_use': 'Use in 01_governance when collecting or updating '
+                                               'data steward details before creating a data '
+                                               'agreement.',
                                 'glossary_terms': ['notebook template'],
-                                'return_interpretation': 'The widget itself is the user interface; saved steward values are available to downstream agreement workflows only after the user completes the widget action.',
-                                'common_failure_causes': ['ipywidgets is not available in the runtime.',
+                                'return_interpretation': 'The widget itself is the user interface; '
+                                                         'saved steward values are available to '
+                                                         'downstream agreement workflows only after '
+                                                         'the user completes the widget action.',
+                                'common_failure_causes': ['ipywidgets is not available in the '
+                                                          'runtime.',
                                                           'Required steward fields are left blank.',
-                                                          'Widget state is cleared by rerunning cells out of order.',
-                                                          'Metadata routing is unavailable when the widget tries to persist records.']},
- 'widget_render_data_agreement': {'expanded_purpose': 'Renders the data agreement intake widget used to capture the overarching governance arrangement between accountable producer and consumer stewards, including purpose, scope, permitted use, and review context.',
-                                  'when_to_use': 'Use in 01_governance after steward context exists to establish the parent governance agreement before technical Data Contracts are registered.',
+                                                          'Widget state is cleared by rerunning '
+                                                          'cells out of order.',
+                                                          'Metadata routing is unavailable when '
+                                                          'the widget tries to persist records.']},
+ 'widget_render_data_agreement': {'expanded_purpose': 'Renders the data agreement intake widget '
+                                                      'used to capture the overarching governance '
+                                                      'arrangement between accountable producer and '
+                                                      'consumer stewards, including purpose, scope, '
+                                                      'permitted use, and review context.',
+                                  'when_to_use': 'Use in 01_governance after steward context exists '
+                                                 'to establish the parent governance agreement '
+                                                 'before technical Data Contracts are registered.',
                                   'glossary_terms': ['notebook template'],
-                                  'return_interpretation': 'The rendered widget collects agreement input; downstream helpers can only use the agreement after the user saves valid values.',
-                                  'common_failure_causes': ['ipywidgets is not available in the runtime.',
-                                                            'Required agreement fields are missing.',
-                                                            'Agreement identifiers conflict with existing metadata.',
-                                                            'The metadata target cannot be written.']},
- 'read_lakehouse_table': {'expanded_purpose': 'Reads a Delta table from the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.',
-                          'when_to_use': 'Use when notebook code needs a managed lakehouse Delta table by ABFSS path rather than a file path, registered Spark table name, or warehouse SQL query.',
+                                  'return_interpretation': 'The rendered widget collects agreement '
+                                                           'input; downstream helpers can only use '
+                                                           'the agreement after the user saves '
+                                                           'valid values.',
+                                  'common_failure_causes': ['ipywidgets is not available in the '
+                                                            'runtime.',
+                                                            'Required agreement fields are '
+                                                            'missing.',
+                                                            'Agreement identifiers conflict with '
+                                                            'existing metadata.',
+                                                            'The metadata target cannot be '
+                                                            'written.']},
+ 'read_lakehouse_table': {'expanded_purpose': 'Reads a Delta table from the configured Fabric '
+                                              'lakehouse target, resolving to '
+                                              '{store.root}/Tables/{table} for classic targets or '
+                                              '{store.root}/Tables/{schema}/{table} for '
+                                              'schema-enabled targets.',
+                          'when_to_use': 'Use when notebook code needs a managed lakehouse Delta '
+                                         'table by ABFSS path rather than a file path, registered '
+                                         'Spark table name, or warehouse SQL query.',
                           'glossary_terms': ['source data', 'metadata lakehouse'],
-                          'return_interpretation': 'The returned DataFrame represents the resolved lakehouse table; validate row counts and schema before relying on it for guardrails or writes.',
+                          'return_interpretation': 'The returned DataFrame represents the resolved '
+                                                   'lakehouse table; validate row counts and '
+                                                   'schema before relying on it for guardrails or '
+                                                   'writes.',
                           'common_failure_causes': ['The target or table name is misspelled.',
-                                                    'The selected environment does not define the requested lakehouse target.',
+                                                    'The selected environment does not define the '
+                                                    'requested lakehouse target.',
                                                     'Spark cannot access the table.',
-                                                    'The caller lacks permission to read the lakehouse.']},
- 'write_lakehouse_table': {'expanded_purpose': 'Writes a DataFrame to the configured Fabric lakehouse target, resolving to {store.root}/Tables/{table} for classic targets or {store.root}/Tables/{schema}/{table} for schema-enabled targets.',
-                           'when_to_use': 'Use for lakehouse or metadata table writes after guardrails have passed when the destination should be saved by ABFSS Delta path, not saveAsTable or a Spark namespace.',
+                                                    'The caller lacks permission to read the '
+                                                    'lakehouse.']},
+ 'write_lakehouse_table': {'expanded_purpose': 'Writes a DataFrame to the configured Fabric '
+                                               'lakehouse target, resolving to '
+                                               '{store.root}/Tables/{table} for classic targets or '
+                                               '{store.root}/Tables/{schema}/{table} for '
+                                               'schema-enabled targets.',
+                           'when_to_use': 'Use for lakehouse or metadata table writes after '
+                                          'guardrails have passed when the destination should be '
+                                          'saved by ABFSS Delta path, not saveAsTable or a Spark '
+                                          'namespace.',
                            'glossary_terms': ['target table', 'guardrails', 'metadata lakehouse'],
-                           'return_interpretation': 'The helper returns the write operation result from the underlying DataFrame writer when available; verify downstream table state for business validation.',
-                           'common_failure_causes': ['Guardrails were skipped before a target write.',
-                                                     'The target lakehouse is not configured for the environment.',
-                                                     'The write mode is unsupported for the destination.',
-                                                     'The caller lacks write permission or Spark cannot create the table.']},
- 'read_lakehouse_csv': {'expanded_purpose': 'Reads a CSV file from the Files area of a configured Fabric lakehouse and returns it as a Spark DataFrame.',
-                        'when_to_use': 'Use for file-based source ingestion when the source is CSV and should be resolved through configured Fabric targets.',
+                           'return_interpretation': 'The helper returns the write operation result '
+                                                    'from the underlying DataFrame writer when '
+                                                    'available; verify downstream table state for '
+                                                    'business validation.',
+                           'common_failure_causes': ['Guardrails were skipped before a target '
+                                                     'write.',
+                                                     'The target lakehouse is not configured for '
+                                                     'the environment.',
+                                                     'The write mode is unsupported for the '
+                                                     'destination.',
+                                                     'The caller lacks write permission or Spark '
+                                                     'cannot create the table.']},
+ 'read_lakehouse_csv': {'expanded_purpose': 'Reads a CSV file from the Files area of a configured '
+                                            'Fabric lakehouse and returns it as a Spark DataFrame.',
+                        'when_to_use': 'Use for file-based source ingestion when the source is CSV '
+                                       'and should be resolved through configured Fabric targets.',
                         'glossary_terms': ['source data', 'notebook template'],
-                        'return_interpretation': 'The returned DataFrame reflects Spark CSV parsing options; inspect schema and sample rows before profiling or writing.',
-                        'common_failure_causes': ['The file path is wrong or outside the configured lakehouse.',
+                        'return_interpretation': 'The returned DataFrame reflects Spark CSV '
+                                                 'parsing options; inspect schema and sample rows '
+                                                 'before profiling or writing.',
+                        'common_failure_causes': ['The file path is wrong or outside the '
+                                                  'configured lakehouse.',
                                                   'CSV options do not match the file shape.',
                                                   'Spark cannot access the file.',
-                                                  'The selected environment is missing the source lakehouse target.']},
- 'read_lakehouse_parquet': {'expanded_purpose': 'Reads a Parquet file or folder from the Files area of a configured Fabric lakehouse into a Spark DataFrame.',
-                            'when_to_use': 'Use for file-based source ingestion when the source is Parquet rather than a managed table.',
+                                                  'The selected environment is missing the source '
+                                                  'lakehouse target.']},
+ 'read_lakehouse_parquet': {'expanded_purpose': 'Reads a Parquet file or folder from the Files '
+                                                'area of a configured Fabric lakehouse into a '
+                                                'Spark DataFrame.',
+                            'when_to_use': 'Use for file-based source ingestion when the source is '
+                                           'Parquet rather than a managed table.',
                             'glossary_terms': ['source data', 'notebook template'],
-                            'return_interpretation': 'The returned DataFrame uses the Parquet schema read by Spark; validate it before downstream profile or guardrail checks.',
+                            'return_interpretation': 'The returned DataFrame uses the Parquet '
+                                                     'schema read by Spark; validate it before '
+                                                     'downstream profile or guardrail checks.',
                             'common_failure_causes': ['The Parquet path is missing or misspelled.',
                                                       'The file is not valid Parquet.',
-                                                      'The configured lakehouse target is unavailable.',
+                                                      'The configured lakehouse target is '
+                                                      'unavailable.',
                                                       'The caller lacks read permission.']},
- 'read_lakehouse_excel': {'expanded_purpose': 'Reads an Excel file from a configured lakehouse Files path and converts it into a Spark DataFrame for notebook processing.',
-                          'when_to_use': 'Use when source data arrives as an Excel workbook and should still follow configured Fabric lakehouse routing.',
+ 'read_lakehouse_excel': {'expanded_purpose': 'Reads an Excel file from a configured lakehouse '
+                                              'Files path and converts it into a Spark DataFrame '
+                                              'for notebook processing.',
+                          'when_to_use': 'Use when source data arrives as an Excel workbook and '
+                                         'should still follow configured Fabric lakehouse routing.',
                           'glossary_terms': ['source data', 'notebook template'],
-                          'return_interpretation': 'The returned DataFrame depends on workbook sheet and parsing options; confirm headers and types before using it as pipeline input.',
+                          'return_interpretation': 'The returned DataFrame depends on workbook '
+                                                   'sheet and parsing options; confirm headers and '
+                                                   'types before using it as pipeline input.',
                           'common_failure_causes': ['The workbook path or sheet name is incorrect.',
                                                     'Excel parsing dependencies are unavailable.',
-                                                    'The workbook layout does not match expected headers.',
-                                                    'The configured lakehouse target cannot be read.']},
- 'read_warehouse_table': {'expanded_purpose': 'Reads data from a configured Fabric Warehouse table or query target into a Spark DataFrame.',
-                          'when_to_use': 'Use when source data lives in a Fabric Warehouse rather than a lakehouse file or Delta table.',
+                                                    'The workbook layout does not match expected '
+                                                    'headers.',
+                                                    'The configured lakehouse target cannot be '
+                                                    'read.']},
+ 'read_warehouse_table': {'expanded_purpose': 'Reads data from a configured Fabric Warehouse table '
+                                              'or query target into a Spark DataFrame.',
+                          'when_to_use': 'Use when source data lives in a Fabric Warehouse rather '
+                                         'than a lakehouse file or Delta table.',
                           'glossary_terms': ['source data', 'notebook template'],
-                          'return_interpretation': 'The returned DataFrame represents the warehouse read result; confirm filters and row counts before profiling or transformation.',
+                          'return_interpretation': 'The returned DataFrame represents the '
+                                                   'warehouse read result; confirm filters and row '
+                                                   'counts before profiling or transformation.',
                           'common_failure_causes': ['The warehouse target is not configured.',
                                                     'The table or SQL text is invalid.',
                                                     'Warehouse connector context is unavailable.',
                                                     'The caller lacks warehouse read permission.']},
- 'write_warehouse_table': {'expanded_purpose': 'Writes a DataFrame to a configured Fabric Warehouse destination for pipeline outputs that belong in warehouse storage.',
-                           'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a warehouse table.',
+ 'write_warehouse_table': {'expanded_purpose': 'Writes a DataFrame to a configured Fabric '
+                                               'Warehouse destination for pipeline outputs that '
+                                               'belong in warehouse storage.',
+                           'when_to_use': 'Use for target writes after guardrails pass and the '
+                                          'configured output layer is a warehouse table.',
                            'glossary_terms': ['target table', 'guardrails'],
-                           'return_interpretation': 'A successful write means the helper submitted the DataFrame write to the configured warehouse target; verify downstream table state for business checks.',
-                           'common_failure_causes': ['The warehouse target is missing from configuration.',
-                                                     'The target table name or write mode is invalid.',
+                           'return_interpretation': 'A successful write means the helper submitted '
+                                                    'the DataFrame write to the configured '
+                                                    'warehouse target; verify downstream table '
+                                                    'state for business checks.',
+                           'common_failure_causes': ['The warehouse target is missing from '
+                                                     'configuration.',
+                                                     'The target table name or write mode is '
+                                                     'invalid.',
                                                      'Warehouse connector support is unavailable.',
                                                      'The caller lacks write permission.']},
- 'profile_dataframe': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
-                       'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table needs reproducible profile evidence.',
+ 'profile_dataframe': {'expanded_purpose': 'Builds deterministic profiles for a DataFrame, '
+                                           'including schema, row counts, nulls, distinct counts, '
+                                           'numeric statistics, and supported min/max values.',
+                       'when_to_use': 'Use during exploration, governance review, or guardrail '
+                                      'preparation when a table needs reproducible profile '
+                                      'evidence.',
                        'glossary_terms': ['evidence', 'source data', 'target table'],
-                       'return_interpretation': 'Each returned profile row describes one table or column metric. Downstream governance and guardrail helpers use those rows as evidence.',
-                       'common_failure_causes': ['The DataFrame is empty or missing expected columns.',
-                                                 'Requested statistics are unsupported for a column type.',
-                                                 'Spark actions fail while computing counts or summaries.',
-                                                 'Excluded columns remove fields needed for review.']},
+                       'return_interpretation': 'Each returned profile row describes one table or '
+                                                'column metric. Downstream governance and '
+                                                'guardrail helpers use those rows as evidence.',
+                       'common_failure_causes': ['The DataFrame is empty or missing expected '
+                                                 'columns.',
+                                                 'Requested statistics are unsupported for a '
+                                                 'column type.',
+                                                 'Spark actions fail while computing counts or '
+                                                 'summaries.',
+                                                 'Excluded columns remove fields needed for '
+                                                 'review.']},
  'profile_frequency_distribution': {'expanded_purpose': 'Calculates exact value frequencies for selected scalar columns, including counts, percentages using the profiled row count as the denominator, ranks, and the total profiled row count.',
                                     'when_to_use': 'Use during exploration or profiling when value distribution details are needed without writing metadata.',
                                     'glossary_terms': ['source data', 'distinct value'],
@@ -1759,91 +2043,213 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                                     'common_failure_causes': ['Requested columns are missing.',
                                                               'top_n is not greater than zero when supplied.',
                                                               'Spark actions fail while computing frequency counts.']},
- 'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column is recent enough for the configured maximum lag before pipeline writes continue.',
-                       'when_to_use': 'Use as a pipeline guardrail when stale source or target data should block or warn before downstream work proceeds.',
-                       'glossary_terms': ['guardrails', 'can_continue', 'source data', 'target table'],
-                       'return_interpretation': 'If can_continue is true, the latest freshness value is within the allowed lag or the check was skipped. If false, investigate stale data before writing outputs.',
+ 'enforce_freshness': {'expanded_purpose': 'Checks whether the latest value in a freshness column '
+                                           'is recent enough for the configured maximum lag before '
+                                           'pipeline writes continue.',
+                       'when_to_use': 'Use as a pipeline guardrail when stale source or target '
+                                      'data should block or warn before downstream work proceeds.',
+                       'glossary_terms': ['guardrails',
+                                          'can_continue',
+                                          'source data',
+                                          'target table'],
+                       'return_interpretation': 'If can_continue is true, the latest freshness '
+                                                'value is within the allowed lag or the check was '
+                                                'skipped. If false, investigate stale data before '
+                                                'writing outputs.',
                        'common_failure_causes': ['The freshness column is missing.',
                                                  'The max lag value is missing or invalid.',
                                                  'The latest date is older than the allowed lag.',
-                                                 'Severity is invalid or configured as blocking for stale data.']},
- 'enforce_profile_behavior': {'expanded_purpose': 'This function protects against silent data behavior changes. It compares current static_data or changing_data profiles with previous approved evidence. If the current profile no longer matches the approved baseline, the function returns a failed guardrail result so the pipeline can stop before writing data.',
-                              'when_to_use': 'Use this when promoting or running a pipeline that should follow a previously approved profile behavior pattern. It is especially useful when full-table static data changes unexpectedly or when a previous watermark group changes or disappears.',
-                              'glossary_terms': ['profile behavior', 'evidence', 'profile', 'stage', 'profile behavior', 'guardrails', 'can_continue', 'static_data', 'changing_data', 'skip', 'metadata lakehouse'],
-                              'return_interpretation': 'If can_continue is true, the current profile behavior matches the accepted baseline and the pipeline can continue. If can_continue is false, review whether the behavior change is intentional before writing the table. If intentional, review or supersede the relevant guardrail rule in governance. If not intentional, fix the source data or pipeline configuration.',
+                                                 'Severity is invalid or configured as blocking '
+                                                 'for stale data.']},
+ 'enforce_profile_behavior': {'expanded_purpose': 'This function protects against silent data '
+                                                  'behavior changes. It compares current '
+                                                  'static_data or changing_data profiles '
+                                                  'with previous approved evidence. If '
+                                                  'the current profile no longer matches the '
+                                                  'approved baseline, the function returns a '
+                                                  'failed guardrail result so the pipeline can '
+                                                  'stop before writing data.',
+                              'when_to_use': 'Use this when promoting or running a pipeline that '
+                                             'should follow a previously approved profile behavior '
+                                             'pattern. It is especially useful when full-table '
+                                             'static data changes unexpectedly or when a previous '
+                                             'watermark group changes or disappears.',
+                              'glossary_terms': ['profile behavior',
+                                                 'evidence',
+                                                 'profile',
+                                                 'stage',
+                                                 'profile behavior',
+                                                 'guardrails',
+                                                 'can_continue',
+                                                 'static_data',
+                                                 'changing_data',
+                                                 'skip',
+                                                 'metadata lakehouse'],
+                              'return_interpretation': 'If can_continue is true, the current '
+                                                       'profile behavior matches the accepted '
+                                                       'baseline and the pipeline can continue. If '
+                                                       'can_continue is false, review whether the '
+                                                       'behavior change is intentional before '
+                                                       'writing the table. If intentional, review '
+                                                       'or supersede the relevant guardrail rule '
+                                                       'in governance. If not intentional, fix the '
+                                                       'source data or pipeline configuration.',
                               'common_failure_causes': ['No accepted profile exists yet.',
-                                                        'The current profile behavior does not match the accepted baseline.',
-                                                        'The configured dataset or table name does not match evidence.',
-                                                        'The configured stage does not match the accepted evidence.',
-                                                        'The metadata lakehouse or catalogue profile table cannot be read.',
-                                                        'The accepted evidence is missing required profile behavior fields.',
-                                                        'The current profile_mode value is invalid or unsupported.',
-                                                        'The accepted evidence is stale or incomplete.']},
- 'stop_if_failed': {'expanded_purpose': 'Stops or raises for a blocking guardrail result so a notebook does not continue into unsafe downstream writes.',
-                    'when_to_use': 'Use immediately after schema, freshness, profile behavior, or DQ guardrail helpers when can_continue controls whether the pipeline should proceed.',
+                                                        'The current profile behavior does not '
+                                                        'match the accepted baseline.',
+                                                        'The configured dataset or table name does '
+                                                        'not match evidence.',
+                                                        'The configured stage does not match the '
+                                                        'accepted evidence.',
+                                                        'The metadata lakehouse or catalogue '
+                                                        'profile table cannot be read.',
+                                                        'The accepted evidence is missing required '
+                                                        'profile behavior fields.',
+                                                        'The current profile_mode value is invalid '
+                                                        'or unsupported.',
+                                                        'The accepted evidence is stale or '
+                                                        'incomplete.']},
+ 'stop_if_failed': {'expanded_purpose': 'Stops or raises for a blocking guardrail result so a '
+                                        'notebook does not continue into unsafe downstream writes.',
+                    'when_to_use': 'Use immediately after schema, freshness, profile behavior, or '
+                                   'DQ guardrail helpers when can_continue controls whether the '
+                                   'pipeline should proceed.',
                     'glossary_terms': ['guardrails', 'can_continue'],
-                    'return_interpretation': 'No return value means execution may continue. A blocking result raises or exits according to runtime settings.',
-                    'common_failure_causes': ['The guardrail result is missing can_continue or status fields.',
-                                              'A blocking guardrail returned can_continue as false.',
-                                              'Notebook exit behavior is not supported in the current runtime.',
-                                              'The caller passed a warning result that should not stop execution.']},
- 'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime evidence rows generated by pipeline guardrails to the configured metadata target.',
-                              'when_to_use': 'Use after guardrail evidence is built and before governance or handover workflows need the latest runtime evidence.',
-                              'glossary_terms': ['evidence', 'metadata lakehouse', 'guardrails'],
-                              'return_interpretation': 'The returned status summarizes which evidence rows were prepared or written. Confirm expected table keys appear before relying on governance review outputs.',
-                              'common_failure_causes': ['Evidence definitions are missing required fields.',
+                    'return_interpretation': 'No return value means execution may continue. A '
+                                             'blocking result raises or exits according to runtime '
+                                             'settings.',
+                    'common_failure_causes': ['The guardrail result is missing can_continue or '
+                                              'status fields.',
+                                              'A blocking guardrail returned can_continue as '
+                                              'false.',
+                                              'Notebook exit behavior is not supported in the '
+                                              'current runtime.',
+                                              'The caller passed a warning result that should not '
+                                              'stop execution.']},
+ 'write_catalogue_evidence': {'expanded_purpose': 'Writes runtime evidence rows '
+                                                  'generated by pipeline guardrails to the '
+                                                  'configured metadata target.',
+                              'when_to_use': 'Use after guardrail evidence is built and before '
+                                             'governance or handover workflows need the latest '
+                                             'runtime evidence.',
+                              'glossary_terms': ['evidence',
+                                                 'metadata lakehouse',
+                                                 'guardrails'],
+                              'return_interpretation': 'The returned status summarizes which '
+                                                       'evidence rows were prepared or written. '
+                                                       'Confirm expected table keys appear before '
+                                                       'relying on governance review outputs.',
+                              'common_failure_causes': ['Evidence definitions are missing required '
+                                                        'fields.',
                                                         'The metadata lakehouse cannot be written.',
-                                                        'Spark cannot convert evidence rows to the target schema.',
-                                                        'The caller lacks metadata write permission.']},
- 'enforce_freshness_rule': {'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active freshness intent from governance is enforced during pipeline execution.',
-                            'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL should determine the freshness column and maximum lag.',
-                            'do_not_use_when': 'Do not use to create or review freshness rules; use the guardrail authoring and governance review widgets for lifecycle changes.',
+                                                        'Spark cannot convert evidence rows to the '
+                                                        'target schema.',
+                                                        'The caller lacks metadata write '
+                                                        'permission.']},
+
+ 'enforce_freshness_rule': {'expanded_purpose': 'Evaluates freshness using a metadata-backed '
+                                                'guardrail rule so active freshness intent from '
+                                                'governance is enforced during pipeline execution.',
+                            'when_to_use': 'Use in 02_pipeline when active freshness rules from '
+                                           'METADATA_GUARDRAIL should determine the '
+                                           'freshness column and maximum lag.',
+                            'do_not_use_when': 'Do not use to create or review freshness rules; '
+                                               'use the guardrail authoring and governance review '
+                                               'widgets for lifecycle changes.',
                             'glossary_terms': ['guardrails', 'metadata lakehouse', 'can_continue'],
-                            'return_interpretation': 'A can_continue value of true means the latest freshness value satisfied the active rule or no blocking rule applied; false means the run should stop after display.',
+                            'return_interpretation': 'A can_continue value of true means the '
+                                                     'latest freshness value satisfied the active '
+                                                     'rule or no blocking rule applied; false '
+                                                     'means the run should stop after display.',
                             'common_failure_causes': ['The freshness column is missing.',
                                                       'The max lag parameter is invalid.',
                                                       'No active freshness rule matches the table.',
                                                       'Metadata evidence cannot be read.']},
- 'widget_author_guardrails': {'expanded_purpose': 'Renders interactive controls for authoring versioned table-level Schema, Freshness, and Changes guardrail intent.',
+
+ 'widget_author_guardrails': {'expanded_purpose': 'Renders interactive '
+                                                                      'controls for authoring '
+                                                                      'versioned table-level Schema, '
+                                                                      'Freshness, and Changes guardrail intent.',
                                                   'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',
-                                                  'do_not_use_when': 'Do not use to write evidence or runtime outcomes; it writes rule intent only to METADATA_GUARDRAIL when saving.',
-                                                  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
-                                                  'return_interpretation': 'The widget state exposes controls, preview records, and save actions that produce append-only guardrail rule rows under the table policy.',
+                                                  'do_not_use_when': 'Do not use to write '
+                                                                     'evidence or '
+                                                                     'runtime outcomes; it writes '
+                                                                     'rule intent only to '
+                                                                     'METADATA_GUARDRAIL '
+                                                                     'when saving.',
+                                                  'glossary_terms': ['guardrails',
+                                                                     'metadata lakehouse',
+                                                                     'notebook template'],
+                                                  'return_interpretation': 'The widget state '
+                                                                           'exposes controls, '
+                                                                           'preview records, and '
+                                                                           'save actions that '
+                                                                           'produce append-only '
+                                                                           'guardrail rule rows '
+                                                                           'under the table '
+                                                                           'policy.',
                                                   'common_failure_causes': ['The selected table state is missing columns or its canonical key.',
                                                                             'Freshness maximum age is invalid.',
-                                                                            'The metadata target cannot be written.']},
+                                                                            'The metadata target '
+                                                                            'cannot be written.']},
  'widget_author_dq_rules': {'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
                             'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
                             'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
-                            'glossary_terms': ['guardrails', 'evidence', 'metadata lakehouse', 'notebook template'],
+                            'glossary_terms': ['guardrails',
+                                               'evidence',
+                                               'metadata lakehouse',
+                                               'notebook template'],
                             'return_interpretation': 'The widget returns mutable preview records; explicit saves write guardrail rule intent to METADATA_GUARDRAIL.',
                             'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
                                                       'No applicable column is selected.',
                                                       'The metadata target cannot be written.']},
  }
 
-RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates', 'path': '../../notebook-templates.md'},
-                    {'title': 'Metadata Tables', 'path': '../../reference/metadata.md'}],
- 'setup_metadata_tables': [{'title': 'Templates', 'path': '../../notebook-templates.md'},
-                           {'title': 'Metadata Tables', 'path': '../../reference/metadata.md'}],
- 'widget_render_data_steward': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'widget_render_data_agreement': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'read_lakehouse_table': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'write_lakehouse_table': [{'title': 'Templates', 'path': '../../notebook-templates.md'},
-                           {'title': 'Metadata Tables', 'path': '../../reference/metadata.md'}],
- 'read_lakehouse_csv': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'read_lakehouse_parquet': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'read_lakehouse_excel': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'read_warehouse_table': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'write_warehouse_table': [{'title': 'Templates', 'path': '../../notebook-templates.md'}],
- 'profile_dataframe': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                       {'title': 'Governance Review', 'path': '../../guided-demo/03-enrich-guardrails.md'}],
- 'enforce_freshness': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}],
- 'enforce_profile_behavior': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                              {'title': 'Governance Review', 'path': '../../guided-demo/03-enrich-guardrails.md'}],
- 'stop_if_failed': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'}],
- 'write_catalogue_evidence': [{'title': 'Pipeline Execution', 'path': '../../guided-demo/02-run-pipeline.md'},
-                              {'title': 'Metadata Tables', 'path': '../../reference/metadata.md'}],}
+RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
+                     'path': '../../notebook-templates.md'},
+                    {'title': 'Metadata Tables',
+                     'path': '../../reference/metadata.md'}],
+ 'setup_metadata_tables': [{'title': 'Templates',
+                            'path': '../../notebook-templates.md'},
+                           {'title': 'Metadata Tables',
+                            'path': '../../reference/metadata.md'}],
+ 'widget_render_data_steward': [{'title': 'Templates',
+                                 'path': '../../notebook-templates.md'}],
+ 'widget_render_data_agreement': [{'title': 'Templates',
+                                   'path': '../../notebook-templates.md'}],
+ 'read_lakehouse_table': [{'title': 'Templates',
+                           'path': '../../notebook-templates.md'}],
+ 'write_lakehouse_table': [{'title': 'Templates',
+                            'path': '../../notebook-templates.md'},
+                           {'title': 'Metadata Tables',
+                            'path': '../../reference/metadata.md'}],
+ 'read_lakehouse_csv': [{'title': 'Templates',
+                         'path': '../../notebook-templates.md'}],
+ 'read_lakehouse_parquet': [{'title': 'Templates',
+                             'path': '../../notebook-templates.md'}],
+ 'read_lakehouse_excel': [{'title': 'Templates',
+                           'path': '../../notebook-templates.md'}],
+ 'read_warehouse_table': [{'title': 'Templates',
+                           'path': '../../notebook-templates.md'}],
+ 'write_warehouse_table': [{'title': 'Templates',
+                            'path': '../../notebook-templates.md'}],
+ 'profile_dataframe': [{'title': 'Pipeline Execution',
+                        'path': '../../guided-demo/02-run-pipeline.md'},
+                       {'title': 'Governance Review',
+                        'path': '../../guided-demo/03-enrich-guardrails.md'}],
+ 'enforce_freshness': [{'title': 'Pipeline Execution',
+                        'path': '../../guided-demo/02-run-pipeline.md'}],
+ 'enforce_profile_behavior': [{'title': 'Pipeline Execution',
+                               'path': '../../guided-demo/02-run-pipeline.md'},
+                              {'title': 'Governance Review',
+                               'path': '../../guided-demo/03-enrich-guardrails.md'}],
+ 'stop_if_failed': [{'title': 'Pipeline Execution',
+                     'path': '../../guided-demo/02-run-pipeline.md'}],
+ 'write_catalogue_evidence': [{'title': 'Pipeline Execution',
+                               'path': '../../guided-demo/02-run-pipeline.md'},
+                              {'title': 'Metadata Tables',
+                               'path': '../../reference/metadata.md'}],}
+
 
 
 def _metadata_row(symbol_name: str) -> PublicSymbolDocMetadata:
