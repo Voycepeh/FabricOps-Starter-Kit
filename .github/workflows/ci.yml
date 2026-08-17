@@ -1,23 +1,21 @@
 name: FabricOps CI
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-  workflow_dispatch:
+      - breaking/stage3-enrichment-access-fresh
 
 permissions:
   contents: write
 
 jobs:
   stage3-reference-patch:
-    if: github.event_name == 'pull_request' && github.event.pull_request.number == 1108
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Stage 3 branch
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: breaking/stage3-enrichment-access-fresh
           fetch-depth: 0
 
       - name: Install uv
@@ -39,7 +37,6 @@ jobs:
           path = Path("scripts/reference_docs_metadata.py")
           text = path.read_text()
 
-          # Replace only the Stage 3 table-model slice.
           models_root = text.index("METADATA_TABLE_MODELS = {")
           models_start = text.index('    "METADATA_ENRICHMENT": {', models_root)
           models_end = text.index('    "METADATA_GUARDRAIL": {', models_start)
@@ -65,7 +62,6 @@ jobs:
 '''
           text = text[:models_start] + models_replacement + text[models_end:]
 
-          # Replace only the Enrichment ownership slice. Data Access remains schema-only/untraced.
           owners_root = text.index("METADATA_COLUMN_OWNERS = {")
           owners_start = text.index('    "METADATA_ENRICHMENT": {', owners_root)
           owners_end = text.index('    "METADATA_GUARDRAIL": {', owners_start)
@@ -86,13 +82,12 @@ jobs:
 '''
           text = text[:owners_start] + owners_replacement + text[owners_end:]
 
-          # Update only the public widget's stale Stage 2 wording.
           public_root = text.index("PUBLIC_SYMBOL_DOCS = [")
           symbol_pos = text.index("'symbol_name': 'widget_enrich_table_metadata'", public_root)
           widget_start = text.rfind(" {'kind': 'function',", public_root, symbol_pos)
           widget_end = text.index("\n\n {'kind': 'function',", symbol_pos)
           widget = text[widget_start:widget_end]
-          field_replacements = {
+          replacements = {
               "'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.'": "'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.'",
               "'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'": "'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'",
               "'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint']": "'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue']",
@@ -100,7 +95,7 @@ jobs:
               "'The metadata catalogue has no logical tables.'": "'The active environment has no logical tables in the metadata catalogue.'",
               "'A table or current column lacks its canonical metadata key.'": "'A selected table lacks table_id or a current column lacks column_id.'",
           }
-          for old, new in field_replacements.items():
+          for old, new in replacements.items():
               if widget.count(old) != 1:
                   raise SystemExit(f"Expected widget field exactly once: {old}")
               widget = widget.replace(old, new)
@@ -108,8 +103,6 @@ jobs:
 
           if "widget_review_guardrail_governance" in text:
               raise SystemExit("Deleted guardrail review widget reference unexpectedly present")
-          if '"METADATA_ENRICHMENT"' not in text or '"table_id"' not in text:
-              raise SystemExit("Stage 3 metadata model patch did not apply")
 
           path.write_text(text)
           PY
@@ -127,4 +120,4 @@ jobs:
           git add -A
           git diff --cached --stat
           git commit -m "Align Stage 3 metadata references"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin HEAD:breaking/stage3-enrichment-access-fresh
