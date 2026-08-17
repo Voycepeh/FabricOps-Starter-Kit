@@ -57,9 +57,14 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     }
 
     assert '<div class="grid cards"' not in first_landing
+    assert '<div class="metadata-table-grid">' in first_landing
+    assert "1 → N" in first_landing
+    assert "View full schema" not in first_landing
+    assert "## Data Agreement versus Data Contract" not in first_landing
     for table_name in CANONICAL_METADATA_TABLES:
         slug = table_name.lower()
-        assert first_landing.count(f"## [{table_name}](metadata/{slug}.md)") == 1
+        assert first_landing.count(f'href="metadata/{slug}.md"') == 1
+        assert first_landing.count(f'>{table_name}</span>') == 1
         page = first_pages[f"{slug}.md"]
         assert "## Model" in page
         assert "**Grain:**" in page
