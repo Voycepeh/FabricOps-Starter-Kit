@@ -1,8 +1,8 @@
 {
   "artifacts": {
     "individual_function_reference_pages": {
-      "generated_at_sgt": "18 Aug 2026, 7:34 AM SGT",
-      "generated_at_utc": "2026-08-17T23:34:43.297734Z",
+      "generated_at_sgt": "18 Aug 2026, 4:26 AM SGT",
+      "generated_at_utc": "2026-08-17T20:26:28.977491Z",
       "generator": "scripts/generate_individual_function_reference_pages.py",
       "label": "Individual function reference pages",
       "output_path": "docs/api/reference"
