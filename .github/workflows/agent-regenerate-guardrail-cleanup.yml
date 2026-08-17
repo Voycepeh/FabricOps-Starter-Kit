@@ -1,0 +1,61 @@
+name: Agent regenerate guardrail cleanup
+
+on:
+  push:
+    branches:
+      - agent/remove-unused-guardrail-review-widget
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: agent/remove-unused-guardrail-review-widget
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Generate public function call flows
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/call-flow-first.diff
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/call-flow-second.diff
+          diff -u /tmp/call-flow-first.diff /tmp/call-flow-second.diff
+
+      - name: Generate individual function references
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-first.diff
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-second.diff
+          diff -u /tmp/reference-first.diff /tmp/reference-second.diff
+
+      - name: Commit only generated diffs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -u -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+          git commit -m "docs: regenerate references after widget removal"
+          git push origin HEAD:agent/remove-unused-guardrail-review-widget
