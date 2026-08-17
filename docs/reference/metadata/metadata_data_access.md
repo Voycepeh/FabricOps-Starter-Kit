@@ -1,43 +1,36 @@
 # METADATA_DATA_ACCESS
 
-See who can use the data and how it can be used.
+See who has row-level access to the data.
 
 ## Model
 
-**Grain:** One access review record for one user and governed scope.
+**Grain:** One RLS assignment for one user and one Catalogue table in one environment.
 
-**Primary key:** Not defined in the current implementation.
+**Primary key:** `access_id`
 
 **Relationships:**
 
-* No immediate logical relationship is defined in the current implementation.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many RLS assignments can reference the same logical Catalogue table identity in an environment.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 22 |
-| Business columns | 14 |
+| Total columns | 15 |
+| Business columns | 7 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
+| `access_id` | `string` | Implemented schema registry only | Identifier stored for `access_id`. |
 | `user_principal` | `string` | Implemented schema registry only | User principal recorded for the access row. |
-| `role_name` | `string` | Implemented schema registry only | Role name recorded for the access row. |
-| `permission` | `string` | Implemented schema registry only | Permission recorded for the access row. |
-| `access_purpose` | `string` | Implemented schema registry only | Reason the access row exists. |
-| `approval_status` | `string` | Implemented schema registry only | Approval status recorded for the access row. |
-| `access_scope` | `string` | Implemented schema registry only | Scope of the recorded access entry. |
 | `table_id` | `string` | Implemented schema registry only | Identifier for the accessed table or object. |
-| `metadata_table_key` | `string` | Implemented schema registry only | Stable governed data asset key that identifies a table across environment, dataset, and table context. |
-| `metadata_column_key` | `string` | Implemented schema registry only | Stable governed data asset key that identifies a column across environment, dataset, table, and column context. |
-| `granted_date` | `date` | Implemented schema registry only | Date when access was granted. |
-| `expires_at` | `timestamp` | Implemented schema registry only | Timestamp when access expires. |
-| `approved_by` | `string` | Implemented schema registry only | Actor who approved the access row. |
-| `approved_at` | `timestamp` | Implemented schema registry only | Timestamp when the access row was approved. |
-| `notes` | `string` | Implemented schema registry only | Free-text notes recorded for the row. |
+| `environment_name` | `string` | Implemented schema registry only | Environment name recorded for the metadata row. |
+| `access_level` | `string` | Implemented schema registry only | Metadata Data Access field `access_level`. |
+| `access_value` | `string` | Implemented schema registry only | Metadata Data Access field `access_value`. |
+| `access_state` | `string` | Implemented schema registry only | Metadata Data Access field `access_state`. |
 | `_committed_by` | `string` | Implemented schema registry only | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | Implemented schema registry only | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | Implemented schema registry only | Fabric workspace identifier captured from runtime audit context. |
