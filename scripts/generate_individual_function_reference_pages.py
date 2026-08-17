@@ -4216,33 +4216,24 @@ def _metadata_index_key_html(fields: list[str]) -> str:
     )
 
 
-def _metadata_index_relationships(
+def _metadata_index_downstream_tables(
     table_name: str,
     table_models: dict[str, dict[str, Any]],
-) -> list[tuple[str, str, str]]:
-    """Return exact parent-to-child field relationships for one metadata table card."""
-    relationships: list[tuple[str, str, str]] = []
-    seen: set[tuple[str, str, str]] = set()
+) -> list[str]:
+    """Return unique downstream tables that reference one metadata table."""
+    downstream_tables: list[str] = []
+    seen: set[str] = set()
     for child_table, child_model in table_models.items():
+        if child_table == table_name:
+            continue
         for foreign_key in child_model.get("foreign_keys", []):
-            if child_table == table_name:
-                relationship = (
-                    f"{foreign_key['referenced_table']}.{foreign_key['referenced_field']}",
-                    "1 → N",
-                    f"{table_name}.{foreign_key['local_field']}",
-                )
-            elif foreign_key["referenced_table"] == table_name:
-                relationship = (
-                    f"{table_name}.{foreign_key['referenced_field']}",
-                    "1 → N",
-                    f"{child_table}.{foreign_key['local_field']}",
-                )
-            else:
+            if foreign_key["referenced_table"] != table_name:
                 continue
-            if relationship not in seen:
-                seen.add(relationship)
-                relationships.append(relationship)
-    return relationships
+            if child_table not in seen:
+                seen.add(child_table)
+                downstream_tables.append(child_table)
+            break
+    return downstream_tables
 
 
 def render_metadata_reference_index(
@@ -4259,7 +4250,7 @@ def render_metadata_reference_index(
         "## Metadata tables",
         "",
         "<style>",
-        ".metadata-table-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.25rem 0 2rem; }",
+        ".metadata-table-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }",
         ".metadata-table-card { display: flex; flex-direction: column; gap: .55rem; padding: 1rem 1.1rem; border: 1px solid rgba(0, 150, 136, .24); border-radius: .7rem; background: rgba(0, 150, 136, .055); color: inherit !important; text-decoration: none !important; box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: border-color .15s ease, background .15s ease, transform .15s ease; }",
         ".metadata-table-card:hover { border-color: rgba(0, 150, 136, .48); background: rgba(0, 150, 136, .085); transform: translateY(-1px); }",
         ".metadata-table-card__header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }",
@@ -4269,11 +4260,14 @@ def render_metadata_reference_index(
         ".metadata-table-card__meta { display: grid; grid-template-columns: 6.4rem minmax(0, 1fr); gap: .5rem; align-items: start; font-size: .84rem; line-height: 1.4; }",
         ".metadata-table-card__meta strong, .metadata-table-card__relationships-label { color: var(--md-default-fg-color--light); font-size: .74rem; letter-spacing: .02em; text-transform: uppercase; }",
         ".metadata-table-card__relationships { display: flex; flex-direction: column; gap: .35rem; padding-top: .15rem; }",
-        ".metadata-table-card__relationship { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font-size: .76rem; line-height: 1.35; }",
-        ".metadata-table-card__relationship code { font-size: .72rem; overflow-wrap: anywhere; }",
+        ".metadata-table-card__relationships-header { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }",
+        ".metadata-table-card__relationships-count { font-size: .74rem; color: var(--md-default-fg-color--light); white-space: nowrap; }",
+        ".metadata-table-card__relationship-summary { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: .5rem; align-items: start; }",
+        ".metadata-table-card__relationship-list { display: flex; flex-wrap: wrap; gap: .35rem .5rem; min-width: 0; }",
+        ".metadata-table-card__relationship-list code { font-size: .74rem; overflow-wrap: anywhere; }",
         ".metadata-table-card__cardinality { font-weight: 700; color: var(--md-primary-fg-color); white-space: nowrap; }",
         ".metadata-table-card__empty { font-size: .8rem; color: var(--md-default-fg-color--light); }",
-        "@media (max-width: 720px) { .metadata-table-grid { grid-template-columns: 1fr; gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 5.6rem minmax(0, 1fr); } }",
+        "@media (max-width: 720px) { .metadata-table-grid { gap: .8rem; } .metadata-table-card { padding: .9rem 1rem; } .metadata-table-card__meta { grid-template-columns: 1fr; gap: .15rem; } .metadata-table-card__relationship-summary { grid-template-columns: 3rem minmax(0, 1fr); } }",
         "</style>",
         "",
         '<div class="metadata-table-grid">',
@@ -4282,9 +4276,11 @@ def render_metadata_reference_index(
         slug = table_name.lower()
         model = table_models[table_name]
         purpose = _metadata_table_purpose(table_name, table_purposes)
-        relationships = _metadata_index_relationships(table_name, table_models)
+        downstream_tables = _metadata_index_downstream_tables(table_name, table_models)
+        downstream_count = len(downstream_tables)
+        downstream_label = plural_word(downstream_count, "table", "tables")
         lines.extend([
-            f'<a class="metadata-table-card" href="metadata/{slug}.md" aria-label="Open {html_escape(table_name)} schema">',
+            f'<a class="metadata-table-card" href="{slug}/" aria-label="Open {html_escape(table_name)} schema">',
             '  <span class="metadata-table-card__header">',
             f'    <span class="metadata-table-card__title">{html_escape(table_name)}</span>',
             '    <span class="metadata-table-card__arrow" aria-hidden="true">→</span>',
@@ -4299,19 +4295,25 @@ def render_metadata_reference_index(
             f'    <span>{_metadata_index_key_html(model["primary_key"])}</span>',
             '  </span>',
             '  <span class="metadata-table-card__relationships">',
-            '    <span class="metadata-table-card__relationships-label">Relationships</span>',
+            '    <span class="metadata-table-card__relationships-header">',
+            '      <span class="metadata-table-card__relationships-label">Used by</span>',
+            f'      <span class="metadata-table-card__relationships-count">{downstream_count} {downstream_label}</span>',
+            '    </span>',
         ])
-        if relationships:
-            for parent, cardinality, child in relationships:
-                lines.extend([
-                    '    <span class="metadata-table-card__relationship">',
-                    f'      <code>{html_escape(parent)}</code>',
-                    f'      <span class="metadata-table-card__cardinality">{html_escape(cardinality)}</span>',
-                    f'      <code>{html_escape(child)}</code>',
-                    '    </span>',
-                ])
+        if downstream_tables:
+            lines.extend([
+                '    <span class="metadata-table-card__relationship-summary">',
+                '      <span class="metadata-table-card__cardinality">1 → N</span>',
+                '      <span class="metadata-table-card__relationship-list">',
+            ])
+            for downstream_table in downstream_tables:
+                lines.append(f'        <code>{html_escape(downstream_table)}</code>')
+            lines.extend([
+                '      </span>',
+                '    </span>',
+            ])
         else:
-            lines.append('    <span class="metadata-table-card__empty">No immediate logical relationship is defined.</span>')
+            lines.append('    <span class="metadata-table-card__empty">No downstream tables.</span>')
         lines.extend(['  </span>', '</a>'])
     lines.extend(['</div>', ''])
     return "\n".join(lines).rstrip() + "\n"

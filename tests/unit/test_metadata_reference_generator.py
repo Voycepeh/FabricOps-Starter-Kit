@@ -58,12 +58,17 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
 
     assert '<div class="grid cards"' not in first_landing
     assert '<div class="metadata-table-grid">' in first_landing
+    assert "grid-template-columns: 1fr;" in first_landing
+    assert "repeat(2, minmax(0, 1fr))" not in first_landing
     assert "1 → N" in first_landing
+    assert "Used by" in first_landing
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
+    assert "METADATA_DATA_CATALOGUE.table_id" not in first_landing
+    assert "metadata/metadata_data_profiled_frequency" not in first_landing
     for table_name in CANONICAL_METADATA_TABLES:
         slug = table_name.lower()
-        assert first_landing.count(f'href="metadata/{slug}.md"') == 1
+        assert first_landing.count(f'href="{slug}/"') == 1
         assert first_landing.count(f'>{table_name}</span>') == 1
         page = first_pages[f"{slug}.md"]
         assert "## Model" in page
@@ -72,6 +77,18 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "**Relationships:**" in page
         assert "## Implemented schema" in page
         assert "| Column | Data type | Managed by | Description |" in page
+
+    catalogue_card = first_landing.split(
+        'aria-label="Open METADATA_DATA_CATALOGUE schema">', 1
+    )[1].split("</a>", 1)[0]
+    assert catalogue_card.count(">METADATA_DATA_PROFILED</code>") == 1
+
+    profiled_card = first_landing.split(
+        'aria-label="Open METADATA_DATA_PROFILED schema">', 1
+    )[1].split("</a>", 1)[0]
+    assert "METADATA_DATA_CATALOGUE" not in profiled_card
+    assert ">METADATA_DATA_PROFILED_FREQUENCY</code>" in profiled_card
+    assert 'href="metadata_data_profiled_frequency/"' in first_landing
 
     generator.generate_metadata_reference_pages()
     assert landing.read_text(encoding="utf-8") == first_landing
