@@ -6,20 +6,10 @@ from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
 from fabricops_kit.io.shared import read_lakehouse_table_core
-from fabricops_kit.widgets.shared import (
-    _html_escape,
-    _prepare_selected_guardrail_views,
-    dataset_label,
-    form_grid,
-    form_page,
-    form_section,
-    require_ipywidgets,
-    resolve_agreement_details,
-    widget_common,
-)
+import fabricops_kit.widgets.shared as widget_shared
 
 
-def collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[dict[str, Any]]:
+def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[dict[str, Any]]:
     """Collect one readable inventory row per normalized catalogue table."""
     from pyspark.sql import functions as F
 
@@ -98,7 +88,7 @@ def _resolve_agreement_catalogue_scope(
     runtime_context: dict[str, Any],
 ) -> tuple[set[str], None, dict[str, Any], dict[str, Any]]:
     """Resolve the selected agreement's registered table IDs."""
-    agreement_id, agreement_name = resolve_agreement_details(agreement or {})
+    agreement_id, agreement_name = widget_shared.resolve_agreement_details(agreement or {})
     if not agreement_id:
         raise ValueError("A saved agreement selection is required to view its catalogue inventory.")
     from pyspark.sql import functions as F
@@ -143,7 +133,7 @@ def _reader_dataset_label(row: dict[str, Any], role: str | None = None) -> str:
     """Return a readable dataset label backed by normalized table identity."""
     labelled = dict(row)
     labelled["metadata_table_key"] = str(row.get("table_id") or "")
-    return dataset_label(labelled, role)
+    return widget_shared.dataset_label(labelled, role)
 
 
 def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
@@ -151,7 +141,7 @@ def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
     return frame.select(*[name for name in preferred if name in frame.columns])
 
 
-def build_catalogue_widget(
+def _build_catalogue_widget(
     *,
     title: str,
     description: str,
@@ -166,7 +156,7 @@ def build_catalogue_widget(
     empty_message: str,
 ) -> dict[str, Any]:
     """Build the normalized catalogue reader and human-facing Spark views."""
-    widgets = require_ipywidgets()
+    widgets = widget_shared.require_ipywidgets()
     rows_by_table_id = {str(row["table_id"]): row for row in inventory_rows}
     roles = role_options or [(None, table_id) for table_id in sorted(rows_by_table_id)]
     options: list[tuple[str, str]] = []
@@ -180,9 +170,9 @@ def build_catalogue_widget(
         option_context[value] = (role, table_id)
     options.sort(key=lambda item: (item[0].casefold(), item[1]))
 
-    search = widgets.Text(value="", placeholder="Search catalogues", **widget_common(widgets, "Search"))
-    dataset = widgets.Dropdown(options=options, **widget_common(widgets, "Dataset"))
-    profile_column = widgets.Dropdown(options=[], **widget_common(widgets, "Profile column"))
+    search = widgets.Text(value="", placeholder="Search catalogues", **widget_shared.widget_common(widgets, "Search"))
+    dataset = widgets.Dropdown(options=options, **widget_shared.widget_common(widgets, "Dataset"))
+    profile_column = widgets.Dropdown(options=[], **widget_shared.widget_common(widgets, "Profile column"))
     for control in (search, dataset, profile_column):
         control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
 
@@ -305,9 +295,9 @@ def build_catalogue_widget(
         selection = get_selection()
         labels_by_profile_id = {value: label for label, value in profile_column.options}
         selection_details.value = (
-            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
-            f"<b>Profile snapshot:</b> {_html_escape(selection['profiled_at'])}<br>"
-            f"<b>Profile column:</b> {_html_escape(labels_by_profile_id.get(selection['profile_id'], ''))}"
+            f"<b>Dataset:</b> {widget_shared._html_escape(selection['dataset_label'])}<br>"
+            f"<b>Profile snapshot:</b> {widget_shared._html_escape(selection['profiled_at'])}<br>"
+            f"<b>Profile column:</b> {widget_shared._html_escape(labels_by_profile_id.get(selection['profile_id'], ''))}"
             if table_id
             else ""
         )
@@ -404,7 +394,7 @@ def build_catalogue_widget(
             "frequency": frequency.orderBy("frequency_rank", "value"),
         }
         views.update(
-            _prepare_selected_guardrail_views(
+            widget_shared._prepare_selected_guardrail_views(
                 source_frames["guardrail_results"],
                 source_frames["guardrail_row_results"],
                 metadata_table_key=table_id,
@@ -425,7 +415,7 @@ def build_catalogue_widget(
         state["error"] = None if table_id else empty_message
         selection = get_selection()
         selection_details.value = (
-            f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
+            f"<b>Dataset:</b> {widget_shared._html_escape(selection['dataset_label'])}<br>"
             "<b>Profile snapshot:</b> Load views to resolve<br>"
             "<b>Profile column:</b> Load views to resolve"
             if table_id
@@ -490,25 +480,25 @@ def build_catalogue_widget(
     search.observe(lambda change: filter_options() if change.get("name") == "value" else None, names="value")
 
     context_html = "<br>".join(
-        f"<b>{_html_escape(name)}:</b> {_html_escape(value)}"
+        f"<b>{widget_shared._html_escape(name)}:</b> {widget_shared._html_escape(value)}"
         for name, value in display_context.items()
         if value not in (None, "")
     )
     from IPython import display as ip
 
-    context_section = form_section(widgets, title="Context", children=[widgets.HTML(value=context_html)])
-    selection_section = form_section(
+    context_section = widget_shared.form_section(widgets, title="Context", children=[widgets.HTML(value=context_html)])
+    selection_section = widget_shared.form_section(
         widgets,
         title="Catalogue selection",
-        children=[form_grid(widgets, [search, dataset, profile_column])],
+        children=[widget_shared.form_grid(widgets, [search, dataset, profile_column])],
     )
-    selected_section = form_section(
+    selected_section = widget_shared.form_section(
         widgets,
         title="Selected catalogue",
         children=[selection_details, status],
     )
     ip.display(
-        form_page(
+        widget_shared.form_page(
             widgets,
             title=title,
             description=description,
@@ -612,7 +602,7 @@ def widget_view_catalogue(
         spark_session=spark_session,
         context=runtime_context,
     )
-    inventory_rows = collect_catalogue_inventory(catalogue, environment_name)
+    inventory_rows = _collect_catalogue_inventory(catalogue, environment_name)
     if mode == "explore":
         scope = _resolve_explore_catalogue_scope(
             inventory_rows=inventory_rows,
@@ -641,7 +631,7 @@ def widget_view_catalogue(
         ),
     }
     title, description, empty_message = presentation[mode]
-    return build_catalogue_widget(
+    return _build_catalogue_widget(
         title=title,
         description=description,
         selection_context=selection_context,
