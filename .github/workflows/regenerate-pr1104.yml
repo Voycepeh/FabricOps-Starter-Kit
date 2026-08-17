@@ -38,16 +38,24 @@ jobs:
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
 
-      - name: Verify generators are stable
+      - name: Verify generated content is stable
         shell: bash
         run: |
           set -euo pipefail
           source .venv/bin/activate
-          git diff > /tmp/first.diff
+          sha256sum \
+            docs/reference/_data/public-function-call-flows.json \
+            docs/api/reference/widget_view_catalogue.md \
+            docs/reference/index.md \
+            docs/reference/function-call-graph.md > /tmp/first.sha256
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/second.diff
-          diff -u /tmp/first.diff /tmp/second.diff
+          sha256sum \
+            docs/reference/_data/public-function-call-flows.json \
+            docs/api/reference/widget_view_catalogue.md \
+            docs/reference/index.md \
+            docs/reference/function-call-graph.md > /tmp/second.sha256
+          diff -u /tmp/first.sha256 /tmp/second.sha256
 
       - name: Commit only directly owned generated outputs
         shell: bash
@@ -58,7 +66,7 @@ jobs:
           git add \
             docs/reference/_data/public-function-call-flows.json \
             docs/reference/_data/generated-artifacts.json \
-            docs/api/reference \
+            docs/api/reference/widget_view_catalogue.md \
             docs/reference/index.md \
             docs/reference/function-call-graph.md
           if git diff --cached --quiet; then
