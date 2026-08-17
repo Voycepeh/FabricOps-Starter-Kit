@@ -33,7 +33,6 @@ PREVIEW_PUBLIC_API = (
     "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
     "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
     "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-    "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
 )
 
 RELEASE_PUBLIC_API = SUPPORTED_PUBLIC_API + PREVIEW_PUBLIC_API
