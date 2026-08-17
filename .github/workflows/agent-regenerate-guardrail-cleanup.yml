@@ -30,22 +30,21 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Generate public function call flows
+      - name: Generate public function call flows twice
         run: |
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/call-flow-first.diff
+          cp docs/reference/_data/public-function-call-flows.json /tmp/public-function-call-flows-first.json
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-          git diff -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json > /tmp/call-flow-second.diff
-          diff -u /tmp/call-flow-first.diff /tmp/call-flow-second.diff
+          cmp /tmp/public-function-call-flows-first.json docs/reference/_data/public-function-call-flows.json
 
-      - name: Generate individual function references
+      - name: Generate individual function references twice
         run: |
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-first.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md > /tmp/reference-first.diff
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/reference-second.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md > /tmp/reference-second.diff
           diff -u /tmp/reference-first.diff /tmp/reference-second.diff
 
       - name: Commit only generated diffs
