@@ -41,6 +41,9 @@ jobs:
           text = path.read_text(encoding="utf-8")
           lines = text.splitlines(keepends=True)
           tree = ast.parse(text)
+          short = "widget_review_guardrail_governance"
+          module = "widgets.widget_review_guardrail_governance"
+          fq = "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance"
 
           delete_ranges = []
           for node in ast.walk(tree):
@@ -50,23 +53,34 @@ jobs:
               for key, value in zip(node.keys, node.values):
                   if isinstance(key, ast.Constant) and isinstance(key.value, str) and isinstance(value, ast.Constant):
                       pairs[key.value] = value.value
-              if pairs.get("symbol_name") == "widget_review_guardrail_governance" or pairs.get("module_name") == "widgets.widget_review_guardrail_governance":
+                  if isinstance(key, ast.Constant) and key.value == short:
+                      delete_ranges.append((key.lineno - 1, value.end_lineno))
+              if pairs.get("symbol_name") == short or pairs.get("module_name") == module:
                   delete_ranges.append((node.lineno - 1, node.end_lineno))
 
-          for start, end in sorted(delete_ranges, reverse=True):
+          normalized = []
+          for start, end in sorted(set(delete_ranges)):
+              if normalized and start <= normalized[-1][1]:
+                  normalized[-1] = (normalized[-1][0], max(normalized[-1][1], end))
+              else:
+                  normalized.append((start, end))
+          for start, end in reversed(normalized):
               del lines[start:end]
 
           text = "".join(lines)
-          fq = 'fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance'
           text = "\n".join(line for line in text.split("\n") if fq not in line)
-          text = text.replace(", 'widget_review_guardrail_governance'", "")
-          text = text.replace("'widget_review_guardrail_governance', ", "")
-          text = text.replace("['widget_review_guardrail_governance']", "[]")
-          text = text.replace(', "widget_review_guardrail_governance"', "")
-          text = text.replace('"widget_review_guardrail_governance", ', "")
-          text = text.replace('["widget_review_guardrail_governance"]', "[]")
-          if "widget_review_guardrail_governance" in text:
+          text = text.replace(f", '{short}'", "")
+          text = text.replace(f"'{short}', ", "")
+          text = text.replace(f"['{short}']", "[]")
+          text = text.replace(f', "{short}"', "")
+          text = text.replace(f'"{short}", ', "")
+          text = text.replace(f'["{short}"]', "[]")
+          if short in text:
+              for lineno, line in enumerate(text.splitlines(), 1):
+                  if short in line:
+                      print(f"remaining {lineno}: {line}")
               raise SystemExit("stale widget_review_guardrail_governance reference remains in reference_docs_metadata.py")
+          ast.parse(text)
           path.write_text(text, encoding="utf-8")
           PY
 
