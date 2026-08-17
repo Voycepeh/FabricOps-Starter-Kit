@@ -13,6 +13,44 @@ permissions:
   contents: read
 
 jobs:
+  agent-regenerate-call-flow:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/true-unused-cleanup-classification' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: agent/true-unused-cleanup-classification
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra dev
+
+      - name: Regenerate public call-flow contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "regenerate public function call-flow data"
+          git push origin HEAD:agent/true-unused-cleanup-classification
+
   validate:
     runs-on: ubuntu-latest
     env:
