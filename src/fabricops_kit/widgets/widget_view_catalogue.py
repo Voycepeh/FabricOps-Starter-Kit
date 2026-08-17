@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context, resolve_runtime_context
@@ -139,6 +140,69 @@ def _reader_dataset_label(row: dict[str, Any], role: str | None = None) -> str:
 def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
     """Select reader-facing columns while keeping technical IDs at the end."""
     return frame.select(*[name for name in preferred if name in frame.columns])
+
+
+def _prepare_selected_guardrail_views(results, row_results, *, metadata_table_key: str) -> dict[str, Any]:
+    """Prepare the selected dataset's latest persisted guardrail execution."""
+    from pyspark.sql import functions as F
+
+    scoped = results.filter(
+        (F.col("metadata_table_key") == metadata_table_key)
+        & F.col("run_id").isNotNull()
+        & (F.trim(F.col("run_id")) != "")
+    )
+    latest = (
+        scoped.select("run_id", "_committed_at")
+        .distinct()
+        .orderBy(F.col("_committed_at").desc_nulls_last(), F.col("run_id").desc())
+        .limit(1)
+        .collect()
+    )
+    selected_run_id = str(latest[0]["run_id"]) if latest else None
+    selected_results = (
+        scoped.filter(F.col("run_id") == selected_run_id)
+        if selected_run_id is not None
+        else scoped.limit(0)
+    )
+    actual = F.col("actual_value_json")
+    guardrail_results = selected_results.select(
+        "rule_type",
+        F.col("column_name").alias("columns"),
+        "status",
+        "severity",
+        F.get_json_object(actual, "$.failed_count").cast("long").alias("failed_rows"),
+        F.get_json_object(actual, "$.failed_percent").cast("double").alias("failed_percent"),
+        F.get_json_object(actual, "$.total_count").cast("long").alias("total_count"),
+        "reason",
+        "can_continue",
+        "run_id",
+    ).orderBy(
+        F.when(F.lower(F.col("status")) == "failed", 0)
+        .when(F.lower(F.col("status")) == "warning", 1)
+        .otherwise(2),
+        F.col("rule_type"),
+        F.col("columns"),
+    )
+    selected_row_results = (
+        row_results.filter(
+            (F.col("metadata_table_key") == metadata_table_key)
+            & (F.col("run_id") == selected_run_id)
+        )
+        if selected_run_id is not None
+        else row_results.limit(0)
+    )
+    guardrail_row_results = selected_row_results.select(
+        "rule_type",
+        "row_identity",
+        F.col("involved_columns_json").alias("involved_columns"),
+        F.col("failed_values_json").alias("failed_values"),
+        "failure_reason",
+        "run_id",
+    ).orderBy("row_identity", "rule_type", "failure_reason")
+    return {
+        "guardrail_results": guardrail_results,
+        "guardrail_row_results": guardrail_row_results,
+    }
 
 
 def _build_catalogue_widget(
@@ -297,9 +361,9 @@ def _build_catalogue_widget(
         selection = get_selection()
         labels_by_profile_id = {value: label for label, value in profile_column.options}
         selection_details.value = (
-            f"<b>Dataset:</b> {widget_shared._html_escape(selection['dataset_label'])}<br>"
-            f"<b>Profile snapshot:</b> {widget_shared._html_escape(selection['profiled_at'])}<br>"
-            f"<b>Profile column:</b> {widget_shared._html_escape(labels_by_profile_id.get(selection['profile_id'], ''))}"
+            f"<b>Dataset:</b> {html.escape(str(selection['dataset_label'] or ''))}<br>"
+            f"<b>Profile snapshot:</b> {html.escape(str(selection['profiled_at'] or ''))}<br>"
+            f"<b>Profile column:</b> {html.escape(str(labels_by_profile_id.get(selection['profile_id'], '') or ''))}"
             if table_id
             else ""
         )
@@ -396,7 +460,7 @@ def _build_catalogue_widget(
             "frequency": frequency.orderBy("frequency_rank", "value"),
         }
         views.update(
-            widget_shared._prepare_selected_guardrail_views(
+            _prepare_selected_guardrail_views(
                 source_frames["guardrail_results"],
                 source_frames["guardrail_row_results"],
                 metadata_table_key=table_id,
@@ -417,7 +481,7 @@ def _build_catalogue_widget(
         state["error"] = None if table_id else empty_message
         selection = get_selection()
         selection_details.value = (
-            f"<b>Dataset:</b> {widget_shared._html_escape(selection['dataset_label'])}<br>"
+            f"<b>Dataset:</b> {html.escape(str(selection['dataset_label'] or ''))}<br>"
             "<b>Profile snapshot:</b> Load views to resolve<br>"
             "<b>Profile column:</b> Load views to resolve"
             if table_id
@@ -482,7 +546,7 @@ def _build_catalogue_widget(
     search.observe(lambda change: filter_options() if change.get("name") == "value" else None, names="value")
 
     context_html = "<br>".join(
-        f"<b>{widget_shared._html_escape(name)}:</b> {widget_shared._html_escape(value)}"
+        f"<b>{html.escape(str(name))}:</b> {html.escape(str(value))}"
         for name, value in display_context.items()
         if value not in (None, "")
     )
