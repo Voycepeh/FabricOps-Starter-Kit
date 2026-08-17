@@ -67,10 +67,10 @@ Define the expectations the data used in the ETL pipeline should meet.
 | `approval_policy` | `string` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Approval policy recorded for the selected table. |
 | `submitted_by` | `string` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Actor who submitted the row for governance review. |
 | `submitted_at` | `timestamp` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Timestamp populated during a real submission into pending governance review. |
-| `reviewed_by` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Actor who recorded the governance review decision. |
-| `reviewed_at` | `timestamp` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Timestamp captured when a governance reviewer records a review decision. |
-| `review_decision` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Governance decision recorded for the row. |
-| `review_comment` | `string` | [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md), `fabricops_kit.widgets.shared.record_table_governance` | Reviewer comment recorded for the row. |
+| `reviewed_by` | `string` | `fabricops_kit.widgets.shared.record_table_governance` | Actor who recorded the governance review decision. |
+| `reviewed_at` | `timestamp` | `fabricops_kit.widgets.shared.record_table_governance` | Timestamp captured when a governance reviewer records a review decision. |
+| `review_decision` | `string` | `fabricops_kit.widgets.shared.record_table_governance` | Governance decision recorded for the row. |
+| `review_comment` | `string` | `fabricops_kit.widgets.shared.record_table_governance` | Reviewer comment recorded for the row. |
 | `supersedes_rule_id` | `string` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Rule identifier superseded by the current row. |
 | `effective_from` | `date` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Date when the record becomes effective. |
 | `effective_to` | `date` | [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md), [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md) | Date when the record stops being effective. |
@@ -87,4 +87,3 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 * [`widget_author_guardrails`](../../api/reference/widget_author_guardrails.md)
 * [`widget_author_dq_rules`](../../api/reference/widget_author_dq_rules.md)
-* [`widget_review_guardrail_governance`](../../api/reference/widget_review_guardrail_governance.md)

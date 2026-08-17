@@ -218,7 +218,6 @@ METADATA_RELATED_FUNCTIONS = {
     "METADATA_GUARDRAIL": [
         "widget_author_guardrails",
         "widget_author_dq_rules",
-        "widget_review_guardrail_governance",
     ],
 }
 
@@ -242,7 +241,6 @@ PUBLIC_MODULE_PREFERRED_NAMES = {
     "widgets.widget_author_guardrails": "widgets.widget_author_guardrails",
     "widgets.widget_author_dq_rules": "widgets.widget_author_dq_rules",
     "widgets.widget_enrich_table_metadata": "widgets.widget_enrich_table_metadata",
-    "widgets.widget_review_guardrail_governance": "widgets.widget_review_guardrail_governance",
     "pipeline.profile_dataframe": "pipeline",
     "io": "io",
     "pipeline.guardrails_shared": "pipeline",
@@ -2748,7 +2746,6 @@ ROLE_TAGS_BY_NAME = {
     "widget_author_dq_rules": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_author_guardrails": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "widget_enrich_table_metadata": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
-    "widget_review_guardrail_governance": ["public_api_entrypoint", "widget_entrypoint", "public_stable"],
     "_render_agreement_evidence_widget_workflow": ["internal_workflow", "agreement_evidence_widget_workflow"],
     "_latest_metadata_catalogue_lookup_workflow": ["internal_workflow", "metadata_catalogue_lookup_workflow"],
     "_table_metadata_enrichment_widget_workflow": ["internal_workflow", "widget_workflow"],
