@@ -1,0 +1,52 @@
+name: Fix metadata card tests
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-tests:
+    if: github.head_ref == 'docs/metadata-reference-cards'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Update remaining metadata card test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('tests/unit/test_reference_agent_docs.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''    assert text.index("FabricOps metadata tables describe") < text.index(image_reference)
+    assert text.index(image_reference) < text.index("## [METADATA_DATA_STEWARD]")
+'''
+          new = '''    assert text.index("FabricOps metadata tables describe") < text.index(image_reference)
+    assert text.index(image_reference) < text.index('<div class="metadata-table-grid">')
+    assert text.index(image_reference) < text.index("METADATA_DATA_STEWARD")
+'''
+          if old not in text:
+              raise SystemExit('metadata overview ordering assertion not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Validate focused tests
+        run: |
+          uv run ruff check tests/unit/test_metadata_reference_generator.py tests/unit/test_reference_agent_docs.py
+          uv run pytest tests/unit/test_metadata_reference_generator.py tests/unit/test_reference_agent_docs.py -q
+          git diff --check
+
+      - name: Remove temporary workflow and commit
+        run: |
+          rm .github/workflows/fix-metadata-card-tests.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/unit/test_reference_agent_docs.py .github/workflows/fix-metadata-card-tests.yml
+          git commit -m 'Update metadata reference overview test'
+          git push origin HEAD:${GITHUB_HEAD_REF}
