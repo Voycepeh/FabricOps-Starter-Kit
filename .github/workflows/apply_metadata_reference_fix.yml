@@ -207,6 +207,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git checkout -- docs/reference/_data/generated-artifacts.json
           python - <<'PY'
           import subprocess
 
