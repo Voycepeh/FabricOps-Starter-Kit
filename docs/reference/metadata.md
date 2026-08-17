@@ -64,7 +64,7 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 **Relationships:**
 
 * `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**1:N**). One contracted table identity can match the catalogue rows for that table's columns.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). The current Data Contract column retains its pre-Stage-2 name, but its stable hash value identifies the same logical table now exposed by Catalogue as table_id. Data Contract redesign is deferred to Stage 5.
 
 [View full schema](metadata/metadata_data_contract.md)
 
@@ -72,15 +72,15 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 
 ## [METADATA_DATA_CATALOGUE](metadata/metadata_data_catalogue.md)
 
-See what data is available and how it is structured.
+See the tables and columns FabricOps has observed.
 
-**Grain:** One registered column for one table and schema fingerprint in one environment.
+**Grain:** One table or column asset in one environment.
 
-**Primary key:** `environment_name` + `metadata_table_key` + `metadata_column_key` + `schema_fingerprint`
+**Primary key:** `environment_name` + `table_id` + `column_id`
 
 **Relationships:**
 
-* **1:N**: One catalogue table identity can be referenced by many Source Observation, Data Profiled, Data Lineage, Enrichment and Guardrail rows.
+* **1:N**: A Catalogue table identity can be referenced by many Profile, Lineage, Source Observation, Enrichment, Access and Guardrail rows over time.
 
 [View full schema](metadata/metadata_data_catalogue.md)
 
@@ -88,15 +88,15 @@ See what data is available and how it is structured.
 
 ## [METADATA_SOURCE_OBSERVATION](metadata/metadata_source_observation.md)
 
-See whether the source arrived and changed as expected.
+See what FabricOps previously observed about the source data.
 
-**Grain:** One observed partition state for one source table at one observation time.
+**Grain:** One partition observation within one source-table observation.
 
-**Primary key:** `metadata_table_key` + `partition_column` + `partition_value` + `observed_at`
+**Primary key:** `observation_id` + `partition_value`
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many source partition observations can belong to one logical catalogue table identity.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many source observations can belong to one logical Catalogue table identity in an environment.
 
 [View full schema](metadata/metadata_source_observation.md)
 
@@ -104,17 +104,17 @@ See whether the source arrived and changed as expected.
 
 ## [METADATA_DATA_PROFILED](metadata/metadata_data_profiled.md)
 
-Understand the shape, completeness, and characteristics of the data.
+See the column-level profile metrics captured for a dataset snapshot.
 
-**Grain:** One profiled column for one dataset snapshot.
+**Grain:** One observed column in one profiling snapshot.
 
-**Primary key:** `environment_name` + `metadata_column_key` + `schema_fingerprint` + `profiled_at`
+**Primary key:** `profile_id`
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many profiled column snapshots can belong to one logical catalogue table identity.
-* `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). Many profile snapshots can describe the same logical catalogue column over time.
-* **1:N**: One profiled column snapshot can have many Data Profiled Frequency rows through metadata_column_key and profiled_at.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many column profile snapshots can describe the same logical Catalogue table over time.
+* `column_id` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Many profile snapshots can describe the same logical Catalogue column over time.
+* **1:1**: One logical column Profile has one corresponding frequency distribution. The distribution is stored separately and flattened into multiple physical Frequency rows to avoid a large JSON payload in the Profile row.
 
 [View full schema](metadata/metadata_data_profiled.md)
 
@@ -122,16 +122,17 @@ Understand the shape, completeness, and characteristics of the data.
 
 ## [METADATA_DATA_PROFILED_FREQUENCY](metadata/metadata_data_profiled_frequency.md)
 
-See how values are distributed across the data.
+See the frequency distribution captured for a profiled column.
 
-**Grain:** One ranked observed value frequency for one profiled column snapshot.
+**Grain:** One flattened ranked value within one logical frequency distribution for a column Profile.
 
-**Primary key:** `metadata_column_key` + `profiled_at` + `frequency_rank`
+**Primary key:** `frequency_id`
 
 **Relationships:**
 
-* `metadata_column_key` → `METADATA_DATA_PROFILED.metadata_column_key` (**N:1**). Frequency rows belong to a profiled column; metadata_column_key and profiled_at together identify the parent snapshot.
-* `profiled_at` → `METADATA_DATA_PROFILED.profiled_at` (**N:1**). The profile timestamp is the second part of the logical link back to the profiled column snapshot.
+* `profile_id` → `METADATA_DATA_PROFILED.profile_id` (**N:1**). Physical Frequency rows link back to the Profile that owns the logical distribution through profile_id.
+* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). Profile and Frequency are produced together in the same profiling snapshot.
+* **1:1**: Logically this table stores the one frequency distribution belonging to a Profile; that distribution is physically flattened into multiple rows for storage.
 
 [View full schema](metadata/metadata_data_profiled_frequency.md)
 
@@ -141,14 +142,14 @@ See how values are distributed across the data.
 
 See where the data came from and where it ends up.
 
-**Grain:** One source or target participation event for one profiled table snapshot in one Fabric activity.
+**Grain:** One table participating as a source or target in one pipeline/profiling execution.
 
-**Primary key:** `lineage_event_id`
+**Primary key:** `lineage_id`
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many lineage events can refer to the same logical catalogue table identity.
-* **1:N**: One lineage event can describe a table snapshot that is represented by many profiled column rows through metadata_table_key, schema_fingerprint and profiled_at.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many lineage participation records can refer to the same logical Catalogue table identity.
+* `profile_snapshot_id` → `METADATA_DATA_PROFILED.profile_snapshot_id` (**N:1**). The lineage participation is recorded for the same profiling execution identified by profile_snapshot_id.
 
 [View full schema](metadata/metadata_data_lineage.md)
 
@@ -164,8 +165,8 @@ Add business and governance context to the data.
 
 **Relationships:**
 
-* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). When enrichment_level is table, many enrichment rows can describe one catalogue table identity.
-* `metadata_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). When enrichment_level is column, many enrichment rows can describe one catalogue column identity.
+* `metadata_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id.
+* `metadata_key` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id.
 
 [View full schema](metadata/metadata_enrichment.md)
 
@@ -197,9 +198,10 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many guardrail configurations can apply to one logical catalogue table identity.
-* `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). Column level guardrails can point to one logical catalogue column identity.
-* **1:N**: One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 renames the Guardrail identity fields, metadata_table_key carries the same stable value now exposed by Catalogue as table_id.
+* `metadata_column_key` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Until Stage 4 renames the Guardrail identity fields, metadata_column_key carries the same stable value now exposed by Catalogue as column_id.
+* **1:N**: One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
+* **1:N**: One Guardrail rule can produce many Guardrail Row Results when DQ quarantine evidence is captured.
 
 [View full schema](metadata/metadata_guardrail.md)
 
@@ -215,9 +217,8 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 **Relationships:**
 
-* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one authored guardrail rule.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many runtime guardrail outcomes can refer to one logical catalogue table identity.
-* **1:N**: One Guardrail Result can have many Guardrail Row Results when row level failure evidence is captured.
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one authored Guardrail rule.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 normalization, the result keeps metadata_table_key while carrying the same stable Catalogue table_id value.
 
 [View full schema](metadata/metadata_guardrail_results.md)
 
@@ -225,17 +226,16 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 ## [METADATA_GUARDRAIL_ROW_RESULTS](metadata/metadata_guardrail_row_results.md)
 
-See which records did not meet the expectations.
+See the failed or quarantined rows produced by a Data Quality guardrail.
 
-**Grain:** One failed source row or DQ rule evidence row linked to one runtime guardrail result.
+**Grain:** One failed-row evidence record produced by one Guardrail rule evaluation.
 
 **Primary key:** `guardrail_row_result_id`
 
 **Relationships:**
 
-* `guardrail_result_id` → `METADATA_GUARDRAIL_RESULTS.guardrail_result_id` (**N:1**). Many row level failure evidence rows can belong to one Guardrail Result.
-* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many row level failure evidence rows can trace back to one authored guardrail rule.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many row level failure evidence rows can refer to one logical catalogue table identity.
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Row-level DQ quarantine evidence belongs directly to the Guardrail rule that produced it.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 normalization, the row result keeps metadata_table_key while carrying the same stable Catalogue table_id value.
 
 [View full schema](metadata/metadata_guardrail_row_results.md)
 

@@ -10,9 +10,8 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 **Relationships:**
 
-* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one authored guardrail rule.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many runtime guardrail outcomes can refer to one logical catalogue table identity.
-* **1:N**: One Guardrail Result can have many Guardrail Row Results when row level failure evidence is captured.
+* `guardrail_rule_id` → `METADATA_GUARDRAIL.guardrail_rule_id` (**N:1**). Many runtime outcomes can come from one authored Guardrail rule.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 normalization, the result keeps metadata_table_key while carrying the same stable Catalogue table_id value.
 
 ## Column summary
 

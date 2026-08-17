@@ -10,9 +10,10 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 **Relationships:**
 
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**N:1**). Many guardrail configurations can apply to one logical catalogue table identity.
-* `metadata_column_key` → `METADATA_DATA_CATALOGUE.metadata_column_key` (**N:1**). Column level guardrails can point to one logical catalogue column identity.
-* **1:N**: One guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until Stage 4 renames the Guardrail identity fields, metadata_table_key carries the same stable value now exposed by Catalogue as table_id.
+* `metadata_column_key` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Until Stage 4 renames the Guardrail identity fields, metadata_column_key carries the same stable value now exposed by Catalogue as column_id.
+* **1:N**: One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
+* **1:N**: One Guardrail rule can produce many Guardrail Row Results when DQ quarantine evidence is captured.
 
 ## Column summary
 

@@ -11,7 +11,7 @@ Define what the data is, how it looks, its sensitivity, quality requirements, sc
 **Relationships:**
 
 * `agreement_id` → `METADATA_DATA_AGREEMENT.agreement_id` (**N:1**). Many Data Contract rows can belong to one Data Agreement lifecycle; the current schema does not store agreement_version on the contract row.
-* `metadata_table_key` → `METADATA_DATA_CATALOGUE.metadata_table_key` (**1:N**). One contracted table identity can match the catalogue rows for that table's columns.
+* `metadata_table_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). The current Data Contract column retains its pre-Stage-2 name, but its stable hash value identifies the same logical table now exposed by Catalogue as table_id. Data Contract redesign is deferred to Stage 5.
 
 ## Column summary
 

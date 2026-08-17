@@ -870,16 +870,18 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     }
 
     assert catalogue_names == [
-        "metadata_table_key",
-        "metadata_column_key",
-        "schema_fingerprint",
+        "metadata_level",
+        "table_id",
+        "column_id",
         "environment_name",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
         "column_name",
-        "data_type",
+        "first_profiled_at",
+        "last_profiled_at",
+        "is_active",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -890,9 +892,9 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "_activity_id",
     ]
     assert profiling_fields.isdisjoint(catalogue_names)
-    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(catalogue_names)
+    assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
-    assert {"metadata_table_key", "metadata_column_key", "schema_fingerprint", "column_name"}.issubset(profiled_names)
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "environment_name", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -1271,7 +1273,9 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
     assert agreement["agreement_version"] == "string"
     assert catalogue["store_type"] == "string"
     assert "profile_role" not in catalogue
-    assert catalogue["schema_fingerprint"] == "string"
+    assert catalogue["first_profiled_at"] == "timestamp"
+    assert catalogue["last_profiled_at"] == "timestamp"
+    assert catalogue["is_active"] == "boolean"
     assert "fabric_store_target" not in catalogue
     assert contract["agreement_id"] == "string"
     assert "contract_snapshot_id" not in contract
@@ -1288,7 +1292,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["_committed_at"]
+            assert timestamp_fields == ["first_profiled_at", "last_profiled_at", "_committed_at"]
         elif table_name == "METADATA_DATA_PROFILED":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
         else:
@@ -1304,12 +1308,12 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
     schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
     audit_names = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
     assert schema.fieldNames() == [
-        "lineage_event_id",
-        "metadata_table_key",
-        "schema_fingerprint",
-        "profile_role",
-        "profiled_at",
+        "lineage_id",
+        "table_id",
+        "profile_snapshot_id",
         "environment_name",
+        "pipeline_role",
+        "recorded_at",
         *audit_names,
     ]
     assert all(not field.nullable for field in schema.fields if field.name in audit_names)

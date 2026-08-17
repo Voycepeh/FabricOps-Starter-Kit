@@ -214,16 +214,18 @@ def test_catalogue_schema_uses_lowercase_canonical_columns_only():
     }
     assert duplicate_legacy_fields.isdisjoint(catalogue_fields)
     expected_catalogue_fields = [
-        "metadata_table_key",
-        "metadata_column_key",
-        "schema_fingerprint",
+        "metadata_level",
+        "table_id",
+        "column_id",
         "environment_name",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
         "column_name",
-        "data_type",
+        "first_profiled_at",
+        "last_profiled_at",
+        "is_active",
         "_committed_by",
         "_committed_at",
         "_workspace_id",
@@ -298,7 +300,7 @@ def test_governance_metadata_schemas_include_guardrail_rules_without_failure_tab
     assert "METADATA_DATA_PROFILED" in schemas
     assert governance.DATA_ACCESS_TABLE in schemas
     assert governance.ENRICHMENT_TABLE in schemas
-    assert "metadata_table_key" in schemas["METADATA_DATA_PROFILED"].fieldNames()
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id"}.issubset(schemas["METADATA_DATA_PROFILED"].fieldNames())
     required_audit_fields = {
         "_committed_by",
         "_committed_at",

@@ -7,7 +7,7 @@ from functools import reduce
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone, get_current_audit_timestamp, resolve_fabric_context
-from ..io.shared import configured_lakehouse_schema, write_lakehouse_table_core
+from ..io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
 from ..config.shared import build_metadata_table_key
 from ..config.metadata_schemas import coerce_metadata_row_types
@@ -1232,3 +1232,87 @@ def write_catalogue_evidence(
             )
         statuses[name] = "written"
     return statuses
+
+
+SOURCE_OBSERVATION_COLUMNS = frozenset(
+    {
+        "observation_id",
+        "table_id",
+        "environment_name",
+        "partition_value",
+        "row_count",
+        "min_change_value",
+        "max_change_value",
+        "is_present",
+        "observed_at",
+    }
+)
+
+
+def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
+    """Return canonical observation rows as dictionaries."""
+    values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
+    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in values or []]
+
+
+def is_source_observation(dataframe: Any) -> bool:
+    """Return whether a value exposes the normalized observation contract."""
+    columns = set(getattr(dataframe, "columns", ()))
+    if not columns and isinstance(dataframe, (list, tuple)) and dataframe:
+        columns = set(dict(dataframe[0]))
+    return SOURCE_OBSERVATION_COLUMNS <= columns
+
+
+def catalogue_table_identity(
+    *, config: Any, env: str, table_id: str, spark_session: Any
+) -> dict[str, Any] | None:
+    """Resolve physical table attributes from the environment-specific Catalogue row."""
+    catalogue = read_lakehouse_table_core(
+        "METADATA_DATA_CATALOGUE",
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        spark_session=spark_session,
+        context={"config": config, "env": env},
+    )
+    if hasattr(catalogue, "where"):
+        from pyspark.sql import functions as F
+
+        matches = catalogue.where(
+            (F.col("environment_name") == env)
+            & (F.col("table_id") == table_id)
+            & (F.col("metadata_level") == "table")
+        )
+        if "is_active" in getattr(matches, "columns", ()):
+            matches = matches.where(F.col("is_active") == F.lit(True))
+        rows = matches.orderBy(F.col("last_profiled_at").desc_nulls_last()).limit(1).collect()
+        return rows[0].asDict(recursive=True) if rows else None
+
+    rows = observation_rows(catalogue)
+    candidates = [
+        row
+        for row in rows
+        if str(row.get("environment_name") or "") == env
+        and str(row.get("table_id") or "") == table_id
+        and str(row.get("metadata_level") or "") == "table"
+        and row.get("is_active", True) is not False
+    ]
+    if not candidates:
+        return None
+    candidates.sort(key=lambda row: str(row.get("last_profiled_at") or ""), reverse=True)
+    return candidates[0]
+
+
+def guardrail_compatibility_observation(
+    observation: Any, *, table_id: str, change_column: str
+) -> Any:
+    """Add temporary in-memory aliases required by the Stage 4 Guardrail model."""
+    if hasattr(observation, "withColumn"):
+        from pyspark.sql import functions as F
+
+        return observation.withColumn("metadata_table_key", F.lit(table_id)).withColumn(
+            "change_column", F.lit(change_column)
+        )
+    return [
+        {**row, "metadata_table_key": table_id, "change_column": change_column}
+        for row in observation_rows(observation)
+    ]

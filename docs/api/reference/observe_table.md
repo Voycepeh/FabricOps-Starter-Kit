@@ -20,9 +20,9 @@ later guardrail checks can judge the source without a full source read.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/observe_table.py:113`
+`fabricops_kit/pipeline/observe_table.py:142`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L113-L239">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/observe_table.py#L142-L287">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -91,8 +91,8 @@ RuntimeError
 
 <div class="reference-docstring-notes" markdown="1">
 
-The stored evidence is only the partition, row count, and earliest and
-latest change values. This is a lightweight change signal, not proof that
+The stored evidence is the stable ``observation_id`` and ``table_id``, active
+``environment_name``, partition value, row count, and earliest and latest change values. This is a lightweight change signal, not proof that
 every cell is unchanged: a middle value can change while all three signals
 remain identical. Sources without a reliable change column require deeper
 change detection elsewhere. Warehouse aggregation is pushed into SQL;
@@ -100,11 +100,10 @@ Lakehouse aggregation is distributed and projects only the two required
 source columns.
 Evidence is appended only after collection succeeds. This function neither
 loads history nor makes guardrail decisions; ``check_changes`` owns
-comparison and removal tombstones. The
-canonical table key is built from the resolved physical identity with the
-same :func:`build_metadata_table_key` helper used by
-:func:`profile_and_register_table`, linking observations to
-``METADATA_DATA_CATALOGUE`` without requiring a pre-existing catalogue row.
+comparison and removal tombstones. The stable ``table_id`` is built from the resolved physical identity with the
+same logical identity rules used by :func:`profile_and_register_table`. It is
+independent of Development or Production; ``environment_name`` keeps those
+operational observations separate without requiring a pre-existing catalogue row.
 
 </div>
 
