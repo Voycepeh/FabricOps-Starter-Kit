@@ -27,21 +27,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Revert unrelated guided-demo normalization
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/reference_docs_metadata.py')
-          text = path.read_text(encoding='utf-8')
-          replacements = {
-              '../../guided-demo/02-run-pipeline.md': '../../guided-demo/run-pipeline.md',
-              '../../guided-demo/03-enrich-guardrails.md': '../../guided-demo/review-guardrails.md',
-          }
-          for new, old in replacements.items():
-              text = text.replace(new, old)
-          path.write_text(text, encoding='utf-8')
-          PY
-
       - name: Regenerate individual references twice
         run: |
           source .venv/bin/activate
@@ -68,16 +53,11 @@ jobs:
           rm .github/workflows/agent-finalize-retired-widget-pr.yml
           git add -u -- \
             .github/workflows/agent-finalize-retired-widget-pr.yml \
-            scripts/reference_docs_metadata.py \
             docs/reference/_data/generated-artifacts.json \
             docs/api/reference \
             docs/reference/index.md \
             docs/reference/function-call-graph.md \
             docs/reference/metadata.md \
             docs/reference/metadata
-          if git diff --cached --quiet; then
-            echo 'No final changes to commit'
-            exit 0
-          fi
           git commit -m "docs: finalize retired widget references"
           git push origin HEAD:agent/remove-unused-guardrail-review-widget
