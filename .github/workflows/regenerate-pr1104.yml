@@ -1,0 +1,69 @@
+name: Regenerate PR 1104 artifacts
+
+on:
+  push:
+    branches:
+      - agent/catalogue-reader-views
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: agent/catalogue-reader-views
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Generate owned artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+
+      - name: Verify generators are stable
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          git diff > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+
+      - name: Commit only directly owned generated outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            docs/reference/_data/public-function-call-flows.json \
+            docs/reference/_data/generated-artifacts.json \
+            docs/api/reference \
+            docs/reference/index.md \
+            docs/reference/function-call-graph.md
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Regenerate catalogue reader references'
+          git push origin HEAD:agent/catalogue-reader-views
