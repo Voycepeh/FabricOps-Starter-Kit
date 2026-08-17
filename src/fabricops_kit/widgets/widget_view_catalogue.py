@@ -33,10 +33,6 @@ def _collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[
     return [row.asDict(recursive=True) for row in rows if str(row["table_id"] or "").strip()]
 
 
-collect_catalogue_inventory = _collect_catalogue_inventory
-require_ipywidgets = widget_shared.require_ipywidgets
-
-
 def _resolve_pipeline_catalogue_scope(
     *,
     environment_name: str,
@@ -160,7 +156,7 @@ def _build_catalogue_widget(
     empty_message: str,
 ) -> dict[str, Any]:
     """Build the normalized catalogue reader and human-facing Spark views."""
-    widgets = require_ipywidgets()
+    widgets = widget_shared.require_ipywidgets()
     rows_by_table_id = {str(row["table_id"]): row for row in inventory_rows}
     roles = role_options or [(None, table_id) for table_id in sorted(rows_by_table_id)]
     options: list[tuple[str, str]] = []
@@ -514,9 +510,6 @@ def _build_catalogue_widget(
     return state
 
 
-build_catalogue_widget = _build_catalogue_widget
-
-
 def widget_view_catalogue(
     *,
     mode: str,
@@ -611,7 +604,7 @@ def widget_view_catalogue(
         spark_session=spark_session,
         context=runtime_context,
     )
-    inventory_rows = collect_catalogue_inventory(catalogue, environment_name)
+    inventory_rows = _collect_catalogue_inventory(catalogue, environment_name)
     if mode == "explore":
         scope = _resolve_explore_catalogue_scope(
             inventory_rows=inventory_rows,
@@ -640,7 +633,7 @@ def widget_view_catalogue(
         ),
     }
     title, description, empty_message = presentation[mode]
-    return build_catalogue_widget(
+    return _build_catalogue_widget(
         title=title,
         description=description,
         selection_context=selection_context,
