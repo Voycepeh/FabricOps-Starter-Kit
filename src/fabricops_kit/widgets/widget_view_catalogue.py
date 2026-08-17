@@ -40,11 +40,7 @@ def collect_catalogue_inventory(catalogue: Any, environment_name: str) -> list[d
         .distinct()
         .collect()
     )
-    return [
-        row.asDict(recursive=True)
-        for row in rows
-        if str(row["table_id"] or "").strip()
-    ]
+    return [row.asDict(recursive=True) for row in rows if str(row["table_id"] or "").strip()]
 
 
 def _resolve_pipeline_catalogue_scope(
@@ -131,9 +127,7 @@ def _resolve_agreement_catalogue_scope(
 
 
 def _resolve_explore_catalogue_scope(
-    *,
-    inventory_rows: list[dict[str, Any]],
-    environment_name: str,
+    *, inventory_rows: list[dict[str, Any]], environment_name: str
 ) -> tuple[set[str], None, dict[str, Any], dict[str, Any]]:
     """Resolve every catalogued table in the current environment."""
     table_ids = {str(row["table_id"]) for row in inventory_rows}
@@ -141,10 +135,7 @@ def _resolve_explore_catalogue_scope(
         table_ids,
         None,
         {"environment_name": environment_name},
-        {
-            "Environment": environment_name,
-            "Datasets": len(table_ids),
-        },
+        {"Environment": environment_name, "Datasets": len(table_ids)},
     )
 
 
@@ -157,8 +148,7 @@ def _reader_dataset_label(row: dict[str, Any], role: str | None = None) -> str:
 
 def _select_reader_columns(frame: Any, preferred: list[str]) -> Any:
     """Select reader-facing columns while keeping technical IDs at the end."""
-    available = [name for name in preferred if name in frame.columns]
-    return frame.select(*available)
+    return frame.select(*[name for name in preferred if name in frame.columns])
 
 
 def build_catalogue_widget(
@@ -195,6 +185,7 @@ def build_catalogue_widget(
     profile_column = widgets.Dropdown(options=[], **widget_common(widgets, "Profile column"))
     for control in (search, dataset, profile_column):
         control.layout = widgets.Layout(width="100%", height="auto", overflow="visible")
+
     selection_details = widgets.HTML(value="")
     status = widgets.HTML(value="")
     controls = {"search": search, "dataset": dataset, "profile_id": profile_column}
@@ -213,7 +204,6 @@ def build_catalogue_widget(
     filtering_options = False
 
     def get_selection() -> dict[str, Any]:
-        """Return the current normalized reader selection."""
         role, table_id = option_context.get(str(dataset.value or ""), (None, ""))
         row = rows_by_table_id.get(table_id, {})
         return {
@@ -232,7 +222,6 @@ def build_catalogue_widget(
         }
 
     def refresh_loaded_views() -> None:
-        """Resolve the latest profile snapshot and prepare reader-facing frames."""
         nonlocal selected_profile_snapshot_id, selected_profiled_at
         from pyspark.sql import functions as F
 
@@ -249,10 +238,10 @@ def build_catalogue_widget(
         )
         selected_profile_snapshot_id = str(latest[0]["profile_snapshot_id"]) if latest else None
         selected_profiled_at = latest[0]["profiled_at"] if latest else None
-
         catalogue_columns = catalogue_raw.filter(F.col("metadata_level") == "column").select(
             "table_id", "column_id", "column_name"
         )
+
         if selected_profile_snapshot_id is None:
             profile_snapshot = profile_for_table.limit(0)
             profile_reader = profile_snapshot.withColumn("column_name", F.lit(None).cast("string"))
@@ -277,7 +266,7 @@ def build_catalogue_widget(
                 source_frames["frequency"]
                 .filter(F.col("profile_snapshot_id") == selected_profile_snapshot_id)
                 .join(
-                    profile_snapshot.select("profile_id", "table_id", "column_id"),
+                    profile_snapshot.select("profile_id", "profile_snapshot_id", "table_id", "column_id"),
                     on=["profile_id", "profile_snapshot_id"],
                     how="inner",
                 )
@@ -293,7 +282,8 @@ def build_catalogue_widget(
         profile_ids = [value for _label, value in column_options]
         preferred_profile_id = next((value for value in profile_ids if value in frequency_profile_ids), None)
         profile_column.value = (
-            previous_profile_id if previous_profile_id in profile_ids
+            previous_profile_id
+            if previous_profile_id in profile_ids
             else preferred_profile_id or (profile_ids[0] if profile_ids else None)
         )
         selected_profile_id = profile_column.value
@@ -313,11 +303,13 @@ def build_catalogue_widget(
         state.update(get_selection())
         state["error"] = None if table_id else empty_message
         selection = get_selection()
+        labels_by_profile_id = {value: label for label, value in profile_column.options}
         selection_details.value = (
             f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
             f"<b>Profile snapshot:</b> {_html_escape(selection['profiled_at'])}<br>"
-            f"<b>Profile column:</b> {_html_escape(dict(profile_column.options).get(selection['profile_id'], ''))}"
-            if table_id else ""
+            f"<b>Profile column:</b> {_html_escape(labels_by_profile_id.get(selection['profile_id'], ''))}"
+            if table_id
+            else ""
         )
         status.value = (
             "No profile snapshot is available for this dataset."
@@ -328,51 +320,25 @@ def build_catalogue_widget(
         )
 
     def get_views() -> dict[str, Any]:
-        """Return concise catalogue/profile/frequency views plus guardrail evidence."""
         selection = get_selection()
         table_id = selection["table_id"]
         if not table_id:
             raise ValueError(empty_message)
         if not source_frames:
-            source_frames.update(
-                {
-                    "catalogue": read_lakehouse_table_core(
-                        "METADATA_DATA_CATALOGUE",
-                        target=target,
-                        schema=schema,
-                        spark_session=spark_session,
-                        context=runtime_context,
-                    ),
-                    "profile": read_lakehouse_table_core(
-                        "METADATA_DATA_PROFILED",
-                        target=target,
-                        schema=schema,
-                        spark_session=spark_session,
-                        context=runtime_context,
-                    ),
-                    "frequency": read_lakehouse_table_core(
-                        "METADATA_DATA_PROFILED_FREQUENCY",
-                        target=target,
-                        schema=schema,
-                        spark_session=spark_session,
-                        context=runtime_context,
-                    ),
-                    "guardrail_results": read_lakehouse_table_core(
-                        "METADATA_GUARDRAIL_RESULTS",
-                        target=target,
-                        schema=schema,
-                        spark_session=spark_session,
-                        context=runtime_context,
-                    ),
-                    "guardrail_row_results": read_lakehouse_table_core(
-                        "METADATA_GUARDRAIL_ROW_RESULTS",
-                        target=target,
-                        schema=schema,
-                        spark_session=spark_session,
-                        context=runtime_context,
-                    ),
-                }
-            )
+            for name, table_name in (
+                ("catalogue", "METADATA_DATA_CATALOGUE"),
+                ("profile", "METADATA_DATA_PROFILED"),
+                ("frequency", "METADATA_DATA_PROFILED_FREQUENCY"),
+                ("guardrail_results", "METADATA_GUARDRAIL_RESULTS"),
+                ("guardrail_row_results", "METADATA_GUARDRAIL_ROW_RESULTS"),
+            ):
+                source_frames[name] = read_lakehouse_table_core(
+                    table_name,
+                    target=target,
+                    schema=schema,
+                    spark_session=spark_session,
+                    context=runtime_context,
+                )
             refresh_loaded_views()
 
         catalogue = _select_reader_columns(
@@ -447,7 +413,6 @@ def build_catalogue_widget(
         return views
 
     def refresh(*_args: Any) -> None:
-        """Synchronize lightweight selection state and cached reader views."""
         nonlocal selected_profile_snapshot_id, selected_profiled_at
         _role, table_id = option_context.get(str(dataset.value or ""), (None, ""))
         if source_frames:
@@ -463,15 +428,16 @@ def build_catalogue_widget(
             f"<b>Dataset:</b> {_html_escape(selection['dataset_label'])}<br>"
             "<b>Profile snapshot:</b> Load views to resolve<br>"
             "<b>Profile column:</b> Load views to resolve"
-            if table_id else ""
+            if table_id
+            else ""
         )
         status.value = (
             "Selection ready. Run get_views() in the next cell to load native Spark DataFrames."
-            if table_id else empty_message
+            if table_id
+            else empty_message
         )
 
     def refresh_frequency(*_args: Any) -> None:
-        """Restrict normalized frequencies to the selected profile ID."""
         from pyspark.sql import functions as F
 
         frequency = current_frames.get("frequency_snapshot")
@@ -486,7 +452,6 @@ def build_catalogue_widget(
         state.update(get_selection())
 
     def select_dataset(change: dict[str, Any]) -> None:
-        """Remember valid selections and refresh after dataset changes."""
         nonlocal last_dataset_value
         selected = str(change.get("new") or "")
         if selected:
@@ -495,7 +460,6 @@ def build_catalogue_widget(
             refresh()
 
     def filter_options(*_args: Any) -> None:
-        """Filter datasets and restore a valid selection automatically."""
         nonlocal filtering_options, last_dataset_value
         query = str(search.value or "").strip().casefold()
         filtered = [option for option in options if query in option[0].casefold()]
@@ -504,8 +468,10 @@ def build_catalogue_widget(
         try:
             dataset.options = filtered
             dataset.value = (
-                last_dataset_value if last_dataset_value in filtered_values
-                else filtered_values[0] if filtered_values
+                last_dataset_value
+                if last_dataset_value in filtered_values
+                else filtered_values[0]
+                if filtered_values
                 else None
             )
         finally:
@@ -638,6 +604,7 @@ def widget_view_catalogue(
             spark_session=spark_session,
             runtime_context=runtime_context,
         )
+
     catalogue = read_lakehouse_table_core(
         "METADATA_DATA_CATALOGUE",
         target=target,
@@ -655,6 +622,7 @@ def widget_view_catalogue(
     rows = [row for row in inventory_rows if row["table_id"] in allowed_table_ids]
     if mode == "agreement":
         display_context["Linked datasets"] = len({row["table_id"] for row in rows})
+
     presentation = {
         "pipeline": (
             "Pipeline Catalogue Viewer",
