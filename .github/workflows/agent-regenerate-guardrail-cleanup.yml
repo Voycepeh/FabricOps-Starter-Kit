@@ -39,13 +39,20 @@ jobs:
 
           path = Path("scripts/reference_docs_metadata.py")
           text = path.read_text(encoding="utf-8")
-          lines = text.splitlines(keepends=True)
           tree = ast.parse(text)
           short = "widget_review_guardrail_governance"
           module = "widgets.widget_review_guardrail_governance"
           fq = "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance"
 
-          delete_ranges = []
+          starts = [0]
+          for i, char in enumerate(text):
+              if char == "\n":
+                  starts.append(i + 1)
+
+          def offset(lineno, col):
+              return starts[lineno - 1] + col
+
+          spans = []
           for node in ast.walk(tree):
               if not isinstance(node, ast.Dict):
                   continue
@@ -54,20 +61,27 @@ jobs:
                   if isinstance(key, ast.Constant) and isinstance(key.value, str) and isinstance(value, ast.Constant):
                       pairs[key.value] = value.value
                   if isinstance(key, ast.Constant) and key.value == short:
-                      delete_ranges.append((key.lineno - 1, value.end_lineno))
+                      start = offset(key.lineno, key.col_offset)
+                      end = offset(value.end_lineno, value.end_col_offset)
+                      pos = end
+                      while pos < len(text) and text[pos] in " \t":
+                          pos += 1
+                      if pos < len(text) and text[pos] == ",":
+                          pos += 1
+                      spans.append((start, pos))
               if pairs.get("symbol_name") == short or pairs.get("module_name") == module:
-                  delete_ranges.append((node.lineno - 1, node.end_lineno))
+                  start = offset(node.lineno, node.col_offset)
+                  end = offset(node.end_lineno, node.end_col_offset)
+                  pos = end
+                  while pos < len(text) and text[pos] in " \t":
+                      pos += 1
+                  if pos < len(text) and text[pos] == ",":
+                      pos += 1
+                  spans.append((start, pos))
 
-          normalized = []
-          for start, end in sorted(set(delete_ranges)):
-              if normalized and start <= normalized[-1][1]:
-                  normalized[-1] = (normalized[-1][0], max(normalized[-1][1], end))
-              else:
-                  normalized.append((start, end))
-          for start, end in reversed(normalized):
-              del lines[start:end]
+          for start, end in sorted(set(spans), reverse=True):
+              text = text[:start] + text[end:]
 
-          text = "".join(lines)
           text = "\n".join(line for line in text.split("\n") if fq not in line)
           text = text.replace(f", '{short}'", "")
           text = text.replace(f"'{short}', ", "")
