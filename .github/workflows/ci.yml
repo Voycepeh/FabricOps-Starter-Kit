@@ -39,128 +39,77 @@ jobs:
           path = Path("scripts/reference_docs_metadata.py")
           text = path.read_text()
 
-          replacements = [
-              (
-                  '''    "METADATA_ENRICHMENT": {
-                      "purpose": "Add business and governance context to the data.",
-                      "grain": "One appended enrichment value for one table or column identity.",
-                      "primary_key": ["enrichment_id"],
-                      "foreign_keys": [
-                          {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id."},
-                          {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id."},
-                      ],
-                      "relationships": [],
-                  },
-                  "METADATA_DATA_ACCESS": {
-                      "purpose": "See who can use the data and how it can be used.",
-                      "grain": "One access review record for one user and governed scope.",
-                      "primary_key": [],
-                      "foreign_keys": [],
-                      "relationships": [],
-                  },''',
-                  '''    "METADATA_ENRICHMENT": {
-                      "purpose": "Add business and governance context to the data.",
-                      "grain": "One appended enrichment value for one table or column identity in one environment.",
-                      "primary_key": ["enrichment_id"],
-                      "foreign_keys": [
-                          {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
-                          {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
-                      ],
-                      "relationships": [],
-                  },
-                  "METADATA_DATA_ACCESS": {
-                      "purpose": "See who has row-level access to the data.",
-                      "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
-                      "primary_key": ["access_id"],
-                      "foreign_keys": [
-                          {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
-                      ],
-                      "relationships": [],
-                  },''',
-                  "metadata table models",
-              ),
-              (
-                  '''    "METADATA_ENRICHMENT": {
-                      "__default__": [
-                          "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-                          "fabricops_kit.widgets.shared.build_enrichment_records",
-                      ],
-                      "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-                      "enrichment_id": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-                      "enrichment_level": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-                      "metadata_key": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-                      "enrichment_type": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-                      "value": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-                  },''',
-                  '''    "METADATA_ENRICHMENT": {
-                      "__default__": [
-                          "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-                          "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
-                      ],
-                      "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-                      "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                      "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
-                  },''',
-                  "enrichment column owners",
-              ),
-              (
-                  ''' {'kind': 'function',
-                    'module': 'widgets.widget_enrich_table_metadata',
-                    'function_type': 'callable',
-                    'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
-                    'symbol_name': 'widget_enrich_table_metadata',
-                    'template_notebook': '01_governance',
-                    'template_segment': 'Guardrail governance review',
-                    'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.',
-                    'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
-                    'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
-                    'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
-                    'related_functions': ['widget_view_catalogue'],
-                    'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
-                    'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
-                    'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
-                    'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint'],
-                    'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.',
-                    'common_failure_causes': ['The metadata catalogue has no logical tables.',
-                                              'A table or current column lacks its canonical metadata key.',
-                                              'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},''',
-                  ''' {'kind': 'function',
-                    'module': 'widgets.widget_enrich_table_metadata',
-                    'function_type': 'callable',
-                    'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
-                    'symbol_name': 'widget_enrich_table_metadata',
-                    'template_notebook': '01_governance',
-                    'template_segment': 'Guardrail governance review',
-                    'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.',
-                    'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
-                    'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
-                    'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
-                    'related_functions': ['widget_view_catalogue'],
-                    'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
-                    'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
-                    'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
-                    'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue'],
-                    'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.',
-                    'common_failure_causes': ['The active environment has no logical tables in the metadata catalogue.',
-                                              'A selected table lacks table_id or a current column lacks column_id.',
-                                              'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},''',
-                  "widget enrichment docs",
-              ),
-          ]
+          # Replace only the Stage 3 table-model slice.
+          models_root = text.index("METADATA_TABLE_MODELS = {")
+          models_start = text.index('    "METADATA_ENRICHMENT": {', models_root)
+          models_end = text.index('    "METADATA_GUARDRAIL": {', models_start)
+          models_replacement = '''    "METADATA_ENRICHMENT": {
+              "purpose": "Add business and governance context to the data.",
+              "grain": "One appended enrichment value for one table or column identity in one environment.",
+              "primary_key": ["enrichment_id"],
+              "foreign_keys": [
+                  {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
+                  {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+              ],
+              "relationships": [],
+          },
+          "METADATA_DATA_ACCESS": {
+              "purpose": "See who has row-level access to the data.",
+              "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
+              "primary_key": ["access_id"],
+              "foreign_keys": [
+                  {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
+              ],
+              "relationships": [],
+          },
+'''
+          text = text[:models_start] + models_replacement + text[models_end:]
 
-          for old, new, label in replacements:
-              matches = text.count(old)
-              if matches != 1:
-                  raise SystemExit(f"Expected exactly one {label} match, found {matches}")
-              text = text.replace(old, new)
+          # Replace only the Enrichment ownership slice. Data Access remains schema-only/untraced.
+          owners_root = text.index("METADATA_COLUMN_OWNERS = {")
+          owners_start = text.index('    "METADATA_ENRICHMENT": {', owners_root)
+          owners_end = text.index('    "METADATA_GUARDRAIL": {', owners_start)
+          owners_replacement = '''    "METADATA_ENRICHMENT": {
+              "__default__": [
+                  "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+                  "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
+              ],
+              "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+              "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+              "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+          },
+'''
+          text = text[:owners_start] + owners_replacement + text[owners_end:]
+
+          # Update only the public widget's stale Stage 2 wording.
+          public_root = text.index("PUBLIC_SYMBOL_DOCS = [")
+          symbol_pos = text.index("'symbol_name': 'widget_enrich_table_metadata'", public_root)
+          widget_start = text.rfind(" {'kind': 'function',", public_root, symbol_pos)
+          widget_end = text.index("\n\n {'kind': 'function',", symbol_pos)
+          widget = text[widget_start:widget_end]
+          field_replacements = {
+              "'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.'": "'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.'",
+              "'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'": "'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.'",
+              "'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint']": "'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue']",
+              "'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.'": "'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.'",
+              "'The metadata catalogue has no logical tables.'": "'The active environment has no logical tables in the metadata catalogue.'",
+              "'A table or current column lacks its canonical metadata key.'": "'A selected table lacks table_id or a current column lacks column_id.'",
+          }
+          for old, new in field_replacements.items():
+              if widget.count(old) != 1:
+                  raise SystemExit(f"Expected widget field exactly once: {old}")
+              widget = widget.replace(old, new)
+          text = text[:widget_start] + widget + text[widget_end:]
 
           if "widget_review_guardrail_governance" in text:
               raise SystemExit("Deleted guardrail review widget reference unexpectedly present")
+          if '"METADATA_ENRICHMENT"' not in text or '"table_id"' not in text:
+              raise SystemExit("Stage 3 metadata model patch did not apply")
 
           path.write_text(text)
           PY
