@@ -43,7 +43,6 @@ PUBLIC_CALLABLE_TYPES = {"public_function", "widget_function"}
 # TODO: Detect unresolved calls that appear to target local/internal helpers without faking the signal.
 
 
-
 @dataclass(frozen=True)
 class FunctionInfo:
     """Top-level function metadata discovered from source."""
@@ -303,6 +302,51 @@ def called_function_qns(info: FunctionInfo, modules: dict[str, ModuleInfo], func
         if isinstance(node, ast.Call):
             calls.update(resolve_call_qns(node, module, functions, name_index))
     return calls
+
+
+def _module_level_reference_qns(
+    module: ModuleInfo,
+    functions: dict[str, FunctionInfo],
+    name_index: dict[str, set[str]],
+) -> set[str]:
+    """Return functions referenced by module-level values such as registries and callbacks."""
+    references: set[str] = set()
+    for statement in module.tree.body:
+        if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Import, ast.ImportFrom)):
+            continue
+        for node in ast.walk(statement):
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                references.update(resolve_name(node.id, module, functions, name_index))
+            elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                module_qn = module.module_aliases.get(node.value.id)
+                if module_qn:
+                    candidate = f"{module_qn}.{node.attr}"
+                    if candidate in functions:
+                        references.add(candidate)
+    return references
+
+
+def build_global_source_references(
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+) -> dict[str, set[str]]:
+    """Build inbound package-source references for every discovered function."""
+    name_index = build_name_index(functions)
+    inbound: dict[str, set[str]] = {qn: set() for qn in functions}
+    for caller_qn, info in functions.items():
+        for target_qn in called_function_qns(info, modules, functions, name_index):
+            if target_qn != caller_qn:
+                inbound[target_qn].add(caller_qn)
+    for module in modules.values():
+        module_ref = f"{module.module_name}::<module>"
+        for target_qn in _module_level_reference_qns(module, functions, name_index):
+            inbound[target_qn].add(module_ref)
+    return inbound
+
+
+def is_implicit_runtime_hook(info: FunctionInfo) -> bool:
+    """Return whether Python can invoke the function without a normal source call edge."""
+    return info.function_name.startswith("__") and info.function_name.endswith("__")
 
 
 def function_type(info: FunctionInfo, public_qns: set[str], root_qn: str | None = None) -> str:
@@ -650,6 +694,7 @@ def _documentation_fields(info: FunctionInfo) -> dict[str, Any]:
         "public_import_path": f"fabricops_kit.{info.function_name}",
     }
 
+
 def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = INIT_PATH, manifests_dir: Path | None = None) -> dict[str, Any]:
     """Build the v2 JSON payload."""
     manifests_dir = manifests_dir or root / "docs" / "releases" / "manifests"
@@ -715,7 +760,15 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
     for public_function in public_functions:
         enrich_rows_with_contract(public_function["flow"], impact, public_qns, lifecycle_by_qn)
     defined_functions = [function_record(info, public_qns, lifecycle_by_qn, impact) for info in sorted(functions.values(), key=lambda item: item.qualified_name)]
-    unused = [unused_record(functions[qn]) for qn in sorted(set(functions) - used_all)]
+
+    inbound_references = build_global_source_references(modules, functions)
+    not_public_flow_reachable = set(functions) - used_all
+    runtime_hooks = {qn for qn in not_public_flow_reachable if is_implicit_runtime_hook(functions[qn])}
+    source_referenced = {qn for qn in not_public_flow_reachable if inbound_references.get(qn)}
+    detached = source_referenced | runtime_hooks
+    unused_qns = not_public_flow_reachable - detached
+    unused = [unused_record(functions[qn], inbound_references.get(qn, set())) for qn in sorted(unused_qns)]
+
     release_contract = {
         "release_versions": release_versions,
         "latest_release_version": release_versions[-1] if release_versions else None,
@@ -732,16 +785,24 @@ def build_payload(root: Path = ROOT, pkg_dir: Path = PKG_DIR, init_path: Path = 
             "public_function_source": "src/fabricops_kit/__init__.py::__all__",
             "architecture_violation_rules": ARCHITECTURE_VIOLATION_RULES,
             "architecture_violation_signal": "Any Type 1 to Type 5 edge appears in the public function flow.",
+            "unused_function_definition": "Not reachable from a public function flow, has no inbound package source references, and is not an implicit Python runtime hook.",
+            "detached_function_definition": "Not reachable from a public function flow but referenced elsewhere in package source or callable implicitly by Python.",
         },
         "public_functions": public_functions,
         "defined_functions": defined_functions,
         "used_functions": sorted(used_all),
+        "source_referenced_functions": sorted(source_referenced),
+        "implicit_runtime_hook_functions": sorted(runtime_hooks),
+        "detached_functions": sorted(detached),
         "defined_but_not_used": unused,
         "release_contract": release_contract,
         "summary": {
             "public_function_count": len(public_functions),
             "defined_function_count": len(functions),
             "used_function_count": len(used_all),
+            "source_referenced_function_count": len(source_referenced),
+            "implicit_runtime_hook_count": len(runtime_hooks),
+            "detached_function_count": len(detached),
             "defined_but_not_used_count": len(unused),
         },
     }
@@ -776,6 +837,7 @@ def calculate_refactor_signals(
 def public_signal_label(signal: str) -> str:
     """Return the dashboard label for a public-level signal."""
     return {"large_width_or_depth": "Large width/depth", "architecture_violation": "Architecture violation"}.get(signal, signal)
+
 
 def flow_evidence(item: dict[str, Any]) -> dict[str, Any]:
     """Return compact evidence for a flow node."""
@@ -834,18 +896,18 @@ def function_record(
     return record
 
 
-def unused_record(info: FunctionInfo) -> dict[str, Any]:
-    """Return a serializable unused-function record."""
+def unused_record(info: FunctionInfo, inbound_references: set[str] | None = None) -> dict[str, Any]:
+    """Return a serializable true-unused cleanup candidate record."""
     return {
         "function_name": info.function_name,
         "qualified_name": info.qualified_name,
         "source_path": info.source_path,
         "source_start_line": info.source_start_line,
         "source_end_line": info.source_end_line,
-        "reason": "Defined in src but not reached from any public function flow",
-        "suggested_action": "review_for_deletion_or_connection",
+        "inbound_source_references": sorted(inbound_references or set()),
+        "reason": "Defined in src, not reached from any public function flow, has no inbound package source references, and is not an implicit Python runtime hook",
+        "suggested_action": "review_for_deletion_or_dynamic_entrypoint",
     }
-
 
 
 def freeze_release_payload(payload: dict[str, Any], *, release_version: str, source_ref: str) -> dict[str, Any]:
@@ -876,6 +938,9 @@ def freeze_release_payload(payload: dict[str, Any], *, release_version: str, sou
         if row.get("qualified_name") in retained_qns
     ]
     frozen["used_functions"] = sorted(qn for qn in frozen.get("used_functions", []) if qn in retained_qns)
+    frozen["source_referenced_functions"] = sorted(qn for qn in frozen.get("source_referenced_functions", []) if qn in retained_qns)
+    frozen["implicit_runtime_hook_functions"] = sorted(qn for qn in frozen.get("implicit_runtime_hook_functions", []) if qn in retained_qns)
+    frozen["detached_functions"] = sorted(qn for qn in frozen.get("detached_functions", []) if qn in retained_qns)
     frozen["defined_but_not_used"] = [
         row for row in frozen.get("defined_but_not_used", [])
         if row.get("qualified_name") in retained_qns
@@ -904,9 +969,13 @@ def freeze_release_payload(payload: dict[str, Any], *, release_version: str, sou
         "public_function_count": len(live_public),
         "defined_function_count": len(frozen["defined_functions"]),
         "used_function_count": len(frozen["used_functions"]),
+        "source_referenced_function_count": len(frozen["source_referenced_functions"]),
+        "implicit_runtime_hook_count": len(frozen["implicit_runtime_hook_functions"]),
+        "detached_function_count": len(frozen["detached_functions"]),
         "defined_but_not_used_count": len(frozen["defined_but_not_used"]),
     }
     return frozen
+
 
 def write_json(payload: dict[str, Any], data_path: Path = DATA_PATH) -> None:
     """Write only the public function call-flow JSON output."""
