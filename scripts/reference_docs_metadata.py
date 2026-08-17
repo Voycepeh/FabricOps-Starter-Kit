@@ -212,19 +212,21 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_ENRICHMENT": {
         "purpose": "Add business and governance context to the data.",
-        "grain": "One appended enrichment value for one table or column identity.",
+        "grain": "One appended enrichment value for one table or column identity in one environment.",
         "primary_key": ["enrichment_id"],
         "foreign_keys": [
-            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id."},
-            {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
+            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
         ],
         "relationships": [],
     },
     "METADATA_DATA_ACCESS": {
-        "purpose": "See who can use the data and how it can be used.",
-        "grain": "One access review record for one user and governed scope.",
-        "primary_key": [],
-        "foreign_keys": [],
+        "purpose": "See who has row-level access to the data.",
+        "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
+        "primary_key": ["access_id"],
+        "foreign_keys": [
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
+        ],
         "relationships": [],
     },
     "METADATA_GUARDRAIL": {
@@ -437,14 +439,16 @@ METADATA_COLUMN_OWNERS = {
     "METADATA_ENRICHMENT": {
         "__default__": [
             "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
-            "fabricops_kit.widgets.shared.build_enrichment_records",
+            "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "enrichment_id": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-        "enrichment_level": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-        "metadata_key": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-        "enrichment_type": ["fabricops_kit.widgets.shared.build_enrichment_records"],
-        "value": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+        "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+        "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
     },
     "METADATA_GUARDRAIL": {
         "__default__": [
@@ -474,15 +478,19 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.widgets.shared._build_dq_rule_records",
         ],
         "reviewed_by": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
             "fabricops_kit.widgets.shared.record_table_governance",
         ],
         "reviewed_at": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
             "fabricops_kit.widgets.shared.record_table_governance",
         ],
         "review_decision": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
             "fabricops_kit.widgets.shared.record_table_governance",
         ],
         "review_comment": [
+            "fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance",
             "fabricops_kit.widgets.shared.record_table_governance",
         ],
     },
@@ -580,7 +588,11 @@ MODULE_DOCS_METADATA = [{'module_name': 'config',
   'module_summary': 'Owns table metadata enrichment widget workflow.',
   'sidebar_group': '1. Governance steward',
   'sidebar_include': False},
- 
+ {'module_name': 'widgets.widget_review_guardrail_governance',
+  'visibility': 'public',
+  'module_summary': 'Owns guardrail governance review widget workflow.',
+  'sidebar_group': '1. Governance steward',
+  'sidebar_include': False},
  {'module_name': 'io',
   'visibility': 'public',
   'module_summary': 'Owns Fabric read/write helpers for Lakehouse, Warehouse, and file/table IO.',
@@ -974,7 +986,7 @@ PUBLIC_SYMBOL_DOCS = [
                        '    config=CONFIG,\n'
                        '    env="Sandbox",\n'
                        ')',
-  'related_functions': ['setup_notebook'],
+  'related_functions': ['setup_notebook', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Prepares FabricOps metadata tables through configured metadata target ABFSS '
                       'paths, not Spark partial namespaces or an attached default lakehouse.',
   'when_to_use': 'Use after setup_notebook in 00_env_config when bootstrapping or validating the '
@@ -1275,7 +1287,7 @@ PUBLIC_SYMBOL_DOCS = [
   'preferred_example': 'write_warehouse_table(serving_df, '
                        'target="Warehouse", schema="dbo", table="orders_serving", mode="append")',
   'related_functions': ['read_warehouse_table', 'read_warehouse_query', 'stop_if_failed'],
-  'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied writer options.',
+  'expanded_purpose': 'Resolves the configured Warehouse table target, optionally applies Spark repartition_by handling to control write parallelism without creating a physically partitioned Warehouse table, then delegates writes to the Fabric Warehouse Spark connector with supplied connector options.',
   'when_to_use': 'Use for target writes after guardrails pass and the configured output layer is a '
                  'warehouse table.',
   'glossary_terms': ['target table', 'guardrails'],
@@ -1308,7 +1320,7 @@ PUBLIC_SYMBOL_DOCS = [
   'ai_verification': 'Verify the profile row count matches expected business columns and inspect '
                      'key schema/profile fields before writing evidence.',
   'preferred_example': 'profile_rows_df = profile_dataframe(df, exclude_columns=["technical_column"])',
-  'related_functions': ['enforce_profile_behavior'],
+  'related_functions': ['enforce_profile_behavior', 'widget_review_guardrail_governance'],
   'expanded_purpose': 'Builds deterministic profiles for a DataFrame, including schema, '
                       'row counts, nulls, distinct counts, numeric statistics, and supported min/max values.',
   'when_to_use': 'Use during exploration, governance review, or guardrail preparation when a table '
@@ -1418,7 +1430,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'The latest date is older than the allowed lag.',
                             'Severity is invalid or configured as blocking for stale data.'],
   'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'}]},
+                      'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1509,9 +1521,9 @@ PUBLIC_SYMBOL_DOCS = [
                         'enforce_freshness',
                         'stop_if_failed'],
   'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'},
+                      'path': '../../guided-demo/run-pipeline.md'},
                      {'title': 'Governance Review',
-                      'path': '../../guided-demo/03-enrich-guardrails.md'}]},
+                      'path': '../../guided-demo/review-guardrails.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1550,7 +1562,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'Notebook exit behavior is not supported in the current runtime.',
                             'The caller passed a warning result that should not stop execution.'],
   'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'}]},
+                      'path': '../../guided-demo/run-pipeline.md'}]},
  {'kind': 'function',
   'module': 'pipeline',
   'function_type': 'callable',
@@ -1579,7 +1591,7 @@ PUBLIC_SYMBOL_DOCS = [
                             'Spark cannot convert evidence rows to the target schema.',
                             'The caller lacks metadata write permission.'],
   'related_guides': [{'title': 'Pipeline Execution',
-                      'path': '../../guided-demo/02-run-pipeline.md'},
+                      'path': '../../guided-demo/run-pipeline.md'},
                      {'title': 'Metadata Tables',
                       'path': '../../reference/metadata.md'}]},
  {'kind': 'function',
@@ -1596,7 +1608,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': [],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Evaluates freshness using a metadata-backed guardrail rule so active '
                       'freshness intent from governance is enforced during pipeline execution.',
   'when_to_use': 'Use in 02_pipeline when active freshness rules from METADATA_GUARDRAIL '
@@ -1618,18 +1630,18 @@ PUBLIC_SYMBOL_DOCS = [
   'symbol_name': 'widget_enrich_table_metadata',
   'template_notebook': '01_governance',
   'template_segment': 'Guardrail governance review',
-  'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.',
+  'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.',
   'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
   'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
   'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
   'related_functions': ['widget_view_catalogue'],
-  'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
+  'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
   'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
   'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
-  'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint'],
-  'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.',
-  'common_failure_causes': ['The metadata catalogue has no logical tables.',
-                            'A table or current column lacks its canonical metadata key.',
+  'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue'],
+  'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.',
+  'common_failure_causes': ['The active environment has no logical tables in the metadata catalogue.',
+                            'A selected table lacks table_id or a current column lacks column_id.',
                             'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},
 
  {'kind': 'function',
@@ -1703,7 +1715,7 @@ PUBLIC_SYMBOL_DOCS = [
   'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
              'the helper.',
   'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
-  'related_functions': [],
+  'related_functions': ['widget_review_guardrail_governance'],
   'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',
   'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',
   'do_not_use_when': 'Do not use for runtime DQ enforcement or catalogue profiling.',
@@ -1716,7 +1728,35 @@ PUBLIC_SYMBOL_DOCS = [
                             'The metadata target cannot be written.']},
 
 
- ]
+ {'kind': 'function',
+  'module': 'widgets.widget_review_guardrail_governance',
+  'function_type': 'callable',
+  'summary_override': 'Render interactive controls for reviewing proposed and bypassed guardrail '
+                      'rules.',
+  'symbol_name': 'widget_review_guardrail_governance',
+  'template_segment': 'Optional governance review controls',
+  'use_when': 'Use this public FabricOps helper from the matching notebook workflow when that '
+              'guardrail authoring, governance, or display step is required.',
+  'parameters': 'See the source docstring for the notebook runtime, Spark session, state, and '
+                'record parameters accepted by this helper.',
+  'returns': 'Notebook-facing state, records, display rows, or persisted metadata rows produced by '
+             'the helper.',
+  'raises': 'Raises validation, widget, Spark, or metadata routing errors when required inputs are missing or the configured metadata lakehouse cannot be read or written.',
+  'related_functions': ['widget_review_guardrail_governance'],
+  'expanded_purpose': 'Renders governance review controls for reviewing '
+                      'proposed or bypass-active enrichment and guardrail rules, and applying approve, reject, or '
+                      'supersede actions.',
+  'when_to_use': 'Use directly only when explicitly adopting the preview review controls; this helper is not a required stage in the current seven-stage template workflow.',
+  'do_not_use_when': 'Do not use for automatic pipeline enforcement or profiles '
+                     'generation; it is an interactive governance review widget.',
+  'glossary_terms': ['guardrails', 'metadata lakehouse', 'notebook template'],
+  'return_interpretation': 'The widget returns controls, current rule history, and action helpers '
+                           'that write to enrichment or guardrail rule tables when '
+                           'invoked.',
+  'common_failure_causes': ['No target state is selected.',
+                            'No proposed or bypassed rules are available for review.',
+                            'Unsupported governance action is selected.',
+                            'The metadata target cannot be written.']}]
 
 FOCUSED_FUNCTION_DOC_UPDATES = {
     "setup_metadata_tables": {
@@ -2203,7 +2243,32 @@ PUBLIC_SYMBOL_DOCS_SUPPLEMENTAL = {'setup_notebook': {'expanded_purpose': 'Valid
                             'common_failure_causes': ['Rule parameters are invalid for the selected DQ type.',
                                                       'No applicable column is selected.',
                                                       'The metadata target cannot be written.']},
- }
+ 'widget_review_guardrail_governance': {'expanded_purpose': 'Renders governance review controls '
+                                                            'for reviewing '
+                                                            'proposed or bypass-active enrichment and guardrail '
+                                                            'rules, and applying approve, reject, '
+                                                            'or supersede actions.',
+                                        'when_to_use': 'Use in 01_governance after selecting a '
+                                                       'guardrail target to perform human review '
+                                                       'of enrichment and guardrail rule intent.',
+                                        'do_not_use_when': 'Do not use for automatic pipeline '
+                                                           'enforcement or profiles '
+                                                           'generation; it is an interactive '
+                                                           'governance review widget.',
+                                        'glossary_terms': ['guardrails',
+                                                           'metadata lakehouse',
+                                                           'notebook template'],
+                                        'return_interpretation': 'The widget returns controls, '
+                                                                 'current rule history, and action '
+                                                                 'helpers that write to guardrail '
+                                                                 'rules or guardrail rule '
+                                                                 'tables when invoked.',
+                                        'common_failure_causes': ['No target state is selected.',
+                                                                  'No proposed or bypassed rules '
+                                                                  'are available for review.',
+                                                                  'Unsupported governance action is selected.',
+                                                                  'The metadata target cannot be '
+                                                                  'written.']},}
 
 RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                      'path': '../../notebook-templates.md'},
@@ -2238,15 +2303,15 @@ RELATED_GUIDES_BY_SYMBOL = {'setup_notebook': [{'title': 'Templates',
                        {'title': 'Governance Review',
                         'path': '../../guided-demo/03-enrich-guardrails.md'}],
  'enforce_freshness': [{'title': 'Pipeline Execution',
-                        'path': '../../guided-demo/02-run-pipeline.md'}],
+                        'path': '../../guided-demo/run-pipeline.md'}],
  'enforce_profile_behavior': [{'title': 'Pipeline Execution',
-                               'path': '../../guided-demo/02-run-pipeline.md'},
+                               'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Governance Review',
-                               'path': '../../guided-demo/03-enrich-guardrails.md'}],
+                               'path': '../../guided-demo/review-guardrails.md'}],
  'stop_if_failed': [{'title': 'Pipeline Execution',
-                     'path': '../../guided-demo/02-run-pipeline.md'}],
+                     'path': '../../guided-demo/run-pipeline.md'}],
  'write_catalogue_evidence': [{'title': 'Pipeline Execution',
-                               'path': '../../guided-demo/02-run-pipeline.md'},
+                               'path': '../../guided-demo/run-pipeline.md'},
                               {'title': 'Metadata Tables',
                                'path': '../../reference/metadata.md'}],}
 
