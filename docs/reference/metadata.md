@@ -160,12 +160,17 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__relationship">
       <code>METADATA_DATA_CATALOGUE.table_id</code>
       <span class="metadata-table-card__cardinality">1 → N</span>
-      <code>METADATA_ENRICHMENT.metadata_key</code>
+      <code>METADATA_ENRICHMENT.table_id</code>
     </span>
     <span class="metadata-table-card__relationship">
       <code>METADATA_DATA_CATALOGUE.column_id</code>
       <span class="metadata-table-card__cardinality">1 → N</span>
-      <code>METADATA_ENRICHMENT.metadata_key</code>
+      <code>METADATA_ENRICHMENT.column_id</code>
+    </span>
+    <span class="metadata-table-card__relationship">
+      <code>METADATA_DATA_CATALOGUE.table_id</code>
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <code>METADATA_DATA_ACCESS.table_id</code>
     </span>
     <span class="metadata-table-card__relationship">
       <code>METADATA_DATA_CATALOGUE.table_id</code>
@@ -319,7 +324,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__purpose">Add business and governance context to the data.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One appended enrichment value for one table or column identity.</span>
+    <span>One appended enrichment value for one table or column identity in one environment.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -330,12 +335,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__relationship">
       <code>METADATA_DATA_CATALOGUE.table_id</code>
       <span class="metadata-table-card__cardinality">1 → N</span>
-      <code>METADATA_ENRICHMENT.metadata_key</code>
+      <code>METADATA_ENRICHMENT.table_id</code>
     </span>
     <span class="metadata-table-card__relationship">
       <code>METADATA_DATA_CATALOGUE.column_id</code>
       <span class="metadata-table-card__cardinality">1 → N</span>
-      <code>METADATA_ENRICHMENT.metadata_key</code>
+      <code>METADATA_ENRICHMENT.column_id</code>
     </span>
   </span>
 </a>
@@ -344,18 +349,22 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__title">METADATA_DATA_ACCESS</span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See who can use the data and how it can be used.</span>
+  <span class="metadata-table-card__purpose">See who has row-level access to the data.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One access review record for one user and governed scope.</span>
+    <span>One RLS assignment for one user and one Catalogue table in one environment.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span>Not defined in the current implementation.</span>
+    <span><code>access_id</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-label">Relationships</span>
-    <span class="metadata-table-card__empty">No immediate logical relationship is defined.</span>
+    <span class="metadata-table-card__relationship">
+      <code>METADATA_DATA_CATALOGUE.table_id</code>
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <code>METADATA_DATA_ACCESS.table_id</code>
+    </span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata/metadata_guardrail.md" aria-label="Open METADATA_GUARDRAIL schema">

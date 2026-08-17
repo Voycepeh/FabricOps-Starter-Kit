@@ -4,32 +4,34 @@ Add business and governance context to the data.
 
 ## Model
 
-**Grain:** One appended enrichment value for one table or column identity.
+**Grain:** One appended enrichment value for one table or column identity in one environment.
 
 **Primary key:** `enrichment_id`
 
 **Relationships:**
 
-* `metadata_key` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id.
-* `metadata_key` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id.
+* `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment.
+* `column_id` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty.
 
 ## Column summary
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 13 |
-| Business columns | 5 |
+| Total columns | 15 |
+| Business columns | 7 |
 | Audit columns | 8 |
 
 ## Implemented schema
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `enrichment_id` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Identifier stored for `enrichment_id`. |
-| `enrichment_level` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `enrichment_level`. |
-| `metadata_key` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `metadata_key`. |
-| `enrichment_type` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Enrichment type recorded for the row. |
-| `value` | `string` | `fabricops_kit.widgets.shared.build_enrichment_records` | Metadata Enrichment field `value`. |
+| `enrichment_id` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Identifier stored for `enrichment_id`. |
+| `table_id` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Identifier for the accessed table or object. |
+| `column_id` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Identifier stored for `column_id`. |
+| `environment_name` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Environment name recorded for the metadata row. |
+| `enrichment_level` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Metadata Enrichment field `enrichment_level`. |
+| `enrichment_type` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Enrichment type recorded for the row. |
+| `value` | `string` | `fabricops_kit.widgets.enrichment_shared.build_enrichment_records` | Metadata Enrichment field `value`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

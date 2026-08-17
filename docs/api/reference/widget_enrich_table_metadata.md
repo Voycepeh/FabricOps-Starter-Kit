@@ -11,19 +11,18 @@ Browse catalogue history and maintain metadata enrichment.
 
 <div class="reference-docstring-intro" markdown="1">
 
-Select a logical table, browse its latest and historical columns, and
-maintain table- or column-level enrichment. Current columns are editable;
-columns absent from the latest schema fingerprint are shown as removed and
-remain read-only for historical reference.
+Select a current logical table, browse its current and inactive Catalogue
+columns, and maintain environment-specific table- or column-level
+enrichment. Inactive columns remain visible as read-only history.
 
 </div>
 
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_enrich_table_metadata.py:26`
+`fabricops_kit/widgets/widget_enrich_table_metadata.py:27`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L26-L308">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_enrich_table_metadata.py#L27-L392">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -66,7 +65,7 @@ def widget_enrich_table_metadata(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark_session` | `Any` | Yes | Fabric Spark session used to read the canonical catalogue and append enrichment records through the configured metadata target. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to read Catalogue and append Enrichment rows through the configured metadata target. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active Fabric context initialized by ``00_env_config``. |
 
 ## Returns
@@ -75,7 +74,7 @@ Standalone three-pane browser state with table and column selectors, draft-aware
 
 ### Return interpretation
 
-Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.
+Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.
 
 ## Raises / Errors
 
@@ -83,8 +82,8 @@ Raises clear catalogue identity, metadata read, or metadata routing errors when 
 
 ### Common failure causes
 
-- The metadata catalogue has no logical tables.
-- A table or current column lacks its canonical metadata key.
+- The active environment has no logical tables in the metadata catalogue.
+- A selected table lacks table_id or a current column lacks column_id.
 - Metadata lakehouse reads or writes cannot be routed through 00_env_config.
 
 ## Notes
@@ -92,11 +91,10 @@ Raises clear catalogue identity, metadata read, or metadata routing errors when 
 <div class="reference-docstring-notes" markdown="1">
 
 Table enrichment supports ``Description`` and ``Classification``. Column
-enrichment additionally supports ``Personal_identifier``. Existing values,
-including values removed from current dropdown configuration, are preserved.
-Saving appends only non-empty changed values to ``METADATA_ENRICHMENT``;
-repeated unchanged saves produce no write. This workflow is independent of
-guardrail target selection and keeps unsaved drafts in memory while open.
+enrichment additionally supports ``Personal_identifier``. Saving appends
+only non-empty changed values to ``METADATA_ENRICHMENT`` using ``table_id``,
+optional ``column_id``, and ``environment_name``. Repeated unchanged saves
+produce no write.
 
 </div>
 
