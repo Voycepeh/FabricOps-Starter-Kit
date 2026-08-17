@@ -2,7 +2,7 @@ name: Apply metadata reference cards
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
 
 permissions:
   contents: write
@@ -21,22 +21,13 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('scripts/generate_individual_function_reference_pages.py')
           text = path.read_text(encoding='utf-8')
 
-          old = '''def parse_metadata_reference_overview() -> list[str]:
-              """Parse curated Metadata Table Overview content from reference docs metadata."""
-              namespace = runpy.run_path(str(DOCS_METADATA_PATH))
-              intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
-              caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
-              diagram = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM", "")).strip()
-              agreement_contract = str(namespace.get("METADATA_REFERENCE_AGREEMENT_CONTRACT_EXPLANATION", "")).strip()
-              if not intro or not caption or not diagram or not agreement_contract:
-                  raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
-              return [intro, "", caption, "", diagram, "", agreement_contract]
-          '''.replace('          ', '')
-          new = '''def parse_metadata_reference_overview() -> list[str]:
+          overview_pattern = r'''def parse_metadata_reference_overview\(\) -> list\[str\]:\n.*?\n\n\ndef parse_metadata_reference_contract'''
+          overview_replacement = '''def parse_metadata_reference_overview() -> list[str]:
               """Parse the concise Metadata Table Overview content."""
               namespace = runpy.run_path(str(DOCS_METADATA_PATH))
               intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
@@ -45,18 +36,15 @@ jobs:
               if not intro or not caption or not diagram:
                   raise RuntimeError("Metadata reference overview content must include intro, caption, and diagram")
               return [intro, "", caption, "", diagram]
-          '''.replace('          ', '')
-          if old not in text:
-              raise SystemExit('Could not find metadata overview parser block')
-          text = text.replace(old, new, 1)
 
-          anchor = '''def _metadata_table_purpose(table_name: str, table_purposes: dict[str, str]) -> str:
-              """Return generated metadata table purpose text."""
-              return table_purposes.get(table_name, f"{_metadata_table_title(table_name)} metadata table.")
-          '''.replace('          ', '')
-          addition = r'''
 
-          def _metadata_index_key_html(fields: list[str]) -> str:
+def parse_metadata_reference_contract'''.replace('              ', '')
+          text, count = re.subn(overview_pattern, overview_replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'Expected one metadata overview parser block, found {count}')
+
+          helper_marker = 'def _metadata_column_counts(\n'
+          helpers = r'''def _metadata_index_key_html(fields: list[str]) -> str:
               """Return compact HTML for a metadata card primary key."""
               if not fields:
                   return "Not defined in the current implementation."
@@ -65,7 +53,7 @@ jobs:
               )
 
 
-          def _metadata_index_relationships(
+def _metadata_index_relationships(
               table_name: str,
               table_models: dict[str, dict[str, Any]],
           ) -> list[tuple[str, str, str]]:
@@ -94,7 +82,7 @@ jobs:
               return relationships
 
 
-          def render_metadata_reference_index(
+def render_metadata_reference_index(
               table_models: dict[str, dict[str, Any]],
               reference_order: list[str],
               table_purposes: dict[str, str],
@@ -164,53 +152,37 @@ jobs:
                   lines.extend(['  </span>', '</a>'])
               lines.extend(['</div>', ''])
               return "\n".join(lines).rstrip() + "\n"
-          '''.replace('          ', '')
-          if anchor not in text:
-              raise SystemExit('Could not find metadata purpose helper anchor')
-          text = text.replace(anchor, anchor + addition, 1)
 
-          old_index_start = '''    index_lines = [
-              "# List of Metadata Tables",
-              "",
-              *parse_metadata_reference_overview(),
-              "",
-          ]
-          '''.replace('          ', '')
-          if old_index_start not in text:
-              raise SystemExit('Could not find metadata index start block')
-          text = text.replace(old_index_start, '', 1)
 
-          old_card_block = '''        index_lines.extend([
-                  f"## [{table_name}](metadata/{slug}.md)",
-                  "",
-                  purpose,
-                  "",
-                  f"**Grain:** {model['grain']}",
-                  "",
-                  f"**Primary key:** {_model_key_text(model['primary_key'])}",
-                  "",
-                  "**Relationships:**",
-                  "",
-                  *_relationship_lines(model),
-                  "",
-                  f"[View full schema](metadata/{slug}.md)",
-                  "",
-                  "---",
-                  "",
-              ])
+'''.replace('              ', '')
+          if helper_marker not in text:
+              raise SystemExit('Could not find metadata column-count helper marker')
+          text = text.replace(helper_marker, helpers + helper_marker, 1)
 
-          '''.replace('          ', '')
-          if old_card_block not in text:
-              raise SystemExit('Could not find old metadata index table block')
-          text = text.replace(old_card_block, '', 1)
+          text, count = re.subn(
+              r'\n    index_lines = \[\n        "# List of Metadata Tables",\n        "",\n        \*parse_metadata_reference_overview\(\),\n        "",\n    \]\n',
+              '\n',
+              text,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f'Expected one metadata index start block, found {count}')
 
-          old_write = '''    METADATA_REFERENCE_INDEX_PATH.write_text("\\n".join(index_lines).rstrip() + "\\n", encoding="utf-8")
-          '''.replace('          ', '')
+          text, count = re.subn(
+              r'\n        index_lines\.extend\(\[\n.*?\n        \]\)\n\n        rows = metadata_table_schema_rows',
+              '\n        rows = metadata_table_schema_rows',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'Expected one metadata index card block, found {count}')
+
+          old_write = '    METADATA_REFERENCE_INDEX_PATH.write_text("\\n".join(index_lines).rstrip() + "\\n", encoding="utf-8")'
           new_write = '''    METADATA_REFERENCE_INDEX_PATH.write_text(
               render_metadata_reference_index(table_models, reference_order, table_purposes),
               encoding="utf-8",
-          )
-          '''.replace('          ', '')
+          )'''.replace('              ', '')
           if old_write not in text:
               raise SystemExit('Could not find metadata index write block')
           text = text.replace(old_write, new_write, 1)
@@ -239,8 +211,23 @@ jobs:
           python -m py_compile scripts/generate_individual_function_reference_pages.py
           grep -q 'class="metadata-table-card"' docs/reference/metadata.md
           grep -q 'METADATA_DATA_CATALOGUE.table_id' docs/reference/metadata.md
+          grep -q '1 → N' docs/reference/metadata.md
           if grep -q 'View full schema' docs/reference/metadata.md; then exit 1; fi
           if grep -q '## Data Agreement versus Data Contract' docs/reference/metadata.md; then exit 1; fi
+          cp docs/reference/metadata.md /tmp/metadata-before.md
+          python - <<'PY'
+          from pathlib import Path
+          import runpy
+          generator = runpy.run_path('scripts/generate_individual_function_reference_pages.py', run_name='metadata_reference_generator')
+          metadata = runpy.run_path('scripts/reference_docs_metadata.py')
+          content = generator['render_metadata_reference_index'](
+              metadata['METADATA_TABLE_MODELS'],
+              metadata['METADATA_REFERENCE_ORDER'],
+              metadata['METADATA_TABLE_PURPOSES'],
+          )
+          Path('docs/reference/metadata.md').write_text(content, encoding='utf-8')
+          PY
+          cmp /tmp/metadata-before.md docs/reference/metadata.md
           git diff --check
 
       - name: Remove temporary workflow and commit
