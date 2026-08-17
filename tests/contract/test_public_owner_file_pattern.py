@@ -17,6 +17,7 @@ FORBIDDEN_BATCH_FILENAMES = {
     "resolvers.py",
 }
 
+# Specialized shared-helper modules are support surfaces, not public owner files.
 SHARED_HELPER_FILENAMES = {
     "__init__.py",
     "shared.py",
