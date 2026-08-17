@@ -1,0 +1,41 @@
+name: Stage 3 reference refresh
+
+on:
+  push:
+    branches:
+      - hotfix/stage3-metadata-reference-contract
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: hotfix/stage3-metadata-reference-contract
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - run: uv sync --frozen --extra docs --extra dev
+
+      - name: Regenerate owned Stage 3 references
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
+
+      - name: Remove temporary workflow and commit generated outputs
+        run: |
+          rm .github/workflows/stage3-reference-refresh.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Refresh Stage 3 generated references"
+          git push origin HEAD:hotfix/stage3-metadata-reference-contract
