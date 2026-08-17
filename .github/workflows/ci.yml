@@ -13,6 +13,158 @@ permissions:
   contents: read
 
 jobs:
+  agent-unused-cleanup:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/remove-confirmed-unused-helpers' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: agent/remove-confirmed-unused-helpers
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Apply focused cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          generator = Path('scripts/generate_public_function_call_flows_json.py')
+          text = generator.read_text(encoding='utf-8')
+          old = '''def build_global_source_references(
+              modules: dict[str, ModuleInfo],
+              functions: dict[str, FunctionInfo],
+          ) -> dict[str, set[str]]:
+              """Build inbound package-source references for every discovered function."""
+              name_index = build_name_index(functions)
+              inbound: dict[str, set[str]] = {qn: set() for qn in functions}
+              for caller_qn, info in functions.items():
+                  for target_qn in called_function_qns(info, modules, functions, name_index):
+                      if target_qn != caller_qn:
+                          inbound[target_qn].add(caller_qn)
+              for module in modules.values():
+                  module_ref = f"{module.module_name}::<module>"
+                  for target_qn in _module_level_reference_qns(module, functions, name_index):
+                      inbound[target_qn].add(module_ref)
+              return inbound
+          '''
+          new = '''def _function_body_reference_qns(
+              info: FunctionInfo,
+              modules: dict[str, ModuleInfo],
+              functions: dict[str, FunctionInfo],
+              name_index: dict[str, set[str]],
+          ) -> set[str]:
+              """Return package functions referenced as values anywhere in a function body."""
+              module_name = ".".join(info.qualified_name.split(".")[:-1])
+              module = modules[module_name]
+              references: set[str] = set()
+              for node in ast.walk(info.node):
+                  if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+                      references.update(resolve_name(node.id, module, functions, name_index))
+                  elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+                      module_qn = module.module_aliases.get(node.value.id)
+                      if module_qn:
+                          candidate = f"{module_qn}.{node.attr}"
+                          if candidate in functions:
+                              references.add(candidate)
+              return references
+
+
+          def build_global_source_references(
+              modules: dict[str, ModuleInfo],
+              functions: dict[str, FunctionInfo],
+          ) -> dict[str, set[str]]:
+              """Build inbound package-source references for every discovered function."""
+              name_index = build_name_index(functions)
+              inbound: dict[str, set[str]] = {qn: set() for qn in functions}
+              for caller_qn, info in functions.items():
+                  for target_qn in _function_body_reference_qns(info, modules, functions, name_index):
+                      if target_qn != caller_qn:
+                          inbound[target_qn].add(caller_qn)
+              for module in modules.values():
+                  module_ref = f"{module.module_name}::<module>"
+                  for target_qn in _module_level_reference_qns(module, functions, name_index):
+                      inbound[target_qn].add(module_ref)
+              return inbound
+          '''
+          if old not in text:
+              raise SystemExit('Expected build_global_source_references block not found')
+          generator.write_text(text.replace(old, new), encoding='utf-8')
+
+          test_path = Path('tests/unit/test_public_function_unused_classification.py')
+          text = test_path.read_text(encoding='utf-8')
+          text = text.replace(
+              '"def detached_root():\\n"\n        "    return detached_helper()\\n\\n"',
+              '"def detached_root():\\n"\n        "    detached_helper()\\n"\n        "    return callback_consumer()\\n\\n"',
+          )
+          text = text.replace(
+              '"def callback_only():\\n"\n        "    return None\\n\\n"\n        "CALLBACKS = {\'callback\': callback_only}\\n\\n"',
+              '"def callback_only():\\n"\n        "    return None\\n\\n"\n        "CALLBACKS = {\'callback\': callback_only}\\n\\n"\n        "def body_callback_only():\\n"\n        "    return None\\n\\n"\n        "def callback_consumer():\\n"\n        "    return {\'label_fn\': body_callback_only}\\n\\n"',
+          )
+          text = text.replace(
+              'assert {"detached_helper", "callback_only", "__getattr__"} <= detached_names',
+              'assert {"detached_helper", "callback_only", "callback_consumer", "body_callback_only", "__getattr__"} <= detached_names',
+          )
+          text = text.replace(
+              'assert {"detached_helper", "callback_only"} <= source_referenced_names',
+              'assert {"detached_helper", "callback_only", "callback_consumer", "body_callback_only"} <= source_referenced_names',
+          )
+          text = text.replace(
+              'assert payload["summary"]["detached_function_count"] == 3',
+              'assert payload["summary"]["detached_function_count"] == 5',
+          )
+          text = text.replace(
+              'callback_only = "fabricops_kit.internal.callback_only"\n    assert inbound[detached_helper] == {"fabricops_kit.internal.detached_root"}\n    assert inbound[callback_only] == {"fabricops_kit.internal::<module>"}',
+              'callback_only = "fabricops_kit.internal.callback_only"\n    callback_consumer = "fabricops_kit.internal.callback_consumer"\n    body_callback_only = "fabricops_kit.internal.body_callback_only"\n    assert inbound[detached_helper] == {"fabricops_kit.internal.detached_root"}\n    assert inbound[callback_only] == {"fabricops_kit.internal::<module>"}\n    assert inbound[callback_consumer] == {"fabricops_kit.internal.detached_root"}\n    assert inbound[body_callback_only] == {"fabricops_kit.internal.callback_consumer"}',
+          )
+          test_path.write_text(text, encoding='utf-8')
+
+          dead_test = Path('tests/contract/test_dead_internal_helpers.py')
+          text = dead_test.read_text(encoding='utf-8')
+          text = text.replace(
+              '    "_now_audit_timestamp": "Legacy audit timestamp helper retained for metadata compatibility but not currently called.",\n',
+              '',
+          )
+          dead_test.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate focused changes and regenerate
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          uv run ruff check scripts/generate_public_function_call_flows_json.py tests/unit/test_public_function_unused_classification.py tests/contract/test_dead_internal_helpers.py src/fabricops_kit/config/audit.py
+          uv run pytest tests/unit/test_public_function_unused_classification.py tests/contract/test_dead_internal_helpers.py
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git status --short
+
+      - name: Commit focused changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add scripts/generate_public_function_call_flows_json.py tests/unit/test_public_function_unused_classification.py tests/contract/test_dead_internal_helpers.py docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "tighten unused function classification"
+          git push origin HEAD:agent/remove-confirmed-unused-helpers
+
   validate:
     runs-on: ubuntu-latest
     env:
