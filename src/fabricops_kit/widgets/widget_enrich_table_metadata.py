@@ -8,7 +8,8 @@ from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core
-from fabricops_kit.widgets import shared as _enrichment
+from fabricops_kit.widgets import enrichment_shared as _enrichment
+from fabricops_kit.widgets import shared as _widget_shared
 
 
 def _rows(value: Any) -> list[dict[str, Any]]:
@@ -28,18 +29,17 @@ def widget_enrich_table_metadata(
     spark_session: Any,
     context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Browse catalogue history and maintain table or column enrichment.
+    """Browse one environment's Catalogue and maintain table or column enrichment.
 
-    Select a logical table, browse its latest and historical columns, and
-    maintain table- or column-level enrichment. Current columns are editable;
-    columns absent from the latest schema fingerprint are shown as removed and
-    remain read-only for historical reference.
+    Select a current logical table, browse its current and inactive Catalogue
+    columns, and maintain environment-specific table- or column-level
+    enrichment. Inactive columns remain visible as read-only history.
 
     Parameters
     ----------
     spark_session : Any
-        Fabric Spark session used to read the canonical catalogue and append
-        enrichment records through the configured metadata target.
+        Fabric Spark session used to read Catalogue and append Enrichment rows
+        through the configured metadata target.
     context : dict[str, Any], optional
         Advanced override for the active Fabric context initialized by
         ``00_env_config``.
@@ -47,24 +47,23 @@ def widget_enrich_table_metadata(
     Returns
     -------
     dict[str, Any]
-        Browser controls and the selected table state, draft store,
+        Browser controls and selected table state, draft store,
         ``build_records`` callback, and ``save`` callback.
 
     Raises
     ------
     ValueError
-        If catalogue rows lack a canonical table or current-column metadata key.
+        If the current environment has no usable Catalogue table identity.
     RuntimeError
-        If catalogue or enrichment metadata cannot be read or written.
+        If Catalogue or Enrichment metadata cannot be read or written.
 
     Notes
     -----
     Table enrichment supports ``Description`` and ``Classification``. Column
-    enrichment additionally supports ``Personal_identifier``. Existing values,
-    including values removed from current dropdown configuration, are preserved.
-    Saving appends only non-empty changed values to ``METADATA_ENRICHMENT``;
-    repeated unchanged saves produce no write. This workflow is independent of
-    guardrail target selection and keeps unsaved drafts in memory while open.
+    enrichment additionally supports ``Personal_identifier``. Saving appends
+    only non-empty changed values to ``METADATA_ENRICHMENT`` using ``table_id``,
+    optional ``column_id``, and ``environment_name``. Repeated unchanged saves
+    produce no write.
 
     Examples
     --------
@@ -99,29 +98,40 @@ def widget_enrich_table_metadata(
     except Exception as exc:
         raise RuntimeError(f"Unable to read METADATA_ENRICHMENT: {exc}") from exc
 
-    table_options = _enrichment.catalogue_table_options(catalogue_rows)
+    table_options = _enrichment.catalogue_table_options(catalogue_rows, environment_name=env)
     if not catalogue_rows:
         raise ValueError("METADATA_DATA_CATALOGUE has no catalogue rows available.")
     if not table_options:
-        raise ValueError("METADATA_DATA_CATALOGUE has no logical tables with metadata_table_key.")
-    current_values = _enrichment.latest_enrichment_values(enrichment_rows)
-    classification_options, personal_options, _, _ = _enrichment.enrichment_control_options(config)
-    drafts: dict[tuple[str, str], dict[str, str]] = {}
-    originals: dict[tuple[str, str], dict[str, str]] = {}
-    selected: dict[str, Any] = {"table_key": "", "item_token": ""}
-    state_holder: dict[str, Any] = {}
+        raise ValueError(f"METADATA_DATA_CATALOGUE has no active table rows for environment {env!r}.")
+    current_values = _enrichment.latest_enrichment_values(enrichment_rows, environment_name=env)
+    classification_options, personal_options, _, _ = _widget_shared.enrichment_control_options(config)
+    drafts: dict[tuple[str, str, str], dict[str, str]] = {}
+    originals: dict[tuple[str, str, str], dict[str, str]] = {}
+    selected: dict[str, Any] = {"table_id": "", "item_token": ""}
+    state_holder: dict[str, Any] = {"state": {}}
     detail_state = {"is_rendering": False}
 
     def pane_layout(basis: str) -> Any:
         return widgets.Layout(
             flex=f"1 1 {basis}", min_width="220px", max_width="100%", overflow="auto", height="560px"
         )
-    table_search = widgets.Text(description="Search tables", placeholder="Table, layer, schema, environment…", layout=widgets.Layout(width="100%"))
-    table_select = widgets.Select(options=[], description="Logical table", layout=widgets.Layout(width="100%", height="360px"))
+
+    table_search = widgets.Text(
+        description="Search tables",
+        placeholder="Table, layer, schema…",
+        layout=widgets.Layout(width="100%"),
+    )
+    table_select = widgets.Select(
+        options=[], description="Logical table", layout=widgets.Layout(width="100%", height="360px")
+    )
     table_summary = widgets.HTML(value="")
-    fingerprint_summary = widgets.HTML(value="")
-    column_search = widgets.Text(description="Search columns", placeholder="Column name or type…", layout=widgets.Layout(width="100%"))
-    column_select = widgets.Select(options=[], description="Table / columns", layout=widgets.Layout(width="100%", height="390px"))
+    catalogue_summary = widgets.HTML(value="")
+    column_search = widgets.Text(
+        description="Search columns", placeholder="Column name or status…", layout=widgets.Layout(width="100%")
+    )
+    column_select = widgets.Select(
+        options=[], description="Table / columns", layout=widgets.Layout(width="100%", height="390px")
+    )
     detail_title = widgets.HTML(value="")
     technical_detail = widgets.HTML(value="")
     description = widgets.Textarea(description="Description", rows=5, layout=widgets.Layout(width="100%"))
@@ -131,24 +141,29 @@ def widget_enrich_table_metadata(
     unsaved = widgets.HTML(value="")
     controls = {"Description": description, "Classification": classification, "Personal_identifier": personal}
 
-    def selected_identity() -> tuple[str, str]:
+    def selected_identity() -> tuple[str, str, str]:
         token = str(selected.get("item_token") or "")
-        level, _, key = token.partition(":")
-        return level, key
+        level, _, item_id = token.partition(":")
+        table_id = str(selected.get("table_id") or "")
+        return level, table_id, "" if level == "table" else item_id
 
     def values_from_controls(level: str) -> dict[str, str]:
-        names = ("Description", "Classification") if level == "table" else ("Description", "Classification", "Personal_identifier")
+        names = (
+            ("Description", "Classification")
+            if level == "table"
+            else ("Description", "Classification", "Personal_identifier")
+        )
         return {name: str(controls[name].value or "") for name in names}
 
     def remember_draft(*_: Any) -> None:
         if detail_state["is_rendering"]:
             return
-        level, key = selected_identity()
-        if not level or not key or controls["Description"].disabled:
+        level, table_id, column_id = selected_identity()
+        identity = (level, table_id, column_id)
+        if not level or not table_id or controls["Description"].disabled:
             return
-        drafts[(level, key)] = values_from_controls(level)
-        changed = drafts[(level, key)] != originals.get((level, key), {})
-        unsaved.value = "<b>Unsaved changes</b>" if changed else ""
+        drafts[identity] = values_from_controls(level)
+        unsaved.value = "<b>Unsaved changes</b>" if drafts[identity] != originals.get(identity, {}) else ""
 
     def options_with_current(configured: list[str], current: str) -> list[str]:
         return ["", *dict.fromkeys([*[str(value) for value in configured if str(value)], *([current] if current else [])])]
@@ -158,22 +173,25 @@ def widget_enrich_table_metadata(
         if not token:
             return
         selected["item_token"] = token
-        level, key = selected_identity()
+        level, table_id, column_id = selected_identity()
         browser = state_holder["state"]
         if level == "table":
-            item = {"column_name": browser["table_name"], "status": "current", "data_type": ""}
+            item = {"column_name": browser["table_name"], "status": "current"}
             loaded = browser["current_enrichment_values"]["table"]
         else:
-            item = next(row for row in browser["all_historical_columns"] if row["metadata_column_key"] == key)
+            item = next(row for row in browser["all_historical_columns"] if row["column_id"] == column_id)
             loaded = item["enrichment_values"]
-        originals.setdefault((level, key), dict(loaded))
-        values = drafts.get((level, key), originals[(level, key)])
+        identity = (level, table_id, column_id)
+        originals.setdefault(identity, dict(loaded))
+        values = drafts.get(identity, originals[identity])
         removed = item["status"] == "removed"
         detail_title.value = f"<h3>{html.escape(str(item['column_name'] or browser['table_name']))}</h3>"
+        identifier = table_id if level == "table" else column_id
         technical_detail.value = (
-            f"<small><b>Level:</b> {level} · <b>Metadata key:</b> {html.escape(str(key))}"
-            + (f" · <b>Data type:</b> {html.escape(str(item['data_type']))} · <b>Status:</b> {item['status']}" if level == "column" else "")
-            + "</small>"
+            f"<small><b>Level:</b> {level} · <b>{'Table' if level == 'table' else 'Column'} ID:</b> "
+            f"{html.escape(str(identifier))}"
+            + (f" · <b>Status:</b> {item['status']}" if level == "column" else "")
+            + f" · <b>Environment:</b> {html.escape(str(env))}</small>"
         )
         detail_state["is_rendering"] = True
         try:
@@ -189,11 +207,11 @@ def widget_enrich_table_metadata(
         finally:
             detail_state["is_rendering"] = False
         if removed:
-            unsaved.value = "This column is not part of the latest schema. Existing enrichment is shown for historical reference."
+            unsaved.value = "This column is inactive in the current environment. Existing enrichment is read-only."
         else:
             unsaved.value = (
                 "<b>Unsaved changes</b>"
-                if (level, key) in drafts and drafts[(level, key)] != originals[(level, key)]
+                if identity in drafts and drafts[identity] != originals[identity]
                 else ""
             )
 
@@ -202,13 +220,22 @@ def widget_enrich_table_metadata(
         if not browser:
             return
         query = str(column_search.value or "").strip().casefold()
-        options = [(f"▣ {browser['table_name']} (Table)", f"table:{browser['metadata_table_key']}")]
+        options = [(f"▣ {browser['table_name']} (Table)", f"table:{browser['table_id']}")]
         for row in browser["all_historical_columns"]:
-            haystack = f"{row['column_name']} {row['data_type']} {row['status']}".casefold()
+            haystack = f"{row['column_name']} {row['status']}".casefold()
             if query and query not in haystack:
                 continue
-            suffix = "Current" if row["status"] == "current" else f"Removed · last observed {_display_time(row['last_observed_at'])}"
-            options.append((f"{'●' if row['status'] == 'current' else '○'} {row['column_name']} — {row['data_type']} — {suffix}", f"column:{row['metadata_column_key']}"))
+            suffix = (
+                "Current"
+                if row["status"] == "current"
+                else f"Inactive · last profiled {_display_time(row['last_observed_at'])}"
+            )
+            options.append(
+                (
+                    f"{'●' if row['status'] == 'current' else '○'} {row['column_name']} — {suffix}",
+                    f"column:{row['column_id']}",
+                )
+            )
         previous = str(selected.get("item_token") or "")
         column_select.options = options
         available = [value for _, value in options]
@@ -216,28 +243,40 @@ def widget_enrich_table_metadata(
         render_detail()
 
     def select_table(*_: Any) -> None:
-        key = str(table_select.value or "")
-        if not key:
+        table_id = str(table_select.value or "")
+        if not table_id:
             return
-        selected["table_key"] = key
+        selected["table_id"] = table_id
         selected["item_token"] = ""
-        browser = _enrichment.catalogue_table_browser_state(catalogue_rows, key, current_values)
-        state_holder.setdefault("state", {}).clear()
+        browser = _enrichment.catalogue_table_browser_state(
+            catalogue_rows,
+            table_id,
+            environment_name=env,
+            current_values=current_values,
+        )
+        state_holder["state"].clear()
         state_holder["state"].update(browser)
-        table_summary.value = f"<b>{html.escape(str(browser['table_name']))}</b><br><small>{html.escape(str(key))}</small>"
-        fingerprint_summary.value = (
-            f"<b>Latest schema fingerprint:</b> {html.escape(str(browser['latest_schema_fingerprint']))}<br>"
-            f"<b>Recorded:</b> {_display_time(browser['latest_schema_timestamp'])} · "
-            f"<b>Current:</b> {len(browser['current_columns'])} · <b>Removed:</b> {len(browser['removed_columns'])}"
+        table_summary.value = (
+            f"<b>{html.escape(str(browser['table_name']))}</b><br>"
+            f"<small>{html.escape(table_id)} · {html.escape(str(env))}</small>"
+        )
+        catalogue_summary.value = (
+            f"<b>Current columns:</b> {len(browser['current_columns'])} · "
+            f"<b>Inactive columns:</b> {len(browser['removed_columns'])}"
         )
         refresh_column_options()
 
-    spark_read_count = 1
+    spark_read_count = 2
+
     def filter_tables(*_: Any) -> None:
         query = str(table_search.value or "").strip().casefold()
-        filtered = [row for row in table_options if not query or query in " ".join(str(value) for value in row.values()).casefold()]
-        options = [(row["label"], row["metadata_table_key"]) for row in filtered]
-        previous = str(selected.get("table_key") or "")
+        filtered = [
+            row
+            for row in table_options
+            if not query or query in " ".join(str(value) for value in row.values()).casefold()
+        ]
+        options = [(row["label"], row["table_id"]) for row in filtered]
+        previous = str(selected.get("table_id") or "")
         table_select.options = options
         values = [value for _, value in options]
         table_select.value = previous if previous in values else (values[0] if values else None)
@@ -246,16 +285,27 @@ def widget_enrich_table_metadata(
 
     def build_records() -> list[dict[str, Any]]:
         remember_draft()
-        level, key = selected_identity()
-        if not level or not key:
-            raise ValueError("The selected item is missing its canonical metadata key.")
+        level, table_id, column_id = selected_identity()
+        if not level or not table_id:
+            raise ValueError("The selected item is missing its canonical Catalogue identity.")
+        if level == "column" and not column_id:
+            raise ValueError("The selected column is missing column_id.")
         if controls["Description"].disabled:
             return []
-        values = drafts.get((level, key), values_from_controls(level))
-        before = originals.get((level, key), {})
+        identity = (level, table_id, column_id)
+        values = drafts.get(identity, values_from_controls(level))
+        before = originals.get(identity, {})
         inputs = [
-            {"enrichment_level": level, "metadata_key": key, "enrichment_type": name, "value": value}
-            for name, value in values.items() if value.strip() and value != before.get(name, "")
+            {
+                "enrichment_level": level,
+                "table_id": table_id,
+                "column_id": column_id,
+                "environment_name": env,
+                "enrichment_type": name,
+                "value": value,
+            }
+            for name, value in values.items()
+            if value.strip() and value != before.get(name, "")
         ]
         return _enrichment.build_enrichment_records(inputs, config=config, env=env)
 
@@ -269,13 +319,19 @@ def widget_enrich_table_metadata(
         except Exception as exc:
             status.value = f"Enrichment write failed: {html.escape(str(exc))}"
             return {"enrichment_records": []}
-        level, key = selected_identity()
-        original = originals[(level, key)]
+        level, table_id, column_id = selected_identity()
+        identity = (level, table_id, column_id)
+        original = originals[identity]
         for record in records:
             original[record["enrichment_type"]] = record["value"]
-            current_values[(level, key, record["enrichment_type"])] = dict(record)
-        drafts[(level, key)] = dict(original)
-        refreshed = _enrichment.catalogue_table_browser_state(catalogue_rows, selected["table_key"], current_values)
+            current_values[(level, table_id, column_id, record["enrichment_type"])] = dict(record)
+        drafts[identity] = dict(original)
+        refreshed = _enrichment.catalogue_table_browser_state(
+            catalogue_rows,
+            table_id,
+            environment_name=env,
+            current_values=current_values,
+        )
         state_holder["state"].clear()
         state_holder["state"].update(refreshed)
         status.value = f"Saved {len(records)} enrichment row(s) to METADATA_ENRICHMENT."
@@ -291,18 +347,46 @@ def widget_enrich_table_metadata(
     save_button.on_click(lambda _: save())
     filter_tables()
 
-    left = widgets.VBox([widgets.HTML("<h3>Tables</h3>"), table_search, table_select, table_summary], layout=pane_layout("25%"))
-    middle = widgets.VBox([widgets.HTML("<h3>Schema browser</h3>"), fingerprint_summary, column_search, column_select], layout=pane_layout("30%"))
-    right = widgets.VBox([detail_title, technical_detail, description, classification, personal, save_button, unsaved, status], layout=pane_layout("45%"))
-    page = widgets.VBox([
-        widgets.HTML("<h2>Enrich table metadata</h2><p>Select a logical table, browse current and historical columns, and maintain enrichment.</p>"),
-        widgets.HBox([left, middle, right], layout=widgets.Layout(width="100%", display="flex", flex_flow="row wrap", align_items="stretch", gap="12px")),
-    ], layout=widgets.Layout(width="100%", overflow="visible"))
+    left = widgets.VBox(
+        [widgets.HTML("<h3>Tables</h3>"), table_search, table_select, table_summary], layout=pane_layout("25%")
+    )
+    middle = widgets.VBox(
+        [widgets.HTML("<h3>Catalogue browser</h3>"), catalogue_summary, column_search, column_select],
+        layout=pane_layout("30%"),
+    )
+    right = widgets.VBox(
+        [detail_title, technical_detail, description, classification, personal, save_button, unsaved, status],
+        layout=pane_layout("45%"),
+    )
+    page = widgets.VBox(
+        [
+            widgets.HTML(
+                "<h2>Enrich table metadata</h2><p>Select a table in the current environment, browse its Catalogue columns, and maintain enrichment.</p>"
+            ),
+            widgets.HBox(
+                [left, middle, right],
+                layout=widgets.Layout(
+                    width="100%", display="flex", flex_flow="row wrap", align_items="stretch", gap="12px"
+                ),
+            ),
+        ],
+        layout=widgets.Layout(width="100%", overflow="visible"),
+    )
     ip.display(page)
     return {
-        "table_options": table_options, "table_search": table_search, "table_selector": table_select,
-        "column_search": column_search, "column_selector": column_select, "controls": controls,
-        "selected_table_state": state_holder["state"], "drafts": drafts, "original_values": originals,
-        "build_records": build_records, "save": save, "save_button": save_button, "status": status,
-        "spark_read_count": spark_read_count, "page": page,
+        "table_options": table_options,
+        "table_search": table_search,
+        "table_selector": table_select,
+        "column_search": column_search,
+        "column_selector": column_select,
+        "controls": controls,
+        "selected_table_state": state_holder["state"],
+        "drafts": drafts,
+        "original_values": originals,
+        "build_records": build_records,
+        "save": save,
+        "save_button": save_button,
+        "status": status,
+        "spark_read_count": spark_read_count,
+        "page": page,
     }

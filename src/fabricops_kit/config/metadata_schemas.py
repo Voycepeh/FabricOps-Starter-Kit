@@ -205,11 +205,29 @@ def metadata_table_schema_registry() -> dict[str, Any]:
         ),
         "METADATA_DATA_ACCESS": build_metadata_schema(
             "METADATA_DATA_ACCESS",
-            [("user_principal", "string"), ("role_name", "string"), ("permission", "string"), ("access_purpose", "string"), ("approval_status", "string"), ("access_scope", "string"), ("table_id", "string"), ("metadata_table_key", "string"), ("metadata_column_key", "string"), ("granted_date", "date"), ("expires_at", "timestamp"), ("approved_by", "string"), ("approved_at", "timestamp"), ("notes", "string"), *audit],
+            [
+                ("access_id", "string"),
+                ("user_principal", "string"),
+                ("table_id", "string"),
+                ("environment_name", "string"),
+                ("access_level", "string"),
+                ("access_value", "string"),
+                ("access_state", "string"),
+                *audit,
+            ],
         ),
         "METADATA_ENRICHMENT": build_metadata_schema(
             "METADATA_ENRICHMENT",
-            [("enrichment_id", "string", False), ("enrichment_level", "string", False), ("metadata_key", "string", False), ("enrichment_type", "string", False), ("value", "string", False), *audit],
+            [
+                ("enrichment_id", "string"),
+                ("table_id", "string"),
+                ("column_id", "string"),
+                ("environment_name", "string"),
+                ("enrichment_level", "string"),
+                ("enrichment_type", "string"),
+                ("value", "string"),
+                *audit,
+            ],
         ),
         "METADATA_GUARDRAIL": build_metadata_schema(
             "METADATA_GUARDRAIL",

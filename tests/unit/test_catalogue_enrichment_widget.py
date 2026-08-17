@@ -2,40 +2,65 @@
 
 from __future__ import annotations
 
-import inspect
 import importlib
+import inspect
 import types
 
-import pytest
-
-from fabricops_kit.widgets import shared
+from fabricops_kit.widgets import enrichment_shared
 from fabricops_kit.widgets import widget_enrich_table_metadata
 from tests.unit.test_guardrail_authoring_model import _install_fake_notebook_widgets
 
 
 def _catalogue_rows():
-    base = {"environment_name": "dev", "store_type": "lakehouse", "layer": "Governance Lakehouse", "schema_name": "dbo"}
+    base = {
+        "environment_name": "dev",
+        "store_type": "lakehouse",
+        "layer": "Governance Lakehouse",
+        "schema_name": "dbo",
+        "first_profiled_at": "2026-01-01",
+        "last_profiled_at": "2026-02-01",
+        "is_active": True,
+        "_activity_id": "a",
+    }
     return [
-        {**base, "metadata_table_key": "table-students", "metadata_column_key": "col-id", "schema_fingerprint": "fp-old", "table_name": "Students", "column_name": "student_id", "data_type": "long", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {**base, "metadata_table_key": "table-students", "metadata_column_key": "col-legacy", "schema_fingerprint": "fp-old", "table_name": "Students", "column_name": "legacy_code", "data_type": "string", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {**base, "metadata_table_key": "table-students", "metadata_column_key": "col-id", "schema_fingerprint": "fp-new", "table_name": "Students", "column_name": "student_id", "data_type": "bigint", "_committed_at": "2026-02-01", "_activity_id": "b"},
-        {**base, "metadata_table_key": "table-students", "metadata_column_key": "col-name", "schema_fingerprint": "fp-new", "table_name": "Students", "column_name": "name", "data_type": "string", "_committed_at": "2026-02-01", "_activity_id": "b"},
-        {**base, "layer": "Engineering Production", "schema_name": "curated", "metadata_table_key": "table-students-2", "metadata_column_key": "col-other", "schema_fingerprint": "fp-other", "table_name": "Students", "column_name": "student_id", "data_type": "long", "_committed_at": "2026-02-02", "_activity_id": "c"},
+        {**base, "metadata_level": "table", "table_id": "table-students", "column_id": "", "table_name": "Students", "column_name": ""},
+        {**base, "metadata_level": "column", "table_id": "table-students", "column_id": "col-id", "table_name": "Students", "column_name": "student_id"},
+        {**base, "metadata_level": "column", "table_id": "table-students", "column_id": "col-name", "table_name": "Students", "column_name": "name"},
+        {**base, "metadata_level": "column", "table_id": "table-students", "column_id": "col-legacy", "table_name": "Students", "column_name": "legacy_code", "last_profiled_at": "2026-01-01", "is_active": False},
+        {**base, "metadata_level": "table", "table_id": "table-courses", "column_id": "", "table_name": "Courses", "layer": "Engineering Production", "schema_name": "curated"},
+        {**base, "metadata_level": "column", "table_id": "table-courses", "column_id": "col-course", "table_name": "Courses", "column_name": "course_id", "layer": "Engineering Production", "schema_name": "curated"},
+        {**base, "environment_name": "prod", "metadata_level": "table", "table_id": "table-students", "column_id": "", "table_name": "Students", "layer": "Engineering Production"},
+        {**base, "environment_name": "prod", "metadata_level": "column", "table_id": "table-students", "column_id": "col-prod-only", "table_name": "Students", "column_name": "production_only", "layer": "Engineering Production"},
     ]
 
 
-def test_catalogue_browser_uses_canonical_identity_and_complete_latest_fingerprint():
-    """Canonical keys distinguish tables and latest membership uses the full fingerprint group."""
-    options = shared.catalogue_table_options(_catalogue_rows())
-    assert [row["metadata_table_key"] for row in options] == ["table-students-2", "table-students"]
-    assert len({row["label"] for row in options}) == 2
-    assert all("Students" in row["label"] for row in options)
-    state = shared.catalogue_table_browser_state(_catalogue_rows(), "table-students", {})
-    assert state["latest_schema_fingerprint"] == "fp-new"
-    assert {row["metadata_column_key"] for row in state["latest_schema_rows"]} == {"col-id", "col-name"}
-    assert {row["metadata_column_key"] for row in state["current_columns"]} == {"col-id", "col-name"}
-    removed = state["removed_columns"]
-    assert [(row["metadata_column_key"], row["data_type"], row["last_observed_at"]) for row in removed] == [("col-legacy", "string", "2026-01-01")]
+def _existing_enrichment():
+    return [
+        {"enrichment_id": "1", "table_id": "table-students", "column_id": "col-id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Identifier", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "2", "table_id": "table-students", "column_id": "col-id", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Classification", "value": "retired-label", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "3", "table_id": "table-students", "column_id": "col-legacy", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Historical", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "4", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Description", "value": "Student name", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "5", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "6", "table_id": "table-students", "column_id": "col-name", "environment_name": "dev", "enrichment_level": "column", "enrichment_type": "Personal_identifier", "value": "none", "_committed_at": "2026-01-01", "_activity_id": "a"},
+        {"enrichment_id": "7", "table_id": "table-students", "column_id": "col-id", "environment_name": "prod", "enrichment_level": "column", "enrichment_type": "Description", "value": "Production identifier", "_committed_at": "2026-03-01", "_activity_id": "z"},
+    ]
+
+
+def test_catalogue_browser_uses_stage2_ids_and_environment_isolation():
+    """Table and column selection is scoped by environment while stable IDs remain shared."""
+    options = enrichment_shared.catalogue_table_options(_catalogue_rows(), environment_name="dev")
+    assert {row["table_id"] for row in options} == {"table-students", "table-courses"}
+    current_values = enrichment_shared.latest_enrichment_values(_existing_enrichment(), environment_name="dev")
+    state = enrichment_shared.catalogue_table_browser_state(
+        _catalogue_rows(),
+        "table-students",
+        environment_name="dev",
+        current_values=current_values,
+    )
+    assert {row["column_id"] for row in state["current_columns"]} == {"col-id", "col-name"}
+    assert [row["column_id"] for row in state["removed_columns"]] == ["col-legacy"]
+    assert "col-prod-only" not in {row["column_id"] for row in state["all_historical_columns"]}
+    assert next(row for row in state["current_columns"] if row["column_id"] == "col-id")["enrichment_values"]["Description"] == "Identifier"
 
 
 def _build_widget(monkeypatch, *, auto_observe=False):
@@ -43,25 +68,32 @@ def _build_widget(monkeypatch, *, auto_observe=False):
     _install_fake_notebook_widgets(monkeypatch, auto_observe=auto_observe)
     reads = []
     writes = []
-    existing = [
-        {"enrichment_id": "1", "enrichment_level": "column", "metadata_key": "col-id", "enrichment_type": "Description", "value": "Identifier", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "2", "enrichment_level": "column", "metadata_key": "col-id", "enrichment_type": "Classification", "value": "retired-label", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "3", "enrichment_level": "column", "metadata_key": "col-legacy", "enrichment_type": "Description", "value": "Historical", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "4", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Description", "value": "Student name", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "5", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Classification", "value": "public", "_committed_at": "2026-01-01", "_activity_id": "a"},
-        {"enrichment_id": "6", "enrichment_level": "column", "metadata_key": "col-name", "enrichment_type": "Personal_identifier", "value": "none", "_committed_at": "2026-01-01", "_activity_id": "a"},
-    ]
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *a, **k: reads.append(1) or _catalogue_rows())
-    monkeypatch.setattr(shared, "read_enrichment_records", lambda *a, **k: existing)
-    monkeypatch.setattr(shared, "write_enrichment_records", lambda records, **kwargs: writes.append(records))
-    monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kwargs: {name: "audit" for name in shared.STANDARD_RUNTIME_AUDIT_COLUMNS})
-    config = types.SimpleNamespace(governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"]))
+    monkeypatch.setattr(enrichment_shared, "read_enrichment_records", lambda *a, **k: reads.append(1) or _existing_enrichment())
+    monkeypatch.setattr(enrichment_shared, "write_enrichment_records", lambda records, **kwargs: writes.append(records))
+    monkeypatch.setattr(
+        enrichment_shared,
+        "build_runtime_audit_fields",
+        lambda **kwargs: {
+            "_committed_by": "audit",
+            "_committed_at": "2026-01-01T00:00:00",
+            "_workspace_id": "audit",
+            "_workspace_name": "audit",
+            "_notebook_id": "audit",
+            "_notebook_name": "audit",
+            "_metadata_lakehouse_name": "audit",
+            "_activity_id": "audit",
+        },
+    )
+    config = types.SimpleNamespace(
+        governance_config=types.SimpleNamespace(sensitivity_labels=["public"], pii_classifications=["none"])
+    )
     widget = widget_enrich_table_metadata(spark_session=object(), context={"config": config, "env": "dev"})
     return widget, reads, writes
 
 
 def _select(widget, token):
-    if token != "table:table-students-2" and str(token).split(":", 1)[-1] != "col-other" and widget["table_selector"].value != "table-students":
+    if token != "table:table-courses" and str(token).split(":", 1)[-1] != "col-course" and widget["table_selector"].value != "table-students":
         widget["table_selector"].value = "table-students"
         widget["table_selector"]._observer({"name": "value", "new": "table-students"})
     widget["column_selector"].value = token
@@ -73,13 +105,13 @@ def _change(control, value):
     control._observer({"name": "value", "new": value})
 
 
-def test_public_widget_is_standalone_and_table_and_column_editors_are_level_specific(monkeypatch):
-    """The public signature needs no guardrail state and editors use canonical level keys."""
+def test_public_widget_is_standalone_and_writes_stage3_identity(monkeypatch):
+    """The public widget writes table/column IDs plus the current environment."""
     signature = inspect.signature(widget_enrich_table_metadata)
     assert list(signature.parameters) == ["spark_session", "context"]
-    widget, _, _ = _build_widget(monkeypatch)
-    assert widget["column_selector"].value == "table:table-students-2"
-    assert widget["controls"]["Personal_identifier"].layout.display == "none"
+    widget, reads, _ = _build_widget(monkeypatch)
+    assert widget["spark_read_count"] == 2
+    assert len(reads) == 2
     _select(widget, "column:col-id")
     assert widget["controls"]["Description"].value == "Identifier"
     assert widget["controls"]["Classification"].value == "retired-label"
@@ -87,16 +119,21 @@ def test_public_widget_is_standalone_and_table_and_column_editors_are_level_spec
     assert widget["controls"]["Personal_identifier"].layout.display == ""
     _change(widget["controls"]["Personal_identifier"], "none")
     records = widget["build_records"]()
-    assert [(row["enrichment_level"], row["metadata_key"], row["enrichment_type"]) for row in records] == [("column", "col-id", "Personal_identifier")]
+    assert [(row["enrichment_level"], row["table_id"], row["column_id"], row["environment_name"], row["enrichment_type"]) for row in records] == [
+        ("column", "table-students", "col-id", "dev", "Personal_identifier")
+    ]
+    assert "metadata_key" not in records[0]
     _select(widget, "table:table-students")
     _change(widget["controls"]["Description"], "Student table")
     record = widget["build_records"]()[0]
-    assert (record["enrichment_level"], record["metadata_key"]) == ("table", "table-students")
+    assert (record["enrichment_level"], record["table_id"], record["column_id"], record["environment_name"]) == (
+        "table", "table-students", "", "dev"
+    )
     assert "Personal_identifier" not in {row["enrichment_type"] for row in widget["build_records"]()}
 
 
-def test_change_detection_drafts_removed_read_only_and_search_without_reads(monkeypatch):
-    """Drafts survive selection changes, saves deduplicate, and removed columns cannot write."""
+def test_change_detection_drafts_inactive_read_only_and_search_without_reads(monkeypatch):
+    """Drafts survive selection changes, saves deduplicate, and inactive columns cannot write."""
     widget, reads, writes = _build_widget(monkeypatch)
     _select(widget, "column:col-id")
     _change(widget["controls"]["Description"], "Draft identifier")
@@ -115,8 +152,8 @@ def test_change_detection_drafts_removed_read_only_and_search_without_reads(monk
     assert widget["build_records"]() == []
     widget["table_search"].value = "engineering"
     widget["table_search"]._observer({"name": "value", "new": "engineering"})
-    assert len(reads) == 1
-    assert list(widget["table_selector"].options) == [("Students — Engineering Production / curated", "table-students-2")]
+    assert len(reads) == 2
+    assert list(widget["table_selector"].options) == [("Courses — Engineering Production / curated", "table-courses")]
 
 
 def test_selection_hydration_does_not_create_or_cross_contaminate_drafts(monkeypatch):
@@ -129,7 +166,6 @@ def test_selection_hydration_does_not_create_or_cross_contaminate_drafts(monkeyp
     assert widget["drafts"] == {}
 
     widget["column_selector"].value = "column:col-name"
-
     assert widget["controls"]["Description"].value == "Student name"
     assert widget["controls"]["Classification"].value == "public"
     assert widget["controls"]["Personal_identifier"].value == "none"

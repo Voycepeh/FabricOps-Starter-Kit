@@ -140,11 +140,46 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
     assert {"metadata_table_key", "guardrail_rule_version_id", "partition_column", "change_column"}.isdisjoint(fields)
 
 
-def test_enrichment_schema_is_unchanged_until_stage3():
-    """Do not pull the Enrichment migration into Stage 2."""
-    schema = metadata_table_schema_registry()["METADATA_ENRICHMENT"]
-    expected_names = [
-        "enrichment_id", "enrichment_level", "metadata_key", "enrichment_type", "value",
+def test_stage3_enrichment_schema_uses_asset_ids_and_environment():
+    """Enrichment stores one table/column value against the Stage 2 asset IDs."""
+    fields = metadata_table_schema_registry()["METADATA_ENRICHMENT"].fieldNames()
+    assert fields == [
+        "enrichment_id",
+        "table_id",
+        "column_id",
+        "environment_name",
+        "enrichment_level",
+        "enrichment_type",
+        "value",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert schema.fieldNames() == expected_names
+    assert {"metadata_id", "metadata_key", "metadata_table_key", "metadata_column_key", "enrichment_name"}.isdisjoint(fields)
+
+
+def test_stage3_data_access_schema_is_minimal_rls_contract():
+    """Data Access stores only the RLS assignment needed for one table/environment."""
+    fields = metadata_table_schema_registry()["METADATA_DATA_ACCESS"].fieldNames()
+    assert fields == [
+        "access_id",
+        "user_principal",
+        "table_id",
+        "environment_name",
+        "access_level",
+        "access_value",
+        "access_state",
+        *[name for name, _kind, _nullable in audit_schema_fields()],
+    ]
+    assert {
+        "role_name",
+        "permission",
+        "access_purpose",
+        "approval_status",
+        "access_scope",
+        "metadata_table_key",
+        "metadata_column_key",
+        "granted_date",
+        "expires_at",
+        "approved_by",
+        "approved_at",
+        "notes",
+    }.isdisjoint(fields)
