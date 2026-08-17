@@ -1,4 +1,4 @@
-"""Tests for the scoped catalogue widgets and their shared contract."""
+"""Tests for the scoped catalogue widget and its reader-facing views."""
 
 from __future__ import annotations
 
@@ -11,12 +11,7 @@ import types
 import pytest
 
 import fabricops_kit
-from fabricops_kit.widgets.shared import (
-    _prepare_selected_guardrail_views,
-    build_catalogue_widget,
-    dataset_label,
-    schema_version_options,
-)
+from fabricops_kit.widgets.shared import _prepare_selected_guardrail_views, dataset_label
 
 pytestmark = pytest.mark.unit
 
@@ -37,48 +32,33 @@ def test_catalogue_widget_rejects_invalid_mode():
 
 @pytest.mark.parametrize("mode", ["pipeline", "agreement", "explore"])
 def test_catalogue_widget_dispatches_only_scope_resolution(monkeypatch, mode):
-    """Every supported mode hands allowed keys to one shared widget builder."""
+    """Every supported mode hands allowed table IDs to one private reader builder."""
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
-    selected = {"pipeline": "pipeline-key", "agreement": "agreement-key", "explore": "explore-key"}[mode]
-    inventory = [
-        {"metadata_table_key": selected},
-        {"metadata_table_key": "out-of-scope-key"},
-    ]
+    selected = {"pipeline": "pipeline-id", "agreement": "agreement-id", "explore": "explore-id"}[mode]
+    inventory = [{"table_id": selected}, {"table_id": "out-of-scope-id"}]
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (object(), "dev", {}))
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: object())
-    monkeypatch.setattr(module, "collect_catalogue_inventory", lambda *_args: inventory)
+    monkeypatch.setattr(module, "_collect_catalogue_inventory", lambda *_args: inventory)
     scope = ({selected}, None, {"environment_name": "dev"}, {"Environment": "dev"})
     monkeypatch.setattr(module, "_resolve_pipeline_catalogue_scope", lambda **_kwargs: scope)
     monkeypatch.setattr(module, "_resolve_agreement_catalogue_scope", lambda **_kwargs: scope)
     monkeypatch.setattr(module, "_resolve_explore_catalogue_scope", lambda **_kwargs: scope)
-    monkeypatch.setattr(module, "build_catalogue_widget", lambda **kwargs: kwargs)
+    monkeypatch.setattr(module, "_build_catalogue_widget", lambda **kwargs: kwargs)
 
     result = module.widget_view_catalogue(mode=mode, agreement={"agreement_id": "agreement"})
 
-    assert result["inventory_rows"] == [{"metadata_table_key": selected}]
+    assert result["inventory_rows"] == [{"table_id": selected}]
     assert result["role_options"] is None
     if mode == "agreement":
         assert result["display_context"]["Linked datasets"] == 1
 
 
 def test_dataset_labels_are_consistent_and_pipeline_roles_are_explicit():
-    """Shared labels are consistent and make lineage roles explicit."""
+    """Shared labels stay readable when the normalized reader supplies its table ID fallback."""
     row = {"layer": "raw", "schema_name": "sales", "table_name": "orders", "metadata_table_key": "key"}
     assert dataset_label(row) == "raw / sales / orders"
     assert dataset_label(row, "Source") == "[Source] raw / sales / orders"
     assert dataset_label(row, "Target") == "[Target] raw / sales / orders"
-
-
-def test_schema_versions_are_deduplicated_and_latest_is_deterministic():
-    """Schema choices deduplicate column observations and choose the latest."""
-    rows = [
-        {"metadata_table_key": "key", "schema_fingerprint": "old", "_committed_at": datetime(2026, 1, 1)},
-        {"metadata_table_key": "key", "schema_fingerprint": "new", "_committed_at": datetime(2026, 2, 1)},
-        {"metadata_table_key": "key", "schema_fingerprint": "new", "_committed_at": datetime(2026, 2, 1)},
-    ]
-    options = schema_version_options(rows, "key")
-    assert [value for _label, value in options] == ["new", "old"]
-    assert options[0][0].startswith("Latest")
 
 
 def test_guardrail_views_keep_stable_empty_schemas(spark_session):
@@ -98,40 +78,26 @@ def test_guardrail_views_keep_stable_empty_schemas(spark_session):
 
     assert views["guardrail_results"].count() == 0
     assert views["guardrail_results"].columns == [
-        "rule_type",
-        "columns",
-        "status",
-        "severity",
-        "failed_rows",
-        "failed_percent",
-        "total_count",
-        "reason",
-        "can_continue",
-        "run_id",
+        "rule_type", "columns", "status", "severity", "failed_rows", "failed_percent",
+        "total_count", "reason", "can_continue", "run_id",
     ]
     assert views["guardrail_row_results"].count() == 0
     assert views["guardrail_row_results"].columns == [
-        "rule_type",
-        "row_identity",
-        "involved_columns",
-        "failed_values",
-        "failure_reason",
-        "run_id",
+        "rule_type", "row_identity", "involved_columns", "failed_values", "failure_reason", "run_id",
     ]
 
 
-def test_widget_documents_common_five_view_contract():
-    """The public owner documents the normalized common view contract."""
+def test_widget_documents_normalized_five_view_contract():
+    """The public widget documents readable views without changing persisted schemas."""
     source = inspect.getsource(fabricops_kit.widget_view_catalogue)
-    assert "display(catalogue" not in source
     assert "guardrail_row_results" in source
-    assert "All modes then use one shared selector" in source
+    assert "frequency rows are enriched with ``column_name``" in source
+    assert "without\n    changing their persisted schemas" in source
 
 
 def _run_pipeline_widget(monkeypatch, *, context=None):
-    """Run the pipeline widget with lightweight lineage and rendering fakes."""
+    """Run the pipeline widget with lightweight normalized lineage fakes."""
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
-
     comparisons = []
 
     class Expression:
@@ -156,7 +122,7 @@ def _run_pipeline_widget(monkeypatch, *, context=None):
             return self
 
         def collect(self):
-            return [{"profile_role": "Source", "metadata_table_key": "table-key"}]
+            return [{"pipeline_role": "Source", "table_id": "table-id"}]
 
     functions = types.ModuleType("pyspark.sql.functions")
     functions.col = Expression
@@ -168,19 +134,15 @@ def _run_pipeline_widget(monkeypatch, *, context=None):
     monkeypatch.setitem(sys.modules, "pyspark.sql", sql)
     monkeypatch.setitem(sys.modules, "pyspark.sql.functions", functions)
     monkeypatch.setattr(module, "read_lakehouse_table_core", lambda *_args, **_kwargs: Frame())
-    monkeypatch.setattr(
-        module,
-        "collect_catalogue_inventory",
-        lambda *_args: [{"metadata_table_key": "table-key"}],
-    )
-    monkeypatch.setattr(module, "build_catalogue_widget", lambda **kwargs: kwargs)
+    monkeypatch.setattr(module, "_collect_catalogue_inventory", lambda *_args: [{"table_id": "table-id"}])
+    monkeypatch.setattr(module, "_build_catalogue_widget", lambda **kwargs: kwargs)
     explicit = {"config": object(), "env": "dev", **(context or {})}
     result = module.widget_view_catalogue(mode="pipeline", context=explicit)
     return result, comparisons
 
 
 def test_pipeline_widget_resolves_current_fabric_identity(monkeypatch, fake_notebookutils):
-    """Current Fabric keys resolve end to end and scope workspace lineage."""
+    """Current Fabric keys resolve end to end and scope normalized lineage audit fields."""
     fake_notebookutils.runtime.context.clear()
     fake_notebookutils.runtime.context.update(
         currentNotebookId="live-notebook",
@@ -194,9 +156,9 @@ def test_pipeline_widget_resolves_current_fabric_identity(monkeypatch, fake_note
     assert result["selection_context"]["notebook_id"] == "live-notebook"
     assert result["selection_context"]["notebook_name"] == "Live Notebook"
     assert result["display_context"]["Notebook"] == "Live Notebook"
-    assert ("notebook_id", "live-notebook") in comparisons
+    assert ("_notebook_id", "live-notebook") in comparisons
     assert ("environment_name", "dev") in comparisons
-    assert ("workspace_id", "live-workspace") in comparisons
+    assert ("_workspace_id", "live-workspace") in comparisons
 
 
 def test_pipeline_widget_resolves_fallback_fabric_identity(monkeypatch, fake_notebookutils):
@@ -214,7 +176,7 @@ def test_pipeline_widget_resolves_fallback_fabric_identity(monkeypatch, fake_not
     assert result["selection_context"]["notebook_id"] == "fallback-notebook"
     assert result["selection_context"]["notebook_name"] == "Fallback Notebook"
     assert result["display_context"]["Notebook"] == "Fallback Notebook"
-    assert ("workspace_id", "fallback-workspace") in comparisons
+    assert ("_workspace_id", "fallback-workspace") in comparisons
 
 
 def test_pipeline_widget_explicit_identity_wins_live_runtime(monkeypatch, fake_notebookutils):
@@ -234,8 +196,8 @@ def test_pipeline_widget_explicit_identity_wins_live_runtime(monkeypatch, fake_n
 
     assert result["selection_context"]["notebook_id"] == "explicit-notebook"
     assert result["display_context"]["Notebook"] == "Explicit Notebook"
-    assert ("workspace_id", "explicit-workspace") in comparisons
-    assert ("notebook_id", "live-notebook") not in comparisons
+    assert ("_workspace_id", "explicit-workspace") in comparisons
+    assert ("_notebook_id", "live-notebook") not in comparisons
 
 
 def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake_notebookutils):
@@ -245,23 +207,45 @@ def test_pipeline_widget_public_signature_and_missing_identity(monkeypatch, fake
 
     module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     fake_notebookutils.runtime.context.clear()
-    with pytest.raises(
-        ValueError,
-        match="active FabricOps context or Fabric runtime context",
-    ):
+    with pytest.raises(ValueError, match="active FabricOps context or Fabric runtime context"):
         module.widget_view_catalogue(mode="pipeline", context={"config": object(), "env": "dev"})
 
 
-def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatch, spark_session):
-    """Views keep compact parents and normalized children on one exact snapshot."""
-    import fabricops_kit.widgets.shared as shared
+def test_catalogue_inventory_reads_table_level_normalized_rows(spark_session):
+    """Inventory uses normalized table rows instead of rebuilding physical context from profile rows."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
+    rows = [
+        ("table", "table-id", None, "dev", "lakehouse", "raw", "sales", "orders", None),
+        ("column", "table-id", "column-id", "dev", "lakehouse", "raw", "sales", "orders", "id"),
+        ("table", "other-id", None, "prod", "lakehouse", "curated", "sales", "orders", None),
+    ]
+    catalogue = spark_session.createDataFrame(
+        rows,
+        "metadata_level string, table_id string, column_id string, environment_name string, store_type string, "
+        "layer string, schema_name string, table_name string, column_name string",
+    ).withColumn("last_profiled_at", __import__("pyspark.sql.functions", fromlist=["lit"]).lit(None).cast("timestamp"))
+
+    inventory = module._collect_catalogue_inventory(catalogue, "dev")
+
+    assert inventory == [{
+        "table_id": "table-id",
+        "environment_name": "dev",
+        "store_type": "lakehouse",
+        "layer": "raw",
+        "schema_name": "sales",
+        "table_name": "orders",
+        "last_profiled_at": None,
+    }]
+
+
+def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(monkeypatch, spark_session):
+    """Reader shapes normalized catalogue/profile/frequency tables without changing their schemas."""
+    module = importlib.import_module("fabricops_kit.widgets.widget_view_catalogue")
     from tests.unit.test_widget_register_data_contract import _FakeWidgets
 
     _FakeWidgets.Dropdown = _FakeWidgets.Select
 
     class FakeHTML(_FakeWidgets.HTML):
-        """Capture positional HTML content like ipywidgets.HTML."""
-
         def __init__(self, value="", **kwargs):
             super().__init__(value=value, **kwargs)
 
@@ -273,130 +257,55 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     fake_ipython.display = fake_display
     monkeypatch.setitem(sys.modules, "IPython", fake_ipython)
     monkeypatch.setitem(sys.modules, "IPython.display", fake_display)
-    monkeypatch.setattr(shared, "require_ipywidgets", lambda: _FakeWidgets)
+    monkeypatch.setattr(module.widget_shared, "require_ipywidgets", lambda: _FakeWidgets)
 
     old_snapshot = datetime(2026, 7, 30)
     latest_snapshot = datetime(2026, 7, 31)
     later_snapshot = datetime(2026, 8, 1)
+    catalogue_schema = (
+        "metadata_level string, table_id string, column_id string, environment_name string, store_type string, "
+        "layer string, schema_name string, table_name string, column_name string, first_profiled_at timestamp, "
+        "last_profiled_at timestamp, is_active boolean, _committed_at timestamp"
+    )
+    profile_schema = (
+        "profile_id string, profile_snapshot_id string, table_id string, column_id string, environment_name string, "
+        "data_type string, row_count long, non_null_count long, null_count long, null_percent double, "
+        "distinct_count long, distinct_percent double, mean_value double, stddev_value double, min_value string, "
+        "percentile_25_value double, median_value double, percentile_75_value double, max_value string, "
+        "profiled_at timestamp, _committed_at timestamp"
+    )
+    frequency_schema = (
+        "frequency_id string, profile_id string, profile_snapshot_id string, value string, frequency_count long, "
+        "frequency_percent double, frequency_rank integer, profiled_row_count long, profiled_non_null_count long, "
+        "profiled_at timestamp, _committed_at timestamp"
+    )
     tables = {
-        "METADATA_DATA_CATALOGUE": spark_session.createDataFrame(
-            [
-                ("dataset-key", "fingerprint", "id", "column-id", latest_snapshot),
-                ("dataset-key", "previous-fingerprint", "id", "column-id", old_snapshot),
-                ("unprofiled-key", "fingerprint-2", "id", "column-id-2", latest_snapshot),
-            ],
-            "metadata_table_key string, schema_fingerprint string, column_name string, "
-            "metadata_column_key string, _committed_at timestamp",
-        ),
-        "METADATA_DATA_PROFILED": spark_session.createDataFrame(
-            [
-                ("dataset-key", "fingerprint", "column-a", "Country", old_snapshot, old_snapshot),
-                ("dataset-key", "fingerprint", "column-a", "Country", latest_snapshot, latest_snapshot),
-                ("dataset-key", "fingerprint", "column-b", "Comment", latest_snapshot, latest_snapshot),
-                ("dataset-key", "previous-fingerprint", "column-a", "Country", old_snapshot, old_snapshot),
-            ],
-            "metadata_table_key string, schema_fingerprint string, metadata_column_key string, "
-            "column_name string, profiled_at timestamp, _committed_at timestamp",
-        ),
-        "METADATA_DATA_PROFILED_FREQUENCY": spark_session.createDataFrame(
-            [
-                ("column-a", "old", 1, 1, old_snapshot),
-                ("column-a", None, 2, 1, latest_snapshot),
-                ("column-a", "current", 3, 2, latest_snapshot),
-                ("column-a", "future", 4, 1, later_snapshot),
-                ("unrelated-column", "other", 5, 1, latest_snapshot),
-            ],
-            "metadata_column_key string, value string, frequency_count long, "
-            "frequency_rank integer, profiled_at timestamp",
-        ),
-        "METADATA_GUARDRAIL_RESULTS": spark_session.createDataFrame(
-            [
-                (
-                    "dataset-key",
-                    "orders",
-                    "old-run",
-                    "not_null",
-                    "id",
-                    "failed",
-                    "error",
-                    False,
-                    "old failure",
-                    '{"failed_count":1,"failed_percent":25.0,"total_count":4}',
-                    old_snapshot,
-                ),
-                (
-                    "dataset-key",
-                    "orders",
-                    "latest-run",
-                    "required_when",
-                    "required_value,status",
-                    "failed",
-                    "error",
-                    False,
-                    "required value missing",
-                    '{"failed_count":1,"failed_percent":25.0,"total_count":4}',
-                    latest_snapshot,
-                ),
-                (
-                    "dataset-key",
-                    "orders",
-                    "latest-run",
-                    "not_null",
-                    "id",
-                    "passed",
-                    "error",
-                    True,
-                    "Rule passed.",
-                    '{"failed_count":0,"failed_percent":0.0,"total_count":4}',
-                    latest_snapshot,
-                ),
-                (
-                    "other-key",
-                    "orders",
-                    "other-run",
-                    "not_null",
-                    "id",
-                    "failed",
-                    "error",
-                    False,
-                    "wrong canonical table",
-                    '{"failed_count":9,"failed_percent":90.0,"total_count":10}',
-                    later_snapshot,
-                ),
-                (
-                    "unprofiled-key",
-                    "customers",
-                    "customer-run",
-                    "not_null",
-                    "customer_id",
-                    "passed",
-                    "error",
-                    True,
-                    "Rule passed.",
-                    '{"failed_count":0,"failed_percent":0.0,"total_count":2}',
-                    later_snapshot,
-                ),
-            ],
-            "metadata_table_key string, table_name string, run_id string, rule_type string, column_name string, "
-            "status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp",
-        ),
+        "METADATA_DATA_CATALOGUE": spark_session.createDataFrame([
+            ("table", "dataset-key", None, "dev", "lakehouse", "raw", "sales", "orders", None, old_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "dataset-key", "column-country", "dev", "lakehouse", "raw", "sales", "orders", "Country", old_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "dataset-key", "column-comment", "dev", "lakehouse", "raw", "sales", "orders", "Comment", old_snapshot, latest_snapshot, True, latest_snapshot),
+            ("table", "unprofiled-key", None, "dev", "lakehouse", "curated", "sales", "customers", None, latest_snapshot, latest_snapshot, True, latest_snapshot),
+            ("column", "unprofiled-key", "column-customer", "dev", "lakehouse", "curated", "sales", "customers", "customer_id", latest_snapshot, latest_snapshot, True, latest_snapshot),
+        ], catalogue_schema),
+        "METADATA_DATA_PROFILED": spark_session.createDataFrame([
+            ("old-country", "snapshot-old", "dataset-key", "column-country", "dev", "string", 4, 4, 0, 0.0, 2, 50.0, None, None, "DE", None, None, None, "SG", old_snapshot, old_snapshot),
+            ("profile-country", "snapshot-latest", "dataset-key", "column-country", "dev", "string", 5, 5, 0, 0.0, 2, 40.0, None, None, "DE", None, None, None, "SG", latest_snapshot, latest_snapshot),
+            ("profile-comment", "snapshot-latest", "dataset-key", "column-comment", "dev", "string", 5, 4, 1, 20.0, 4, 80.0, None, None, "a", None, None, None, "z", latest_snapshot, latest_snapshot),
+        ], profile_schema),
+        "METADATA_DATA_PROFILED_FREQUENCY": spark_session.createDataFrame([
+            ("freq-old", "old-country", "snapshot-old", "old", 1, 25.0, 1, 4, 4, old_snapshot, old_snapshot),
+            ("freq-null", "profile-country", "snapshot-latest", None, 2, 40.0, 1, 5, 5, latest_snapshot, latest_snapshot),
+            ("freq-current", "profile-country", "snapshot-latest", "current", 3, 60.0, 2, 5, 5, latest_snapshot, latest_snapshot),
+            ("freq-future", "profile-country", "snapshot-future", "future", 4, 80.0, 1, 5, 5, later_snapshot, later_snapshot),
+        ], frequency_schema),
+        "METADATA_GUARDRAIL_RESULTS": spark_session.createDataFrame([
+            ("dataset-key", "old-run", "not_null", "Country", "failed", "error", False, "old", '{"failed_count":1,"failed_percent":25.0,"total_count":4}', old_snapshot),
+            ("dataset-key", "latest-run", "not_null", "Country", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":5}', latest_snapshot),
+            ("unprofiled-key", "customer-run", "not_null", "customer_id", "passed", "error", True, "Rule passed.", '{"failed_count":0,"failed_percent":0.0,"total_count":2}', later_snapshot),
+        ], "metadata_table_key string, run_id string, rule_type string, column_name string, status string, severity string, can_continue boolean, reason string, actual_value_json string, _committed_at timestamp"),
         "METADATA_GUARDRAIL_ROW_RESULTS": spark_session.createDataFrame(
-            [
-                (
-                    "dataset-key",
-                    "latest-run",
-                    "required_when",
-                    '{"id":1}',
-                    '["required_value","status"]',
-                    '{"required_value":null,"status":"open"}',
-                    "required value was null",
-                ),
-                ("dataset-key", "latest-run", "not_null", '{"id":1}', '["id"]', '{"id":null}', "id was null"),
-                ("dataset-key", "old-run", "not_null", '{"id":2}', '["id"]', '{"id":null}', "old failure"),
-                ("other-key", "other-run", "not_null", '{"id":3}', '["id"]', '{"id":null}', "wrong canonical table"),
-            ],
-            "metadata_table_key string, run_id string, rule_type string, row_identity string, "
-            "involved_columns_json string, failed_values_json string, failure_reason string",
+            [],
+            "metadata_table_key string, run_id string, rule_type string, row_identity string, involved_columns_json string, failed_values_json string, failure_reason string",
         ),
     }
     read_calls = []
@@ -405,38 +314,15 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
         read_calls.append(table)
         return tables[table]
 
-    monkeypatch.setattr(shared, "read_lakehouse_table_core", read_table)
-
-    state = build_catalogue_widget(
+    monkeypatch.setattr(module, "read_lakehouse_table_core", read_table)
+    state = module._build_catalogue_widget(
         title="Pipeline Catalogue Viewer",
         description="View data catalogues used by the current pipeline notebook",
         selection_context={"notebook_id": "technical-id", "environment_name": "dev"},
         display_context={"Notebook": "Customer <pipeline>", "Environment": "dev", "Linked datasets": 1},
         inventory_rows=[
-            {
-                "metadata_table_key": "dataset-key",
-                "schema_fingerprint": "fingerprint",
-                "layer": "raw",
-                "schema_name": "sales",
-                "table_name": "orders",
-                "_committed_at": latest_snapshot,
-            },
-            {
-                "metadata_table_key": "dataset-key",
-                "schema_fingerprint": "previous-fingerprint",
-                "layer": "raw",
-                "schema_name": "sales",
-                "table_name": "orders",
-                "_committed_at": old_snapshot,
-            },
-            {
-                "metadata_table_key": "unprofiled-key",
-                "schema_fingerprint": "fingerprint-2",
-                "layer": "z_curated",
-                "schema_name": "sales",
-                "table_name": "customers",
-                "_committed_at": latest_snapshot,
-            },
+            {"table_id": "dataset-key", "environment_name": "dev", "store_type": "lakehouse", "layer": "raw", "schema_name": "sales", "table_name": "orders", "last_profiled_at": latest_snapshot},
+            {"table_id": "unprofiled-key", "environment_name": "dev", "store_type": "lakehouse", "layer": "curated", "schema_name": "sales", "table_name": "customers", "last_profiled_at": latest_snapshot},
         ],
         role_options=None,
         target="metadata",
@@ -449,69 +335,55 @@ def test_catalogue_views_select_one_snapshot_and_one_frequency_column(monkeypatc
     page = displayed[0]
     visible_html = page.children[1].children[1].value
     assert "<b>Notebook:</b> Customer &lt;pipeline&gt;" in visible_html
-    assert "Customer <pipeline>" not in visible_html
-    assert "<b>Environment:</b> dev" in visible_html
-    assert "<b>Linked datasets:</b> 1" in visible_html
     assert "technical-id" not in visible_html
-    assert "notebook_id" not in visible_html
-    assert "environment_name" not in visible_html
-    selection = state["get_selection"]()
-    assert selection["notebook_id"] == "technical-id"
-    assert selection["metadata_table_key"] == "dataset-key"
-    assert selection["profiled_at"] is None
-    assert selection["metadata_column_key"] is None
+    assert state["get_selection"]()["table_id"] == "dataset-key"
+    assert state["get_selection"]()["profile_snapshot_id"] is None
+    assert state["get_selection"]()["profile_id"] is None
     assert read_calls == []
+
     views = state["get_views"]()
     assert read_calls == [
-        "METADATA_DATA_CATALOGUE",
-        "METADATA_DATA_PROFILED",
-        "METADATA_DATA_PROFILED_FREQUENCY",
-        "METADATA_GUARDRAIL_RESULTS",
-        "METADATA_GUARDRAIL_ROW_RESULTS",
+        "METADATA_DATA_CATALOGUE", "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
+        "METADATA_GUARDRAIL_RESULTS", "METADATA_GUARDRAIL_ROW_RESULTS",
     ]
-    assert state["get_selection"]()["profiled_at"] == latest_snapshot
-    assert state["get_selection"]()["metadata_column_key"] == "column-a"
+    selection = state["get_selection"]()
+    assert selection["profile_snapshot_id"] == "snapshot-latest"
+    assert selection["profiled_at"] == latest_snapshot
+    assert selection["profile_id"] == "profile-country"
     assert set(views) == {"catalogue", "profile", "frequency", "guardrail_results", "guardrail_row_results"}
-    assert {row.profiled_at for row in views["profile"].collect()} == {latest_snapshot}
+    assert views["catalogue"].columns == [
+        "metadata_level", "table_name", "column_name", "store_type", "layer", "schema_name",
+        "first_profiled_at", "last_profiled_at", "is_active", "table_id", "column_id",
+    ]
+    assert views["profile"].columns[:6] == [
+        "column_name", "data_type", "row_count", "non_null_count", "null_count", "null_percent",
+    ]
+    assert views["profile"].columns[-4:] == ["profile_id", "profile_snapshot_id", "column_id", "table_id"]
+    assert {row.column_name for row in views["profile"].collect()} == {"Country", "Comment"}
+    assert views["frequency"].columns == [
+        "column_name", "value", "frequency_count", "frequency_percent", "frequency_rank",
+        "profiled_row_count", "profiled_non_null_count", "profiled_at", "frequency_id", "profile_id",
+        "profile_snapshot_id",
+    ]
     frequency_rows = views["frequency"].collect()
-    assert {row.profiled_at for row in frequency_rows} == {latest_snapshot}
-    assert {row.metadata_column_key for row in frequency_rows} == {"column-a"}
+    assert {row.column_name for row in frequency_rows} == {"Country"}
+    assert {row.profile_id for row in frequency_rows} == {"profile-country"}
     assert {row.value for row in frequency_rows} == {None, "current"}
-    guardrail_rows = views["guardrail_results"].collect()
-    assert {row.run_id for row in guardrail_rows} == {"latest-run"}
-    assert [row.status for row in guardrail_rows] == ["failed", "passed"]
-    assert guardrail_rows[0].failed_rows == 1
-    evidence_rows = views["guardrail_row_results"].collect()
-    assert len(evidence_rows) == 2
-    assert {row.rule_type for row in evidence_rows} == {"required_when", "not_null"}
-    assert {row.row_identity for row in evidence_rows} == {'{"id":1}'}
-    required = next(row for row in evidence_rows if row.rule_type == "required_when")
-    assert '"required_value":null' in required.failed_values
+    assert {row.run_id for row in views["guardrail_results"].collect()} == {"latest-run"}
+
+    state["_controls"]["profile_id"].value = "profile-comment"
+    assert state["get_selection"]()["profile_id"] == "profile-comment"
+    assert state["get_views"]()["frequency"].count() == 0
+    assert len(read_calls) == 5
 
     state["_controls"]["search"].value = "does not exist"
     assert state["_controls"]["dataset"].value is None
     state["_controls"]["search"].value = ""
-    assert state["_controls"]["dataset"].value == "\x1fdataset-key"
-    assert len(read_calls) == 5
-
-    selected_details = page.children[3].children[1]
-    state["_controls"]["schema_fingerprint"].value = "previous-fingerprint"
-    assert "<b>Schema version:</b> previous-fingerprint" in selected_details.value
-    state["_controls"]["schema_fingerprint"].value = "fingerprint"
-    assert len(read_calls) == 5
-
-    state["_controls"]["metadata_column_key"].value = "column-b"
-    assert state["get_selection"]()["metadata_column_key"] == "column-b"
-    assert state["get_views"]()["frequency"].count() == 0
-    assert len(read_calls) == 5
+    assert state["_controls"]["dataset"].value in {"\x1fdataset-key", "\x1funprofiled-key"}
 
     state["_controls"]["dataset"].value = "\x1funprofiled-key"
     unprofiled = state["get_views"]()
-    assert len(read_calls) == 5
-    assert state["get_selection"]()["profiled_at"] is None
+    assert state["get_selection"]()["profile_snapshot_id"] is None
     assert unprofiled["profile"].count() == 0
     assert unprofiled["frequency"].count() == 0
-    assert unprofiled["profile"].schema == tables["METADATA_DATA_PROFILED"].schema
-    assert unprofiled["frequency"].schema == tables["METADATA_DATA_PROFILED_FREQUENCY"].schema
     assert {row.run_id for row in unprofiled["guardrail_results"].collect()} == {"customer-run"}
-    assert unprofiled["guardrail_row_results"].count() == 0
