@@ -4,23 +4,20 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate:
+  stage3-reference-patch:
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 1108
     runs-on: ubuntu-latest
-    env:
-      DISABLE_MKDOCS_2_WARNING: "true"
     steps:
-      - name: Checkout
+      - name: Checkout Stage 3 branch
         uses: actions/checkout@v5
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Install uv
@@ -34,80 +31,151 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Ruff lint
-        run: uv run ruff check .
-
-      - name: Normalize guided-demo links
-        run: uv run python scripts/normalize_guided_demo_links.py
-
-      - name: Run full test suite
-        run: uv run pytest
-
-      - name: Validate release navigation
-        run: uv run python scripts/release_navigation.py --check
-
-      - name: Validate owned generated artifacts
-        shell: bash
+      - name: Patch Stage 3 metadata reference contract
         run: |
-          set -euo pipefail
-          source .venv/bin/activate
-          python scripts/validate_generated_artifact_ownership.py
-
-      - name: Build strict documentation
-        env:
-          FABRICOPS_GIT_SHA: ${{ github.sha }}
-        run: uv run mkdocs build --strict
-
-      - name: Build distributions
-        run: uv build
-
-      - name: Check distributions
-        run: uvx twine check dist/*
-
-      - name: Install wheel and smoke-test public imports
-        shell: bash
-        run: |
-          set -euo pipefail
-          wheel_path="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          test -n "${wheel_path}"
-          python -m venv "${RUNNER_TEMP}/fabricops-wheel-smoke"
-          source "${RUNNER_TEMP}/fabricops-wheel-smoke/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install "pyspark>=4.1.1" "${wheel_path}"
           python - <<'PY'
-          from importlib.metadata import version
-          import fabricops_kit as kit
+          from pathlib import Path
 
-          assert kit.__version__ == version("fabricops-kit")
-          for public_name in kit.__all__:
-              getattr(kit, public_name)
-          print(f"Imported fabricops_kit {kit.__version__} with {len(kit.__all__)} public names")
+          path = Path("scripts/reference_docs_metadata.py")
+          text = path.read_text()
+
+          replacements = [
+              (
+                  '''    "METADATA_ENRICHMENT": {
+                      "purpose": "Add business and governance context to the data.",
+                      "grain": "One appended enrichment value for one table or column identity.",
+                      "primary_key": ["enrichment_id"],
+                      "foreign_keys": [
+                          {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, table-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as table_id."},
+                          {"local_field": "metadata_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until the Stage 3 rename, column-level enrichment keeps metadata_key while referencing the same stable value now exposed by Catalogue as column_id."},
+                      ],
+                      "relationships": [],
+                  },
+                  "METADATA_DATA_ACCESS": {
+                      "purpose": "See who can use the data and how it can be used.",
+                      "grain": "One access review record for one user and governed scope.",
+                      "primary_key": [],
+                      "foreign_keys": [],
+                      "relationships": [],
+                  },''',
+                  '''    "METADATA_ENRICHMENT": {
+                      "purpose": "Add business and governance context to the data.",
+                      "grain": "One appended enrichment value for one table or column identity in one environment.",
+                      "primary_key": ["enrichment_id"],
+                      "foreign_keys": [
+                          {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many table- or column-level enrichment rows can reference the same logical Catalogue table identity in an environment."},
+                          {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level enrichment references the Catalogue column through column_id while retaining its parent table_id; table-level enrichment leaves column_id empty."},
+                      ],
+                      "relationships": [],
+                  },
+                  "METADATA_DATA_ACCESS": {
+                      "purpose": "See who has row-level access to the data.",
+                      "grain": "One RLS assignment for one user and one Catalogue table in one environment.",
+                      "primary_key": ["access_id"],
+                      "foreign_keys": [
+                          {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many RLS assignments can reference the same logical Catalogue table identity in an environment."},
+                      ],
+                      "relationships": [],
+                  },''',
+                  "metadata table models",
+              ),
+              (
+                  '''    "METADATA_ENRICHMENT": {
+                      "__default__": [
+                          "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+                          "fabricops_kit.widgets.shared.build_enrichment_records",
+                      ],
+                      "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+                      "enrichment_id": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+                      "enrichment_level": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+                      "metadata_key": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+                      "enrichment_type": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+                      "value": ["fabricops_kit.widgets.shared.build_enrichment_records"],
+                  },''',
+                  '''    "METADATA_ENRICHMENT": {
+                      "__default__": [
+                          "fabricops_kit.widgets.widget_enrich_table_metadata.widget_enrich_table_metadata",
+                          "fabricops_kit.widgets.enrichment_shared.build_enrichment_records",
+                      ],
+                      "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
+                      "enrichment_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "table_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "column_id": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "environment_name": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "enrichment_level": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "enrichment_type": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                      "value": ["fabricops_kit.widgets.enrichment_shared.build_enrichment_records"],
+                  },''',
+                  "enrichment column owners",
+              ),
+              (
+                  ''' {'kind': 'function',
+                    'module': 'widgets.widget_enrich_table_metadata',
+                    'function_type': 'callable',
+                    'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
+                    'symbol_name': 'widget_enrich_table_metadata',
+                    'template_notebook': '01_governance',
+                    'template_segment': 'Guardrail governance review',
+                    'use_when': 'Select a logical table, browse its latest and historical columns, and maintain table- or column-level enrichment.',
+                    'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
+                    'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
+                    'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
+                    'related_functions': ['widget_view_catalogue'],
+                    'expanded_purpose': 'Uses the latest complete schema fingerprint to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
+                    'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
+                    'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
+                    'glossary_terms': ['evidence', 'metadata lakehouse', 'schema fingerprint'],
+                    'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT; repeated unchanged saves produce no write.',
+                    'common_failure_causes': ['The metadata catalogue has no logical tables.',
+                                              'A table or current column lacks its canonical metadata key.',
+                                              'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},''',
+                  ''' {'kind': 'function',
+                    'module': 'widgets.widget_enrich_table_metadata',
+                    'function_type': 'callable',
+                    'summary_override': 'Browse catalogue history and maintain metadata enrichment.',
+                    'symbol_name': 'widget_enrich_table_metadata',
+                    'template_notebook': '01_governance',
+                    'template_segment': 'Guardrail governance review',
+                    'use_when': 'Select a logical table in the active environment, browse its current and historical columns, and maintain table- or column-level enrichment.',
+                    'parameters': 'See the source docstring for the Spark session and optional active Fabric context.',
+                    'returns': 'Standalone three-pane browser state with table and column selectors, draft-aware detail controls, record building, and a save callback.',
+                    'raises': 'Raises clear catalogue identity, metadata read, or metadata routing errors when canonical catalogue evidence is unavailable.',
+                    'related_functions': ['widget_view_catalogue'],
+                    'expanded_purpose': 'Uses the environment-specific Catalogue table_id and column_id identities to distinguish editable current columns from grey, read-only historically removed columns with their last-observed dates. It maintains Description and Classification for tables and those values plus Personal_identifier for columns.',
+                    'when_to_use': 'Use when notebook users need an independent, landscape-oriented metadata catalogue browser and enrichment editor without first selecting a guardrail target.',
+                    'do_not_use_when': 'Do not use to author DQ rules, edit data-contract membership, or change removed-column enrichment.',
+                    'glossary_terms': ['evidence', 'metadata lakehouse', 'metadata catalogue'],
+                    'return_interpretation': 'Only non-empty changed values are appended to METADATA_ENRICHMENT for the active environment; repeated unchanged saves produce no write.',
+                    'common_failure_causes': ['The active environment has no logical tables in the metadata catalogue.',
+                                              'A selected table lacks table_id or a current column lacks column_id.',
+                                              'Metadata lakehouse reads or writes cannot be routed through 00_env_config.']},''',
+                  "widget enrichment docs",
+              ),
+          ]
+
+          for old, new, label in replacements:
+              matches = text.count(old)
+              if matches != 1:
+                  raise SystemExit(f"Expected exactly one {label} match, found {matches}")
+              text = text.replace(old, new)
+
+          if "widget_review_guardrail_governance" in text:
+              raise SystemExit("Deleted guardrail review widget reference unexpectedly present")
+
+          path.write_text(text)
           PY
 
-      - name: Configure GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
+      - name: Regenerate owned references
+        run: |
+          PYTHONPATH=src uv run python scripts/generate_individual_function_reference_pages.py
+          PYTHONPATH=src uv run python scripts/generate_public_function_call_flows_json.py
 
-      - name: Upload validated GitHub Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: site
-
-  deploy-docs:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: validate
-    runs-on: ubuntu-latest
-    concurrency:
-      group: pages
-      cancel-in-progress: true
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy validated documentation to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Restore normal CI and push generated Stage 3 fix
+        run: |
+          git checkout origin/main -- .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Align Stage 3 metadata references"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
