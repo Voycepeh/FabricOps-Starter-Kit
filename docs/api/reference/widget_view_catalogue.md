@@ -12,9 +12,9 @@ Select catalogue evidence through an explicit pipeline, agreement, or explore da
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_view_catalogue.py:117`
+`fabricops_kit/widgets/widget_view_catalogue.py:577`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L117-L247">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_view_catalogue.py#L577-L712">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -76,8 +76,10 @@ def widget_view_catalogue(
 dict
     Common state with ``get_selection``, ``get_views``, and ``refresh``.
     ``get_views`` returns exactly ``catalogue``, ``profile``, ``frequency``,
-    ``guardrail_results``, and ``guardrail_row_results`` Spark DataFrames,
-    all scoped to the selected ``metadata_table_key``.
+    ``guardrail_results``, and ``guardrail_row_results`` Spark DataFrames.
+    Catalogue and profile views expose readable asset/column fields first;
+    frequency rows are enriched with ``column_name`` through the normalized
+    ``profile_id`` relationship.
 
 ### Return interpretation
 
@@ -96,7 +98,8 @@ ValueError
 Microsoft Fabric is the execution runtime. Pipeline mode derives its scope
 from current-notebook lineage, agreement mode derives it from registered
 contracts, and explore mode includes the current environment inventory.
-All modes then use one shared selector and evidence-loading path.
+The widget reads the normalized catalogue/profile/frequency tables without
+changing their persisted schemas.
 
 </div>
 
