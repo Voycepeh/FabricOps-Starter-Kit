@@ -30,6 +30,46 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
+      - name: Remove stale docs metadata references
+        shell: bash
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          path = Path("scripts/reference_docs_metadata.py")
+          text = path.read_text(encoding="utf-8")
+          lines = text.splitlines(keepends=True)
+          tree = ast.parse(text)
+
+          delete_ranges = []
+          for node in ast.walk(tree):
+              if not isinstance(node, ast.Dict):
+                  continue
+              pairs = {}
+              for key, value in zip(node.keys, node.values):
+                  if isinstance(key, ast.Constant) and isinstance(key.value, str) and isinstance(value, ast.Constant):
+                      pairs[key.value] = value.value
+              if pairs.get("symbol_name") == "widget_review_guardrail_governance" or pairs.get("module_name") == "widgets.widget_review_guardrail_governance":
+                  delete_ranges.append((node.lineno - 1, node.end_lineno))
+
+          for start, end in sorted(delete_ranges, reverse=True):
+              del lines[start:end]
+
+          text = "".join(lines)
+          fq = 'fabricops_kit.widgets.widget_review_guardrail_governance.widget_review_guardrail_governance'
+          text = "\n".join(line for line in text.split("\n") if fq not in line)
+          text = text.replace(", 'widget_review_guardrail_governance'", "")
+          text = text.replace("'widget_review_guardrail_governance', ", "")
+          text = text.replace("['widget_review_guardrail_governance']", "[]")
+          text = text.replace(', "widget_review_guardrail_governance"', "")
+          text = text.replace('"widget_review_guardrail_governance", ', "")
+          text = text.replace('["widget_review_guardrail_governance"]', "[]")
+          if "widget_review_guardrail_governance" in text:
+              raise SystemExit("stale widget_review_guardrail_governance reference remains in reference_docs_metadata.py")
+          path.write_text(text, encoding="utf-8")
+          PY
+
       - name: Generate public function call flows twice
         run: |
           source .venv/bin/activate
@@ -47,14 +87,11 @@ jobs:
           git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md > /tmp/reference-second.diff
           diff -u /tmp/reference-first.diff /tmp/reference-second.diff
 
-      - name: Commit only generated diffs
+      - name: Commit source and generated diffs only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -u -- docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md
-          if git diff --cached --quiet; then
-            echo "No generated changes to commit"
-            exit 0
-          fi
+          rm .github/workflows/agent-regenerate-guardrail-cleanup.yml
+          git add -u -- scripts/reference_docs_metadata.py .github/workflows/agent-regenerate-guardrail-cleanup.yml docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/call-graph.md
           git commit -m "docs: regenerate references after widget removal"
           git push origin HEAD:agent/remove-unused-guardrail-review-widget
