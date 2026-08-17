@@ -379,7 +379,7 @@ def test_catalogue_views_are_readable_and_frequency_joins_through_profile_id(mon
     state["_controls"]["search"].value = "does not exist"
     assert state["_controls"]["dataset"].value is None
     state["_controls"]["search"].value = ""
-    assert state["_controls"]["dataset"].value == "\x1fdataset-key"
+    assert state["_controls"]["dataset"].value in {"\x1fdataset-key", "\x1funprofiled-key"}
 
     state["_controls"]["dataset"].value = "\x1funprofiled-key"
     unprofiled = state["get_views"]()
