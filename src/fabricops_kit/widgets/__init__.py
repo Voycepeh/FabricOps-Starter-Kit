@@ -8,7 +8,6 @@ __all__ = [
     "widget_enrich_table_metadata",
     "widget_render_data_agreement",
     "widget_render_data_steward",
-    "widget_review_guardrail_governance",
 ]
 
 _WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in __all__}

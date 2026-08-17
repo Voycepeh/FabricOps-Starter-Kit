@@ -13,7 +13,7 @@ from fabricops_kit.widgets.shared import (
 )
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 from fabricops_kit.config.shared import build_metadata_table_key
-from fabricops_kit.widgets import widget_author_dq_rules, widget_enrich_table_metadata, widget_review_guardrail_governance
+from fabricops_kit.widgets import widget_author_dq_rules, widget_enrich_table_metadata
 
 
 @pytest.fixture(autouse=True)
@@ -402,44 +402,8 @@ def test_dq_widget_batch_and_individual_actions_create_required_lifecycles(monke
         assert {record["activation_reason"] for record in records} == {"engineering_apply_now"}
 
 
-def test_governance_review_widget_actions(monkeypatch):
-    """Verify governance review widget exposes policy and rule actions."""
-    _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.widgets import widget_review_guardrail_governance
-
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
-    widget = widget_review_guardrail_governance(state)
-    approved = widget["save_rule_action"]("approve")
-    rejected = widget["save_rule_action"]("reject")
-    superseded = widget["save_rule_action"]("supersede")
-
-    assert approved["review_status"] == "governance_approved"
-    assert rejected["review_status"] == "rejected_by_governance"
-    assert superseded["review_status"] == "superseded"
 
 
-def test_review_widget_does_not_write_separate_policy_table(monkeypatch):
-    """Verify review widget actions write rule rows, not a separate policy table."""
-    _install_fake_notebook_widgets(monkeypatch)
-    from fabricops_kit.widgets import shared as governance_review
-    from fabricops_kit import widgets
-    from fabricops_kit.widgets import shared as widget_shared
-
-    writes = []
-
-    class Spark:
-        def createDataFrame(self, records):
-            return records
-
-    monkeypatch.setattr(widget_shared, "write_lakehouse_table_core", lambda frame, table, *, target, context, **kwargs: writes.append(table))
-    state = {"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "metadata_table_key": "table-key", "governance_mode": "ungoverned", "approval_policy": "no_approval_required", "existing_rules": [_rule(review_status="pending_governance_review", is_active=False)]}
-    widget = widgets.widget_review_guardrail_governance(state, context={"config": object(), "env": "dev"}, spark_session=Spark())
-
-    widget["save_rule_action"]("approve")
-
-    assert writes == [governance_review.GUARDRAIL_TABLE]
-    assert governance_review.CATALOGUE_TABLE not in writes
-    assert governance_review.GUARDRAIL_RESULTS_TABLE not in writes
 
 def test_guardrail_rule_active_statuses_are_strict_for_schema_rules():
     """Verify only new active rule statuses are enforced for schema rules."""
@@ -560,24 +524,3 @@ def test_authoring_widgets_stamp_engineering_and_governance_sources(monkeypatch)
     assert governance["created_by_role"] == "governance"
 
 
-def test_review_guardrail_governance_actions_and_replace_mapping(monkeypatch):
-    """Verify the canonical governance review widget records and uses replace actions."""
-    _install_fake_notebook_widgets(monkeypatch)
-    state = {
-        "environment_name": "dev",
-        "dataset_name": "sales",
-        "table_name": "orders",
-        "metadata_table_key": "table-key",
-        "existing_rules": [
-            _rule(rule_id="pending", rule_key="pending", activation_state="pending", is_active=False, review_state="pending_governance_review", review_status="pending_governance_review"),
-            _rule(rule_id="active", rule_key="active", activation_state="active", is_active=True, review_state="governance_approved", review_status="governance_approved"),
-            _rule(rule_id="old", rule_key="old", activation_state="inactive", is_active=False, review_state="superseded", review_status="superseded"),
-        ],
-    }
-    widget = widget_review_guardrail_governance(state)
-
-    assert widget["controls"]["replacement_key"].description == "Supersedes/replacement"
-    replaced = widget["save_record_action"]("replace")
-    assert len(replaced) == 2
-    assert replaced[0]["review_state"] == "superseded"
-    assert replaced[1]["review_state"] == "governance_approved"

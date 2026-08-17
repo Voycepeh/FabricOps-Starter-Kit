@@ -184,18 +184,13 @@ def test_widget_functions_do_not_write_mixed_guardrail_metadata():
     target_source = _function_source("widgets/shared.py", "_load_guardrail_authoring_targets")
     schema_source = _function_source("widgets/widget_author_guardrails.py", "_render_guardrail_authoring")
     dq_source = _function_source("widgets/widget_author_dq_rules.py", "widget_author_dq_rules")
-    review_source = _function_source(
-        "widgets/widget_review_guardrail_governance.py",
-        "_guardrail_governance_review_widget_workflow",
-    )
 
     assert "PROFILED_TABLE" in target_source
     assert "GUARDRAIL_TABLE" in target_source
     assert "_read_metadata_table_or_empty" in target_source
     assert "_write_rule_records" in schema_source
     assert "_write_rule_records" in dq_source
-    assert "_write_rule_records" in review_source
-    for source in (schema_source, dq_source, review_source):
+    for source in (schema_source, dq_source):
         assert "write_lakehouse_table_core" not in source
         assert "GUARDRAIL_RESULTS_TABLE" not in source
 

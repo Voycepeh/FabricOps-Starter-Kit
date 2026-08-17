@@ -79,7 +79,6 @@ WIDGET_EXPORTS = (
     "widget_view_catalogue",
     "widget_register_data_contract",
     "widget_author_dq_rules",
-    "widget_review_guardrail_governance",
 )
 
 _LAZY_WIDGET_MODULES = {name: f"fabricops_kit.widgets.{name}" for name in WIDGET_EXPORTS}

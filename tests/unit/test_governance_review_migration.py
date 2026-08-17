@@ -66,7 +66,6 @@ EXPECTED_V1_CALLABLES = [
     'widget_view_catalogue',
     'widget_register_data_contract',
     'widget_author_dq_rules',
-    'widget_review_guardrail_governance',
 ]
 
 def test_public_callable_list_includes_guardrail_authoring_widgets():
@@ -87,7 +86,6 @@ def test_widget_public_callables_live_under_widgets_package():
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
-        'widget_review_guardrail_governance',
     }
     for name in widget_names:
         value = getattr(widgets, name)
@@ -111,7 +109,6 @@ def test_widget_modules_do_not_call_public_widget_functions():
         'widget_enrich_table_metadata',
         'widget_render_data_agreement',
         'widget_render_data_steward',
-        'widget_review_guardrail_governance',
     }
     offenders = []
     for path in widgets_dir.glob("widget_*.py"):
@@ -545,6 +542,5 @@ def test_root_public_governance_and_widget_imports_still_work():
         "widget_author_dq_rules",
         "widget_author_guardrails",
         "widget_enrich_table_metadata",
-        "widget_review_guardrail_governance",
     ]:
         assert callable(getattr(fabricops_kit, name))
