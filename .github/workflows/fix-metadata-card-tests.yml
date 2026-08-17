@@ -2,7 +2,7 @@ name: Fix metadata card tests
 
 on:
   pull_request:
-    types: [synchronize]
+    types: [reopened]
 
 permissions:
   contents: write
