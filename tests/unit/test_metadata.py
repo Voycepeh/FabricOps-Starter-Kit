@@ -260,7 +260,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
             schema_name=None,
             guardrail_type="schema",
             rule_type="schema",
-            result={"status": "failed"},
+            result={"guardrail_rule_id": "schema-rule", "status": "failed"},
         )
 
 
@@ -273,8 +273,6 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
     spark = FakeSpark()
     config = framework_config()
     config.path_config.paths["prod"] = config.path_config.paths["dev"]
-    expected = config_shared.build_metadata_table_key("lakehouse", "raw", None, "orders")
-
     for env in ("dev", "prod"):
         guardrails_shared.write_guardrail_result_row(
             spark_session=spark,
@@ -288,8 +286,8 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
             schema_name=None,
             guardrail_type="schema",
             rule_type="strict",
-            result={"status": "passed"},
+            result={"guardrail_rule_id": "schema-rule", "status": "passed"},
         )
 
-    assert [frame.rows[0]["metadata_table_key"] for frame in writes] == [expected, expected]
+    assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]
     assert [frame.rows[0]["environment_name"] for frame in writes] == ["dev", "prod"]

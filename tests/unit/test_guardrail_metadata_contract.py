@@ -8,7 +8,7 @@ from datetime import datetime
 import pytest
 
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
-from fabricops_kit.pipeline import guardrail_metadata
+from fabricops_kit.pipeline import guardrail_metadata, guardrails_shared
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -190,10 +190,10 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
 def test_runtime_result_writer_emits_only_canonical_result_fields(monkeypatch) -> None:
     """Verify runtime result persistence emits only the compact Stage 4A result row."""
     writes = []
-    monkeypatch.setattr(guardrail_metadata, "build_runtime_audit_fields", lambda **_kwargs: _audit())
-    monkeypatch.setattr(guardrail_metadata, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
+    monkeypatch.setattr(guardrails_shared, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
-        guardrail_metadata,
+        guardrails_shared,
         "write_lakehouse_table_core",
         lambda frame, table, **_kwargs: writes.append((table, frame.rows[0])),
     )

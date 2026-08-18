@@ -123,7 +123,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-header">
       <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">9 tables</span>
+      <span class="metadata-table-card__relationships-count">7 tables</span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
@@ -135,8 +135,6 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
         <code>METADATA_ENRICHMENT</code>
         <code>METADATA_DATA_ACCESS</code>
         <code>METADATA_GUARDRAIL</code>
-        <code>METADATA_GUARDRAIL_RESULTS</code>
-        <code>METADATA_GUARDRAIL_ROW_RESULTS</code>
       </span>
     </span>
   </span>
@@ -287,7 +285,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__purpose">Define the expectations the data used in the ETL pipeline should meet.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One authored guardrail configuration row for one rule lifecycle or version.</span>
+    <span>One configured Guardrail rule for one Catalogue table or column in one environment.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -296,13 +294,12 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-header">
       <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">2 tables</span>
+      <span class="metadata-table-card__relationships-count">1 table</span>
     </span>
     <span class="metadata-table-card__relationship-summary">
       <span class="metadata-table-card__cardinality">1 → N</span>
       <span class="metadata-table-card__relationship-list">
         <code>METADATA_GUARDRAIL_RESULTS</code>
-        <code>METADATA_GUARDRAIL_ROW_RESULTS</code>
       </span>
     </span>
   </span>
@@ -315,7 +312,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__purpose">See whether the expectations of the data in the ETL pipeline run are met.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One runtime outcome for one guardrail rule in one pipeline run.</span>
+    <span>One runtime outcome for one Guardrail rule in one pipeline run.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
@@ -324,9 +321,14 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-header">
       <span class="metadata-table-card__relationships-label">Used by</span>
-      <span class="metadata-table-card__relationships-count">0 tables</span>
+      <span class="metadata-table-card__relationships-count">1 table</span>
     </span>
-    <span class="metadata-table-card__empty">No downstream tables.</span>
+    <span class="metadata-table-card__relationship-summary">
+      <span class="metadata-table-card__cardinality">1 → N</span>
+      <span class="metadata-table-card__relationship-list">
+        <code>METADATA_GUARDRAIL_ROW_RESULTS</code>
+      </span>
+    </span>
   </span>
 </a>
 <a class="metadata-table-card" href="metadata_guardrail_row_results/" aria-label="Open METADATA_GUARDRAIL_ROW_RESULTS schema">
@@ -334,10 +336,10 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
     <span class="metadata-table-card__title">METADATA_GUARDRAIL_ROW_RESULTS</span>
     <span class="metadata-table-card__arrow" aria-hidden="true">→</span>
   </span>
-  <span class="metadata-table-card__purpose">See the failed or quarantined rows produced by a Data Quality guardrail.</span>
+  <span class="metadata-table-card__purpose">See the individual records that failed a Data Quality rule.</span>
   <span class="metadata-table-card__meta">
     <strong>Grain</strong>
-    <span>One failed-row evidence record produced by one Guardrail rule evaluation.</span>
+    <span>One failed record belonging to one Guardrail Result.</span>
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>

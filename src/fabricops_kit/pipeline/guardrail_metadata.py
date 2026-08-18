@@ -50,8 +50,8 @@ def canonical_guardrail_rule_record(
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or ""),
         "configuration_version": int(record.get("configuration_version") or 1),
-        "table_id": str(record.get("table_id") or record.get("metadata_table_key") or ""),
-        "column_id": str(record.get("column_id") or record.get("metadata_column_key") or ""),
+        "table_id": str(record.get("table_id") or ""),
+        "column_id": str(record.get("column_id") or ""),
         "environment_name": str(record.get("environment_name") or env),
         "guardrail_type": str(record.get("guardrail_type") or ""),
         "rule_id": str(record.get("rule_id") or ""),
@@ -132,55 +132,7 @@ def resolve_change_rule_observation_columns(rule: Mapping[str, Any]) -> tuple[st
     return runtime.resolve_change_rule_observation_columns(dict(rule))
 
 
-def write_guardrail_result_row(
-    *,
-    spark_session: Any,
-    config: Any,
-    env: str,
-    run_id: str,
-    dataset_name: str,
-    table_name: str,
-    store_type: str,
-    layer: str,
-    schema_name: str | None = None,
-    guardrail_type: str,
-    rule_type: str,
-    result: dict[str, Any],
-    rule_key: str = "",
-    column_name: str = "",
-    results_table: str = GUARDRAIL_RESULTS_TABLE,
-) -> None:
-    """Append one runtime outcome for one configured Guardrail rule."""
-    del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
-    if spark_session is None or not hasattr(spark_session, "createDataFrame"):
-        return
-    guardrail_rule_id = str(result.get("guardrail_rule_id") or "").strip()
-    if not guardrail_rule_id:
-        return
-    audit = build_runtime_audit_fields(config=config, env=env)
-    resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
-    payload = {key: value for key, value in result.items() if key != "dataframe"}
-    row = {
-        "guardrail_result_id": str(uuid4()),
-        "guardrail_rule_id": guardrail_rule_id,
-        "run_id": resolved_run_id,
-        "environment_name": env,
-        "status": str(result.get("status") or "not_run"),
-        "can_continue": bool(result.get("can_continue", True)),
-        "severity": str(result.get("severity") or "blocking"),
-        "reason": str(result.get("reason") or result.get("message") or ""),
-        "result_payload_json": _stable_json(payload),
-        **audit,
-    }
-    write_lakehouse_table_core(
-        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
-        results_table,
-        target="metadata",
-        schema=configured_lakehouse_schema(config, env, "metadata"),
-        context={"config": config, "env": env},
-        mode="append",
-    )
-
+write_guardrail_result_row = runtime.write_guardrail_result_row
 
 def schema_check_core(
     dataframe: Any,
@@ -286,7 +238,7 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    if {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns and rule_type != "skip":
+    if {"table_id", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns and rule_type != "skip":
         rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
         change_columns = {str(_row_to_dict(row).get("change_column") or "") for row in rows or []}
         change_columns.discard("")

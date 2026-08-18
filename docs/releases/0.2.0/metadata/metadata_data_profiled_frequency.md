@@ -26,14 +26,16 @@ Description: Supported FabricOps metadata table for data profiled frequency.
 
 | Column name | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
-| `metadata_column_key` | `string` | No | FabricOps metadata schema registry | `metadata_column_key` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `frequency_id` | `string` | Yes | FabricOps metadata schema registry | `frequency_id` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `profile_id` | `string` | Yes | FabricOps metadata schema registry | `profile_id` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `profile_snapshot_id` | `string` | Yes | FabricOps metadata schema registry | `profile_snapshot_id` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
 | `value` | `string` | Yes | FabricOps metadata schema registry | `value` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `frequency_count` | `long` | No | FabricOps metadata schema registry | `frequency_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `frequency_percent` | `double` | No | FabricOps metadata schema registry | `frequency_percent` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `frequency_rank` | `integer` | No | FabricOps metadata schema registry | `frequency_rank` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `profiled_row_count` | `long` | No | FabricOps metadata schema registry | `profiled_row_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `profiled_non_null_count` | `long` | No | FabricOps metadata schema registry | `profiled_non_null_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
-| `profiled_at` | `timestamp` | No | FabricOps metadata schema registry | `profiled_at` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `frequency_count` | `long` | Yes | FabricOps metadata schema registry | `frequency_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `frequency_percent` | `double` | Yes | FabricOps metadata schema registry | `frequency_percent` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `frequency_rank` | `integer` | Yes | FabricOps metadata schema registry | `frequency_rank` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `profiled_row_count` | `long` | Yes | FabricOps metadata schema registry | `profiled_row_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `profiled_non_null_count` | `long` | Yes | FabricOps metadata schema registry | `profiled_non_null_count` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
+| `profiled_at` | `timestamp` | Yes | FabricOps metadata schema registry | `profiled_at` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
 | `_committed_by` | `string` | No | FabricOps metadata schema registry | `_committed_by` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
 | `_committed_at` | `timestamp` | No | FabricOps metadata schema registry | `_committed_at` field in `METADATA_DATA_PROFILED_FREQUENCY`. |
 | `_workspace_id` | `string` | No | FabricOps metadata schema registry | `_workspace_id` field in `METADATA_DATA_PROFILED_FREQUENCY`. |

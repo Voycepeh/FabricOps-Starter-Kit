@@ -74,9 +74,8 @@ Startup flow:
 11. Return an overall readiness status.
 
 Supported notebook naming patterns currently include ``00_env_config``,
-``01_agreement`` and suffixed variants, ``02_pipeline`` and suffixed
-variants, ``03_governance`` and suffixed variants, and ``99_explore`` and
-suffixed variants.
+``01_governance`` and suffixed variants, ``02_pipeline`` and suffixed
+variants, and ``99_explore`` and suffixed variants.
 
 Each resolved target contains the configured Fabric store identity needed
 by downstream functions, such as workspace identity, Fabric item identity,

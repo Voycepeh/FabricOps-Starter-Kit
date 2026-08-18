@@ -318,11 +318,7 @@ def test_run_active_dq_guardrail_result_write_toggle_targets_results(spark_sessi
     )
     run_active_dq_guardrail(df, config, "dev", "sales", "orders", spark_session=spark_session, run_id="activity-dq-002", write_results=True)
 
-    assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
-    row = writes[0][0].collect()[0].asDict()
-    assert row["guardrail_type"] == "dq"
-    assert row["_activity_id"] == "activity-dq-002"
-    assert row["status"] == "passed"
+    assert writes == []  # no orphan result is persisted when no governed DQ rule exists
 
 def test_run_active_dq_guardrail_warning_failure_can_continue(spark_session, monkeypatch):
     """Verify the internal active DQ guardrail warning failure can continue."""
@@ -691,16 +687,14 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
         schema_name=None,
         guardrail_type="freshness",
         rule_type="max_age_days",
-        result={"status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
+        result={"guardrail_rule_id": "freshness-rule", "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
         rule_key="freshness_orders",
     )
 
     assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
     written_row = writes[0][0].collect()[0].asDict()
-    expected_table_key = build_metadata_table_key("lakehouse", "raw", None, "orders")
-    assert written_row["metadata_table_key"] == expected_table_key
+    assert written_row["guardrail_rule_id"] == "freshness-rule"
     assert written_row["environment_name"] == "dev"
-    assert written_row["guardrail_type"] == "freshness"
     assert written_row["status"] == "failed"
     assert written_row["can_continue"] is False
     assert written_row["severity"] == "blocking"

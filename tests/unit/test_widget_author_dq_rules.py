@@ -194,6 +194,7 @@ def test_widget_changes_preview_only_until_explicit_save(monkeypatch):
 
     monkeypatch.setattr(module.shared, "_load_guardrail_authoring_targets", fake_targets)
     monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **kwargs: writes.append(records))
+    monkeypatch.setattr(module, "canonical_guardrail_rule_record", lambda record, **_: record)
 
     widget = module.widget_author_dq_rules(spark_session=object(), context={"config": object(), "env": "dev"})
     widget["controls"]["parameter_controls"]["maximum_null_percent"].value = "5"

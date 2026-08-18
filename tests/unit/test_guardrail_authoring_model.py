@@ -138,8 +138,8 @@ def test_metadata_ownership_schema_separates_catalogue_rules_and_results():
         "source_change_signal_json",
     }
     assert not removed_catalogue_fields & catalogue_fields
-    assert {"approval_required", "approval_bypassed", "requires_post_review", "governance_mode", "approval_policy"}.issubset(rule_fields)
-    assert {"result_id", "result_payload_json", "actual_value_json"}.issubset(result_fields)
+    assert {"guardrail_rule_id", "configuration_version", "table_id", "column_id", "guardrail_type", "rule_id", "rule_type", "rule_parameters_json", "severity", "is_active"}.issubset(rule_fields)
+    assert {"guardrail_result_id", "guardrail_rule_id", "result_payload_json"}.issubset(result_fields)
     assert {"governance_mode", "approval_policy", "bypass_allowed", "policy_reason"}.isdisjoint(catalogue_fields)
     assert {"policy_updated_by", "policy_updated_at"}.isdisjoint(catalogue_fields)
     assert governance_review.DATA_ACCESS_TABLE in schemas

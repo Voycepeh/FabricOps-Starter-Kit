@@ -231,37 +231,37 @@ METADATA_TABLE_MODELS = {
     },
     "METADATA_GUARDRAIL": {
         "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
-        "grain": "One authored guardrail configuration row for one rule lifecycle or version.",
+        "grain": "One configured Guardrail rule for one Catalogue table or column in one environment.",
         "primary_key": ["guardrail_rule_id"],
         "foreign_keys": [
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 renames the Guardrail identity fields, metadata_table_key carries the same stable value now exposed by Catalogue as table_id."},
-            {"local_field": "metadata_column_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Until Stage 4 renames the Guardrail identity fields, metadata_column_key carries the same stable value now exposed by Catalogue as column_id."},
+            {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many Guardrail rules can belong to one logical Catalogue table identity in an environment."},
+            {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty."},
         ],
         "relationships": [
             {"cardinality": "1:N", "statement": "One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
-            {"cardinality": "1:N", "statement": "One Guardrail rule can produce many Guardrail Row Results when DQ quarantine evidence is captured."},
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "purpose": "See whether the expectations of the data in the ETL pipeline run are met.",
-        "grain": "One runtime outcome for one guardrail rule in one pipeline run.",
+        "grain": "One runtime outcome for one Guardrail rule in one pipeline run.",
         "primary_key": ["guardrail_result_id"],
         "foreign_keys": [
-            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one authored Guardrail rule."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 normalization, the result keeps metadata_table_key while carrying the same stable Catalogue table_id value."},
+            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Many runtime outcomes can come from one configured Guardrail rule."},
         ],
-        "relationships": [],
+        "relationships": [
+            {"cardinality": "1:N", "statement": "One Guardrail Result can have many failed-record Guardrail Row Results through guardrail_result_id."},
+        ],
     },
     "METADATA_GUARDRAIL_ROW_RESULTS": {
-        "purpose": "See the failed or quarantined rows produced by a Data Quality guardrail.",
-        "grain": "One failed-row evidence record produced by one Guardrail rule evaluation.",
+        "purpose": "See the individual records that failed a Data Quality rule.",
+        "grain": "One failed record belonging to one Guardrail Result.",
         "primary_key": ["guardrail_row_result_id"],
         "foreign_keys": [
-            {"local_field": "guardrail_rule_id", "referenced_table": "METADATA_GUARDRAIL", "referenced_field": "guardrail_rule_id", "cardinality": "N:1", "statement": "Row-level DQ quarantine evidence belongs directly to the Guardrail rule that produced it."},
-            {"local_field": "metadata_table_key", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Until Stage 4 normalization, the row result keeps metadata_table_key while carrying the same stable Catalogue table_id value."},
+            {"local_field": "guardrail_result_id", "referenced_table": "METADATA_GUARDRAIL_RESULTS", "referenced_field": "guardrail_result_id", "cardinality": "N:1", "statement": "Many failed records can belong to one Guardrail Result."},
         ],
         "relationships": [],
     },
+
 
 }
 
@@ -454,41 +454,20 @@ METADATA_COLUMN_OWNERS = {
         "__default__": [
             "fabricops_kit.widgets.widget_author_guardrails.widget_author_guardrails",
             "fabricops_kit.widgets.widget_author_dq_rules.widget_author_dq_rules",
+            "fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_rule_id": [
-            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
-            "fabricops_kit.widgets.shared._build_dq_rule_records",
-        ],
-        "rule_key": [
-            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
-            "fabricops_kit.widgets.shared._build_dq_rule_records",
-            "fabricops_kit.config.metadata_keys._build_dq_rule_key",
-        ],
-        "metadata_column_key": [
-            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
-            "fabricops_kit.widgets.shared._build_dq_rule_records",
-        ],
-        "metadata_table_key": [
-            "fabricops_kit.widgets.shared._base_guardrail_rule_record",
-            "fabricops_kit.widgets.shared._build_dq_rule_records",
-        ],
-        "rule_parameters_json": [
-            "fabricops_kit.widgets.shared._schema_freshness_profile_records_from_selection",
-            "fabricops_kit.widgets.shared._build_dq_rule_records",
-        ],
-        "reviewed_by": [
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "reviewed_at": [
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "review_decision": [
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
-        "review_comment": [
-            "fabricops_kit.widgets.shared.record_table_governance",
-        ],
+        "guardrail_rule_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "configuration_version": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "table_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "column_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "environment_name": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "guardrail_type": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "rule_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "rule_type": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "rule_parameters_json": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "severity": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "is_active": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
     },
     "METADATA_GUARDRAIL_RESULTS": {
         "__default__": [
@@ -497,38 +476,31 @@ METADATA_COLUMN_OWNERS = {
             "fabricops_kit.pipeline.check_changes.check_changes",
             "fabricops_kit.pipeline.check_dq.check_dq",
             "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
+            "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_result_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "guardrail_rule_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "result_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "run_id": [
-            "fabricops_kit.pipeline.check_dq.check_dq",
-            "fabricops_kit.pipeline.guardrails_shared.check_dq_runtime",
-            "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
-        ],
-        "rule_key": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "metadata_table_key": [
-            "fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row",
-            "fabricops_kit.config.shared.build_metadata_table_key",
-        ],
-        "expected_value_json": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "actual_value_json": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
-        "result_payload_json": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row"],
+        "guardrail_result_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "guardrail_rule_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "run_id": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "environment_name": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "status": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "can_continue": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "severity": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "reason": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "result_payload_json": ["fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row", "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
     },
     "METADATA_GUARDRAIL_ROW_RESULTS": {
         "__default__": [
             "fabricops_kit.pipeline.check_dq.check_dq",
-            "fabricops_kit.pipeline.guardrails_shared.check_dq_runtime",
+            "fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime",
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
-        "guardrail_result_id": ["fabricops_kit.pipeline.guardrails_shared.check_dq_runtime"],
-        "guardrail_rule_id": ["fabricops_kit.pipeline.guardrails_shared.check_dq_runtime"],
-        "metadata_table_key": [
-            "fabricops_kit.pipeline.guardrails_shared.check_dq_runtime",
-            "fabricops_kit.config.shared.build_metadata_table_key",
-        ],
-        "row_identity": ["fabricops_kit.pipeline.guardrails_shared.check_dq_runtime"],
+        "guardrail_row_result_id": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "guardrail_result_id": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "row_identity": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "involved_columns_json": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "failed_values_json": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
+        "failure_reason": ["fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime"],
     },
     "METADATA_SOURCE_OBSERVATION": {
         "__default__": ["fabricops_kit.pipeline.observe_table.observe_table"],

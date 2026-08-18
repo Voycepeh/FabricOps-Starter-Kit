@@ -216,6 +216,7 @@ def test_two_persisted_saves_advance_the_local_version(monkeypatch):
     written = []
     module = sys.modules["fabricops_kit.widgets.widget_author_guardrails"]
     monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **_: written.append(records))
+    monkeypatch.setattr(module, "canonical_guardrail_rule_record", lambda record, **_: record)
 
     widget = _render_guardrail_authoring(
         _state(existing), context={"config": object(), "env": "dev"}, spark_session=object()

@@ -24,6 +24,7 @@ SHARED_HELPER_FILENAMES = {
     "audit.py",
     "metadata_schemas.py",
     "guardrails_shared.py",
+    "guardrail_metadata.py",
     "enrichment_shared.py",
     "notebook_registry.py",
 }
