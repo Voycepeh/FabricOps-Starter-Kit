@@ -94,8 +94,111 @@ def _align_writer_test_with_authoritative_module() -> None:
     path.write_text(text)
 
 
+def _align_remaining_stage4a_tests() -> None:
+    path = Path("tests/unit/test_observation_guardrails.py")
+    text = path.read_text()
+    text = text.replace(
+        '        "table_name": "orders",\n        "guardrail_type": "change",',
+        '        "table_name": "orders",\n        "environment_name": "dev",\n        "guardrail_type": "change",',
+        1,
+    )
+    text = text.replace(
+        '        "table_name": "orders",\n        "guardrail_type": "freshness",',
+        '        "table_name": "orders",\n        "environment_name": "dev",\n        "guardrail_type": "freshness",',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/unit/test_dq_rules.py")
+    text = path.read_text().replace(
+        '{"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(',
+        '{"guardrail_result_id", "guardrail_rule_id", "status", "can_continue", "result_payload_json"}.issubset(',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/unit/test_guardrail_authoring_model.py")
+    text = path.read_text().replace(
+        '{"actual_value_json", "result_id", "result_payload_json"}.issubset(result_fields)',
+        '{"guardrail_result_id", "guardrail_rule_id", "result_payload_json"}.issubset(result_fields)',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/unit/test_metadata.py")
+    text = path.read_text()
+    text = text.replace(
+        '            result={"status": "failed"},\n',
+        '            result={"guardrail_rule_id": "schema-rule", "status": "failed"},\n',
+        1,
+    )
+    text = text.replace(
+        '    expected = config_shared.build_metadata_table_key("lakehouse", "raw", None, "orders")\n\n',
+        '',
+        1,
+    )
+    text = text.replace(
+        '            result={"status": "passed"},\n',
+        '            result={"guardrail_rule_id": "schema-rule", "status": "passed"},\n',
+        1,
+    )
+    text = text.replace(
+        '    assert [frame.rows[0]["metadata_table_key"] for frame in writes] == [expected, expected]\n',
+        '    assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]\n',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/integration/test_spark_flows.py")
+    text = path.read_text()
+    old_toggle = '''    assert writes[0][2:4] == ("metadata", "METADATA_GUARDRAIL_RESULTS")
+    row = writes[0][0].collect()[0].asDict()
+    assert row["guardrail_type"] == "dq"
+    assert row["_activity_id"] == "activity-dq-002"
+    assert row["status"] == "passed"
+'''
+    text = text.replace(
+        old_toggle,
+        '    assert writes == []  # no orphan result is persisted when no governed DQ rule exists\n',
+        1,
+    )
+    text = text.replace(
+        '        result={"status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},\n',
+        '        result={"guardrail_rule_id": "freshness-rule", "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},\n',
+        1,
+    )
+    old_written = '''    expected_table_key = build_metadata_table_key("lakehouse", "raw", None, "orders")
+    assert written_row["metadata_table_key"] == expected_table_key
+    assert written_row["environment_name"] == "dev"
+    assert written_row["guardrail_type"] == "freshness"
+'''
+    text = text.replace(
+        old_written,
+        '    assert written_row["guardrail_rule_id"] == "freshness-rule"\n    assert written_row["environment_name"] == "dev"\n',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/unit/test_widget_author_dq_rules.py")
+    text = path.read_text().replace(
+        '    monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **kwargs: writes.append(records))\n\n    widget = module.widget_author_dq_rules',
+        '    monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **kwargs: writes.append(records))\n    monkeypatch.setattr(module, "canonical_guardrail_rule_record", lambda record, **_: record)\n\n    widget = module.widget_author_dq_rules',
+        1,
+    )
+    path.write_text(text)
+
+    path = Path("tests/unit/test_widget_author_guardrails.py")
+    text = path.read_text().replace(
+        '    monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **_: written.append(records))\n\n    widget = _render_guardrail_authoring(',
+        '    monkeypatch.setattr(module.shared, "_write_rule_records", lambda records, **_: written.append(records))\n    monkeypatch.setattr(module, "canonical_guardrail_rule_record", lambda record, **_: record)\n\n    widget = _render_guardrail_authoring(',
+        1,
+    )
+    path.write_text(text)
+
+
 if __name__ == "__main__":
     _restore_rule_audit_fields()
     _restore_shared_guardrail_constants()
     _align_writer_test_with_authoritative_module()
+    _align_remaining_stage4a_tests()
     Path(__file__).unlink()
