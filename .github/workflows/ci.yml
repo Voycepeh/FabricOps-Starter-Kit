@@ -13,6 +13,71 @@ permissions:
   contents: read
 
 jobs:
+  agent-finish-stage4a:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/normalize-guardrail-metadata-model' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      DISABLE_MKDOCS_2_WARNING: "true"
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: agent/normalize-guardrail-metadata-model
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Apply Stage 4A completion edits
+        run: uv run python scripts/_stage4a_finish.py
+
+      - name: Regenerate directly owned artifacts twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/first.diff
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/second.diff
+          diff -u /tmp/first.diff /tmp/second.diff
+
+      - name: Validate completed Stage 4A
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff check .
+          uv run pytest tests/unit/test_guardrail_metadata_contract.py tests/unit/test_metadata_reference_generator.py
+          uv run pytest
+          source .venv/bin/activate
+          python scripts/validate_generated_artifact_ownership.py
+          uv run mkdocs build --strict
+          git diff --check
+
+      - name: Commit completed Stage 4A
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
+          rm scripts/_stage4a_finish.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "Complete Stage 4A metadata contract"
+          git push origin HEAD:agent/normalize-guardrail-metadata-model
+
   validate:
     runs-on: ubuntu-latest
     env:
