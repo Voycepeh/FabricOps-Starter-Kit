@@ -159,8 +159,10 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     source = {
         "guardrail_rule_id": "rule-1",
         "configuration_version": 3,
-        "metadata_table_key": "table-id",
-        "metadata_column_key": "column-id",
+        "table_id": "table-id",
+        "column_id": "column-id",
+        "metadata_table_key": "legacy-table-id",
+        "metadata_column_key": "legacy-column-id",
         "environment_name": "dev",
         "guardrail_type": "dq",
         "rule_id": "missing_values",
@@ -179,6 +181,8 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
     assert row["column_id"] == "column-id"
     assert row["rule_parameters_json"] == '{"a":1,"maximum_null_percent":0,"z":2}'
     assert json.loads(row["rule_parameters_json"])["maximum_null_percent"] == 0
+    assert "metadata_table_key" not in row
+    assert "metadata_column_key" not in row
     assert "review_status" not in row
     assert "table_name" not in row
 
