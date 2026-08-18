@@ -13,53 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  agent-regenerate-individual-reference-pages:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/remove-confirmed-unused-helpers' && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v5
-        with:
-          ref: agent/remove-confirmed-unused-helpers
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: .python-version
-
-      - name: Install locked dependencies
-        run: uv sync --frozen --extra docs --extra dev
-
-      - name: Regenerate individual function references twice
-        shell: bash
-        run: |
-          set -euo pipefail
-          source .venv/bin/activate
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/first.diff
-          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/second.diff
-          diff -u /tmp/first.diff /tmp/second.diff
-
-      - name: Commit generated outputs
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "regenerate affected function references"
-          git push origin HEAD:agent/remove-confirmed-unused-helpers
-
   validate:
     runs-on: ubuntu-latest
     env:
