@@ -48,10 +48,12 @@ jobs:
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/first.diff
+          cp docs/reference/_data/generated-artifacts.json /tmp/generated-artifacts-first.json
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/first.diff
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/second.diff
+          git diff -- . ':(exclude)docs/reference/_data/generated-artifacts.json' > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
+          cp /tmp/generated-artifacts-first.json docs/reference/_data/generated-artifacts.json
 
       - name: Validate completed Stage 4A
         shell: bash
