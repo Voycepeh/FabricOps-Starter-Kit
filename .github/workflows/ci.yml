@@ -40,6 +40,8 @@ jobs:
 
       - name: Apply Stage 4A completion edits
         run: |
+          sed -i 's/results_table: str = GUARDRAIL_RESULTS_TABLE/results_table: str = "METADATA_GUARDRAIL_RESULTS"/' src/fabricops_kit/pipeline/guardrail_metadata.py
+          sed -i 's/"result_payload_json": _stable_json(payload),/"result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),/' src/fabricops_kit/pipeline/guardrail_metadata.py
           uv run python scripts/_stage4a_finish.py
           uv run python scripts/_stage4a_fix2.py
 
@@ -74,7 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
-          rm scripts/_stage4a_finish.py
+          rm scripts/_stage4a_finish.py scripts/_stage4a_fix2.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
