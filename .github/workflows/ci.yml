@@ -59,6 +59,13 @@ jobs:
           diff -u /tmp/first.diff /tmp/second.diff
           cp /tmp/generated-artifacts-first.json docs/reference/_data/generated-artifacts.json
 
+      - name: Stage completed Stage 4A diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+
       - name: Validate completed Stage 4A
         shell: bash
         run: |
