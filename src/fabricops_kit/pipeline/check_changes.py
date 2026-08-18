@@ -202,30 +202,26 @@ def _observation_changes(observation) -> dict:
             else ("Source observation changed." if has_changes else "Source observation is unchanged.")
         ),
     }
-    result["metadata_table_key"] = table_id  # in-memory Stage 4 compatibility only
-    table_name = str(selected_rule.get("table_name") or "")
     result = evaluate_changes_guardrail(
         result,
         rules_df=rules_df,
-        table_name=table_name,
         environment_name=env,
         metadata_table_key=table_id,
     )
-    if result.get("rule_key"):
+    if result.get("guardrail_rule_id"):
         write_guardrail_result_row(
             spark_session=getattr(observation, "sparkSession", None),
             config=config,
             env=env,
             run_id=str(observed_at),
-            dataset_name=str(selected_rule.get("dataset_name") or ""),
-            table_name=table_name,
+            dataset_name="",
+            table_name="",
             store_type="",
             layer="",
             schema_name=None,
             guardrail_type="change",
             rule_type=str(result.get("rule_type") or "monitor_only"),
             result=result,
-            rule_key=str(result["rule_key"]),
         )
     return result
 
