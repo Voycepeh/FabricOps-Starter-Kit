@@ -326,6 +326,28 @@ def _module_level_reference_qns(
     return references
 
 
+def _function_body_reference_qns(
+    info: FunctionInfo,
+    modules: dict[str, ModuleInfo],
+    functions: dict[str, FunctionInfo],
+    name_index: dict[str, set[str]],
+) -> set[str]:
+    """Return package functions referenced as values anywhere in a function body."""
+    module_name = ".".join(info.qualified_name.split(".")[:-1])
+    module = modules[module_name]
+    references: set[str] = set()
+    for node in ast.walk(info.node):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load):
+            references.update(resolve_name(node.id, module, functions, name_index))
+        elif isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
+            module_qn = module.module_aliases.get(node.value.id)
+            if module_qn:
+                candidate = f"{module_qn}.{node.attr}"
+                if candidate in functions:
+                    references.add(candidate)
+    return references
+
+
 def build_global_source_references(
     modules: dict[str, ModuleInfo],
     functions: dict[str, FunctionInfo],
@@ -334,7 +356,7 @@ def build_global_source_references(
     name_index = build_name_index(functions)
     inbound: dict[str, set[str]] = {qn: set() for qn in functions}
     for caller_qn, info in functions.items():
-        for target_qn in called_function_qns(info, modules, functions, name_index):
+        for target_qn in _function_body_reference_qns(info, modules, functions, name_index):
             if target_qn != caller_qn:
                 inbound[target_qn].add(caller_qn)
     for module in modules.values():

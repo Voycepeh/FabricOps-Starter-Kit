@@ -13,11 +13,6 @@ def _audit_timestamp_value(config: Any = None) -> datetime:
     return datetime.fromisoformat(get_current_audit_timestamp(config=config, drop_microseconds=False))
 
 
-def _now_audit_timestamp(config: Any = None) -> str:
-    """Return the current audit timestamp using FABRICOPS_AUDIT_TIMEZONE."""
-    return get_current_audit_timestamp(config=config, drop_microseconds=False)
-
-
 def _context_get(context: Any, *keys: str) -> Any:
     for key in keys:
         try:
@@ -31,10 +26,6 @@ def _context_get(context: Any, *keys: str) -> Any:
         if value is not None:
             return value
     return None
-
-
-def _safe_str(value: Any) -> str:
-    return "" if value is None else str(value)
 
 
 def _resolve_action_by(action_by: str | None = None) -> str:
