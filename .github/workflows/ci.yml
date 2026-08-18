@@ -42,9 +42,9 @@ jobs:
           set -euo pipefail
           source .venv/bin/activate
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/first.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/first.diff
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/_data/generated-artifacts.json > /tmp/second.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/second.diff
           diff -u /tmp/first.diff /tmp/second.diff
 
       - name: Commit generated outputs
