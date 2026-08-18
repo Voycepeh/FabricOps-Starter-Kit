@@ -93,8 +93,7 @@ def check_schema(
         dataframe, rules_df=rules_df, table_name=resolved_table,
         environment_name=env, metadata_table_key=metadata_table_key,
     )
-    if result.get("rule_key"):
-        result["metadata_table_key"] = metadata_table_key
+    if result.get("guardrail_rule_id"):
         result["expected"] = {"schema_rule": result.get("rule_type")}
         result["actual"] = {
             name: result.get(name, [])
@@ -105,7 +104,6 @@ def check_schema(
             table_name=resolved_table, store_type=store_type, layer=target,
             schema_name=schema_name, guardrail_type="schema",
             rule_type=str(result.get("rule_type")), result=result,
-            rule_key=str(result["rule_key"]),
         )
     stop_if_failed(result)
     return result
