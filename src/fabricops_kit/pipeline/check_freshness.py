@@ -2,7 +2,7 @@
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.guardrails_shared import (
+from fabricops_kit.pipeline.guardrail_metadata import (
     freshness_check_core,
     load_table_guardrail_rules,
     resolve_change_rule_observation_columns,
