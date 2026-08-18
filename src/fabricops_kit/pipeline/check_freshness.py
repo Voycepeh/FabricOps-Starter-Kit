@@ -83,16 +83,13 @@ def check_freshness(observation) -> dict:
         table_id=table_id,
         change_column=change_column,
     )
-    table_name = str(freshness_rule.get("table_name") or change_rule.get("table_name") or "")
     result = freshness_check_core(
         compatibility_observation,
         rules_df=rules_df,
-        table_name=table_name,
         environment_name=env,
         metadata_table_key=table_id,
     )
-    if result.get("rule_key"):
-        result["metadata_table_key"] = table_id  # in-memory Stage 4 compatibility only
+    if result.get("guardrail_rule_id"):
         result["expected"] = {"max_lag_days": result.get("freshness_max_lag_days")}
         result["actual"] = {
             "latest_observed_change_value": result.get("latest_value"),
@@ -103,14 +100,13 @@ def check_freshness(observation) -> dict:
             config=config,
             env=env,
             run_id=str(first.get("observed_at") or ""),
-            dataset_name=str(freshness_rule.get("dataset_name") or ""),
-            table_name=table_name,
+            dataset_name="",
+            table_name="",
             store_type="",
             layer="",
             schema_name=None,
             guardrail_type="freshness",
             rule_type=str(result.get("rule_type") or ""),
             result=result,
-            rule_key=str(result["rule_key"]),
         )
     return result
