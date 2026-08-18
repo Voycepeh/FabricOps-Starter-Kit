@@ -118,11 +118,21 @@ def _align_remaining_stage4a_tests() -> None:
     path.write_text(text)
 
     path = Path("tests/unit/test_guardrail_authoring_model.py")
-    text = path.read_text().replace(
+    text = path.read_text()
+    old_result_assertions = (
+        '{"result_id", "result_payload_json", "actual_value_json"}.issubset(result_fields)',
         '{"actual_value_json", "result_id", "result_payload_json"}.issubset(result_fields)',
-        '{"guardrail_result_id", "guardrail_rule_id", "result_payload_json"}.issubset(result_fields)',
-        1,
     )
+    for old in old_result_assertions:
+        if old in text:
+            text = text.replace(
+                old,
+                '{"guardrail_result_id", "guardrail_rule_id", "result_payload_json"}.issubset(result_fields)',
+                1,
+            )
+            break
+    else:
+        raise RuntimeError("Expected stale Guardrail Results schema assertion not found")
     path.write_text(text)
 
     path = Path("tests/unit/test_metadata.py")
