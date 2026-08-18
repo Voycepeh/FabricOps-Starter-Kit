@@ -39,7 +39,9 @@ jobs:
         run: uv sync --frozen --extra docs --extra dev
 
       - name: Apply Stage 4A completion edits
-        run: uv run python scripts/_stage4a_finish.py
+        run: |
+          uv run python scripts/_stage4a_finish.py
+          uv run python scripts/_stage4a_finish_followup.py
 
       - name: Regenerate directly owned artifacts twice
         shell: bash
@@ -72,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
-          rm scripts/_stage4a_finish.py
+          rm scripts/_stage4a_finish.py scripts/_stage4a_finish_followup.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
