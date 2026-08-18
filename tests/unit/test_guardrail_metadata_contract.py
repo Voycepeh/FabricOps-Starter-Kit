@@ -85,12 +85,14 @@ def _audit() -> dict[str, object]:
 
 
 def test_guardrail_metadata_tables_have_exact_stage4a_columns() -> None:
+    """Lock the exact physical columns of all three normalized Guardrail tables."""
     assert _field_names("METADATA_GUARDRAIL") == _GUARDRAIL_COLUMNS
     assert _field_names("METADATA_GUARDRAIL_RESULTS") == _RESULT_COLUMNS
     assert _field_names("METADATA_GUARDRAIL_ROW_RESULTS") == _ROW_RESULT_COLUMNS
 
 
 def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
+    """Verify each metadata layer stores only the relational identity it owns."""
     guardrail_fields = set(_field_names("METADATA_GUARDRAIL"))
     result_fields = set(_field_names("METADATA_GUARDRAIL_RESULTS"))
     row_result_fields = set(_field_names("METADATA_GUARDRAIL_ROW_RESULTS"))
@@ -105,6 +107,7 @@ def test_guardrail_metadata_uses_canonical_parent_identities() -> None:
 
 
 def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
+    """Verify Stage 4A removes duplicated identity and obsolete review workflow fields."""
     obsolete = {
         "metadata_table_key",
         "metadata_column_key",
@@ -140,6 +143,7 @@ def test_obsolete_guardrail_identity_and_review_fields_are_absent() -> None:
 
 
 def test_standard_eight_audit_fields_are_present_on_all_guardrail_tables() -> None:
+    """Verify every normalized Guardrail table ends with the standard audit contract."""
     assert len(_AUDIT_COLUMNS) == 8
     for table_name in (
         "METADATA_GUARDRAIL",
@@ -150,6 +154,7 @@ def test_standard_eight_audit_fields_are_present_on_all_guardrail_tables() -> No
 
 
 def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monkeypatch) -> None:
+    """Verify authored rule rows are normalized and rule JSON is deterministic."""
     monkeypatch.setattr(guardrail_metadata, "build_runtime_audit_fields", lambda **_kwargs: _audit())
     source = {
         "guardrail_rule_id": "rule-1",
@@ -179,6 +184,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
 
 
 def test_runtime_result_writer_emits_only_canonical_result_fields(monkeypatch) -> None:
+    """Verify runtime result persistence emits only the compact Stage 4A result row."""
     writes = []
     monkeypatch.setattr(guardrail_metadata, "build_runtime_audit_fields", lambda **_kwargs: _audit())
     monkeypatch.setattr(guardrail_metadata, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
@@ -221,4 +227,5 @@ def test_runtime_result_writer_emits_only_canonical_result_fields(monkeypatch) -
 
 
 def test_source_observation_physical_contract_is_unchanged() -> None:
+    """Verify Stage 4A does not alter the independent Source Observation schema."""
     assert _field_names("METADATA_SOURCE_OBSERVATION") == _SOURCE_OBSERVATION_COLUMNS
