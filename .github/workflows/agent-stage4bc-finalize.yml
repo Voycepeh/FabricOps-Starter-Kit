@@ -35,7 +35,7 @@ jobs:
           uv sync --frozen --extra docs --extra dev
           echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
-      - name: Apply focused lint, metadata, and notebook updates
+      - name: Apply focused source, lint, metadata, and notebook updates
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -82,6 +82,132 @@ jobs:
                       raise SystemExit(f"Expected text not found in {path}: {old}")
                   text = text.replace(old, new, 1)
               path.write_text(text, encoding="utf-8")
+
+          helper_names = {
+              "stable_json": "_stable_json",
+              "latest_rule": "_latest_rule",
+              "rule_parameters": "_rule_parameters",
+              "column_id_for_name": "_column_id_for_name",
+              "build_guardrail_rule_id": "_build_guardrail_rule_id",
+              "next_configuration_version": "_next_configuration_version",
+              "build_rule_record": "_build_rule_record",
+              "dq_records_from_selection": "_dq_records_from_selection",
+              "canonicalize_and_write": "_canonicalize_records",
+              "load_guardrail_authoring_targets": "_load_guardrail_authoring_targets",
+          }
+          helper_paths = (
+              Path("src/fabricops_kit/widgets/guardrail_authoring_shared.py"),
+              Path("src/fabricops_kit/widgets/widget_author_guardrails.py"),
+              Path("src/fabricops_kit/widgets/widget_author_dq_rules.py"),
+              Path("tests/unit/test_widget_author_guardrails.py"),
+              Path("tests/unit/test_widget_author_dq_rules.py"),
+          )
+          for path in helper_paths:
+              text = path.read_text(encoding="utf-8")
+              for old, new in helper_names.items():
+                  text = text.replace(old, new)
+              path.write_text(text, encoding="utf-8")
+
+          helper_path = Path("src/fabricops_kit/widgets/guardrail_authoring_shared.py")
+          helper_text = helper_path.read_text(encoding="utf-8")
+          old_block = '''def _canonicalize_records(
+    records: list[dict[str, Any]],
+    *,
+    config: Any,
+    env: str,
+    spark_session: Any,
+) -> list[dict[str, Any]]:
+    """Normalize and append authored Guardrail rows through the canonical writer path."""
+    canonical = [canonical_guardrail_rule_record(record, config=config, env=env) for record in records]
+    shared._write_rule_records(canonical, config=config, env=env, spark_session=spark_session)
+    return canonical
+'''
+          new_block = '''def _canonicalize_records(
+    records: list[dict[str, Any]],
+    *,
+    config: Any,
+    env: str,
+) -> list[dict[str, Any]]:
+    """Normalize authored Guardrail rows before the widget-owned shared write call."""
+    return [canonical_guardrail_rule_record(record, config=config, env=env) for record in records]
+'''
+          if old_block not in helper_text:
+              raise SystemExit("Expected canonical authoring helper block not found")
+          helper_path.write_text(helper_text.replace(old_block, new_block, 1), encoding="utf-8")
+
+          for path in (
+              Path("src/fabricops_kit/widgets/widget_author_guardrails.py"),
+              Path("src/fabricops_kit/widgets/widget_author_dq_rules.py"),
+          ):
+              text = path.read_text(encoding="utf-8")
+              old = '''        canonical_records = authoring._canonicalize_records(
+            records,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+        )
+'''
+              new = '''        canonical_records = authoring._canonicalize_records(
+            records,
+            config=config,
+            env=env,
+        )
+        shared._write_rule_records(
+            canonical_records,
+            config=config,
+            env=env,
+            spark_session=spark_session,
+        )
+'''
+              if old not in text:
+                  raise SystemExit(f"Expected canonical save block not found in {path}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          guardrail_test = Path("tests/unit/test_widget_author_guardrails.py")
+          text = guardrail_test.read_text(encoding="utf-8")
+          old = '''    monkeypatch.setattr(
+        authoring,
+        "_canonicalize_records",
+        lambda records, **kwargs: saved.append([dict(row) for row in records]) or [dict(row) for row in records],
+    )
+'''
+          new = '''    monkeypatch.setattr(
+        authoring,
+        "_canonicalize_records",
+        lambda records, **kwargs: [dict(row) for row in records],
+    )
+    monkeypatch.setattr(
+        sys.modules["fabricops_kit.widgets.widget_author_guardrails"].shared,
+        "_write_rule_records",
+        lambda records, **kwargs: saved.append([dict(row) for row in records]),
+    )
+'''
+          if old not in text:
+              raise SystemExit("Expected Guardrail save test block not found")
+          guardrail_test.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          dq_test = Path("tests/unit/test_widget_author_dq_rules.py")
+          text = dq_test.read_text(encoding="utf-8")
+          old = '''    monkeypatch.setattr(
+        module.authoring,
+        "_canonicalize_records",
+        lambda records, **kwargs: saved.append(records) or records,
+    )
+'''
+          new = '''    monkeypatch.setattr(
+        module.authoring,
+        "_canonicalize_records",
+        lambda records, **kwargs: records,
+    )
+    monkeypatch.setattr(
+        module.shared,
+        "_write_rule_records",
+        lambda records, **kwargs: saved.append(records),
+    )
+'''
+          if old not in text:
+              raise SystemExit("Expected DQ save test block not found")
+          dq_test.write_text(text.replace(old, new, 1), encoding="utf-8")
 
           for path in (
               Path("tests/unit/test_widget_author_guardrails.py"),
