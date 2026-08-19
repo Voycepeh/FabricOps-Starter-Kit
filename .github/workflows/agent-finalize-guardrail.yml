@@ -1,0 +1,131 @@
+name: Agent Finalize Guardrail Consolidation
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/consolidate-guardrail-shared
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --all-groups
+
+      - name: Run tested consolidation transform
+        run: |
+          python - <<'PY'
+          import subprocess
+          import yaml
+          from pathlib import Path
+          data = yaml.safe_load(Path('.github/workflows/agent-generate.yml').read_text())
+          steps = data['jobs']['consolidate']['steps']
+          script = next(step['run'] for step in steps if step.get('name') == 'Consolidate Guardrail implementation into package shared modules')
+          subprocess.run(script, shell=True, check=True, executable='/bin/bash')
+          PY
+
+      - name: Lint transformed source
+        run: |
+          uv run --with ruff ruff check --fix src tests scripts/reference_docs_metadata.py
+          uv run --with ruff ruff check src tests scripts/reference_docs_metadata.py
+
+      - name: Run focused Guardrail tests
+        run: |
+          uv run pytest -q \
+            tests/unit/test_guardrail_metadata_contract.py \
+            tests/unit/test_widget_author_guardrails.py \
+            tests/unit/test_widget_author_dq_rules.py \
+            tests/contract/test_public_owner_file_pattern.py
+
+      - name: Generate owned artifacts
+        run: |
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          cp docs/reference/_data/public-function-call-flows.json /tmp/callflow-first.json
+          git diff --binary -- scripts/reference_docs_metadata.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata > /tmp/docs-first.diff
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('docs/reference/_data/generated-artifacts.json').read_text())
+          def clean(obj):
+              if isinstance(obj, dict):
+                  return {k: clean(v) for k, v in obj.items() if 'generated_at' not in k}
+              if isinstance(obj, list):
+                  return [clean(v) for v in obj]
+              return obj
+          Path('/tmp/manifest-first.json').write_text(json.dumps(clean(value), sort_keys=True, separators=(',', ':')))
+          PY
+
+      - name: Verify generators are substantively idempotent
+        run: |
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          cmp /tmp/callflow-first.json docs/reference/_data/public-function-call-flows.json
+          git diff --binary -- scripts/reference_docs_metadata.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata > /tmp/docs-second.diff
+          cmp /tmp/docs-first.diff /tmp/docs-second.diff
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('docs/reference/_data/generated-artifacts.json').read_text())
+          def clean(obj):
+              if isinstance(obj, dict):
+                  return {k: clean(v) for k, v in obj.items() if 'generated_at' not in k}
+              if isinstance(obj, list):
+                  return [clean(v) for v in obj]
+              return obj
+          assert Path('/tmp/manifest-first.json').read_text() == json.dumps(clean(value), sort_keys=True, separators=(',', ':'))
+          PY
+
+      - name: Verify selected flows have zero architecture violations
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('docs/reference/_data/public-function-call-flows.json').read_text())
+          selected = {'check_dq', 'check_freshness', 'widget_author_dq_rules', 'widget_author_guardrails'}
+          found = set()
+          bad = {}
+          def walk(value):
+              if isinstance(value, dict):
+                  name = value.get('function_name')
+                  if name in selected and ('architecture_violation_count' in value or 'has_architecture_violation' in value):
+                      found.add(name)
+                      count = int(value.get('architecture_violation_count') or 0)
+                      flag = bool(value.get('has_architecture_violation', False))
+                      if count or flag:
+                          bad[name] = {'count': count, 'flag': flag}
+                  for child in value.values():
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+          walk(data)
+          assert selected <= found, f'Missing selected flow summaries: {sorted(selected - found)}'
+          assert not bad, f'Architecture violations remain: {bad}'
+          print('Zero architecture violations:', ', '.join(sorted(selected)))
+          PY
+
+      - name: Commit consolidation outputs once
+        run: |
+          if ! git diff --name-only | grep -Eq 'src/fabricops_kit/(pipeline/(shared|guardrail_shared|guardrails_shared)\.py|widgets/(shared|guardrail_authoring_shared)\.py)'; then
+            echo "No source consolidation diff; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src tests scripts/reference_docs_metadata.py
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json
+          git add docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata
+          git commit -m "Consolidate Guardrail helpers into package shared modules"
+          git push origin HEAD:agent/consolidate-guardrail-shared
