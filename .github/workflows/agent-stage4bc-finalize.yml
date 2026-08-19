@@ -30,7 +30,7 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Apply focused lint and reference metadata updates
+      - name: Apply focused lint, metadata, and notebook updates
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -61,6 +61,12 @@ jobs:
                   "'expanded_purpose': 'Authors Data Quality rules from canonical rule definitions after independently resolving a profiled table and its columns.',",
                   "'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',":
                   "'when_to_use': 'Use in 01_governance to select a profiled table, choose a Data Quality rule, configure its parameters, and apply it to the relevant columns.',",
+              },
+              Path("templates/notebooks/01_governance.ipynb"): {
+                  'Create or update schema, freshness, profile-behaviour, and data-quality guardrail rules.':
+                  'Create or update Schema, Freshness, Changes, and Data Quality guardrail rules.',
+                  '    "    source_notebook_type=\\"01_governance\\",\\n",\n    "    created_by_role=\\"governance\\",\\n",\n':
+                  '',
               },
           }
 
