@@ -51,7 +51,9 @@ def _install_fake_notebook_widgets(monkeypatch, *, auto_observe=False):
                 self._value = kwargs["value"]
             elif options:
                 first = options[0]
-                self._value = first[1] if isinstance(first, tuple) and len(first) == 2 else first
+                self._value = (
+                    first[1] if isinstance(first, tuple) and len(first) == 2 else first
+                )
             else:
                 self._value = ""
             self.description = kwargs.get("description", "")
@@ -111,10 +113,30 @@ def _install_fake_notebook_widgets(monkeypatch, *, auto_observe=False):
 
 def _state(existing=()):
     rows = [
-        {"table_id": "table-orders", "column_id": "col-id", "column_name": "id", "data_type": "bigint"},
-        {"table_id": "table-orders", "column_id": "col-updated", "column_name": "updated_at", "data_type": "timestamp"},
-        {"table_id": "table-orders", "column_id": "col-snapshot", "column_name": "snapshot_date", "data_type": "date"},
-        {"table_id": "table-orders", "column_id": "col-extra", "column_name": "extra", "data_type": "string"},
+        {
+            "table_id": "table-orders",
+            "column_id": "col-id",
+            "column_name": "id",
+            "data_type": "bigint",
+        },
+        {
+            "table_id": "table-orders",
+            "column_id": "col-updated",
+            "column_name": "updated_at",
+            "data_type": "timestamp",
+        },
+        {
+            "table_id": "table-orders",
+            "column_id": "col-snapshot",
+            "column_name": "snapshot_date",
+            "data_type": "date",
+        },
+        {
+            "table_id": "table-orders",
+            "column_id": "col-extra",
+            "column_name": "extra",
+            "data_type": "string",
+        },
     ]
     return {
         "environment_name": "dev",
@@ -145,6 +167,7 @@ def _records(**overrides):
 
 
 def test_public_surface_keeps_two_standalone_authoring_widgets():
+    """Verify that the public surface keeps only the two standalone widgets."""
     assert fabricops_kit.widget_author_guardrails is widget_author_guardrails
     assert callable(fabricops_kit.widget_author_dq_rules)
     assert "widget_select_guardrail_target" not in fabricops_kit.__all__
@@ -152,6 +175,7 @@ def test_public_surface_keeps_two_standalone_authoring_widgets():
 
 
 def test_guardrail_records_use_only_stage4a_authoring_fields():
+    """Verify that authored Guardrail rows use only the Stage 4A contract."""
     records = _records()
     expected = {
         "guardrail_rule_id",
@@ -172,6 +196,7 @@ def test_guardrail_records_use_only_stage4a_authoring_fields():
 
 
 def test_schema_selection_serializes_required_columns_and_current_types():
+    """Verify that Schema rules persist required columns and current data types."""
     schema = _records(required_columns=["id", "extra"])[0]
     assert schema["guardrail_type"] == "schema"
     assert schema["rule_id"] == "schema"
@@ -183,7 +208,12 @@ def test_schema_selection_serializes_required_columns_and_current_types():
 
 
 def test_freshness_uses_runtime_parameter_vocabulary_and_failure_severity():
-    freshness = _records(maximum_age=24, maximum_age_unit="Hours", freshness_severity="warning")[1]
+    """Verify that Freshness rules use the runtime parameter vocabulary."""
+    freshness = _records(
+        maximum_age=24,
+        maximum_age_unit="Hours",
+        freshness_severity="warning",
+    )[1]
     assert freshness["rule_type"] == "max_age"
     assert freshness["severity"] == "warning"
     assert json.loads(freshness["rule_parameters_json"]) == {
@@ -195,6 +225,7 @@ def test_freshness_uses_runtime_parameter_vocabulary_and_failure_severity():
 
 
 def test_freshness_can_be_disabled_without_removing_logical_rule():
+    """Verify that Freshness can be disabled while preserving its logical row."""
     freshness = _records(freshness_column="")[1]
     assert freshness["rule_id"] == "freshness"
     assert freshness["rule_type"] == "skip"
@@ -202,6 +233,7 @@ def test_freshness_can_be_disabled_without_removing_logical_rule():
 
 
 def test_change_behaviours_preserve_existing_runtime_contract():
+    """Verify that Changes behaviour labels preserve the existing runtime contract."""
     expected = {
         "No changes expected": ("no_change_required", "snapshot"),
         "Incremental append": ("monitor_only", "incremental_append"),
@@ -220,6 +252,7 @@ def test_change_behaviours_preserve_existing_runtime_contract():
 
 
 def test_invalid_columns_age_and_failure_action_fail_clearly():
+    """Verify that invalid Guardrail inputs fail with clear validation errors."""
     with pytest.raises(ValueError, match="positive"):
         _records(maximum_age=0)
     with pytest.raises(ValueError, match="selected table schema"):
@@ -229,20 +262,25 @@ def test_invalid_columns_age_and_failure_action_fail_clearly():
 
 
 def test_rule_identity_is_stable_while_configuration_version_advances():
+    """Verify stable logical identity across configuration versions."""
     first = _records(configuration_version=1)
     second = _records(configuration_version=2, maximum_age=48)
-    assert [row["guardrail_rule_id"] for row in first] == [row["guardrail_rule_id"] for row in second]
+    assert [row["guardrail_rule_id"] for row in first] == [
+        row["guardrail_rule_id"] for row in second
+    ]
     assert {row["configuration_version"] for row in first} == {1}
     assert {row["configuration_version"] for row in second} == {2}
 
 
 def test_column_name_to_column_id_resolution_is_canonical():
-    assert authoring.column_id_for_name(_state(), "updated_at") == "col-updated"
+    """Verify that visible column names resolve through canonical Catalogue IDs."""
+    assert authoring._column_id_for_name(_state(), "updated_at") == "col-updated"
     with pytest.raises(ValueError, match="column_id"):
-        authoring.column_id_for_name(_state(), "missing")
+        authoring._column_id_for_name(_state(), "missing")
 
 
 def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch):
+    """Verify that target resolution joins the latest profile snapshot to Catalogue."""
     widgets = _install_fake_notebook_widgets(monkeypatch)
     catalogue = [
         {
@@ -263,7 +301,11 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
                 "column_name": column_name,
                 "environment_name": "dev",
             }
-            for column_id, column_name in (("col-a", "a"), ("col-b", "b"), ("col-c", "obsolete_c"))
+            for column_id, column_name in (
+                ("col-a", "a"),
+                ("col-b", "b"),
+                ("col-c", "obsolete_c"),
+            )
         ],
     ]
     profiles = [
@@ -289,7 +331,13 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
         }
         for column_id in ("col-a", "col-b")
     ]
-    rules = [{"table_id": "table-orders", "environment_name": "dev", "guardrail_type": "schema"}]
+    rules = [
+        {
+            "table_id": "table-orders",
+            "environment_name": "dev",
+            "guardrail_type": "schema",
+        }
+    ]
 
     def fake_read(config, env, table_name, *, spark_session):
         return {
@@ -299,7 +347,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
         }[table_name]
 
     monkeypatch.setattr(authoring.shared, "_read_metadata_table_or_empty", fake_read)
-    state, _, _ = authoring.load_guardrail_authoring_targets(
+    state, _, _ = authoring._load_guardrail_authoring_targets(
         object(), "dev", spark_session=object(), widgets=widgets
     )
 
@@ -312,6 +360,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
 
 
 def test_widget_preview_uses_new_metadata_vocabulary(monkeypatch):
+    """Verify that the widget preview exposes only normalized metadata vocabulary."""
     _install_fake_notebook_widgets(monkeypatch)
     widget = _render_guardrail_authoring(
         _state(), context={"config": object(), "env": "dev"}
@@ -323,12 +372,18 @@ def test_widget_preview_uses_new_metadata_vocabulary(monkeypatch):
 
 
 def test_widget_save_uses_shared_canonical_writer_and_advances_version(monkeypatch):
+    """Verify that saving uses the shared writer and advances configuration version."""
     _install_fake_notebook_widgets(monkeypatch)
     saved = []
     monkeypatch.setattr(
         authoring,
-        "canonicalize_and_write",
-        lambda records, **kwargs: saved.append([dict(row) for row in records]) or [dict(row) for row in records],
+        "_canonicalize_records",
+        lambda records, **kwargs: [dict(row) for row in records],
+    )
+    monkeypatch.setattr(
+        sys.modules["fabricops_kit.widgets.widget_author_guardrails"].shared,
+        "_write_rule_records",
+        lambda records, **kwargs: saved.append([dict(row) for row in records]),
     )
     widget = _render_guardrail_authoring(
         _state(), spark_session=object(), context={"config": object(), "env": "dev"}
@@ -341,6 +396,9 @@ def test_widget_save_uses_shared_canonical_writer_and_advances_version(monkeypat
 
 
 def test_authoring_widgets_do_not_depend_on_each_other_or_public_target_selector():
-    guardrail_source = inspect.getsource(sys.modules["fabricops_kit.widgets.widget_author_guardrails"])
+    """Verify that the standalone widgets do not depend on each other or old selector."""
+    guardrail_source = inspect.getsource(
+        sys.modules["fabricops_kit.widgets.widget_author_guardrails"]
+    )
     assert "widget_author_dq_rules(" not in guardrail_source
     assert "widget_select_guardrail_target" not in guardrail_source
