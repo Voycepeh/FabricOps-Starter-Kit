@@ -26,18 +26,49 @@ jobs:
       - name: Update authoritative metadata ownership
         run: |
           sed -i 's/fabricops_kit\.pipeline\.guardrail_metadata/fabricops_kit.pipeline.guardrail_shared/g' scripts/reference_docs_metadata.py
-      - name: Generate call-flow contract
-        run: uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-      - name: Generate individual references
-        run: uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-      - name: Capture first generated diff
-        run: git diff --binary > /tmp/generated-first.diff
-      - name: Verify generators are idempotent
+      - name: Generate owned artifacts
         run: |
           uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff --binary > /tmp/generated-second.diff
+      - name: Capture first generated state
+        run: |
+          git diff --binary -- scripts/reference_docs_metadata.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata > /tmp/generated-first.diff
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          def normalized(path):
+              value = json.loads(Path(path).read_text())
+              def clean(obj):
+                  if isinstance(obj, dict):
+                      return {k: clean(v) for k, v in obj.items() if not k.startswith('generated_at')}
+                  if isinstance(obj, list):
+                      return [clean(v) for v in obj]
+                  return obj
+              return json.dumps(clean(value), sort_keys=True, separators=(',', ':'))
+          Path('/tmp/callflow-first.json').write_text(normalized('docs/reference/_data/public-function-call-flows.json'))
+          Path('/tmp/manifest-first.json').write_text(normalized('docs/reference/_data/generated-artifacts.json'))
+          PY
+      - name: Verify generators are idempotent apart from owned timestamps
+        run: |
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff --binary -- scripts/reference_docs_metadata.py docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md docs/reference/metadata.md docs/reference/metadata > /tmp/generated-second.diff
           cmp /tmp/generated-first.diff /tmp/generated-second.diff
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          def normalized(path):
+              value = json.loads(Path(path).read_text())
+              def clean(obj):
+                  if isinstance(obj, dict):
+                      return {k: clean(v) for k, v in obj.items() if not k.startswith('generated_at')}
+                  if isinstance(obj, list):
+                      return [clean(v) for v in obj]
+                  return obj
+              return json.dumps(clean(value), sort_keys=True, separators=(',', ':'))
+          assert Path('/tmp/callflow-first.json').read_text() == normalized('docs/reference/_data/public-function-call-flows.json')
+          assert Path('/tmp/manifest-first.json').read_text() == normalized('docs/reference/_data/generated-artifacts.json')
+          PY
       - name: Commit directly affected generated outputs
         run: |
           git config user.name "github-actions[bot]"
