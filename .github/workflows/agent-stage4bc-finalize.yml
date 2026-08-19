@@ -1,0 +1,151 @@
+name: Agent Stage 4B 4C Finalize
+
+on:
+  push:
+    branches:
+      - agent/improve-standalone-guardrail-dq-authoring
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: agent/improve-standalone-guardrail-dq-authoring
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install locked dependencies
+        run: uv sync --frozen --extra docs --extra dev
+
+      - name: Apply focused lint and reference metadata updates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path("src/fabricops_kit/widgets/widget_author_guardrails.py"): {
+                  '"""Author Schema, Freshness, and Change expectations for a profiled table.':
+                  '"""Configure Schema, Freshness, and Change expectations for a profiled table.',
+              },
+              Path("src/fabricops_kit/widgets/widget_author_dq_rules.py"): {
+                  '"""Author Data Quality rules for relevant columns of a profiled table.':
+                  '"""Configure Data Quality rules for relevant columns of a profiled table.',
+              },
+              Path("scripts/reference_docs_metadata.py"): {
+                  "'module_summary': 'Owns versioned Schema, Freshness, and Changes guardrail authoring.',":
+                  "'module_summary': 'Owns standalone Schema, Freshness, and Changes Guardrail authoring.',",
+                  "'module_summary': 'Owns DQ rule authoring widget workflow.',":
+                  "'module_summary': 'Owns standalone Data Quality rule authoring for profiled tables.',",
+                  "'summary_override': 'Render versioned table-level Schema, Freshness, and Changes guardrail controls.',":
+                  "'summary_override': 'Author Schema, Freshness, and Changes expectations for a profiled table.',",
+                  "'expanded_purpose': 'Renders one lightweight form for versioned table-level Schema, Freshness, and Changes guardrail intent.',":
+                  "'expanded_purpose': 'Authors Schema, Freshness, and Changes expectations for a profiled table using the normalized Guardrail metadata model.',",
+                  "'when_to_use': 'Use in 01_governance after selecting a table to append a new guardrail configuration version.',":
+                  "'when_to_use': 'Use in 01_governance to select a profiled table and author its Schema, Freshness, and Changes expectations.',",
+                  "'summary_override': 'Render interactive manual DQ guardrail authoring controls.',":
+                  "'summary_override': 'Author Data Quality rules for relevant columns of a profiled table.',",
+                  "'expanded_purpose': 'Renders standalone structured DQ authoring controls with integrated profiled-target selection.',":
+                  "'expanded_purpose': 'Authors Data Quality rules from canonical rule definitions after independently resolving a profiled table and its columns.',",
+                  "'when_to_use': 'Use in 01_governance to select a profiled table and submit structured DQ rule intent.',":
+                  "'when_to_use': 'Use in 01_governance to select a profiled table, choose a Data Quality rule, configure its parameters, and apply it to the relevant columns.',",
+              },
+          }
+
+          for path, mapping in replacements.items():
+              text = path.read_text(encoding="utf-8")
+              for old, new in mapping.items():
+                  if old not in text:
+                      raise SystemExit(f"Expected text not found in {path}: {old}")
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding="utf-8")
+
+          for path in (
+              Path("tests/unit/test_widget_author_guardrails.py"),
+              Path("tests/unit/test_widget_author_dq_rules.py"),
+          ):
+              lines = path.read_text(encoding="utf-8").splitlines()
+              result = []
+              for index, line in enumerate(lines):
+                  result.append(line)
+                  if line.startswith("def test_") and line.rstrip().endswith("):"):
+                      next_line = lines[index + 1] if index + 1 < len(lines) else ""
+                      if not next_line.lstrip().startswith(('"""', "'''")):
+                          result.append('    """Verify the focused authoring contract."""')
+              path.write_text("\n".join(result) + "\n", encoding="utf-8")
+          PY
+
+      - name: Regenerate public call-flow contract twice
+        run: |
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git diff > /tmp/call-flow-first.diff
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          git diff > /tmp/call-flow-second.diff
+          diff -u /tmp/call-flow-first.diff /tmp/call-flow-second.diff
+
+      - name: Regenerate individual function references twice
+        run: |
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/reference-first.diff
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff > /tmp/reference-second.diff
+          diff -u /tmp/reference-first.diff /tmp/reference-second.diff
+
+      - name: Verify dashboard was not regenerated
+        run: |
+          if git diff --name-only | grep -Fx 'docs/assets/public-function-call-flows-dashboard.html'; then
+            echo 'Dashboard HTML changed unexpectedly.' >&2
+            exit 1
+          fi
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Compile Python
+        run: python -m compileall -q src scripts
+
+      - name: Run full test suite
+        run: uv run pytest
+
+      - name: Validate generated artifact ownership
+        run: python scripts/validate_generated_artifact_ownership.py
+
+      - name: Build strict documentation
+        env:
+          DISABLE_MKDOCS_2_WARNING: "true"
+        run: uv run mkdocs build --strict
+
+      - name: Check diff whitespace
+        run: git diff --check
+
+      - name: Review resulting diff
+        run: |
+          git status --short
+          git diff --stat
+          git diff --name-only
+
+      - name: Remove temporary workflow and publish validated changes
+        run: |
+          git rm .github/workflows/agent-stage4bc-finalize.yml
+          git diff --check
+          if git diff --name-only | grep -Fx 'docs/assets/public-function-call-flows-dashboard.html'; then
+            echo 'Dashboard HTML changed unexpectedly.' >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Finalize standalone Guardrail and DQ authoring'
+          git push origin HEAD:agent/improve-standalone-guardrail-dq-authoring
