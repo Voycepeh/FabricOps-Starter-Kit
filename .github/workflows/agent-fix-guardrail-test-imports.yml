@@ -1,0 +1,59 @@
+name: Agent Fix Guardrail Test Imports
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/consolidate-guardrail-shared
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --all-groups
+      - name: Rewrite removed module imports in tests only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for path in Path('tests').rglob('*.py'):
+              text = path.read_text()
+              text = re.sub(
+                  r'from fabricops_kit\.pipeline import guardrails_shared as ([A-Za-z_][A-Za-z0-9_]*)',
+                  r'from fabricops_kit.pipeline import shared as \1',
+                  text,
+              )
+              text = text.replace(
+                  'from fabricops_kit.pipeline import guardrails_shared\n',
+                  'from fabricops_kit.pipeline import shared as guardrails_shared\n',
+              )
+              path.write_text(text)
+          PY
+          if grep -R "from fabricops_kit.pipeline import guardrails_shared" tests; then
+            echo "Stale removed-module imports remain"
+            exit 1
+          fi
+      - name: Validate collection and lint
+        run: |
+          uv run --with ruff ruff check tests
+          uv run pytest --collect-only -q
+      - name: Commit test import migration once
+        run: |
+          if git diff --quiet -- tests; then
+            echo "No test import changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests
+          git commit -m "Update tests for consolidated Guardrail shared module"
+          git push origin HEAD:agent/consolidate-guardrail-shared
