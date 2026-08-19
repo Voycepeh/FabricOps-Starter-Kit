@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
       - run: uv sync --locked --all-groups
 
-      - name: Patch canonical selector and stale ownership tests
+      - name: Patch canonical Guardrail consolidation
         run: |
           uv run python - <<'PY'
           from pathlib import Path
@@ -36,6 +36,16 @@ jobs:
           text = text.replace(
               'rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))',
               'rule_table_key = _string_value(_catalogue_value(row, "table_id", "metadata_table_key"))',
+              1,
+          )
+          text = text.replace(
+              '''        "severity": severity,\n        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),\n    })''',
+              '''        "severity": severity,\n        "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),\n        "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),\n        "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),\n        "rule_id": _string_value(_catalogue_value(rule, "rule_id")),\n    })''',
+              1,
+          )
+          text = text.replace(
+              '{"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns',
+              '{"metadata_table_key", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns',
               1,
           )
           shared.write_text(text)
@@ -87,8 +97,41 @@ jobs:
         run: |
           uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          cp docs/reference/_data/public-function-call-flows.json /tmp/callflow-first.json
+          git diff --binary -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/reference-first.diff
           uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
           uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          cmp /tmp/callflow-first.json docs/reference/_data/public-function-call-flows.json
+          git diff --binary -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/reference-second.diff
+          cmp /tmp/reference-first.diff /tmp/reference-second.diff
+
+      - name: Verify selected architecture flows
+        run: |
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('docs/reference/_data/public-function-call-flows.json').read_text())
+          selected = {'check_dq', 'check_freshness', 'widget_author_dq_rules', 'widget_author_guardrails'}
+          found = set()
+          bad = {}
+          def walk(value):
+              if isinstance(value, dict):
+                  name = value.get('function_name')
+                  if name in selected and ('architecture_violation_count' in value or 'has_architecture_violation' in value):
+                      found.add(name)
+                      count = int(value.get('architecture_violation_count') or 0)
+                      flag = bool(value.get('has_architecture_violation', False))
+                      if count or flag:
+                          bad[name] = {'count': count, 'flag': flag}
+                  for child in value.values():
+                      walk(child)
+              elif isinstance(value, list):
+                  for child in value:
+                      walk(child)
+          walk(data)
+          assert selected <= found, f'Missing flow summaries: {sorted(selected - found)}'
+          assert not bad, f'Architecture violations remain: {bad}'
+          PY
 
       - name: Commit final fixes
         run: |
@@ -96,6 +139,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src tests docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
           if ! git diff --cached --quiet; then
-            git commit -m "Fix canonical Guardrail selector ownership"
+            git commit -m "Fix canonical Guardrail consolidation behavior"
             git push origin HEAD:agent/consolidate-guardrail-shared
           fi
