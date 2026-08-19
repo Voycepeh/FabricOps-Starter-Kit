@@ -12,8 +12,11 @@ from fabricops_kit.pipeline.guardrail_metadata import (
     load_table_guardrail_rules,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.guardrail_results import write_guardrail_result_row
-from fabricops_kit.pipeline.guardrails_shared import changes_check_core, resolve_guardrail_change_behaviour
+from fabricops_kit.pipeline.guardrails_shared import (
+    changes_check_core,
+    resolve_guardrail_change_behaviour,
+    write_guardrail_result_row,
+)
 from fabricops_kit.pipeline.shared import observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
