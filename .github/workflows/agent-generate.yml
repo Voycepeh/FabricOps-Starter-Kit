@@ -6,13 +6,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: agent/consolidate-guardrail-shared
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -20,6 +23,9 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --locked --all-groups
+      - name: Update authoritative metadata ownership
+        run: |
+          sed -i 's/fabricops_kit\.pipeline\.guardrail_metadata/fabricops_kit.pipeline.guardrail_shared/g' scripts/reference_docs_metadata.py
       - name: Generate call-flow contract
         run: uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
       - name: Generate individual references
@@ -32,6 +38,20 @@ jobs:
           uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
           git diff --binary > /tmp/generated-second.diff
           cmp /tmp/generated-first.diff /tmp/generated-second.diff
+      - name: Commit directly affected generated outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/reference_docs_metadata.py
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json
+          git add docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+          git add docs/reference/metadata.md docs/reference/metadata
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "Refresh Guardrail generated references"
+            git push origin HEAD:agent/consolidate-guardrail-shared
+          fi
       - name: Upload generated outputs
         uses: actions/upload-artifact@v4
         with:
@@ -42,4 +62,6 @@ jobs:
             docs/api/reference
             docs/reference/index.md
             docs/reference/function-call-graph.md
+            docs/reference/metadata.md
+            docs/reference/metadata
           if-no-files-found: error
