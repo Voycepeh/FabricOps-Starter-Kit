@@ -61,7 +61,7 @@ jobs:
 
       - name: Validate focused failures
         run: |
-          uv run ruff check src/fabricops_kit/pipeline/shared.py tests/unit/test_config.py tests/unit/test_metadata_writer_ownership.py tests/unit/test_governance_review_migration.py tests/unit/test_observation_guardrails.py
+          uv run --with ruff ruff check src/fabricops_kit/pipeline/shared.py tests/unit/test_config.py tests/unit/test_metadata_writer_ownership.py tests/unit/test_governance_review_migration.py tests/unit/test_observation_guardrails.py
           uv run pytest -q \
             tests/unit/test_config.py \
             tests/unit/test_governance_review_migration.py \
