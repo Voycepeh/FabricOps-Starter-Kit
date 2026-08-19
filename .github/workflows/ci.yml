@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
@@ -21,8 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -34,23 +33,6 @@ jobs:
 
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
-
-      - name: Apply approved Stage 4E CI fixes
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        shell: bash
-        run: |
-          set -euo pipefail
-          if test -f scripts/_agent_fix_4e_ci.py; then
-            uv run python scripts/_agent_fix_4e_ci.py
-            rm -f scripts/_agent_fix_4e_ci.py .github/workflows/agent-fix-4e-ci.yml
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            if ! git diff --cached --quiet; then
-              git commit -m "Align tests with Stage 4E metadata contract"
-              git push origin HEAD:${{ github.event.pull_request.head.ref }}
-            fi
-          fi
 
       - name: Ruff lint
         run: uv run ruff check .
