@@ -132,8 +132,6 @@ def resolve_change_rule_observation_columns(rule: Mapping[str, Any]) -> tuple[st
     return runtime.resolve_change_rule_observation_columns(dict(rule))
 
 
-write_guardrail_result_row = runtime.write_guardrail_result_row
-
 
 def schema_check_core(
     dataframe: Any,

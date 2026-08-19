@@ -16,8 +16,8 @@ See what FabricOps previously observed about the source data.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 16 |
+| Business columns | 8 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -32,7 +32,6 @@ See what FabricOps previously observed about the source data.
 | `min_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Earliest observed change-column value, or null for a removal tombstone. |
 | `max_change_value` | `string` | [`observe_table`](../../api/reference/observe_table.md) | Latest observed change-column value, or null for a removal tombstone. |
 | `is_present` | `boolean` | [`observe_table`](../../api/reference/observe_table.md) | Whether the partition exists in this observation; false identifies a removal tombstone. |
-| `observed_at` | `timestamp` | [`observe_table`](../../api/reference/observe_table.md) | Timestamp when FabricOps collected this compact source observation. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

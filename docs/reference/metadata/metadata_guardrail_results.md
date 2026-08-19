@@ -17,8 +17,8 @@ See whether the expectations of the data in the ETL pipeline run are met.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 17 |
-| Business columns | 9 |
+| Total columns | 18 |
+| Business columns | 10 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -27,6 +27,7 @@ See whether the expectations of the data in the ETL pipeline run are met.
 | --- | --- | --- | --- |
 | `guardrail_result_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Stable identifier for the runtime guardrail result row. |
 | `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Stable identifier for the guardrail rule row. |
+| `guardrail_version` | `integer` | [`check_schema`](../../api/reference/check_schema.md), [`check_freshness`](../../api/reference/check_freshness.md), [`check_changes`](../../api/reference/check_changes.md), [`check_dq`](../../api/reference/check_dq.md), `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Metadata Guardrail Results field `guardrail_version`. |
 | `run_id` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Identifier stored for `run_id`. |
 | `environment_name` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Environment name recorded for the metadata row. |
 | `status` | `string` | `fabricops_kit.pipeline.guardrails_shared.write_guardrail_result_row`, `fabricops_kit.pipeline.guardrail_metadata.check_dq_runtime` | Pipeline run status recorded with the run summary. |

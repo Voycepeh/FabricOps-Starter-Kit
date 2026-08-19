@@ -289,7 +289,7 @@ The diagram below shows how the FabricOps metadata tables relate to one another 
   </span>
   <span class="metadata-table-card__meta">
     <strong>Primary key</strong>
-    <span><code>guardrail_rule_id</code></span>
+    <span><code>guardrail_rule_id</code> <span class="metadata-table-card__key-separator">+</span> <code>guardrail_version</code></span>
   </span>
   <span class="metadata-table-card__relationships">
     <span class="metadata-table-card__relationships-header">

@@ -75,29 +75,6 @@ def test_strict_null_rate_and_blank_text_have_distinct_semantics(spark_session):
     assert non_empty_check["failed_count"] == 3
 
 
-def test_dq_metadata_actions_are_append_only_and_preserve_multicolumns(fake_notebookutils):
-    """Verify dq metadata actions are append only and preserve multicolumns."""
-    profile_rows = [{"environment_name": "dev", "dataset_name": "sales", "table_name": "orders", "column_name": "student_id"}]
-    base = {"rule_id": "grain", "rule_type": "unique_combination", "columns": ["student_id", "semester"], "severity": "error", "description": "grain", "commit": True}
-    rows = governance_authoring._build_dq_rule_records(
-        profile_rows,
-        [
-            {**base, "action_type": "created"},
-            {**base, "action_type": "updated", "description": "new grain"},
-            {**base, "action_type": "deactivated"},
-            {**base, "action_type": "reactivated"},
-        ],
-        config=framework_config(),
-        env="dev",
-        approved_by="reviewer@example.com",
-    )
-    assert [r["action_type"] for r in rows] == ["created", "updated", "deactivated", "reactivated"]
-    assert [r["is_active"] for r in rows] == [True, True, False, True]
-    assert json.loads(rows[0]["rule_parameters_json"])["columns"] == ["student_id", "semester"]
-    for field in ["rule_key", "rule_id", "metadata_column_key", "metadata_table_key", "environment_name", "dataset_name", "table_name", "column_name", "rule_type", "rule_parameters_json", "severity", "description", "is_active", "review_status", "approved_by", "approved_at", "suggestion_json", "action_type", "_committed_at", "_committed_by", "_workspace_name", "_notebook_name", "_metadata_lakehouse_name", "_activity_id"]:
-        assert field in rows[0]
-
-
 def test_latest_active_rule_resolution_and_inactive_not_enforced(spark_session):
     """Verify latest active rule resolution and inactive not enforced."""
     metadata = spark_session.createDataFrame(

@@ -8,7 +8,7 @@ from datetime import datetime
 import pytest
 
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
-from fabricops_kit.pipeline import guardrail_metadata, guardrail_results
+from fabricops_kit.pipeline import guardrail_metadata, guardrails_shared
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -193,15 +193,15 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
 def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> None:
     """Verify runtime result persistence identifies the exact Guardrail revision."""
     writes = []
-    monkeypatch.setattr(guardrail_results, "build_runtime_audit_fields", lambda **_kwargs: _audit())
-    monkeypatch.setattr(guardrail_results, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
+    monkeypatch.setattr(guardrails_shared, "configured_lakehouse_schema", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
-        guardrail_results,
+        guardrails_shared,
         "write_lakehouse_table_core",
         lambda frame, table, **_kwargs: writes.append((table, frame.rows[0])),
     )
 
-    guardrail_results.write_guardrail_result_row(
+    guardrails_shared.write_guardrail_result_row(
         spark_session=FakeSpark(),
         config=framework_config(),
         env="dev",
@@ -237,10 +237,10 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch) -> 
 
 def test_runtime_result_writer_rejects_missing_guardrail_version(monkeypatch) -> None:
     """Every persisted result must identify one exact Guardrail revision."""
-    monkeypatch.setattr(guardrail_results, "build_runtime_audit_fields", lambda **_kwargs: _audit())
+    monkeypatch.setattr(guardrails_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
 
     with pytest.raises(ValueError, match="guardrail_version is required"):
-        guardrail_results.write_guardrail_result_row(
+        guardrails_shared.write_guardrail_result_row(
             spark_session=FakeSpark(),
             config=framework_config(),
             env="dev",

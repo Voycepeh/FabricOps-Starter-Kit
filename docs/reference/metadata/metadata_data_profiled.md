@@ -18,8 +18,8 @@ See the column-level profile metrics captured for a dataset snapshot.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 28 |
-| Business columns | 20 |
+| Total columns | 27 |
+| Business columns | 19 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -45,7 +45,6 @@ See the column-level profile metrics captured for a dataset snapshot.
 | `median_value` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed median value for numeric columns when available. |
 | `percentile_75_value` | `double` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed 75th percentile for numeric columns when available. |
 | `max_value` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe` | Observed maximum value captured as text. |
-| `profiled_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._canonical_profiled_dataframe`, `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Timestamp when the dataset profile snapshot was captured. |
 | `_committed_by` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.pipeline.profile_and_register_table._audit_literal_columns` | Fabric workspace identifier captured from runtime audit context. |

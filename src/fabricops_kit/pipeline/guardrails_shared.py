@@ -47,19 +47,23 @@ def write_guardrail_result_row(
     column_name: str = "",
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
-    """Append one runtime outcome for one configured Guardrail rule."""
+    """Append one runtime outcome for one exact Guardrail revision."""
     del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
     guardrail_rule_id = str(result.get("guardrail_rule_id") or "").strip()
     if not guardrail_rule_id:
         return
+    guardrail_version = int(result.get("guardrail_version") or 0)
+    if guardrail_version <= 0:
+        raise ValueError("guardrail_version is required to persist a Guardrail result.")
     audit = build_runtime_audit_fields(config=config, env=env)
     resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
     payload = {key: value for key, value in result.items() if key != "dataframe"}
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
+        "guardrail_version": guardrail_version,
         "run_id": resolved_run_id,
         "environment_name": env,
         "status": str(result.get("status") or "not_run"),
