@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/consolidate-guardrail-shared
-          fetch-depth: 0
+          fetch-depth: 1
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -177,6 +177,10 @@ jobs:
               canonical = remove_top_function(
                   canonical,
                   'resolve_change_rule_observation_columns',
+              )
+              canonical = canonical.replace(
+                  'from fabricops_kit.pipeline import guardrails_shared as runtime\n',
+                  '',
               )
               canonical = remove_imports_from_module(
                   canonical,
