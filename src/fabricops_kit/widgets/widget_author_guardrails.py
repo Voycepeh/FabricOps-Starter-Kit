@@ -21,9 +21,9 @@ _FAILURE_ACTIONS = (("Block pipeline", "blocking"), ("Warn only", "warning"))
 _FAILURE_SEVERITIES = {value for _, value in _FAILURE_ACTIONS}
 
 
-def _configuration_version(rules: Iterable[Mapping[str, Any]]) -> int:
-    """Return the latest explicit Guardrail configuration version."""
-    return max((int(row.get("configuration_version") or 0) for row in rules), default=0)
+def _guardrail_version(rules: Iterable[Mapping[str, Any]]) -> int:
+    """Return the latest explicit Guardrail version."""
+    return max((int(row.get("guardrail_version") or 0) for row in rules), default=0)
 
 
 def _guardrail_records_from_selection(
@@ -39,7 +39,7 @@ def _guardrail_records_from_selection(
     change_severity: str = "blocking",
     partition_column: str = "",
     change_column: str = "",
-    configuration_version: int | None = None,
+    guardrail_version: int | None = None,
     config: Any = None,
 ) -> list[dict[str, Any]]:
     """Translate Schema, Freshness, and Changes controls into Stage 4A rows."""
@@ -77,8 +77,8 @@ def _guardrail_records_from_selection(
     if any(value not in _FAILURE_SEVERITIES for value in severities.values()):
         raise ValueError("Failure action must be Block pipeline or Warn only.")
 
-    version = configuration_version or (
-        _configuration_version(state.get("existing_rules") or ()) + 1
+    version = guardrail_version or (
+        _guardrail_version(state.get("existing_rules") or ()) + 1
     )
     data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
@@ -95,7 +95,7 @@ def _guardrail_records_from_selection(
                 "data_types": {name: data_types.get(name, "") for name in required},
             },
             severity=severities["schema"],
-            configuration_version=version,
+            guardrail_version=version,
         ),
         authoring._build_rule_record(
             state,
@@ -108,7 +108,7 @@ def _guardrail_records_from_selection(
                 "maximum_age_unit": maximum_age_unit.lower(),
             },
             severity=severities["freshness"],
-            configuration_version=version,
+            guardrail_version=version,
         ),
         authoring._build_rule_record(
             state,
@@ -123,7 +123,7 @@ def _guardrail_records_from_selection(
                 "change_column": change_column,
             },
             severity=severities["change"],
-            configuration_version=version,
+            guardrail_version=version,
         ),
     ]
 
@@ -229,7 +229,7 @@ def _render_guardrail_authoring(
     widgets = shared.require_ipywidgets()
     columns = [str(value) for value in state.get("columns", [])]
     existing = list(state.get("existing_rules") or [])
-    version_state = {"persisted": _configuration_version(existing)}
+    version_state = {"persisted": _guardrail_version(existing)}
     schema_rule = authoring._latest_rule(existing, "schema")
     freshness_rule = authoring._latest_rule(existing, "freshness")
     change_rule = authoring._latest_rule(existing, "change")
@@ -367,7 +367,7 @@ def _render_guardrail_authoring(
             change_severity=change_failure_action.value,
             partition_column=partition_column.value,
             change_column=change_column.value,
-            configuration_version=version_state["persisted"] + 1,
+            guardrail_version=version_state["persisted"] + 1,
         )
 
     def refresh_preview(*_: Any) -> None:
@@ -403,13 +403,13 @@ def _render_guardrail_authoring(
         state_existing = state.get("existing_rules")
         if isinstance(state_existing, list):
             state_existing.extend(canonical_records)
-        version_state["persisted"] = records[0]["configuration_version"]
+        version_state["persisted"] = records[0]["guardrail_version"]
         version_display.value = (
             f"<b>Next save version</b><br>{version_state['persisted'] + 1}"
         )
         message.value = (
             f"<b style='color:green'>Saved Guardrail version "
-            f"{records[0]['configuration_version']}.</b>"
+            f"{records[0]['guardrail_version']}.</b>"
         )
         refresh_preview()
         return canonical_records
