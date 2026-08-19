@@ -5,52 +5,9 @@ from __future__ import annotations
 import pytest
 
 from fabricops_kit.widgets import shared as gr
-from tests.helpers import FakeSpark, framework_config
-
-from fabricops_kit.widgets.shared import (
-    _build_dq_rule_records,
-    build_enrichment_records,
-    latest_enrichment_values,
-)
+from fabricops_kit.widgets.shared import build_enrichment_records, latest_enrichment_values
 
 pytestmark = pytest.mark.unit
-
-
-def _profile_rows(run: str = "run-2") -> list[dict]:
-    return [
-        {
-            "metadata_table_key": "table-key",
-            "metadata_column_key": "col-order",
-            "environment_name": "dev",
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "column_name": "order_id",
-            "profile_run_id": run,
-            "profile_stage": "target",
-            "profile_status": "success",
-            "data_type": "string",
-            "row_count": 10,
-            "null_count": 0,
-            "distinct_count": 10,
-            "profiled_at": "2026-01-02T00:00:00Z",
-        },
-        {
-            "metadata_table_key": "table-key",
-            "metadata_column_key": "col-amount",
-            "environment_name": "dev",
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "column_name": "amount",
-            "profile_run_id": run,
-            "profile_stage": "target",
-            "profile_status": "success",
-            "data_type": "double",
-            "row_count": 10,
-            "null_count": 1,
-            "distinct_count": 8,
-            "profiled_at": "2026-01-02T00:00:00Z",
-        },
-    ]
 
 
 def test_profile_helper_returns_notebook_ready_structure():
@@ -59,7 +16,6 @@ def test_profile_helper_returns_notebook_ready_structure():
 
     assert profile["table_name"] == "orders"
     assert profile["row_count"] == 3
-
 
 
 def test_generic_enrichment_builder_and_latest_values(monkeypatch):
