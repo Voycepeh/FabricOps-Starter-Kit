@@ -8,7 +8,7 @@ import types
 
 from fabricops_kit.widgets import enrichment_shared
 from fabricops_kit.widgets import widget_enrich_table_metadata
-from tests.unit.test_guardrail_authoring_model import _install_fake_notebook_widgets
+from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
 
 def _catalogue_rows():
