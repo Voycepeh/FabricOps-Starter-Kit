@@ -67,7 +67,9 @@ jobs:
         env:
           DISABLE_MKDOCS_2_WARNING: "true"
         run: uv run mkdocs build --strict
-      - name: Confirm exact clean tree and push
+      - name: Confirm exact tracked tree and push
         run: |
-          test -z "$(git status --porcelain)"
+          git status --short
+          git diff --exit-code
+          git diff --cached --exit-code
           git push origin HEAD:agent/improve-standalone-guardrail-dq-authoring
