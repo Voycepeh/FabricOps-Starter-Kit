@@ -48,6 +48,11 @@ jobs:
               '{"metadata_table_key", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns',
               1,
           )
+          text = text.replace(
+              '''    if rule is not None:\n        base_result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})''',
+              '''    if rule is not None:\n        base_result.update({\n            "guardrail_type": "freshness",\n            "rule_type": rule_type,\n            "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),\n            "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),\n            "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),\n            "rule_id": _string_value(_catalogue_value(rule, "rule_id")),\n        })''',
+              1,
+          )
           shared.write_text(text)
 
           path = Path('tests/unit/test_config.py')
