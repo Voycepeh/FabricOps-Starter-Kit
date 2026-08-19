@@ -57,7 +57,11 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "column_selection": "independent",
         "minimum_columns": 1,
         "parameters": {
-            "allowed_values": {"label": "Allowed values", "type": "list", "required": True}
+            "allowed_values": {
+                "label": "Allowed values",
+                "type": "list",
+                "required": True,
+            }
         },
     },
     "blocked_values": {
@@ -66,7 +70,11 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "column_selection": "independent",
         "minimum_columns": 1,
         "parameters": {
-            "blocked_values": {"label": "Blocked values", "type": "list", "required": True}
+            "blocked_values": {
+                "label": "Blocked values",
+                "type": "list",
+                "required": True,
+            }
         },
     },
     "value_range": {
@@ -77,9 +85,17 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "at_least_one_of": ("minimum", "maximum"),
         "parameters": {
             "minimum": {"label": "Minimum", "type": "optional_scalar"},
-            "minimum_inclusive": {"label": "Include minimum", "type": "boolean", "default": True},
+            "minimum_inclusive": {
+                "label": "Include minimum",
+                "type": "boolean",
+                "default": True,
+            },
             "maximum": {"label": "Maximum", "type": "optional_scalar"},
-            "maximum_inclusive": {"label": "Include maximum", "type": "boolean", "default": True},
+            "maximum_inclusive": {
+                "label": "Include maximum",
+                "type": "boolean",
+                "default": True,
+            },
         },
     },
     "text_pattern": {
@@ -87,7 +103,9 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "label": "Text pattern",
         "column_selection": "independent",
         "minimum_columns": 1,
-        "parameters": {"pattern": {"label": "Pattern", "type": "text", "required": True}},
+        "parameters": {
+            "pattern": {"label": "Pattern", "type": "text", "required": True}
+        },
     },
     "required_when": {
         "rule_id": "required_when",
@@ -95,9 +113,21 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "column_selection": "conditional",
         "minimum_columns": 1,
         "parameters": {
-            "condition_column": {"label": "Condition column", "type": "column", "required": True},
-            "condition_operator": {"label": "Condition operator", "type": "operator", "required": True},
-            "condition_value": {"label": "Condition value", "type": "scalar", "required": True},
+            "condition_column": {
+                "label": "Condition column",
+                "type": "column",
+                "required": True,
+            },
+            "condition_operator": {
+                "label": "Condition operator",
+                "type": "operator",
+                "required": True,
+            },
+            "condition_value": {
+                "label": "Condition value",
+                "type": "scalar",
+                "required": True,
+            },
         },
     },
     "conditional_value": {
@@ -107,10 +137,26 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "minimum_columns": 1,
         "maximum_columns": 1,
         "parameters": {
-            "condition_column": {"label": "Condition column", "type": "column", "required": True},
-            "condition_operator": {"label": "Condition operator", "type": "operator", "required": True},
-            "condition_value": {"label": "Condition value", "type": "scalar", "required": True},
-            "expected_value": {"label": "Expected value", "type": "scalar", "required": True},
+            "condition_column": {
+                "label": "Condition column",
+                "type": "column",
+                "required": True,
+            },
+            "condition_operator": {
+                "label": "Condition operator",
+                "type": "operator",
+                "required": True,
+            },
+            "condition_value": {
+                "label": "Condition value",
+                "type": "scalar",
+                "required": True,
+            },
+            "expected_value": {
+                "label": "Expected value",
+                "type": "scalar",
+                "required": True,
+            },
         },
     },
     "compare_columns": {
@@ -120,13 +166,19 @@ DQ_RULE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "minimum_columns": 2,
         "maximum_columns": 2,
         "parameters": {
-            "operator": {"label": "Comparison operator", "type": "operator", "required": True}
+            "operator": {
+                "label": "Comparison operator",
+                "type": "operator",
+                "required": True,
+            }
         },
     },
 }
 
 if set(DQ_RULE_DEFINITIONS) != set(DQ_RULE_TYPES):
-    raise RuntimeError("DQ authoring definitions must exactly match the supported runtime DQ rules.")
+    raise RuntimeError(
+        "DQ authoring definitions must exactly match the supported runtime DQ rules."
+    )
 
 
 def _parameter_control(
@@ -148,7 +200,9 @@ def _parameter_control(
         return widgets.Dropdown(options=options, value=selected, **common)
     if kind == "operator":
         selected = value if value in DQ_COMPARISON_OPERATORS else "="
-        return widgets.Dropdown(options=DQ_COMPARISON_OPERATORS, value=selected, **common)
+        return widgets.Dropdown(
+            options=DQ_COMPARISON_OPERATORS, value=selected, **common
+        )
     if kind == "list":
         text = (
             ", ".join(str(item) for item in value)
@@ -176,10 +230,22 @@ def _collect_parameters(
                 value = None if str(value).strip() == "" else float(value)
             except (TypeError, ValueError) as exc:
                 raise ValueError(f"{parameter['label']} must be a number.") from exc
-            if value is not None and parameter.get("minimum") is not None and value < parameter["minimum"]:
-                raise ValueError(f"{parameter['label']} must be at least {parameter['minimum']}.")
-            if value is not None and parameter.get("maximum") is not None and value > parameter["maximum"]:
-                raise ValueError(f"{parameter['label']} must be at most {parameter['maximum']}.")
+            if (
+                value is not None
+                and parameter.get("minimum") is not None
+                and value < parameter["minimum"]
+            ):
+                raise ValueError(
+                    f"{parameter['label']} must be at least {parameter['minimum']}."
+                )
+            if (
+                value is not None
+                and parameter.get("maximum") is not None
+                and value > parameter["maximum"]
+            ):
+                raise ValueError(
+                    f"{parameter['label']} must be at most {parameter['maximum']}."
+                )
         elif kind in {"optional_scalar", "scalar"}:
             text = str(value).strip()
             if text == "" and kind == "optional_scalar":
@@ -196,7 +262,9 @@ def _collect_parameters(
         values[name] = value
     alternatives = definition.get("at_least_one_of", ())
     if alternatives and all(values.get(name) in {None, ""} for name in alternatives):
-        labels = " or ".join(str(definition["parameters"][name]["label"]) for name in alternatives)
+        labels = " or ".join(
+            str(definition["parameters"][name]["label"]) for name in alternatives
+        )
         raise ValueError(f"Provide at least one of {labels}.")
     return values
 
@@ -211,7 +279,7 @@ def widget_author_dq_rules(
     severity: str = "warning",
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Author Data Quality rules for relevant columns of a profiled table.
+    """Configure Data Quality rules for relevant columns of a profiled table.
 
     Parameters
     ----------
@@ -259,7 +327,10 @@ def widget_author_dq_rules(
     state: dict[str, Any] = {}
     initial_parameters = dict(parameters or {})
     rule = widgets.Dropdown(
-        options=[(definition["label"], name) for name, definition in DQ_RULE_DEFINITIONS.items()],
+        options=[
+            (definition["label"], name)
+            for name, definition in DQ_RULE_DEFINITIONS.items()
+        ],
         value=rule_type if rule_type in DQ_RULE_DEFINITIONS else "missing_values",
         **shared.widget_common(widgets, "DQ rule"),
     )
@@ -302,15 +373,21 @@ def widget_author_dq_rules(
         definition = DQ_RULE_DEFINITIONS[rule.value]
         selection_mode = definition["column_selection"]
         columns = list(selected_state.get("columns", []))
-        initial = [column for column in (selected_columns or ()) if column in columns]
+        initial = [
+            column for column in (selected_columns or ()) if column in columns
+        ]
         if selection_mode == "ordered_pair":
             if len(columns) < 2:
-                column_box.children = (widgets.HTML("<b>At least two profiled columns are required.</b>"),)
+                column_box.children = (
+                    widgets.HTML("<b>At least two profiled columns are required.</b>"),
+                )
                 refresh_preview()
                 return
             column_a_value = initial[0] if initial else columns[0]
-            column_b_value = initial[1] if len(initial) > 1 else next(
-                column for column in columns if column != column_a_value
+            column_b_value = (
+                initial[1]
+                if len(initial) > 1
+                else next(column for column in columns if column != column_a_value)
             )
             column_a = widgets.Dropdown(
                 options=columns,
@@ -337,7 +414,9 @@ def widget_author_dq_rules(
                     widgets.HTML("<b>Column name</b>"),
                     widgets.HTML("<b>Data type</b>"),
                 ],
-                layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"),
+                layout=widgets.Layout(
+                    grid_template_columns="70px 1fr 1fr", width="100%"
+                ),
             )
         ]
         types = {
@@ -345,7 +424,9 @@ def widget_author_dq_rules(
             for row in selected_state.get("catalogue_profile_rows", [])
         }
         for name in columns:
-            control = widgets.Checkbox(value=name in selected, description="", indent=False)
+            control = widgets.Checkbox(
+                value=name in selected, description="", indent=False
+            )
             control.observe(refresh_preview, names="value")
             column_controls[name] = control
             rows.append(
@@ -353,9 +434,13 @@ def widget_author_dq_rules(
                     [
                         control,
                         widgets.HTML(f"<code>{html.escape(name)}</code>"),
-                        widgets.HTML(f"<code>{html.escape(types.get(name, ''))}</code>"),
+                        widgets.HTML(
+                            f"<code>{html.escape(types.get(name, ''))}</code>"
+                        ),
                     ],
-                    layout=widgets.Layout(grid_template_columns="70px 1fr 1fr", width="100%"),
+                    layout=widgets.Layout(
+                        grid_template_columns="70px 1fr 1fr", width="100%"
+                    ),
                 )
             )
         column_box.children = tuple(rows)
@@ -367,11 +452,16 @@ def widget_author_dq_rules(
         if selection_mode == "ordered_pair":
             if set(column_controls) != {"column_a", "column_b"}:
                 raise ValueError("Compare columns requires two profiled columns.")
-            columns = [column_controls["column_a"].value, column_controls["column_b"].value]
+            columns = [
+                column_controls["column_a"].value,
+                column_controls["column_b"].value,
+            ]
             if columns[0] == columns[1]:
                 raise ValueError("Left and right columns must be different.")
         else:
-            columns = [name for name, control in column_controls.items() if control.value]
+            columns = [
+                name for name, control in column_controls.items() if control.value
+            ]
         minimum = int(definition.get("minimum_columns", 1))
         maximum = definition.get("maximum_columns")
         if len(columns) < minimum:
@@ -379,7 +469,7 @@ def widget_author_dq_rules(
         if maximum is not None and len(columns) > int(maximum):
             raise ValueError(f"Select at most {int(maximum)} column(s).")
         values = _collect_parameters(definition, parameter_controls)
-        return authoring.dq_records_from_selection(
+        return authoring._dq_records_from_selection(
             state,
             rule_id=str(definition["rule_id"]),
             selected_columns=columns,
@@ -393,17 +483,26 @@ def widget_author_dq_rules(
             return
         try:
             records_state["records"] = build_records()
-            preview.value = json.dumps(records_state["records"], indent=2, sort_keys=True, default=str)
+            preview.value = json.dumps(
+                records_state["records"], indent=2, sort_keys=True, default=str
+            )
             message.value = ""
         except ValueError as exc:
             records_state["records"] = []
             preview.value = ""
-            message.value = f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
+            message.value = (
+                f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
+            )
 
     def save() -> list[dict[str, Any]]:
         records = build_records()
-        canonical_records = authoring.canonicalize_and_write(
+        canonical_records = authoring._canonicalize_records(
             records,
+            config=config,
+            env=env,
+        )
+        shared._write_rule_records(
+            canonical_records,
             config=config,
             env=env,
             spark_session=spark_session,
@@ -426,7 +525,7 @@ def widget_author_dq_rules(
         render_parameters(selected_state)
         render_columns(selected_state)
 
-    state, target, target_controls = authoring.load_guardrail_authoring_targets(
+    state, target, target_controls = authoring._load_guardrail_authoring_targets(
         config,
         env,
         spark_session=spark_session,
@@ -445,16 +544,26 @@ def widget_author_dq_rules(
     ui = shared.form_page(
         widgets,
         title="Author DQ Rules",
-        description="Select a profiled table, choose a DQ rule, then apply it to the relevant columns.",
+        description=(
+            "Select a profiled table, choose a DQ rule, then apply it to the relevant columns."
+        ),
         children=[
             shared.form_section(
                 widgets,
                 title="1. Profiled table",
                 children=[target, target_controls["target_summary"]],
             ),
-            shared.form_section(widgets, title="2. DQ rule and parameters", children=[rule, parameter_box]),
-            shared.form_section(widgets, title="3. Relevant columns", children=[column_box]),
-            shared.form_section(widgets, title="4. Failure behaviour", children=[severity_control]),
+            shared.form_section(
+                widgets,
+                title="2. DQ rule and parameters",
+                children=[rule, parameter_box],
+            ),
+            shared.form_section(
+                widgets, title="3. Relevant columns", children=[column_box]
+            ),
+            shared.form_section(
+                widgets, title="4. Failure behaviour", children=[severity_control]
+            ),
             shared.form_section(widgets, title="5. Preview", children=[preview]),
             shared.action_row(widgets, [save_button]),
             message,
