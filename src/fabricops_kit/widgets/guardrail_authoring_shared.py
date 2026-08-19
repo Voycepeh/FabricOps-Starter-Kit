@@ -1,4 +1,4 @@
-"""Private normalized Guardrail authoring helpers shared by standalone widgets."""
+"""Shared Guardrail authoring helpers for standalone widgets."""
 
 from __future__ import annotations
 
@@ -7,7 +7,14 @@ import hashlib
 import json
 from typing import Any
 
-from fabricops_kit.pipeline.guardrail_metadata import canonical_guardrail_rule_record
+from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+from fabricops_kit.config.shared import is_table_not_found_error
+from fabricops_kit.io.shared import (
+    configured_lakehouse_schema,
+    read_lakehouse_table_core,
+    write_lakehouse_table_core,
+)
+from fabricops_kit.pipeline.guardrail_shared import canonical_guardrail_rule_record
 from fabricops_kit.widgets import shared
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
@@ -20,7 +27,7 @@ def _stable_json(value: Any) -> str:
     return json.dumps(value, default=str, sort_keys=True, separators=(",", ":"))
 
 
-def _latest_rule(
+def latest_rule(
     existing_rules: Iterable[Mapping[str, Any]],
     guardrail_type: str,
     *,
@@ -45,7 +52,7 @@ def _latest_rule(
     return matches[0] if matches else {}
 
 
-def _rule_parameters(rule: Mapping[str, Any]) -> dict[str, Any]:
+def rule_parameters(rule: Mapping[str, Any]) -> dict[str, Any]:
     """Parse one normalized Guardrail parameter payload."""
     raw = rule.get("rule_parameters_json") or "{}"
     try:
@@ -97,7 +104,7 @@ def _next_guardrail_version(
     return max(versions, default=0) + 1
 
 
-def _build_rule_record(
+def build_rule_record(
     state: Mapping[str, Any],
     *,
     guardrail_type: str,
@@ -143,7 +150,7 @@ def _build_rule_record(
     }
 
 
-def _dq_records_from_selection(
+def dq_records_from_selection(
     state: Mapping[str, Any],
     *,
     rule_id: str,
@@ -160,7 +167,7 @@ def _dq_records_from_selection(
     values = dict(parameters or {})
     if column_selection == "independent":
         return [
-            _build_rule_record(
+            build_rule_record(
                 state,
                 guardrail_type="dq",
                 rule_id=rule_id,
@@ -180,7 +187,7 @@ def _dq_records_from_selection(
             state, condition_column
         )
     return [
-        _build_rule_record(
+        build_rule_record(
             state,
             guardrail_type="dq",
             rule_id=rule_id,
@@ -192,7 +199,7 @@ def _dq_records_from_selection(
     ]
 
 
-def _canonicalize_records(
+def canonicalize_records(
     records: list[dict[str, Any]],
     *,
     config: Any,
@@ -205,7 +212,63 @@ def _canonicalize_records(
     ]
 
 
-def _load_guardrail_authoring_targets(
+def _coerce_rows(rows_or_df: Any) -> list[dict[str, Any]]:
+    if rows_or_df is None:
+        return []
+    if hasattr(rows_or_df, "collect"):
+        rows_or_df = rows_or_df.collect()
+    return [
+        row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)
+        for row in rows_or_df
+    ]
+
+
+def read_metadata_table_or_empty(
+    config: Any,
+    env: str,
+    table_name: str,
+    *,
+    spark_session: Any,
+) -> list[dict[str, Any]]:
+    """Read a metadata table and return row dictionaries, or an empty list if absent."""
+    try:
+        frame = read_lakehouse_table_core(
+            table_name,
+            target="metadata",
+            schema=configured_lakehouse_schema(config, env, "metadata"),
+            context={"config": config, "env": env},
+            spark_session=spark_session,
+        )
+    except Exception as exc:
+        if is_table_not_found_error(exc):
+            return []
+        raise
+    return _coerce_rows(frame)
+
+
+def write_rule_records(
+    records: list[dict[str, Any]],
+    *,
+    config: Any,
+    env: str,
+    spark_session: Any,
+) -> None:
+    """Append canonical rule records to ``METADATA_GUARDRAIL``."""
+    if not records:
+        return
+    write_lakehouse_table_core(
+        spark_session.createDataFrame(
+            [coerce_metadata_row_types(GUARDRAIL_TABLE, record) for record in records]
+        ),
+        GUARDRAIL_TABLE,
+        target="metadata",
+        schema=configured_lakehouse_schema(config, env, "metadata"),
+        context={"config": config, "env": env},
+        mode="append",
+    )
+
+
+def load_guardrail_authoring_targets(
     config: Any,
     env: str,
     *,
@@ -214,13 +277,13 @@ def _load_guardrail_authoring_targets(
     on_change: Any | None = None,
 ) -> tuple[dict[str, Any], Any, dict[str, Any]]:
     """Resolve independently selectable profiled targets through normalized Catalogue IDs."""
-    catalogue = shared._read_metadata_table_or_empty(
+    catalogue = read_metadata_table_or_empty(
         config, env, CATALOGUE_TABLE, spark_session=spark_session
     )
-    profiles = shared._read_metadata_table_or_empty(
+    profiles = read_metadata_table_or_empty(
         config, env, PROFILED_TABLE, spark_session=spark_session
     )
-    rules = shared._read_metadata_table_or_empty(
+    rules = read_metadata_table_or_empty(
         config, env, GUARDRAIL_TABLE, spark_session=spark_session
     )
     if not catalogue or not profiles:
