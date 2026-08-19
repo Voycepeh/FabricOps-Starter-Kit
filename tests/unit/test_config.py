@@ -866,7 +866,6 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "profiled_at",
     }
 
     assert catalogue_names == [
@@ -1313,7 +1312,6 @@ def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
         "profile_snapshot_id",
         "environment_name",
         "pipeline_role",
-        "recorded_at",
         *audit_names,
     ]
     assert all(not field.nullable for field in schema.fields if field.name in audit_names)

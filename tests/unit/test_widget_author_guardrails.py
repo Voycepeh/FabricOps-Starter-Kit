@@ -75,6 +75,7 @@ def _install_fake_notebook_widgets(monkeypatch, *, auto_observe=False):
                     callback({"name": "value", "old": previous, "new": value})
 
         def observe(self, callback, names=None):
+            self._observer = callback
             self._observers.append(callback)
 
         def on_click(self, callback):

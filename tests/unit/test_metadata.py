@@ -260,7 +260,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
             schema_name=None,
             guardrail_type="schema",
             rule_type="schema",
-            result={"guardrail_rule_id": "schema-rule", "status": "failed"},
+            result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "status": "failed"},
         )
 
 
@@ -286,7 +286,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
             schema_name=None,
             guardrail_type="schema",
             rule_type="strict",
-            result={"guardrail_rule_id": "schema-rule", "status": "passed"},
+            result={"guardrail_rule_id": "schema-rule", "guardrail_version": 1, "status": "passed"},
         )
 
     assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]

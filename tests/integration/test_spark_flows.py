@@ -615,7 +615,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
         schema_name=None,
         guardrail_type="freshness",
         rule_type="max_age_days",
-        result={"guardrail_rule_id": "freshness-rule", "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
+        result={"guardrail_rule_id": "freshness-rule", "guardrail_version": 1, "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
         rule_key="freshness_orders",
     )
 
