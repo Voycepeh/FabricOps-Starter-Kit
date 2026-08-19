@@ -30,7 +30,7 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --extra docs --extra dev
 
-      - name: Apply Stage 4E CI cleanup
+      - name: Apply Stage 4E CI cleanup and targeted validation
         run: uv run python scripts/_agent_fix_4e_ci.py
 
       - name: Commit fixes
