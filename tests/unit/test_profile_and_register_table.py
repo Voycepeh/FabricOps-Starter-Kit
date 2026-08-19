@@ -354,12 +354,12 @@ def test_profile_and_register_table_writes_frequency_rows_for_same_logical_profi
     )
     child = next(write["df"] for write in registered if write["table_name"] == PROFILED_FREQUENCY_TABLE)
     assert child.columns == metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
-    assert {"table_id", "column_id", "environment_name"}.isdisjoint(child.columns)
+    assert {"table_id", "column_id", "environment_name", "profiled_at"}.isdisjoint(child.columns)
     parent_by_profile = {row.profile_id: row.asDict() for row in result.collect()}
     assert {row.profile_id for row in child.collect()} <= set(parent_by_profile)
     assert {row.profile_snapshot_id for row in child.collect()} == {row.profile_snapshot_id for row in result.collect()}
     for row in child.collect():
-        assert row.profiled_at == parent_by_profile[row.profile_id]["profiled_at"]
+        assert row._committed_at == parent_by_profile[row.profile_id]["_committed_at"]
     assert set(AUDIT_COLUMNS).issubset(child.columns)
 
 
@@ -452,9 +452,10 @@ def test_profiled_schema_matches_stage2_contract():
         "profile_id", "profile_snapshot_id", "table_id", "column_id", "environment_name"
     ]
     assert {
-        "metadata_table_key", "metadata_column_key", "store_type", "layer", "schema_name",
+        "profiled_at", "metadata_table_key", "metadata_column_key", "store_type", "layer", "schema_name",
         "table_name", "column_name", "schema_fingerprint", "profile_role",
     }.isdisjoint(PROFILED_COLUMNS)
+    assert "_committed_at" in PROFILED_COLUMNS
 
 
 def test_catalogue_schema_is_environment_aware_asset_contract():
@@ -498,7 +499,6 @@ def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
                 "column_id": build_column_id(table_id, field.name),
                 "environment_name": "dev",
                 "data_type": field.dataType.simpleString(),
-                "profiled_at": datetime(2026, 1, 1),
                 "_committed_by": "tester",
                 "_committed_at": datetime(2026, 1, 1),
                 "_workspace_id": "workspace-1",
@@ -525,15 +525,15 @@ def test_catalogue_builder_requires_physical_identity_explicitly(spark_session):
 
 def test_lineage_schema_is_pipeline_participation_contract():
     fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
-    assert fields[:6] == [
-        "lineage_id", "table_id", "profile_snapshot_id", "environment_name", "pipeline_role", "recorded_at"
+    assert fields[:5] == [
+        "lineage_id", "table_id", "profile_snapshot_id", "environment_name", "pipeline_role"
     ]
-    assert {"lineage_event_id", "metadata_table_key", "schema_fingerprint", "profile_role", "profiled_at"}.isdisjoint(fields)
+    assert {"lineage_event_id", "metadata_table_key", "schema_fingerprint", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
+    assert "_committed_at" in fields
 
 
 def test_lineage_writer_uses_activity_for_idempotent_identity(spark_session, monkeypatch):
     module = importlib.import_module("fabricops_kit.pipeline.profile_and_register_table")
-    recorded_at = datetime(2026, 1, 1, 10, 30)
     audit = {
         "_committed_by": "tester",
         "_committed_at": datetime(2026, 1, 1, 10, 31),
@@ -551,7 +551,6 @@ def test_lineage_writer_uses_activity_for_idempotent_identity(spark_session, mon
         "table_id": "table-1",
         "profile_snapshot_id": "snapshot-1",
         "pipeline_role": "source",
-        "recorded_at": recorded_at,
         "config": object(),
         "env": "dev",
         "context": {},
@@ -564,7 +563,7 @@ def test_lineage_writer_uses_activity_for_idempotent_identity(spark_session, mon
     assert rows[0]["lineage_id"] == module._lineage_id(
         activity_id="activity-1", table_id="table-1", profile_snapshot_id="snapshot-1", pipeline_role="source"
     )
-    assert rows[0]["recorded_at"] == recorded_at
+    assert rows[0]["_committed_at"] == audit["_committed_at"]
 
 
 def test_lineage_upsert_failure_does_not_append_duplicate(spark_session, monkeypatch, registered):

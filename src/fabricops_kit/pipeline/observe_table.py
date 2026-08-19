@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import re
 from typing import Any
 from uuid import uuid4
@@ -104,7 +103,6 @@ def _persist(
     *,
     observation_id: str,
     table_id: str,
-    observed_at: datetime,
     spark_session: Any,
     config: Any,
     env: str,
@@ -119,7 +117,6 @@ def _persist(
             "observation_id": observation_id,
             "table_id": table_id,
             "environment_name": env,
-            "observed_at": observed_at,
             **audit,
         }
         for row in rows
@@ -278,7 +275,6 @@ def observe_table(
         current,
         observation_id=str(uuid4()),
         table_id=table_id,
-        observed_at=datetime.now(UTC),
         spark_session=spark,
         config=config,
         env=env,

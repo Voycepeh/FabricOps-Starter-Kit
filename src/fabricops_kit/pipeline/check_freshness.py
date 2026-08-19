@@ -7,13 +7,32 @@ from fabricops_kit.pipeline.guardrail_metadata import (
     load_table_guardrail_rules,
     resolve_change_rule_observation_columns,
     select_table_guardrail_rule,
-    write_guardrail_result_row,
 )
+from fabricops_kit.pipeline.guardrails_shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import (
     guardrail_compatibility_observation,
-    is_source_observation,
     observation_rows,
 )
+
+_OBSERVATION_COLUMNS = {
+    "observation_id",
+    "table_id",
+    "environment_name",
+    "partition_value",
+    "row_count",
+    "min_change_value",
+    "max_change_value",
+    "is_present",
+    "_committed_at",
+    "_activity_id",
+}
+
+
+def _is_source_observation(observation) -> bool:
+    columns = set(getattr(observation, "columns", ()))
+    if not columns and isinstance(observation, (list, tuple)) and observation:
+        columns = set(dict(observation[0]))
+    return _OBSERVATION_COLUMNS <= columns
 
 
 def check_freshness(observation) -> dict:
@@ -36,7 +55,7 @@ def check_freshness(observation) -> dict:
     >>> result = check_freshness(observation)
 
     """
-    if not is_source_observation(observation):
+    if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
     rows = observation_rows(observation)
     if not rows:
@@ -99,7 +118,7 @@ def check_freshness(observation) -> dict:
             spark_session=spark_session,
             config=config,
             env=env,
-            run_id=str(first.get("observed_at") or ""),
+            run_id=str(first.get("_activity_id") or ""),
             dataset_name="",
             table_name="",
             store_type="",

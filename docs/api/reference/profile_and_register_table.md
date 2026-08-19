@@ -28,9 +28,9 @@ configured in ``00_env_config`` for the active environment.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/profile_and_register_table.py:506`
+`fabricops_kit/pipeline/profile_and_register_table.py:501`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L506-L850">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_and_register_table.py#L501-L843">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -129,7 +129,7 @@ Processing flow:
 3. Produce flattened frequency rows for the selected columns using the
    same calculation exposed by ``profile_frequency_distribution``.
 4. Resolve each frequency row to its parent ``profile_id`` and shared
-``profile_snapshot_id``.
+   ``profile_snapshot_id``.
 5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
 6. Replace rows for the exact ``profile_snapshot_id`` child snapshot and
 write the normalized rows to
@@ -163,47 +163,46 @@ Return the profiling result to the notebook
 
 Frequency snapshot behavior:
 
-- Every eligible statistical profile row remains in the compact parent
+* Every eligible statistical profile row remains in the compact parent
   result whether or not that column produces child frequency rows.
-- ``frequency_columns=None`` automatically profiles eligible non-technical
+* ``frequency_columns=None`` automatically profiles eligible non-technical
   scalar columns whose distinct-per-non-null percentage is less than or
   equal to ``frequency_max_distinct_percent``. The default threshold is
   ``80.0`` percent.
-- Automatically selected columns above the threshold and all-null automatic
+* Automatically selected columns above the threshold and all-null automatic
   columns produce no child frequency rows. No fake skipped values are stored.
-- ``frequency_max_distinct_percent=None`` disables the high-cardinality
+* ``frequency_max_distinct_percent=None`` disables the high-cardinality
   threshold for automatic columns.
-- Only columns listed in a non-empty ``frequency_columns`` sequence receive
+* Only columns listed in a non-empty ``frequency_columns`` sequence receive
   generated frequency evidence; explicit selections override the automatic
   threshold. Other profiled columns produce no child rows.
-- ``frequency_columns=[]`` skips frequency profiling entirely and writes no
+* ``frequency_columns=[]`` skips frequency profiling entirely and writes no
   child rows for the current snapshot.
-- ``frequency_profile_df=None`` profiles frequencies against the complete
+* ``frequency_profile_df=None`` profiles frequencies against the complete
   supplied source DataFrame. When a caller supplies ``frequency_profile_df``,
   frequency counts, percentages, ranks, profiled row counts, and profiled
   non-null counts describe that caller-provided DataFrame. The compact
   parent statistics still describe the complete source DataFrame.
-- ``frequency_top_n`` restricts persisted child rows only when supplied. It
+* ``frequency_top_n`` restricts persisted child rows only when supplied. It
   limits output rows after grouped counts are calculated and does not
   reduce grouping cost.
-- Frequency values are ordered deterministically by rank.
-- Historical parent and child rows join through ``profile_id``. Replacement
-is scoped to the current ``profile_snapshot_id``, so earlier snapshots remain intact.
+* Frequency values are ordered deterministically by rank.
+* Historical parent and child rows join through ``profile_id``. Replacement
+  is scoped to the current ``profile_snapshot_id``, so earlier snapshots remain intact.
 
 ``METADATA_DATA_PROFILED`` receives one appended row per eligible input
 DataFrame column. Repeated executions create additional profiling
 snapshots, and the returned DataFrame is the same compact DataFrame
 appended to this table. Its logical field groups are:
 
-- Identity fields: ``profile_id``, ``profile_snapshot_id``, ``table_id``,
+* Identity fields: ``profile_id``, ``profile_snapshot_id``, ``table_id``,
   ``column_id``, ``environment_name``, ``data_type``.
-- Statistical fields: ``row_count``, ``non_null_count``, ``null_count``,
+* Statistical fields: ``row_count``, ``non_null_count``, ``null_count``,
   ``null_percent``, ``distinct_count``, ``distinct_percent``,
   ``mean_value``, ``stddev_value``, ``min_value``,
   ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
   ``max_value``.
-- Runtime field: ``profiled_at``.
-- Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
+* Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
   ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
   ``_metadata_lakehouse_name``, ``_activity_id``.
 
@@ -227,23 +226,23 @@ or produced as an output during the current notebook activity. A
 ``profile_role="source"`` value means the DataFrame was used as an input.
 A ``profile_role="target"`` value means the DataFrame was produced as an
 output. Lineage-specific fields are ``lineage_id``, ``table_id``,
-``profile_snapshot_id``, ``environment_name``, ``pipeline_role``, and
-``recorded_at``. The standard eight underscore
-audit fields are the sole execution-context contract. ``recorded_at`` is the lineage participation time, while ``_committed_at``
-is the metadata write time. ``lineage_id`` is deterministically derived from
-``_activity_id``, ``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.
+``profile_snapshot_id``, ``environment_name``, and ``pipeline_role``. The
+standard eight underscore audit fields are the execution-context contract,
+and ``_committed_at`` is the authoritative timestamp for the lineage event.
+``lineage_id`` is deterministically derived from ``_activity_id``,
+``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.
 
 What the notebook receives: a Spark DataFrame containing one profiling
 result row for each eligible column.
 
 What FabricOps saves:
 
-- ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
-- ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
+* ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
+* ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
   ``profile_id`` and grouped by ``profile_snapshot_id``.
-- ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
+* ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
   records.
-- ``METADATA_DATA_LINEAGE``: the current source or target activity.
+* ``METADATA_DATA_LINEAGE``: the current source or target activity.
 
 Statistical profiling records describe the complete DataFrame supplied
 during the notebook activity. If ``frequency_profile_df`` is supplied,

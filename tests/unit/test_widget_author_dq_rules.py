@@ -175,7 +175,7 @@ def test_independent_rule_identity_is_stable_across_parameter_versions():
         selected_columns=["student_id"],
         parameters={"maximum_null_percent": 0},
     )[0]
-    existing = [{**first, "configuration_version": 3}]
+    existing = [{**first, "guardrail_version": 3}]
     second = authoring._dq_records_from_selection(
         _state(existing),
         rule_id="missing_values",
@@ -183,7 +183,7 @@ def test_independent_rule_identity_is_stable_across_parameter_versions():
         parameters={"maximum_null_percent": 5},
     )[0]
     assert first["guardrail_rule_id"] == second["guardrail_rule_id"]
-    assert second["configuration_version"] == 4
+    assert second["guardrail_version"] == 4
 
 
 def test_group_rule_creates_one_row_and_preserves_all_columns():
@@ -259,6 +259,7 @@ def test_conditional_rule_preserves_condition_and_target_relationship():
 def test_dq_records_contain_no_obsolete_stage4_fields():
     """Verify that DQ rows omit obsolete Stage 4 metadata fields."""
     obsolete = {
+        "configuration_version",
         "metadata_table_key",
         "metadata_column_key",
         "dataset_name",
@@ -341,7 +342,9 @@ def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_field
     assert len(rows) == 2
     preview = widget["controls"]["preview"].value
     assert preview.count('"guardrail_rule_id"') == 2
+    assert preview.count('"guardrail_version"') == 2
     assert '"column_id": "col-student"' in preview
+    assert '"configuration_version"' not in preview
     assert '"metadata_table_key"' not in preview
 
 
@@ -384,6 +387,7 @@ def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
     widget["save"]()
     assert len(saved) == 1
     assert saved[0][0]["column_id"] == "col-student"
+    assert saved[0][0]["guardrail_version"] == 1
 
 
 def test_authoring_widgets_are_independent_and_use_shared_private_storage_model():

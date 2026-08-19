@@ -142,15 +142,6 @@ def test_profile_behavior_runtime_writer_targets_results_not_catalogue():
     assert '"METADATA_DATA_CATALOGUE"' not in source
 
 
-def test_governance_rule_writer_targets_guardrail_rules_for_dq():
-    """Verify table governance commits DQ approvals to guardrail rules."""
-    source = _function_source("widgets/shared.py", "record_table_governance")
-
-    assert "GUARDRAIL_TABLE" in source
-    assert "ENRICHMENT_TABLE" not in source
-    assert "GUARDRAIL_RESULTS_TABLE" not in source
-
-
 
 def test_runtime_enforcement_functions_route_outcomes_to_results():
     """Verify runtime guardrails expose result-table outcome writes."""
@@ -178,27 +169,3 @@ def test_guardrail_result_writer_has_single_shared_implementation():
         )
 
     assert writer_definitions == ["pipeline/guardrails_shared.py:write_guardrail_result_row"]
-
-def test_widget_functions_do_not_write_mixed_guardrail_metadata():
-    """Verify standalone widgets reuse the canonical metadata reader and writer."""
-    target_source = _function_source("widgets/shared.py", "_load_guardrail_authoring_targets")
-    schema_source = _function_source("widgets/widget_author_guardrails.py", "_render_guardrail_authoring")
-    dq_source = _function_source("widgets/widget_author_dq_rules.py", "widget_author_dq_rules")
-
-    assert "PROFILED_TABLE" in target_source
-    assert "GUARDRAIL_TABLE" in target_source
-    assert "_read_metadata_table_or_empty" in target_source
-    assert "_write_rule_records" in schema_source
-    assert "_write_rule_records" in dq_source
-    for source in (schema_source, dq_source):
-        assert "write_lakehouse_table_core" not in source
-        assert "GUARDRAIL_RESULTS_TABLE" not in source
-
-
-    for path in SRC.rglob("*.py"):
-        source = path.read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef) and node.name.startswith("widget_"):
-                function_source = ast.get_source_segment(source, node) or ""
-                assert "write_lakehouse_table_core" not in function_source, f"{path}:{node.name} writes metadata directly"

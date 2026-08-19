@@ -232,13 +232,13 @@ METADATA_TABLE_MODELS = {
     "METADATA_GUARDRAIL": {
         "purpose": "Define the expectations the data used in the ETL pipeline should meet.",
         "grain": "One configured Guardrail rule for one Catalogue table or column in one environment.",
-        "primary_key": ["guardrail_rule_id"],
+        "primary_key": ["guardrail_rule_id", "guardrail_version"],
         "foreign_keys": [
             {"local_field": "table_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "table_id", "cardinality": "N:1", "statement": "Many Guardrail rules can belong to one logical Catalogue table identity in an environment."},
             {"local_field": "column_id", "referenced_table": "METADATA_DATA_CATALOGUE", "referenced_field": "column_id", "cardinality": "N:1", "statement": "Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty."},
         ],
         "relationships": [
-            {"cardinality": "1:N", "statement": "One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id."},
+            {"cardinality": "1:N", "statement": "One Guardrail revision can produce many Guardrail Results across pipeline runs through guardrail_rule_id and guardrail_version."},
         ],
     },
     "METADATA_GUARDRAIL_RESULTS": {
@@ -458,7 +458,7 @@ METADATA_COLUMN_OWNERS = {
         ],
         "__audit__": ["fabricops_kit.config.audit.build_runtime_audit_fields"],
         "guardrail_rule_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
-        "configuration_version": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
+        "guardrail_version": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
         "table_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
         "column_id": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],
         "environment_name": ["fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record"],

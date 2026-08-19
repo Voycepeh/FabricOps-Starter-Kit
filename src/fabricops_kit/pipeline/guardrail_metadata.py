@@ -49,7 +49,7 @@ def canonical_guardrail_rule_record(
     parameters = _parse_parameters(record)
     return {
         "guardrail_rule_id": str(record.get("guardrail_rule_id") or ""),
-        "configuration_version": int(record.get("configuration_version") or 1),
+        "guardrail_version": int(record.get("guardrail_version") or 1),
         "table_id": str(record.get("table_id") or ""),
         "column_id": str(record.get("column_id") or ""),
         "environment_name": str(record.get("environment_name") or env),
@@ -105,7 +105,7 @@ def _select_rule(
     if not candidates:
         return None
     candidates.sort(
-        key=lambda row: (int(row.get("configuration_version") or 0), str(row.get("_committed_at") or "")),
+        key=lambda row: (int(row.get("guardrail_version") or 0), str(row.get("_committed_at") or "")),
         reverse=True,
     )
     return candidates[0]
@@ -132,7 +132,6 @@ def resolve_change_rule_observation_columns(rule: Mapping[str, Any]) -> tuple[st
     return runtime.resolve_change_rule_observation_columns(dict(rule))
 
 
-write_guardrail_result_row = runtime.write_guardrail_result_row
 
 def schema_check_core(
     dataframe: Any,
@@ -174,6 +173,7 @@ def schema_check_core(
     result.update(
         guardrail_type="schema",
         guardrail_rule_id=str(rule.get("guardrail_rule_id") or ""),
+        guardrail_version=int(rule.get("guardrail_version") or 1),
         rule_id=str(rule.get("rule_id") or ""),
         rule_type=rule_type,
         severity=severity,
@@ -238,7 +238,7 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    if {"table_id", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns and rule_type != "skip":
+    if {"table_id", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns and rule_type != "skip":
         rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
         change_columns = {str(_row_to_dict(row).get("change_column") or "") for row in rows or []}
         change_columns.discard("")
@@ -275,6 +275,7 @@ def freshness_check_core(
         base_result.update(
             guardrail_type="freshness",
             guardrail_rule_id=str(rule.get("guardrail_rule_id") or ""),
+            guardrail_version=int(rule.get("guardrail_version") or 1),
             rule_id=str(rule.get("rule_id") or ""),
             rule_type=rule_type,
         )
@@ -352,6 +353,7 @@ def evaluate_changes_guardrail(
         raise ValueError("severity must be one of: blocking, warning")
     result.update(
         guardrail_rule_id=str(rule.get("guardrail_rule_id") or ""),
+        guardrail_version=int(rule.get("guardrail_version") or 1),
         rule_id=str(rule.get("rule_id") or ""),
         rule_type=rule_type,
         source_pattern=source_pattern,
@@ -398,21 +400,18 @@ def _load_active_dq_rules(metadata_df: Any, table_id: str, env: str | None = Non
     """Load current active DQ rules from the normalized rule table."""
     _, F, Window = runtime._spark_sql_helpers()
     columns = set(getattr(metadata_df, "columns", []))
-    required = {"guardrail_rule_id", "table_id", "rule_id", "rule_type", "rule_parameters_json", "severity", "is_active"}
+    required = {"guardrail_rule_id", "guardrail_version", "table_id", "rule_id", "rule_type", "rule_parameters_json", "severity", "is_active"}
     missing = sorted(required - columns)
     if missing:
         raise ValueError(f"DQ metadata is missing canonical Guardrail columns: {', '.join(missing)}")
     latest = metadata_df.filter(F.col("table_id") == table_id)
     if env is not None and "environment_name" in columns:
         latest = latest.filter(F.col("environment_name") == env)
-    order = []
-    if "configuration_version" in columns:
-        order.append(F.col("configuration_version").desc_nulls_last())
+    order = [F.col("guardrail_version").desc_nulls_last()]
     if "_committed_at" in columns:
         order.append(F.col("_committed_at").desc_nulls_last())
-    if order:
-        window = Window.partitionBy(F.col("guardrail_rule_id")).orderBy(*order)
-        latest = latest.withColumn("_rn", F.row_number().over(window)).filter(F.col("_rn") == 1).drop("_rn")
+    window = Window.partitionBy(F.col("guardrail_rule_id")).orderBy(*order)
+    latest = latest.withColumn("_rn", F.row_number().over(window)).filter(F.col("_rn") == 1).drop("_rn")
     latest = latest.filter(F.col("is_active") == True)
     rules: list[dict[str, Any]] = []
     for row in (_row_to_dict(item) for item in latest.collect()):
@@ -423,6 +422,7 @@ def _load_active_dq_rules(metadata_df: Any, table_id: str, env: str | None = Non
             {
                 "rule_id": str(row.get("rule_id") or ""),
                 "guardrail_rule_id": str(row.get("guardrail_rule_id") or ""),
+                "guardrail_version": int(row.get("guardrail_version") or 1),
                 "rule_type": str(row.get("rule_type") or ""),
                 "columns": [value for value in rule_columns if value],
                 "severity": runtime._normalize_dq_severity(row.get("severity")),
@@ -504,12 +504,13 @@ def check_dq_runtime(
         rule_payload = {
             key: value
             for key, value in rule.items()
-            if key not in {"guardrail_rule_id", "severity"}
+            if key not in {"guardrail_rule_id", "guardrail_version", "severity"}
         }
         summary_rows.append(
             {
                 "guardrail_result_id": result_ids[rule["rule_id"]],
                 "guardrail_rule_id": rule["guardrail_rule_id"],
+                "guardrail_version": rule["guardrail_version"],
                 "run_id": resolved_run_id,
                 "environment_name": env,
                 "status": check["status"],

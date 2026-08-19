@@ -37,7 +37,7 @@ def _latest_rule(
         matches.append(row)
     matches.sort(
         key=lambda row: (
-            int(row.get("configuration_version") or 0),
+            int(row.get("guardrail_version") or 0),
             str(row.get("_committed_at") or ""),
         ),
         reverse=True,
@@ -85,12 +85,12 @@ def _build_guardrail_rule_id(
     return f"guardrail_{hashlib.sha256(_stable_json(payload).encode('utf-8')).hexdigest()}"
 
 
-def _next_configuration_version(
+def _next_guardrail_version(
     existing_rules: Iterable[Mapping[str, Any]], guardrail_rule_id: str
 ) -> int:
-    """Return the next append-only configuration version for one logical rule."""
+    """Return the next append-only Guardrail version for one logical rule."""
     versions = [
-        int(row.get("configuration_version") or 0)
+        int(row.get("guardrail_version") or 0)
         for row in existing_rules or ()
         if str(row.get("guardrail_rule_id") or "") == guardrail_rule_id
     ]
@@ -107,7 +107,7 @@ def _build_rule_record(
     severity: str = "warning",
     column_name: str = "",
     identity_parameters: Mapping[str, Any] | None = None,
-    configuration_version: int | None = None,
+    guardrail_version: int | None = None,
     is_active: bool = True,
 ) -> dict[str, Any]:
     """Build one Stage 4A Guardrail row without obsolete identity or review fields."""
@@ -125,12 +125,12 @@ def _build_rule_record(
         rule_id=rule_id,
         identity_parameters=identity_parameters,
     )
-    version = configuration_version or _next_configuration_version(
+    version = guardrail_version or _next_guardrail_version(
         state.get("existing_rules") or (), guardrail_rule_id
     )
     return {
         "guardrail_rule_id": guardrail_rule_id,
-        "configuration_version": int(version),
+        "guardrail_version": int(version),
         "table_id": table_id,
         "column_id": column_id,
         "environment_name": environment_name,
@@ -278,7 +278,7 @@ def _load_guardrail_authoring_targets(
         latest = max(
             table_profiles,
             key=lambda row: (
-                str(row.get("profiled_at") or ""),
+                str(row.get("_committed_at") or ""),
                 str(row.get("profile_snapshot_id") or ""),
             ),
         )
@@ -290,11 +290,11 @@ def _load_guardrail_authoring_targets(
                 if str(row.get("profile_snapshot_id") or "") == snapshot_id
             ]
         else:
-            latest_at = str(latest.get("profiled_at") or "")
+            latest_at = str(latest.get("_committed_at") or "")
             snapshot = [
                 row
                 for row in table_profiles
-                if str(row.get("profiled_at") or "") == latest_at
+                if str(row.get("_committed_at") or "") == latest_at
             ]
 
         catalogue_columns = {
@@ -322,7 +322,7 @@ def _load_guardrail_authoring_targets(
                     "data_type": str(profile.get("data_type") or ""),
                     "profile_id": str(profile.get("profile_id") or ""),
                     "profile_snapshot_id": snapshot_id,
-                    "profiled_at": profile.get("profiled_at"),
+                    "_committed_at": profile.get("_committed_at"),
                 }
             )
         evidence.sort(key=lambda row: row["column_name"].casefold())

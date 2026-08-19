@@ -6,13 +6,13 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 **Grain:** One configured Guardrail rule for one Catalogue table or column in one environment.
 
-**Primary key:** `guardrail_rule_id`
+**Primary key:** `guardrail_rule_id` + `guardrail_version`
 
 **Relationships:**
 
 * `table_id` → `METADATA_DATA_CATALOGUE.table_id` (**N:1**). Many Guardrail rules can belong to one logical Catalogue table identity in an environment.
 * `column_id` → `METADATA_DATA_CATALOGUE.column_id` (**N:1**). Column-level Guardrail rules reference the Catalogue column through column_id; table-level rules leave column_id empty.
-* **1:N**: One Guardrail rule can produce many Guardrail Results across pipeline runs through guardrail_rule_id.
+* **1:N**: One Guardrail revision can produce many Guardrail Results across pipeline runs through guardrail_rule_id and guardrail_version.
 
 ## Column summary
 
@@ -27,7 +27,7 @@ Define the expectations the data used in the ETL pipeline should meet.
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
 | `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Stable identifier for the guardrail rule row. |
-| `configuration_version` | `integer` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Metadata Guardrail field `configuration_version`. |
+| `guardrail_version` | `integer` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Metadata Guardrail field `guardrail_version`. |
 | `table_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Identifier for the accessed table or object. |
 | `column_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Identifier stored for `column_id`. |
 | `environment_name` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Environment name recorded for the metadata row. |

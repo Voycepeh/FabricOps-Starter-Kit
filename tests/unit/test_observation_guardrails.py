@@ -24,6 +24,7 @@ def row(
     table_id="key",
     environment_name="dev",
     observation_id="observation-1",
+    activity_id="activity-1",
 ):
     return {
         "observation_id": observation_id,
@@ -34,7 +35,8 @@ def row(
         "min_change_value": minimum,
         "max_change_value": maximum,
         "is_present": present,
-        "observed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
+        "_committed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
+        "_activity_id": activity_id,
     }
 
 
@@ -73,6 +75,7 @@ def change_rule(*, severity="blocking", rule_type="monitor_only", behaviour=None
         "severity": severity,
         "is_active": True,
         "guardrail_rule_id": f"change_{rule_type}_{severity}",
+        "guardrail_version": 1,
         "rule_id": f"change_{rule_type}_{severity}",
     }
 
@@ -90,7 +93,21 @@ def freshness_rule(*, freshness_column="modified_at", max_lag_days=0):
         "severity": "blocking",
         "is_active": True,
         "guardrail_rule_id": "freshness_rule",
+        "guardrail_version": 1,
         "rule_id": "freshness_rule",
+    }
+
+
+def _audit(at=None, activity_id="activity-tombstone"):
+    return {
+        "_committed_by": "tester@example.com",
+        "_committed_at": at or datetime(2026, 8, 14, tzinfo=UTC),
+        "_workspace_id": "workspace-id",
+        "_workspace_name": "workspace-name",
+        "_notebook_id": "notebook-id",
+        "_notebook_name": "02_pipeline",
+        "_metadata_lakehouse_name": "metadata",
+        "_activity_id": activity_id,
     }
 
 
@@ -100,7 +117,7 @@ def configure_changes(monkeypatch, history, rules=None):
     monkeypatch.setattr(changes, "read_lakehouse_table_core", lambda *args, **kwargs: Frame(history))
     written = []
     monkeypatch.setattr(changes, "write_lakehouse_table_core", lambda frame, *args, **kwargs: written.extend(frame.collect()))
-    monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: {})
+    monkeypatch.setattr(changes, "build_runtime_audit_fields", lambda **kwargs: _audit())
     monkeypatch.setattr(changes, "write_guardrail_result_row", lambda **kwargs: None)
     monkeypatch.setattr(changes, "load_table_guardrail_rules", lambda *args, **kwargs: rules or [change_rule()])
     return written
@@ -171,6 +188,7 @@ def test_approved_changes_rule_governs_continuation(monkeypatch, severity, statu
     assert result["status"] == status
     assert result["can_continue"] is can_continue
     assert result["severity"] == severity
+    assert result["guardrail_version"] == 1
     assert result_writes[0]["guardrail_type"] == "change"
 
 
@@ -197,6 +215,7 @@ def test_freshness_uses_change_rule_only_to_resolve_observation_column(monkeypat
     configure_freshness(monkeypatch)
     result = freshness.check_freshness(observed)
     assert result["status"] == "passed"
+    assert result["guardrail_version"] == 1
 
 
 def test_freshness_rejects_rule_column_that_differs_from_observation(monkeypatch):
@@ -246,7 +265,13 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     frame = types.SimpleNamespace(limit=lambda count: types.SimpleNamespace(columns=["id"]))
     config = object()
     store = types.SimpleNamespace(kind="lakehouse")
-    rules = [{"guardrail_rule_id": "schema_rule", "table_id": "lakehouse||source||dbo||orders", "guardrail_type": "schema", "is_active": True}]
+    rules = [{
+        "guardrail_rule_id": "schema_rule",
+        "guardrail_version": 2,
+        "table_id": "lakehouse||source||dbo||orders",
+        "guardrail_type": "schema",
+        "is_active": True,
+    }]
     writes = []
     core_calls = []
 
@@ -267,9 +292,11 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
     result = schema_module.check_schema("orders", target="source", schema="dbo")
     assert result["status"] == "passed"
+    assert result["guardrail_version"] == 2
     assert core_calls[0][1]["metadata_table_key"] == "lakehouse||source||dbo||orders"
     assert writes[0]["guardrail_type"] == "schema"
     assert writes[0]["table_name"] == "orders"
+    assert writes[0]["result"]["guardrail_version"] == 2
 
 
 def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monkeypatch):
@@ -277,7 +304,13 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
     incoming = types.SimpleNamespace(columns=["id"])
     config = object()
     store = types.SimpleNamespace(kind="warehouse", schema="dbo")
-    rules = [{"guardrail_rule_id": "schema_rule", "table_id": "warehouse||product||sales||orders", "guardrail_type": "schema", "is_active": True}]
+    rules = [{
+        "guardrail_rule_id": "schema_rule",
+        "guardrail_version": 1,
+        "table_id": "warehouse||product||sales||orders",
+        "guardrail_type": "schema",
+        "is_active": True,
+    }]
     core_calls = []
 
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "prod", {}))
@@ -313,7 +346,16 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
 
 def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
-    result = {"status": "failed", "can_continue": False, "guardrail_rule_id": "rule", "rule_type": "strict", "table_id": "governed-orders", "guardrail_type": "schema", "is_active": True}
+    result = {
+        "status": "failed",
+        "can_continue": False,
+        "guardrail_rule_id": "rule",
+        "guardrail_version": 1,
+        "rule_type": "strict",
+        "table_id": "governed-orders",
+        "guardrail_type": "schema",
+        "is_active": True,
+    }
     events = []
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (object(), "prod", {}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))

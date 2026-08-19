@@ -17,8 +17,8 @@ See where the data came from and where it ends up.
 
 | Column category | Count |
 | --- | ---: |
-| Total columns | 14 |
-| Business columns | 6 |
+| Total columns | 13 |
+| Business columns | 5 |
 | Audit columns | 8 |
 
 ## Implemented schema
@@ -30,7 +30,6 @@ See where the data came from and where it ends up.
 | `profile_snapshot_id` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Identifier stored for `profile_snapshot_id`. |
 | `environment_name` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Environment name recorded for the metadata row. |
 | `pipeline_role` | `string` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Metadata Data Lineage field `pipeline_role`. |
-| `recorded_at` | `timestamp` | [`profile_and_register_table`](../../api/reference/profile_and_register_table.md), `fabricops_kit.pipeline.profile_and_register_table._write_lineage_participation` | Timestamp stored for `recorded_at`. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

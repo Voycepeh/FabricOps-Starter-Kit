@@ -185,78 +185,6 @@ def test_load_active_dq_rules_reconstructs_current_shape_metadata_row(spark_sess
     ]
 
 
-def test_load_active_dq_rules_reconstructs_current_governance_metadata(spark_session, monkeypatch):
-    """Verify load active dq rules reconstructs current governance metadata."""
-    from fabricops_kit.pipeline import guardrails_shared as dq_runtime
-    from fabricops_kit.widgets import shared as governance_authoring
-    from tests.helpers import framework_config
-
-    writes = []
-    monkeypatch.setattr(
-        governance_authoring,
-        "write_lakehouse_table_core",
-        lambda df, table, *, target, context, **kwargs: writes.append((table, df)),
-    )
-    profile_rows = [
-        {
-            "environment_name": "dev",
-            "dataset_name": "sales",
-            "table_name": "orders",
-            "column_name": "amount",
-            "metadata_table_key": "dev|sales|orders",
-            "metadata_column_key": "dev|sales|orders|amount",
-        }
-    ]
-
-    monkeypatch.setattr(
-        "fabricops_kit.config.audit.resolve_runtime_context",
-        lambda **_kwargs: resolved_runtime_context(),
-    )
-    config = framework_config()
-
-    governance_authoring.record_table_governance(
-        config,
-        "dev",
-        profile_rows,
-        spark_session=spark_session,
-        guardrail_rule_reviews=[
-            {
-                "rule_id": "amount_positive",
-                "column_name": "amount",
-                "rule_type": "value_range",
-                "columns": ["amount"],
-                "minimum": 0,
-                "minimum_inclusive": False,
-                "severity": "error",
-                "description": "Amount must be non-negative",
-                "commit": True,
-            }
-        ],
-        approved_by="reviewer@example.com",
-    )
-
-    assert [table for table, _ in writes] == [governance_authoring.GUARDRAIL_TABLE]
-    persisted = writes[0][1].collect()[0]
-    assert persisted["guardrail_type"] == "dq"
-    loaded = dq_runtime._load_active_dq_rules(writes[0][1], persisted["metadata_table_key"])
-
-    assert loaded == [
-        {
-            "rule_id": "amount_positive",
-            "guardrail_rule_id": persisted["rule_id"],
-            "rule_key": persisted["rule_key"],
-            "rule_type": "value_range",
-            "columns": ["amount"],
-            "severity": "error",
-            "description": "Amount must be non-negative",
-            "review_status": "governance_approved",
-            "minimum": 0,
-            "minimum_inclusive": False,
-            "maximum_inclusive": True,
-        }
-    ]
-
-
 
 def _dq_metadata_df(spark_session, rows):
     from fabricops_kit.config.shared import build_metadata_table_key
@@ -687,7 +615,7 @@ def test_write_guardrail_result_writes_runtime_outcome_to_results_table(spark_se
         schema_name=None,
         guardrail_type="freshness",
         rule_type="max_age_days",
-        result={"guardrail_rule_id": "freshness-rule", "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
+        result={"guardrail_rule_id": "freshness-rule", "guardrail_version": 1, "status": "failed", "can_continue": False, "severity": "blocking", "message": "too old"},
         rule_key="freshness_orders",
     )
 

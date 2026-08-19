@@ -95,6 +95,7 @@ def check_schema(
     )
     if selected_rule is not None:
         result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
+        result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
         result["expected"] = {"schema_rule": result.get("rule_type")}
         result["actual"] = {
             name: result.get(name, [])
