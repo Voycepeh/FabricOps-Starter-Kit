@@ -198,6 +198,7 @@ def test_successful_observation_persists_canonical_identity_without_rule_definit
     assert "partition_column" not in identity
     assert "change_column" not in identity
     assert "guardrail_rule_version_id" not in identity
+    assert "observed_at" not in identity
 
 
 def test_failed_observation_does_not_persist(monkeypatch):
@@ -218,7 +219,7 @@ def test_failed_observation_does_not_persist(monkeypatch):
 
 def test_metadata_schema_matches_table_observation_contract():
     names = module.metadata_table_schema_registry()[module.OBSERVATION_TABLE].fieldNames()
-    assert names[:9] == [
+    assert names[:8] == [
         "observation_id",
         "table_id",
         "environment_name",
@@ -227,6 +228,6 @@ def test_metadata_schema_matches_table_observation_contract():
         "min_change_value",
         "max_change_value",
         "is_present",
-        "observed_at",
     ]
-    assert {"metadata_table_key", "partition_column", "change_column", "guardrail_rule_version_id"}.isdisjoint(names)
+    assert "_committed_at" in names
+    assert {"observed_at", "metadata_table_key", "partition_column", "change_column", "guardrail_rule_version_id"}.isdisjoint(names)
