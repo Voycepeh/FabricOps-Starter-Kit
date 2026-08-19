@@ -2,7 +2,7 @@
 
 from fabricops_kit.config.shared import get_store, resolve_fabric_context
 from fabricops_kit.io.shared import resolve_lakehouse_table_location, resolve_warehouse_table_location
-from fabricops_kit.pipeline.guardrails_shared import check_dq_runtime
+from fabricops_kit.pipeline.guardrail_metadata import check_dq_runtime
 
 
 def check_dq(

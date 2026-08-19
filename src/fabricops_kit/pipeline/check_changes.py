@@ -7,14 +7,13 @@ from fabricops_kit.config.audit import build_runtime_audit_fields
 from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types, metadata_table_schema_registry
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
 from fabricops_kit.io.shared import configured_lakehouse_schema, read_lakehouse_table_core, write_lakehouse_table_core
-from fabricops_kit.pipeline.guardrails_shared import (
-    changes_check_core,
+from fabricops_kit.pipeline.guardrail_metadata import (
     evaluate_changes_guardrail,
     load_table_guardrail_rules,
-    resolve_guardrail_change_behaviour,
     select_table_guardrail_rule,
     write_guardrail_result_row,
 )
+from fabricops_kit.pipeline.guardrails_shared import changes_check_core, resolve_guardrail_change_behaviour
 from fabricops_kit.pipeline.shared import is_source_observation, observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
@@ -202,30 +201,26 @@ def _observation_changes(observation) -> dict:
             else ("Source observation changed." if has_changes else "Source observation is unchanged.")
         ),
     }
-    result["metadata_table_key"] = table_id  # in-memory Stage 4 compatibility only
-    table_name = str(selected_rule.get("table_name") or "")
     result = evaluate_changes_guardrail(
         result,
         rules_df=rules_df,
-        table_name=table_name,
         environment_name=env,
         metadata_table_key=table_id,
     )
-    if result.get("rule_key"):
+    if result.get("guardrail_rule_id"):
         write_guardrail_result_row(
             spark_session=getattr(observation, "sparkSession", None),
             config=config,
             env=env,
             run_id=str(observed_at),
-            dataset_name=str(selected_rule.get("dataset_name") or ""),
-            table_name=table_name,
+            dataset_name="",
+            table_name="",
             store_type="",
             layer="",
             schema_name=None,
             guardrail_type="change",
             rule_type=str(result.get("rule_type") or "monitor_only"),
             result=result,
-            rule_key=str(result["rule_key"]),
         )
     return result
 

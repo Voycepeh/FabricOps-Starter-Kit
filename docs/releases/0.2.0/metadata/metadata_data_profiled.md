@@ -26,21 +26,18 @@ Description: Supported FabricOps metadata table for data profiled.
 
 | Column name | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
-| `metadata_table_key` | `string` | No | FabricOps metadata schema registry | `metadata_table_key` field in `METADATA_DATA_PROFILED`. |
-| `metadata_column_key` | `string` | No | FabricOps metadata schema registry | `metadata_column_key` field in `METADATA_DATA_PROFILED`. |
-| `environment_name` | `string` | No | FabricOps metadata schema registry | `environment_name` field in `METADATA_DATA_PROFILED`. |
-| `store_type` | `string` | No | FabricOps metadata schema registry | `store_type` field in `METADATA_DATA_PROFILED`. |
-| `layer` | `string` | No | FabricOps metadata schema registry | `layer` field in `METADATA_DATA_PROFILED`. |
-| `schema_name` | `string` | Yes | FabricOps metadata schema registry | `schema_name` field in `METADATA_DATA_PROFILED`. |
-| `table_name` | `string` | No | FabricOps metadata schema registry | `table_name` field in `METADATA_DATA_PROFILED`. |
-| `column_name` | `string` | No | FabricOps metadata schema registry | `column_name` field in `METADATA_DATA_PROFILED`. |
-| `data_type` | `string` | No | FabricOps metadata schema registry | `data_type` field in `METADATA_DATA_PROFILED`. |
-| `row_count` | `long` | No | FabricOps metadata schema registry | `row_count` field in `METADATA_DATA_PROFILED`. |
-| `non_null_count` | `long` | No | FabricOps metadata schema registry | `non_null_count` field in `METADATA_DATA_PROFILED`. |
-| `null_count` | `long` | No | FabricOps metadata schema registry | `null_count` field in `METADATA_DATA_PROFILED`. |
-| `null_percent` | `double` | No | FabricOps metadata schema registry | `null_percent` field in `METADATA_DATA_PROFILED`. |
-| `distinct_count` | `long` | No | FabricOps metadata schema registry | `distinct_count` field in `METADATA_DATA_PROFILED`. |
-| `distinct_percent` | `double` | No | FabricOps metadata schema registry | `distinct_percent` field in `METADATA_DATA_PROFILED`. |
+| `profile_id` | `string` | Yes | FabricOps metadata schema registry | `profile_id` field in `METADATA_DATA_PROFILED`. |
+| `profile_snapshot_id` | `string` | Yes | FabricOps metadata schema registry | `profile_snapshot_id` field in `METADATA_DATA_PROFILED`. |
+| `table_id` | `string` | Yes | FabricOps metadata schema registry | `table_id` field in `METADATA_DATA_PROFILED`. |
+| `column_id` | `string` | Yes | FabricOps metadata schema registry | `column_id` field in `METADATA_DATA_PROFILED`. |
+| `environment_name` | `string` | Yes | FabricOps metadata schema registry | `environment_name` field in `METADATA_DATA_PROFILED`. |
+| `data_type` | `string` | Yes | FabricOps metadata schema registry | `data_type` field in `METADATA_DATA_PROFILED`. |
+| `row_count` | `long` | Yes | FabricOps metadata schema registry | `row_count` field in `METADATA_DATA_PROFILED`. |
+| `non_null_count` | `long` | Yes | FabricOps metadata schema registry | `non_null_count` field in `METADATA_DATA_PROFILED`. |
+| `null_count` | `long` | Yes | FabricOps metadata schema registry | `null_count` field in `METADATA_DATA_PROFILED`. |
+| `null_percent` | `double` | Yes | FabricOps metadata schema registry | `null_percent` field in `METADATA_DATA_PROFILED`. |
+| `distinct_count` | `long` | Yes | FabricOps metadata schema registry | `distinct_count` field in `METADATA_DATA_PROFILED`. |
+| `distinct_percent` | `double` | Yes | FabricOps metadata schema registry | `distinct_percent` field in `METADATA_DATA_PROFILED`. |
 | `mean_value` | `double` | Yes | FabricOps metadata schema registry | `mean_value` field in `METADATA_DATA_PROFILED`. |
 | `stddev_value` | `double` | Yes | FabricOps metadata schema registry | `stddev_value` field in `METADATA_DATA_PROFILED`. |
 | `min_value` | `string` | Yes | FabricOps metadata schema registry | `min_value` field in `METADATA_DATA_PROFILED`. |
@@ -48,8 +45,7 @@ Description: Supported FabricOps metadata table for data profiled.
 | `median_value` | `double` | Yes | FabricOps metadata schema registry | `median_value` field in `METADATA_DATA_PROFILED`. |
 | `percentile_75_value` | `double` | Yes | FabricOps metadata schema registry | `percentile_75_value` field in `METADATA_DATA_PROFILED`. |
 | `max_value` | `string` | Yes | FabricOps metadata schema registry | `max_value` field in `METADATA_DATA_PROFILED`. |
-| `schema_fingerprint` | `string` | No | FabricOps metadata schema registry | `schema_fingerprint` field in `METADATA_DATA_PROFILED`. |
-| `profiled_at` | `timestamp` | No | FabricOps metadata schema registry | `profiled_at` field in `METADATA_DATA_PROFILED`. |
+| `profiled_at` | `timestamp` | Yes | FabricOps metadata schema registry | `profiled_at` field in `METADATA_DATA_PROFILED`. |
 | `_committed_by` | `string` | No | FabricOps metadata schema registry | `_committed_by` field in `METADATA_DATA_PROFILED`. |
 | `_committed_at` | `timestamp` | No | FabricOps metadata schema registry | `_committed_at` field in `METADATA_DATA_PROFILED`. |
 | `_workspace_id` | `string` | No | FabricOps metadata schema registry | `_workspace_id` field in `METADATA_DATA_PROFILED`. |

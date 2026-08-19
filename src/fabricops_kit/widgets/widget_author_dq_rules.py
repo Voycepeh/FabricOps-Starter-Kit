@@ -8,6 +8,7 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.pipeline.guardrail_metadata import canonical_guardrail_rule_record
 from fabricops_kit.pipeline.guardrails_shared import DQ_COMPARISON_OPERATORS
 from fabricops_kit.widgets import shared
 
@@ -364,10 +365,11 @@ def widget_author_dq_rules(
 
     def save() -> list[dict[str, Any]]:
         records = build_records()
-        records_state["records"] = records
-        shared._write_rule_records(records, config=config, env=env, spark_session=spark_session)
-        message.value = f"<b style='color:green'>Saved {len(records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
-        return records
+        canonical_records = [canonical_guardrail_rule_record(record, config=config, env=env) for record in records]
+        records_state["records"] = canonical_records
+        shared._write_rule_records(canonical_records, config=config, env=env, spark_session=spark_session)
+        message.value = f"<b style='color:green'>Saved {len(canonical_records)} DQ rule row(s) to METADATA_GUARDRAIL.</b>"
+        return canonical_records
 
     def render_target(selected_state: Mapping[str, Any]) -> None:
         if selected_state is not state:

@@ -47,42 +47,34 @@ def write_guardrail_result_row(
     column_name: str = "",
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
-    """Append one runtime guardrail outcome to ``METADATA_GUARDRAIL_RESULTS``."""
+    """Append one runtime outcome for one configured Guardrail rule."""
+    del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
+    guardrail_rule_id = str(result.get("guardrail_rule_id") or "").strip()
+    if not guardrail_rule_id:
+        return
     audit = build_runtime_audit_fields(config=config, env=env)
+    resolved_run_id = str(run_id or "").strip() or str(audit["_activity_id"])
+    payload = {key: value for key, value in result.items() if key != "dataframe"}
     row = {
         "guardrail_result_id": str(uuid4()),
-        "result_id": str(uuid4()),
-        "run_id": run_id,
-        "guardrail_rule_id": str(result.get("guardrail_rule_id") or rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
-        "rule_key": str(rule_key or result.get("rule_key") or f"{guardrail_type}_default"),
-        "metadata_table_key": str(
-            result.get("metadata_table_key")
-            or build_metadata_table_key(store_type, layer, schema_name, table_name)
-        ),
+        "guardrail_rule_id": guardrail_rule_id,
+        "run_id": resolved_run_id,
         "environment_name": env,
-        "dataset_name": dataset_name,
-        "table_name": table_name,
-        "column_name": column_name,
-        "guardrail_type": guardrail_type,
-        "rule_type": rule_type,
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
-        "reason": str(result.get("message") or result.get("reason") or ""),
-        "expected_value_json": json.dumps(result.get("expected") or result.get("expected_value_json") or {}, default=str, sort_keys=True),
-        "actual_value_json": json.dumps(result.get("actual") or result.get("actual_value_json") or {}, default=str, sort_keys=True),
-        "result_payload_json": json.dumps({key: value for key, value in result.items() if key != "dataframe"}, default=str, sort_keys=True),
+        "reason": str(result.get("reason") or result.get("message") or ""),
+        "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
         **audit,
     }
-    context = {"config": config, "env": env}
     write_lakehouse_table_core(
         spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
         results_table,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
-        context=context,
+        context={"config": config, "env": env},
         mode="append",
     )
 

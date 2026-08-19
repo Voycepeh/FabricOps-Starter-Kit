@@ -64,31 +64,33 @@ def change_rule(*, severity="blocking", rule_type="monitor_only", behaviour=None
         else f'{{"partition_column":"business_date","change_column":"modified_at","change_behaviour":"{behaviour}"}}'
     )
     return {
-        "metadata_table_key": "key",
+        "table_id": "key",
         "table_name": "orders",
+        "environment_name": "dev",
         "guardrail_type": "change",
         "rule_type": rule_type,
         "rule_parameters_json": parameters,
         "severity": severity,
-        "activation_state": "active",
-        "review_state": "governance_approved",
-        "rule_key": f"change_{rule_type}_{severity}",
+        "is_active": True,
+        "guardrail_rule_id": f"change_{rule_type}_{severity}",
+        "rule_id": f"change_{rule_type}_{severity}",
     }
 
 
 def freshness_rule(*, freshness_column="modified_at", max_lag_days=0):
     return {
-        "metadata_table_key": "key",
+        "table_id": "key",
         "table_name": "orders",
+        "environment_name": "dev",
         "guardrail_type": "freshness",
         "rule_type": "max_lag_days",
         "rule_parameters_json": (
             f'{{"freshness_column":"{freshness_column}","max_lag_days":{max_lag_days}}}'
         ),
         "severity": "blocking",
-        "activation_state": "active",
-        "review_state": "governance_approved",
-        "rule_key": "freshness_rule",
+        "is_active": True,
+        "guardrail_rule_id": "freshness_rule",
+        "rule_id": "freshness_rule",
     }
 
 
@@ -213,7 +215,6 @@ def test_authored_change_behaviour_drives_observation_runtime_semantics(
 ):
     now = datetime(2026, 8, 14, tzinfo=UTC)
     rules = [change_rule(behaviour=behaviour)]
-    rules[0]["review_state"] = "authored"
     configure_changes(monkeypatch, [row(at=now - timedelta(hours=1))], rules)
     result = check_changes(Frame([row(at=now, count=2)], Spark()))
     assert result["source_pattern"] == expected_pattern
@@ -245,7 +246,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
     frame = types.SimpleNamespace(limit=lambda count: types.SimpleNamespace(columns=["id"]))
     config = object()
     store = types.SimpleNamespace(kind="lakehouse")
-    rules = [{"rule_key": "schema_rule"}]
+    rules = [{"guardrail_rule_id": "schema_rule", "table_id": "lakehouse||source||dbo||orders", "guardrail_type": "schema", "is_active": True}]
     writes = []
     core_calls = []
 
@@ -260,7 +261,7 @@ def test_schema_resolves_table_rule_and_writes_governed_result(monkeypatch):
 
     def fake_core(dataframe, **kwargs):
         core_calls.append((dataframe, kwargs))
-        return {"status": "passed", "can_continue": True, "rule_key": "schema_rule", "rule_type": "required_columns"}
+        return {"status": "passed", "can_continue": True, "guardrail_rule_id": "schema_rule", "rule_type": "required_columns"}
 
     monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
     monkeypatch.setattr(schema_module, "write_guardrail_result_row", lambda **kwargs: writes.append(kwargs))
@@ -276,7 +277,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
     incoming = types.SimpleNamespace(columns=["id"])
     config = object()
     store = types.SimpleNamespace(kind="warehouse", schema="dbo")
-    rules = [{"rule_key": "schema_rule"}]
+    rules = [{"guardrail_rule_id": "schema_rule", "table_id": "warehouse||product||sales||orders", "guardrail_type": "schema", "is_active": True}]
     core_calls = []
 
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (config, "prod", {}))
@@ -295,7 +296,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
 
     def fake_core(dataframe, **kwargs):
         core_calls.append((dataframe, kwargs))
-        return {"status": "passed", "can_continue": True, "rule_key": "schema_rule", "rule_type": "strict"}
+        return {"status": "passed", "can_continue": True, "guardrail_rule_id": "schema_rule", "rule_type": "strict"}
 
     monkeypatch.setattr(schema_module, "schema_check_core", fake_core)
     schema_module.check_schema("orders", target="product", schema="sales", dataframe=incoming)
@@ -312,7 +313,7 @@ def test_schema_uses_supplied_dataframe_without_changing_governed_identity(monke
 
 def test_schema_delegates_blocking_to_the_existing_guardrail_gate(monkeypatch):
     schema_module = importlib.import_module("fabricops_kit.pipeline.check_schema")
-    result = {"status": "failed", "can_continue": False, "rule_key": "rule", "rule_type": "strict"}
+    result = {"status": "failed", "can_continue": False, "guardrail_rule_id": "rule", "rule_type": "strict", "table_id": "governed-orders", "guardrail_type": "schema", "is_active": True}
     events = []
     monkeypatch.setattr(schema_module, "resolve_fabric_context", lambda: (object(), "prod", {}))
     monkeypatch.setattr(schema_module, "get_store", lambda *args: types.SimpleNamespace(kind="lakehouse"))

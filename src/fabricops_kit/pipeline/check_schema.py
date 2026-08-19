@@ -8,13 +8,12 @@ from fabricops_kit.io.shared import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
-from fabricops_kit.pipeline.guardrails_shared import (
+from fabricops_kit.pipeline.guardrail_metadata import (
     load_table_guardrail_rules,
     schema_check_core,
     select_table_guardrail_rule,
-    stop_if_failed,
-    write_guardrail_result_row,
 )
+from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, write_guardrail_result_row
 
 
 def check_schema(
@@ -84,17 +83,18 @@ def check_schema(
         raise ValueError(f"Target {target!r} must resolve to a Lakehouse or Warehouse.")
     metadata_table_key = build_metadata_table_key(store_type, target, schema_name, resolved_table)
     rules_df = load_table_guardrail_rules(config, env, spark_session=spark)
-    if select_table_guardrail_rule(
+    selected_rule = select_table_guardrail_rule(
         rules_df, guardrail_type="schema", metadata_table_key=metadata_table_key,
         environment_name=env,
-    ) is None:
+    )
+    if selected_rule is None:
         raise ValueError(f"No active approved schema rule exists for {metadata_table_key!r}.")
     result = schema_check_core(
         dataframe, rules_df=rules_df, table_name=resolved_table,
         environment_name=env, metadata_table_key=metadata_table_key,
     )
-    if result.get("rule_key"):
-        result["metadata_table_key"] = metadata_table_key
+    if selected_rule is not None:
+        result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
         result["expected"] = {"schema_rule": result.get("rule_type")}
         result["actual"] = {
             name: result.get(name, [])
@@ -105,7 +105,6 @@ def check_schema(
             table_name=resolved_table, store_type=store_type, layer=target,
             schema_name=schema_name, guardrail_type="schema",
             rule_type=str(result.get("rule_type")), result=result,
-            rule_key=str(result["rule_key"]),
         )
     stop_if_failed(result)
     return result

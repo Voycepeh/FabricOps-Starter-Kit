@@ -144,7 +144,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
     assert not hasattr(governance, "GUARDRAIL_BASELINE_EVENT_TYPES")
     assert ["schema", "freshness", "profile_behavior", "dq"] == ["schema", "freshness", "profile_behavior", "dq"]
     assert "governance_approved" in governance_authoring.GUARDRAIL_REVIEW_STATUSES
-    assert {"guardrail_type", "review_status", "source_notebook_type", "superseded_by_rule_key"}.issubset(
+    assert {"guardrail_rule_id", "table_id", "column_id", "guardrail_type", "rule_parameters_json", "is_active"}.issubset(
         set(schemas[governance_authoring.GUARDRAIL_TABLE].fieldNames())
     )
     catalogue_fields = set(schemas[governance_authoring.CATALOGUE_TABLE].fieldNames())
@@ -184,7 +184,7 @@ def test_governance_metadata_schemas_use_catalogue_for_profile_history():
         "target_data_change_check",
         "source_change_signal_json",
     }.isdisjoint(catalogue_fields)
-    assert {"status", "can_continue", "expected_value_json", "actual_value_json"}.issubset(
+    assert {"guardrail_result_id", "guardrail_rule_id", "status", "can_continue", "result_payload_json"}.issubset(
         set(schemas[governance_authoring.GUARDRAIL_RESULTS_TABLE].fieldNames())
     )
 

@@ -26,12 +26,12 @@ Description: Supported FabricOps metadata table for data lineage.
 
 | Column name | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
-| `lineage_event_id` | `string` | No | FabricOps metadata schema registry | `lineage_event_id` field in `METADATA_DATA_LINEAGE`. |
-| `metadata_table_key` | `string` | No | FabricOps metadata schema registry | `metadata_table_key` field in `METADATA_DATA_LINEAGE`. |
-| `schema_fingerprint` | `string` | No | FabricOps metadata schema registry | `schema_fingerprint` field in `METADATA_DATA_LINEAGE`. |
-| `profile_role` | `string` | No | FabricOps metadata schema registry | `profile_role` field in `METADATA_DATA_LINEAGE`. |
-| `profiled_at` | `timestamp` | No | FabricOps metadata schema registry | `profiled_at` field in `METADATA_DATA_LINEAGE`. |
+| `lineage_id` | `string` | Yes | FabricOps metadata schema registry | `lineage_id` field in `METADATA_DATA_LINEAGE`. |
+| `table_id` | `string` | Yes | FabricOps metadata schema registry | `table_id` field in `METADATA_DATA_LINEAGE`. |
+| `profile_snapshot_id` | `string` | Yes | FabricOps metadata schema registry | `profile_snapshot_id` field in `METADATA_DATA_LINEAGE`. |
 | `environment_name` | `string` | Yes | FabricOps metadata schema registry | `environment_name` field in `METADATA_DATA_LINEAGE`. |
+| `pipeline_role` | `string` | Yes | FabricOps metadata schema registry | `pipeline_role` field in `METADATA_DATA_LINEAGE`. |
+| `recorded_at` | `timestamp` | Yes | FabricOps metadata schema registry | `recorded_at` field in `METADATA_DATA_LINEAGE`. |
 | `_committed_by` | `string` | No | FabricOps metadata schema registry | `_committed_by` field in `METADATA_DATA_LINEAGE`. |
 | `_committed_at` | `timestamp` | No | FabricOps metadata schema registry | `_committed_at` field in `METADATA_DATA_LINEAGE`. |
 | `_workspace_id` | `string` | No | FabricOps metadata schema registry | `_workspace_id` field in `METADATA_DATA_LINEAGE`. |

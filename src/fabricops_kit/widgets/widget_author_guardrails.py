@@ -7,6 +7,7 @@ import html
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
+from fabricops_kit.pipeline.guardrail_metadata import canonical_guardrail_rule_record
 from fabricops_kit.pipeline.guardrails_shared import (
     GUARDRAIL_CHANGE_BEHAVIOURS,
     resolve_guardrail_change_behaviour,
@@ -351,11 +352,12 @@ def _render_guardrail_authoring(
         if spark_session is None or config is None or env is None:
             message.value = "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
             return records
-        shared._write_rule_records(records, config=config, env=env, spark_session=spark_session)
+        canonical_records = [canonical_guardrail_rule_record(record, config=config, env=env) for record in records]
+        shared._write_rule_records(canonical_records, config=config, env=env, spark_session=spark_session)
         version_state["persisted"] = records[0]["configuration_version"]
         version_display.value = f"<b>Next save version</b><br>{version_state['persisted'] + 1}"
         message.value = f"<b style='color:green'>Saved guardrail version {records[0]['configuration_version']}.</b>"
-        return records
+        return canonical_records
 
     save_button.on_click(save)
     version = version_state["persisted"] + 1
@@ -378,27 +380,20 @@ def _render_guardrail_authoring(
             shared.form_section(
                 widgets,
                 title="1. Schema",
-                children=[
-                    required_schema,
-                    schema_failure_action,
-                ],
+                children=[required_schema, schema_failure_action],
             ),
             shared.form_section(
                 widgets,
                 title="2. Freshness",
                 children=[
-                    shared.form_grid(
-                        widgets, [freshness_column, maximum_age, maximum_age_unit, freshness_failure_action]
-                    )
+                    shared.form_grid(widgets, [freshness_column, maximum_age, maximum_age_unit, freshness_failure_action])
                 ],
             ),
             shared.form_section(
                 widgets,
                 title="3. Changes",
                 children=[
-                    shared.form_grid(
-                        widgets, [change_behaviour, partition_column, change_column, change_failure_action]
-                    )
+                    shared.form_grid(widgets, [change_behaviour, partition_column, change_column, change_failure_action])
                 ],
             ),
             shared.action_row(widgets, [save_button]),

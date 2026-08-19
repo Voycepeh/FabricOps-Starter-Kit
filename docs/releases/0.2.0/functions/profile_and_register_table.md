@@ -28,7 +28,7 @@ df : pyspark.sql.DataFrame
 profile_role : {"source", "target"}
     Records whether the profiled asset participated in the notebook
     activity as an input or an output: ``source`` for an activity input and
-    ``target`` for an activity output. The value is stored in
+    ``target`` for an activity output. The value is recorded as ``pipeline_role`` in
     ``METADATA_DATA_LINEAGE`` rather than in ``METADATA_DATA_PROFILED`` or
     ``METADATA_DATA_CATALOGUE``.
 target : str
@@ -73,9 +73,8 @@ frequency_profile_df : pyspark.sql.DataFrame, optional
 pyspark.sql.DataFrame
     A Spark DataFrame containing one canonical profiling record for each
     eligible column in the supplied DataFrame. This is the same DataFrame
-    appended to ``METADATA_DATA_PROFILED`` and includes physical asset
-    identity, compact statistical metrics, schema identity, and runtime
-    audit fields. Flattened child frequency rows, generated catalogue rows,
+    appended to ``METADATA_DATA_PROFILED`` and includes stable table and column identity, profiling snapshot identity,
+compact statistical metrics, environment identity, and runtime audit fields. Flattened child frequency rows, generated catalogue rows,
     and the lineage event are not returned.
 
 ## Usage notes
@@ -92,11 +91,11 @@ Processing flow:
    ``frequency_columns=[]`` skips frequency profiling entirely.
 3. Produce flattened frequency rows for the selected columns using the
    same calculation exposed by ``profile_frequency_distribution``.
-4. Resolve each frequency row to its parent ``metadata_column_key`` and
-   prepare it with the same ``profiled_at`` snapshot timestamp.
+4. Resolve each frequency row to its parent ``profile_id`` and shared
+``profile_snapshot_id``.
 5. Save the compact profiling snapshot to ``METADATA_DATA_PROFILED``.
-6. Replace rows for the exact ``metadata_column_key + profiled_at`` child
-   snapshot and write the normalized rows to
+6. Replace rows for the exact ``profile_snapshot_id`` child snapshot and
+write the normalized rows to
    ``METADATA_DATA_PROFILED_FREQUENCY``.
 7. Create stable table and column IDs, then update matching catalogue
    records or add new records in ``METADATA_DATA_CATALOGUE``.
@@ -151,72 +150,51 @@ Frequency snapshot behavior:
   limits output rows after grouped counts are calculated and does not
   reduce grouping cost.
 - Frequency values are ordered deterministically by rank.
-- Historical parent and child snapshots join on both
-  ``metadata_column_key`` and ``profiled_at``. Rows are replaced only for
-  that exact snapshot identity, so earlier snapshots remain intact.
+- Historical parent and child rows join through ``profile_id``. Replacement
+is scoped to the current ``profile_snapshot_id``, so earlier snapshots remain intact.
 
 ``METADATA_DATA_PROFILED`` receives one appended row per eligible input
 DataFrame column. Repeated executions create additional profiling
 snapshots, and the returned DataFrame is the same compact DataFrame
 appended to this table. Its logical field groups are:
 
-- Identity fields: ``metadata_table_key``, ``metadata_column_key``,
-  ``environment_name``, ``store_type``, ``layer``, ``schema_name``,
-  ``table_name``, ``column_name``, ``data_type``.
+- Identity fields: ``profile_id``, ``profile_snapshot_id``, ``table_id``,
+  ``column_id``, ``environment_name``, ``data_type``.
 - Statistical fields: ``row_count``, ``non_null_count``, ``null_count``,
   ``null_percent``, ``distinct_count``, ``distinct_percent``,
   ``mean_value``, ``stddev_value``, ``min_value``,
   ``percentile_25_value``, ``median_value``, ``percentile_75_value``,
   ``max_value``.
-- Runtime fields: ``schema_fingerprint``, ``profiled_at``.
+- Runtime field: ``profiled_at``.
 - Audit fields: ``_committed_by``, ``_committed_at``, ``_workspace_id``,
   ``_workspace_name``, ``_notebook_id``, ``_notebook_name``,
   ``_metadata_lakehouse_name``, ``_activity_id``.
 
 ``METADATA_DATA_PROFILED`` saves a new compact profiling snapshot. One row
 is saved for each eligible DataFrame column. ``METADATA_DATA_PROFILED_FREQUENCY``
-saves one flattened row per returned distinct value. Earlier parent and
-child snapshots are retained and join on ``metadata_column_key + profiled_at``.
+saves one flattened row per returned distinct value. Earlier parent and child snapshots are retained. Frequency rows link to
+their parent through ``profile_id`` and share the same ``profile_snapshot_id``.
 
 ``METADATA_DATA_CATALOGUE`` stores table and column records, not profiling
 measurements. FabricOps creates a stable ID for the table and each column,
-then checks whether the same table, column, and schema already exist. If a
-matching record exists, it is updated. Otherwise, a new record is added.
-Matching uses ``environment_name + metadata_table_key +
-metadata_column_key + schema_fingerprint``:
-
-- ``metadata_table_key``: stable logical table identity shared across
-  environments.
-- ``metadata_column_key``: stable logical column identity shared across
-  environments.
-- ``schema_fingerprint``: deterministic fingerprint of ordered schema
-  content, independent of deployment environment. The current schema
-  contract includes ordered column names and data types; nullability is
-  not currently part of the fingerprint.
-- ``environment_name``: environment-specific catalogue observation.
-
-One logical Data Contract link can therefore govern the same dataset in
-Development and Production, while catalogue and execution observations
-remain separate and promotion checks can compare matching logical keys.
-Existing metadata created with environment-coupled identities must be
-recreated or explicitly migrated; FabricOps does not provide a legacy-key
-compatibility path.
-
-A changed ``schema_fingerprint`` represents a newly observed table
-structure and can create a new catalogue snapshot.
+then checks whether the same logical asset already exists in the active
+environment. If a matching record exists, it is updated. Otherwise, a new
+record is added. Matching uses ``environment_name + metadata_level + table_id
++ column_id``. ``table_id`` and ``column_id`` are stable logical identities
+shared across environments, while ``environment_name`` keeps Development and
+Production observations separate. Column catalogue rows that disappear from a
+new profile are retained but marked inactive rather than silently deleted.
 
 ``METADATA_DATA_LINEAGE`` records whether the table was used as an input
 or produced as an output during the current notebook activity. A
 ``profile_role="source"`` value means the DataFrame was used as an input.
 A ``profile_role="target"`` value means the DataFrame was produced as an
-output. Lineage-specific fields are ``lineage_event_id``,
-``metadata_table_key``, ``schema_fingerprint``, ``profile_role``,
-``profiled_at``, and ``environment_name``. The standard eight underscore
-audit fields are the sole execution-context contract. ``profiled_at`` is
-the dataset profile snapshot time, while ``_committed_at`` is the metadata
-write time. ``lineage_event_id`` is deterministically derived from
-``_activity_id``, ``metadata_table_key``, ``schema_fingerprint``, and
-``profile_role``.
+output. Lineage-specific fields are ``lineage_id``, ``table_id``,
+``profile_snapshot_id``, ``environment_name``, ``pipeline_role``, and
+``recorded_at``. The standard eight underscore
+audit fields are the sole execution-context contract. ``recorded_at`` is the lineage participation time, while ``_committed_at``
+is the metadata write time. ``lineage_id`` is deterministically derived from
+``_activity_id``, ``table_id``, ``profile_snapshot_id``, and ``pipeline_role``.
 
 What the notebook receives: a Spark DataFrame containing one profiling
 result row for each eligible column.
@@ -225,7 +203,7 @@ What FabricOps saves:
 
 - ``METADATA_DATA_PROFILED``: a new compact profiling snapshot.
 - ``METADATA_DATA_PROFILED_FREQUENCY``: flattened frequency rows linked by
-  ``metadata_column_key`` and ``profiled_at``.
+  ``profile_id`` and grouped by ``profile_snapshot_id``.
 - ``METADATA_DATA_CATALOGUE``: updated or newly added table and column
   records.
 - ``METADATA_DATA_LINEAGE``: the current source or target activity.
@@ -248,9 +226,9 @@ a ``RuntimeError`` explaining that profile and catalogue registration
 succeeded but lineage registration failed. Guardrail execution is a
 separate workflow.
 
-Removing ``frequency_json`` from ``METADATA_DATA_PROFILED`` and adding the
-normalized child table is a breaking physical-schema change. Existing
-metadata tables may need recreation through the established setup flow;
-no compatibility or automatic migration layer is provided.
+This Stage 2 redesign changes the physical schemas for Catalogue, Profile,
+Profile Frequency, Lineage, and Source Observation. Existing development
+metadata tables may need recreation through the established setup flow; no
+compatibility or automatic migration layer is provided.
 
 [Back to release overview](../index.md)

@@ -26,16 +26,18 @@ Description: Supported FabricOps metadata table for data catalogue.
 
 | Column name | Data type | Nullable | Managed by | Description |
 | --- | --- | --- | --- | --- |
-| `metadata_table_key` | `string` | No | FabricOps metadata schema registry | `metadata_table_key` field in `METADATA_DATA_CATALOGUE`. |
-| `metadata_column_key` | `string` | No | FabricOps metadata schema registry | `metadata_column_key` field in `METADATA_DATA_CATALOGUE`. |
-| `schema_fingerprint` | `string` | No | FabricOps metadata schema registry | `schema_fingerprint` field in `METADATA_DATA_CATALOGUE`. |
-| `environment_name` | `string` | No | FabricOps metadata schema registry | `environment_name` field in `METADATA_DATA_CATALOGUE`. |
-| `store_type` | `string` | No | FabricOps metadata schema registry | `store_type` field in `METADATA_DATA_CATALOGUE`. |
-| `layer` | `string` | No | FabricOps metadata schema registry | `layer` field in `METADATA_DATA_CATALOGUE`. |
+| `metadata_level` | `string` | Yes | FabricOps metadata schema registry | `metadata_level` field in `METADATA_DATA_CATALOGUE`. |
+| `table_id` | `string` | Yes | FabricOps metadata schema registry | `table_id` field in `METADATA_DATA_CATALOGUE`. |
+| `column_id` | `string` | Yes | FabricOps metadata schema registry | `column_id` field in `METADATA_DATA_CATALOGUE`. |
+| `environment_name` | `string` | Yes | FabricOps metadata schema registry | `environment_name` field in `METADATA_DATA_CATALOGUE`. |
+| `store_type` | `string` | Yes | FabricOps metadata schema registry | `store_type` field in `METADATA_DATA_CATALOGUE`. |
+| `layer` | `string` | Yes | FabricOps metadata schema registry | `layer` field in `METADATA_DATA_CATALOGUE`. |
 | `schema_name` | `string` | Yes | FabricOps metadata schema registry | `schema_name` field in `METADATA_DATA_CATALOGUE`. |
-| `table_name` | `string` | No | FabricOps metadata schema registry | `table_name` field in `METADATA_DATA_CATALOGUE`. |
-| `column_name` | `string` | No | FabricOps metadata schema registry | `column_name` field in `METADATA_DATA_CATALOGUE`. |
-| `data_type` | `string` | No | FabricOps metadata schema registry | `data_type` field in `METADATA_DATA_CATALOGUE`. |
+| `table_name` | `string` | Yes | FabricOps metadata schema registry | `table_name` field in `METADATA_DATA_CATALOGUE`. |
+| `column_name` | `string` | Yes | FabricOps metadata schema registry | `column_name` field in `METADATA_DATA_CATALOGUE`. |
+| `first_profiled_at` | `timestamp` | Yes | FabricOps metadata schema registry | `first_profiled_at` field in `METADATA_DATA_CATALOGUE`. |
+| `last_profiled_at` | `timestamp` | Yes | FabricOps metadata schema registry | `last_profiled_at` field in `METADATA_DATA_CATALOGUE`. |
+| `is_active` | `boolean` | Yes | FabricOps metadata schema registry | `is_active` field in `METADATA_DATA_CATALOGUE`. |
 | `_committed_by` | `string` | No | FabricOps metadata schema registry | `_committed_by` field in `METADATA_DATA_CATALOGUE`. |
 | `_committed_at` | `timestamp` | No | FabricOps metadata schema registry | `_committed_at` field in `METADATA_DATA_CATALOGUE`. |
 | `_workspace_id` | `string` | No | FabricOps metadata schema registry | `_workspace_id` field in `METADATA_DATA_CATALOGUE`. |
