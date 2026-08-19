@@ -101,17 +101,16 @@ jobs:
       - name: Regenerate public call-flow contract twice
         run: |
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-          git diff > /tmp/call-flow-first.diff
+          cp docs/reference/_data/public-function-call-flows.json /tmp/public-function-call-flows-first.json
           PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
-          git diff > /tmp/call-flow-second.diff
-          diff -u /tmp/call-flow-first.diff /tmp/call-flow-second.diff
+          diff -u /tmp/public-function-call-flows-first.json docs/reference/_data/public-function-call-flows.json
 
       - name: Regenerate individual function references twice
         run: |
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/reference-first.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/reference-first.diff
           PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
-          git diff > /tmp/reference-second.diff
+          git diff -- docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md > /tmp/reference-second.diff
           diff -u /tmp/reference-first.diff /tmp/reference-second.diff
 
       - name: Verify dashboard was not regenerated
