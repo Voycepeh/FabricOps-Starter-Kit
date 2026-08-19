@@ -31,7 +31,9 @@ jobs:
           python-version-file: .python-version
 
       - name: Install locked dependencies
-        run: uv sync --frozen --extra docs --extra dev
+        run: |
+          uv sync --frozen --extra docs --extra dev
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Apply focused lint, metadata, and notebook updates
         run: |
