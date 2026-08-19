@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 import fabricops_kit
-from fabricops_kit.pipeline import guardrails_shared as dq_runtime
+from fabricops_kit.pipeline import shared as dq_runtime
 from fabricops_kit.config import metadata_schemas
 from fabricops_kit.widgets import shared as governance
 from tests.helpers import FakeSpark, framework_config
