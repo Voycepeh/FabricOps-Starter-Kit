@@ -13,7 +13,8 @@ from fabricops_kit.pipeline.guardrail_metadata import (
     schema_check_core,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, write_guardrail_result_row
+from fabricops_kit.pipeline.guardrail_results import write_guardrail_result_row
+from fabricops_kit.pipeline.guardrails_shared import stop_if_failed
 
 
 def check_schema(
@@ -95,6 +96,7 @@ def check_schema(
     )
     if selected_rule is not None:
         result.setdefault("guardrail_rule_id", str(selected_rule.get("guardrail_rule_id") or ""))
+        result.setdefault("guardrail_version", int(selected_rule.get("guardrail_version") or 1))
         result["expected"] = {"schema_rule": result.get("rule_type")}
         result["actual"] = {
             name: result.get(name, [])
