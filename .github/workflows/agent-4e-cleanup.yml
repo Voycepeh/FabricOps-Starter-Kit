@@ -31,7 +31,7 @@ jobs:
         run: uv sync --frozen --extra docs --extra dev
 
       - name: Apply Stage 4E cleanup and regenerate owned artifacts
-        run: uv run python scripts/_agent_apply_4e_cleanup.py
+        run: uv run python scripts/_agent_run_4e_cleanup.py
 
       - name: Commit generated cleanup
         shell: bash
