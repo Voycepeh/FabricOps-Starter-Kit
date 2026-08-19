@@ -54,8 +54,8 @@ def test_public_pipeline_helpers_are_exported_without_wrapper_bloat():
     assert not hasattr(pipeline, "prepare_pipeline_table_configs")
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module("fabricops_kit.pipeline.prepare_pipeline_table_configs")
-    assert "run_table_guardrails" not in fabricops_kit.__all__
-    assert not hasattr(fabricops_kit, "run_table_guardrails")
+    assert "run_table_guardrails" in fabricops_kit.__all__
+    assert fabricops_kit.run_table_guardrails is pipeline.run_table_guardrails
     assert "write_catalogue_evidence" not in fabricops_kit.__all__
     assert "write_pipeline_lineage" not in fabricops_kit.__all__
     assert "write_pipeline_run_summary" not in fabricops_kit.__all__
