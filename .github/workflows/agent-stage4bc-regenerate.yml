@@ -1,0 +1,67 @@
+name: Agent Stage 4B 4C regenerate
+
+on:
+  push:
+    branches:
+      - agent/improve-standalone-guardrail-dq-authoring
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/improve-standalone-guardrail-dq-authoring
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        run: python -m pip install uv
+      - name: Install project
+        run: uv sync --dev
+      - name: Regenerate owned call-flow contract
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          cp docs/reference/_data/public-function-call-flows.json /tmp/public-function-call-flows.json
+          PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          cmp /tmp/public-function-call-flows.json docs/reference/_data/public-function-call-flows.json
+      - name: Regenerate owned individual references
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          cp -a docs/api/reference /tmp/reference-pages
+          cp docs/reference/index.md /tmp/reference-index.md
+          cp docs/reference/function-call-graph.md /tmp/function-call-graph.md
+          PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          diff -qr /tmp/reference-pages docs/api/reference
+          cmp /tmp/reference-index.md docs/reference/index.md
+          cmp /tmp/function-call-graph.md docs/reference/function-call-graph.md
+      - name: Confirm dashboard is untouched
+        run: git diff --exit-code -- docs/assets/public-function-call-flows-dashboard.html
+      - name: Ruff
+        run: uv run ruff check .
+      - name: Compile Python
+        run: uv run python -m compileall -q src scripts
+      - name: Full pytest
+        run: uv run pytest
+      - name: Validate generated ownership
+        run: uv run python scripts/validate_generated_artifact_ownership.py
+      - name: MkDocs strict
+        run: uv run mkdocs build --strict
+      - name: Remove temporary workflow and commit owned outputs
+        run: |
+          git rm .github/workflows/agent-stage4bc-regenerate.yml
+          git status --short
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/reference/index.md docs/reference/function-call-graph.md docs/api/reference templates/notebooks/01_governance.ipynb
+          git diff --cached --check
+          git commit -m "Regenerate guardrail authoring references"
+          git push origin HEAD:agent/improve-standalone-guardrail-dq-authoring
