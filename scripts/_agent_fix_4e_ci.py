@@ -20,6 +20,15 @@ def replace(path: str, old: str, new: str, *, count: int = -1) -> None:
     target.write_text(text.replace(old, new, count), encoding="utf-8")
 
 
+def remove_lines_containing(path: str, needles: set[str]) -> None:
+    target = ROOT / path
+    lines = target.read_text(encoding="utf-8").splitlines(keepends=True)
+    target.write_text(
+        "".join(line for line in lines if not any(needle in line for needle in needles)),
+        encoding="utf-8",
+    )
+
+
 def remove_top_level_functions(path: str, names: set[str]) -> None:
     target = ROOT / path
     text = target.read_text(encoding="utf-8")
@@ -76,17 +85,9 @@ def main() -> None:
     )
 
     # Remove stale timestamp expectations now owned by the standard audit timestamp.
-    replace(
+    remove_lines_containing(
         "tests/unit/test_config.py",
-        '            "max_value",\n            "profiled_at",\n        }',
-        '            "max_value",\n        }',
-        count=1,
-    )
-    replace(
-        "tests/unit/test_config.py",
-        '        "pipeline_role",\n        "recorded_at",\n        *audit_names,',
-        '        "pipeline_role",\n        *audit_names,',
-        count=1,
+        {'"profiled_at",', '"recorded_at",'},
     )
 
     # Stage 4E deliberately removes review lifecycle constants from widget/shared.py.
