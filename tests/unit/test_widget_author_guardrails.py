@@ -20,6 +20,7 @@ from fabricops_kit.widgets.widget_author_guardrails import (
 
 
 OBSOLETE_GUARDRAIL_FIELDS = {
+    "configuration_version",
     "metadata_table_key",
     "metadata_column_key",
     "dataset_name",
@@ -179,7 +180,7 @@ def test_guardrail_records_use_only_stage4a_authoring_fields():
     records = _records()
     expected = {
         "guardrail_rule_id",
-        "configuration_version",
+        "guardrail_version",
         "table_id",
         "column_id",
         "environment_name",
@@ -261,15 +262,15 @@ def test_invalid_columns_age_and_failure_action_fail_clearly():
         _records(schema_severity="error")
 
 
-def test_rule_identity_is_stable_while_configuration_version_advances():
-    """Verify stable logical identity across configuration versions."""
-    first = _records(configuration_version=1)
-    second = _records(configuration_version=2, maximum_age=48)
+def test_rule_identity_is_stable_while_guardrail_version_advances():
+    """Verify stable logical identity across Guardrail versions."""
+    first = _records(guardrail_version=1)
+    second = _records(guardrail_version=2, maximum_age=48)
     assert [row["guardrail_rule_id"] for row in first] == [
         row["guardrail_rule_id"] for row in second
     ]
-    assert {row["configuration_version"] for row in first} == {1}
-    assert {row["configuration_version"] for row in second} == {2}
+    assert {row["guardrail_version"] for row in first} == {1}
+    assert {row["guardrail_version"] for row in second} == {2}
 
 
 def test_column_name_to_column_id_resolution_is_canonical():
@@ -316,7 +317,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
             "column_id": column_id,
             "environment_name": "dev",
             "data_type": "string",
-            "profiled_at": "2026-01-01T00:00:00Z",
+            "_committed_at": "2026-01-01T00:00:00Z",
         }
         for column_id in ("col-a", "col-c")
     ] + [
@@ -327,7 +328,7 @@ def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch)
             "column_id": column_id,
             "environment_name": "dev",
             "data_type": "string",
-            "profiled_at": "2026-02-01T00:00:00Z",
+            "_committed_at": "2026-02-01T00:00:00Z",
         }
         for column_id in ("col-a", "col-b")
     ]
@@ -367,12 +368,13 @@ def test_widget_preview_uses_new_metadata_vocabulary(monkeypatch):
     )
     preview = widget["controls"]["preview"].value
     assert '"table_id": "table-orders"' in preview
+    assert '"guardrail_version": 1' in preview
     for field in OBSOLETE_GUARDRAIL_FIELDS:
         assert f'"{field}"' not in preview
 
 
 def test_widget_save_uses_shared_canonical_writer_and_advances_version(monkeypatch):
-    """Verify that saving uses the shared writer and advances configuration version."""
+    """Verify that saving uses the shared writer and advances Guardrail version."""
     _install_fake_notebook_widgets(monkeypatch)
     saved = []
     monkeypatch.setattr(
@@ -391,8 +393,8 @@ def test_widget_save_uses_shared_canonical_writer_and_advances_version(monkeypat
     first = widget["save"]()
     second = widget["save"]()
     assert len(saved) == 2
-    assert {row["configuration_version"] for row in first} == {1}
-    assert {row["configuration_version"] for row in second} == {2}
+    assert {row["guardrail_version"] for row in first} == {1}
+    assert {row["guardrail_version"] for row in second} == {2}
 
 
 def test_authoring_widgets_do_not_depend_on_each_other_or_public_target_selector():
