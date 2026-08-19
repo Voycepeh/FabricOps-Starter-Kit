@@ -28,11 +28,17 @@ jobs:
 
           shared = Path('src/fabricops_kit/pipeline/shared.py')
           text = shared.read_text()
-          old = '''def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:\n    """Select the latest active approved table rule by canonical identity."""\n    return _select_table_guardrail_rule(\n        rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",\n        environment_name=environment_name, metadata_table_key=metadata_table_key,\n    )\n'''
-          new = '''def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:\n    """Select the latest active canonical table rule by table identity."""\n    return _select_rule(\n        rules_df,\n        guardrail_type=guardrail_type,\n        table_id=metadata_table_key,\n        environment_name=environment_name,\n    )\n'''
-          if old not in text:
-              raise SystemExit('Expected select_table_guardrail_rule implementation not found')
-          shared.write_text(text.replace(old, new, 1))
+          text = text.replace(
+              '''def _is_active_guardrail_rule(row: dict) -> bool:\n    activation_state = _string_value(_catalogue_value(row, "activation_state")).lower()\n    if activation_state:\n        if activation_state != "active":\n            return False\n    elif _catalogue_value(row, "is_active") is not True:\n        return False\n    return _rule_review_status(row) in _ACTIVE_RULE_REVIEW_STATUSES\n''',
+              '''def _is_active_guardrail_rule(row: dict) -> bool:\n    activation_state = _string_value(_catalogue_value(row, "activation_state")).lower()\n    if activation_state:\n        if activation_state != "active":\n            return False\n    elif _catalogue_value(row, "is_active") is not True:\n        return False\n    review_status = _rule_review_status(row)\n    return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES\n''',
+              1,
+          )
+          text = text.replace(
+              'rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))',
+              'rule_table_key = _string_value(_catalogue_value(row, "table_id", "metadata_table_key"))',
+              1,
+          )
+          shared.write_text(text)
 
           path = Path('tests/unit/test_config.py')
           text = path.read_text()
@@ -44,15 +50,21 @@ jobs:
           text = text.replace('guardrails_shared_source = Path("src/fabricops_kit/pipeline/shared.py")', 'pipeline_shared_source = Path("src/fabricops_kit/pipeline/shared.py")')
           text = text.replace('in guardrails_shared_source', 'in pipeline_shared_source')
           text = text.replace('not in guardrails_shared_source', 'not in pipeline_shared_source')
+          text = text.replace(
+              'assert "from fabricops_kit.config.audit import build_runtime_audit_fields" in Path(\n        "src/fabricops_kit/pipeline/shared.py"\n    ).read_text(encoding="utf-8")',
+              'assert "build_runtime_audit_fields" in Path(\n        "src/fabricops_kit/pipeline/shared.py"\n    ).read_text(encoding="utf-8")',
+          )
+          text = text.replace(
+              'assert "from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types" in pipeline_shared_source',
+              'assert "coerce_metadata_row_types" in pipeline_shared_source',
+          )
           path.write_text(text)
 
           path = Path('tests/unit/test_metadata_writer_ownership.py')
-          text = path.read_text().replace('pipeline/guardrails_shared.py', 'pipeline/shared.py')
-          path.write_text(text)
+          path.write_text(path.read_text().replace('pipeline/guardrails_shared.py', 'pipeline/shared.py'))
 
           path = Path('tests/unit/test_governance_review_migration.py')
-          text = path.read_text()
-          text = text.replace(
+          text = path.read_text().replace(
               'assert "from fabricops_kit.pipeline.shared import run_active_dq_guardrail" in pipeline_source',
               'assert "def run_active_dq_guardrail(" in pipeline_source',
           )
