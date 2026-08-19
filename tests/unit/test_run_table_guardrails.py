@@ -20,6 +20,7 @@ class _TaggedFrame:
 
 
 def test_run_table_guardrails_delegates_and_splits_blocking_dq_rows(monkeypatch):
+    """Delegate to focused checks and split only blocking DQ failures."""
     runtime = importlib.import_module("fabricops_kit.pipeline.run_table_guardrails")
     dataframe = object()
     observation = object()
@@ -74,6 +75,7 @@ def test_run_table_guardrails_delegates_and_splits_blocking_dq_rows(monkeypatch)
 
 
 def test_run_table_guardrails_collects_observation_when_not_supplied(monkeypatch):
+    """Collect canonical observation evidence when the caller omits it."""
     runtime = importlib.import_module("fabricops_kit.pipeline.run_table_guardrails")
     dataframe = object()
     observation = object()
