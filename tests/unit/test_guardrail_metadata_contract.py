@@ -8,7 +8,7 @@ from datetime import datetime
 import pytest
 
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
-from fabricops_kit.pipeline import guardrail_metadata, guardrails_shared
+from fabricops_kit.pipeline import guardrail_shared, guardrails_shared
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
@@ -156,7 +156,7 @@ def test_standard_eight_audit_fields_are_present_on_all_guardrail_tables() -> No
 
 def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monkeypatch) -> None:
     """Verify authored rule rows are normalized and rule JSON is deterministic."""
-    monkeypatch.setattr(guardrail_metadata, "build_runtime_audit_fields", lambda **_kwargs: _audit())
+    monkeypatch.setattr(guardrail_shared, "build_runtime_audit_fields", lambda **_kwargs: _audit())
     source = {
         "guardrail_rule_id": "rule-1",
         "guardrail_version": 3,
@@ -175,7 +175,7 @@ def test_canonical_rule_writer_emits_only_physical_contract_and_stable_json(monk
         "table_name": "orders",
     }
 
-    row = guardrail_metadata.canonical_guardrail_rule_record(source, config=framework_config(), env="dev")
+    row = guardrail_shared.canonical_guardrail_rule_record(source, config=framework_config(), env="dev")
 
     assert list(row) == _GUARDRAIL_COLUMNS
     assert row["guardrail_version"] == 3
