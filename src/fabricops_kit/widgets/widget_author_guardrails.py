@@ -62,7 +62,10 @@ def _guardrail_records_from_selection(
             raise ValueError("Maximum age unit must be Minutes, Hours, or Days.")
     else:
         age = 0.0
-    for label, value in (("Partition column", partition_column), ("Change / watermark column", change_column)):
+    for label, value in (
+        ("Partition column", partition_column),
+        ("Change / watermark column", change_column),
+    ):
         if value and value not in available:
             raise ValueError(f"{label} must come from the selected table schema.")
     expected_change, source_pattern = resolve_guardrail_change_behaviour(change_behaviour)
@@ -74,13 +77,15 @@ def _guardrail_records_from_selection(
     if any(value not in _FAILURE_SEVERITIES for value in severities.values()):
         raise ValueError("Failure action must be Block pipeline or Warn only.")
 
-    version = configuration_version or (_configuration_version(state.get("existing_rules") or ()) + 1)
+    version = configuration_version or (
+        _configuration_version(state.get("existing_rules") or ()) + 1
+    )
     data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
         for row in state.get("catalogue_profile_rows", [])
     }
     return [
-        authoring.build_rule_record(
+        authoring._build_rule_record(
             state,
             guardrail_type="schema",
             rule_id="schema",
@@ -92,7 +97,7 @@ def _guardrail_records_from_selection(
             severity=severities["schema"],
             configuration_version=version,
         ),
-        authoring.build_rule_record(
+        authoring._build_rule_record(
             state,
             guardrail_type="freshness",
             rule_id="freshness",
@@ -105,7 +110,7 @@ def _guardrail_records_from_selection(
             severity=severities["freshness"],
             configuration_version=version,
         ),
-        authoring.build_rule_record(
+        authoring._build_rule_record(
             state,
             guardrail_type="change",
             rule_id="changes",
@@ -129,7 +134,7 @@ def widget_author_guardrails(
     context: dict[str, Any] | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Author Schema, Freshness, and Change expectations for a profiled table.
+    """Configure Schema, Freshness, and Change expectations for a profiled table.
 
     Parameters
     ----------
@@ -177,7 +182,7 @@ def widget_author_guardrails(
         )
         authoring_box.children = (current["ui"],)
 
-    state, target, target_controls = authoring.load_guardrail_authoring_targets(
+    state, target, target_controls = authoring._load_guardrail_authoring_targets(
         config,
         env,
         spark_session=spark_session,
@@ -189,7 +194,9 @@ def widget_author_guardrails(
     ui = shared.form_page(
         widgets,
         title="Author Guardrails",
-        description="Select a profiled table, then author Schema, Freshness, and Changes expectations.",
+        description=(
+            "Select a profiled table, then author Schema, Freshness, and Changes expectations."
+        ),
         children=[
             shared.form_section(
                 widgets,
@@ -223,19 +230,21 @@ def _render_guardrail_authoring(
     columns = [str(value) for value in state.get("columns", [])]
     existing = list(state.get("existing_rules") or [])
     version_state = {"persisted": _configuration_version(existing)}
-    schema_rule = authoring.latest_rule(existing, "schema")
-    freshness_rule = authoring.latest_rule(existing, "freshness")
-    change_rule = authoring.latest_rule(existing, "change")
-    schema_params = authoring.rule_parameters(schema_rule)
-    freshness_params = authoring.rule_parameters(freshness_rule)
-    change_params = authoring.rule_parameters(change_rule)
+    schema_rule = authoring._latest_rule(existing, "schema")
+    freshness_rule = authoring._latest_rule(existing, "freshness")
+    change_rule = authoring._latest_rule(existing, "change")
+    schema_params = authoring._rule_parameters(schema_rule)
+    freshness_params = authoring._rule_parameters(freshness_rule)
+    change_params = authoring._rule_parameters(change_rule)
     selected_required = set(schema_params.get("columns") or columns)
     schema_data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
         for row in state.get("catalogue_profile_rows", [])
     }
     schema_checkboxes = {
-        name: widgets.Checkbox(value=name in selected_required, description="", indent=False)
+        name: widgets.Checkbox(
+            value=name in selected_required, description="", indent=False
+        )
         for name in columns
     }
     schema_header = widgets.GridBox(
@@ -255,7 +264,9 @@ def _render_guardrail_authoring(
             [
                 schema_checkboxes[name],
                 widgets.HTML(value=f"<code>{html.escape(name)}</code>"),
-                widgets.HTML(value=f"<code>{html.escape(schema_data_types.get(name, ''))}</code>"),
+                widgets.HTML(
+                    value=f"<code>{html.escape(schema_data_types.get(name, ''))}</code>"
+                ),
             ],
             layout=widgets.Layout(
                 width="100%",
@@ -277,7 +288,9 @@ def _render_guardrail_authoring(
             schema_header,
             *schema_rows.values(),
         ],
-        layout=widgets.Layout(width="100%", height="auto", overflow="visible", gap="4px"),
+        layout=widgets.Layout(
+            width="100%", height="auto", overflow="visible", gap="4px"
+        ),
     )
     schema_failure_action = widgets.Dropdown(
         options=_FAILURE_ACTIONS,
@@ -359,19 +372,30 @@ def _render_guardrail_authoring(
 
     def refresh_preview(*_: Any) -> None:
         try:
-            preview.value = json.dumps(build_records(), indent=2, sort_keys=True, default=str)
+            preview.value = json.dumps(
+                build_records(), indent=2, sort_keys=True, default=str
+            )
             message.value = ""
         except ValueError as exc:
             preview.value = ""
-            message.value = f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
+            message.value = (
+                f"<b style='color:#b00020'>Validation error:</b> {html.escape(str(exc))}"
+            )
 
     def save(*_: Any) -> list[dict[str, Any]]:
         records = build_records()
         if spark_session is None or config is None or env is None:
-            message.value = "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
+            message.value = (
+                "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
+            )
             return records
-        canonical_records = authoring.canonicalize_and_write(
+        canonical_records = authoring._canonicalize_records(
             records,
+            config=config,
+            env=env,
+        )
+        shared._write_rule_records(
+            canonical_records,
             config=config,
             env=env,
             spark_session=spark_session,
@@ -408,17 +432,27 @@ def _render_guardrail_authoring(
     identity = shared.form_grid(
         widgets,
         [
-            widgets.HTML(value=f"<b>Environment</b><br>{html.escape(str(state.get('environment_name', '')))}"),
-            widgets.HTML(value=f"<b>Store</b><br>{html.escape(str(state.get('store_type', '')))}"),
-            widgets.HTML(value=f"<b>Schema</b><br>{html.escape(str(state.get('schema_name', '')))}"),
-            widgets.HTML(value=f"<b>Table</b><br>{html.escape(str(state.get('table_name', '')))}"),
+            widgets.HTML(
+                value=f"<b>Environment</b><br>{html.escape(str(state.get('environment_name', '')))}"
+            ),
+            widgets.HTML(
+                value=f"<b>Store</b><br>{html.escape(str(state.get('store_type', '')))}"
+            ),
+            widgets.HTML(
+                value=f"<b>Schema</b><br>{html.escape(str(state.get('schema_name', '')))}"
+            ),
+            widgets.HTML(
+                value=f"<b>Table</b><br>{html.escape(str(state.get('table_name', '')))}"
+            ),
             version_display,
         ],
     )
     ui = shared.form_page(
         widgets,
         title="Author Guardrails",
-        description="Version Schema, Freshness, and Changes expectations for this profiled table.",
+        description=(
+            "Version Schema, Freshness, and Changes expectations for this profiled table."
+        ),
         children=[
             identity,
             shared.form_section(
