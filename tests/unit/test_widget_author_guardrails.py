@@ -280,6 +280,86 @@ def test_column_name_to_column_id_resolution_is_canonical():
         authoring._column_id_for_name(_state(), "missing")
 
 
+def test_target_resolver_joins_latest_profile_snapshot_to_catalogue(monkeypatch):
+    """Verify that target resolution joins the latest profile snapshot to Catalogue."""
+    widgets = _install_fake_notebook_widgets(monkeypatch)
+    catalogue = [
+        {
+            "metadata_level": "table",
+            "table_id": "table-orders",
+            "column_id": "",
+            "environment_name": "dev",
+            "store_type": "lakehouse",
+            "layer": "silver",
+            "schema_name": "dbo",
+            "table_name": "orders",
+        },
+        *[
+            {
+                "metadata_level": "column",
+                "table_id": "table-orders",
+                "column_id": column_id,
+                "column_name": column_name,
+                "environment_name": "dev",
+            }
+            for column_id, column_name in (
+                ("col-a", "a"),
+                ("col-b", "b"),
+                ("col-c", "obsolete_c"),
+            )
+        ],
+    ]
+    profiles = [
+        {
+            "profile_id": f"old-{column_id}",
+            "profile_snapshot_id": "snapshot-1",
+            "table_id": "table-orders",
+            "column_id": column_id,
+            "environment_name": "dev",
+            "data_type": "string",
+            "_committed_at": "2026-01-01T00:00:00Z",
+        }
+        for column_id in ("col-a", "col-c")
+    ] + [
+        {
+            "profile_id": f"new-{column_id}",
+            "profile_snapshot_id": "snapshot-2",
+            "table_id": "table-orders",
+            "column_id": column_id,
+            "environment_name": "dev",
+            "data_type": "string",
+            "_committed_at": "2026-02-01T00:00:00Z",
+        }
+        for column_id in ("col-a", "col-b")
+    ]
+    rules = [
+        {
+            "table_id": "table-orders",
+            "environment_name": "dev",
+            "guardrail_type": "schema",
+        }
+    ]
+
+    def fake_read(config, env, table_name, *, spark_session):
+        return {
+            authoring.CATALOGUE_TABLE: catalogue,
+            authoring.PROFILED_TABLE: profiles,
+            authoring.GUARDRAIL_TABLE: rules,
+        }[table_name]
+
+    monkeypatch.setattr(authoring.shared, "_read_metadata_table_or_empty", fake_read)
+    state, _, _ = authoring._load_guardrail_authoring_targets(
+        object(), "dev", spark_session=object(), widgets=widgets
+    )
+
+    assert state["table_id"] == "table-orders"
+    assert state["profile_snapshot_id"] == "snapshot-2"
+    assert state["columns"] == ["a", "b"]
+    assert state["column_ids"] == {"a": "col-a", "b": "col-b"}
+    assert state["existing_rules"] == rules
+    assert "metadata_table_key" not in state
+
+
 def test_widget_preview_uses_new_metadata_vocabulary(monkeypatch):
     """Verify that the widget preview exposes only normalized metadata vocabulary."""
     _install_fake_notebook_widgets(monkeypatch)
