@@ -1,6 +1,9 @@
 name: Agent Stage 4B 4C Finalize
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - agent/improve-standalone-guardrail-dq-authoring
