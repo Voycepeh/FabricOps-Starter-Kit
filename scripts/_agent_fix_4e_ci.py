@@ -89,6 +89,10 @@ def main() -> None:
         "tests/unit/test_config.py",
         {'"profiled_at",', '"recorded_at",'},
     )
+    remove_lines_containing(
+        "tests/unit/test_dq_rules.py",
+        {'"profiled_at",'},
+    )
 
     # Stage 4E deliberately removes review lifecycle constants from widget/shared.py.
     replace(
