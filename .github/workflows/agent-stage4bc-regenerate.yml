@@ -1,9 +1,9 @@
 name: Agent Stage 4B 4C regenerate
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/improve-standalone-guardrail-dq-authoring
+      - main
 
 permissions:
   contents: write
