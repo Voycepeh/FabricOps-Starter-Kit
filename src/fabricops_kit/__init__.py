@@ -35,6 +35,7 @@ from .pipeline import (
     profile_and_register_table,
     profile_dataframe,
     profile_frequency_distribution,
+    run_table_guardrails,
 )
 
 CONFIG_EXPORTS = (
@@ -65,6 +66,7 @@ PIPELINE_EXPORTS = (
     "check_freshness",
     "check_changes",
     "check_dq",
+    "run_table_guardrails",
     "profile_and_register_table",
     "profile_dataframe",
     "profile_frequency_distribution",
