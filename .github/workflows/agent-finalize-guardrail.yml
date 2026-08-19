@@ -25,7 +25,7 @@ jobs:
 
       - name: Run tested consolidation transform
         run: |
-          python - <<'PY'
+          uv run python - <<'PY'
           import subprocess
           import yaml
           from pathlib import Path
