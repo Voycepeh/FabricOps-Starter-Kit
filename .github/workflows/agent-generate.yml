@@ -43,12 +43,9 @@ jobs:
               lines = source.splitlines(keepends=True)
               targets = [n for n in tree.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == function_name]
               for node in reversed(targets):
-                  start = node.lineno - 1
-                  end = node.end_lineno
-                  del lines[start:end]
+                  del lines[node.lineno - 1:node.end_lineno]
               return ''.join(lines)
 
-          # Pipeline: merge both Guardrail-specific shared modules into the canonical package shared.py.
           legacy_path = pipeline / 'guardrails_shared.py'
           canonical_path = pipeline / 'guardrail_shared.py'
           shared_path = pipeline / 'shared.py'
@@ -56,37 +53,25 @@ jobs:
               base = shared_path.read_text()
               legacy = strip_future(legacy_path.read_text())
               canonical = strip_future(canonical_path.read_text())
-
-              # shared.py already owns build_profile_dataframe; avoid importing itself.
               legacy = legacy.replace('from fabricops_kit.pipeline.shared import build_profile_dataframe\n', '')
-              # The canonical schema adapter needs the lower-level schema implementation after merge.
               legacy = re.sub(r'(?m)^def schema_check_core\(', 'def _guardrail_schema_check_base(', legacy, count=1)
-
-              # The canonical source-change observation-column helper was only a pass-through.
-              # Keep the existing shared implementation rather than creating a recursive wrapper.
               canonical = remove_top_function(canonical, 'resolve_change_rule_observation_columns')
               canonical = canonical.replace('from fabricops_kit.pipeline import guardrails_shared as runtime\n', '')
               canonical = canonical.replace('runtime.schema_check_core', '_guardrail_schema_check_base')
               canonical = canonical.replace('runtime.resolve_guardrail_change_behaviour', 'resolve_guardrail_change_behaviour')
-
-              # Remove imports that previously bridged shared.py back into Guardrail-specific shared modules.
-              base = re.sub(
-                  r'(?ms)^from fabricops_kit\.pipeline\.guardrails_shared import run_active_dq_guardrail\n',
-                  '',
-                  base,
+              base = re.sub(r'(?ms)^from fabricops_kit\.pipeline\.guardrails_shared import run_active_dq_guardrail\n', '', base)
+              base = re.sub(r'(?ms)^from fabricops_kit\.pipeline\.guardrails_shared import \(\n.*?^\)\n', '', base)
+              shared_path.write_text(
+                  base.rstrip()
+                  + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail shared implementation\n# ---------------------------------------------------------------------------\n\n'
+                  + legacy.strip()
+                  + '\n\n\n# ---------------------------------------------------------------------------\n# Canonical Guardrail rule/runtime adapters\n# ---------------------------------------------------------------------------\n\n'
+                  + canonical.strip()
+                  + '\n'
               )
-              base = re.sub(
-                  r'(?ms)^from fabricops_kit\.pipeline\.guardrails_shared import \(\n.*?^\)\n',
-                  '',
-                  base,
-              )
-
-              merged = base.rstrip() + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail shared implementation\n# ---------------------------------------------------------------------------\n\n' + legacy.strip() + '\n\n\n# ---------------------------------------------------------------------------\n# Canonical Guardrail rule/runtime adapters\n# ---------------------------------------------------------------------------\n\n' + canonical.strip() + '\n'
-              shared_path.write_text(merged)
               legacy_path.unlink()
               canonical_path.unlink()
 
-          # Widgets: merge Guardrail authoring shared helpers into widgets/shared.py.
           authoring_path = widgets / 'guardrail_authoring_shared.py'
           widget_shared_path = widgets / 'shared.py'
           if authoring_path.exists():
@@ -94,15 +79,17 @@ jobs:
               authoring = strip_future(authoring_path.read_text())
               authoring = authoring.replace('from fabricops_kit.widgets import shared\n', '')
               authoring = authoring.replace('from fabricops_kit.pipeline.guardrail_shared import canonical_guardrail_rule_record', 'from fabricops_kit.pipeline.shared import canonical_guardrail_rule_record')
-              # Avoid overriding generic private helpers already owned by widgets/shared.py.
               authoring = re.sub(r'\b_stable_json\b', '_guardrail_stable_json', authoring)
               authoring = re.sub(r'\b_coerce_rows\b', '_guardrail_coerce_rows', authoring)
               authoring = authoring.replace('shared.widget_common', 'widget_common')
-              merged = base.rstrip() + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail authoring shared implementation\n# ---------------------------------------------------------------------------\n\n' + authoring.strip() + '\n'
-              widget_shared_path.write_text(merged)
+              widget_shared_path.write_text(
+                  base.rstrip()
+                  + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail authoring shared implementation\n# ---------------------------------------------------------------------------\n\n'
+                  + authoring.strip()
+                  + '\n'
+              )
               authoring_path.unlink()
 
-          # Rewrite source/tests/docs metadata imports to canonical package shared modules.
           for path in [*Path('src').rglob('*.py'), *Path('tests').rglob('*.py'), Path('scripts/reference_docs_metadata.py')]:
               if not path.exists():
                   continue
@@ -111,14 +98,12 @@ jobs:
               text = text.replace('fabricops_kit.pipeline.guardrail_shared', 'fabricops_kit.pipeline.shared')
               text = text.replace('fabricops_kit.pipeline.guardrails_shared', 'fabricops_kit.pipeline.shared')
               text = text.replace('from fabricops_kit.widgets import guardrail_authoring_shared as authoring', 'from fabricops_kit.widgets import shared as authoring')
-              # Focused test imported both old pipeline modules as separate aliases; they are now one owner.
               text = text.replace(
                   'from fabricops_kit.pipeline import guardrail_shared, guardrails_shared',
                   'from fabricops_kit.pipeline import shared as guardrail_shared\nguardrails_shared = guardrail_shared',
               )
               path.write_text(text)
 
-          # Public-owner architecture: these specialized Guardrail shared filenames no longer exist.
           owner_test = Path('tests/contract/test_public_owner_file_pattern.py')
           text = owner_test.read_text()
           for name in ('    "guardrail_shared.py",\n', '    "guardrails_shared.py",\n', '    "guardrail_authoring_shared.py",\n'):
@@ -127,7 +112,7 @@ jobs:
           PY
 
       - name: Lint transformed source
-        run: uv run ruff check src tests scripts/reference_docs_metadata.py
+        run: uv run --with ruff ruff check src tests scripts/reference_docs_metadata.py
 
       - name: Run focused Guardrail tests
         run: |
@@ -190,27 +175,24 @@ jobs:
           from pathlib import Path
           data = json.loads(Path('docs/reference/_data/public-function-call-flows.json').read_text())
           selected = {'check_dq', 'check_freshness', 'widget_author_dq_rules', 'widget_author_guardrails'}
-          found = {}
+          bad = {}
+          found = set()
           def walk(value):
               if isinstance(value, dict):
                   name = value.get('function_name')
                   if name in selected and ('architecture_violation_count' in value or 'has_architecture_violation' in value):
-                      found.setdefault(name, []).append(value)
+                      found.add(name)
+                      count = int(value.get('architecture_violation_count') or 0)
+                      flag = bool(value.get('has_architecture_violation', False))
+                      if count or flag:
+                          bad[name] = {'count': count, 'flag': flag}
                   for child in value.values():
                       walk(child)
               elif isinstance(value, list):
                   for child in value:
                       walk(child)
           walk(data)
-          missing = selected - set(found)
-          assert not missing, f'Missing selected flow summaries: {sorted(missing)}'
-          bad = {}
-          for name, entries in found.items():
-              for entry in entries:
-                  count = int(entry.get('architecture_violation_count') or 0)
-                  flag = bool(entry.get('has_architecture_violation', False))
-                  if count or flag:
-                      bad[name] = {'count': count, 'flag': flag}
+          assert selected <= found, f'Missing selected flow summaries: {sorted(selected - found)}'
           assert not bad, f'Architecture violations remain: {bad}'
           print('Selected flows have zero Type 1-5 architecture violations:', ', '.join(sorted(selected)))
           PY
