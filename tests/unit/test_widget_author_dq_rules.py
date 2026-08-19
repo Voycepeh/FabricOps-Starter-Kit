@@ -9,8 +9,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.pipeline.guardrails_shared import DQ_RULE_TYPES
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.pipeline.shared import DQ_RULE_TYPES
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 from fabricops_kit.widgets.widget_author_dq_rules import (
     DQ_RULE_DEFINITIONS,

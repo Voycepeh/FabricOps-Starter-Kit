@@ -7,8 +7,8 @@ import json
 import pytest
 
 from fabricops_kit.config.shared import resolve_runtime_context
-from fabricops_kit.pipeline.guardrails_shared import _load_active_dq_rules, _prepare_dq_profile_input_rows, run_active_dq_guardrail
-from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, schema_check_core
+from fabricops_kit.pipeline.shared import _load_active_dq_rules, _prepare_dq_profile_input_rows, run_active_dq_guardrail
+from fabricops_kit.pipeline.shared import stop_if_failed, schema_check_core
 from tests.helpers import framework_config
 
 pytestmark = pytest.mark.spark

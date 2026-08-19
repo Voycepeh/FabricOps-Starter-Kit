@@ -189,7 +189,7 @@ def test_private_guardrail_evidence_definitions_defaults_fabric_store_target():
 
 def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
     """Verify schema guardrail strict and allow new columns behavior."""
-    from fabricops_kit.pipeline.guardrails_shared import schema_check_core
+    from fabricops_kit.pipeline.shared import schema_check_core
 
     happy_df = spark_session.createDataFrame([(1, "new")], "id int, status string")
     additive_df = spark_session.createDataFrame([(1, "new", "extra")], "id int, status string, source_file string")
@@ -228,7 +228,7 @@ def test_schema_guardrail_strict_and_allow_new_columns_behavior(spark_session):
 
 def test_freshness_guardrail_blocks_or_warns_by_severity(spark_session):
     """Verify freshness guardrail blocks or warns by severity."""
-    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness
+    from fabricops_kit.pipeline.shared import enforce_freshness
 
     current_df = spark_session.createDataFrame([("2026-06-14",), ("2026-06-13",)], "business_date string")
     stale_df = spark_session.createDataFrame([("2026-06-01",), ("2026-06-02",)], "business_date string")

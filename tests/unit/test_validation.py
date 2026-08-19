@@ -3,7 +3,7 @@
 from __future__ import annotations
 import pytest
 
-from fabricops_kit.pipeline.guardrails_shared import enforce_profile_behavior, stop_if_failed, schema_check_core
+from fabricops_kit.pipeline.shared import enforce_profile_behavior, stop_if_failed, schema_check_core
 
 pytestmark = pytest.mark.unit
 
@@ -125,7 +125,7 @@ def test_enforce_profile_behavior_skip_returns_skipped_and_can_continue(spark_se
 
 def test_profile_row_count_falls_back_to_first_normalized_column_row_count():
     """Verify profile row count falls back to first normalized column row count."""
-    from fabricops_kit.pipeline.guardrails_shared import _profile_row_count
+    from fabricops_kit.pipeline.shared import _profile_row_count
 
     result = _profile_row_count({"columns": [{"column_name": "business_date", "row_count": "42"}]})
 
@@ -134,7 +134,7 @@ def test_profile_row_count_falls_back_to_first_normalized_column_row_count():
 
 def test_profile_row_count_returns_none_for_invalid_row_count():
     """Verify profile row count returns none for invalid row count."""
-    from fabricops_kit.pipeline.guardrails_shared import _profile_row_count
+    from fabricops_kit.pipeline.shared import _profile_row_count
 
     result = _profile_row_count({"row_count": "not-a-number", "columns": [{"row_count": "also-invalid"}]})
 
@@ -142,7 +142,7 @@ def test_profile_row_count_returns_none_for_invalid_row_count():
 
 def test_enforce_freshness_passes_when_latest_value_within_lag():
     """Verify enforce freshness passes when latest value within lag."""
-    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness
+    from fabricops_kit.pipeline.shared import enforce_freshness
 
     result = enforce_freshness(
         [{"business_date": "2026-06-10"}],
@@ -160,7 +160,7 @@ def test_enforce_freshness_passes_when_latest_value_within_lag():
 
 def test_enforce_freshness_blocks_when_latest_value_is_stale():
     """Verify enforce freshness blocks when latest value is stale."""
-    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness
+    from fabricops_kit.pipeline.shared import enforce_freshness
 
     result = enforce_freshness(
         [{"business_date": "2026-06-09"}],
@@ -178,7 +178,7 @@ def test_enforce_freshness_blocks_when_latest_value_is_stale():
 
 def test_enforce_freshness_warns_when_stale_warning_severity():
     """Verify enforce freshness warns when stale warning severity."""
-    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness
+    from fabricops_kit.pipeline.shared import enforce_freshness
 
     result = enforce_freshness(
         [{"business_date": "2026-06-09"}],
@@ -194,7 +194,7 @@ def test_enforce_freshness_warns_when_stale_warning_severity():
 
 def test_enforce_freshness_skips_when_column_not_configured():
     """Verify enforce freshness skips when column not configured."""
-    from fabricops_kit.pipeline.guardrails_shared import enforce_freshness
+    from fabricops_kit.pipeline.shared import enforce_freshness
 
     result = enforce_freshness([], None, None)
 

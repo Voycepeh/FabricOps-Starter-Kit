@@ -10,7 +10,7 @@ import types
 import pytest
 
 import fabricops_kit
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import widget_author_guardrails
 from fabricops_kit.widgets.widget_author_guardrails import (
     CHANGE_BEHAVIOURS,

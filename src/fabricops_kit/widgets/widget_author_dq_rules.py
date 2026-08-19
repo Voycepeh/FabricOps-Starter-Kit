@@ -8,8 +8,8 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.pipeline.guardrails_shared import DQ_COMPARISON_OPERATORS, DQ_RULE_TYPES
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.pipeline.shared import DQ_COMPARISON_OPERATORS, DQ_RULE_TYPES
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 
 

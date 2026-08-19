@@ -1747,8 +1747,8 @@ def test_callable_flow_flags_nested_internal_helper_chain_violation() -> None:
     """Verify hidden internal/private chains beneath public callables are findings."""
     import scripts.generate_individual_function_reference_pages as generator
 
-    public_qn = "fabricops_kit.pipeline.guardrails_shared.run_table_guardrails"
-    workflow_qn = "fabricops_kit.pipeline.guardrails_shared.orchestrate_table_guardrails"
+    public_qn = "fabricops_kit.pipeline.shared.run_table_guardrails"
+    workflow_qn = "fabricops_kit.pipeline.shared.orchestrate_table_guardrails"
     core_qn = "fabricops_kit.profiling.profile_dataframe_core"
     private_core_qn = "fabricops_kit.profiling._profile_dataframe_core"
     distribution_qn = "fabricops_kit.profiling.build_distribution_summaries"

@@ -8,11 +8,11 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.pipeline.guardrails_shared import (
+from fabricops_kit.pipeline.shared import (
     GUARDRAIL_CHANGE_BEHAVIOURS,
     resolve_guardrail_change_behaviour,
 )
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 
 CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS

@@ -8,7 +8,8 @@ from datetime import datetime
 import pytest
 
 from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
-from fabricops_kit.pipeline import guardrail_shared, guardrails_shared
+from fabricops_kit.pipeline import shared as guardrail_shared
+guardrails_shared = guardrail_shared
 from tests.helpers import FakeSpark, framework_config
 
 pytestmark = pytest.mark.unit
