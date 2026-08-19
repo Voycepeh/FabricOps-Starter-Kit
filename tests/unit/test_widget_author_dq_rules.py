@@ -35,10 +35,26 @@ FINAL_RULES = {
 
 def _state(existing=()):
     rows = [
-        {"column_name": "student_id", "column_id": "col-student", "data_type": "string"},
-        {"column_name": "semester", "column_id": "col-semester", "data_type": "string"},
-        {"column_name": "status", "column_id": "col-status", "data_type": "string"},
-        {"column_name": "score", "column_id": "col-score", "data_type": "double"},
+        {
+            "column_name": "student_id",
+            "column_id": "col-student",
+            "data_type": "string",
+        },
+        {
+            "column_name": "semester",
+            "column_id": "col-semester",
+            "data_type": "string",
+        },
+        {
+            "column_name": "status",
+            "column_id": "col-status",
+            "data_type": "string",
+        },
+        {
+            "column_name": "score",
+            "column_id": "col-score",
+            "data_type": "double",
+        },
     ]
     return {
         "environment_name": "dev",
@@ -52,17 +68,31 @@ def _state(existing=()):
 
 
 def test_registry_is_exactly_the_runtime_rule_vocabulary():
-    assert set(DQ_RULE_DEFINITIONS) == FINAL_RULES == set(DQ_RULE_TYPES) == set(shared.DQ_RULE_TYPES)
+    """Verify that DQ authoring definitions match the runtime rule vocabulary."""
+    assert (
+        set(DQ_RULE_DEFINITIONS)
+        == FINAL_RULES
+        == set(DQ_RULE_TYPES)
+        == set(shared.DQ_RULE_TYPES)
+    )
     for name, definition in DQ_RULE_DEFINITIONS.items():
         assert definition["rule_id"] == name
         assert definition["label"]
-        assert definition["column_selection"] in {"independent", "group", "ordered_pair", "conditional"}
+        assert definition["column_selection"] in {
+            "independent",
+            "group",
+            "ordered_pair",
+            "conditional",
+        }
         assert int(definition.get("minimum_columns", 1)) >= 1
         assert isinstance(definition["parameters"], dict)
 
 
 def test_rule_definitions_capture_required_parameter_contracts_and_defaults():
-    assert DQ_RULE_DEFINITIONS["missing_values"]["parameters"]["maximum_null_percent"] == {
+    """Verify that rule definitions capture parameter contracts and defaults."""
+    assert DQ_RULE_DEFINITIONS["missing_values"]["parameters"][
+        "maximum_null_percent"
+    ] == {
         "label": "Maximum null percent",
         "type": "number",
         "required": True,
@@ -76,10 +106,14 @@ def test_rule_definitions_capture_required_parameter_contracts_and_defaults():
     assert DQ_RULE_DEFINITIONS["compare_columns"]["maximum_columns"] == 2
     assert DQ_RULE_DEFINITIONS["required_when"]["column_selection"] == "conditional"
     assert DQ_RULE_DEFINITIONS["conditional_value"]["maximum_columns"] == 1
-    assert DQ_RULE_DEFINITIONS["value_range"]["at_least_one_of"] == ("minimum", "maximum")
+    assert DQ_RULE_DEFINITIONS["value_range"]["at_least_one_of"] == (
+        "minimum",
+        "maximum",
+    )
 
 
 def test_parameter_conversion_and_validation_are_definition_driven():
+    """Verify that parameter conversion and validation follow rule definitions."""
     definition = DQ_RULE_DEFINITIONS["value_range"]
     controls = {
         "minimum": SimpleNamespace(value="0"),
@@ -100,6 +134,7 @@ def test_parameter_conversion_and_validation_are_definition_driven():
 
 
 def test_missing_values_percentage_validation_has_clear_bounds():
+    """Verify that percentage parameters enforce clear inclusive bounds."""
     definition = DQ_RULE_DEFINITIONS["missing_values"]
     control = {"maximum_null_percent": SimpleNamespace(value="101")}
     with pytest.raises(ValueError, match="at most 100"):
@@ -108,11 +143,14 @@ def test_missing_values_percentage_validation_has_clear_bounds():
     with pytest.raises(ValueError, match="at least 0"):
         _collect_parameters(definition, control)
     control["maximum_null_percent"].value = "5"
-    assert _collect_parameters(definition, control) == {"maximum_null_percent": 5.0}
+    assert _collect_parameters(definition, control) == {
+        "maximum_null_percent": 5.0
+    }
 
 
 def test_independent_rules_create_one_canonical_row_per_selected_column():
-    records = authoring.dq_records_from_selection(
+    """Verify that independent rules create one canonical row per selected column."""
+    records = authoring._dq_records_from_selection(
         _state(),
         rule_id="unique_values",
         selected_columns=["student_id", "semester"],
@@ -130,14 +168,15 @@ def test_independent_rules_create_one_canonical_row_per_selected_column():
 
 
 def test_independent_rule_identity_is_stable_across_parameter_versions():
-    first = authoring.dq_records_from_selection(
+    """Verify that independent rule identity is stable across parameter versions."""
+    first = authoring._dq_records_from_selection(
         _state(),
         rule_id="missing_values",
         selected_columns=["student_id"],
         parameters={"maximum_null_percent": 0},
     )[0]
     existing = [{**first, "configuration_version": 3}]
-    second = authoring.dq_records_from_selection(
+    second = authoring._dq_records_from_selection(
         _state(existing),
         rule_id="missing_values",
         selected_columns=["student_id"],
@@ -148,32 +187,37 @@ def test_independent_rule_identity_is_stable_across_parameter_versions():
 
 
 def test_group_rule_creates_one_row_and_preserves_all_columns():
-    record = authoring.dq_records_from_selection(
+    """Verify that grouped rules preserve all selected columns in one row."""
+    record = authoring._dq_records_from_selection(
         _state(),
         rule_id="unique_combination",
         selected_columns=["student_id", "semester"],
         column_selection="group",
     )[0]
     assert record["column_id"] == ""
-    assert json.loads(record["rule_parameters_json"])["columns"] == ["student_id", "semester"]
+    assert json.loads(record["rule_parameters_json"])["columns"] == [
+        "student_id",
+        "semester",
+    ]
 
 
 def test_ordered_pair_preserves_left_right_order_and_operator_identity():
-    left_right = authoring.dq_records_from_selection(
+    """Verify that ordered-pair identity preserves left/right order and operator."""
+    left_right = authoring._dq_records_from_selection(
         _state(),
         rule_id="compare_columns",
         selected_columns=["score", "semester"],
         parameters={"operator": ">="},
         column_selection="ordered_pair",
     )[0]
-    reversed_columns = authoring.dq_records_from_selection(
+    reversed_columns = authoring._dq_records_from_selection(
         _state(),
         rule_id="compare_columns",
         selected_columns=["semester", "score"],
         parameters={"operator": ">="},
         column_selection="ordered_pair",
     )[0]
-    changed_operator = authoring.dq_records_from_selection(
+    changed_operator = authoring._dq_records_from_selection(
         _state(),
         rule_id="compare_columns",
         selected_columns=["score", "semester"],
@@ -189,7 +233,8 @@ def test_ordered_pair_preserves_left_right_order_and_operator_identity():
 
 
 def test_conditional_rule_preserves_condition_and_target_relationship():
-    record = authoring.dq_records_from_selection(
+    """Verify that conditional rules preserve condition and target relationships."""
+    record = authoring._dq_records_from_selection(
         _state(),
         rule_id="conditional_value",
         selected_columns=["student_id"],
@@ -212,6 +257,7 @@ def test_conditional_rule_preserves_condition_and_target_relationship():
 
 
 def test_dq_records_contain_no_obsolete_stage4_fields():
+    """Verify that DQ rows omit obsolete Stage 4 metadata fields."""
     obsolete = {
         "metadata_table_key",
         "metadata_column_key",
@@ -225,7 +271,7 @@ def test_dq_records_contain_no_obsolete_stage4_fields():
         "source_notebook_type",
         "created_by_role",
     }
-    records = authoring.dq_records_from_selection(
+    records = authoring._dq_records_from_selection(
         _state(),
         rule_id="unique_values",
         selected_columns=["student_id", "semester"],
@@ -234,10 +280,11 @@ def test_dq_records_contain_no_obsolete_stage4_fields():
 
 
 def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
-    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+    """Verify visible column checkboxes and dynamic rule parameter controls."""
     from fabricops_kit.widgets import widget_author_dq_rules as public_callable
-    module = sys.modules[public_callable.__module__]
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
+    module = sys.modules[public_callable.__module__]
     widgets = _install_fake_notebook_widgets(monkeypatch, auto_observe=True)
 
     def fake_targets(config, env, *, spark_session, widgets, on_change):
@@ -248,7 +295,9 @@ def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
             "refresh_target": lambda: None,
         }
 
-    monkeypatch.setattr(module.authoring, "load_guardrail_authoring_targets", fake_targets)
+    monkeypatch.setattr(
+        module.authoring, "_load_guardrail_authoring_targets", fake_targets
+    )
     widget = module.widget_author_dq_rules(
         spark_session=object(), context={"config": object(), "env": "dev"}
     )
@@ -261,11 +310,14 @@ def test_widget_uses_visible_checkboxes_and_dynamic_parameters(monkeypatch):
     assert isinstance(widgets, SimpleNamespace)
 
 
-def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_fields(monkeypatch):
-    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_fields(
+    monkeypatch,
+):
+    """Verify multiple independent preview rows with canonical fields only."""
     from fabricops_kit.widgets import widget_author_dq_rules as public_callable
-    module = sys.modules[public_callable.__module__]
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
+    module = sys.modules[public_callable.__module__]
     _install_fake_notebook_widgets(monkeypatch)
 
     def fake_targets(config, env, *, spark_session, widgets, on_change):
@@ -276,7 +328,9 @@ def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_field
             "refresh_target": lambda: None,
         }
 
-    monkeypatch.setattr(module.authoring, "load_guardrail_authoring_targets", fake_targets)
+    monkeypatch.setattr(
+        module.authoring, "_load_guardrail_authoring_targets", fake_targets
+    )
     widget = module.widget_author_dq_rules(
         spark_session=object(),
         context={"config": object(), "env": "dev"},
@@ -292,10 +346,11 @@ def test_widget_preview_shows_multiple_independent_rows_and_only_canonical_field
 
 
 def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
-    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
+    """Verify that the DQ widget uses the shared canonical Guardrail writer."""
     from fabricops_kit.widgets import widget_author_dq_rules as public_callable
-    module = sys.modules[public_callable.__module__]
+    from tests.unit.test_widget_author_guardrails import _install_fake_notebook_widgets
 
+    module = sys.modules[public_callable.__module__]
     _install_fake_notebook_widgets(monkeypatch)
     saved = []
 
@@ -307,11 +362,18 @@ def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
             "refresh_target": lambda: None,
         }
 
-    monkeypatch.setattr(module.authoring, "load_guardrail_authoring_targets", fake_targets)
+    monkeypatch.setattr(
+        module.authoring, "_load_guardrail_authoring_targets", fake_targets
+    )
     monkeypatch.setattr(
         module.authoring,
-        "canonicalize_and_write",
-        lambda records, **kwargs: saved.append(records) or records,
+        "_canonicalize_records",
+        lambda records, **kwargs: records,
+    )
+    monkeypatch.setattr(
+        module.shared,
+        "_write_rule_records",
+        lambda records, **kwargs: saved.append(records),
     )
     widget = module.widget_author_dq_rules(
         spark_session=object(),
@@ -325,8 +387,11 @@ def test_widget_save_uses_same_canonical_guardrail_writer(monkeypatch):
 
 
 def test_authoring_widgets_are_independent_and_use_shared_private_storage_model():
+    """Verify independent widget orchestration with shared private storage primitives."""
     from fabricops_kit.widgets import widget_author_dq_rules as public_callable
+
     dq_source = inspect.getsource(sys.modules[public_callable.__module__])
     assert "widget_author_guardrails(" not in dq_source
     assert "widget_select_guardrail_target" not in dq_source
-    assert "authoring.canonicalize_and_write" in dq_source
+    assert "authoring._canonicalize_records" in dq_source
+    assert "shared._write_rule_records" in dq_source
