@@ -65,6 +65,7 @@ jobs:
 
           guardrail = Path('src/fabricops_kit/widgets/widget_author_guardrails.py')
           text = guardrail.read_text(encoding='utf-8')
+          text = text.replace('"""Author Schema, Freshness, and Change expectations for a profiled table.', '"""Configure Schema, Freshness, and Change expectations for a profiled table.', 1)
           old = '''        canonical_records = authoring._canonicalize_records(\n            records,\n            config=config,\n            env=env,\n            spark_session=spark_session,\n        )\n'''
           new = '''        canonical_records = authoring._canonicalize_records(\n            records,\n            config=config,\n            env=env,\n        )\n        shared._write_rule_records(\n            canonical_records,\n            config=config,\n            env=env,\n            spark_session=spark_session,\n        )\n'''
           if old not in text:
@@ -73,6 +74,7 @@ jobs:
 
           dq = Path('src/fabricops_kit/widgets/widget_author_dq_rules.py')
           text = dq.read_text(encoding='utf-8')
+          text = text.replace('"""Author Data Quality rules for relevant columns of a profiled table.', '"""Configure Data Quality rules for relevant columns of a profiled table.', 1)
           old = '''        canonical_records = authoring._canonicalize_records(\n            records,\n            config=config,\n            env=env,\n            spark_session=spark_session,\n        )\n'''
           new = '''        canonical_records = authoring._canonicalize_records(\n            records,\n            config=config,\n            env=env,\n        )\n        shared._write_rule_records(\n            canonical_records,\n            config=config,\n            env=env,\n            spark_session=spark_session,\n        )\n'''
           if old not in text:
@@ -93,7 +95,6 @@ jobs:
                           result.append('    """Verify the focused standalone authoring contract."""')
               path.write_text('\n'.join(result) + '\n', encoding='utf-8')
 
-          # Update save tests to patch the actual shared writer plus canonicalizer.
           path = Path('tests/unit/test_widget_author_guardrails.py')
           text = path.read_text(encoding='utf-8')
           text = text.replace('"_canonicalize_records",\n        lambda records, **kwargs: saved.append([dict(row) for row in records]) or [dict(row) for row in records],', '"_canonicalize_records",\n        lambda records, **kwargs: [dict(row) for row in records],')
