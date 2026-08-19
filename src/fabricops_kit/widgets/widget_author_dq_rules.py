@@ -8,8 +8,8 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.pipeline.guardrails_shared import DQ_COMPARISON_OPERATORS, DQ_RULE_TYPES
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.pipeline.shared import DQ_COMPARISON_OPERATORS, DQ_RULE_TYPES
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 
 
@@ -469,7 +469,7 @@ def widget_author_dq_rules(
         if maximum is not None and len(columns) > int(maximum):
             raise ValueError(f"Select at most {int(maximum)} column(s).")
         values = _collect_parameters(definition, parameter_controls)
-        return authoring._dq_records_from_selection(
+        return authoring.dq_records_from_selection(
             state,
             rule_id=str(definition["rule_id"]),
             selected_columns=columns,
@@ -496,12 +496,12 @@ def widget_author_dq_rules(
 
     def save() -> list[dict[str, Any]]:
         records = build_records()
-        canonical_records = authoring._canonicalize_records(
+        canonical_records = authoring.canonicalize_records(
             records,
             config=config,
             env=env,
         )
-        shared._write_rule_records(
+        authoring.write_rule_records(
             canonical_records,
             config=config,
             env=env,
@@ -525,7 +525,7 @@ def widget_author_dq_rules(
         render_parameters(selected_state)
         render_columns(selected_state)
 
-    state, target, target_controls = authoring._load_guardrail_authoring_targets(
+    state, target, target_controls = authoring.load_guardrail_authoring_targets(
         config,
         env,
         spark_session=spark_session,

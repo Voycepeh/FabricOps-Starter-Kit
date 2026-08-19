@@ -19,7 +19,7 @@ from fabricops_kit.io.shared import (
     resolve_warehouse_table_location,
     write_lakehouse_table_core,
 )
-from fabricops_kit.pipeline.guardrails_shared import (
+from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     resolve_change_rule_observation_columns,
     select_table_guardrail_rule,

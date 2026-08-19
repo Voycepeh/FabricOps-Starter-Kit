@@ -8,12 +8,12 @@ from fabricops_kit.io.shared import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
-from fabricops_kit.pipeline.guardrail_metadata import (
+from fabricops_kit.pipeline.shared import (
     load_table_guardrail_rules,
     schema_check_core,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.guardrails_shared import stop_if_failed, write_guardrail_result_row
+from fabricops_kit.pipeline.shared import stop_if_failed, write_guardrail_result_row
 
 
 def check_schema(

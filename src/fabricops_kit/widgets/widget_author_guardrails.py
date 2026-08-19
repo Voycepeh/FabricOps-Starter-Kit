@@ -8,11 +8,11 @@ import json
 from typing import Any
 
 from fabricops_kit.config.shared import resolve_fabric_context
-from fabricops_kit.pipeline.guardrails_shared import (
+from fabricops_kit.pipeline.shared import (
     GUARDRAIL_CHANGE_BEHAVIOURS,
     resolve_guardrail_change_behaviour,
 )
-from fabricops_kit.widgets import guardrail_authoring_shared as authoring
+from fabricops_kit.widgets import shared as authoring
 from fabricops_kit.widgets import shared
 
 CHANGE_BEHAVIOURS = GUARDRAIL_CHANGE_BEHAVIOURS
@@ -85,7 +85,7 @@ def _guardrail_records_from_selection(
         for row in state.get("catalogue_profile_rows", [])
     }
     return [
-        authoring._build_rule_record(
+        authoring.build_rule_record(
             state,
             guardrail_type="schema",
             rule_id="schema",
@@ -97,7 +97,7 @@ def _guardrail_records_from_selection(
             severity=severities["schema"],
             guardrail_version=version,
         ),
-        authoring._build_rule_record(
+        authoring.build_rule_record(
             state,
             guardrail_type="freshness",
             rule_id="freshness",
@@ -110,7 +110,7 @@ def _guardrail_records_from_selection(
             severity=severities["freshness"],
             guardrail_version=version,
         ),
-        authoring._build_rule_record(
+        authoring.build_rule_record(
             state,
             guardrail_type="change",
             rule_id="changes",
@@ -182,7 +182,7 @@ def widget_author_guardrails(
         )
         authoring_box.children = (current["ui"],)
 
-    state, target, target_controls = authoring._load_guardrail_authoring_targets(
+    state, target, target_controls = authoring.load_guardrail_authoring_targets(
         config,
         env,
         spark_session=spark_session,
@@ -230,12 +230,12 @@ def _render_guardrail_authoring(
     columns = [str(value) for value in state.get("columns", [])]
     existing = list(state.get("existing_rules") or [])
     version_state = {"persisted": _guardrail_version(existing)}
-    schema_rule = authoring._latest_rule(existing, "schema")
-    freshness_rule = authoring._latest_rule(existing, "freshness")
-    change_rule = authoring._latest_rule(existing, "change")
-    schema_params = authoring._rule_parameters(schema_rule)
-    freshness_params = authoring._rule_parameters(freshness_rule)
-    change_params = authoring._rule_parameters(change_rule)
+    schema_rule = authoring.latest_rule(existing, "schema")
+    freshness_rule = authoring.latest_rule(existing, "freshness")
+    change_rule = authoring.latest_rule(existing, "change")
+    schema_params = authoring.rule_parameters(schema_rule)
+    freshness_params = authoring.rule_parameters(freshness_rule)
+    change_params = authoring.rule_parameters(change_rule)
     selected_required = set(schema_params.get("columns") or columns)
     schema_data_types = {
         str(row.get("column_name") or ""): str(row.get("data_type") or "")
@@ -389,12 +389,12 @@ def _render_guardrail_authoring(
                 "<b>Preview only:</b> FABRIC_CONTEXT and spark_session are required to save."
             )
             return records
-        canonical_records = authoring._canonicalize_records(
+        canonical_records = authoring.canonicalize_records(
             records,
             config=config,
             env=env,
         )
-        shared._write_rule_records(
+        authoring.write_rule_records(
             canonical_records,
             config=config,
             env=env,

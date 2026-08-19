@@ -26,17 +26,17 @@ Define the expectations the data used in the ETL pipeline should meet.
 
 | Column | Data type | Managed by | Description |
 | --- | --- | --- | --- |
-| `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Stable identifier for the guardrail rule row. |
-| `guardrail_version` | `integer` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Metadata Guardrail field `guardrail_version`. |
-| `table_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Identifier for the accessed table or object. |
-| `column_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Identifier stored for `column_id`. |
-| `environment_name` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Environment name recorded for the metadata row. |
-| `guardrail_type` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Guardrail family recorded for the row. |
-| `rule_id` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Rule identity stored by the authoring workflow. |
-| `rule_type` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Specific rule type recorded within the guardrail family. |
-| `rule_parameters_json` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Serialized rule parameters stored for the guardrail row. |
-| `severity` | `string` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Severity recorded for the guardrail intent or result. |
-| `is_active` | `boolean` | `fabricops_kit.pipeline.guardrail_metadata.canonical_guardrail_rule_record` | Whether the row is currently active. |
+| `guardrail_rule_id` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Stable identifier for the guardrail rule row. |
+| `guardrail_version` | `integer` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Metadata Guardrail field `guardrail_version`. |
+| `table_id` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Identifier for the accessed table or object. |
+| `column_id` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Identifier stored for `column_id`. |
+| `environment_name` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Environment name recorded for the metadata row. |
+| `guardrail_type` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Guardrail family recorded for the row. |
+| `rule_id` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Rule identity stored by the authoring workflow. |
+| `rule_type` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Specific rule type recorded within the guardrail family. |
+| `rule_parameters_json` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Serialized rule parameters stored for the guardrail row. |
+| `severity` | `string` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Severity recorded for the guardrail intent or result. |
+| `is_active` | `boolean` | `fabricops_kit.pipeline.shared.canonical_guardrail_rule_record` | Whether the row is currently active. |
 | `_committed_by` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | User principal or runtime identity that committed the metadata row. |
 | `_committed_at` | `timestamp` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Timestamp when the metadata row was committed. |
 | `_workspace_id` | `string` | `fabricops_kit.config.audit.build_runtime_audit_fields` | Fabric workspace identifier captured from runtime audit context. |

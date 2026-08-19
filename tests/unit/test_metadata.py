@@ -239,7 +239,7 @@ def test_runtime_audit_fields_report_all_missing_and_reject_unknown():
 
 def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monkeypatch):
     """Verify metadata result writes fail before persistence when audit cannot resolve."""
-    from fabricops_kit.pipeline import guardrails_shared
+    from fabricops_kit.pipeline import shared as guardrails_shared
 
     monkeypatch.setattr(
         guardrails_shared,
@@ -266,7 +266,7 @@ def test_guardrail_result_write_fails_before_persistence_when_audit_missing(monk
 
 def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_notebookutils):
     """Verify guardrail evidence and catalogue registration share one key helper."""
-    from fabricops_kit.pipeline import guardrails_shared
+    from fabricops_kit.pipeline import shared as guardrails_shared
 
     writes = []
     monkeypatch.setattr(guardrails_shared, "write_lakehouse_table_core", lambda frame, *_args, **_kwargs: writes.append(frame))

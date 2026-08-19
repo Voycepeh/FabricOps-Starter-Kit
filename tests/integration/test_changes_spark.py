@@ -2,7 +2,7 @@
 
 import pytest
 
-from fabricops_kit.pipeline import guardrails_shared
+from fabricops_kit.pipeline import shared as guardrails_shared
 
 pytestmark = pytest.mark.spark
 

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from fabricops_kit.pipeline import guardrails_shared as governance
+from fabricops_kit.pipeline import shared as governance
 from fabricops_kit.config import metadata_schemas
 from fabricops_kit.config.shared import build_metadata_table_key
 from fabricops_kit.widgets import shared as governance_authoring

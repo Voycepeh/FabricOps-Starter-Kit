@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from fabricops_kit.pipeline import guardrails_shared as governance
+from fabricops_kit.pipeline import shared as governance
 
 
 def test_dq_rule_index_contains_exact_supported_catalogue():

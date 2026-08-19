@@ -2,13 +2,13 @@
 
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.guardrail_metadata import (
+from fabricops_kit.pipeline.shared import (
     freshness_check_core,
     load_table_guardrail_rules,
     resolve_change_rule_observation_columns,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.guardrails_shared import write_guardrail_result_row
+from fabricops_kit.pipeline.shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import (
     guardrail_compatibility_observation,
     observation_rows,
