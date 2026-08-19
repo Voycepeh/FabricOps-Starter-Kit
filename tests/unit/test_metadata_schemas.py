@@ -48,9 +48,9 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 
 
 def test_stage2_profile_schema_is_normalized():
-    """Profile stores snapshot metrics and asset IDs without repeated physical names."""
+    """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:20] == [
+    assert fields[:19] == [
         "profile_id",
         "profile_snapshot_id",
         "table_id",
@@ -70,9 +70,9 @@ def test_stage2_profile_schema_is_normalized():
         "median_value",
         "percentile_75_value",
         "max_value",
-        "profiled_at",
     ]
     assert {
+        "profiled_at",
         "metadata_table_key",
         "metadata_column_key",
         "store_type",
@@ -82,6 +82,7 @@ def test_stage2_profile_schema_is_normalized():
         "column_name",
         "schema_fingerprint",
     }.isdisjoint(fields)
+    assert "_committed_at" in fields
 
 
 def test_profiled_frequency_schema_is_flattened_detail_for_profile():
@@ -101,14 +102,13 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "frequency_rank",
         "profiled_row_count",
         "profiled_non_null_count",
-        "profiled_at",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {"table_id", "column_id", "environment_name", "metadata_column_key"}.isdisjoint(fields)
+    assert {"table_id", "column_id", "environment_name", "metadata_column_key", "profiled_at"}.isdisjoint(fields)
 
 
 def test_stage2_lineage_schema_uses_pipeline_language():
-    """Lineage describes pipeline participation rather than a profiling role."""
+    """Lineage describes pipeline participation and uses the standard commit timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
     assert fields == [
         "lineage_id",
@@ -116,14 +116,14 @@ def test_stage2_lineage_schema_uses_pipeline_language():
         "profile_snapshot_id",
         "environment_name",
         "pipeline_role",
-        "recorded_at",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {"lineage_event_id", "profile_role", "profiled_at"}.isdisjoint(fields)
+    assert {"lineage_event_id", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
+    assert "_committed_at" in fields
 
 
 def test_stage2_source_observation_schema_is_guardrail_independent():
-    """Persist reusable source evidence without Guardrail-owned identity."""
+    """Persist reusable source evidence with the standard commit timestamp only."""
     fields = metadata_table_schema_registry()["METADATA_SOURCE_OBSERVATION"].fieldNames()
     assert fields == [
         "observation_id",
@@ -134,10 +134,27 @@ def test_stage2_source_observation_schema_is_guardrail_independent():
         "min_change_value",
         "max_change_value",
         "is_present",
-        "observed_at",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
-    assert {"metadata_table_key", "guardrail_rule_version_id", "partition_column", "change_column"}.isdisjoint(fields)
+    assert {
+        "observed_at",
+        "metadata_table_key",
+        "guardrail_rule_version_id",
+        "partition_column",
+        "change_column",
+    }.isdisjoint(fields)
+    assert "_committed_at" in fields
+
+
+def test_guardrail_schema_uses_entity_version_and_results_capture_exact_revision():
+    """One Guardrail revision is identified by rule ID plus guardrail_version."""
+    registry = metadata_table_schema_registry()
+    guardrail = registry["METADATA_GUARDRAIL"].fieldNames()
+    results = registry["METADATA_GUARDRAIL_RESULTS"].fieldNames()
+
+    assert guardrail[:2] == ["guardrail_rule_id", "guardrail_version"]
+    assert "configuration_version" not in guardrail
+    assert results[:3] == ["guardrail_result_id", "guardrail_rule_id", "guardrail_version"]
 
 
 def test_stage3_enrichment_schema_uses_asset_ids_and_environment():
