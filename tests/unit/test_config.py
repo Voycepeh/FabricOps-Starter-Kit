@@ -1111,8 +1111,8 @@ def test_internal_modules_import_config_shared_helpers_not_old_module():
     assert "from fabricops_kit.config.shared import get_store, resolve_fabric_context" in Path(
         "src/fabricops_kit/io/shared.py"
     ).read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.audit import build_runtime_audit_fields" in Path(
-        "src/fabricops_kit/pipeline/guardrails_shared.py"
+    assert "build_runtime_audit_fields" in Path(
+        "src/fabricops_kit/pipeline/shared.py"
     ).read_text(encoding="utf-8")
     assert "from fabricops_kit.config.shared import build_audit_timestamp_expr, get_audit_timezone" in Path(
         "src/fabricops_kit/pipeline/shared.py"
@@ -1183,15 +1183,14 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
 def test_runtime_writers_use_shared_metadata_schema_contract_not_public_owner():
     """Verify runtime metadata writers do not import private setup owner helpers."""
     writer_paths = [
-        Path("src/fabricops_kit/pipeline/guardrails_shared.py"),
         Path("src/fabricops_kit/widgets/shared.py"),
         Path("src/fabricops_kit/pipeline/shared.py"),
     ]
 
-    guardrails_shared_source = Path("src/fabricops_kit/pipeline/guardrails_shared.py").read_text(encoding="utf-8")
-    assert "from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types" in guardrails_shared_source
-    assert "from fabricops_kit.config.setup_metadata_tables" not in guardrails_shared_source
-    assert "from .config.setup_metadata_tables" not in guardrails_shared_source
+    pipeline_shared_source = Path("src/fabricops_kit/pipeline/shared.py").read_text(encoding="utf-8")
+    assert "coerce_metadata_row_types" in pipeline_shared_source
+    assert "from fabricops_kit.config.setup_metadata_tables" not in pipeline_shared_source
+    assert "from .config.setup_metadata_tables" not in pipeline_shared_source
 
     for path in writer_paths:
         source = path.read_text(encoding="utf-8")

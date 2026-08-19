@@ -1793,7 +1793,8 @@ def _is_active_guardrail_rule(row: dict) -> bool:
             return False
     elif _catalogue_value(row, "is_active") is not True:
         return False
-    return _rule_review_status(row) in _ACTIVE_RULE_REVIEW_STATUSES
+    review_status = _rule_review_status(row)
+    return not review_status or review_status in _ACTIVE_RULE_REVIEW_STATUSES
 
 def _parse_rule_parameters(row: dict) -> dict:
     raw = _catalogue_value(row, "rule_parameters_json") or "{}"
@@ -1818,7 +1819,7 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
             continue
         if table_name and _string_value(_catalogue_value(row, "table_name")) != table_name:
             continue
-        rule_table_key = _string_value(_catalogue_value(row, "metadata_table_key"))
+        rule_table_key = _string_value(_catalogue_value(row, "table_id", "metadata_table_key"))
         if metadata_table_key and rule_table_key != metadata_table_key:
             continue
         if not _is_active_guardrail_rule(row):
@@ -1897,6 +1898,9 @@ def evaluate_changes_guardrail(
         "source_pattern": source_pattern,
         "severity": severity,
         "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+        "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
+        "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
+        "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
     })
     if rule_type not in {"change_required", "no_change_required", "monitor_only"}:
         raise ValueError("expected_change must be one of: change_required, no_change_required, monitor_only")
@@ -2503,7 +2507,7 @@ def freshness_check_core(
     dataframe_columns = set(getattr(dataframe, "columns", ()))
     if not dataframe_columns and isinstance(dataframe, (list, tuple)) and dataframe:
         dataframe_columns = set(_row_to_dict(dataframe[0]))
-    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "observed_at"} <= dataframe_columns
+    observation_evidence = {"metadata_table_key", "partition_value", "change_column", "max_change_value", "_committed_at"} <= dataframe_columns
     if observation_evidence and rule_type != "skip":
         rows = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
         change_columns = {_string_value(_catalogue_value(_row_to_dict(row), "change_column")) for row in rows or []}
@@ -2538,7 +2542,14 @@ def freshness_check_core(
         "message": "Freshness check skipped because no freshness column is configured.",
     }
     if rule is not None:
-        base_result.update({"guardrail_type": "freshness", "rule_type": rule_type, "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id"))})
+        base_result.update({
+            "guardrail_type": "freshness",
+            "rule_type": rule_type,
+            "rule_key": _string_value(_catalogue_value(rule, "rule_key", "rule_id")),
+            "guardrail_rule_id": _string_value(_catalogue_value(rule, "guardrail_rule_id", "rule_id")),
+            "guardrail_version": int(_catalogue_value(rule, "guardrail_version", "configuration_version") or 1),
+            "rule_id": _string_value(_catalogue_value(rule, "rule_id")),
+        })
     if not column:
         return _apply_bypass_post_review_warning(base_result, rule)
     if max_age_seconds is None and (max_lag_days is None or str(max_lag_days).strip() == ""):
