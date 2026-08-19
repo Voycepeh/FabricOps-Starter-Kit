@@ -1,0 +1,89 @@
+name: Agent Fix Final Guardrail CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/consolidate-guardrail-shared
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --all-groups
+
+      - name: Patch canonical selector and stale ownership tests
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+
+          shared = Path('src/fabricops_kit/pipeline/shared.py')
+          text = shared.read_text()
+          old = '''def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:\n    """Select the latest active approved table rule by canonical identity."""\n    return _select_table_guardrail_rule(\n        rules_df, guardrail_type=guardrail_type, dataset_name="", table_name="",\n        environment_name=environment_name, metadata_table_key=metadata_table_key,\n    )\n'''
+          new = '''def select_table_guardrail_rule(rules_df, *, guardrail_type: str, metadata_table_key: str, environment_name: str = "") -> dict | None:\n    """Select the latest active canonical table rule by table identity."""\n    return _select_rule(\n        rules_df,\n        guardrail_type=guardrail_type,\n        table_id=metadata_table_key,\n        environment_name=environment_name,\n    )\n'''
+          if old not in text:
+              raise SystemExit('Expected select_table_guardrail_rule implementation not found')
+          shared.write_text(text.replace(old, new, 1))
+
+          path = Path('tests/unit/test_config.py')
+          text = path.read_text()
+          text = text.replace('src/fabricops_kit/pipeline/guardrails_shared.py', 'src/fabricops_kit/pipeline/shared.py')
+          text = text.replace(
+              '''    writer_paths = [\n        Path("src/fabricops_kit/pipeline/shared.py"),\n        Path("src/fabricops_kit/widgets/shared.py"),\n        Path("src/fabricops_kit/pipeline/shared.py"),\n    ]''',
+              '''    writer_paths = [\n        Path("src/fabricops_kit/widgets/shared.py"),\n        Path("src/fabricops_kit/pipeline/shared.py"),\n    ]''',
+          )
+          text = text.replace('guardrails_shared_source = Path("src/fabricops_kit/pipeline/shared.py")', 'pipeline_shared_source = Path("src/fabricops_kit/pipeline/shared.py")')
+          text = text.replace('in guardrails_shared_source', 'in pipeline_shared_source')
+          text = text.replace('not in guardrails_shared_source', 'not in pipeline_shared_source')
+          path.write_text(text)
+
+          path = Path('tests/unit/test_metadata_writer_ownership.py')
+          text = path.read_text().replace('pipeline/guardrails_shared.py', 'pipeline/shared.py')
+          path.write_text(text)
+
+          path = Path('tests/unit/test_governance_review_migration.py')
+          text = path.read_text()
+          text = text.replace(
+              'assert "from fabricops_kit.pipeline.shared import run_active_dq_guardrail" in pipeline_source',
+              'assert "def run_active_dq_guardrail(" in pipeline_source',
+          )
+          path.write_text(text)
+          PY
+
+      - name: Validate focused failures
+        run: |
+          uv run ruff check src/fabricops_kit/pipeline/shared.py tests/unit/test_config.py tests/unit/test_metadata_writer_ownership.py tests/unit/test_governance_review_migration.py tests/unit/test_observation_guardrails.py
+          uv run pytest -q \
+            tests/unit/test_config.py \
+            tests/unit/test_governance_review_migration.py \
+            tests/unit/test_metadata_writer_ownership.py \
+            tests/unit/test_observation_guardrails.py
+
+      - name: Run full test suite
+        run: uv run pytest -q
+
+      - name: Regenerate owned architecture outputs
+        run: |
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+
+      - name: Commit final fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src tests docs/reference/_data/public-function-call-flows.json docs/reference/_data/generated-artifacts.json docs/api/reference docs/reference/index.md docs/reference/function-call-graph.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Fix canonical Guardrail selector ownership"
+            git push origin HEAD:agent/consolidate-guardrail-shared
+          fi
