@@ -15,12 +15,12 @@ PROFILED_TABLE = "METADATA_DATA_PROFILED"
 GUARDRAIL_TABLE = "METADATA_GUARDRAIL"
 
 
-def stable_json(value: Any) -> str:
+def _stable_json(value: Any) -> str:
     """Serialize authoring parameters deterministically."""
     return json.dumps(value, default=str, sort_keys=True, separators=(",", ":"))
 
 
-def latest_rule(
+def _latest_rule(
     existing_rules: Iterable[Mapping[str, Any]],
     guardrail_type: str,
     *,
@@ -36,13 +36,16 @@ def latest_rule(
             continue
         matches.append(row)
     matches.sort(
-        key=lambda row: (int(row.get("configuration_version") or 0), str(row.get("_committed_at") or "")),
+        key=lambda row: (
+            int(row.get("configuration_version") or 0),
+            str(row.get("_committed_at") or ""),
+        ),
         reverse=True,
     )
     return matches[0] if matches else {}
 
 
-def rule_parameters(rule: Mapping[str, Any]) -> dict[str, Any]:
+def _rule_parameters(rule: Mapping[str, Any]) -> dict[str, Any]:
     """Parse one normalized Guardrail parameter payload."""
     raw = rule.get("rule_parameters_json") or "{}"
     try:
@@ -51,17 +54,19 @@ def rule_parameters(rule: Mapping[str, Any]) -> dict[str, Any]:
         return {}
 
 
-def column_id_for_name(state: Mapping[str, Any], column_name: str) -> str:
+def _column_id_for_name(state: Mapping[str, Any], column_name: str) -> str:
     """Resolve one visible column name to its canonical Catalogue column ID."""
     name = str(column_name or "").strip()
     column_ids = dict(state.get("column_ids") or {})
     column_id = str(column_ids.get(name) or "").strip()
     if not name or not column_id:
-        raise ValueError(f"Column {name!r} does not resolve to a canonical column_id for the selected table.")
+        raise ValueError(
+            f"Column {name!r} does not resolve to a canonical column_id for the selected table."
+        )
     return column_id
 
 
-def build_guardrail_rule_id(
+def _build_guardrail_rule_id(
     *,
     table_id: str,
     column_id: str,
@@ -77,10 +82,12 @@ def build_guardrail_rule_id(
         "rule_id": str(rule_id),
         "identity_parameters": dict(identity_parameters or {}),
     }
-    return f"guardrail_{hashlib.sha256(stable_json(payload).encode('utf-8')).hexdigest()}"
+    return f"guardrail_{hashlib.sha256(_stable_json(payload).encode('utf-8')).hexdigest()}"
 
 
-def next_configuration_version(existing_rules: Iterable[Mapping[str, Any]], guardrail_rule_id: str) -> int:
+def _next_configuration_version(
+    existing_rules: Iterable[Mapping[str, Any]], guardrail_rule_id: str
+) -> int:
     """Return the next append-only configuration version for one logical rule."""
     versions = [
         int(row.get("configuration_version") or 0)
@@ -90,7 +97,7 @@ def next_configuration_version(existing_rules: Iterable[Mapping[str, Any]], guar
     return max(versions, default=0) + 1
 
 
-def build_rule_record(
+def _build_rule_record(
     state: Mapping[str, Any],
     *,
     guardrail_type: str,
@@ -110,15 +117,15 @@ def build_rule_record(
         raise ValueError("A selected profiled table with a canonical table_id is required.")
     if not environment_name:
         raise ValueError("The selected profiled table must have an environment_name.")
-    column_id = column_id_for_name(state, column_name) if column_name else ""
-    guardrail_rule_id = build_guardrail_rule_id(
+    column_id = _column_id_for_name(state, column_name) if column_name else ""
+    guardrail_rule_id = _build_guardrail_rule_id(
         table_id=table_id,
         column_id=column_id,
         guardrail_type=guardrail_type,
         rule_id=rule_id,
         identity_parameters=identity_parameters,
     )
-    version = configuration_version or next_configuration_version(
+    version = configuration_version or _next_configuration_version(
         state.get("existing_rules") or (), guardrail_rule_id
     )
     return {
@@ -130,13 +137,13 @@ def build_rule_record(
         "guardrail_type": str(guardrail_type),
         "rule_id": str(rule_id),
         "rule_type": str(rule_type),
-        "rule_parameters_json": stable_json(dict(parameters or {})),
+        "rule_parameters_json": _stable_json(dict(parameters or {})),
         "severity": str(severity),
         "is_active": bool(is_active),
     }
 
 
-def dq_records_from_selection(
+def _dq_records_from_selection(
     state: Mapping[str, Any],
     *,
     rule_id: str,
@@ -153,7 +160,7 @@ def dq_records_from_selection(
     values = dict(parameters or {})
     if column_selection == "independent":
         return [
-            build_rule_record(
+            _build_rule_record(
                 state,
                 guardrail_type="dq",
                 rule_id=rule_id,
@@ -165,13 +172,15 @@ def dq_records_from_selection(
             for column in columns
         ]
 
-    column_ids = [column_id_for_name(state, column) for column in columns]
+    column_ids = [_column_id_for_name(state, column) for column in columns]
     identity_parameters: dict[str, Any] = {"column_ids": column_ids, **values}
     condition_column = str(values.get("condition_column") or "").strip()
     if condition_column:
-        identity_parameters["condition_column_id"] = column_id_for_name(state, condition_column)
+        identity_parameters["condition_column_id"] = _column_id_for_name(
+            state, condition_column
+        )
     return [
-        build_rule_record(
+        _build_rule_record(
             state,
             guardrail_type="dq",
             rule_id=rule_id,
@@ -183,20 +192,20 @@ def dq_records_from_selection(
     ]
 
 
-def canonicalize_and_write(
+def _canonicalize_records(
     records: list[dict[str, Any]],
     *,
     config: Any,
     env: str,
-    spark_session: Any,
 ) -> list[dict[str, Any]]:
-    """Normalize and append authored Guardrail rows through the canonical writer path."""
-    canonical = [canonical_guardrail_rule_record(record, config=config, env=env) for record in records]
-    shared._write_rule_records(canonical, config=config, env=env, spark_session=spark_session)
-    return canonical
+    """Normalize authored Guardrail rows before the widget-owned shared write call."""
+    return [
+        canonical_guardrail_rule_record(record, config=config, env=env)
+        for record in records
+    ]
 
 
-def load_guardrail_authoring_targets(
+def _load_guardrail_authoring_targets(
     config: Any,
     env: str,
     *,
@@ -227,11 +236,14 @@ def load_guardrail_authoring_targets(
     profile_table_ids = {
         str(row.get("table_id") or "")
         for row in profiles
-        if str(row.get("environment_name") or env) == env and str(row.get("table_id") or "").strip()
+        if str(row.get("environment_name") or env) == env
+        and str(row.get("table_id") or "").strip()
     }
     selectable_ids = sorted(set(table_rows) & profile_table_ids)
     if not selectable_ids:
-        raise ValueError("METADATA_DATA_PROFILED has no table that resolves to METADATA_DATA_CATALOGUE.")
+        raise ValueError(
+            "METADATA_DATA_PROFILED has no table that resolves to METADATA_DATA_CATALOGUE."
+        )
 
     def label(table_id: str) -> str:
         row = table_rows[table_id]
@@ -260,18 +272,30 @@ def load_guardrail_authoring_targets(
         table_profiles = [
             dict(row)
             for row in profiles
-            if str(row.get("environment_name") or env) == env and str(row.get("table_id") or "") == table_id
+            if str(row.get("environment_name") or env) == env
+            and str(row.get("table_id") or "") == table_id
         ]
         latest = max(
             table_profiles,
-            key=lambda row: (str(row.get("profiled_at") or ""), str(row.get("profile_snapshot_id") or "")),
+            key=lambda row: (
+                str(row.get("profiled_at") or ""),
+                str(row.get("profile_snapshot_id") or ""),
+            ),
         )
         snapshot_id = str(latest.get("profile_snapshot_id") or "")
         if snapshot_id:
-            snapshot = [row for row in table_profiles if str(row.get("profile_snapshot_id") or "") == snapshot_id]
+            snapshot = [
+                row
+                for row in table_profiles
+                if str(row.get("profile_snapshot_id") or "") == snapshot_id
+            ]
         else:
             latest_at = str(latest.get("profiled_at") or "")
-            snapshot = [row for row in table_profiles if str(row.get("profiled_at") or "") == latest_at]
+            snapshot = [
+                row
+                for row in table_profiles
+                if str(row.get("profiled_at") or "") == latest_at
+            ]
 
         catalogue_columns = {
             str(row.get("column_id") or ""): dict(row)
@@ -303,11 +327,14 @@ def load_guardrail_authoring_targets(
             )
         evidence.sort(key=lambda row: row["column_name"].casefold())
         if not evidence:
-            raise ValueError("The selected profile snapshot has no columns that resolve to Catalogue column IDs.")
+            raise ValueError(
+                "The selected profile snapshot has no columns that resolve to Catalogue column IDs."
+            )
         existing_rules = [
             dict(row)
             for row in rules
-            if str(row.get("environment_name") or env) == env and str(row.get("table_id") or "") == table_id
+            if str(row.get("environment_name") or env) == env
+            and str(row.get("table_id") or "") == table_id
         ]
         state.clear()
         state.update(
@@ -320,7 +347,9 @@ def load_guardrail_authoring_targets(
                 "schema_name": str(table.get("schema_name") or ""),
                 "profile_snapshot_id": snapshot_id,
                 "columns": [row["column_name"] for row in evidence],
-                "column_ids": {row["column_name"]: row["column_id"] for row in evidence},
+                "column_ids": {
+                    row["column_name"]: row["column_id"] for row in evidence
+                },
                 "catalogue_profile_rows": evidence,
                 "existing_rules": existing_rules,
             }
