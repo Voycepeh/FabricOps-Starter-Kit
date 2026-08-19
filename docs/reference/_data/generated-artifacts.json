@@ -1,8 +1,8 @@
 {
   "artifacts": {
     "individual_function_reference_pages": {
-      "generated_at_sgt": "18 Aug 2026, 8:01 PM SGT",
-      "generated_at_utc": "2026-08-18T12:01:34.081106Z",
+      "generated_at_sgt": "19 Aug 2026, 9:09 PM SGT",
+      "generated_at_utc": "2026-08-19T13:09:39.228849Z",
       "generator": "scripts/generate_individual_function_reference_pages.py",
       "label": "Individual function reference pages",
       "output_path": "docs/api/reference"
@@ -15,14 +15,14 @@
       "output_path": "docs/assets/public-function-call-flows-dashboard.html"
     },
     "public_function_call_flows_json": {
-      "generated_at_sgt": "18 Aug 2026, 7:34 AM SGT",
-      "generated_at_utc": "2026-08-17T23:34:44.560260Z",
+      "generated_at_sgt": "19 Aug 2026, 9:09 PM SGT",
+      "generated_at_utc": "2026-08-19T13:09:34.487754Z",
       "generator": "scripts/generate_public_function_call_flows_json.py",
       "label": "Public function call-flow data",
       "output_path": "docs/reference/_data/public-function-call-flows.json"
     }
   },
-  "last_generated_at_sgt": "18 Aug 2026, 8:01 PM SGT",
-  "last_generated_at_utc": "2026-08-18T12:01:34.081106Z",
+  "last_generated_at_sgt": "19 Aug 2026, 9:09 PM SGT",
+  "last_generated_at_utc": "2026-08-19T13:09:39.228849Z",
   "schema": "fabricops_generated_artifact_timestamps_v1"
 }

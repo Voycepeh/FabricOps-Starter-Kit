@@ -12,9 +12,9 @@ Render interactive manual DQ guardrail authoring controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_dq_rules.py:145`
+`fabricops_kit/widgets/widget_author_dq_rules.py:272`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L145-L428">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_dq_rules.py#L272-L596">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -43,8 +43,6 @@ def widget_author_dq_rules(
     selected_columns: Iterable[str] | None=None,
     parameters: Mapping[str, Any] | None=None,
     severity: str='warning',
-    source_notebook_type: str='01_governance',
-    created_by_role: str='governance',
     commit: bool=False,
 ) -> dict[str, Any]:
 ```
@@ -63,15 +61,13 @@ def widget_author_dq_rules(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark_session` | `Any` | Yes | Fabric Spark session used to read profiled targets and save DQ rules. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to resolve profiled targets and save DQ rules. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
-| `rule_type` | `str` | No | Initially selected canonical DQ rule type. |
-| `selected_columns` | `Iterable[str] \| None` | No | Columns initially selected on each resolved target. |
-| `parameters` | `Mapping[str, Any] \| None` | No | Initial structured values for the selected rule's controls. |
-| `severity` | `str` | No | Initial failure severity. |
-| `source_notebook_type` | `str` | No | Notebook role recorded on authored metadata rows. |
-| `created_by_role` | `str` | No | Actor role recorded on authored metadata rows. |
-| `commit` | `bool` | No | Save the initial selection immediately. |
+| `rule_type` | `str` | No | Initially selected canonical DQ rule ID. |
+| `selected_columns` | `Iterable[str] \| None` | No | Columns initially selected on the resolved target. |
+| `parameters` | `Mapping[str, Any] \| None` | No | Initial values for the selected rule's dynamic parameter controls. |
+| `severity` | `str` | No | Initial DQ failure severity. |
+| `commit` | `bool` | No | Save the initial valid configuration immediately. |
 
 ## Returns
 
@@ -95,10 +91,10 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 <div class="reference-docstring-notes" markdown="1">
 
-Run after ``00_env_config`` in Microsoft Fabric. Independent rules produce one ``METADATA_GUARDRAIL`` row per selected
-column. Grouped, conditional, and ordered-pair rules remain one logical
-row, with all participating columns and structured values serialized in
-``rule_parameters_json``.
+Rule definitions drive column semantics, parameters, defaults, and validation.
+Independent rules create one ``METADATA_GUARDRAIL`` row per selected column.
+Grouped, conditional, and ordered-pair rules create one logical row and keep
+their column relationship in ``rule_parameters_json``.
 
 </div>
 
