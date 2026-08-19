@@ -11,15 +11,34 @@ from fabricops_kit.pipeline.guardrail_metadata import (
     evaluate_changes_guardrail,
     load_table_guardrail_rules,
     select_table_guardrail_rule,
-    write_guardrail_result_row,
 )
+from fabricops_kit.pipeline.guardrail_results import write_guardrail_result_row
 from fabricops_kit.pipeline.guardrails_shared import changes_check_core, resolve_guardrail_change_behaviour
-from fabricops_kit.pipeline.shared import is_source_observation, observation_rows
+from fabricops_kit.pipeline.shared import observation_rows
 
 _OBSERVATION_TABLE = "METADATA_SOURCE_OBSERVATION"
+_OBSERVATION_COLUMNS = {
+    "observation_id",
+    "table_id",
+    "environment_name",
+    "partition_value",
+    "row_count",
+    "min_change_value",
+    "max_change_value",
+    "is_present",
+    "_committed_at",
+    "_activity_id",
+}
 
 
-def _previous_observation(history, *, table_id: str, environment_name: str, observed_at) -> list[dict[str, Any]]:
+def _is_source_observation(observation) -> bool:
+    columns = set(getattr(observation, "columns", ()))
+    if not columns and isinstance(observation, (list, tuple)) and observation:
+        columns = set(dict(observation[0]))
+    return _OBSERVATION_COLUMNS <= columns
+
+
+def _previous_observation(history, *, table_id: str, environment_name: str, committed_at) -> list[dict[str, Any]]:
     """Return the latest earlier observation for this table and environment."""
     if hasattr(history, "where") and hasattr(history, "agg"):
         from pyspark.sql import functions as F
@@ -27,14 +46,14 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
         comparable = history.where(
             (F.col("table_id") == table_id)
             & (F.col("environment_name") == environment_name)
-            & (F.col("observed_at") < F.lit(observed_at))
+            & (F.col("_committed_at") < F.lit(committed_at))
         )
-        timestamp_rows = comparable.agg(F.max("observed_at").alias("previous_observed_at")).collect()
-        previous_at = timestamp_rows[0]["previous_observed_at"] if timestamp_rows else None
+        timestamp_rows = comparable.agg(F.max("_committed_at").alias("previous_committed_at")).collect()
+        previous_at = timestamp_rows[0]["previous_committed_at"] if timestamp_rows else None
         if previous_at is None:
             return []
         return observation_rows(
-            comparable.where(F.col("observed_at") == F.lit(previous_at)).select(
+            comparable.where(F.col("_committed_at") == F.lit(previous_at)).select(
                 "observation_id",
                 "table_id",
                 "environment_name",
@@ -43,7 +62,8 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
                 "row_count",
                 "min_change_value",
                 "max_change_value",
-                "observed_at",
+                "_committed_at",
+                "_activity_id",
             )
         )
 
@@ -52,10 +72,10 @@ def _previous_observation(history, *, table_id: str, environment_name: str, obse
         for row in observation_rows(history)
         if str(row.get("table_id") or "") == table_id
         and str(row.get("environment_name") or "") == environment_name
-        and row.get("observed_at") < observed_at
+        and row.get("_committed_at") < committed_at
     ]
-    previous_at = max((row["observed_at"] for row in candidates), default=None)
-    return [row for row in candidates if row["observed_at"] == previous_at]
+    previous_at = max((row["_committed_at"] for row in candidates), default=None)
+    return [row for row in candidates if row["_committed_at"] == previous_at]
 
 
 def _observation_changes(observation) -> dict:
@@ -66,11 +86,16 @@ def _observation_changes(observation) -> dict:
     table_id = str(current[0].get("table_id") or "")
     environment_name = str(current[0].get("environment_name") or "")
     observation_id = str(current[0].get("observation_id") or "")
-    observed_at = current[0]["observed_at"]
-    if not table_id or not observation_id or not environment_name:
-        raise ValueError("observation dataframe must contain table_id, observation_id, and environment_name")
-    if any(row["observed_at"] != observed_at for row in current):
-        raise ValueError("observation dataframe must contain one shared observed_at snapshot")
+    committed_at = current[0]["_committed_at"]
+    activity_id = str(current[0].get("_activity_id") or "")
+    if not table_id or not observation_id or not environment_name or not activity_id:
+        raise ValueError(
+            "observation dataframe must contain table_id, observation_id, environment_name, and _activity_id"
+        )
+    if any(row["_committed_at"] != committed_at for row in current):
+        raise ValueError("observation dataframe must contain one shared _committed_at snapshot")
+    if any(str(row.get("_activity_id") or "") != activity_id for row in current):
+        raise ValueError("observation dataframe must contain one shared _activity_id")
     if any(str(row.get("observation_id") or "") != observation_id for row in current):
         raise ValueError("observation dataframe must contain one shared observation_id")
     if any(str(row.get("table_id") or "") != table_id for row in current):
@@ -96,7 +121,7 @@ def _observation_changes(observation) -> dict:
             history,
             table_id=table_id,
             environment_name=environment_name,
-            observed_at=observed_at,
+            committed_at=committed_at,
         )
     except Exception as exc:
         if not is_table_not_found_error(exc):
@@ -212,7 +237,7 @@ def _observation_changes(observation) -> dict:
             spark_session=getattr(observation, "sparkSession", None),
             config=config,
             env=env,
-            run_id=str(observed_at),
+            run_id=activity_id,
             dataset_name="",
             table_name="",
             store_type="",
@@ -254,6 +279,6 @@ def check_changes(observation) -> dict:
     True
 
     """
-    if not is_source_observation(observation):
+    if not _is_source_observation(observation):
         raise ValueError("observation must be canonical evidence returned by observe_table()")
     return _observation_changes(observation)
