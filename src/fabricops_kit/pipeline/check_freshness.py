@@ -8,7 +8,7 @@ from fabricops_kit.pipeline.guardrail_metadata import (
     resolve_change_rule_observation_columns,
     select_table_guardrail_rule,
 )
-from fabricops_kit.pipeline.guardrail_results import write_guardrail_result_row
+from fabricops_kit.pipeline.guardrails_shared import write_guardrail_result_row
 from fabricops_kit.pipeline.shared import (
     guardrail_compatibility_observation,
     observation_rows,
