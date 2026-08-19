@@ -30,7 +30,17 @@ def write_guardrail_result_row(
     results_table: str = "METADATA_GUARDRAIL_RESULTS",
 ) -> None:
     """Append one runtime outcome for one exact Guardrail revision."""
-    del dataset_name, table_name, store_type, layer, schema_name, guardrail_type, rule_type, rule_key, column_name
+    del (
+        dataset_name,
+        table_name,
+        store_type,
+        layer,
+        schema_name,
+        guardrail_type,
+        rule_type,
+        rule_key,
+        column_name,
+    )
     if spark_session is None or not hasattr(spark_session, "createDataFrame"):
         return
     guardrail_rule_id = str(result.get("guardrail_rule_id") or "").strip()
@@ -52,11 +62,18 @@ def write_guardrail_result_row(
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
         "reason": str(result.get("reason") or result.get("message") or ""),
-        "result_payload_json": json.dumps(payload, default=str, sort_keys=True, separators=(",", ":")),
+        "result_payload_json": json.dumps(
+            payload,
+            default=str,
+            sort_keys=True,
+            separators=(",", ":"),
+        ),
         **audit,
     }
     write_lakehouse_table_core(
-        spark_session.createDataFrame([coerce_metadata_row_types(results_table, row)]),
+        spark_session.createDataFrame(
+            [coerce_metadata_row_types(results_table, row)]
+        ),
         results_table,
         target="metadata",
         schema=configured_lakehouse_schema(config, env, "metadata"),
