@@ -1,0 +1,45 @@
+name: Agent Generate Guardrail Artifacts
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --all-groups
+      - name: Generate call-flow contract
+        run: uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+      - name: Generate individual references
+        run: uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+      - name: Capture first generated diff
+        run: git diff --binary > /tmp/generated-first.diff
+      - name: Verify generators are idempotent
+        run: |
+          uv run env PYTHONPATH=src python scripts/generate_public_function_call_flows_json.py
+          uv run env PYTHONPATH=src python scripts/generate_individual_function_reference_pages.py
+          git diff --binary > /tmp/generated-second.diff
+          cmp /tmp/generated-first.diff /tmp/generated-second.diff
+      - name: Upload generated outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardrail-generated-outputs
+          path: |
+            docs/reference/_data/public-function-call-flows.json
+            docs/reference/_data/generated-artifacts.json
+            docs/api/reference
+            docs/reference/index.md
+            docs/reference/function-call-graph.md
+          if-no-files-found: error
