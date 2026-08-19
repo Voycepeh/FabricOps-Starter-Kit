@@ -29,6 +29,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import ast
+          import copy
           import re
 
           root = Path('.')
@@ -51,17 +52,110 @@ jobs:
                   del lines[node.lineno - 1:node.end_lineno]
               return ''.join(lines)
 
-          def remove_import_from_module(source: str, module_name: str) -> str:
+          def remove_imports_from_module(source: str, module_name: str) -> str:
               tree = ast.parse(source)
               lines = source.splitlines(keepends=True)
               targets = [
                   node
-                  for node in ast.walk(tree)
+                  for node in tree.body
                   if isinstance(node, ast.ImportFrom) and node.module == module_name
               ]
               for node in sorted(targets, key=lambda item: item.lineno, reverse=True):
                   del lines[node.lineno - 1:node.end_lineno]
               return ''.join(lines)
+
+          def target_names(target):
+              if isinstance(target, ast.Name):
+                  return {target.id}
+              if isinstance(target, (ast.Tuple, ast.List)):
+                  names = set()
+                  for item in target.elts:
+                      names.update(target_names(item))
+                  return names
+              return set()
+
+          def node_bound_names(node):
+              if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                  return {node.name}
+              if isinstance(node, ast.Assign):
+                  names = set()
+                  for target in node.targets:
+                      names.update(target_names(target))
+                  return names
+              if isinstance(node, ast.AnnAssign):
+                  return target_names(node.target)
+              if isinstance(node, ast.Import):
+                  return {alias.asname or alias.name.split('.')[0] for alias in node.names}
+              if isinstance(node, ast.ImportFrom):
+                  return {alias.asname or alias.name for alias in node.names}
+              return set()
+
+          def top_level_names(source: str):
+              names = set()
+              for node in ast.parse(source).body:
+                  names.update(node_bound_names(node))
+              return names
+
+          def append_unique_symbols(base: str, source: str, *, section_title: str) -> str:
+              seen = top_level_names(base)
+              tree = ast.parse(source)
+              pieces = []
+
+              for index, node in enumerate(tree.body):
+                  if (
+                      index == 0
+                      and isinstance(node, ast.Expr)
+                      and isinstance(node.value, ast.Constant)
+                      and isinstance(node.value.value, str)
+                  ):
+                      continue
+                  if isinstance(node, ast.ImportFrom) and node.module == '__future__':
+                      continue
+
+                  if isinstance(node, ast.Import):
+                      kept = []
+                      for alias in node.names:
+                          bound = alias.asname or alias.name.split('.')[0]
+                          if bound not in seen:
+                              kept.append(alias)
+                              seen.add(bound)
+                      if kept:
+                          new_node = copy.deepcopy(node)
+                          new_node.names = kept
+                          pieces.append(ast.unparse(new_node))
+                      continue
+
+                  if isinstance(node, ast.ImportFrom):
+                      kept = []
+                      for alias in node.names:
+                          bound = alias.asname or alias.name
+                          if bound not in seen:
+                              kept.append(alias)
+                              seen.add(bound)
+                      if kept:
+                          new_node = copy.deepcopy(node)
+                          new_node.names = kept
+                          pieces.append(ast.unparse(new_node))
+                      continue
+
+                  bound = node_bound_names(node)
+                  if bound and bound & seen:
+                      continue
+
+                  segment = ast.get_source_segment(source, node)
+                  if segment is None:
+                      segment = ast.unparse(node)
+                  pieces.append(segment)
+                  seen.update(bound)
+
+              if not pieces:
+                  return base
+              return (
+                  base.rstrip()
+                  + f'\n\n\n# ---------------------------------------------------------------------------\n# {section_title}\n# ---------------------------------------------------------------------------\n\n'
+                  + '\n\n'.join(piece.strip() for piece in pieces if piece.strip())
+                  + '\n'
+              )
 
           legacy_path = pipeline / 'guardrails_shared.py'
           canonical_path = pipeline / 'guardrail_shared.py'
@@ -71,30 +165,43 @@ jobs:
               legacy = strip_future(legacy_path.read_text())
               canonical = strip_future(canonical_path.read_text())
 
-              base = remove_import_from_module(base, 'fabricops_kit.pipeline.guardrails_shared')
-              legacy = remove_import_from_module(legacy, 'fabricops_kit.pipeline.shared')
+              base = remove_imports_from_module(base, 'fabricops_kit.pipeline.guardrails_shared')
+              legacy = remove_imports_from_module(legacy, 'fabricops_kit.pipeline.shared')
               legacy = re.sub(
                   r'(?m)^def schema_check_core\(',
                   'def _guardrail_schema_check_base(',
                   legacy,
                   count=1,
               )
-              canonical = remove_top_function(canonical, 'resolve_change_rule_observation_columns')
-              canonical = remove_import_from_module(canonical, 'fabricops_kit.pipeline.guardrails_shared')
-              canonical = canonical.replace('runtime.schema_check_core', '_guardrail_schema_check_base')
+
+              canonical = remove_top_function(
+                  canonical,
+                  'resolve_change_rule_observation_columns',
+              )
+              canonical = remove_imports_from_module(
+                  canonical,
+                  'fabricops_kit.pipeline.guardrails_shared',
+              )
+              canonical = canonical.replace(
+                  'runtime.schema_check_core',
+                  '_guardrail_schema_check_base',
+              )
               canonical = canonical.replace(
                   'runtime.resolve_guardrail_change_behaviour',
                   'resolve_guardrail_change_behaviour',
               )
 
-              shared_path.write_text(
-                  base.rstrip()
-                  + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail shared implementation\n# ---------------------------------------------------------------------------\n\n'
-                  + legacy.strip()
-                  + '\n\n\n# ---------------------------------------------------------------------------\n# Canonical Guardrail rule/runtime adapters\n# ---------------------------------------------------------------------------\n\n'
-                  + canonical.strip()
-                  + '\n'
+              merged = append_unique_symbols(
+                  base,
+                  legacy,
+                  section_title='Guardrail shared implementation',
               )
+              merged = append_unique_symbols(
+                  merged,
+                  canonical,
+                  section_title='Canonical Guardrail rule/runtime adapters',
+              )
+              shared_path.write_text(merged)
               legacy_path.unlink()
               canonical_path.unlink()
 
@@ -111,12 +218,12 @@ jobs:
               authoring = re.sub(r'\b_stable_json\b', '_guardrail_stable_json', authoring)
               authoring = re.sub(r'\b_coerce_rows\b', '_guardrail_coerce_rows', authoring)
               authoring = authoring.replace('shared.widget_common', 'widget_common')
-              widget_shared_path.write_text(
-                  base.rstrip()
-                  + '\n\n\n# ---------------------------------------------------------------------------\n# Guardrail authoring shared implementation\n# ---------------------------------------------------------------------------\n\n'
-                  + authoring.strip()
-                  + '\n'
+              merged = append_unique_symbols(
+                  base,
+                  authoring,
+                  section_title='Guardrail authoring shared implementation',
               )
+              widget_shared_path.write_text(merged)
               authoring_path.unlink()
 
           for path in [
