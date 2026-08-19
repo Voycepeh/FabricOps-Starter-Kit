@@ -12,9 +12,9 @@ Render versioned table-level Schema, Freshness, and Changes guardrail controls.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_author_guardrails.py:140`
+`fabricops_kit/widgets/widget_author_guardrails.py:131`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L140-L210">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_author_guardrails.py#L131-L215">View on GitHub</a>
 </div>
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges">
@@ -57,7 +57,7 @@ def widget_author_guardrails(
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
-| `spark_session` | `Any` | Yes | Fabric Spark session used to read profiled targets and save rules. |
+| `spark_session` | `Any` | Yes | Fabric Spark session used to resolve profiled targets and save rules. |
 | `context` | `dict[str, Any] \| None` | No | Advanced override for the active ``FABRIC_CONTEXT``. |
 | `commit` | `bool` | No | Save the initial selection immediately. The default renders the widget. |
 
@@ -83,9 +83,9 @@ Raises validation, widget, Spark, or metadata routing errors when required input
 
 <div class="reference-docstring-notes" markdown="1">
 
-Run after ``00_env_config`` in Microsoft Fabric. The widget reads
-``METADATA_DATA_PROFILED`` and existing ``METADATA_GUARDRAIL`` rows, then
-writes new versions through the canonical guardrail metadata writer.
+The widget resolves ``table_id`` and ``column_id`` through the normalized
+Catalogue and Profile metadata and writes only the Stage 4A
+``METADATA_GUARDRAIL`` contract.
 
 </div>
 
