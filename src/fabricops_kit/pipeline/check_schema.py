@@ -8,7 +8,7 @@ from fabricops_kit.io.shared import (
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
-from fabricops_kit.pipeline.guardrail_metadata import (
+from fabricops_kit.pipeline.guardrail_shared import (
     load_table_guardrail_rules,
     schema_check_core,
     select_table_guardrail_rule,
